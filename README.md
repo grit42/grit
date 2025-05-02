@@ -17,7 +17,7 @@ Run the grit platform via the provided Docker image:
 docker info
 ```
 
-2. Download the [docker compose file](https://raw.githubusercontent.com/grit42/grit/refs/heads/main/docker-compose.yml) and put it in an empty directory somewhere
+2. Download the [docker compose file](./docker-compose.yml) and put it in an empty directory somewhere
 
 3. Go to the directory where you just added the docker-compose.yml file and run
 ```
