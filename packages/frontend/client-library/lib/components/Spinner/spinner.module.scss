@@ -1,0 +1,73 @@
+@use "../../scss/colors.scss";
+@use "../../scss/theme.scss";
+
+$transition-ease: cubic-bezier(0.4, 1, 0.75, 0.9) !default;
+$transition-ease-bounce: cubic-bezier(0.54, 1.12, 0.38, 1.11) !default;
+$transition-duration: 100ms;
+$progress-track-color: rgba(colors.$steel-666, 0.2) !default;
+$progress-head-color: rgba(colors.$steel-666, 0.8) !default;
+
+@keyframes spinner-animation {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinner {
+  align-items: center;
+  // center animation container inside parent element to isolate layout
+  display: flex;
+  justify-content: center;
+
+  // allow paths to overflow container -- critical for edges of circles!
+  vertical-align: middle;
+  overflow: hidden !important;
+
+  .animation {
+    animation: spinner-animation ($transition-duration * 5) linear infinite;
+
+    &.noSpin {
+      animation: none;
+    }
+  }
+
+  svg {
+    display: block;
+
+    &.primary {
+      .spinnerHead {
+        stroke: theme.$palette-secondary-main;
+      }
+    }
+
+    &.secondary {
+      .spinnerHead {
+        stroke: rgb(from theme.$palette-primary-contrast-text r g b / 50%);
+      }
+    }
+
+    &.color {
+      .spinnerHead {
+        stroke: currentColor !important;
+      }
+    }
+  }
+
+  path {
+    fill-opacity: 0%;
+  }
+
+  .spinnerHead {
+    stroke: $progress-head-color;
+    stroke-linecap: round;
+    transform-origin: center;
+    transition: stroke-dashoffset ($transition-duration * 2) $transition-ease;
+  }
+
+  .spinnerTrack {
+    stroke: $progress-track-color;
+  }
+}

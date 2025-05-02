@@ -1,0 +1,34 @@
+{
+  "name": "@grit/notifications",
+  "author": "Jonathan Rebourt, grit42 <jonny@grit42.com>",
+  "license": "GPL-3.0-or-later",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "tsc": "tsc -b",
+    "lint": "eslint .",
+    "format": "prettier . -w"
+  },
+  "exports": {
+    ".": {
+      "import": "./lib/index.ts"
+    }
+  },
+  "files": [
+    "./lib"
+  ],
+  "description": "",
+  "dependencies": {
+    "react-toastify": "catalog:"
+  },
+  "peerDependencies": {
+    "react": "catalog:"
+  },
+  "devDependencies": {
+    "@types/react": "catalog:",
+    "react": "catalog:",
+    "typescript": "catalog:",
+    "typescript-eslint": "catalog:"
+  }
+}

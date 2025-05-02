@@ -1,0 +1,8 @@
+{
+    "label": "Administration",
+    "position": 1,
+    "link": {
+      "type": "generated-index",
+      "description": "How to prepare the platform and upload and display assay results"
+    }
+  }

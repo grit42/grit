@@ -1,0 +1,144 @@
+@use "@grit/client-library/mixins.scss";
+@use "@grit/client-library/theme.scss";
+
+$navigation-switch-width: 1124px;
+$navigation-height: 4.5em;
+
+$header-background: #04040c;
+$dark-secondary-main: #f8eb5f;
+$dark-contrast-text: #eee;
+$header-inactive-link: #a4a4a6;
+
+.navigation {
+  height: $navigation-height;
+  width: 100%;
+  margin: 0;
+  background-color: $header-background;
+
+  .navContent {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 100%;
+    gap: 1.5em;
+
+    @include mixins.responsive-inline-padding;
+  }
+
+  .gritLogo {
+    height: calc($navigation-height - 2em);
+    fill: $dark-secondary-main;
+  }
+
+  .right {
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+    gap: 2em;
+    margin-left: auto;
+
+    .marvinIcon {
+      height: calc($navigation-height - 1.5em);
+      fill: $dark-secondary-main !important;
+    }
+  }
+
+  .links {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    height: 100%;
+
+    .linkSelector {
+      position: absolute;
+      bottom: 0;
+      user-select: none;
+      height: 4px;
+      background: $dark-secondary-main;
+      transition: all 0.25s ease-in-out;
+      transform-origin: center center;
+      border-radius: theme.$border-radius;
+
+      &.hide {
+        opacity: 0;
+        transform: scaleX(0);
+      }
+    }
+
+    a {
+      text-decoration: none;
+      font-size: 13px;
+      text-transform: uppercase;
+      padding: 0 1em;
+      position: relative;
+      bottom: 3px;
+      font-family: theme.$title-font-family;
+      color: $header-inactive-link;
+      white-space: nowrap;
+      height: 100%;
+      transition: color 0.25s ease-in-out;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      &:focus-visible {
+        outline: none;
+        color: $dark-secondary-main !important;
+      }
+
+      &:hover {
+        text-decoration: none;
+        color: $dark-contrast-text;
+      }
+
+      & span {
+        position: relative;
+      }
+
+      &.documentationLink {
+        gap: theme.$spacing;
+
+        svg {
+          transition: fill 0.25s ease-in-out;
+          fill: $header-inactive-link;
+          height: 10px;
+          position: relative;
+          bottom: 3px;
+        }
+
+        &:hover {
+          svg {
+            fill: $dark-contrast-text;
+          }
+        }
+      }
+    }
+
+    .selected {
+      color: $dark-contrast-text !important;
+      position: relative;
+    }
+  }
+}
+
+.profile {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75em;
+}
+
+.motdTooltip {
+  z-index: 100;
+  pointer-events: all;
+}
+
+.username {
+  color: $dark-contrast-text !important;
+  text-transform: capitalize;
+  font-size: calc($navigation-height / 4.5);
+  white-space: nowrap;
+}

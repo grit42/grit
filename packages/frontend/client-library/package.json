@@ -1,0 +1,86 @@
+{
+  "name": "@grit/client-library",
+  "license": "GPL-3.0-or-later",
+  "author": "Jonathan Rebourt, grit42 <jonny@grit42.com>",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    "./theme.scss": {
+      "import": "./lib/scss/theme.scss"
+    },
+    "./mixins.scss": {
+      "import": "./lib/scss/mixins.scss"
+    },
+    "./components": {
+      "import": "./lib/components/index.ts"
+    },
+    "./hooks": {
+      "import": "./lib/hooks/index.ts"
+    },
+    "./icons/*": {
+      "import": "./lib/icons/*.tsx"
+    },
+    "./theme": {
+      "import": "./lib/theme/index.ts"
+    },
+    "./utils": {
+      "import": "./lib/utils/index.ts"
+    },
+    "./table": {
+      "import": "./lib/features/table/index.ts"
+    }
+  },
+  "files": [
+    "lib"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "format:check": "prettier . -c",
+    "format": "prettier . -w",
+    "preview": "vite preview",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
+  },
+  "devDependencies": {
+    "@chromatic-com/storybook": "^3.2.2",
+    "@storybook/addon-essentials": "^8.4.5",
+    "@storybook/addon-interactions": "^8.4.5",
+    "@storybook/addon-onboarding": "^8.4.5",
+    "@storybook/blocks": "^8.4.5",
+    "@storybook/react": "^8.4.5",
+    "@storybook/react-vite": "^8.4.5",
+    "@storybook/test": "^8.4.5",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "eslint-plugin-storybook": "^0.11.1",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "react-router-dom": "catalog:",
+    "storybook": "^8.4.5",
+    "typescript": "catalog:",
+    "typescript-eslint": "catalog:",
+    "vite": "catalog:"
+  },
+  "dependencies": {
+    "@floating-ui/react": "^0.26.28",
+    "@grit/api": "workspace:*",
+    "@tanstack/react-form": "catalog:",
+    "@tanstack/react-table": "catalog:",
+    "@tanstack/table-core": "catalog:",
+    "axios": "catalog:",
+    "dayjs": "1",
+    "react-dropzone": "14",
+    "react-helmet-async": "catalog:",
+    "react-tabs": "6",
+    "superjson": "2"
+  },
+  "peerDependencies": {
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "react-router-dom": "catalog:"
+  }
+}

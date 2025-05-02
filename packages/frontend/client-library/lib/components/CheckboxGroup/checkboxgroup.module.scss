@@ -1,0 +1,28 @@
+@use "../../scss/theme.scss";
+
+.label {
+  padding-bottom: 5px;
+
+  color: theme.$palette-primary-contrast-text;
+  display: block;
+}
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-bottom: 0.5rem;
+
+  label {
+    padding-left: 0.5em;
+    word-break: break-all;
+  }
+}
+
+.checkboxGroup {
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, 16em);
+    column-gap: 0.5rem;
+  }
+}

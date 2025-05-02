@@ -1,0 +1,10 @@
+{
+    "label": "Compounds",
+    "position": 4,
+    "link": {
+      "type": "generated-index",
+      "description": "Register small molecules, oligonucleotides, or whatever rows your research.
+      Use the compound types to define yor modalities and what metadata you would like to store on them.
+      The different modalities can co-exist in the platform so if you are one of the advanced labs who work on several modalities in parallel we have you covered."
+    }
+  }

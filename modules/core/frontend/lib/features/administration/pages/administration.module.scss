@@ -1,0 +1,14 @@
+@use "@grit/client-library/theme.scss";
+
+.administrationPage {
+  display: grid;
+  grid-template-rows: min-content 1fr;
+  height: 100%;
+
+  overflow: auto;
+
+  ul[role="tablist"] {
+    border-bottom: 1px solid
+      rgb(from theme.$palette-primary-contrast-text r g b / 0.2);
+  }
+}

@@ -1,0 +1,10 @@
+one:
+  text_value: hello
+  batch_property: one
+  batch: one
+
+two:
+  text_value: world
+  batch_property: two
+  batch: one
+

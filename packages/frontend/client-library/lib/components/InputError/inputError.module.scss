@@ -1,0 +1,10 @@
+@use "../../scss/mixins.scss";
+@use "../../scss/theme.scss";
+
+.error {
+  color: theme.$palette-error-main !important;
+  font-size: 0.8em;
+  margin-top: theme.$spacing;
+  margin-bottom: 0;
+  white-space: pre;
+}

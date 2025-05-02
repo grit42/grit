@@ -1,0 +1,51 @@
+@use "../../scss/theme.scss";
+
+.checkbox {
+  appearance: none;
+  padding: 0.35em !important;
+  border-radius: 0.15em;
+  cursor: pointer;
+  background: theme.$palette-primary-dark;
+  margin: 0;
+  z-index: 1;
+
+  display: grid;
+  place-content: center;
+  align-self: center;
+
+  aspect-ratio: 1 / 1;
+  flex: 0;
+
+  &:focus-visible {
+    box-shadow: 0 0 0 2px theme.$palette-secondary-main;
+  }
+
+  &:hover {
+    background: theme.$palette-primary-main;
+  }
+
+  &::before {
+    content: "";
+    width: calc(1.45 * theme.$spacing);
+    height: calc(1.45 * theme.$spacing);
+    transform: scale(0);
+    box-shadow: inset 1em 1em theme.$palette-secondary-main;
+    background-color: CanvasText;
+  }
+
+  &:checked::before {
+    clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+    transform: scale(1);
+  }
+
+  &:indeterminate::before {
+    clip-path: polygon(100% 35%, 100% 60%, 0% 60%, 0% 35%);
+    transform: scale(1);
+  }
+
+  &:disabled {
+    border: 1px solid currentColor;
+    cursor: not-allowed;
+    opacity: 50%;
+  }
+}

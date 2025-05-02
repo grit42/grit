@@ -1,0 +1,38 @@
+/**
+ * Copyright 2025 grit42 A/S. <https://grit42.com/>
+ *
+ * This file is part of @grit/core.
+ *
+ * @grit/core is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or  any later version.
+ *
+ * @grit/core is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * @grit/core. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+import { Navigate } from "react-router-dom";
+import { useSession } from "../..";
+import { Spinner } from "@grit/client-library/components";
+
+interface Props {
+  children: React.ReactNode;
+}
+
+export default function NoAuthGuard({ children }: Props) {
+  const { isLoading, data } = useSession();
+
+  if (isLoading) return <Spinner />;
+
+
+  if (data) {
+    return <Navigate to="/" />;
+  }
+
+  return <>{children}</>;
+}

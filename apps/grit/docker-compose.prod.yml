@@ -1,0 +1,27 @@
+services:
+  db:
+    image: "grit42com/pgrdkit:16.3-2024.03.1"
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-grit}
+      - POSTGRES_DB=${GRIT_DATABASE:-grit}-default
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-muchsecurepasswordwow}
+    volumes:
+      - ./postgres-data-prod:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    platform: linux/amd64
+    restart: unless-stopped
+  app:
+    image: "grit42com/grit-compounds:0.1.0"
+    depends_on:
+      - db
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-grit}
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_PASSWORD=muchsecurepasswordwow
+      - SECRET_KEY_BASE=verysecret
+    ports:
+      - "3000:3000"
+    platform: linux/amd64
+    restart: unless-stopped

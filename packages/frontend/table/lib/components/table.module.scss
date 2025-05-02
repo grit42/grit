@@ -1,0 +1,325 @@
+@use "@grit/client-library/theme.scss";
+
+.container {
+  overflow: auto;
+  display: grid;
+  grid-template-rows: min-content 1fr min-content;
+  grid-template-columns: 1fr;
+  height: 100%;
+  width: 100%;
+}
+
+.header {
+  display: grid;
+  grid-template-columns: max-content 1fr 1fr;
+  margin-bottom: theme.$spacing;
+
+  .title {
+    font-size: 2em;
+    font-family: theme.$title-font-family;
+    color: theme.$palette-secondary-main;
+  }
+
+  .rightActions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+  }
+
+  .leftActions {
+    display: flex;
+    align-items: center;
+
+    &.withTitle {
+      margin-left: theme.$spacing;
+    }
+  }
+
+  .tableMenuTrigger {
+    padding-inline-start: theme.$spacing;
+    svg {
+      height: 100%;
+      fill: rgb(from theme.$palette-primary-contrast-text r g b / 80%);
+
+      &:hover {
+        fill: theme.$palette-primary-contrast-text;
+      }
+    }
+  }
+}
+
+.tableContainer {
+  overflow: auto;
+  position: relative;
+  height: 100%;
+  width: 100%;
+  background-color: theme.$palette-background-surface;
+  border-top-left-radius: theme.$border-radius;
+  border-top-right-radius: theme.$border-radius;
+
+  &.noFooter {
+    border-bottom-left-radius: theme.$border-radius;
+    border-bottom-right-radius: theme.$border-radius;
+  }
+
+  table {
+    display: grid;
+    font-size: 12px;
+
+    &.compact {
+      tr {
+        height: 2em !important;
+      }
+    }
+  }
+
+  thead {
+    display: grid;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background-color: theme.$palette-primary-main;
+
+    tr {
+      display: flex;
+
+      &:not(:last-child) {
+        th {
+          border-bottom: 1px solid theme.$palette-primary-dark;
+        }
+      }
+
+      th {
+        display: flex;
+        align-items: center;
+        position: relative;
+        padding: theme.$spacing;
+        border-inline-end: 1px solid theme.$palette-primary-dark;
+
+        .tableHeaderContainer {
+          display: grid;
+          grid-template-columns: 100%;
+          grid-template-rows: min-content 1fr;
+          width: 100%;
+
+          .tableHeader {
+            display: flex;
+            align-items: center;
+
+            .dragHandle {
+              background: none;
+              background-color: theme.$palette-primary-contrast-text;
+              color: inherit;
+              border: none;
+              padding: 0;
+              font: inherit;
+              outline: inherit;
+              cursor: grab;
+              margin-right: calc(theme.$spacing / 2);
+              width: theme.$spacing;
+              height: 100%;
+              opacity: 0.1;
+
+              &:hover {
+                opacity: 0.8;
+              }
+
+              &.dragging {
+                opacity: 0.8;
+                cursor: grabbing;
+              }
+            }
+
+            svg {
+              fill: theme.$palette-primary-contrast-text;
+            }
+          }
+
+          .tableHeaderDescription {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-align: start;
+            width: 100%;
+            font-weight: normal;
+          }
+        }
+      }
+    }
+  }
+
+  tbody {
+    display: grid;
+    position: relative;
+
+    &.emptyTable {
+      position: unset;
+    }
+
+    .clickable {
+      cursor: pointer;
+    }
+
+    tr {
+      display: flex;
+      position: absolute;
+      height: 3em;
+
+      &.emphasized {
+        background-color: rgb(from theme.$palette-error-main r g b / 20%);
+      }
+
+      td {
+        display: flex;
+        align-items: center;
+        padding: theme.$spacing;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        border-block-end: 1px solid theme.$palette-primary-dark;
+        border-inline-end: 1px solid theme.$palette-primary-dark;
+      }
+    }
+  }
+}
+
+.cellContentContainer {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-align: start;
+  flex: 1;
+}
+
+.footer {
+  padding: theme.$spacing;
+  min-height: calc(21px + theme.$spacing * 2);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  background-color: theme.$palette-primary-main;
+  border-bottom-left-radius: theme.$border-radius;
+  border-bottom-right-radius: theme.$border-radius;
+}
+
+.resizer {
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 100%;
+  width: 3px;
+  background: theme.$palette-secondary-main;
+  cursor: col-resize;
+  user-select: none;
+  touch-action: none;
+  opacity: 0;
+  border-radius: 20px;
+  z-index: 10;
+
+  &:hover {
+    opacity: 1;
+  }
+
+  &.isResizing {
+    opacity: 1;
+  }
+}
+
+.emptyTable,
+.infiniteScrollObserver {
+  border: none !important;
+
+  &:hover {
+    background: transparent !important;
+  }
+
+  td {
+    border-right: none !important;
+    border-bottom: none !important;
+
+    &:hover {
+      background: unset !important;
+    }
+  }
+}
+
+.emptyTable {
+  position: unset !important;
+
+  h3 {
+    white-space: break-spaces;
+    text-align: center;
+    padding: 0 15%;
+  }
+
+  td {
+    position: absolute;
+    width: 99.9%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    color: theme.$palette-secondary-main;
+    top: 50%;
+    transform: translateY(-50%);
+
+    &:hover {
+      background: transparent !important;
+    }
+
+    .icon {
+      fill: theme.$palette-secondary-main;
+    }
+
+    h3 {
+      margin-top: calc(theme.$spacing * 2);
+    }
+  }
+}
+
+.loadingRow {
+  border: none;
+  position: absolute;
+  bottom: 0;
+
+  td {
+    position: absolute;
+    width: 100%;
+    border: none;
+  }
+
+  .spinner {
+    position: absolute;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+}
+
+.rowControls {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  height: 100%;
+
+  .icon {
+    position: relative;
+    height: 1.2em;
+
+    fill: rgb(from theme.$palette-primary-contrast-text r g b / 80%);
+
+    &.disabled {
+      fill: rgb(from theme.$palette-primary-contrast-text r g b / 20%);
+    }
+
+    &.delete:not(&.disabled) {
+      &:hover {
+        fill: theme.$palette-warning-main;
+      }
+    }
+
+    &:hover:not(&.disabled) {
+      fill: theme.$palette-secondary-main;
+    }
+  }
+}

@@ -1,0 +1,10 @@
+one:
+  text_value: hello
+  compound_property: one
+  compound: one
+
+two:
+  text_value: world
+  compound_property: two
+  compound: one
+

@@ -1,0 +1,28 @@
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  username: grit
+  # For details on connection pooling, see Rails configuration guide
+  # https://guides.rubyonrails.org/configuring.html#database-pooling
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+
+local: &local
+  <<: *default
+  host: <%= ENV["POSTGRES_HOST"] || "127.0.0.1" %>
+  port: <%= ENV["POSTGRES_PORT"] || 5432 %>
+  password: <%= ENV["POSTGRES_PASSWORD"] || "muchsecurepasswordwow" %>
+
+development:
+  <<: *local
+  database: <%= ENV["GRIT_DATABASE"] || "compounds" %>_dev
+
+test:
+  <<: *local
+  database: <%= ENV["GRIT_DATABASE"] || "compounds" %>_test
+
+production:
+  <<: *default
+  host: <%= ENV["POSTGRES_HOST"] %>
+  port: <%= ENV["POSTGRES_PORT"] %>
+  database: <%= ENV["GRIT_DATABASE"] || "compounds" %>
+  password: <%= ENV["POSTGRES_PASSWORD"] %>

@@ -1,0 +1,65 @@
+// @use "./variables.scss";
+@use "./theme.scss";
+
+@mixin input-field {
+  appearance: none;
+  border: 0;
+  outline: none;
+  padding: 0.5em 1em;
+  border-radius: theme.$border-radius;
+  height: 38px;
+  width: 100%;
+  color: theme.$palette-primary-contrast-text;
+  background: theme.$palette-background-default;
+  color-scheme: theme.$color-scheme;
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  /* Chrome, Safari, Edge, Opera */
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  &::placeholder {
+    font-size: 12px;
+  }
+
+  /* Firefox */
+  &[type="number"] {
+    appearance: textfield;
+    -moz-appearance: textfield;
+  }
+}
+
+$breakpoint-large: 60em; // 960px
+$breakpoint-xl: 90em; // 1440px
+
+@mixin responsive-inline-padding {
+  padding-inline: 1em;
+
+  @media only screen and (min-width: $breakpoint-large) {
+    padding-inline: 2em;
+  }
+
+  @media only screen and (min-width: $breakpoint-xl) {
+    padding: 0 2em;
+  }
+}
+
+@mixin fadeIn {
+  animation: fadeIn 0.25s ease-in-out;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}

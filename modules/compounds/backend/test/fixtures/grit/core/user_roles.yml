@@ -1,0 +1,7 @@
+compound_admin_compound_admin:
+  user_id: 111
+  role_id: 111
+
+compound_user_compound_user:
+  user_id: 112
+  role_id: 112

@@ -1,0 +1,31 @@
+{
+  "name": "grit",
+  "version": "0.1.0",
+  "description": "",
+  "scripts": {
+    "apps": "pnpm --filter ./apps/**/client",
+    "packages": "pnpm --filter ./packages/*",
+    "modules": "pnpm --filter ./modules/**/frontend"
+  },
+  "keywords": [],
+  "author": "Jonathan Rebourt",
+  "license": "ISC",
+  "engines": {
+    "node": ">=18.20.4"
+  },
+  "devDependencies": {
+    "@eslint/js": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
+    "autoprefixer": "catalog:",
+    "eslint-plugin-react-hooks": "catalog:",
+    "eslint-plugin-react-refresh": "catalog:",
+    "globals": "catalog:",
+    "postcss": "catalog:",
+    "prettier": "catalog:",
+    "sass-embedded": "catalog:",
+    "typescript-eslint": "catalog:",
+    "vite": "catalog:"
+  },
+  "type": "module",
+  "packageManager": "pnpm@10.0.0-alpha.4"
+}

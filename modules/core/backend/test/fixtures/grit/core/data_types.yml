@@ -1,0 +1,8 @@
+integer:
+  name: integer
+  is_entity: false
+
+string:
+  name: string
+  is_entity: false
+
