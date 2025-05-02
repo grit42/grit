@@ -2,7 +2,7 @@
 
 ## What is grit?
 
-grit a scientific research data management platform. In the grit platform you can store, manage, and visualise data from all the pre-clinical drug discovery phases.
+grit is a scientific research data management platform. In the grit platform you can store, manage, and visualise data from all the pre-clinical drug discovery phases.
 
 ## Getting started
 
