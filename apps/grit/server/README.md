@@ -29,7 +29,7 @@ Create a personal access token as described [here](https://docs.github.com/en/au
 ## Local install
 
 ```sh
-bundle config --global https://github.com/grit42/grit-ce.git <your_github_token>
+bundle config --global https://github.com/grit42/grit.git <your_github_token>
 ```
 
 You can also use `--local` to limit the token to the current project
@@ -37,5 +37,5 @@ You can also use `--local` to limit the token to the current project
 ## Prod build
 
 ```sh
-GITHUB_TOKEN=<your_github_token> docker build --secret id=GITHUB_TOKEN -t grit42com/grit-ce:latest .
+GITHUB_TOKEN=<your_github_token> docker build --secret id=GITHUB_TOKEN -t grit42com/grit:latest .
 ```

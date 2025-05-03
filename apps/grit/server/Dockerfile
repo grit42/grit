@@ -30,7 +30,7 @@ RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y build-essential git libpq-dev pkg-config && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
-RUN --mount=type=secret,id=GITHUB_TOKEN bundle config set --local https://github.com/grit42/grit-ce.git `cat -e /run/secrets/GITHUB_TOKEN`
+RUN --mount=type=secret,id=GITHUB_TOKEN bundle config set --local https://github.com/grit42/grit.git `cat -e /run/secrets/GITHUB_TOKEN`
 
 # Install application gems
 COPY Gemfile Gemfile.lock ./

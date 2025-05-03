@@ -29,7 +29,7 @@ You can naturally use another editor if you prefer. But the rest of the guide be
 
 ## Documentation development setup
 
-Clone the [grit-ce repository](https://github.com/grit42/grit-ce) as described in the [Github documentation](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) and open the `grit.code-workspace` file in Visual Studio Code.
+Clone the [grit repository](https://github.com/grit42/grit) as described in the [Github documentation](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) and open the `grit.code-workspace` file in Visual Studio Code.
 
 ### Install the LTex extension for spell checking
 
@@ -129,7 +129,7 @@ git push -u origin docs/a-meaningful-branch-name
 git push
 ```
 
-Navigate to the [grit-ce repository](https://github.com/grit42/grit-ce), and open a pull request targetting the `main` branch with a description of your changes.
+Navigate to the [grit repository](https://github.com/grit42/grit), and open a pull request targetting the `main` branch with a description of your changes.
 
 ## Guidelines for images
 
@@ -159,7 +159,7 @@ The current process is as follows (IF you decided to install GIMP. Other tools t
 1. Open the freshly captured screenshot in GIMP
 2. Add the annotations as layers
     - Click File > Open as layers...
-    - Navigate to `grit-ce/grit-docs/resources/annotations`
+    - Navigate to `grit/grit-docs/resources/annotations`
     - Open all the number images
 3. Move the annotations to the appropriate locations on the screenshot
     - If all annotations are not used, hide the unused ones in the layer controls (likely on the right side of the interface)

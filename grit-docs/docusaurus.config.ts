@@ -84,7 +84,7 @@ const config: Config = {
         },
         // {to: '/blog', label: 'Blog', position: 'left'},
         {
-          href: "https://github.com/grit42/grit-ce",
+          href: "https://github.com/grit42/grit",
           label: "GitHub",
           position: "right",
         },
@@ -98,7 +98,7 @@ const config: Config = {
           items: [
             {
               label: "GitHub",
-              href: "https://github.com/grit42/grit-ce",
+              href: "https://github.com/grit42/grit",
             },
             {
               label: "LinkedIn",
@@ -115,7 +115,7 @@ const config: Config = {
         //     },
         //     {
         //       label: 'GitHub',
-        //       href: 'https://github.com/grit42/grit-ce',
+        //       href: 'https://github.com/grit42/grit',
         //     },
         //   ],
         // },
