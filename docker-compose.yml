@@ -23,6 +23,6 @@ services:
       - POSTGRES_PASSWORD=password
       - GRIT_DATABASE=grit
       - SECRET_KEY_BASE=secretkeybase
-    image: "grit42com/grit:0.1.0"
+    image: "grit42com/grit:0.1.1"
     platform: linux/amd64
     restart: unless-stopped

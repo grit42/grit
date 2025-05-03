@@ -10,8 +10,8 @@ catalogs:
       specifier: '9'
       version: 9.21.0
     '@tanstack/react-form':
-      specifier: '0.41'
-      version: 0.41.4
+      specifier: 0.42.1
+      version: 0.42.1
     '@tanstack/react-query':
       specifier: '5'
       version: 5.67.1
@@ -203,7 +203,7 @@ importers:
         version: link:../../../packages/frontend/table
       '@tanstack/react-form':
         specifier: 'catalog:'
-        version: 0.41.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.6.3)
+        version: 0.42.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.6.3)
       '@tanstack/react-table':
         specifier: 'catalog:'
         version: 8.21.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -328,7 +328,7 @@ importers:
         version: link:../../../packages/frontend/table
       '@tanstack/react-form':
         specifier: 'catalog:'
-        version: 0.41.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.6.3)
+        version: 0.42.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.6.3)
       '@tanstack/react-table':
         specifier: 'catalog:'
         version: 8.21.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -453,7 +453,7 @@ importers:
         version: link:../../../packages/frontend/table
       '@tanstack/react-form':
         specifier: 'catalog:'
-        version: 0.41.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.6.3)
+        version: 0.42.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.6.3)
       '@tanstack/react-table':
         specifier: 'catalog:'
         version: 8.21.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -591,7 +591,7 @@ importers:
         version: link:../api
       '@tanstack/react-form':
         specifier: 'catalog:'
-        version: 0.41.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.6.3)
+        version: 0.42.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.6.3)
       '@tanstack/react-table':
         specifier: 'catalog:'
         version: 8.21.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -682,7 +682,7 @@ importers:
         version: link:../client-library
       '@tanstack/react-form':
         specifier: 'catalog:'
-        version: 0.41.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.6.3)
+        version: 0.42.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.6.3)
     devDependencies:
       '@types/react':
         specifier: 'catalog:'
@@ -1798,8 +1798,8 @@ packages:
     peerDependencies:
       storybook: ^8.2.0 || ^8.3.0-0 || ^8.4.0-0 || ^8.5.0-0 || ^8.6.0-0
 
-  '@tanstack/form-core@0.41.4':
-    resolution: {integrity: sha512-XZJtN7mWJmi3apsc2J+GpWbcsXbv0pWBkZKP47ZW1QD/2Tj1UWsM6JjcaAkzIlrBdaoEFYmrHToLKr/Ddk8BVg==}
+  '@tanstack/form-core@0.42.1':
+    resolution: {integrity: sha512-jTU0jyHqFceujdtPNv3jPVej1dTqBwa8TYdIyWB5BCwRVUBZEp1PiYEBkC9r92xu5fMpBiKc+JKud3eeVjuMiA==}
 
   '@tanstack/query-core@5.67.1':
     resolution: {integrity: sha512-AkFmuukVejyqVIjEQoFhLb3q+xHl7JG8G9cANWTMe3s8iKzD9j1VBSYXgCjy6vm6xM8cUCR9zP2yqWxY9pTWOA==}
@@ -1807,8 +1807,8 @@ packages:
   '@tanstack/query-devtools@5.65.0':
     resolution: {integrity: sha512-g5y7zc07U9D3esMdqUfTEVu9kMHoIaVBsD0+M3LPdAdD710RpTcLiNvJY1JkYXqkq9+NV+CQoemVNpQPBXVsJg==}
 
-  '@tanstack/react-form@0.41.4':
-    resolution: {integrity: sha512-uIfIDZJNqR1dLW03TNByK/woyKd2jfXIrEBq6DPJbqupqyfYXTDo5TMd/7koTYLO4dgTM5wd+2v3uBX3M2bRaA==}
+  '@tanstack/react-form@0.42.1':
+    resolution: {integrity: sha512-F9Rft5Nj36cH9OPRGGS0LlxJVuNwyYghBIW3WHCYKVOOTNbyAvcbJpWC0DJ87B2vzzZ22BDNIepWOUZ2dsLELg==}
     peerDependencies:
       '@tanstack/start': ^1.43.13
       react: ^17.0.0 || ^18.0.0 || ^19.0.0
@@ -5415,7 +5415,7 @@ snapshots:
     dependencies:
       storybook: 8.6.4(prettier@3.5.3)
 
-  '@tanstack/form-core@0.41.4':
+  '@tanstack/form-core@0.42.1':
     dependencies:
       '@tanstack/store': 0.7.0
 
@@ -5423,10 +5423,10 @@ snapshots:
 
   '@tanstack/query-devtools@5.65.0': {}
 
-  '@tanstack/react-form@0.41.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.6.3)':
+  '@tanstack/react-form@0.42.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.6.3)':
     dependencies:
       '@remix-run/node': 2.16.0(typescript@5.6.3)
-      '@tanstack/form-core': 0.41.4
+      '@tanstack/form-core': 0.42.1
       '@tanstack/react-store': 0.7.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       decode-formdata: 0.8.0
       react: 18.3.1
