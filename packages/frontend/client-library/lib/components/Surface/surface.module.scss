@@ -1,9 +1,0 @@
-@use "../../scss/theme.scss";
-
-.surface {
-  background-color: theme.$palette-background-surface;
-  color: theme.$palette-background-contrast-text;
-  border-radius: theme.$border-radius;
-  padding: calc(theme.$spacing * 2);
-  width: max-content;
-}

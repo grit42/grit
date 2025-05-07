@@ -1,7 +1,0 @@
-**/pnpm-lock.yaml
-**/dist
-**/server
-**/backend
-**/node_modules
-**/postgres-data/
-**/postgres-data-prod/

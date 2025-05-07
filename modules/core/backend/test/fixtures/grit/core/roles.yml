@@ -1,9 +1,0 @@
-one:
-  id: 42
-  name: Administrator
-  description: Administrator
-
-another_role:
-  id: 43
-  name: AnotherRole
-  description: Another role

@@ -1,2 +1,0 @@
-grit-docs/**/*.png filter=lfs diff=lfs merge=lfs -text
-grit-docs/**/*.xcf filter=lfs diff=lfs merge=lfs -text

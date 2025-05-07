@@ -1,9 +1,0 @@
-compound_admin:
-  id: 111
-  name: CompoundAdministrator
-  description: Compound administrator
-
-compound_user:
-  id: 112
-  name: CompoundUser
-  description: Compound user

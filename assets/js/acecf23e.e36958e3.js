@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkgrit_docs=self.webpackChunkgrit_docs||[]).push([[1903],{1912:s=>{s.exports=JSON.parse('{"blogBasePath":"/grit/blog","blogTitle":"Blog","authorsListPath":"/grit/blog/authors"}')}}]);
