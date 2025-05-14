@@ -3,7 +3,7 @@ import {
   ErrorPage,
   Spinner,
   Surface,
-} from "@grit/client-library/components";
+} from "@grit42/client-library/components";
 import {
   Link,
   useNavigate,
@@ -18,15 +18,15 @@ import {
   genericErrorHandler,
   getVisibleFieldData,
   useForm,
-} from "@grit/form";
-import { useQueryClient } from "@grit/api";
+} from "@grit42/form";
+import { useQueryClient } from "@grit42/api";
 import {
   useCreateEntityMutation,
   useEditEntityMutation,
   useDestroyEntityMutation,
   EntityFormFieldDef,
   useHasRoles,
-} from "@grit/core";
+} from "@grit42/core";
 import { useMemo, useState } from "react";
 import styles from "../../experiments.module.scss";
 import {
@@ -35,10 +35,9 @@ import {
   useExperimentFields,
 } from "../../../../queries/experiments";
 import { useAssay, useAssayFields } from "../../../../queries/assays";
-import { classnames } from "@grit/client-library/utils";
+import { classnames } from "@grit42/client-library/utils";
 
-const ORGANIZED_FIELDS = ["assay_id", "name", "description"] as const;
-type OrganizedFields = (typeof ORGANIZED_FIELDS)[number];
+type OrganizedFields = ["assay_id", "name", "description"][number];
 
 type ExperimentFormFields = {
   [key in OrganizedFields]?: FormFieldDef;
@@ -224,9 +223,9 @@ const ExperimentForm = ({
   } = useMemo(() => {
     return fields.reduce(
       (acc, f) => {
+        const entityField = f as EntityFormFieldDef;
         switch (f.name) {
           case "assay_id":
-            const entityField = f as EntityFormFieldDef;
             acc.assay_id = {
               ...entityField,
               hidden: !!experiment.id,
@@ -245,7 +244,7 @@ const ExperimentForm = ({
       },
       { rest: [] } as ExperimentFormFields,
     );
-  }, [fields, experiment]);
+  }, [fields, experiment.id, canCrudExperiment]);
 
   if (!assay_id_field || !name_field || !description_field) {
     return (

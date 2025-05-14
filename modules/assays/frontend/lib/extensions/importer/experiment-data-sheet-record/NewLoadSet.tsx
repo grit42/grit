@@ -1,19 +1,19 @@
 /**
  * Copyright 2025 grit42 A/S. <https://grit42.com/>
  *
- * This file is part of @grit/assays.
+ * This file is part of @grit42/assays.
  *
- * @grit/assays is free software: you can redistribute it and/or modify it
+ * @grit42/assays is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
  * Software Foundation, either version 3 of the License, or  any later version.
  *
- * @grit/assays is distributed in the hope that it will be useful, but
+ * @grit42/assays is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
  * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
  * more details.
  *
  * You should have received a copy of the GNU General Public License along with
- * @grit/assays. If not, see <https://www.gnu.org/licenses/>.
+ * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
  */
 
 import {
@@ -23,16 +23,17 @@ import {
   InputError,
   Spinner,
   Surface,
-} from "@grit/client-library/components";
-import { useForm, useStore } from "@tanstack/react-form";
+} from "@grit42/client-library/components";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   FormField,
   Form,
+  useForm,
+  useStore,
   genericErrorHandler,
   AddFormControl,
-} from "@grit/form";
-import { useCreateLoadSetMutation, useLoadSetFields } from "@grit/core";
+} from "@grit42/form";
+import { useCreateLoadSetMutation, useLoadSetFields } from "@grit42/core";
 
 interface NewLoadSetData {
   origin_id: number | null;
@@ -136,7 +137,7 @@ const NewLoadSet = ({ entity }: { entity: string }) => {
             name="text_data"
             listeners={{
               onChange: ({ fieldApi }) => {
-                fieldApi.form.validateField("data", "submit")
+                fieldApi.form.validateField("data", "submit");
               },
             }}
             children={(field) => {

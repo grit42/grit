@@ -1,5 +1,5 @@
-import { URLParams, UseQueryOptions } from "@grit/api";
-import { EntityData, useEntityData } from "@grit/core";
+import { URLParams, UseQueryOptions } from "@grit42/api";
+import { EntityData, useEntityData } from "@grit42/core";
 import { useMemo } from "react";
 
 export interface ExperimentDataSheetData extends EntityData {

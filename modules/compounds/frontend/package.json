@@ -1,53 +1,73 @@
 {
-  "name": "@grit/compounds",
+  "name": "@grit42/compounds",
   "author": "Jonathan Rebourt, grit42 <jonny@grit42.com>",
   "license": "GPL-3.0-or-later",
-  "private": true,
-  "version": "0.1.0",
+  "version": "0.3.0",
   "type": "module",
   "exports": {
     ".": {
-      "import": "./lib/index.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
     }
   },
   "files": [
-    "lib"
+    "dist",
+    "COPYING"
   ],
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "repository": "https://github.com/grit42/grit.git",
   "scripts": {
     "dev": "vite test/dummy --port 3001",
     "tsc": "tsc -b",
-    "lint": "eslint .",
-    "format": "prettier . -w"
+    "build": "tsc -b ./tsconfig.lib.json && vite build",
+    "build:watch": "vite build --watch --emptyOutDir=false",
+    "lint": "eslint . --fix",
+    "lint:check": "eslint .",
+    "format": "prettier . -w",
+    "format:check": "prettier . -c"
+  },
+  "dependencies": {
+    "@grit42/api": "workspace:*",
+    "@grit42/client-library": "workspace:*",
+    "@grit42/core": "workspace:*",
+    "@grit42/form": "workspace:*",
+    "@grit42/notifications": "workspace:*",
+    "@grit42/table": "workspace:*",
+    "openchemlib": "8.18.1",
+    "react-ocl": "7.0.2",
+    "usehooks-ts": "3"
   },
   "peerDependencies": {
-    "@grit/client-library": "workspace:*",
-    "@grit/core": "workspace:*",
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-router-dom": "catalog:"
   },
   "devDependencies": {
-    "@grit/client-library": "workspace:*",
-    "@grit/core": "workspace:*",
+    "@eslint/js": "catalog:",
+    "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
+    "path": "^0.12.7",
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-router-dom": "catalog:",
+    "autoprefixer": "catalog:",
+    "eslint": "catalog:",
+    "eslint-plugin-react-hooks": "catalog:",
+    "eslint-plugin-react-refresh": "catalog:",
+    "glob": "catalog:",
+    "globals": "catalog:",
     "typescript": "catalog:",
     "typescript-eslint": "catalog:",
-    "vite": "catalog:"
-  },
-  "dependencies": {
-    "@grit/api": "workspace:*",
-    "@grit/form": "workspace:*",
-    "@grit/notifications": "workspace:^",
-    "@grit/table": "workspace:*",
-    "@tanstack/react-form": "catalog:",
-    "@tanstack/react-table": "catalog:",
-    "@tanstack/table-core": "catalog:",
-    "openchemlib": "8.18.1",
-    "react-ocl": "7.0.2",
-    "usehooks-ts": "3"
+    "vite": "catalog:",
+    "vite-plugin-dts": "catalog:",
+    "vite-plugin-externalize-deps": "catalog:",
+    "vite-plugin-lib-inject-css": "catalog:"
   }
 }

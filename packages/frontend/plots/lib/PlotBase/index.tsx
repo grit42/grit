@@ -1,4 +1,4 @@
-import { Spinner } from "@grit/client-library/components";
+import { Spinner } from "@grit42/client-library/components";
 import { lazy, Suspense } from "react";
 import { PlotParams } from "react-plotly.js";
 

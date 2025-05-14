@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Navigate, Outlet, Route, Routes, useMatch, useNavigate, useParams } from "react-router-dom";
 import { useAssay, useAssayExperiments } from "../../../queries/assays";
 import { AssayDataSheetDefinitionData, useAssayDataSheetDefinitions } from "../../../queries/assay_data_sheet_definitions";
-import { Spinner, ErrorPage, Tabs } from "@grit/client-library/components";
+import { Spinner, ErrorPage, Tabs } from "@grit42/client-library/components";
 import { useExperimentColumns } from "../../../queries/experiments";
 import AssayExperiments from "./Experiments";
 import AssayDataSheet from "./data-sheet";

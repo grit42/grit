@@ -1,19 +1,19 @@
 /**
  * Copyright 2025 grit42 A/S. <https://grit42.com/>
  *
- * This file is part of @grit/core.
+ * This file is part of @grit42/core.
  *
- * @grit/core is free software: you can redistribute it and/or modify it
+ * @grit42/core is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
  * Software Foundation, either version 3 of the License, or  any later version.
  *
- * @grit/core is distributed in the hope that it will be useful, but
+ * @grit42/core is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
  * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
  * more details.
  *
  * You should have received a copy of the GNU General Public License along with
- * @grit/core. If not, see <https://www.gnu.org/licenses/>.
+ * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
 import styles from "./toolbar.module.scss";
@@ -22,11 +22,11 @@ import ToolbarIcons from "./ToolbarIcons";
 import ToolbarIcon from "./ToolbarIcon";
 import ToolbarBlockGroup from "./ToolbarBlockGroup";
 import { useContext, useEffect, useState } from "react";
-import { useLocalStorage } from "@grit/client-library/hooks";
-import { classnames } from "@grit/client-library/utils";
-import DesktopExport from "@grit/client-library/icons/DesktopExport";
-import DesktopImport from "@grit/client-library/icons/DesktopImport";
-import IconArrowDown from "@grit/client-library/icons/IconArrowDown";
+import { useLocalStorage } from "@grit42/client-library/hooks";
+import { classnames } from "@grit42/client-library/utils";
+import DesktopExport from "@grit42/client-library/icons/DesktopExport";
+import DesktopImport from "@grit42/client-library/icons/DesktopImport";
+import IconArrowDown from "@grit42/client-library/icons/IconArrowDown";
 import { ToolbarActions } from "./types";
 import ToolbarContext from "./ToolbarContext";
 

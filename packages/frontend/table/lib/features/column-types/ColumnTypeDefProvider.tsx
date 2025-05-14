@@ -1,19 +1,19 @@
 /**
  * Copyright 2025 grit42 A/S. <https://grit42.com/>
  *
- * This file is part of @grit/table.
+ * This file is part of @grit42/table.
  *
- * @grit/table is free software: you can redistribute it and/or modify it
+ * @grit42/table is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
  * Software Foundation, either version 3 of the License, or  any later version.
  *
- * @grit/table is distributed in the hope that it will be useful, but
+ * @grit42/table is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
  * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
  * more details.
  *
  * You should have received a copy of the GNU General Public License along with
- * @grit/table. If not, see <https://www.gnu.org/licenses/>.
+ * @grit42/table. If not, see <https://www.gnu.org/licenses/>.
  */
 
 import {
@@ -29,7 +29,7 @@ import {
   GritTypedColumnDef,
 } from "../../types";
 import GenericFilterInput from "../filters/GenericFilterInput";
-import { generateUniqueID } from "@grit/client-library/utils";
+import { generateUniqueID } from "@grit42/client-library/utils";
 import { ColumnTypeDef, ColumnTypeDefs } from "./types";
 import { Filter, FilterOperator } from "../filters";
 

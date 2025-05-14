@@ -1,70 +1,87 @@
 {
-  "name": "@grit/core",
+  "name": "@grit42/core",
   "author": "Jonathan Rebourt, grit42 <jonny@grit42.com>",
   "license": "GPL-3.0-or-later",
-  "private": true,
-  "version": "0.1.0",
+  "version": "0.3.0",
   "type": "module",
-  "module": "./lib/index.tsx",
   "exports": {
     ".": {
-      "import": "./lib/index.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
     },
     "./utils": {
-      "import": "./lib/utils/index.ts"
-    },
-    "./Form": {
-      "import": "./lib/Form/index.ts"
+      "types": "./dist/utils/index.d.ts",
+      "import": "./dist/utils/index.js"
     },
     "./Header": {
-      "import": "./lib/components/Header/index.tsx"
-    },
-    "./Table": {
-      "import": "./lib/Table/index.ts"
+      "types": "./dist/components/Header/index.d.ts",
+      "import": "./dist/components/Header/index.js"
     },
     "./Toolbar": {
-      "import": "./lib/Toolbar/index.ts"
+      "types": "./dist/Toolbar/index.d.ts",
+      "import": "./dist/Toolbar/index.js"
     }
   },
   "files": [
-    "lib"
+    "dist",
+    "COPYING"
   ],
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "repository": "https://github.com/grit42/grit.git",
   "scripts": {
     "dev": "vite test/dummy --port 3001",
     "tsc": "tsc -b",
-    "lint": "eslint .",
-    "format": "prettier . -w"
-  },
-  "devDependencies": {
-    "@grit/client-library": "workspace:*",
-    "@playwright/test": "^1.50.0",
-    "@types/node": "catalog:",
-    "@types/react": "catalog:",
-    "@types/react-dom": "catalog:",
-    "path": "^0.12.7",
-    "react": "catalog:",
-    "react-dom": "catalog:",
-    "react-router-dom": "catalog:",
-    "typescript": "catalog:",
-    "typescript-eslint": "catalog:",
-    "vite": "catalog:"
-  },
-  "peerDependencies": {
-    "@grit/client-library": "workspace:*",
-    "react": "catalog:",
-    "react-dom": "catalog:",
-    "react-router-dom": "catalog:"
+    "build": "tsc -b ./tsconfig.lib.json && vite build",
+    "build:watch": "vite build --watch --emptyOutDir=false",
+    "lint": "eslint . --fix",
+    "lint:check": "eslint .",
+    "format": "prettier . -w",
+    "format:check": "prettier . -c"
   },
   "dependencies": {
-    "@grit/api": "workspace:*",
-    "@grit/form": "workspace:*",
-    "@grit/notifications": "workspace:*",
-    "@grit/table": "workspace:*",
+    "@grit42/api": "workspace:*",
+    "@grit42/client-library": "workspace:*",
+    "@grit42/form": "workspace:*",
+    "@grit42/notifications": "workspace:*",
+    "@grit42/table": "workspace:*",
     "@tanstack/react-form": "catalog:",
     "@tanstack/react-table": "catalog:",
     "@tanstack/table-core": "catalog:",
     "axios": "catalog:",
-    "dayjs": "^1.11.13",
-    "ts-debounce": "^4.0.0"
+    "dayjs": "^1.11.13"
+  },
+  "peerDependencies": {
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "react-router-dom": "catalog:"
+  },
+  "devDependencies": {
+    "@eslint/js": "catalog:",
+    "@playwright/test": "^1.50.0",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
+    "path": "^0.12.7",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "react-router-dom": "catalog:",
+    "autoprefixer": "catalog:",
+    "eslint": "catalog:",
+    "eslint-plugin-react-hooks": "catalog:",
+    "eslint-plugin-react-refresh": "catalog:",
+    "glob": "catalog:",
+    "globals": "catalog:",
+    "typescript": "catalog:",
+    "typescript-eslint": "catalog:",
+    "vite": "catalog:",
+    "vite-plugin-dts": "catalog:",
+    "vite-plugin-externalize-deps": "catalog:",
+    "vite-plugin-lib-inject-css": "catalog:"
   }
 }

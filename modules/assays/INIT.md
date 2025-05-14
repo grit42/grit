@@ -99,12 +99,6 @@ Optionally, add the core modules fixtures and `login` util to the test helper
      # ...
      config.api_only = true
 +
-+    config.active_record.schema_format = :sql
-+
-+    config.session_store :cookie_store, key: "_grit_session" # or whatever
-+    config.middleware.use ActionDispatch::Cookies
-+    config.middleware.use config.session_store, config.session_options
-+
 +   config.action_mailer.delivery_method = :smtp
 +   config.action_mailer.smtp_settings = {
 +     address: ENV.fetch("SMTP_SERVER", nil),

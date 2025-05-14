@@ -1,10 +1,10 @@
-import { Button, ErrorPage, Spinner } from "@grit/client-library/components";
+import { Button, ErrorPage, Spinner } from "@grit42/client-library/components";
 import {
   EntityPropertyDef,
   EntityData,
   useCreateEntityMutation,
   useDestroyEntityMutation,
-} from "@grit/core";
+} from "@grit42/core";
 import { useCallback, useMemo } from "react";
 import {
   AssayMetadataDefinitionData,
@@ -12,10 +12,10 @@ import {
   useAssayMetadataDefinitions,
   useAssayMetadataDefinitionsByAssayModel,
 } from "../../../../../../../queries/assay_metadata_definitions";
-import { Row, Table, useSetupTableState } from "@grit/table";
-import { useTableColumns } from "@grit/core/utils";
+import { Row, Table, useSetupTableState } from "@grit42/table";
+import { useTableColumns } from "@grit42/core/utils";
 import { Link, Route, Routes, useParams } from "react-router-dom";
-import { queryClient } from "@grit/api";
+import { queryClient } from "@grit42/api";
 
 const getRowId = (data: EntityData) => data.id.toString();
 

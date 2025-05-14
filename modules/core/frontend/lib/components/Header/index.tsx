@@ -1,33 +1,33 @@
 /**
  * Copyright 2025 grit42 A/S. <https://grit42.com/>
  *
- * This file is part of @grit/core.
+ * This file is part of @grit42/core.
  *
- * @grit/core is free software: you can redistribute it and/or modify it
+ * @grit42/core is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
  * Software Foundation, either version 3 of the License, or  any later version.
  *
- * @grit/core is distributed in the hope that it will be useful, but
+ * @grit42/core is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
  * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
  * more details.
  *
  * You should have received a copy of the GNU General Public License along with
- * @grit/core. If not, see <https://www.gnu.org/licenses/>.
+ * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
 import styles from "./header.module.scss";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
-import { classnames } from "@grit/client-library/utils";
+import { classnames } from "@grit42/client-library/utils";
 import { useUpdateUserSettingsMutation } from "../../features/user-account-settings/mutations";
 import { hasRoles } from "../../features/session/utils";
-import { Dropdown } from "@grit/client-library/components";
+import { Dropdown } from "@grit42/client-library/components";
 import { useLogoutMutation, useSession } from "../../features/session";
 import { UserSettings } from "../../features/user-account-settings";
 import Logo from "../../assets/grit42-logo.svg";
-import { notifyOnError } from "@grit/api";
-import NewTabIcon from "@grit/client-library/icons/NewTab";
+import { notifyOnError } from "@grit42/api";
+import NewTabIcon from "@grit42/client-library/icons/NewTab";
 
 const isActivePath = (location: string, path: string) => {
   return (

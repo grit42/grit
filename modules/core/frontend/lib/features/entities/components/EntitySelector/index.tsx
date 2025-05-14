@@ -1,19 +1,19 @@
 /**
  * Copyright 2025 grit42 A/S. <https://grit42.com/>
  *
- * This file is part of @grit/core.
+ * This file is part of @grit42/core.
  *
- * @grit/core is free software: you can redistribute it and/or modify it
+ * @grit42/core is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
  * Software Foundation, either version 3 of the License, or  any later version.
  *
- * @grit/core is distributed in the hope that it will be useful, but
+ * @grit42/core is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
  * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
  * more details.
  *
  * You should have received a copy of the GNU General Public License along with
- * @grit/core. If not, see <https://www.gnu.org/licenses/>.
+ * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
 import {
@@ -21,7 +21,7 @@ import {
   useEntityData,
   useInfiniteEntityData,
 } from "../..";
-import { classnames } from "@grit/client-library/utils";
+import { classnames } from "@grit42/client-library/utils";
 import {
   forwardRef,
   SetStateAction,
@@ -30,8 +30,8 @@ import {
   useState,
 } from "react";
 import styles from "./entitySelector.module.scss";
-import Circle1Close from "@grit/client-library/icons/Circle1Close";
-import IconArrowDown from "@grit/client-library/icons/IconArrowDown";
+import Circle1Close from "@grit42/client-library/icons/Circle1Close";
+import IconArrowDown from "@grit42/client-library/icons/IconArrowDown";
 import { Row, RowSelectionState } from "@tanstack/table-core";
 import { EntityPropertyDef, EntityData, ForeignEntityPropertyDef } from "../../types";
 import {
@@ -41,11 +41,11 @@ import {
   InputError,
   InputLabel,
   Spinner,
-} from "@grit/client-library/components";
+} from "@grit42/client-library/components";
 import {
   Table,
   useSetupTableState,
-} from "@grit/table";
+} from "@grit42/table";
 import { useTableColumns } from "../../../../utils";
 
 interface Props {

@@ -13,19 +13,10 @@
   "engines": {
     "node": ">=18.20.4"
   },
-  "devDependencies": {
-    "@eslint/js": "catalog:",
-    "@vitejs/plugin-react": "catalog:",
-    "autoprefixer": "catalog:",
-    "eslint-plugin-react-hooks": "catalog:",
-    "eslint-plugin-react-refresh": "catalog:",
-    "globals": "catalog:",
-    "postcss": "catalog:",
-    "prettier": "catalog:",
-    "sass-embedded": "catalog:",
-    "typescript-eslint": "catalog:",
-    "vite": "catalog:"
-  },
   "type": "module",
-  "packageManager": "pnpm@10.0.0-alpha.4"
+  "packageManager": "pnpm@10.0.0-alpha.4",
+  "devDependencies": {
+    "@nx/js": "^21.0.3",
+    "nx": "21.0.3"
+  }
 }

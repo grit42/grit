@@ -1,0 +1,33 @@
+{
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "targetDefaults": {
+    "dev": {
+      "dependsOn": ["^dev"]
+    },
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": ["{projectRoot}/src/**/*", "{projectRoot}/lib/**/*"],
+      "outputs": ["{projectRoot}/dist"],
+      "cache": true
+    },
+    "tsc": {
+      "dependsOn": ["^tsc"],
+      "cache": true
+    },
+    "build:watch": {
+      "dependsOn": ["^build:watch"]
+    },
+    "lint": {
+      "cache": true
+    },
+    "format:check": {
+      "cache": true
+    },
+    "format": {
+      "cache": true
+    },
+    "lint:check": {
+      "cache": true
+    }
+  }
+}

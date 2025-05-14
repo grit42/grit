@@ -1,7 +1,7 @@
 import { Datum, Layout, ScatterData } from "plotly.js";
 import { useMemo } from "react";
 import { nullish } from "../utils";
-import { useTheme } from "@grit/client-library/hooks";
+import { useTheme } from "@grit42/client-library/hooks";
 import { ScatterPlotDefinition, SourceData } from "../types";
 import PlotBase from "../PlotBase";
 

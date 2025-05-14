@@ -1,29 +1,29 @@
 /**
  * Copyright 2025 grit42 A/S. <https://grit42.com/>
  *
- * This file is part of @grit/table.
+ * This file is part of @grit42/table.
  *
- * @grit/table is free software: you can redistribute it and/or modify it
+ * @grit42/table is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
  * Software Foundation, either version 3 of the License, or  any later version.
  *
- * @grit/table is distributed in the hope that it will be useful, but
+ * @grit42/table is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
  * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
  * more details.
  *
  * You should have received a copy of the GNU General Public License along with
- * @grit/table. If not, see <https://www.gnu.org/licenses/>.
+ * @grit42/table. If not, see <https://www.gnu.org/licenses/>.
  */
 
 import styles from "./columnVisibility.module.scss";
 import { ColumnOrderState } from "../../index";
 import { useCallback, useMemo, useState } from "react";
-import { classnames } from "@grit/client-library/utils";
+import { classnames } from "@grit42/client-library/utils";
 import useInternalTableState from "../table-state/useInternalTableState";
-import PreviewIcon from "@grit/client-library/icons/Preview";
-import NoPreviewIcon from "@grit/client-library/icons/NoPreview";
-import { Button, Input, Popover } from "@grit/client-library/components";
+import PreviewIcon from "@grit42/client-library/icons/Preview";
+import NoPreviewIcon from "@grit42/client-library/icons/NoPreview";
+import { Button, Input, Popover } from "@grit42/client-library/components";
 import { GritColumnDef, GritGroupColumnDef } from "../../types";
 import { getLeafColumnsWithGroupLabels } from "../../utils";
 

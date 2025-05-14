@@ -1,19 +1,19 @@
 /**
  * Copyright 2025 grit42 A/S. <https://grit42.com/>
  *
- * This file is part of @grit/compounds.
+ * This file is part of @grit42/compounds.
  *
- * @grit/compounds is free software: you can redistribute it and/or modify it
+ * @grit42/compounds is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
  * Software Foundation, either version 3 of the License, or  any later version.
  *
- * @grit/compounds is distributed in the hope that it will be useful, but
+ * @grit42/compounds is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
  * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
  * more details.
  *
  * You should have received a copy of the GNU General Public License along with
- * @grit/compounds. If not, see <https://www.gnu.org/licenses/>.
+ * @grit42/compounds. If not, see <https://www.gnu.org/licenses/>.
  */
 
 import { useCallback, useEffect, useMemo } from "react";
@@ -23,7 +23,7 @@ import {
   Table,
   useColumnTypeDefs,
   useSetupTableState,
-} from "@grit/table";
+} from "@grit42/table";
 import {
   CompoundData,
   CompoundPropertyDef,
@@ -33,20 +33,20 @@ import {
 } from "../../queries/compounds";
 import { useNavigate } from "react-router-dom";
 import styles from "./compounds.module.scss";
-import { classnames, downloadFile } from "@grit/client-library/utils";
-import { useLocalStorage } from "@grit/client-library/hooks";
+import { classnames, downloadFile } from "@grit42/client-library/utils";
+import { useLocalStorage } from "@grit42/client-library/hooks";
 import CompoundTypesSelector from "../../components/CompoundTypesSelector";
-import { useEntityData, useDestroyEntityMutation } from "@grit/core";
+import { useEntityData, useDestroyEntityMutation } from "@grit42/core";
 import {
   getFilterParams,
   getSortParams,
   getURLParams,
   useQueryClient,
-} from "@grit/api";
-import { useToolbar } from "@grit/core/Toolbar";
-import MoleculePlusIcon from "@grit/client-library/icons/MoleculePlus";
-import { getTableColumns } from "@grit/core/utils";
-import { ErrorPage, Spinner } from "@grit/client-library/components";
+} from "@grit42/api";
+import { useToolbar } from "@grit42/core/Toolbar";
+import MoleculePlusIcon from "@grit42/client-library/icons/MoleculePlus";
+import { getTableColumns } from "@grit42/core/utils";
+import { ErrorPage, Spinner } from "@grit42/client-library/components";
 
 const useTableColumns = <T,>(columns: GritColumnDef<T>[]) => {
   const columnTypeDefs = useColumnTypeDefs();

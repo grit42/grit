@@ -1,36 +1,36 @@
 /**
  * Copyright 2025 grit42 A/S. <https://grit42.com/>
  *
- * This file is part of @grit/assays.
+ * This file is part of @grit42/assays.
  *
- * @grit/assays is free software: you can redistribute it and/or modify it
+ * @grit42/assays is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
  * Software Foundation, either version 3 of the License, or  any later version.
  *
- * @grit/assays is distributed in the hope that it will be useful, but
+ * @grit42/assays is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
  * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
  * more details.
  *
  * You should have received a copy of the GNU General Public License along with
- * @grit/assays. If not, see <https://www.gnu.org/licenses/>.
+ * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
  */
 
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { Button, ErrorPage, Spinner, Surface } from "@grit/client-library/components";
+import { Button, ErrorPage, Spinner, Surface } from "@grit42/client-library/components";
 import styles from "./assayTypes.module.scss";
 import {
   AssayTypeData,
   useAssayType,
   useAssayTypeFields,
 } from "../../../../../queries/assay_types";
-import { useQueryClient } from "@grit/api";
+import { useQueryClient } from "@grit42/api";
 import {
   useCreateEntityMutation,
   useDestroyEntityMutation,
   useEditEntityMutation,
-} from "@grit/core";
+} from "@grit42/core";
 import {
   Form,
   FormControls,
@@ -39,7 +39,7 @@ import {
   genericErrorHandler,
   getVisibleFieldData,
   useForm,
-} from "@grit/form";
+} from "@grit42/form";
 
 const AssayTypeForm = ({
   fields,
