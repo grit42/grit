@@ -1,36 +1,25 @@
-GIT
-  remote: https://github.com/binarylogic/authlogic.git
-  revision: d155fff4672595af99cb3488d9731f1efc595049
-  branch: master
-  specs:
-    authlogic (6.4.3)
-      activemodel (>= 5.2, < 8.1)
-      activerecord (>= 5.2, < 8.1)
-      activesupport (>= 5.2, < 8.1)
-      request_store (~> 1.0)
-
 PATH
   remote: ../../../modules/assays/backend
   specs:
-    grit-assays (0.1.0)
-      grit-core (= 0.1.0)
-      rails (>= 7.2.2.1)
-      rubyzip (>= 2.3.2)
+    grit-assays (0.1.1)
+      grit-core (~> 0.1, >= 0.1.0)
+      rails (~> 7.2, >= 7.2.2)
+      rubyzip (~> 2.3, >= 2.3.2)
 
 PATH
   remote: ../../../modules/compounds/backend
   specs:
-    grit-compounds (0.1.0)
-      grit-core (= 0.1.0)
-      rails (>= 7.2.2.1)
+    grit-compounds (0.1.1)
+      grit-core (~> 0.1, >= 0.1.0)
+      rails (~> 7.2, >= 7.2.2)
 
 PATH
   remote: ../../../modules/core/backend
   specs:
-    grit-core (0.1.0)
-      authlogic
-      rails (>= 7.2.2)
-      scrypt
+    grit-core (0.1.1)
+      authlogic (~> 6.5, >= 6.5.0)
+      rails (~> 7.2, >= 7.2.2)
+      scrypt (~> 3.0, >= 3.0.8)
 
 GEM
   remote: https://rubygems.org/
@@ -109,6 +98,11 @@ GEM
     addressable (2.8.7)
       public_suffix (>= 2.0.2, < 7.0)
     ast (2.4.2)
+    authlogic (6.5.0)
+      activemodel (>= 5.2, < 8.1)
+      activerecord (>= 5.2, < 8.1)
+      activesupport (>= 5.2, < 8.1)
+      request_store (~> 1.0)
     base64 (0.2.0)
     benchmark (0.4.0)
     bigdecimal (3.1.9)
@@ -137,7 +131,7 @@ GEM
     drb (2.2.1)
     error_highlight (0.7.0)
     erubi (1.13.1)
-    ffi (1.17.1-x86_64-linux-gnu)
+    ffi (1.17.2-x86_64-linux-gnu)
     ffi-compiler (1.3.2)
       ffi (>= 1.15.5)
       rake
@@ -309,7 +303,6 @@ PLATFORMS
   x86_64-linux
 
 DEPENDENCIES
-  authlogic!
   bootsnap
   brakeman
   capybara

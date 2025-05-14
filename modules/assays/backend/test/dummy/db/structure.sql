@@ -224,20 +224,6 @@ CREATE TABLE public.audit_trail_generic (
 
 
 --
--- Name: experiment_data_sheet_records__blah; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.experiment_data_sheet_records__blah (
-    id bigint NOT NULL,
-    created_by character varying(30) NOT NULL,
-    created_at timestamp(6) without time zone NOT NULL,
-    updated_by character varying(30),
-    updated_at timestamp(6) without time zone,
-    experiment_data_sheet_id bigint NOT NULL
-);
-
-
---
 -- Name: grit_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -356,7 +342,7 @@ CREATE TABLE public.grit_assays_assay_models (
     name character varying NOT NULL,
     description text,
     assay_type_id bigint NOT NULL,
-    publication_status_id bigint DEFAULT 65511 NOT NULL
+    publication_status_id bigint DEFAULT 10000 NOT NULL
 );
 
 
@@ -388,7 +374,7 @@ CREATE TABLE public.grit_assays_assays (
     name character varying NOT NULL,
     description text,
     assay_model_id bigint NOT NULL,
-    publication_status_id bigint DEFAULT 65511 NOT NULL
+    publication_status_id bigint DEFAULT 10000 NOT NULL
 );
 
 
@@ -476,7 +462,7 @@ CREATE TABLE public.grit_assays_experiments (
     description text,
     plots json DEFAULT '{}'::json,
     assay_id bigint NOT NULL,
-    publication_status_id bigint DEFAULT 65511 NOT NULL
+    publication_status_id bigint DEFAULT 10000 NOT NULL
 );
 
 
@@ -799,14 +785,6 @@ ALTER TABLE ONLY public.audit_trail_generic
 
 
 --
--- Name: experiment_data_sheet_records__blah experiment_data_sheet_records__blah_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.experiment_data_sheet_records__blah
-    ADD CONSTRAINT experiment_data_sheet_records__blah_pkey PRIMARY KEY (id);
-
-
---
 -- Name: grit_assays_assay_data_sheet_columns grit_assays_assay_data_sheet_columns_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1044,13 +1022,6 @@ ALTER TABLE ONLY public.grit_core_users
 
 ALTER TABLE ONLY public.schema_migrations
     ADD CONSTRAINT schema_migrations_pkey PRIMARY KEY (version);
-
-
---
--- Name: experiment_data_sheet_records__bla_experiment_data_sheet_id_idx; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX experiment_data_sheet_records__bla_experiment_data_sheet_id_idx ON public.experiment_data_sheet_records__blah USING btree (experiment_data_sheet_id);
 
 
 --

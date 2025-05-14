@@ -1,8 +1,8 @@
 # Grit::Core
-Short description and motivation.
+The core module
 
 ## Usage
-How to use my plugin.
+WIP
 
 ## Installation
 Add this line to your application's Gemfile:
@@ -22,7 +22,7 @@ $ gem install grit-core
 ```
 
 ## Contributing
-Contribution directions go here.
+See the contribution guideline on [GitHub](https://github.com/grit42/grit/blob/main/CONTRIBUTING.md)
 
 ## License
-The gem is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
+grit-core is released under the [GNU General Public License version 3](https://opensource.org/license/gpl-3-0).

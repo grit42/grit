@@ -30,11 +30,6 @@ module Grit
 
     config.api_only = true
 
-    config.active_record.schema_format = :sql  # Rails cannot dump DB to schema.db because of use of special column type (for instance RDKit mol type). Creates structure.sql instead
-    config.session_store :cookie_store, key: "_grit_session"
-    config.middleware.use ActionDispatch::Cookies
-    config.middleware.use config.session_store, config.session_options
-
     config.action_mailer.delivery_method = :smtp
     config.action_mailer.smtp_settings = {
       address: ENV.fetch("SMTP_SERVER", nil),

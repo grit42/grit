@@ -1014,6 +1014,7 @@ ALTER TABLE ONLY public.test_entities
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20250411144141'),
 ('20250411045043'),
 ('20250408050849'),
 ('20250326121851'),
