@@ -1,19 +1,19 @@
 /**
  * Copyright 2025 grit42 A/S. <https://grit42.com/>
  *
- * This file is part of @grit/core.
+ * This file is part of @grit42/core.
  *
- * @grit/core is free software: you can redistribute it and/or modify it
+ * @grit42/core is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
  * Software Foundation, either version 3 of the License, or  any later version.
  *
- * @grit/core is distributed in the hope that it will be useful, but
+ * @grit42/core is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
  * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
  * more details.
  *
  * You should have received a copy of the GNU General Public License along with
- * @grit/core. If not, see <https://www.gnu.org/licenses/>.
+ * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -32,16 +32,16 @@ import {
   getSortParams,
   getURLParams,
   useQueryClient,
-} from "@grit/api";
-import Circle1New from "@grit/client-library/icons/Circle1New";
+} from "@grit42/api";
+import Circle1New from "@grit42/client-library/icons/Circle1New";
 import { Row } from "@tanstack/table-core";
-import { GritColumnDef, Table, useSetupTableState } from "@grit/table";
+import { GritColumnDef, Table, useSetupTableState } from "@grit42/table";
 import { EntityData, EntityInfo } from "../../types";
-import { ErrorPage, Spinner, Tabs } from "@grit/client-library/components";
+import { ErrorPage, Spinner, Tabs } from "@grit42/client-library/components";
 import styles from "../entities.module.scss";
 import { useToolbar } from "../../../../Toolbar";
 import { useTableColumns } from "../../../../utils";
-import { downloadFile } from "@grit/client-library/utils";
+import { downloadFile } from "@grit42/client-library/utils";
 
 const getExportFileUrl = (
   path: string,

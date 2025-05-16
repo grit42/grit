@@ -1,7 +1,7 @@
-import { Button, ErrorPage, Spinner } from "@grit/client-library/components";
-import { Table, useSetupTableState } from "@grit/table";
-import { useTableColumns } from "@grit/core/utils";
-import { EntityData, useHasRoles } from "@grit/core";
+import { Button, ErrorPage, Spinner } from "@grit42/client-library/components";
+import { Table, useSetupTableState } from "@grit42/table";
+import { useTableColumns } from "@grit42/core/utils";
+import { EntityData, useHasRoles } from "@grit42/core";
 import {
   useExperimentColumns,
   useExperiments,

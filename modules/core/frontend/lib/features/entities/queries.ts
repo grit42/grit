@@ -1,19 +1,19 @@
 /**
  * Copyright 2025 grit42 A/S. <https://grit42.com/>
  *
- * This file is part of @grit/core.
+ * This file is part of @grit42/core.
  *
- * @grit/core is free software: you can redistribute it and/or modify it
+ * @grit42/core is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
  * Software Foundation, either version 3 of the License, or  any later version.
  *
- * @grit/core is distributed in the hope that it will be useful, but
+ * @grit42/core is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
  * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
  * more details.
  *
  * You should have received a copy of the GNU General Public License along with
- * @grit/core. If not, see <https://www.gnu.org/licenses/>.
+ * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
 import {
@@ -29,20 +29,22 @@ import {
   getURLParams,
   PaginatedEndpointSuccess,
   URLParams,
-} from "@grit/api";
-import { SortingState } from "@tanstack/table-core";
-import { Filter } from "@grit/table";
+  UseQueryResult,
+  UseInfiniteQueryResult,
+  InfiniteData,
+} from "@grit42/api";
+import { Filter, SortingState } from "@grit42/table";
 import {
   EntitiesMeta,
   EntityPropertyDef,
   EntityData,
   EntityInfo,
 } from "./types";
-import { FormFieldDef } from "@grit/form";
+import { FormFieldDef } from "@grit42/form";
 
 export const useEntities = (
   queryOptions: Partial<UseQueryOptions<EntitiesMeta, string>> = {},
-) => {
+): UseQueryResult<EntitiesMeta, string> => {
   return useQuery({
     queryKey: ["entities", "list"],
     queryFn: async () => {
@@ -65,7 +67,7 @@ export const useEntities = (
 export const useEntity = (
   entity: string,
   queryOptions: Partial<UseQueryOptions<EntityInfo | null, string>> = {},
-) => {
+): UseQueryResult<EntityInfo | null, string> => {
   return useQuery({
     queryKey: ["entities", entity],
     queryFn: async (): Promise<EntityInfo | null> => {
@@ -91,7 +93,7 @@ export const useEntityColumns = <
   entity: string,
   params: Record<string, any> = {},
   queryOptions: Partial<UseQueryOptions<T[], string>> = {},
-) => {
+): UseQueryResult<T[], string> => {
   return useQuery({
     queryKey: ["entities", "columns", entity, params],
     queryFn: async (): Promise<T[]> => {
@@ -115,7 +117,7 @@ export const useEntityFields = <T extends FormFieldDef = FormFieldDef>(
   entity: string,
   params: Record<string, any> = {},
   queryOptions: Partial<UseQueryOptions<T[], string>> = {},
-) => {
+): UseQueryResult<T[], string> => {
   return useQuery({
     queryKey: ["entites", "fields", entity, params],
     queryFn: async (): Promise<T[]> => {
@@ -141,7 +143,7 @@ export const useEntityData = <T extends EntityData>(
   filter?: Filter[],
   params: URLParams = {},
   queryOptions: Partial<UseQueryOptions<T[], string>> = {},
-) => {
+): UseQueryResult<T[], string> => {
   return useQuery({
     queryKey: [
       "entities",
@@ -179,7 +181,7 @@ export function useInfiniteEntityData<T extends EntityData>(
   queryOptions: Partial<
     UndefinedInitialDataInfiniteOptions<PaginatedEndpointSuccess<T[]>, string>
   > = {},
-) {
+): UseInfiniteQueryResult<InfiniteData<PaginatedEndpointSuccess<T[]>>, string> {
   return useInfiniteQuery({
     queryKey: [
       "entities",
@@ -221,7 +223,7 @@ export const useEntityDatum = <T extends EntityData>(
   entityId: string | number,
   params: URLParams = {},
   queryOptions: Partial<UseQueryOptions<T | null, string>> = {},
-) => {
+): UseQueryResult<T | null, string> => {
   return useQuery({
     queryKey: [
       "entities",

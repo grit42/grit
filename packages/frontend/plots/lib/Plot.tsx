@@ -1,4 +1,4 @@
-import { ErrorPage } from "@grit/client-library/components";
+import { ErrorPage } from "@grit42/client-library/components";
 import BoxPlot from "./BoxPlot";
 import ScatterPlot from "./ScatterPlot";
 import { PlotDefinition, SourceData, SourceDataProperties } from "./types";

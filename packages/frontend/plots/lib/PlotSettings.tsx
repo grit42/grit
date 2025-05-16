@@ -1,4 +1,4 @@
-import { Select } from "@grit/client-library/components";
+import { Select } from "@grit42/client-library/components";
 import { PlotDefinition, SourceDataProperties } from "./types";
 import ScatterPlotSettings from "./ScatterPlot/ScatterPlotSettings";
 import BoxPlotSettings from "./BoxPlot/BoxPlotSettings";

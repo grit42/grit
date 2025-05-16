@@ -1,51 +1,64 @@
 {
-  "name": "@grit/client-library",
+  "name": "@grit42/client-library",
   "license": "GPL-3.0-or-later",
   "author": "Jonathan Rebourt, grit42 <jonny@grit42.com>",
-  "private": true,
-  "version": "0.1.0",
+  "repository": "https://github.com/grit42/grit",
+  "version": "0.3.0",
   "type": "module",
   "exports": {
     "./theme.scss": {
-      "import": "./lib/scss/theme.scss"
+      "import": "./dist/scss/theme.scss"
     },
     "./mixins.scss": {
-      "import": "./lib/scss/mixins.scss"
+      "import": "./dist/scss/mixins.scss"
     },
     "./components": {
-      "import": "./lib/components/index.ts"
+      "types": "./dist/components/index.d.ts",
+      "import": "./dist/components/index.js"
     },
     "./hooks": {
-      "import": "./lib/hooks/index.ts"
+      "types": "./dist/hooks/index.d.ts",
+      "import": "./dist/hooks/index.js"
     },
     "./icons/*": {
-      "import": "./lib/icons/*.tsx"
+      "types": "./dist/icons/*.d.ts",
+      "import": "./dist/icons/*.js"
     },
     "./theme": {
-      "import": "./lib/theme/index.ts"
+      "types": "./dist/theme/index.d.ts",
+      "import": "./dist/theme/index.js"
     },
     "./utils": {
-      "import": "./lib/utils/index.ts"
-    },
-    "./table": {
-      "import": "./lib/features/table/index.ts"
+      "types": "./dist/utils/index.d.ts",
+      "import": "./dist/utils/index.js"
     }
   },
   "files": [
-    "lib"
+    "dist",
+    "COPYING"
   ],
+  "sideEffects": [
+    "**/*.css",
+    "**/*.scss"
+  ],
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "lint": "eslint .",
-    "format:check": "prettier . -c",
+    "tsc": "tsc -b",
+    "build": "tsc -b ./tsconfig.lib.json && vite build",
+    "build:watch": "vite build --watch --emptyOutDir=false",
+    "lint": "eslint . --fix",
+    "lint:check": "eslint .",
     "format": "prettier . -w",
+    "format:check": "prettier . -c",
     "preview": "vite preview",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },
   "devDependencies": {
     "@chromatic-com/storybook": "^3.2.2",
+    "@eslint/js": "catalog:",
     "@storybook/addon-essentials": "^8.4.5",
     "@storybook/addon-interactions": "^8.4.5",
     "@storybook/addon-onboarding": "^8.4.5",
@@ -53,25 +66,30 @@
     "@storybook/react": "^8.4.5",
     "@storybook/react-vite": "^8.4.5",
     "@storybook/test": "^8.4.5",
+    "@vitejs/plugin-react": "catalog:",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "autoprefixer": "catalog:",
     "eslint-plugin-storybook": "^0.11.1",
+    "eslint-plugin-react-hooks": "catalog:",
+    "eslint-plugin-react-refresh": "catalog:",
+    "glob": "catalog:",
+    "globals": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-router-dom": "catalog:",
     "storybook": "^8.4.5",
     "typescript": "catalog:",
     "typescript-eslint": "catalog:",
-    "vite": "catalog:"
+    "vite": "catalog:",
+    "vite-plugin-dts": "catalog:",
+    "vite-plugin-externalize-deps": "catalog:",
+    "vite-plugin-lib-inject-css": "catalog:",
+    "vite-plugin-static-copy": "catalog:"
   },
   "dependencies": {
     "@floating-ui/react": "^0.26.28",
-    "@grit/api": "workspace:*",
-    "@tanstack/react-form": "catalog:",
-    "@tanstack/react-table": "catalog:",
-    "@tanstack/table-core": "catalog:",
-    "axios": "catalog:",
     "dayjs": "1",
     "react-dropzone": "14",
     "react-helmet-async": "catalog:",

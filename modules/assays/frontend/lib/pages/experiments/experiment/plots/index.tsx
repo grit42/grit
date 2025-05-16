@@ -8,9 +8,9 @@ import {
 } from "react-router-dom";
 import { ExperimentData } from "../../../../queries/experiments";
 import { useEffect, useMemo, useState } from "react";
-import { Tabs } from "@grit/client-library/components";
+import { Tabs } from "@grit42/client-library/components";
 import ExperimentPlot from "./ExperimentPlot";
-import { useHasRoles } from "@grit/core";
+import { useHasRoles } from "@grit42/core";
 
 interface Props {
   experiment: ExperimentData;

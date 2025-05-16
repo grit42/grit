@@ -1,4 +1,4 @@
-import { CheckboxGroup, Select } from "@grit/client-library/components";
+import { CheckboxGroup, Select } from "@grit42/client-library/components";
 import { ScatterPlotDefinition, SourceDataProperties } from "../types";
 import { useMemo } from "react";
 import { getScatterPlotTitle } from "./utils";

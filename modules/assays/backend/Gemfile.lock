@@ -1,29 +1,18 @@
-GIT
-  remote: https://github.com/binarylogic/authlogic.git
-  revision: d155fff4672595af99cb3488d9731f1efc595049
-  branch: master
-  specs:
-    authlogic (6.4.3)
-      activemodel (>= 5.2, < 8.1)
-      activerecord (>= 5.2, < 8.1)
-      activesupport (>= 5.2, < 8.1)
-      request_store (~> 1.0)
-
 PATH
   remote: ../../core/backend
   specs:
-    grit-core (0.1.0)
-      authlogic
-      rails (>= 7.2.2)
-      scrypt
+    grit-core (0.1.1)
+      authlogic (~> 6.5, >= 6.5.0)
+      rails (~> 7.2, >= 7.2.2)
+      scrypt (~> 3.0, >= 3.0.8)
 
 PATH
   remote: .
   specs:
-    grit-assays (0.1.0)
-      grit-core (= 0.1.0)
-      rails (>= 7.2.2.1)
-      rubyzip (>= 2.3.2)
+    grit-assays (0.1.1)
+      grit-core (~> 0.1, >= 0.1.0)
+      rails (~> 7.2, >= 7.2.2)
+      rubyzip (~> 2.3, >= 2.3.2)
 
 GEM
   remote: https://rubygems.org/
@@ -100,6 +89,11 @@ GEM
       securerandom (>= 0.3)
       tzinfo (~> 2.0, >= 2.0.5)
     ast (2.4.3)
+    authlogic (6.5.0)
+      activemodel (>= 5.2, < 8.1)
+      activerecord (>= 5.2, < 8.1)
+      activesupport (>= 5.2, < 8.1)
+      request_store (~> 1.0)
     base64 (0.2.0)
     benchmark (0.4.0)
     bigdecimal (3.1.9)
@@ -299,7 +293,6 @@ PLATFORMS
   x86_64-linux-musl
 
 DEPENDENCIES
-  authlogic!
   grit-assays!
   grit-core!
   pg

@@ -11,7 +11,7 @@ import {
   Select,
   Spinner,
   Surface,
-} from "@grit/client-library/components";
+} from "@grit42/client-library/components";
 import {
   nullish,
   Plot,
@@ -19,7 +19,7 @@ import {
   SourceData,
   SourceDataProperties,
   SourceDatum,
-} from "@grit/plots";
+} from "@grit42/plots";
 import {
   useExperimentDataSheetRecordColumns,
   useExperimentDataSheetRecords,
@@ -29,8 +29,8 @@ import {
   EntityPropertyDef,
   useEditEntityMutation,
   useHasRoles,
-} from "@grit/core";
-import { generateUniqueID } from "@grit/client-library/utils";
+} from "@grit42/core";
+import { generateUniqueID } from "@grit42/client-library/utils";
 
 interface Props {
   experiment: ExperimentData;

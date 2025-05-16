@@ -1,29 +1,29 @@
 /**
  * Copyright 2025 grit42 A/S. <https://grit42.com/>
  *
- * This file is part of @grit/core.
+ * This file is part of @grit42/core.
  *
- * @grit/core is free software: you can redistribute it and/or modify it
+ * @grit42/core is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
  * Software Foundation, either version 3 of the License, or  any later version.
  *
- * @grit/core is distributed in the hope that it will be useful, but
+ * @grit42/core is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
  * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
  * more details.
  *
  * You should have received a copy of the GNU General Public License along with
- * @grit/core. If not, see <https://www.gnu.org/licenses/>.
+ * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Button, ErrorPage, Spinner } from "@grit/client-library/components";
-import { useQueryClient } from "@grit/api";
-import { EntityData, useEntity, useHasRoles } from "@grit/core";
-import { Table, useSetupTableState } from "@grit/table";
+import { Button, ErrorPage, Spinner } from "@grit42/client-library/components";
+import { useQueryClient } from "@grit42/api";
+import { EntityData, useEntity, useHasRoles } from "@grit42/core";
+import { Table, useSetupTableState } from "@grit42/table";
 import { useMemo } from "react";
-import { useRollbackLoadSetMutation } from "@grit/core";
-import { LoadSetData } from "@grit/core";
-import { useTableColumns } from "@grit/core/utils";
+import { useRollbackLoadSetMutation } from "@grit42/core";
+import { LoadSetData } from "@grit42/core";
+import { useTableColumns } from "@grit42/core/utils";
 import {
   ExperimentDataSheetData,
   useExperimentDataSheetFromLoadSet,

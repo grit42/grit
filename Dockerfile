@@ -17,7 +17,7 @@ WORKDIR /workspace
 
 RUN npm install -g pnpm@10.0.0-alpha.4
 
-COPY --parents package.json pnpm-workspace.yaml pnpm-lock.yaml ./**/package.json ./
+COPY --parents package.json pnpm-workspace.yaml pnpm-lock.yaml nx.json ./**/package.json ./
 
 RUN pnpm install --frozen-lockfile
 
@@ -25,7 +25,7 @@ COPY --parents ./**/frontend/**/* ./${APP_DIR}/**/* ./
 
 WORKDIR ${APP_WORKDIR}
 
-RUN pnpm build
+RUN pnpm exec nx build
 
 FROM node:lts AS docs
 

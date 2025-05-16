@@ -40,8 +40,6 @@ group :test do
   gem "selenium-webdriver"
 end
 
-gem "authlogic", github: "binarylogic/authlogic", branch: "master"
-
 group :local do
   gem "grit-core", path: "../../../modules/core/backend"
   gem "grit-compounds", path: "../../../modules/compounds/backend"

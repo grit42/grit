@@ -1,17 +1,17 @@
-import { ErrorPage, Spinner } from "@grit/client-library/components";
+import { ErrorPage, Spinner } from "@grit42/client-library/components";
 import {
   useAssayColumns,
   usePublishedAssays,
 } from "../../queries/assays";
-import { Table, useSetupTableState } from "@grit/table";
-import { useTableColumns } from "@grit/core/utils";
+import { Table, useSetupTableState } from "@grit42/table";
+import { useTableColumns } from "@grit42/core/utils";
 import { useAssayTypeColumns, useAssayTypes } from "../../queries/assay_types";
 import {
   useAssayModelColumns,
   usePublishedAssayModels,
 } from "../../queries/assay_models";
 import { useEffect, useMemo, useState } from "react";
-import { EntityData } from "@grit/core";
+import { EntityData } from "@grit42/core";
 import { useNavigate } from "react-router-dom";
 
 interface AssayTypesTableProps {

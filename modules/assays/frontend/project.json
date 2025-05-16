@@ -1,0 +1,12 @@
+{
+  "targets": {
+    "dev": {
+      "dependsOn": [
+        {
+          "projects": ["@grit42/core", "@grit42/assays"],
+          "target": "build:watch"
+        }
+      ]
+    }
+  }
+}

@@ -1,28 +1,17 @@
-GIT
-  remote: https://github.com/binarylogic/authlogic.git
-  revision: d155fff4672595af99cb3488d9731f1efc595049
-  branch: master
-  specs:
-    authlogic (6.4.3)
-      activemodel (>= 5.2, < 8.1)
-      activerecord (>= 5.2, < 8.1)
-      activesupport (>= 5.2, < 8.1)
-      request_store (~> 1.0)
-
 PATH
   remote: ../../core/backend
   specs:
-    grit-core (0.1.0)
-      authlogic
-      rails (>= 7.2.2)
-      scrypt
+    grit-core (0.1.1)
+      authlogic (~> 6.5, >= 6.5.0)
+      rails (~> 7.2, >= 7.2.2)
+      scrypt (~> 3.0, >= 3.0.8)
 
 PATH
   remote: .
   specs:
-    grit-compounds (0.1.0)
-      grit-core (= 0.1.0)
-      rails (>= 7.2.2.1)
+    grit-compounds (0.1.1)
+      grit-core (~> 0.1, >= 0.1.0)
+      rails (~> 7.2, >= 7.2.2)
 
 GEM
   remote: https://rubygems.org/
@@ -99,6 +88,11 @@ GEM
       securerandom (>= 0.3)
       tzinfo (~> 2.0, >= 2.0.5)
     ast (2.4.2)
+    authlogic (6.5.0)
+      activemodel (>= 5.2, < 8.1)
+      activerecord (>= 5.2, < 8.1)
+      activesupport (>= 5.2, < 8.1)
+      request_store (~> 1.0)
     base64 (0.2.0)
     benchmark (0.4.0)
     bigdecimal (3.1.9)
@@ -109,7 +103,7 @@ GEM
     date (3.4.1)
     drb (2.2.1)
     erubi (1.13.1)
-    ffi (1.17.1-x86_64-linux-gnu)
+    ffi (1.17.2-x86_64-linux-gnu)
     ffi-compiler (1.3.2)
       ffi (>= 1.15.5)
       rake
@@ -118,7 +112,7 @@ GEM
     i18n (1.14.7)
       concurrent-ruby (~> 1.0)
     io-console (0.8.0)
-    irb (1.15.1)
+    irb (1.15.2)
       pp (>= 0.6.0)
       rdoc (>= 4.0.0)
       reline (>= 0.4.2)
@@ -137,7 +131,7 @@ GEM
     marcel (1.0.4)
     mini_mime (1.1.5)
     minitest (5.25.4)
-    net-imap (0.5.6)
+    net-imap (0.5.8)
       date
       net-protocol
     net-pop (0.1.2)
@@ -147,7 +141,7 @@ GEM
     net-smtp (0.5.1)
       net-protocol
     nio4r (2.7.4)
-    nokogiri (1.18.3-x86_64-linux-gnu)
+    nokogiri (1.18.8-x86_64-linux-gnu)
       racc (~> 1.4)
     parallel (1.26.3)
     parser (3.3.7.1)
@@ -157,14 +151,14 @@ GEM
     pp (0.6.2)
       prettyprint
     prettyprint (0.2.0)
-    psych (5.2.3)
+    psych (5.2.4)
       date
       stringio
     puma (6.6.0)
       nio4r (~> 2.0)
     racc (1.8.1)
     rack (3.1.10)
-    rack-session (2.1.0)
+    rack-session (2.1.1)
       base64 (>= 0.1.0)
       rack (>= 3.0.0)
     rack-test (2.2.0)
@@ -202,10 +196,10 @@ GEM
       zeitwerk (~> 2.6)
     rainbow (3.1.1)
     rake (13.2.1)
-    rdoc (6.12.0)
+    rdoc (6.13.1)
       psych (>= 4.0.0)
     regexp_parser (2.10.0)
-    reline (0.6.0)
+    reline (0.6.1)
       io-console (~> 0.5)
     request_store (1.7.0)
       rack (>= 1.4)
@@ -246,7 +240,7 @@ GEM
       ffi-compiler (>= 1.0, < 2.0)
       rake (>= 9, < 14)
     securerandom (0.4.1)
-    stringio (3.1.5)
+    stringio (3.1.7)
     thor (1.3.2)
     timeout (0.4.3)
     tzinfo (2.0.6)
@@ -265,7 +259,6 @@ PLATFORMS
   x86_64-linux
 
 DEPENDENCIES
-  authlogic!
   grit-compounds!
   grit-core!
   pg

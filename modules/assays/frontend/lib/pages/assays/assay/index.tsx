@@ -9,12 +9,12 @@ import {
   ErrorPage,
   ButtonGroup,
   Button,
-} from "@grit/client-library/components";
+} from "@grit42/client-library/components";
 import { useExperimentColumns } from "../../../queries/experiments";
 import styles from "../assays.module.scss";
 import AssayDetails from "./Details";
 import AssayTabsWrapper from "./AssayTabs";
-import { useHasRoles } from "@grit/core";
+import { useHasRoles } from "@grit42/core";
 
 const AssayPage = () => {
   const canCreateExperiment = useHasRoles(["Administrator", "AssayAdministrator", "AssayUser"])

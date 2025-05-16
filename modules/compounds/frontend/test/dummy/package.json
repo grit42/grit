@@ -1,5 +1,5 @@
 {
-  "name": "grit",
+  "name": "@grit42/compounds-dummy-app",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -13,12 +13,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@grit/api": "workspace:*",
-    "@grit/client-library": "workspace:*",
-    "@grit/compounds": "workspace:*",
-    "@grit/core": "workspace:*",
-    "@grit/form": "workspace:*",
-    "@grit/table": "workspace:*",
+    "@grit42/app": "workspace:*",
+    "@grit42/api": "workspace:*",
+    "@grit42/compounds": "workspace:*",
+    "@grit42/core": "workspace:*",
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-helmet-async": "catalog:",
@@ -26,11 +24,15 @@
   },
   "devDependencies": {
     "@eslint/js": "catalog:",
-    "@tanstack/react-query-devtools": "catalog:",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "catalog:",
+    "autoprefixer": "catalog:",
+    "eslint": "catalog:",
+    "eslint-plugin-react-hooks": "catalog:",
+    "eslint-plugin-react-refresh": "catalog:",
+    "globals": "catalog:",
     "typescript": "catalog:",
     "typescript-eslint": "catalog:",
     "vite": "catalog:"

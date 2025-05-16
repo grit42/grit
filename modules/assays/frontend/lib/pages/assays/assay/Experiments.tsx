@@ -1,6 +1,6 @@
-import { EntityData } from "@grit/core";
-import { useTableColumns } from "@grit/core/utils";
-import { useSetupTableState, Table } from "@grit/table";
+import { EntityData } from "@grit42/core";
+import { useTableColumns } from "@grit42/core/utils";
+import { useSetupTableState, Table } from "@grit42/table";
 import { useNavigate } from "react-router-dom";
 import { useAssayExperiments } from "../../../queries/assays";
 import { useExperimentColumns } from "../../../queries/experiments";

@@ -1,48 +1,40 @@
-import { Navigate, Route, Routes } from "react-router-dom";
-import { Suspense } from "react";
+/**
+ * Copyright 2025 grit42 A/S. <https://grit42.com/>
+ *
+ * This file is part of @grit42/app.
+ *
+ * @grit42/app is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or  any later version.
+ *
+ * @grit42/app is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * @grit42/app. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+import { StrictMode } from "react";
+import { BrowserRouter } from "react-router-dom";
+import { queryClient, QueryClientProvider } from "@grit42/api";
+import "./index.scss";
+import Provider from "./Provider.tsx";
+import Registrant from "./Registrant.tsx";
+
 import { Helmet, HelmetProvider } from "react-helmet-async";
 import styles from "./app.module.scss";
-import { classnames } from "@grit/client-library/utils";
+import { classnames } from "@grit42/client-library/utils";
 
-import { Meta as CoreMeta, Router as CoreRouter, useSession } from "@grit/core";
-
-import {
-  Meta as CompoundsMeta,
-  Router as CompoundsRouter,
-} from "@grit/compounds";
-
-import {
-  Meta as AssaysMeta,
-  Router as AssaysRouter,
-} from "@grit/assays";
-
-import Header from "@grit/core/Header";
-import defaultRoute from "./defaultRoute";
-import { Spinner, ThemeProvider } from "@grit/client-library/components";
-import { Toolbar } from "@grit/core/Toolbar";
-
-const AppRouter = () => {
-  return (
-    <Suspense fallback={<Spinner />}>
-      <Routes>
-        <Route path={`/${CoreMeta.rootRoute}/*`} element={<CoreRouter />} />
-        <Route
-          path={`/${CompoundsMeta.rootRoute}/*`}
-          element={<CompoundsRouter />}
-        />
-        <Route
-          path={`/${AssaysMeta.rootRoute}/*`}
-          element={<AssaysRouter />}
-        />
-        <Route
-          index
-          path="*"
-          element={<Navigate to={defaultRoute} replace />}
-        />
-      </Routes>
-    </Suspense>
-  );
-};
+import Header from "@grit42/core/Header";
+import { Spinner, ThemeProvider } from "@grit42/client-library/components";
+import { Toolbar } from "@grit42/core/Toolbar";
+import CoreMeta from "@grit42/core/meta";
+import CompoundsMeta from "@grit42/compounds/meta";
+import AssaysMeta from "@grit42/assays/meta";
+import Router from "./Router.tsx";
+import { useSession } from "@grit42/core";
 
 const NAV_ITEMS = [...CompoundsMeta.navItems, ...AssaysMeta.navItems, ...CoreMeta.navItems];
 
@@ -51,7 +43,15 @@ const App = () => {
 
   if (isLoading && !session) {
     <ThemeProvider colorScheme={"dark"} displayDensity={"comfortable"}>
-      <div className={styles.appContainer}>
+      <div
+        className={styles.appContainer}
+        style={{
+          height: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
         <Spinner />
       </div>
     </ThemeProvider>;
@@ -60,7 +60,7 @@ const App = () => {
   return (
     <HelmetProvider>
       <Helmet>
-        <title>{"grit"}</title>
+        <title>grit</title>
       </Helmet>
       <ThemeProvider
         colorScheme={session?.settings.theme ?? "dark"}
@@ -78,7 +78,7 @@ const App = () => {
               [styles.withPadding]: !!session,
             })}
           >
-            <AppRouter />
+            <Router />
           </div>
         </div>
       </ThemeProvider>
@@ -86,4 +86,19 @@ const App = () => {
   );
 };
 
-export default App;
+const AppWrapper = () => {
+  return (
+    <StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <Provider>
+          <Registrant />
+          <BrowserRouter basename="/app">
+            <App />
+          </BrowserRouter>
+        </Provider>
+      </QueryClientProvider>
+    </StrictMode>
+  );
+};
+
+export default AppWrapper;

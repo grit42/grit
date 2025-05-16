@@ -1,0 +1,19 @@
+{
+  "name": "vite-plugin-prevent-overwrite",
+  "version": "0.1.0",
+  "description": "Vite plugin to avoid writing bundled files to disk if their content did not change.",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.js"
+    }
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "Jonathan Rebourt <jonny@grit42.com>",
+  "license": "MIT"
+}

@@ -1,38 +1,38 @@
 /**
  * Copyright 2025 grit42 A/S. <https://grit42.com/>
  *
- * This file is part of @grit/table.
+ * This file is part of @grit42/table.
  *
- * @grit/table is free software: you can redistribute it and/or modify it
+ * @grit42/table is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
  * Software Foundation, either version 3 of the License, or  any later version.
  *
- * @grit/table is distributed in the hope that it will be useful, but
+ * @grit42/table is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
  * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
  * more details.
  *
  * You should have received a copy of the GNU General Public License along with
- * @grit/table. If not, see <https://www.gnu.org/licenses/>.
+ * @grit42/table. If not, see <https://www.gnu.org/licenses/>.
  */
 
 import { ReactNode, useMemo } from "react";
 import styles from "./table.module.scss";
 import { Table } from "@tanstack/react-table";
-import MenuIcon from "@grit/client-library/icons/Menu";
-import PreviewIcon from "@grit/client-library/icons/Preview";
-import NoPreviewIcon from "@grit/client-library/icons/NoPreview";
-import FilterDeleteIcon from "@grit/client-library/icons/FilterDelete";
+import MenuIcon from "@grit42/client-library/icons/Menu";
+import PreviewIcon from "@grit42/client-library/icons/Preview";
+import NoPreviewIcon from "@grit42/client-library/icons/NoPreview";
+import FilterDeleteIcon from "@grit42/client-library/icons/FilterDelete";
 import {
   ButtonGroup,
   Dropdown,
   MenuItems,
-} from "@grit/client-library/components";
+} from "@grit42/client-library/components";
 import { GritColumnDef, GritTableState, TableStateSettings } from "../types";
 import useInternalTableState from "../features/table-state/useInternalTableState";
 import { ColumnVisibility } from "../features/column-visibility";
 import Filters from "../features/filters/Filters";
-import { classnames } from "@grit/client-library/utils";
+import { classnames } from "@grit42/client-library/utils";
 
 interface Props<T> {
   settings?: TableStateSettings<T>;

@@ -1,4 +1,4 @@
-import { Surface } from "@grit/client-library/components";
+import { Surface } from "@grit42/client-library/components";
 import { useMemo } from "react";
 import { AssayData, useAssayFields } from "../../../queries/assays";
 import styles from "../assays.module.scss";

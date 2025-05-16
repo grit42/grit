@@ -1,4 +1,4 @@
-import { ErrorPage, Spinner, Surface } from "@grit/client-library/components";
+import { ErrorPage, Spinner, Surface } from "@grit42/client-library/components";
 import {
   AssayModelData,
   useAssayModel,
@@ -13,13 +13,13 @@ import {
   genericErrorHandler,
   getVisibleFieldData,
   useForm,
-} from "@grit/form";
-import { useQueryClient } from "@grit/api";
+} from "@grit42/form";
+import { useQueryClient } from "@grit42/api";
 import {
   useCreateEntityMutation,
   useEditEntityMutation,
   useDestroyEntityMutation,
-} from "@grit/core";
+} from "@grit42/core";
 import { useState } from "react";
 import styles from "../../assayModels.module.scss";
 

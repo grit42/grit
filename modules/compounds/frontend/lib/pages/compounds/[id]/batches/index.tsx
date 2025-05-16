@@ -1,38 +1,38 @@
 /**
  * Copyright 2025 grit42 A/S. <https://grit42.com/>
  *
- * This file is part of @grit/compounds.
+ * This file is part of @grit42/compounds.
  *
- * @grit/compounds is free software: you can redistribute it and/or modify it
+ * @grit42/compounds is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
  * Software Foundation, either version 3 of the License, or  any later version.
  *
- * @grit/compounds is distributed in the hope that it will be useful, but
+ * @grit42/compounds is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
  * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
  * more details.
  *
  * You should have received a copy of the GNU General Public License along with
- * @grit/compounds. If not, see <https://www.gnu.org/licenses/>.
+ * @grit42/compounds. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { ErrorPage, Spinner } from "@grit/client-library/components";
+import { ErrorPage, Spinner } from "@grit42/client-library/components";
 import { useCallback, useEffect, useMemo } from "react";
 import { useLocation, useMatch, useNavigate } from "react-router-dom";
 import { useCompound } from "../../../../queries/compounds";
-import { Table, useSetupTableState } from "@grit/table";
-import { useToolbar } from "@grit/core/Toolbar";
-import Circle1NewIcon from "@grit/client-library/icons/Circle1New";
+import { Table, useSetupTableState } from "@grit42/table";
+import { useToolbar } from "@grit42/core/Toolbar";
+import Circle1NewIcon from "@grit42/client-library/icons/Circle1New";
 import {
   BatchData,
   useCompoundTypeBatchesColumns,
   useInfiniteBatchesOfCompound,
 } from "../../../../queries/batches";
 import { useDestroyBatch } from "../../../../mutations/batches";
-import { useTableColumns } from "@grit/core/utils";
-import { downloadFile } from "@grit/client-library/utils";
-import { getFilterParams, getSortParams, getURLParams } from "@grit/api";
-import { useHasRoles } from "@grit/core";
+import { useTableColumns } from "@grit42/core/utils";
+import { downloadFile } from "@grit42/client-library/utils";
+import { getFilterParams, getSortParams, getURLParams } from "@grit42/api";
+import { useHasRoles } from "@grit42/core";
 
 interface Props {
   id: string;

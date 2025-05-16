@@ -1,4 +1,4 @@
-@use "@grit/client-library/theme.scss";
+@use "@grit42/client-library/theme.scss";
 
 .appContainer {
   display: grid;
@@ -9,7 +9,7 @@
   max-height: 100vh;
 
   ::-webkit-scrollbar-track {
-    background-color: theme.$palette-primary-main;
+    background-color: theme.$palette-primary-dark;
   }
 
   ::-webkit-scrollbar {
@@ -18,11 +18,14 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background-color: theme.$palette-secondary-main;
+    background-color: rgb(
+      from theme.$palette-primary-contrast-text r g b / 0.5
+    );
     border-radius: 1em;
-
     &:hover {
-      background-color: theme.$palette-secondary-dark;
+      background-color: rgb(
+        from theme.$palette-primary-contrast-text r g b / 0.8
+      );
     }
   }
 
