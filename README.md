@@ -4,6 +4,8 @@
 
 grit is a scientific research data management platform. In the grit platform you can store, manage, and visualise data from all the pre-clinical drug discovery phases.
 
+Learn more and read the docs [here](https://grit42.github.io/grit/intro).
+
 ## Getting started
 
 ### Running grit locally
