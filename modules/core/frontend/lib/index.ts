@@ -55,7 +55,7 @@ import React, { lazy } from "react";
 import Registrant from "./Registrant";
 import Provider from "./Provider";
 import Meta, { ModuleMeta } from "./meta";
-const Router = lazy(() => import("./router"));
+const Router = lazy(() => import("./Router"));
 
 export interface GritModule {
   Meta: ModuleMeta;

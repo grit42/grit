@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@grit42/app": "workspace:*",
+    "@grit42/api": "workspace:*",
     "@grit42/assays": "workspace:*",
     "@grit42/core": "workspace:*",
     "react": "catalog:",

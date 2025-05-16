@@ -101,18 +101,30 @@ importers:
 
   apps/grit/client:
     dependencies:
+      '@grit42/api':
+        specifier: workspace:*
+        version: link:../../../packages/frontend/api
       '@grit42/app':
         specifier: workspace:*
         version: link:../../../packages/frontend/app
       '@grit42/assays':
         specifier: workspace:*
         version: link:../../../modules/assays/frontend
+      '@grit42/client-library':
+        specifier: workspace:*
+        version: link:../../../packages/frontend/client-library
       '@grit42/compounds':
         specifier: workspace:*
         version: link:../../../modules/compounds/frontend
       '@grit42/core':
         specifier: workspace:*
         version: link:../../../modules/core/frontend
+      '@grit42/form':
+        specifier: workspace:*
+        version: link:../../../packages/frontend/form
+      '@grit42/table':
+        specifier: workspace:*
+        version: link:../../../packages/frontend/table
       react:
         specifier: 'catalog:'
         version: 18.3.1
@@ -262,9 +274,15 @@ importers:
       vite-plugin-lib-inject-css:
         specifier: 'catalog:'
         version: 2.2.2(vite@5.4.14(@types/node@22.13.9)(sass-embedded@1.85.1)(sass@1.86.3)(terser@5.39.0))
+      vite-plugin-prevent-overwrite:
+        specifier: workspace:*
+        version: link:../../../packages/frontend/vite-plugin-prevent-overwrite
 
   modules/assays/frontend/test/dummy:
     dependencies:
+      '@grit42/api':
+        specifier: workspace:*
+        version: link:../../../../../packages/frontend/api
       '@grit42/app':
         specifier: workspace:*
         version: link:../../../../../packages/frontend/app
@@ -420,9 +438,15 @@ importers:
       vite-plugin-lib-inject-css:
         specifier: 'catalog:'
         version: 2.2.2(vite@5.4.14(@types/node@22.13.9)(sass-embedded@1.85.1)(sass@1.86.3)(terser@5.39.0))
+      vite-plugin-prevent-overwrite:
+        specifier: workspace:*
+        version: link:../../../packages/frontend/vite-plugin-prevent-overwrite
 
   modules/compounds/frontend/test/dummy:
     dependencies:
+      '@grit42/api':
+        specifier: workspace:*
+        version: link:../../../../../packages/frontend/api
       '@grit42/app':
         specifier: workspace:*
         version: link:../../../../../packages/frontend/app
@@ -584,9 +608,15 @@ importers:
       vite-plugin-lib-inject-css:
         specifier: 'catalog:'
         version: 2.2.2(vite@5.4.14(@types/node@22.13.9)(sass-embedded@1.85.1)(sass@1.86.3)(terser@5.39.0))
+      vite-plugin-prevent-overwrite:
+        specifier: workspace:*
+        version: link:../../../packages/frontend/vite-plugin-prevent-overwrite
 
   modules/core/frontend/test/dummy:
     dependencies:
+      '@grit42/api':
+        specifier: workspace:*
+        version: link:../../../../../packages/frontend/api
       '@grit42/app':
         specifier: workspace:*
         version: link:../../../../../packages/frontend/app
@@ -1171,6 +1201,8 @@ importers:
       vite-plugin-lib-inject-css:
         specifier: 'catalog:'
         version: 2.2.2(vite@5.4.14(@types/node@22.13.9)(sass-embedded@1.85.1)(sass@1.86.3)(terser@5.39.0))
+
+  packages/frontend/vite-plugin-prevent-overwrite: {}
 
 packages:
 

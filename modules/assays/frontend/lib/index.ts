@@ -17,13 +17,13 @@
  */
 
 import { lazy } from "react";
-import Registrant from "./registrant";
+import Registrant from "./Registrant";
 import Meta from "./meta";
 import { GritModule } from "@grit42/core";
 
-export { default as Registrant } from "./registrant";
+export { default as Registrant } from "./Registrant";
 export { default as Meta } from "./meta";
-export const Router = lazy(() => import("./router"));
+export const Router = lazy(() => import("./Router"));
 
 export default {
   Meta,

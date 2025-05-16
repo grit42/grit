@@ -16,15 +16,10 @@
  * @grit42/compounds. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { lazy } from "react";
-import { GritModule } from "@grit42/core";
+import { PropsWithChildren } from "react";
 
-import Registrant from "./registrant";
-import Meta from "./meta";
-const Router = lazy(() => import("./router"));
+const Provider = ({ children }: PropsWithChildren) => {
+  return <>{children}</>;
+};
 
-export default {
-  Meta,
-  Router,
-  Registrant,
-} as GritModule;
+export default Provider;

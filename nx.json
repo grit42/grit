@@ -2,7 +2,8 @@
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "targetDefaults": {
     "dev": {
-      "dependsOn": ["^dev"]
+      "dependsOn": ["build"],
+      "continuous": true
     },
     "build": {
       "dependsOn": ["^build"],
@@ -15,7 +16,10 @@
       "cache": true
     },
     "build:watch": {
-      "dependsOn": ["^build:watch"]
+      "dependsOn": ["^build"],
+      "inputs": ["{projectRoot}/src/**/*", "{projectRoot}/lib/**/*"],
+      "outputs": ["{projectRoot}/dist"],
+      "continuous": true
     },
     "lint": {
       "cache": true

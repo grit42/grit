@@ -17,7 +17,6 @@
  */
 
 export {
-  default as ImportersContext,
   useImportersContext,
   useImporter,
   useRegisterImporter,

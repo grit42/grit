@@ -9,6 +9,22 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
+    "./meta": {
+      "types": "./dist/meta.d.ts",
+      "import": "./dist/meta.js"
+    },
+    "./router": {
+      "types": "./dist/Router.d.ts",
+      "import": "./dist/Router.js"
+    },
+    "./provider": {
+      "types": "./dist/Provider.d.ts",
+      "import": "./dist/Provider.js"
+    },
+    "./registrant": {
+      "types": "./dist/Registrant.d.ts",
+      "import": "./dist/Registrant.js"
+    },
     "./utils": {
       "types": "./dist/utils/index.d.ts",
       "import": "./dist/utils/index.js"
@@ -82,6 +98,7 @@
     "vite": "catalog:",
     "vite-plugin-dts": "catalog:",
     "vite-plugin-externalize-deps": "catalog:",
-    "vite-plugin-lib-inject-css": "catalog:"
+    "vite-plugin-lib-inject-css": "catalog:",
+    "vite-plugin-prevent-overwrite": "workspace:*"
   }
 }
