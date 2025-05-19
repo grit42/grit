@@ -30,10 +30,16 @@ module Grit::Core
           render json: { success: true, data: record }, status: :created, location: record
           return
         rescue EntityLoader::ParseException => e
+          logger.info e.to_s
+          logger.info e.backtrace.join("\n")
           render json: { success: false, errors: { data: [ e.to_s ] } }, status: :unprocessable_entity
         rescue ActiveRecord::RecordInvalid => e
+          logger.info e.to_s
+          logger.info e.backtrace.join("\n")
           render json: { success: false, errors: e.record.errors }, status: :unprocessable_entity
         rescue ActiveRecord::RecordNotSaved => e
+          logger.info e.to_s
+          logger.info e.backtrace.join("\n")
           render json: { success: false, errors: e.to_s }, status: :unprocessable_entity
         end
         raise ActiveRecord::Rollback
@@ -54,12 +60,16 @@ module Grit::Core
 
       render json: { success: true }
     rescue StandardError => e
+      logger.info e.to_s
+      logger.info e.backtrace.join("\n")
       render json: { success: false, errors: e.to_s }, status: :internal_server_error
     end
 
     def fields
       render json: { success: true, data: Grit::Core::EntityLoader.load_set_fields(params) }
     rescue StandardError => e
+      logger.info e.to_s
+      logger.info e.backtrace.join("\n")
       render json: { success: false, errors: e.to_s }, status: :internal_server_error
     end
 
@@ -68,6 +78,8 @@ module Grit::Core
 
       render json: { success: true, data: Grit::Core::EntityLoader.load_set_mapping_fields(load_set) }
     rescue StandardError => e
+      logger.info e.to_s
+      logger.info e.backtrace.join("\n")
       render json: { success: false, errors: e.to_s }, status: :internal_server_error
     end
 
@@ -79,79 +91,115 @@ module Grit::Core
 
       render json: { success: true, data: { headers: headers, data: data } }
     rescue StandardError => e
+      logger.info e.to_s
+      logger.info e.backtrace.join("\n")
       render json: { success: false, errors: e.to_s }, status: :internal_server_error
     end
 
     def validate
-      load_set = Grit::Core::LoadSet.find(params[:load_set_id])
-      if load_set.status.name != "Mapped"
-        render json: { success: false, errors: 'Only load set with "Mapped" status can be validated' }, status: :forbidden
-        return
+      ActiveRecord::Base.transaction do
+        begin
+          load_set = Grit::Core::LoadSet.find(params[:load_set_id])
+          if load_set.status.name != "Mapping"
+            render json: { success: false, errors: 'Only load set with "Mapping" status can be validated' }, status: :forbidden
+            return
+          end
+
+          load_set.status_id = Grit::Core::LoadSetStatus.find_by_name("Validating").id
+          load_set.save!
+
+          validation_results = Grit::Core::EntityLoader.validate_load_set(load_set)
+
+          load_set.record_warnings = validation_results[:warnings]
+
+          if validation_results[:errors].length > 0
+            load_set.status_id = Grit::Core::LoadSetStatus.find_by_name("Invalidated").id
+            load_set.record_errors = validation_results[:errors]
+            load_set.save!
+            render json: { success: false, errors: validation_results[:errors] }, status: :unprocessable_entity
+            return
+          end
+
+          load_set.status_id = Grit::Core::LoadSetStatus.find_by_name("Validated").id
+          load_set.save!
+          render json: { success: true, data: load_set }
+        rescue StandardError => e
+          logger.info e.to_s
+          logger.info e.backtrace.join("\n")
+          render json: { success: false, errors: e.to_s }, status: :internal_server_error
+          raise ActiveRecord::Rollback
+        end
       end
-
-      load_set.status_id = Grit::Core::LoadSetStatus.find_by_name("Validating").id
-      load_set.save!
-
-      validation_results = Grit::Core::EntityLoader.validate_load_set(load_set)
-
-      load_set.record_warnings = validation_results[:warnings]
-
-      if validation_results[:errors].length > 0
-        load_set.status_id = Grit::Core::LoadSetStatus.find_by_name("Invalidated").id
-        load_set.record_errors = validation_results[:errors]
-        load_set.save!
-        render json: { success: false, errors: validation_results[:errors] }, status: :unprocessable_entity
-        return
-      end
-
-
-      load_set.status_id = Grit::Core::LoadSetStatus.find_by_name("Validated").id
-      load_set.save!
-      render json: { success: true, data: load_set }
     end
 
     def confirm
-      load_set = Grit::Core::LoadSet.find(params[:load_set_id])
+      ActiveRecord::Base.transaction do
+        begin
+          load_set = Grit::Core::LoadSet.find(params[:load_set_id])
 
-      unless load_set.status.name == "Validated"
-        render json: { success: false, errors: 'Only load set with "Validated" status can be confirmed' }, status: :forbidden
+          unless load_set.status.name == "Validated"
+            render json: { success: false, errors: 'Only load set with "Validated" status can be confirmed' }, status: :forbidden
+          end
+
+          Grit::Core::EntityLoader.confirm_load_set(load_set)
+
+          load_set.status_id = Grit::Core::LoadSetStatus.find_by_name("Succeeded").id
+          load_set.save!
+          render json: { success: true, data: load_set }
+        rescue StandardError => e
+          logger.info e.to_s
+          logger.info e.backtrace.join("\n")
+          render json: { success: false, errors: e.to_s }, status: :internal_server_error
+          raise ActiveRecord::Rollback
+        end
       end
-
-      Grit::Core::EntityLoader.confirm_load_set(load_set)
-
-      load_set.status_id = Grit::Core::LoadSetStatus.find_by_name("Succeeded").id
-      load_set.save!
-      render json: { success: true, data: load_set }
     end
 
     def rollback
-      load_set = Grit::Core::LoadSet.find(params[:load_set_id])
+      ActiveRecord::Base.transaction do
+        begin
+          load_set = Grit::Core::LoadSet.find(params[:load_set_id])
 
-      load_set_entity = load_set.entity.constantize
+          load_set_entity = load_set.entity.constantize
 
-      load_set_entity.destroy_by("id IN (SELECT record_id FROM grit_core_load_set_loaded_records WHERE grit_core_load_set_loaded_records.load_set_id = #{load_set.id})")
-      Grit::Core::LoadSetLoadedRecord.destroy_by(load_set_id: load_set.id)
-      Grit::Core::LoadSetLoadingRecord.destroy_by(load_set_id: load_set.id)
+          load_set_entity.destroy_by("id IN (SELECT record_id FROM grit_core_load_set_loaded_records WHERE grit_core_load_set_loaded_records.load_set_id = #{load_set.id})")
+          Grit::Core::LoadSetLoadedRecord.destroy_by(load_set_id: load_set.id)
+          Grit::Core::LoadSetLoadingRecord.destroy_by(load_set_id: load_set.id)
 
-      load_set.status_id = Grit::Core::LoadSetStatus.find_by_name("Mapping").id
-      load_set.save!
-      render json: { success: true, data: load_set }
+          load_set.status_id = Grit::Core::LoadSetStatus.find_by_name("Mapping").id
+          load_set.save!
+          render json: { success: true, data: load_set }
+        rescue StandardError => e
+          logger.info e.to_s
+          logger.info e.backtrace.join("\n")
+          render json: { success: false, errors: e.to_s }, status: :internal_server_error
+          raise ActiveRecord::Rollback
+        end
+      end
     end
 
     def set_mappings
-      load_set = Grit::Core::LoadSet.find(params[:load_set_id])
+      ActiveRecord::Base.transaction do
+        begin
+          load_set = Grit::Core::LoadSet.find(params[:load_set_id])
 
-      unless [ "Mapping", "Invalidated" ].include? load_set.status.name
-        render json: { success: false, errors: 'Only load set with "Mapping" or "Invalidated" status can be updated' }, status: :forbidden
-        return
+          unless [ "Mapping", "Invalidated" ].include? load_set.status.name
+            render json: { success: false, errors: 'Only load set with "Mapping" or "Invalidated" status can be updated' }, status: :forbidden
+            return
+          end
+
+          load_set.mappings = params[:mappings]
+          load_set.record_errors = nil
+          load_set.save
+
+          render json: { success: true, data: load_set }
+        rescue StandardError => e
+          logger.info e.to_s
+          logger.info e.backtrace.join("\n")
+          render json: { success: false, errors: e.to_s }, status: :internal_server_error
+          raise ActiveRecord::Rollback
+        end
       end
-
-      load_set.mappings = params[:mappings]
-      load_set.status_id = Grit::Core::LoadSetStatus.find_by_name("Mapped").id
-      load_set.record_errors = nil
-      load_set.save
-
-      render json: { success: true, data: load_set }
     end
 
     private
