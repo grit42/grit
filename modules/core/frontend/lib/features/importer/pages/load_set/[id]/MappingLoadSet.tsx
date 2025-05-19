@@ -89,9 +89,20 @@ const NewDataSetDialog = (props: DialogProps & { loadSet: LoadSetData }) => {
       const formData = new FormData();
       formData.append("data", value.data[0]);
       const loadSet = await setLoadSetDataMutation.mutateAsync(formData);
-      await queryClient.invalidateQueries({
-        queryKey: ["loadSetPreviewData", loadSet.id],
-      });
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["loadSetPreviewData", loadSet.id],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [
+            "entities",
+            "datum",
+            "grit/core/load_sets",
+            loadSet.id.toString(),
+          ],
+          exact: false,
+        }),
+      ]);
       props.onClose?.();
     }),
     defaultValues: {

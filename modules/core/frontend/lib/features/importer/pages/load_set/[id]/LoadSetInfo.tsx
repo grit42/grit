@@ -108,9 +108,7 @@ const LoadSetInfo = ({
   const [selectedTab, setSelectedTab] = useState(0);
 
   useEffect(() => {
-    if (errors.length > 0 || warnings.length > 0) {
-      setSelectedTab(1);
-    }
+    setSelectedTab(errors.length > 0 || warnings.length > 0 ? 1 : 0);
   }, [errors, warnings]);
 
   const columns = useMemo(
