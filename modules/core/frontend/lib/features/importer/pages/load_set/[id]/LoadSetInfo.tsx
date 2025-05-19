@@ -103,18 +103,34 @@ const LoadSetInfo = ({
 
   const columns = useMemo(
     () =>
-      previewData.headers.filter(h => h !== null).map(
-        (h, i): GritColumnDef<Record<string, string>> => ({
-          accessorKey: i.toString(),
-          header: h,
-          id: i.toString(),
-          type: "string",
-        }),
-      ) ?? [],
+      previewData.headers
+        .filter((h) => h !== null)
+        .map(
+          (h, i): GritColumnDef<Record<string, string | number>> => ({
+            accessorKey: i.toString(),
+            header: h,
+            id: i.toString(),
+            type: "string",
+          }),
+        ) ?? [],
     [previewData.headers],
   );
 
-  const data = useMemo(
+  const errorRowColumns = useMemo(
+    () => [
+      {
+        accessorKey: "index",
+        header: "Line",
+        id: "index",
+        type: "integer",
+        size: 40,
+      },
+      ...columns,
+    ],
+    [columns],
+  );
+
+  const data: Record<string, string | number>[] = useMemo(
     () =>
       previewData.data.map((datum) =>
         datum.reduce((acc, prop, i) => ({ ...acc, [i.toString()]: prop }), {}),
@@ -144,6 +160,20 @@ const LoadSetInfo = ({
       }),
     [errors, mappings, previewData.data, previewData.headers],
   );
+
+  const errorRowData = useMemo(() => {
+    const errorRows: Record<string, string | number>[] = [];
+    const errorRowIndexes = new Set<number>();
+    for (const { index } of errors) {
+      errorRowIndexes.add(index);
+    }
+    for (let i = 0; i < data.length; i++) {
+      if (errorRowIndexes.has(i)) {
+        errorRows.push({ ...data[i], index: i + 2 });
+      }
+    }
+    return errorRows;
+  }, [data, errors]);
 
   const warningData = useMemo(
     () =>
@@ -206,6 +236,28 @@ const LoadSetInfo = ({
                     <Table
                       columns={ERROR_COLUMNS}
                       data={errorData}
+                      disableFooter
+                      settings={{
+                        disableColumnReorder: true,
+                        disableColumnSorting: true,
+                        disableFilters: true,
+                        disableVisibilitySettings: true,
+                      }}
+                    />
+                  ),
+                },
+                {
+                  key: "errored-rows",
+                  name: "Errored rows",
+                  panelProps: {
+                    style: {
+                      overflowY: "auto",
+                    } as CSSProperties,
+                  },
+                  panel: (
+                    <Table
+                      columns={errorRowColumns}
+                      data={errorRowData}
                       disableFooter
                       settings={{
                         disableColumnReorder: true,
