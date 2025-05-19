@@ -21,6 +21,7 @@ import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@grit42/api";
 import { useMemo, useState } from "react";
 import {
+  useConfirmLoadSetMutation,
   useSetLoadSetMappingsMutation,
   useValidateLoadSetMutation,
 } from "../../../mutations";
@@ -35,9 +36,14 @@ import { useDestroyEntityMutation } from "../../../../entities";
 import { FormFieldDef } from "@grit42/form";
 import { EntityFormFieldDef } from "../../../../../Registrant";
 
-const getAutoMappings = (fields?: FormFieldDef[], headers?: Array<string | null>) => {
+const getAutoMappings = (
+  fields?: FormFieldDef[],
+  headers?: Array<string | null>,
+) => {
   if (!fields || !headers) return null;
-  const lowerCaseHeaders = headers.filter(h => h !== null).map((h) => h.toLowerCase());
+  const lowerCaseHeaders = headers
+    .filter((h) => h !== null)
+    .map((h) => h.toLowerCase());
   const mappings: Record<string, LoadSetMapping> = {};
   for (const field of fields) {
     const header = lowerCaseHeaders.findIndex(
@@ -88,6 +94,7 @@ const MappingLoadSet = ({
 
   const setLoadSetMappingMutation = useSetLoadSetMappingsMutation(loadSet.id);
   const validateLoadSetMutation = useValidateLoadSetMutation(loadSet.id);
+  const confirmLoadSetMutation = useConfirmLoadSetMutation(loadSet.id);
 
   const destroyLoadSetMutation = useDestroyEntityMutation(
     "grit/core/load_sets",
@@ -117,6 +124,19 @@ const MappingLoadSet = ({
         exact: false,
       });
     }
+  };
+
+  const handleIgnoreErrors = async () => {
+    await confirmLoadSetMutation.mutateAsync();
+    await queryClient.invalidateQueries({
+      queryKey: [
+        "entities",
+        "datum",
+        "grit/core/load_sets",
+        loadSet.id.toString(),
+      ],
+      exact: false,
+    });
   };
 
   const handleCancel = async () => {
@@ -151,10 +171,12 @@ const MappingLoadSet = ({
         style={{ width: "100%", height: "100%", padding: 0, overflowY: "auto" }}
       >
         <MappingForm
+          loadSet={loadSet}
           entityFields={fields}
           headers={previewData?.headers}
           mappings={mappings ?? {}}
           onSubmit={handleSubmit}
+          onIgnoreError={handleIgnoreErrors}
           onCancel={handleCancel}
         />
       </Surface>

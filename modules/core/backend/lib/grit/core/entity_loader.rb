@@ -87,10 +87,13 @@ module Grit::Core
       data = load_set.parsed_data[1..]
       errors = []
 
-      ActiveRecord::Base.transaction do
-        data.each_with_index do |datum, index|
-          record_props = {}
-          record_errors = {}
+      Grit::Core::LoadSetLoadingRecordPropertyValue.delete_by(load_set_id: load_set.id)
+      Grit::Core::LoadSetLoadingRecord.delete_by(load_set_id: load_set.id)
+
+      data.each_with_index do |datum, index|
+        record_props = {}
+        record_errors = {}
+        ActiveRecord::Base.transaction(requires_new: true) do
           loading_record = LoadSetLoadingRecord.new({
             load_set_id: load_set.id,
             number: index
@@ -110,10 +113,8 @@ module Grit::Core
                 value = field_entity.loader_find_by!(find_by, datum[header_index]).id
               rescue NameError
                 record_errors[entity_property[:name].to_s] = [ "#{entity_property[:entity][:full_name]}: No such model" ]
-                next
               rescue ActiveRecord::RecordNotFound
                 record_errors[entity_property[:name].to_s] = [ "could not find #{entity_property[:entity][:full_name]} with '#{find_by}' = #{datum[header_index]}" ]
-                next
               end
             elsif !header_index.nil?
               value = datum[header_index]
@@ -154,16 +155,14 @@ module Grit::Core
 
           if !record_errors.empty?
             errors.push({ index: index, datum: datum, errors: record_errors })
-            next
+            raise ActiveRecord::Rollback
           end
 
           record = load_set_entity.new(record_props)
           unless record.valid?
             errors.push({ index: index, datum: datum, errors: record.errors })
+            raise ActiveRecord::Rollback
           end
-        end
-        if errors.length > 0
-          raise ActiveRecord::Rollback if errors.length > 0
         end
       end
       { errors: errors }
@@ -175,7 +174,7 @@ module Grit::Core
       load_set_entity_table = load_set_entity.table_name
 
       ActiveRecord::Base.transaction do
-        Grit::Core::LoadSetLoadingRecord.where(load_set_id: load_set.id).each do |loading_record|
+        Grit::Core::LoadSetLoadingRecord.includes(:load_set_loading_record_property_values).where(load_set_id: load_set.id).each do |loading_record|
           record_props = {}
           loading_record.load_set_loading_record_property_values.each do |loading_record_property_value|
             entity_property = load_set_entity_properties.find { |p| p[:name] == loading_record_property_value.name }
@@ -196,8 +195,8 @@ module Grit::Core
           }).save!
         end
 
-        Grit::Core::LoadSetLoadingRecordPropertyValue.destroy_by(load_set_id: load_set.id)
-        Grit::Core::LoadSetLoadingRecord.destroy_by(load_set_id: load_set.id)
+        Grit::Core::LoadSetLoadingRecordPropertyValue.delete_by(load_set_id: load_set.id)
+        Grit::Core::LoadSetLoadingRecord.delete_by(load_set_id: load_set.id)
       end
     end
 

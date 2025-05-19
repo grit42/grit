@@ -20,25 +20,32 @@ import { Button, ButtonGroup } from "@grit42/client-library/components";
 import { useForm } from "@tanstack/react-form";
 import { Form, FormFieldDef } from "@grit42/form";
 import { Fragment, useMemo } from "react";
-import { LoadSetMapping } from "../../../types";
+import { LoadSetData, LoadSetMapping } from "../../../types";
 import MappingFormFieldGroup from "./MappingFormFieldGroup";
 import styles from "./loadSet.module.scss";
 
 const MappingForm = ({
+  loadSet,
   entityFields,
   headers,
   mappings,
   onSubmit,
+  onIgnoreError,
   onCancel,
 }: {
+  loadSet: LoadSetData;
   entityFields: FormFieldDef[];
   headers: Array<string | null>;
   mappings: Record<string, LoadSetMapping>;
   onSubmit: (mappings: Record<string, LoadSetMapping>) => Promise<void>;
+  onIgnoreError: () => Promise<void>;
   onCancel: () => Promise<void>;
 }) => {
   const headerOptions = useMemo(
-    () => headers.filter(h => h !== null).map((c, i) => ({ value: i.toString(), label: c })),
+    () =>
+      headers
+        .filter((h) => h !== null)
+        .map((c, i) => ({ value: i.toString(), label: c })),
     [headers],
   );
 
@@ -93,6 +100,9 @@ const MappingForm = ({
               >
                 Continue
               </Button>
+              {(loadSet.status_id__name === "Invalidated") && (
+                <Button color="danger" onClick={onIgnoreError}>Ignore errors and confirm</Button>
+              )}
               <Button onClick={onCancel}>Cancel</Button>
             </ButtonGroup>
           </div>

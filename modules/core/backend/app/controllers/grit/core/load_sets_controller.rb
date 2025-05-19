@@ -100,8 +100,8 @@ module Grit::Core
       ActiveRecord::Base.transaction do
         begin
           load_set = Grit::Core::LoadSet.find(params[:load_set_id])
-          if load_set.status.name != "Mapping"
-            render json: { success: false, errors: 'Only load set with "Mapping" status can be validated' }, status: :forbidden
+          if load_set.status.name != "Mapping" && load_set.status.name != "Invalidated"
+            render json: { success: false, errors: 'Only load set with "Mapping" or "Invalidated" status can be validated' }, status: :forbidden
             return
           end
 
@@ -137,8 +137,9 @@ module Grit::Core
         begin
           load_set = Grit::Core::LoadSet.find(params[:load_set_id])
 
-          unless load_set.status.name == "Validated"
-            render json: { success: false, errors: 'Only load set with "Validated" status can be confirmed' }, status: :forbidden
+          unless load_set.status.name == "Validated" || load_set.status.name == "Invalidated"
+            render json: { success: false, errors: 'Only load set with "Validated" or "Invalidated" status can be confirmed' }, status: :forbidden
+            return
           end
 
           Grit::Core::EntityLoader.confirm_load_set(load_set)
@@ -167,6 +168,7 @@ module Grit::Core
           Grit::Core::LoadSetLoadingRecord.destroy_by(load_set_id: load_set.id)
 
           load_set.status_id = Grit::Core::LoadSetStatus.find_by_name("Mapping").id
+          load_set.record_errors = nil
           load_set.save!
           render json: { success: true, data: load_set }
         rescue StandardError => e
