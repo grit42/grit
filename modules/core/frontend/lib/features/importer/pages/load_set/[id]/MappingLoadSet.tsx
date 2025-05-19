@@ -16,12 +16,20 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { ErrorPage, Spinner, Surface } from "@grit42/client-library/components";
+import {
+  Dialog,
+  DialogProps,
+  ErrorPage,
+  FileInput,
+  Spinner,
+  Surface,
+} from "@grit42/client-library/components";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@grit42/api";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   useConfirmLoadSetMutation,
+  useSetLoadSetDataMutation,
   useSetLoadSetMappingsMutation,
   useValidateLoadSetMutation,
 } from "../../../mutations";
@@ -33,8 +41,15 @@ import { LoadSetData, LoadSetMapping } from "../../../types";
 import MappingForm from "./MappingForm";
 import LoadSetInfo from "./LoadSetInfo";
 import { useDestroyEntityMutation } from "../../../../entities";
-import { FormFieldDef } from "@grit42/form";
+import {
+  AddFormControl,
+  Form,
+  FormFieldDef,
+  genericErrorHandler,
+  useForm,
+} from "@grit42/form";
 import { EntityFormFieldDef } from "../../../../../Registrant";
+import { useToolbar } from "../../../../../Toolbar";
 
 const getAutoMappings = (
   fields?: FormFieldDef[],
@@ -65,6 +80,67 @@ const getAutoMappings = (
   return mappings;
 };
 
+const NewDataSetDialog = (props: DialogProps & { loadSet: LoadSetData }) => {
+  const setLoadSetDataMutation = useSetLoadSetDataMutation(props.loadSet.id);
+  const queryClient = useQueryClient();
+
+  const form = useForm<{ data: File[] }>({
+    onSubmit: genericErrorHandler(async ({ value }) => {
+      const formData = new FormData();
+      formData.append("data", value.data[0]);
+      const loadSet = await setLoadSetDataMutation.mutateAsync(formData);
+      await queryClient.invalidateQueries({
+        queryKey: ["loadSetPreviewData", loadSet.id],
+      });
+      props.onClose?.();
+    }),
+    defaultValues: {
+      data: [],
+    },
+  });
+
+  return (
+    <Dialog {...props}>
+      <Surface style={{ width: "100%", maxWidth: 960 }}>
+        <Form form={form}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "var(--spacing)",
+              paddingBottom: "var(--spacing)",
+            }}
+          >
+            <form.Field
+              name="data"
+              validators={{
+                onChange: ({ value }) => (!value || value.length === 0) ? "Cannot be blank" : undefined,
+              }}
+              children={(field) => {
+                return (
+                  <FileInput
+                    label="Data"
+                    accept={{
+                      "text/*": [".sdf", ".sd", ".csv", ".tsv"],
+                      "application/*": [".sdf", ".sd", ".csv", ".tsv"],
+                    }}
+                    onDrop={(files) => {
+                      field.handleChange(files);
+                      field.handleBlur();
+                    }}
+                    overrideFiles={field.state.value}
+                  />
+                );
+              }}
+            />
+          </div>
+          <AddFormControl form={form} label="Update data set" />
+        </Form>
+      </Surface>
+    </Dialog>
+  );
+};
+
 const MappingLoadSet = ({
   loadSet,
   mappings: mappingFromProps,
@@ -72,7 +148,9 @@ const MappingLoadSet = ({
   loadSet: LoadSetData;
   mappings: Record<string, LoadSetMapping> | null;
 }) => {
+  const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
+  const registerToolbarAction = useToolbar();
   const queryClient = useQueryClient();
   const [mappings, setMappings] = useState<Record<string, LoadSetMapping>>(
     mappingFromProps ?? {},
@@ -99,6 +177,18 @@ const MappingLoadSet = ({
   const destroyLoadSetMutation = useDestroyEntityMutation(
     "grit/core/load_sets",
   );
+
+  useEffect(() => {
+    return registerToolbarAction({
+      importItems: [
+        {
+          id: "REPLACE_DATA",
+          text: "Import new data set",
+          onClick: () => setIsOpen(true),
+        },
+      ],
+    });
+  }, [registerToolbarAction]);
 
   if (isFieldsLoading || isPreviewDataLoading) {
     return <Spinner />;
@@ -185,6 +275,11 @@ const MappingLoadSet = ({
         errors={loadSet.record_errors ?? []}
         warnings={loadSet.record_warnings ?? []}
         previewData={previewData}
+      />
+      <NewDataSetDialog
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        loadSet={loadSet}
       />
     </div>
   );

@@ -54,6 +54,10 @@ module Grit::Core
       loader(load_set.entity).validate(load_set)
     end
 
+    def self.set_load_set_data(load_set, data)
+      loader(load_set.entity).set_data(load_set, data)
+    end
+
     protected
     def self.fields(params)
       Grit::Core::LoadSet.entity_fields.filter { |f| f[:id] != "data" }
@@ -202,6 +206,21 @@ module Grit::Core
 
     def self.mapping_fields(load_set)
       load_set.entity.constantize.entity_fields
+    end
+
+    def self.set_data(load_set, data)
+      parsed_data = self.parse(data)
+      load_set.data = data
+      load_set.parsed_data = parsed_data
+      load_set.status_id = Grit::Core::LoadSetStatus.find_by(name: "Mapping").id
+      load_set.record_errors = nil
+      load_set.record_warnings = nil
+
+      load_set.save!
+
+      Grit::Core::LoadSetLoadingRecordPropertyValue.delete_by(load_set_id: load_set.id)
+      Grit::Core::LoadSetLoadingRecord.delete_by(load_set_id: load_set.id)
+      load_set
     end
 
     def self.parse(data)

@@ -11,6 +11,7 @@ Grit::Core::Engine.routes.draw do
     get :mapping_fields
     get :preview_data
     post :set_mappings
+    post :set_data
     post :validate
     post :confirm
     post :rollback
