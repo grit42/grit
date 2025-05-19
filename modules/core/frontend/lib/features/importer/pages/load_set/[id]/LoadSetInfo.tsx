@@ -17,15 +17,24 @@
  */
 
 import { Tabs } from "@grit42/client-library/components";
-import { CSSProperties, useEffect, useMemo, useState } from "react";
+import {
+  CSSProperties,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { GritColumnDef, Table } from "@grit42/table";
 import styles from "./loadSet.module.scss";
 import {
+  LoadSetData,
   LoadSetError,
   LoadSetMapping,
   LoadSetPreviewData,
   LoadSetWarning,
 } from "../../../types";
+import { useToolbar } from "../../../../../Toolbar";
+import { downloadBlob } from "@grit42/client-library/utils";
 
 const ERROR_COLUMNS: GritColumnDef[] = [
   {
@@ -83,16 +92,19 @@ const WARNING_COLUMNS: GritColumnDef[] = [
 ];
 
 const LoadSetInfo = ({
+  loadSet,
   errors,
   warnings,
   mappings,
   previewData,
 }: {
+  loadSet: LoadSetData;
   errors: LoadSetError[];
   warnings: LoadSetWarning[];
   mappings: Record<string, LoadSetMapping>;
   previewData: LoadSetPreviewData;
 }) => {
+  const registerToolbarActions = useToolbar();
   const [selectedTab, setSelectedTab] = useState(0);
 
   useEffect(() => {
@@ -192,6 +204,48 @@ const LoadSetInfo = ({
       }),
     [warnings],
   );
+
+  const exportErrors = useCallback(() => {
+    const headerRow = `${ERROR_COLUMNS.map(({ header }) => header).join(
+      ",",
+    )}\n`;
+    const dataRows = (errorData as Record<string, string | number>[])
+      .map((d) => ERROR_COLUMNS.map(({ id }) => d[id]).join(","))
+      .join("\n");
+
+    downloadBlob(new Blob([headerRow, dataRows]), `${loadSet.name}_errors.csv`);
+  }, [errorData, loadSet.name]);
+
+  const exportErroredRows = useCallback(() => {
+    const headerRow = `${errorRowColumns
+      .map(({ header }) => header)
+      .join(",")}\n`;
+    const dataRows = errorRowData
+      .map((d) => errorRowColumns.map(({ id }) => d[id]).join(","))
+      .join("\n");
+
+    downloadBlob(
+      new Blob([headerRow, dataRows]),
+      `${loadSet.name}_errored_rows.csv`,
+    );
+  }, [errorRowColumns, errorRowData, loadSet.name]);
+
+  useEffect(() => {
+    return registerToolbarActions({
+      exportItems: [
+        {
+          id: "EXPORT_ERRORS",
+          text: "Export errors",
+          onClick: exportErrors,
+        },
+        {
+          id: "EXPORT_ERRORED_ROWS",
+          text: "Export errored rows",
+          onClick: exportErroredRows,
+        },
+      ],
+    });
+  }, [exportErroredRows, exportErrors, registerToolbarActions]);
 
   return (
     <div style={{ maxHeight: "100%", overflow: "auto", width: "100%" }}>

@@ -114,7 +114,8 @@ const NewDataSetDialog = (props: DialogProps & { loadSet: LoadSetData }) => {
             <form.Field
               name="data"
               validators={{
-                onChange: ({ value }) => (!value || value.length === 0) ? "Cannot be blank" : undefined,
+                onChange: ({ value }) =>
+                  !value || value.length === 0 ? "Cannot be blank" : undefined,
               }}
               children={(field) => {
                 return (
@@ -271,6 +272,7 @@ const MappingLoadSet = ({
         />
       </Surface>
       <LoadSetInfo
+        loadSet={loadSet}
         mappings={mappings ?? {}}
         errors={loadSet.record_errors ?? []}
         warnings={loadSet.record_warnings ?? []}

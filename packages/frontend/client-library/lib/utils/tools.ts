@@ -30,6 +30,10 @@ export const downloadFile = (url: string) => {
   link.click();
 };
 
-export const downloadBlob = (blob: Blob) => {
-  downloadFile(URL.createObjectURL(blob));
+export const downloadBlob = (blob: Blob, fileName: string) => {
+  const link = document.createElement("a");
+
+  link.setAttribute("href", URL.createObjectURL(blob));
+  link.setAttribute("download", fileName);
+  link.click();
 };
