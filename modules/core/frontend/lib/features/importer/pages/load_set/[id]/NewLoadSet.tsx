@@ -18,22 +18,16 @@
 
 import {
   ErrorPage,
-  FileInput,
-  Input,
   InputError,
   Spinner,
   Surface,
 } from "@grit42/client-library/components";
 import { useForm, useStore } from "@tanstack/react-form";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import {
-  FormField,
-  Form,
-  genericErrorHandler,
-  AddFormControl,
-} from "@grit42/form";
+import { FormField, genericErrorHandler, AddFormControl } from "@grit42/form";
 import { useCreateLoadSetMutation } from "../../../mutations";
 import { useLoadSetFields } from "../../../queries";
+import { Editor } from "../../../../../components/Editor";
 
 interface NewLoadSetData {
   origin_id: number | null;
@@ -49,11 +43,11 @@ const NewLoadSet = ({ entity }: { entity: string }) => {
   const { data, isLoading, isError, error } = useLoadSetFields(entity);
   const createLoadSetMutation = useCreateLoadSetMutation();
 
-  const form = useForm<NewLoadSetData & { data: File[]; text_data: string }>({
+  const form = useForm<NewLoadSetData & { data: string }>({
     validators: {
       onMount: () => "Provide either a file or text data",
       onChange: ({ value }) =>
-        value.data[0] || value.text_data.length > 0
+        value.data.length > 0
           ? undefined
           : "Provide either a file or text data",
     },
@@ -61,11 +55,9 @@ const NewLoadSet = ({ entity }: { entity: string }) => {
       const formData = new FormData();
       formData.append(
         "data",
-        value.data[0]
-          ? value.data[0]
-          : new File([value.text_data], `${value.name}.csv`, {
-              type: "application/csv",
-            }),
+        new File([value.data], `${value.name}.csv`, {
+          type: "application/csv",
+        }),
       );
       for (const field of data ?? []) {
         const stringValue = value[field.name]?.toString();
@@ -78,8 +70,7 @@ const NewLoadSet = ({ entity }: { entity: string }) => {
       origin_id: origin_id ? parseInt(origin_id) : null,
       name: `${entity}-${Date.now()}`,
       entity,
-      data: [],
-      text_data: "",
+      data: "",
     },
   });
 
@@ -95,70 +86,56 @@ const NewLoadSet = ({ entity }: { entity: string }) => {
   if (isError || !data) return <ErrorPage error={error} />;
 
   return (
-    <Surface style={{ width: "100%", maxWidth: 960 }}>
-      <Form form={form}>
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "var(--spacing)",
-            paddingBottom: "var(--spacing)",
+    <form
+      style={{ height: "100%" }}
+      onSubmit={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        form.handleSubmit();
+      }}
+    >
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "480px 1fr",
+          gap: "var(--spacing)",
+          height: "100%",
+        }}
+      >
+        <Surface style={{ width: "100%", maxWidth: 960 }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "var(--spacing)",
+              paddingBottom: "var(--spacing)",
+            }}
+          >
+            {data.map((d) => (
+              <FormField key={d.name} form={form} fieldDef={d} />
+            ))}
+
+            <InputError error={dataErrors} />
+            <InputError error={errors} />
+          </div>
+          <AddFormControl form={form} label="Start import" />
+        </Surface>
+        <form.Field
+          name="data"
+          listeners={{
+            onChange: ({ fieldApi }) => {
+              fieldApi.form.validateField("data", "submit");
+            },
           }}
-        >
-          {data.map((d) => (
-            <FormField key={d.name} form={form} fieldDef={d} />
-          ))}
-          <form.Field
-            name="data"
-            children={(field) => {
-              return (
-                <FileInput
-                  label="Data"
-                  accept={{
-                    "text/*": [".sdf", ".sd", ".csv", ".tsv"],
-                    "application/*": [".sdf", ".sd", ".csv", ".tsv"],
-                  }}
-                  onDrop={(files) => {
-                    field.handleChange(files);
-                    field.handleBlur();
-                  }}
-                  overrideFiles={field.state.value}
-                />
-              );
-            }}
-          />
-          <form.Field
-            name="text_data"
-            listeners={{
-              onChange: ({ fieldApi }) => {
-                fieldApi.form.validateField("data", "submit")
-              },
-            }}
-            children={(field) => {
-              return (
-                <Input
-                  label="Text data "
-                  name="text_data"
-                  type="textarea"
-                  style={{ height: 350 }}
-                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                    field.handleChange(e.target.value)
-                  }
-                  onBlur={field.handleBlur}
-                  value={field.state.value as string | null}
-                  error={Array.from(new Set(field.state.meta.errors)).join(
-                    "\n",
-                  )}
-                />
-              );
-            }}
-          />
-          <InputError error={dataErrors} />
-          <InputError error={errors} />
-        </div>
-        <AddFormControl form={form} label="Start import" />
-      </Form>
-    </Surface>
+          children={(field) => (
+            <Editor
+              onChange={field.handleChange}
+              value={field.state.value}
+            />
+          )}
+        />
+      </div>
+    </form>
   );
 };
 
