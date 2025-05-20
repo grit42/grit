@@ -16,57 +16,66 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import {
-  Button,
-} from "@grit42/client-library/components";
+import { Button } from "@grit42/client-library/components";
 import { Editor as MonacoEditor } from "@monaco-editor/react";
 import { useCallback, useRef, useState } from "react";
 import { useTheme } from "@grit42/client-library/hooks";
 import { toast } from "@grit42/notifications";
 
-const Editor = (props: {
+const Editor = ({
+  value,
+  onChange,
+  showInitialOverlay,
+}: {
   value: string;
   onChange: (value: string) => void;
+  showInitialOverlay?: boolean;
 }) => {
   const theme = useTheme();
-  const [overlayVisible, setOverlayVisible] = useState(props.value === "");
+  const [overlayVisible, setOverlayVisible] = useState(
+    showInitialOverlay ?? value === "",
+  );
   const [isDragging, setIsDragging] = useState(false);
   const editorRef = useRef<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleEditorMount = useCallback((editor: any) => {
-    editorRef.current = editor;
-    editor.onDropIntoEditor(({ event }: any) => {
-      event.preventDefault();
+  const handleEditorMount = useCallback(
+    (editor: any) => {
+      editorRef.current = editor;
+      editor.setValue(value);
+      editor.onDropIntoEditor(({ event }: any) => {
+        event.preventDefault();
 
-      const file = event.dataTransfer.files[0];
-      if (file) {
-        const reader = new FileReader();
+        const file = event.dataTransfer.files[0];
+        if (file) {
+          const reader = new FileReader();
 
-        reader.onload = (event) => {
-          const fileContent = event.target?.result;
-          editor.setValue(fileContent);
-        };
+          reader.onload = (event) => {
+            const fileContent = event.target?.result;
+            editor.setValue(fileContent);
+          };
 
-        reader.onerror = () => {
+          reader.onerror = () => {
+            toast.error("Could not read the dropped file.");
+          };
+
+          reader.readAsText(file);
+        } else {
           toast.error("Could not read the dropped file.");
-        };
+        }
+      });
 
-        reader.readAsText(file);
-      } else {
-        toast.error("Could not read the dropped file.");
-      }
-    });
+      const handleBlur = () => {
+        if (editor.getValue().trim() === "") {
+          setOverlayVisible(true);
+        }
+      };
 
-    const handleBlur = () => {
-      if (editor.getValue().trim() === "") {
-        setOverlayVisible(true);
-      }
-    };
-
-    editor.onDidBlurEditorText(handleBlur);
-    editor.onDidBlurEditorWidget(handleBlur);
-  }, []);
+      editor.onDidBlurEditorText(handleBlur);
+      editor.onDidBlurEditorWidget(handleBlur);
+    },
+    [value],
+  );
 
   return (
     <div
@@ -90,7 +99,7 @@ const Editor = (props: {
         loading={null}
         onMount={handleEditorMount}
         onChange={(v) => {
-          props.onChange(v ?? "");
+          onChange(v ?? "");
           setOverlayVisible(v === "");
         }}
       />

@@ -20,7 +20,6 @@ import {
   Dialog,
   DialogProps,
   ErrorPage,
-  FileInput,
   Spinner,
   Surface,
 } from "@grit42/client-library/components";
@@ -37,19 +36,24 @@ import {
   useLoadSetMappingFields,
   useLoadSetPreviewData,
 } from "../../../queries";
-import { LoadSetData, LoadSetMapping } from "../../../types";
+import {
+  LoadSetData,
+  LoadSetMapping,
+  LoadSetPreviewData,
+} from "../../../types";
 import MappingForm from "./MappingForm";
 import LoadSetInfo from "./LoadSetInfo";
 import { useDestroyEntityMutation } from "../../../../entities";
 import {
   AddFormControl,
-  Form,
   FormFieldDef,
   genericErrorHandler,
   useForm,
 } from "@grit42/form";
 import { EntityFormFieldDef } from "../../../../../Registrant";
 import { useToolbar } from "../../../../../Toolbar";
+import { Editor } from "../../../../../components/Editor";
+import styles from "./loadSet.module.scss";
 
 const getAutoMappings = (
   fields?: FormFieldDef[],
@@ -80,14 +84,32 @@ const getAutoMappings = (
   return mappings;
 };
 
-const NewDataSetDialog = (props: DialogProps & { loadSet: LoadSetData }) => {
+const NewDataSetDialog = (
+  props: DialogProps & {
+    loadSet: LoadSetData;
+    previewData: LoadSetPreviewData;
+  },
+) => {
   const setLoadSetDataMutation = useSetLoadSetDataMutation(props.loadSet.id);
   const queryClient = useQueryClient();
 
-  const form = useForm<{ data: File[] }>({
+  const defaultData = useMemo(
+    () =>
+      `${props.previewData.headers.join(",")}\n${props.previewData.data
+        .map((row) => row.join(","))
+        .join("\n")}\n`,
+    [props.previewData],
+  );
+
+  const form = useForm<{ data: string }>({
     onSubmit: genericErrorHandler(async ({ value }) => {
       const formData = new FormData();
-      formData.append("data", value.data[0]);
+      formData.append(
+        "data",
+        new File([value.data], `updated_data.csv`, {
+          type: "application/csv",
+        }),
+      );
       const loadSet = await setLoadSetDataMutation.mutateAsync(formData);
       await Promise.all([
         queryClient.invalidateQueries({
@@ -106,49 +128,47 @@ const NewDataSetDialog = (props: DialogProps & { loadSet: LoadSetData }) => {
       props.onClose?.();
     }),
     defaultValues: {
-      data: [],
+      data: defaultData,
     },
   });
 
   return (
-    <Dialog {...props}>
-      <Surface style={{ width: "100%", maxWidth: 960 }}>
-        <Form form={form}>
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "var(--spacing)",
-              paddingBottom: "var(--spacing)",
+    <Dialog {...props} className={styles.newDataSetDialog}>
+      <form
+        style={{ width: "90vw", height: "80vh", display: "grid", flex: 1 }}
+        onSubmit={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          form.handleSubmit();
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "var(--spacing)",
+            paddingBottom: "var(--spacing)",
+          }}
+        >
+          <form.Field
+            name="data"
+            validators={{
+              onChange: ({ value }) =>
+                !value || value.length === 0 ? "Cannot be blank" : undefined,
             }}
-          >
-            <form.Field
-              name="data"
-              validators={{
-                onChange: ({ value }) =>
-                  !value || value.length === 0 ? "Cannot be blank" : undefined,
-              }}
-              children={(field) => {
-                return (
-                  <FileInput
-                    label="Data"
-                    accept={{
-                      "text/*": [".sdf", ".sd", ".csv", ".tsv"],
-                      "application/*": [".sdf", ".sd", ".csv", ".tsv"],
-                    }}
-                    onDrop={(files) => {
-                      field.handleChange(files);
-                      field.handleBlur();
-                    }}
-                    overrideFiles={field.state.value}
-                  />
-                );
-              }}
-            />
-          </div>
-          <AddFormControl form={form} label="Update data set" />
-        </Form>
-      </Surface>
+            children={(field) => {
+              return (
+                <Editor
+                  showInitialOverlay
+                  onChange={(v) => field.handleChange(v)}
+                  value={field.state.value}
+                />
+              );
+            }}
+          />
+        </div>
+        <AddFormControl form={form} label="Update data set" />
+      </form>
     </Dialog>
   );
 };
@@ -293,6 +313,7 @@ const MappingLoadSet = ({
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
         loadSet={loadSet}
+        previewData={previewData}
       />
     </div>
   );
