@@ -115,7 +115,7 @@ const MappingForm = ({
           gap: "var(--spacing)",
           overflowY: "auto",
           paddingInline: "calc(var(--spacing) * 2)",
-          paddingBottom: "calc(var(--spacing) * 2)",
+          paddingBottom: "200px",
         }}
       >
         {entityFields.map((field) => (
