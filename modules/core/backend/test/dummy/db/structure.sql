@@ -673,6 +673,27 @@ ALTER TABLE ONLY public.test_entities
 
 
 --
+-- Name: idx_countries_on_iso_unique; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_countries_on_iso_unique ON public.grit_core_countries USING btree (iso);
+
+
+--
+-- Name: idx_countries_on_name_unique; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_countries_on_name_unique ON public.grit_core_countries USING btree (name);
+
+
+--
+-- Name: idx_locations_on_name_unique; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_locations_on_name_unique ON public.grit_core_locations USING btree (name);
+
+
+--
 -- Name: idx_on_load_set_id_b4686def04; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -684,6 +705,41 @@ CREATE INDEX idx_on_load_set_id_b4686def04 ON public.grit_core_load_set_loading_
 --
 
 CREATE INDEX idx_on_load_set_loading_record_id_c95f80162e ON public.grit_core_load_set_loading_record_property_values USING btree (load_set_loading_record_id);
+
+
+--
+-- Name: idx_origins_on_name_unique; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_origins_on_name_unique ON public.grit_core_origins USING btree (name);
+
+
+--
+-- Name: idx_publication_statuses_on_name_unique; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_publication_statuses_on_name_unique ON public.grit_core_publication_statuses USING btree (name);
+
+
+--
+-- Name: idx_roles_on_name_unique; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_roles_on_name_unique ON public.grit_core_roles USING btree (name);
+
+
+--
+-- Name: idx_units_on_abbreviation_unique; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_units_on_abbreviation_unique ON public.grit_core_units USING btree (abbreviation);
+
+
+--
+-- Name: idx_units_on_name_unique; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_units_on_name_unique ON public.grit_core_units USING btree (name);
 
 
 --
@@ -1014,6 +1070,7 @@ ALTER TABLE ONLY public.test_entities
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20250521124829'),
 ('20250411144141'),
 ('20250411045043'),
 ('20250408050849'),
