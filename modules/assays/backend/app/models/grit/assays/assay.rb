@@ -48,6 +48,7 @@ module Grit::Assays
           type: "entity",
           limit: nil,
           required: true,
+          unique: false,
           default: nil,
           entity: {
             name: definition.name,

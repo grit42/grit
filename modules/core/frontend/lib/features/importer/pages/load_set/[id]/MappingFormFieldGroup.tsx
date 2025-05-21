@@ -45,6 +45,7 @@ const MappingFormFieldGroup = ({
     undefined,
     {
       enabled: entity !== "",
+      select: (data) => data.filter(({unique}) => unique)
     },
   );
 
