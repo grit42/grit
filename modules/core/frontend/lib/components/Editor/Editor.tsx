@@ -26,10 +26,12 @@ const Editor = ({
   value,
   onChange,
   showInitialOverlay,
+  showFilePicker,
 }: {
   value: string;
   onChange: (value: string) => void;
   showInitialOverlay?: boolean;
+  showFilePicker?: boolean;
 }) => {
   const theme = useTheme();
   const [overlayVisible, setOverlayVisible] = useState(
@@ -64,15 +66,6 @@ const Editor = ({
           toast.error("Could not read the dropped file.");
         }
       });
-
-      const handleBlur = () => {
-        if (editor.getValue().trim() === "") {
-          setOverlayVisible(true);
-        }
-      };
-
-      editor.onDidBlurEditorText(handleBlur);
-      editor.onDidBlurEditorWidget(handleBlur);
     },
     [value],
   );
@@ -94,6 +87,10 @@ const Editor = ({
         width="100%"
         theme={theme.colorScheme === "dark" ? "vs-dark" : "light"}
         options={{
+          minimap: {
+            enabled: false,
+          },
+          scrollBeyondLastColumn: 15,
           scrollBeyondLastLine: false,
         }}
         loading={null}
@@ -163,6 +160,7 @@ const Editor = ({
         >
           <p>Drop or pick a file, or click anywhere to start typing</p>
           <Button
+            key="file-picker-button"
             color="secondary"
             onClick={(e) => {
               e.stopPropagation();
@@ -171,37 +169,55 @@ const Editor = ({
           >
             Pick a file
           </Button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            onClick={(e) => e.stopPropagation()}
-            onChange={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-
-              const file = event.target.files?.[0];
-              if (file) {
-                const reader = new FileReader();
-
-                reader.onload = (event) => {
-                  const fileContent = event.target?.result;
-                  setOverlayVisible(false);
-                  editorRef.current?.setValue(fileContent);
-                };
-
-                reader.onerror = () => {
-                  toast.error("Could not read the selected file.");
-                };
-
-                reader.readAsText(file);
-              } else {
-                toast.error("Could not read the selected file.");
-              }
-            }}
-            style={{ display: "none", height: 0, width: 0 }}
-          />
         </div>
       )}
+      {!overlayVisible && showFilePicker && (
+        <Button
+          key="file-picker-button"
+          color="secondary"
+          onClick={(e) => {
+            e.stopPropagation();
+            fileInputRef.current?.click();
+          }}
+          style={{
+            position: "absolute",
+            bottom: "var(--spacing)",
+            right: "calc(var(--spacing) * 3 )",
+            zIndex: 10,
+          }}
+        >
+          Pick a file
+        </Button>
+      )}
+      <input
+        ref={fileInputRef}
+        type="file"
+        onClick={(e) => e.stopPropagation()}
+        onChange={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+
+          const file = event.target.files?.[0];
+          if (file) {
+            const reader = new FileReader();
+
+            reader.onload = (event) => {
+              const fileContent = event.target?.result;
+              setOverlayVisible(false);
+              editorRef.current?.setValue(fileContent);
+            };
+
+            reader.onerror = () => {
+              toast.error("Could not read the selected file.");
+            };
+
+            reader.readAsText(file);
+          } else {
+            toast.error("Could not read the selected file.");
+          }
+        }}
+        style={{ display: "none", height: 0, width: 0 }}
+      />
     </div>
   );
 };
