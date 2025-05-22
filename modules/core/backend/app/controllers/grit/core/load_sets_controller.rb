@@ -210,7 +210,7 @@ module Grit::Core
           load_set = Grit::Core::LoadSet.find(params[:load_set_id])
           data = params[:data].tempfile.read
 
-          load_set = Grit::Core::EntityLoader.set_load_set_data(load_set, data)
+          load_set = Grit::Core::EntityLoader.set_load_set_data(load_set, data, separator: params[:separator])
 
           render json: { success: true, data: load_set }
         rescue StandardError => e
@@ -224,7 +224,7 @@ module Grit::Core
 
     private
       def permitted_params
-        [ "name", "entity", "origin_id", "data", "mappings" ]
+        [ "name", "entity", "origin_id", "data", "mappings", "separator" ]
       end
   end
 end

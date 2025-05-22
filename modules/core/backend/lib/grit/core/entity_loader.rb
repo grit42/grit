@@ -54,27 +54,28 @@ module Grit::Core
       loader(load_set.entity).validate(load_set)
     end
 
-    def self.set_load_set_data(load_set, data)
-      loader(load_set.entity).set_data(load_set, data)
+    def self.set_load_set_data(load_set, data, **args)
+      loader(load_set.entity).set_data(load_set, data, **args)
     end
 
     protected
     def self.fields(params)
-      Grit::Core::LoadSet.entity_fields.filter { |f| f[:name] != "data" }.map { |f| f[:name] != "entity" ? f : {
-        **f,
-        disabled: true
-      } }
+      fields = Grit::Core::LoadSet.entity_fields.filter { |f| f[:name] != "data" }.to_h { |item| [ item[:name], item ] }
+      fields["entity"][:disabled] = true unless fields["entity"].nil?
+      fields["separator"][:required] = true unless fields["separator"].nil?
+      fields.values
     end
 
     def self.create(params)
       data = params[:data].tempfile.read
 
-      parsed_data = self.parse(data)
+      parsed_data = self.parse(data, params[:separator])
 
       record = Grit::Core::LoadSet.new({
         name: params[:name],
         entity: params[:entity],
         data: data,
+        separator: params[:separator],
         parsed_data: parsed_data,
         origin_id: params[:origin_id],
         status_id: Grit::Core::LoadSetStatus.find_by(name: "Mapping").id
@@ -213,9 +214,10 @@ module Grit::Core
       load_set.entity.constantize.entity_fields
     end
 
-    def self.set_data(load_set, data)
-      parsed_data = self.parse(data)
+    def self.set_data(load_set, data, **args)
+      parsed_data = self.parse(data, args[:separator])
       load_set.data = data
+      load_set.separator = args[:separator]
       load_set.parsed_data = parsed_data
       load_set.status_id = Grit::Core::LoadSetStatus.find_by(name: "Mapping").id
       load_set.record_errors = nil
@@ -228,22 +230,23 @@ module Grit::Core
       load_set
     end
 
-    def self.parse(data)
-      guessed_sep = nil
-      guessed_sep_count = -1
-      [ ",", "\t", ";" ].each do |sep|
-        sep_count = data.scan(/(?=#{sep})/).count
-        if guessed_sep_count < sep_count
-          guessed_sep = sep
-          guessed_sep_count = sep_count
-        end
-      end
+    def self.parse(data, separator)
       begin
-        parsed = CSV.parse(data, col_sep: guessed_sep, liberal_parsing: true, encoding: "utf-8")
+        parsed = CSV.parse(data,
+                          col_sep: separator,
+                          liberal_parsing: true,
+                          encoding: "utf-8")
         return parsed if parsed.map(&:size).uniq.size == 1
-      rescue StandardError
+      rescue CSV::MalformedCSVError => e
+        raise ParseException.new "Malformed CSV data: #{e.message}"
+      rescue ArgumentError => e
+        raise ParseException.new "Invalid CSV parameters: #{e.message}"
+      rescue Encoding::InvalidByteSequenceError => e
+        raise ParseException.new "Invalid character encoding in CSV: #{e.message}"
+      rescue StandardError => e
+        raise ParseException.new "Failed to parse CSV: #{e.message}"
       end
-      raise ParseException.new "Unable to guess value delimiter"
+      raise ParseException.new "Inconsistent column count in CSV rows"
     end
   end
 end

@@ -27,6 +27,7 @@ export interface LoadSetMapping {
 
 export interface LoadSetData extends EntityData {
   entity: string;
+  separator: string | null;
   origin_id: number;
   origin_id__name: string;
   status_id: number;

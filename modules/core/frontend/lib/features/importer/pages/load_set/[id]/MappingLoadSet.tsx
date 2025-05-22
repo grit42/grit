@@ -20,6 +20,7 @@ import {
   Dialog,
   DialogProps,
   ErrorPage,
+  InputLabel,
   Spinner,
   Surface,
 } from "@grit42/client-library/components";
@@ -33,6 +34,7 @@ import {
   useValidateLoadSetMutation,
 } from "../../../mutations";
 import {
+  useLoadSetFields,
   useLoadSetMappingFields,
   useLoadSetPreviewData,
 } from "../../../queries";
@@ -46,6 +48,7 @@ import LoadSetInfo from "./LoadSetInfo";
 import { useDestroyEntityMutation } from "../../../../entities";
 import {
   AddFormControl,
+  FormField,
   FormFieldDef,
   genericErrorHandler,
   useForm,
@@ -54,6 +57,7 @@ import { EntityFormFieldDef } from "../../../../../Registrant";
 import { useToolbar } from "../../../../../Toolbar";
 import { Editor } from "../../../../../components/Editor";
 import styles from "./loadSet.module.scss";
+import { guessDelimiter } from "../../../utils/csv";
 
 const getAutoMappings = (
   fields?: FormFieldDef[],
@@ -90,20 +94,28 @@ const NewDataSetDialog = (
     previewData: LoadSetPreviewData;
   },
 ) => {
+  const {
+    data: loadSetFields,
+    isLoading,
+    isError,
+    error,
+  } = useLoadSetFields(props.loadSet.entity);
+
   const setLoadSetDataMutation = useSetLoadSetDataMutation(props.loadSet.id);
   const queryClient = useQueryClient();
 
   const defaultData = useMemo(
     () =>
-      `${props.previewData.headers.join(",")}\n${props.previewData.data
-        .map((row) => row.join(","))
+      `${props.previewData.headers.join(props.loadSet.separator!)}\n${props.previewData.data
+        .map((row) => row.join(props.loadSet.separator!))
         .join("\n")}\n`,
-    [props.previewData],
+    [props.loadSet.separator, props.previewData.data, props.previewData.headers],
   );
 
-  const form = useForm<{ data: string }>({
+  const form = useForm<{ data: string; separator: string | null }>({
     onSubmit: genericErrorHandler(async ({ value }) => {
       const formData = new FormData();
+      formData.append("separator", value.separator ?? "")
       formData.append(
         "data",
         new File([value.data], `updated_data.csv`, {
@@ -129,44 +141,66 @@ const NewDataSetDialog = (
     }),
     defaultValues: {
       data: defaultData,
+      separator: props.loadSet.separator,
     },
   });
+
+  if (isLoading) return <Spinner />;
+  if (isError || !loadSetFields?.length) return <ErrorPage error={error} />;
+
+  const separatorField = loadSetFields.find((f) => f.name === "separator");
 
   return (
     <Dialog {...props} className={styles.newDataSetDialog}>
       <form
-        style={{ width: "90vw", height: "80vh", display: "grid", flex: 1 }}
+        style={{ width: "90vw", height: "80vh", display: "grid" }}
         onSubmit={(e) => {
           e.preventDefault();
           e.stopPropagation();
           form.handleSubmit();
         }}
       >
-        <div
+        <Surface
           style={{
+            width: "100%",
             display: "flex",
             flexDirection: "column",
             gap: "var(--spacing)",
-            paddingBottom: "var(--spacing)",
+            marginBottom: "var(--spacing)",
           }}
         >
+          {separatorField && (
+            <FormField form={form} fieldDef={separatorField} />
+          )}
+                  <div style={{ display: "grid", gridTemplateRows: "min-content 1fr", flex: 1 }}>
+          <InputLabel label="Data *" />
           <form.Field
             name="data"
             validators={{
               onChange: ({ value }) =>
                 !value || value.length === 0 ? "Cannot be blank" : undefined,
             }}
+            listeners={{
+              onBlur: ({ value, fieldApi }) => {
+                guessDelimiter(value).then((guess) => {
+                  fieldApi.form.setFieldValue("separator", guess);
+                });
+              },
+            }}
             children={(field) => {
               return (
                 <Editor
                   showInitialOverlay
-                  onChange={(v) => field.handleChange(v)}
+                  showFilePicker
+                  onChange={field.handleChange}
+                  onBlur={field.handleBlur}
                   value={field.state.value}
                 />
               );
             }}
           />
         </div>
+        </Surface>
         <AddFormControl form={form} label="Update data set" />
       </form>
     </Dialog>

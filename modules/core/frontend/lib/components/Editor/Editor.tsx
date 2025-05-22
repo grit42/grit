@@ -16,7 +16,7 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Button } from "@grit42/client-library/components";
+import { Button, Surface } from "@grit42/client-library/components";
 import { Editor as MonacoEditor } from "@monaco-editor/react";
 import { useCallback, useRef, useState } from "react";
 import { useTheme } from "@grit42/client-library/hooks";
@@ -25,11 +25,13 @@ import { toast } from "@grit42/notifications";
 const Editor = ({
   value,
   onChange,
+  onBlur,
   showInitialOverlay,
   showFilePicker,
 }: {
   value: string;
   onChange: (value: string) => void;
+  onBlur?: () => void;
   showInitialOverlay?: boolean;
   showFilePicker?: boolean;
 }) => {
@@ -55,6 +57,9 @@ const Editor = ({
           reader.onload = (event) => {
             const fileContent = event.target?.result;
             editor.setValue(fileContent);
+            if (onBlur) {
+              onBlur();
+            }
           };
 
           reader.onerror = () => {
@@ -66,8 +71,13 @@ const Editor = ({
           toast.error("Could not read the dropped file.");
         }
       });
+
+      if (onBlur) {
+        editor.onDidBlurEditorText(onBlur);
+        editor.onDidBlurEditorWidget(onBlur);
+      }
     },
-    [value],
+    [onBlur, value],
   );
 
   return (
@@ -122,6 +132,9 @@ const Editor = ({
               reader.onload = (event) => {
                 const fileContent = event.target?.result;
                 editorRef.current?.setValue(fileContent);
+                if (onBlur) {
+                  onBlur();
+                }
               };
 
               reader.onerror = () => {
@@ -158,17 +171,27 @@ const Editor = ({
             editorRef.current?.focus();
           }}
         >
-          <p>Drop or pick a file, or click anywhere to start typing</p>
-          <Button
-            key="file-picker-button"
-            color="secondary"
-            onClick={(e) => {
-              e.stopPropagation();
-              fileInputRef.current?.click();
+          <Surface
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "var(--spacing)",
             }}
           >
-            Pick a file
-          </Button>
+            <p>Drop or pick a file, or click anywhere to start typing</p>
+            <Button
+              key="file-picker-button"
+              color="secondary"
+              onClick={(e) => {
+                e.stopPropagation();
+                fileInputRef.current?.click();
+              }}
+            >
+              Pick a file
+            </Button>
+          </Surface>
         </div>
       )}
       {!overlayVisible && showFilePicker && (
@@ -205,6 +228,10 @@ const Editor = ({
               const fileContent = event.target?.result;
               setOverlayVisible(false);
               editorRef.current?.setValue(fileContent);
+              editorRef.current?.focus();
+              if (onBlur) {
+                onBlur();
+              }
             };
 
             reader.onerror = () => {

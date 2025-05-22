@@ -36,6 +36,7 @@ import { useLoadSetFields } from "../../../queries";
 import { Editor } from "../../../../../components/Editor";
 import { useMemo } from "react";
 import { EntityProperties } from "../../../../entities";
+import { guessDelimiter } from "../../../utils/csv";
 
 interface NewLoadSetData {
   origin_id: number | null;
@@ -124,17 +125,27 @@ const NewLoadSetForm = ({
           </div>
           <AddFormControl form={form} label="Start import" />
         </Surface>
-        <div style={{ display: "grid", gridTemplateRows: "min-content 1fr"}}>
-          <InputLabel label="Data *"/>
+        <div style={{ display: "grid", gridTemplateRows: "min-content 1fr" }}>
+          <InputLabel label="Data *" />
           <form.Field
             name="data"
             listeners={{
               onChange: ({ fieldApi }) => {
                 fieldApi.form.validateField("data", "submit");
               },
+              onBlur: ({ value, fieldApi }) => {
+                guessDelimiter(value).then((guess) => {
+                  fieldApi.form.setFieldValue("separator", guess);
+                });
+              },
             }}
             children={(field) => (
-              <Editor onChange={field.handleChange} value={field.state.value} showFilePicker />
+              <Editor
+                onChange={field.handleChange}
+                onBlur={field.handleBlur}
+                value={field.state.value}
+                showFilePicker
+              />
             )}
           />
         </div>
