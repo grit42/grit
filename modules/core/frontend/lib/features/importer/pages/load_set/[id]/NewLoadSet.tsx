@@ -19,31 +19,43 @@
 import {
   ErrorPage,
   InputError,
+  InputLabel,
   Spinner,
   Surface,
 } from "@grit42/client-library/components";
 import { useForm, useStore } from "@tanstack/react-form";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { FormField, genericErrorHandler, AddFormControl } from "@grit42/form";
+import {
+  FormField,
+  genericErrorHandler,
+  AddFormControl,
+  FormFieldDef,
+} from "@grit42/form";
 import { useCreateLoadSetMutation } from "../../../mutations";
 import { useLoadSetFields } from "../../../queries";
 import { Editor } from "../../../../../components/Editor";
+import { useMemo } from "react";
+import { EntityProperties } from "../../../../entities";
 
 interface NewLoadSetData {
   origin_id: number | null;
   name: string;
   entity: string;
+  data: string;
   [key: string]: number | string | File[] | null;
 }
 
-const NewLoadSet = ({ entity }: { entity: string }) => {
+const NewLoadSetForm = ({
+  fields,
+  defaultValues,
+}: {
+  fields: FormFieldDef[];
+  defaultValues: EntityProperties;
+}) => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const origin_id = searchParams.get("origin_id");
-  const { data, isLoading, isError, error } = useLoadSetFields(entity);
   const createLoadSetMutation = useCreateLoadSetMutation();
 
-  const form = useForm<NewLoadSetData & { data: string }>({
+  const form = useForm<NewLoadSetData>({
     validators: {
       onMount: () => "Provide either a file or text data",
       onChange: ({ value }) =>
@@ -59,19 +71,14 @@ const NewLoadSet = ({ entity }: { entity: string }) => {
           type: "application/csv",
         }),
       );
-      for (const field of data ?? []) {
+      for (const field of fields) {
         const stringValue = value[field.name]?.toString();
         if (stringValue) formData.append(field.name, stringValue);
       }
       const loadSet = await createLoadSetMutation.mutateAsync(formData);
       navigate(`../${loadSet.id}`, { relative: "path" });
     }),
-    defaultValues: {
-      origin_id: origin_id ? parseInt(origin_id) : null,
-      name: `${entity}-${Date.now()}`,
-      entity,
-      data: "",
-    },
+    defaultValues: defaultValues as NewLoadSetData,
   });
 
   const errors = useStore(form.store, ({ errors }) =>
@@ -81,9 +88,6 @@ const NewLoadSet = ({ entity }: { entity: string }) => {
   const dataErrors = useStore(form.store, ({ fieldMeta }) =>
     Array.from(new Set(fieldMeta.data?.errors)).join("\n"),
   );
-
-  if (isLoading) return <Spinner />;
-  if (isError || !data) return <ErrorPage error={error} />;
 
   return (
     <form
@@ -111,8 +115,8 @@ const NewLoadSet = ({ entity }: { entity: string }) => {
               paddingBottom: "var(--spacing)",
             }}
           >
-            {data.map((d) => (
-              <FormField key={d.name} form={form} fieldDef={d} />
+            {fields.map((f) => (
+              <FormField key={f.name} form={form} fieldDef={f} />
             ))}
 
             <InputError error={dataErrors} />
@@ -120,23 +124,53 @@ const NewLoadSet = ({ entity }: { entity: string }) => {
           </div>
           <AddFormControl form={form} label="Start import" />
         </Surface>
-        <form.Field
-          name="data"
-          listeners={{
-            onChange: ({ fieldApi }) => {
-              fieldApi.form.validateField("data", "submit");
-            },
-          }}
-          children={(field) => (
-            <Editor
-              onChange={field.handleChange}
-              value={field.state.value}
-            />
-          )}
-        />
+        <div style={{ display: "grid", gridTemplateRows: "min-content 1fr"}}>
+          <InputLabel label="Data *"/>
+          <form.Field
+            name="data"
+            listeners={{
+              onChange: ({ fieldApi }) => {
+                fieldApi.form.validateField("data", "submit");
+              },
+            }}
+            children={(field) => (
+              <Editor onChange={field.handleChange} value={field.state.value} showFilePicker />
+            )}
+          />
+        </div>
       </div>
     </form>
   );
+};
+
+const NewLoadSet = ({ entity }: { entity: string }) => {
+  const [searchParams] = useSearchParams();
+  const { data, isLoading, isError, error } = useLoadSetFields(entity);
+
+  const defaultValues = useMemo(() => {
+    const values: EntityProperties = {
+      name: `${entity}-${Date.now()}`,
+      data: "",
+    };
+    if (!data) return values;
+    for (const field of data) {
+      if (searchParams.has(field.name)) {
+        switch (field.type) {
+          case "integer":
+            values[field.name] = Number(searchParams.get(field.name));
+            break;
+          default:
+            values[field.name] = searchParams.get(field.name);
+        }
+      }
+    }
+    return values;
+  }, [data, entity, searchParams]);
+
+  if (isLoading) return <Spinner />;
+  if (isError || !data) return <ErrorPage error={error} />;
+
+  return <NewLoadSetForm defaultValues={defaultValues} fields={data} />;
 };
 
 export default NewLoadSet;
