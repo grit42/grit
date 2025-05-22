@@ -60,7 +60,10 @@ module Grit::Core
 
     protected
     def self.fields(params)
-      Grit::Core::LoadSet.entity_fields.filter { |f| f[:id] != "data" }
+      Grit::Core::LoadSet.entity_fields.filter { |f| f[:name] != "data" }.map { |f| f[:name] != "entity" ? f : {
+        **f,
+        disabled: true
+      } }
     end
 
     def self.create(params)
