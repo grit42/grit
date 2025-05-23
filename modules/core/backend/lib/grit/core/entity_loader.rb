@@ -63,6 +63,7 @@ module Grit::Core
       fields = Grit::Core::LoadSet.entity_fields.filter { |f| f[:name] != "data" }.to_h { |item| [ item[:name], item ] }
       fields["entity"][:disabled] = true unless fields["entity"].nil?
       fields["separator"][:required] = true unless fields["separator"].nil?
+      fields["separator"][:placeholder] = "Will attempt to guess based on provided data" unless fields["separator"].nil?
       fields.values
     end
 

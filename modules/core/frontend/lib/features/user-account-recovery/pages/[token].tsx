@@ -18,7 +18,7 @@
 
 import { useNavigate, useParams } from "react-router-dom";
 import AuthenticationPage from "../../../components/AuthenticationPage";
-import { useForm } from "@tanstack/react-form";
+import { useForm } from "@grit42/form";
 import { Button, Input } from "@grit42/client-library/components";
 import { useResetPasswordMutation } from "../mutations";
 

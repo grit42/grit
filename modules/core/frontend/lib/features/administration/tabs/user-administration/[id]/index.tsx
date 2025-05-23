@@ -18,7 +18,7 @@
 
 import { useNavigate, useParams } from "react-router-dom";
 import { useCallback, useMemo, useState } from "react";
-import { useForm } from "@tanstack/react-form";
+import { useForm } from "@grit42/form";
 import { ErrorPage, Spinner } from "@grit42/client-library/components";
 import {
   FormField,

@@ -24,7 +24,7 @@ import {
   useUpdateUserInfoMutation,
 } from "../mutations";
 import { classnames } from "@grit42/client-library/utils";
-import { useForm } from "@tanstack/react-form";
+import { useForm } from "@grit42/form";
 import { Surface } from "@grit42/client-library/components";
 import {
   Form,

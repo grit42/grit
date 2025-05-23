@@ -23,7 +23,7 @@ import {
   Spinner,
   Surface,
 } from "@grit42/client-library/components";
-import { useForm, useStore } from "@tanstack/react-form";
+import { useForm, useStore } from "@grit42/form";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   FormField,
@@ -39,11 +39,11 @@ import { EntityProperties } from "../../../../entities";
 import { guessDelimiter } from "../../../utils/csv";
 
 interface NewLoadSetData {
-  origin_id: number | null;
   name: string;
   entity: string;
   data: string;
-  [key: string]: number | string | File[] | null;
+  origin_id: number;
+  [key: string]: unknown;
 }
 
 const NewLoadSetForm = ({

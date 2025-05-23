@@ -18,7 +18,7 @@
 
 import { useNavigate } from "react-router-dom";
 import { useCallback } from "react";
-import { Row } from "@tanstack/table-core";
+import { Row } from "@grit42/table";
 import { GritColumnDef, Table, useSetupTableState } from "@grit42/table";
 import { EntityInfo } from "../types";
 import { useEntities } from "../queries";

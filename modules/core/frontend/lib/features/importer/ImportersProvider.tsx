@@ -18,7 +18,7 @@
 
 import { PropsWithChildren, useCallback, useMemo, useState } from "react";
 import ImportersContext, { ImporterDef } from "./ImportersContext";
-import NewLoadSet from "./pages/load_set/[id]/NewLoadSet";
+import { NewLoadSet } from "./pages/load_set/[id]/stages/new";
 import LoadSet from "./pages/load_set/[id]/LoadSet";
 
 const ImportersProvider: React.FC<PropsWithChildren> = ({ children }) => {

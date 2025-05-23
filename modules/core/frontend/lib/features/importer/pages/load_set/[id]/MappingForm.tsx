@@ -17,7 +17,7 @@
  */
 
 import { Button, ButtonGroup } from "@grit42/client-library/components";
-import { useForm } from "@tanstack/react-form";
+import { useForm } from "@grit42/form";
 import { Form, FormFieldDef } from "@grit42/form";
 import { Fragment, useMemo } from "react";
 import { LoadSetData, LoadSetMapping } from "../../../types";
