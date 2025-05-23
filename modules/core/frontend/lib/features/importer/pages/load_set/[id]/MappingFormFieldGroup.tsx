@@ -17,7 +17,7 @@
  */
 
 import { Option, Select, ToggleSwitch } from "@grit42/client-library/components";
-import { ReactFormExtendedApi, useStore } from "@tanstack/react-form";
+import { ReactFormExtendedApi, useStore } from "@grit42/form";
 import { FormFieldDef, requiredValidator, useFormInputs } from "@grit42/form";
 import { useEffect } from "react";
 import { useEntityColumns } from "../../../../entities";
@@ -45,6 +45,7 @@ const MappingFormFieldGroup = ({
     undefined,
     {
       enabled: entity !== "",
+      select: (data) => data.filter(({unique}) => unique)
     },
   );
 

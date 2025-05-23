@@ -25,6 +25,7 @@ export interface LoadSetCreatorProps {
 
 export interface LoadSetEditorProps {
   id: string | number;
+  loadSet: LoadSetData;
 }
 
 export interface SucceededLoadSetProps {

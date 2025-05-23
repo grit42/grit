@@ -18,42 +18,49 @@
 
 import {
   ErrorPage,
-  FileInput,
-  Input,
   InputError,
+  InputLabel,
   Spinner,
   Surface,
 } from "@grit42/client-library/components";
-import { useForm, useStore } from "@tanstack/react-form";
+import { useForm, useStore } from "@grit42/form";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   FormField,
-  Form,
   genericErrorHandler,
   AddFormControl,
+  FormFieldDef,
 } from "@grit42/form";
 import { useCreateLoadSetMutation } from "../../../mutations";
 import { useLoadSetFields } from "../../../queries";
+import { Editor } from "../../../../../components/Editor";
+import { useMemo } from "react";
+import { EntityProperties } from "../../../../entities";
+import { guessDelimiter } from "../../../utils/csv";
 
 interface NewLoadSetData {
-  origin_id: number | null;
   name: string;
   entity: string;
-  [key: string]: number | string | File[] | null;
+  data: string;
+  origin_id: number;
+  [key: string]: unknown;
 }
 
-const NewLoadSet = ({ entity }: { entity: string }) => {
+const NewLoadSetForm = ({
+  fields,
+  defaultValues,
+}: {
+  fields: FormFieldDef[];
+  defaultValues: EntityProperties;
+}) => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const origin_id = searchParams.get("origin_id");
-  const { data, isLoading, isError, error } = useLoadSetFields(entity);
   const createLoadSetMutation = useCreateLoadSetMutation();
 
-  const form = useForm<NewLoadSetData & { data: File[]; text_data: string }>({
+  const form = useForm<NewLoadSetData>({
     validators: {
       onMount: () => "Provide either a file or text data",
       onChange: ({ value }) =>
-        value.data[0] || value.text_data.length > 0
+        value.data.length > 0
           ? undefined
           : "Provide either a file or text data",
     },
@@ -61,26 +68,18 @@ const NewLoadSet = ({ entity }: { entity: string }) => {
       const formData = new FormData();
       formData.append(
         "data",
-        value.data[0]
-          ? value.data[0]
-          : new File([value.text_data], `${value.name}.csv`, {
-              type: "application/csv",
-            }),
+        new File([value.data], `${value.name}.csv`, {
+          type: "application/csv",
+        }),
       );
-      for (const field of data ?? []) {
+      for (const field of fields) {
         const stringValue = value[field.name]?.toString();
         if (stringValue) formData.append(field.name, stringValue);
       }
       const loadSet = await createLoadSetMutation.mutateAsync(formData);
       navigate(`../${loadSet.id}`, { relative: "path" });
     }),
-    defaultValues: {
-      origin_id: origin_id ? parseInt(origin_id) : null,
-      name: `${entity}-${Date.now()}`,
-      entity,
-      data: [],
-      text_data: "",
-    },
+    defaultValues: defaultValues as NewLoadSetData,
   });
 
   const errors = useStore(form.store, ({ errors }) =>
@@ -91,75 +90,98 @@ const NewLoadSet = ({ entity }: { entity: string }) => {
     Array.from(new Set(fieldMeta.data?.errors)).join("\n"),
   );
 
+  return (
+    <form
+      style={{ height: "100%" }}
+      onSubmit={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        form.handleSubmit();
+      }}
+    >
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "480px 1fr",
+          gap: "var(--spacing)",
+          height: "100%",
+        }}
+      >
+        <Surface style={{ width: "100%", maxWidth: 960 }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "var(--spacing)",
+              paddingBottom: "var(--spacing)",
+            }}
+          >
+            {fields.map((f) => (
+              <FormField key={f.name} form={form} fieldDef={f} />
+            ))}
+
+            <InputError error={dataErrors} />
+            <InputError error={errors} />
+          </div>
+          <AddFormControl form={form} label="Start import" />
+        </Surface>
+        <div style={{ display: "grid", gridTemplateRows: "min-content 1fr" }}>
+          <InputLabel label="Data *" />
+          <form.Field
+            name="data"
+            listeners={{
+              onChange: ({ fieldApi }) => {
+                fieldApi.form.validateField("data", "submit");
+              },
+              onBlur: ({ value, fieldApi }) => {
+                guessDelimiter(value).then((guess) => {
+                  fieldApi.form.setFieldValue("separator", guess);
+                });
+              },
+            }}
+            children={(field) => (
+              <Editor
+                onChange={field.handleChange}
+                onBlur={field.handleBlur}
+                value={field.state.value}
+                showFilePicker
+              />
+            )}
+          />
+        </div>
+      </div>
+    </form>
+  );
+};
+
+const NewLoadSet = ({ entity }: { entity: string }) => {
+  const [searchParams] = useSearchParams();
+  const { data, isLoading, isError, error } = useLoadSetFields(entity);
+
+  const defaultValues = useMemo(() => {
+    const values: EntityProperties = {
+      name: `${entity}-${Date.now()}`,
+      data: "",
+    };
+    if (!data) return values;
+    for (const field of data) {
+      if (searchParams.has(field.name)) {
+        switch (field.type) {
+          case "integer":
+            values[field.name] = Number(searchParams.get(field.name));
+            break;
+          default:
+            values[field.name] = searchParams.get(field.name);
+        }
+      }
+    }
+    return values;
+  }, [data, entity, searchParams]);
+
   if (isLoading) return <Spinner />;
   if (isError || !data) return <ErrorPage error={error} />;
 
-  return (
-    <Surface style={{ width: "100%", maxWidth: 960 }}>
-      <Form form={form}>
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "var(--spacing)",
-            paddingBottom: "var(--spacing)",
-          }}
-        >
-          {data.map((d) => (
-            <FormField key={d.name} form={form} fieldDef={d} />
-          ))}
-          <form.Field
-            name="data"
-            children={(field) => {
-              return (
-                <FileInput
-                  label="Data"
-                  accept={{
-                    "text/*": [".sdf", ".sd", ".csv", ".tsv"],
-                    "application/*": [".sdf", ".sd", ".csv", ".tsv"],
-                  }}
-                  onDrop={(files) => {
-                    field.handleChange(files);
-                    field.handleBlur();
-                  }}
-                  overrideFiles={field.state.value}
-                />
-              );
-            }}
-          />
-          <form.Field
-            name="text_data"
-            listeners={{
-              onChange: ({ fieldApi }) => {
-                fieldApi.form.validateField("data", "submit")
-              },
-            }}
-            children={(field) => {
-              return (
-                <Input
-                  label="Text data "
-                  name="text_data"
-                  type="textarea"
-                  style={{ height: 350 }}
-                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                    field.handleChange(e.target.value)
-                  }
-                  onBlur={field.handleBlur}
-                  value={field.state.value as string | null}
-                  error={Array.from(new Set(field.state.meta.errors)).join(
-                    "\n",
-                  )}
-                />
-              );
-            }}
-          />
-          <InputError error={dataErrors} />
-          <InputError error={errors} />
-        </div>
-        <AddFormControl form={form} label="Start import" />
-      </Form>
-    </Surface>
-  );
+  return <NewLoadSetForm defaultValues={defaultValues} fields={data} />;
 };
 
 export default NewLoadSet;

@@ -107,7 +107,8 @@ module Grit::Assays
             display_name: definition_column.name,
             description: definition_column.description,
             type: definition_column.data_type.is_entity ? "entity" : definition_column.data_type.name,
-            required: definition_column.required
+            required: definition_column.required,
+            unique: false
           }
 
           if definition_column.data_type.is_entity

@@ -17,15 +17,24 @@
  */
 
 import { Tabs } from "@grit42/client-library/components";
-import { CSSProperties, useEffect, useMemo, useState } from "react";
+import {
+  CSSProperties,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { GritColumnDef, Table } from "@grit42/table";
 import styles from "./loadSet.module.scss";
 import {
+  LoadSetData,
   LoadSetError,
   LoadSetMapping,
   LoadSetPreviewData,
   LoadSetWarning,
 } from "../../../types";
+import { useToolbar } from "../../../../../Toolbar";
+import { downloadBlob } from "@grit42/client-library/utils";
 
 const ERROR_COLUMNS: GritColumnDef[] = [
   {
@@ -83,38 +92,55 @@ const WARNING_COLUMNS: GritColumnDef[] = [
 ];
 
 const LoadSetInfo = ({
+  loadSet,
   errors,
   warnings,
   mappings,
   previewData,
 }: {
+  loadSet: LoadSetData;
   errors: LoadSetError[];
   warnings: LoadSetWarning[];
   mappings: Record<string, LoadSetMapping>;
   previewData: LoadSetPreviewData;
 }) => {
+  const registerToolbarActions = useToolbar();
   const [selectedTab, setSelectedTab] = useState(0);
 
   useEffect(() => {
-    if (errors.length > 0 || warnings.length > 0) {
-      setSelectedTab(1);
-    }
+    setSelectedTab(errors.length > 0 || warnings.length > 0 ? 1 : 0);
   }, [errors, warnings]);
 
   const columns = useMemo(
     () =>
-      previewData.headers.filter(h => h !== null).map(
-        (h, i): GritColumnDef<Record<string, string>> => ({
-          accessorKey: i.toString(),
-          header: h,
-          id: i.toString(),
-          type: "string",
-        }),
-      ) ?? [],
+      previewData.headers
+        .filter((h) => h !== null)
+        .map(
+          (h, i): GritColumnDef<Record<string, string | number>> => ({
+            accessorKey: i.toString(),
+            header: h,
+            id: i.toString(),
+            type: "string",
+          }),
+        ) ?? [],
     [previewData.headers],
   );
 
-  const data = useMemo(
+  const errorRowColumns = useMemo(
+    () => [
+      {
+        accessorKey: "index",
+        header: "Line",
+        id: "index",
+        type: "integer",
+        size: 40,
+      },
+      ...columns,
+    ],
+    [columns],
+  );
+
+  const data: Record<string, string | number>[] = useMemo(
     () =>
       previewData.data.map((datum) =>
         datum.reduce((acc, prop, i) => ({ ...acc, [i.toString()]: prop }), {}),
@@ -145,6 +171,20 @@ const LoadSetInfo = ({
     [errors, mappings, previewData.data, previewData.headers],
   );
 
+  const errorRowData = useMemo(() => {
+    const errorRows: Record<string, string | number>[] = [];
+    const errorRowIndexes = new Set<number>();
+    for (const { index } of errors) {
+      errorRowIndexes.add(index);
+    }
+    for (let i = 0; i < data.length; i++) {
+      if (errorRowIndexes.has(i)) {
+        errorRows.push({ ...data[i], index: i + 2 });
+      }
+    }
+    return errorRows;
+  }, [data, errors]);
+
   const warningData = useMemo(
     () =>
       warnings.flatMap((w) => {
@@ -162,6 +202,48 @@ const LoadSetInfo = ({
       }),
     [warnings],
   );
+
+  const exportErrors = useCallback(() => {
+    const headerRow = `${ERROR_COLUMNS.map(({ header }) => header).join(
+      ",",
+    )}\n`;
+    const dataRows = (errorData as Record<string, string | number>[])
+      .map((d) => ERROR_COLUMNS.map(({ id }) => d[id]).join(","))
+      .join("\n");
+
+    downloadBlob(new Blob([headerRow, dataRows]), `${loadSet.name}_errors.csv`);
+  }, [errorData, loadSet.name]);
+
+  const exportErroredRows = useCallback(() => {
+    const headerRow = `${errorRowColumns
+      .map(({ header }) => header)
+      .join(",")}\n`;
+    const dataRows = errorRowData
+      .map((d) => errorRowColumns.map(({ id }) => d[id]).join(","))
+      .join("\n");
+
+    downloadBlob(
+      new Blob([headerRow, dataRows]),
+      `${loadSet.name}_errored_rows.csv`,
+    );
+  }, [errorRowColumns, errorRowData, loadSet.name]);
+
+  useEffect(() => {
+    return registerToolbarActions({
+      exportItems: [
+        {
+          id: "EXPORT_ERRORS",
+          text: "Export errors",
+          onClick: exportErrors,
+        },
+        {
+          id: "EXPORT_ERRORED_ROWS",
+          text: "Export errored rows",
+          onClick: exportErroredRows,
+        },
+      ],
+    });
+  }, [exportErroredRows, exportErrors, registerToolbarActions]);
 
   return (
     <div style={{ maxHeight: "100%", overflow: "auto", width: "100%" }}>
@@ -206,6 +288,28 @@ const LoadSetInfo = ({
                     <Table
                       columns={ERROR_COLUMNS}
                       data={errorData}
+                      disableFooter
+                      settings={{
+                        disableColumnReorder: true,
+                        disableColumnSorting: true,
+                        disableFilters: true,
+                        disableVisibilitySettings: true,
+                      }}
+                    />
+                  ),
+                },
+                {
+                  key: "errored-rows",
+                  name: "Errored rows",
+                  panelProps: {
+                    style: {
+                      overflowY: "auto",
+                    } as CSSProperties,
+                  },
+                  panel: (
+                    <Table
+                      columns={errorRowColumns}
+                      data={errorRowData}
                       disableFooter
                       settings={{
                         disableColumnReorder: true,

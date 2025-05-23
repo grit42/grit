@@ -34,7 +34,7 @@ import {
   useQueryClient,
 } from "@grit42/api";
 import Circle1New from "@grit42/client-library/icons/Circle1New";
-import { Row } from "@tanstack/table-core";
+import { Row } from "@grit42/table";
 import { GritColumnDef, Table, useSetupTableState } from "@grit42/table";
 import { EntityData, EntityInfo } from "../../types";
 import { ErrorPage, Spinner, Tabs } from "@grit42/client-library/components";

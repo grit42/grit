@@ -48,6 +48,7 @@ export type EntityPropertyDef<T extends EntityData = EntityData> = {
   type: string;
   limit?: number;
   required: boolean;
+  unique: boolean;
   default_hidden: boolean;
   entity?: ForeignEntityPropertyDef;
   defaultColumnSize?: number;

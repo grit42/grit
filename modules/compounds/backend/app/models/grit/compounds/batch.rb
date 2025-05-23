@@ -94,6 +94,7 @@ module Grit::Compounds
           description: type_property.description,
           type: type_property.data_type.is_entity ? "entity" : type_property.data_type.name,
           required: type_property.required,
+          unique: false,
           compound_type_id: type_property.compound_type_id,
           compound_type_id__name: type_property.compound_type&.name
         }

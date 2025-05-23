@@ -19,7 +19,6 @@
 import { Spinner } from "@grit42/client-library/components";
 import { useEntityDatum } from "../../../../entities";
 import { LoadSetData } from "../../../types";
-import MappingLoadSet from "./MappingLoadSet";
 import SucceededLoadSet from "./SucceededLoadSet";
 import ValidatedLoadSet from "./ValidatedLoadSet";
 
@@ -35,13 +34,6 @@ const LoadSet = ({ id }: { id: string | number }) => {
 
   if (isError || !data) {
     return <p>{error ?? "An error occurred"}</p>;
-  }
-
-  if (
-    data.status_id__name === "Mapping" ||
-    data.status_id__name === "Invalidated"
-  ) {
-    return <MappingLoadSet loadSet={data} />;
   }
 
   if (data.status_id__name === "Validated") {
