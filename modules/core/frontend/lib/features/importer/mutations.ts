@@ -105,14 +105,21 @@ export const useSetLoadSetDataMutation = (loadSetId: number) => {
 };
 
 export const useValidateLoadSetMutation = (loadSetId: number) => {
-  return useMutation<LoadSetData, EndpointErrorErrors<LoadSetData>>({
+  return useMutation<
+    LoadSetData,
+    EndpointErrorErrors<LoadSetData>,
+    Record<string, LoadSetMapping> | undefined
+  >({
     mutationKey: ["validateLoadSet", loadSetId],
-    mutationFn: async () => {
+    mutationFn: async (mappings?: Record<string, LoadSetMapping>) => {
       const response = await request<
         EndpointSuccess<LoadSetData>,
         EndpointError<EndpointErrorErrors<LoadSetData>>
       >(`/grit/core/load_sets/${loadSetId}/validate`, {
         method: "POST",
+        data: {
+          mappings,
+        },
       });
 
       if (!response.success) {

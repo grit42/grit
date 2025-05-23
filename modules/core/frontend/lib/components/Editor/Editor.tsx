@@ -97,6 +97,7 @@ const Editor = ({
         width="100%"
         theme={theme.colorScheme === "dark" ? "vs-dark" : "light"}
         options={{
+          automaticLayout: true,
           minimap: {
             enabled: false,
           },

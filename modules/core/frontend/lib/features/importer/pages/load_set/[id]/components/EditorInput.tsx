@@ -33,7 +33,8 @@ const EditorInput = (props: EditorInputProps) => {
     <div
       style={{
         display: "grid",
-        gridTemplateRows: "min-content 1fr",
+        height: "100%",
+        gridTemplateRows: "min-content minmax(0px, 1fr)",
       }}
     >
       {props.label && <InputLabel label={props.label} />}

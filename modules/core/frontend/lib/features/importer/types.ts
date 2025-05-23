@@ -30,6 +30,12 @@ export interface NewLoadSetData extends EntityProperties {
   entity: string;
   data: string;
   origin_id: number;
+  separator: string | null;
+}
+
+export interface LoadSetDataUpdateData {
+  data: string;
+  separator: string | null;
 }
 
 export interface LoadSetData extends EntityData {

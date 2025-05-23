@@ -42,6 +42,7 @@ const NewLoadSet = ({ entity }: NewLoadSetProps) => {
       entity,
       name: `${entity}-${new Date().toISOString()}`,
       data: "",
+      separator: null
     };
     if (!loadSetFields) return values;
     for (const field of loadSetFields) {

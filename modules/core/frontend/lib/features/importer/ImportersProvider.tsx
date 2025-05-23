@@ -20,12 +20,13 @@ import { PropsWithChildren, useCallback, useMemo, useState } from "react";
 import ImportersContext, { ImporterDef } from "./ImportersContext";
 import { NewLoadSet } from "./pages/load_set/[id]/stages/new";
 import LoadSet from "./pages/load_set/[id]/LoadSet";
+import { MappingLoadSet } from "./pages/load_set/[id]/stages/mapping";
 
 const ImportersProvider: React.FC<PropsWithChildren> = ({ children }) => {
   const [importers, setImporters] = useState<Record<string, ImporterDef>>({
     default: {
       LoadSetCreator: NewLoadSet,
-      LoadSetEditor: LoadSet,
+      LoadSetEditor: MappingLoadSet,
       SucceededLoadSet: LoadSet,
     },
   });
