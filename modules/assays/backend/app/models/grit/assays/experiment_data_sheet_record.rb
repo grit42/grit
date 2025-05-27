@@ -134,7 +134,6 @@ module Grit::Assays
       end
 
       def self.entity_columns(**args)
-        logger.info args
         self.entity_columns_from_properties(self.entity_properties(**args))
       end
 
