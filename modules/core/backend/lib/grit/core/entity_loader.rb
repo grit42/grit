@@ -54,6 +54,10 @@ module Grit::Core
       loader(load_set.entity).mapping_fields(load_set)
     end
 
+    def self.load_set_loaded_data_columns(load_set)
+      loader(load_set.entity).loaded_data_columns(load_set)
+    end
+
     def self.confirm_load_set(load_set)
       loader(load_set.entity).confirm(load_set)
     end
@@ -80,7 +84,7 @@ module Grit::Core
     end
 
     def self.show(load_set)
-      load_set
+      load_set.as_json
     end
 
     def self.create(params)
@@ -104,6 +108,10 @@ module Grit::Core
 
     def self.destroy(load_set)
       load_set.destroy!
+    end
+
+    def self.loaded_data_columns(load_set)
+      load_set.entity.constantize.entity_columns(**self.show(load_set).symbolize_keys!)
     end
 
     def self.validate(load_set)

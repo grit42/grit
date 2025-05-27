@@ -104,6 +104,16 @@ module Grit::Core
       render json: { success: false, errors: e.to_s }, status: :internal_server_error
     end
 
+    def loaded_data_columns
+      load_set = Grit::Core::LoadSet.find(params[:load_set_id])
+
+      render json: { success: true, data: Grit::Core::EntityLoader.load_set_loaded_data_columns(load_set) }
+    rescue StandardError => e
+      logger.info e.to_s
+      logger.info e.backtrace.join("\n")
+      render json: { success: false, errors: e.to_s }, status: :internal_server_error
+    end
+
     def preview_data
       load_set = Grit::Core::LoadSet.find(params[:load_set_id])
 

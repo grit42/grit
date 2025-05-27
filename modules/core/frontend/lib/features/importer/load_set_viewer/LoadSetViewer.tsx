@@ -30,6 +30,7 @@ import { useRollbackLoadSetMutation } from "../mutations";
 import { LoadSetData } from "../types";
 import { useTableColumns } from "../../../utils";
 import styles from "./loadSetViewer.module.scss";
+import { useLoadSetLoadedDataColumns } from "../queries";
 
 interface Props {
   loadSet: LoadSetData;
@@ -49,7 +50,7 @@ const LoadSetViewer = ({ loadSet }: Props) => {
     data: columns,
     isError: isColumnsError,
     error: columnsError,
-  } = useEntityColumns(loadSet.entity);
+  } = useLoadSetLoadedDataColumns(loadSet.id);
 
   const tableColumns = useTableColumns(columns);
 
