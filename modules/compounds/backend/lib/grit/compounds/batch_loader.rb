@@ -28,12 +28,13 @@ module Grit::Compounds
     def self.create(params)
       data = params[:data].tempfile.read
 
-      parsed_data = parse(data)
+      parsed_data = self.parse(data, params[:separator])
 
       load_set = Grit::Core::LoadSet.new({
         name: params[:name],
         entity: "Grit::Compounds::Batch",
         data: data,
+        separator: params[:separator],
         parsed_data: parsed_data,
         origin_id: params[:origin_id],
         status_id: Grit::Core::LoadSetStatus.find_by(name: "Mapping").id
@@ -62,11 +63,15 @@ module Grit::Compounds
 
       names_compound_ids = []
 
-      ActiveRecord::Base.transaction do
-        data.each_with_index do |datum, index|
-          record_props = {}
-          record_props["compound_type_id"] = batch_load_set.compound_type_id
+      Grit::Core::LoadSetLoadingRecordPropertyValue.delete_by(load_set_id: load_set.id)
+      Grit::Core::LoadSetLoadingRecord.delete_by(load_set_id: load_set.id)
 
+      data.each_with_index do |datum, index|
+        record_props = {}
+        record_props["compound_type_id"] = batch_load_set.compound_type_id
+        has_errors = false
+
+        ActiveRecord::Base.transaction(requires_new: true) do
           name_compound_id = {}
 
           record_errors = {}
@@ -90,10 +95,10 @@ module Grit::Compounds
                 value = field_entity.loader_find_by!(find_by, datum[header_index]).id
               rescue NameError
                 record_errors[entity_property_name] = [ "#{entity_property[:entity][:full_name]}: No such model" ]
-                next
+                value = 0
               rescue ActiveRecord::RecordNotFound
                 record_errors[entity_property_name] = [ "could not find #{entity_property[:entity][:full_name]} with '#{find_by}' = #{datum[header_index]}" ]
-                next
+                value = 0
               end
             elsif !header_index.nil?
               value = datum[header_index]
@@ -156,9 +161,11 @@ module Grit::Compounds
 
             unless batch.valid?
               errors.push({ index: index, datum: datum, errors: batch.errors })
+              has_errors = true
             end
           else
             errors.push({ index: index, datum: datum, errors: record_errors })
+            has_errors = true
           end
 
           properties_errors = {}
@@ -177,10 +184,11 @@ module Grit::Compounds
             end
           end
 
-          errors.push({ index: index, datum: datum, errors: properties_errors }) unless properties_errors.empty?
-        end
-        if errors.length > 0
-          raise ActiveRecord::Rollback if errors.length > 0
+          unless properties_errors.empty?
+            errors.push({ index: index, datum: datum, errors: properties_errors })
+            has_errors = true
+          end
+          raise ActiveRecord::Rollback if has_errors
         end
       end
       { errors: errors }
@@ -191,7 +199,7 @@ module Grit::Compounds
       load_set_entity_properties = Grit::Compounds::Batch.entity_properties(compound_type_id: batch_load_set.compound_type_id)
 
       ActiveRecord::Base.transaction do
-        Grit::Core::LoadSetLoadingRecord.where(load_set_id: load_set.id).each do |loading_record|
+        Grit::Core::LoadSetLoadingRecord.includes(:load_set_loading_record_property_values).where(load_set_id: load_set.id).each do |loading_record|
           record_props = {}
           record_props["compound_type_id"] = batch_load_set.compound_type_id
           loading_record.load_set_loading_record_property_values.each do |loading_record_property_value|
@@ -220,8 +228,8 @@ module Grit::Compounds
           end
         end
 
-        Grit::Core::LoadSetLoadingRecordPropertyValue.destroy_by(load_set_id: load_set.id)
-        Grit::Core::LoadSetLoadingRecord.destroy_by(load_set_id: load_set.id)
+        Grit::Core::LoadSetLoadingRecordPropertyValue.delete_by(load_set_id: load_set.id)
+        Grit::Core::LoadSetLoadingRecord.delete_by(load_set_id: load_set.id)
       end
     end
 

@@ -38,6 +38,24 @@ export const useLoadSetFields = (entity: string): UseQueryResult<FormFieldDef[],
   });
 };
 
+export const useLoadSetDataSetFields = (loadSetId: number): UseQueryResult<FormFieldDef[], string> => {
+  return useQuery<FormFieldDef[], string>({
+    queryKey: ["loadSetDataSetFields", loadSetId],
+    queryFn: async (): Promise<FormFieldDef[]> => {
+      const response = await request<
+        EndpointSuccess<FormFieldDef[]>,
+        EndpointError
+      >(`/grit/core/load_sets/${loadSetId}/data_set_fields`);
+
+      if (!response.success) {
+        throw response.errors
+      };
+
+      return response.data;
+    },
+  });
+};
+
 export const useLoadSetMappingFields = (loadSetId: number): UseQueryResult<FormFieldDef[], string> => {
   return useQuery<FormFieldDef[], string>({
     queryKey: ["loadSetMappingFields", loadSetId],
@@ -64,6 +82,25 @@ export const useLoadSetPreviewData = (loadSetId: number): UseQueryResult<LoadSet
         EndpointSuccess<LoadSetPreviewData>,
         EndpointError
       >(`/grit/core/load_sets/${loadSetId}/preview_data`);
+
+      if (!response.success) {
+        throw response.errors
+      };
+
+      return response.data;
+    },
+  });
+};
+
+
+export const useLoadSetData = (loadSetId: number): UseQueryResult<string, string> => {
+  return useQuery<string, string>({
+    queryKey: ["loadSetData", loadSetId],
+    queryFn: async (): Promise<string> => {
+      const response = await request<
+        EndpointSuccess<string>,
+        EndpointError
+      >(`/grit/core/load_sets/${loadSetId}/data`);
 
       if (!response.success) {
         throw response.errors

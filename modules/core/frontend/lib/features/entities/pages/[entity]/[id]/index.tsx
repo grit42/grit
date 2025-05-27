@@ -24,7 +24,7 @@ import {
   useEditEntityMutation,
 } from "../../../mutations";
 import { useMemo, useState } from "react";
-import { useForm } from "@tanstack/react-form";
+import { useForm } from "@grit42/form";
 import {
   Form,
   FormControls,

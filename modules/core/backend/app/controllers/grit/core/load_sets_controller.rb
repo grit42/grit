@@ -46,6 +46,17 @@ module Grit::Core
       end
     end
 
+    def show
+      id = params[:id]
+      load_set = Grit::Core::LoadSet.detailed.find(id)
+      record = Grit::Core::EntityLoader.show_load_set(load_set)
+      render json: { success: true, data: record }
+    rescue StandardError => e
+      logger.info e.to_s
+      logger.info e.backtrace.join("\n")
+      render json: { success: false, errors: e.to_s }, status: :internal_server_error
+    end
+
     def destroy
       id = params[:id]
 
@@ -67,6 +78,16 @@ module Grit::Core
 
     def fields
       render json: { success: true, data: Grit::Core::EntityLoader.load_set_fields(params) }
+    rescue StandardError => e
+      logger.info e.to_s
+      logger.info e.backtrace.join("\n")
+      render json: { success: false, errors: e.to_s }, status: :internal_server_error
+    end
+
+    def data_set_fields
+      load_set = Grit::Core::LoadSet.find(params[:load_set_id])
+
+      render json: { success: true, data: Grit::Core::EntityLoader.load_set_data_fields(load_set) }
     rescue StandardError => e
       logger.info e.to_s
       logger.info e.backtrace.join("\n")
@@ -96,6 +117,16 @@ module Grit::Core
       render json: { success: false, errors: e.to_s }, status: :internal_server_error
     end
 
+    def data
+      load_set = Grit::Core::LoadSet.find(params[:load_set_id])
+
+      render json: { success: true, data: load_set.data }
+    rescue StandardError => e
+      logger.info e.to_s
+      logger.info e.backtrace.join("\n")
+      render json: { success: false, errors: e.to_s }, status: :internal_server_error
+    end
+
     def validate
       ActiveRecord::Base.transaction do
         begin
@@ -106,6 +137,13 @@ module Grit::Core
           end
 
           load_set.status_id = Grit::Core::LoadSetStatus.find_by_name("Validating").id
+          load_set.mappings = params[:mappings] unless params[:mappings].nil?
+
+          if load_set.mappings.nil?
+            render json: { success: false, errors: "No mappings provided" }, status: :unprocessable_entity
+            return
+          end
+
           load_set.save!
 
           validation_results = Grit::Core::EntityLoader.validate_load_set(load_set)
@@ -116,7 +154,7 @@ module Grit::Core
             load_set.status_id = Grit::Core::LoadSetStatus.find_by_name("Invalidated").id
             load_set.record_errors = validation_results[:errors]
             load_set.save!
-            render json: { success: false, errors: validation_results[:errors] }, status: :unprocessable_entity
+            render json: { success: false, errors: "The data set contains errors" }, status: :unprocessable_entity
             return
           end
 
@@ -168,6 +206,7 @@ module Grit::Core
           Grit::Core::LoadSetLoadingRecord.destroy_by(load_set_id: load_set.id)
 
           load_set.status_id = Grit::Core::LoadSetStatus.find_by_name("Mapping").id
+          load_set.record_warnings = nil
           load_set.record_errors = nil
           load_set.save!
           render json: { success: true, data: load_set }
@@ -210,7 +249,7 @@ module Grit::Core
           load_set = Grit::Core::LoadSet.find(params[:load_set_id])
           data = params[:data].tempfile.read
 
-          load_set = Grit::Core::EntityLoader.set_load_set_data(load_set, data, separator: params[:separator])
+          load_set = Grit::Core::EntityLoader.set_load_set_data(load_set, data, **params.permit!.to_h.symbolize_keys)
 
           render json: { success: true, data: load_set }
         rescue StandardError => e

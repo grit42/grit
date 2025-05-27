@@ -66,9 +66,6 @@
     "@grit42/notifications": "workspace:*",
     "@grit42/table": "workspace:*",
     "@monaco-editor/react": "^4.7.0",
-    "@tanstack/react-form": "catalog:",
-    "@tanstack/react-table": "catalog:",
-    "@tanstack/table-core": "catalog:",
     "axios": "catalog:",
     "dayjs": "^1.11.13",
     "monaco-editor": "^0.52.2"

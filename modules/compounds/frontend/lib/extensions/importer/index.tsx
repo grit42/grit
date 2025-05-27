@@ -16,19 +16,29 @@
  * @grit42/compounds. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import useRegisterCompoundForms from "./extensions/entity-form";
-import useRegisterCompoundInputs from "./extensions/form";
-import useRegisterCompoundColumnTypeDefs from "./extensions/table";
-import useRegisterCompoundAdministration from "./extensions/administration";
-import useRegisterCompoundImporter from "./extensions/importer";
+import { useEffect } from "react";
+import { useRegisterImporter } from "@grit42/core";
+import { guessCompoundDataSetValues } from "./utils/data";
 
-const Registrant = () => {
-  useRegisterCompoundForms();
-  useRegisterCompoundInputs();
-  useRegisterCompoundColumnTypeDefs();
-  useRegisterCompoundAdministration();
-  useRegisterCompoundImporter();
+const useRegisterCompoundImporter = () => {
+  const registerImporter = useRegisterImporter();
+
+  useEffect(() => {
+    const unregisterCompoundImporter = registerImporter(
+      "Grit::Compounds::Compound",
+      {
+        guessDataSetValues: guessCompoundDataSetValues,
+      },
+    );
+
+    console.log("topar")
+
+    return () => {
+      unregisterCompoundImporter();
+    };
+  }, [registerImporter]);
+
   return null;
 };
 
-export default Registrant;
+export default useRegisterCompoundImporter;

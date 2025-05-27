@@ -18,22 +18,15 @@
 
 import { Tabs } from "@grit42/client-library/components";
 import {
-  CSSProperties,
   useCallback,
   useEffect,
   useMemo,
   useState,
 } from "react";
 import { GritColumnDef, Table } from "@grit42/table";
-import styles from "./loadSet.module.scss";
-import {
-  LoadSetData,
-  LoadSetError,
-  LoadSetMapping,
-  LoadSetPreviewData,
-  LoadSetWarning,
-} from "../../../types";
-import { useToolbar } from "../../../../../Toolbar";
+import styles from "./loadSetEditor.module.scss";
+import { LoadSetData, LoadSetPreviewData } from "../types";
+import { useToolbar } from "../../../Toolbar";
 import { downloadBlob } from "@grit42/client-library/utils";
 
 const ERROR_COLUMNS: GritColumnDef[] = [
@@ -93,23 +86,24 @@ const WARNING_COLUMNS: GritColumnDef[] = [
 
 const LoadSetInfo = ({
   loadSet,
-  errors,
-  warnings,
-  mappings,
   previewData,
+  headerMappings,
 }: {
   loadSet: LoadSetData;
-  errors: LoadSetError[];
-  warnings: LoadSetWarning[];
-  mappings: Record<string, LoadSetMapping>;
   previewData: LoadSetPreviewData;
+  headerMappings: Record<string, string[]>;
 }) => {
   const registerToolbarActions = useToolbar();
   const [selectedTab, setSelectedTab] = useState(0);
 
   useEffect(() => {
-    setSelectedTab(errors.length > 0 || warnings.length > 0 ? 1 : 0);
-  }, [errors, warnings]);
+    setSelectedTab(
+      (loadSet.record_errors ?? []).length > 0 ||
+        (loadSet.record_warnings ?? []).length > 0
+        ? 1
+        : 0,
+    );
+  }, [loadSet.record_errors, loadSet.record_warnings]);
 
   const columns = useMemo(
     () =>
@@ -118,12 +112,19 @@ const LoadSetInfo = ({
         .map(
           (h, i): GritColumnDef<Record<string, string | number>> => ({
             accessorKey: i.toString(),
-            header: h,
+            header: () => (
+              <div className={styles.previewDataTableHeader}>
+                {h}
+                {headerMappings[i.toString()]?.map((h) => (
+                  <span key={h}>- {h}</span>
+                ))}
+              </div>
+            ),
             id: i.toString(),
             type: "string",
           }),
         ) ?? [],
-    [previewData.headers],
+    [previewData.headers, headerMappings],
   );
 
   const errorRowColumns = useMemo(
@@ -150,31 +151,39 @@ const LoadSetInfo = ({
 
   const errorData = useMemo(
     () =>
-      errors.flatMap((e) => {
+      loadSet.record_errors?.flatMap((e) => {
         const rows = [];
         for (const key in e.errors) {
           for (const i of e.errors[key]) {
             rows.push({
               index: e.index + 2,
-              column: mappings[key]?.header
-                ? previewData.headers[Number(mappings[key].header)]
+              column: loadSet.mappings?.[key]?.header
+                ? previewData.headers[Number(loadSet.mappings?.[key].header)]
                 : "Constant value",
-              value: mappings[key]?.header
-                ? previewData.data[e.index][Number(mappings[key].header)]
-                : mappings[key]?.value,
+              value: loadSet.mappings?.[key]?.header
+                ? previewData.data[e.index][
+                    Number(loadSet.mappings?.[key].header)
+                  ]
+                : loadSet.mappings?.[key]?.value,
               error: i,
             });
           }
         }
         return rows;
-      }),
-    [errors, mappings, previewData.data, previewData.headers],
+      }) ?? [],
+    [
+      loadSet.mappings,
+      loadSet.record_errors,
+      previewData.data,
+      previewData.headers,
+    ],
   );
 
   const errorRowData = useMemo(() => {
     const errorRows: Record<string, string | number>[] = [];
+    if (!loadSet.record_errors) return errorRows;
     const errorRowIndexes = new Set<number>();
-    for (const { index } of errors) {
+    for (const { index } of loadSet.record_errors) {
       errorRowIndexes.add(index);
     }
     for (let i = 0; i < data.length; i++) {
@@ -183,11 +192,11 @@ const LoadSetInfo = ({
       }
     }
     return errorRows;
-  }, [data, errors]);
+  }, [data, loadSet.record_errors]);
 
   const warningData = useMemo(
     () =>
-      warnings.flatMap((w) => {
+      loadSet.record_warnings?.flatMap((w) => {
         const rows = [];
         for (const key in w.warnings) {
           for (const i of w.warnings[key]) {
@@ -199,8 +208,8 @@ const LoadSetInfo = ({
           }
         }
         return rows;
-      }),
-    [warnings],
+      }) ?? [],
+    [loadSet.record_warnings],
   );
 
   const exportErrors = useCallback(() => {
@@ -246,7 +255,7 @@ const LoadSetInfo = ({
   }, [exportErroredRows, exportErrors, registerToolbarActions]);
 
   return (
-    <div style={{ maxHeight: "100%", overflow: "auto", width: "100%" }}>
+    <div className={styles.loadSetInfo}>
       <Tabs
         selectedTab={selectedTab}
         onTabChange={setSelectedTab}
@@ -256,9 +265,7 @@ const LoadSetInfo = ({
             key: "data",
             name: "Preview data",
             panelProps: {
-              style: {
-                overflowY: "auto",
-              },
+              className: styles.loadSetInfoTab,
             },
             panel: (
               <Table
@@ -274,15 +281,13 @@ const LoadSetInfo = ({
               />
             ),
           },
-          ...(errors.length > 0
+          ...(errorData.length > 0
             ? [
                 {
                   key: "errors",
                   name: "Errors",
                   panelProps: {
-                    style: {
-                      overflowY: "auto",
-                    } as CSSProperties,
+                    className: styles.loadSetInfoTab,
                   },
                   panel: (
                     <Table
@@ -301,11 +306,7 @@ const LoadSetInfo = ({
                 {
                   key: "errored-rows",
                   name: "Errored rows",
-                  panelProps: {
-                    style: {
-                      overflowY: "auto",
-                    } as CSSProperties,
-                  },
+                  panelProps: { className: styles.loadSetInfoTab },
                   panel: (
                     <Table
                       columns={errorRowColumns}
@@ -322,15 +323,13 @@ const LoadSetInfo = ({
                 },
               ]
             : []),
-          ...(warnings.length > 0
+          ...(warningData.length > 0
             ? [
                 {
                   key: "warnings",
                   name: "Warnings",
                   panelProps: {
-                    style: {
-                      overflowY: "auto",
-                    } as CSSProperties,
+                    className: styles.loadSetInfoTab,
                   },
                   panel: (
                     <Table

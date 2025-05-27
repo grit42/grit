@@ -23,24 +23,23 @@ export interface LoadSetCreatorProps {
   entity: string;
 }
 
-export interface LoadSetEditorProps {
-  id: string | number;
-}
-
-export interface SucceededLoadSetProps {
-  id: string | number;
+export interface LoadSetStageProps {
   loadSet: LoadSetData;
 }
 
+export type LoadSetEditorProps = LoadSetStageProps;
+export type LoadSetVisualizerProps = LoadSetStageProps;
+
 export interface ImporterDef {
-  LoadSetCreator?: React.ComponentType<LoadSetCreatorProps>;
-  LoadSetEditor?: React.ComponentType<LoadSetEditorProps>;
-  SucceededLoadSet?: React.ComponentType<SucceededLoadSetProps>;
+  LoadSetCreator: React.ComponentType<LoadSetCreatorProps>;
+  LoadSetEditor: React.ComponentType<LoadSetEditorProps>;
+  LoadSetViewer: React.ComponentType<LoadSetVisualizerProps>;
+  guessDataSetValues: <T,>(data: string) => Promise<Partial<T>>;
 }
 
 interface ImportersContextValue {
   importers: Record<string, ImporterDef>;
-  register: (entity: string, importer: ImporterDef) => () => void;
+  register: (entity: string, importer: Partial<ImporterDef>) => () => void;
 }
 
 const defaultContextValue: ImportersContextValue = {
@@ -53,7 +52,7 @@ const defaultContextValue: ImportersContextValue = {
 const ImportersContext = createContext(defaultContextValue);
 
 export const useImportersContext = () => useContext(ImportersContext);
-export const useImporter = (type: string) => {
+export const useImporter = (type: string = "default") => {
   const importers = useContext(ImportersContext).importers;
   return importers[type] ?? importers["default"];
 };

@@ -23,32 +23,19 @@ import {
   useEntity,
   useEntityColumns,
   useInfiniteEntityData,
-} from "../../../../entities";
+} from "../../entities";
 import { Table, useSetupTableState } from "@grit42/table";
 import { useMemo } from "react";
-import { useRollbackLoadSetMutation } from "../../../mutations";
-import { LoadSetData } from "../../../types";
-import { useTableColumns } from "../../../../../utils";
+import { useRollbackLoadSetMutation } from "../mutations";
+import { LoadSetData } from "../types";
+import { useTableColumns } from "../../../utils";
+import styles from "./loadSetViewer.module.scss";
 
-interface Props { loadSet: LoadSetData }
-
-const SucceededLoadSetWrapper = ({ loadSet }: Props) => {
-  const {
-    isLoading: isInfoLoading,
-  } = useEntity(loadSet.entity);
-
-  const {
-    isLoading: isColumnsLoading,
-  } = useEntityColumns(loadSet.entity);
-
-  if (isColumnsLoading || isInfoLoading) {
-    return <Spinner />;
-  }
-
-  return <SucceededLoadSet loadSet={loadSet}/>
+interface Props {
+  loadSet: LoadSetData;
 }
 
-const SucceededLoadSet = ({ loadSet }: Props) => {
+const LoadSetViewer = ({ loadSet }: Props) => {
   const queryClient = useQueryClient();
   const rollbackLoadSetMutation = useRollbackLoadSetMutation(loadSet.id);
 
@@ -95,7 +82,12 @@ const SucceededLoadSet = ({ loadSet }: Props) => {
   );
 
   const onRollback = async () => {
-    if (!window.confirm(`Are you sure you want to rollback this data load? Irreversible data loss may occur`)) return;
+    if (
+      !window.confirm(
+        `Are you sure you want to rollback this data load? Irreversible data loss may occur`,
+      )
+    )
+      return;
     await rollbackLoadSetMutation.mutateAsync();
     await queryClient.invalidateQueries({
       queryKey: [
@@ -113,13 +105,11 @@ const SucceededLoadSet = ({ loadSet }: Props) => {
   };
 
   if (isError || isColumnsError || isInfoError) {
-    return (
-      <ErrorPage error={error ?? columnsError ?? infoError} />
-    );
+    return <ErrorPage error={error ?? columnsError ?? infoError} />;
   }
 
   return (
-    <div style={{ height: "100%", overflow: "auto", width: "100%" }}>
+    <div className={styles.container}>
       <Table<EntityData>
         loading={isFetching && !isFetchingNextPage}
         data={flatData}
@@ -144,4 +134,16 @@ const SucceededLoadSet = ({ loadSet }: Props) => {
   );
 };
 
-export default SucceededLoadSetWrapper;
+const LoadSetViewerWrapper = ({ loadSet }: Props) => {
+  const { isLoading: isInfoLoading } = useEntity(loadSet.entity);
+
+  const { isLoading: isColumnsLoading } = useEntityColumns(loadSet.entity);
+
+  if (isColumnsLoading || isInfoLoading) {
+    return <Spinner />;
+  }
+
+  return <LoadSetViewer loadSet={loadSet} />;
+};
+
+export default LoadSetViewerWrapper;

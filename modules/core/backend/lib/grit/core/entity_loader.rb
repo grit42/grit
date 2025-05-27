@@ -38,6 +38,14 @@ module Grit::Core
       loader(params[:entity]).create(params)
     end
 
+    def self.load_set_data_fields(load_set)
+      loader(load_set.entity).data_set_fields(load_set)
+    end
+
+    def self.show_load_set(load_set)
+      loader(load_set.entity).show(load_set)
+    end
+
     def self.destroy_load_set(load_set)
       loader(load_set.entity).destroy(load_set)
     end
@@ -63,7 +71,16 @@ module Grit::Core
       fields = Grit::Core::LoadSet.entity_fields.filter { |f| f[:name] != "data" }.to_h { |item| [ item[:name], item ] }
       fields["entity"][:disabled] = true unless fields["entity"].nil?
       fields["separator"][:required] = true unless fields["separator"].nil?
+      fields["separator"][:placeholder] = "Will attempt to guess based on provided data" unless fields["separator"].nil?
       fields.values
+    end
+
+    def self.data_set_fields(params)
+      self.fields(params).filter { |f| f[:name] == "separator" }
+    end
+
+    def self.show(load_set)
+      load_set
     end
 
     def self.create(params)

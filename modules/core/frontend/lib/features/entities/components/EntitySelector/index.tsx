@@ -32,7 +32,7 @@ import {
 import styles from "./entitySelector.module.scss";
 import Circle1Close from "@grit42/client-library/icons/Circle1Close";
 import IconArrowDown from "@grit42/client-library/icons/IconArrowDown";
-import { Row, RowSelectionState } from "@tanstack/table-core";
+import { Row, RowSelectionState } from "@grit42/table";
 import { EntityPropertyDef, EntityData, ForeignEntityPropertyDef } from "../../types";
 import {
   Button,
