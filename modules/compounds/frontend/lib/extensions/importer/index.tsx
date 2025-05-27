@@ -31,8 +31,6 @@ const useRegisterCompoundImporter = () => {
       },
     );
 
-    console.log("topar")
-
     return () => {
       unregisterCompoundImporter();
     };
