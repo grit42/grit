@@ -623,7 +623,8 @@ CREATE TABLE public.grit_core_load_sets (
     item_count integer,
     status_id bigint NOT NULL,
     origin_id bigint NOT NULL,
-    record_warnings json
+    record_warnings json,
+    separator character varying
 );
 
 
@@ -2011,6 +2012,7 @@ ALTER TABLE ONLY public.grit_assays_assays
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20250522140707'),
 ('20250521124829'),
 ('20250411144141'),
 ('20250411055514'),

@@ -17,11 +17,9 @@
  */
 
 import useRegisterAssaysAdministration from "./extensions/administration";
-import useRegisterExperimentDataSheetRecordImporter from "./extensions/importer";
 
 const Registrant = () => {
   useRegisterAssaysAdministration();
-  useRegisterExperimentDataSheetRecordImporter();
   return null;
 };
 
