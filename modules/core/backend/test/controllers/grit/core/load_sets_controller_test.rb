@@ -21,6 +21,7 @@ module Grit::Core
         post load_sets_url, params: {
           name: "test-entity-2",
           entity: "TestEntity",
+          separator: ",",
           data: file_fixture_upload("test_entity.csv", "application/csv"),
           origin_id: 42
         }
@@ -71,9 +72,9 @@ module Grit::Core
 
       assert_response :unprocessable_entity
 
-      errors = JSON.parse(@response.body)["errors"]
+      # errors = JSON.parse(@response.body)["errors"]
 
-      assert errors[0]["errors"]["name"][0] == "can't be blank"
+      assert Grit::Core::LoadSet.find(@load_set.id).record_errors[0]["errors"]["name"][0] == "can't be blank"
     end
 
     test "should update load_set and fail to validate not a number" do
@@ -95,9 +96,7 @@ module Grit::Core
 
       assert_response :unprocessable_entity
 
-      errors = JSON.parse(@response.body)["errors"]
-
-      assert errors[0]["errors"]["integer"][0] == "is not a number"
+      assert Grit::Core::LoadSet.find(@load_set.id).record_errors[0]["errors"]["integer"][0] == "is not a number"
     end
 
     test "should update load_set and fail to validate not an ISO date" do
@@ -119,9 +118,7 @@ module Grit::Core
 
       assert_response :unprocessable_entity
 
-      errors = JSON.parse(@response.body)["errors"]
-
-      assert errors[0]["errors"]["date"][0] == "Unable to parse date, please use YYYY/MM/DD or ISO 8601"
+      assert Grit::Core::LoadSet.find(@load_set.id).record_errors[0]["errors"]["date"][0] == "Unable to parse date, please use YYYY/MM/DD or ISO 8601"
     end
 
     test "should update load_set and fail to validate not an ISO datetime" do
@@ -143,9 +140,7 @@ module Grit::Core
 
       assert_response :unprocessable_entity
 
-      errors = JSON.parse(@response.body)["errors"]
-
-      assert errors[0]["errors"]["datetime"][0] == "Unable to parse datetime, please use YYYY/MM/DD HH:mm:ss or ISO 8601"
+      assert Grit::Core::LoadSet.find(@load_set.id).record_errors[0]["errors"]["datetime"][0] == "Unable to parse datetime, please use YYYY/MM/DD HH:mm:ss or ISO 8601"
     end
 
     test "should not destroy succeeded load_set" do
