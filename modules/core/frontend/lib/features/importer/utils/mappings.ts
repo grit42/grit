@@ -16,13 +16,10 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
+import { URLParams } from "@grit42/api";
 import { EntityFormFieldDef } from "../../../Registrant";
-import {
-  LoadSetMapping,
-} from "../types";
-import {
-  FormFieldDef,
-} from "@grit42/form";
+import { LoadSetData, LoadSetMapping } from "../types";
+import { FormFieldDef } from "@grit42/form";
 
 export const getAutoMappings = (
   fields?: FormFieldDef[],
@@ -51,4 +48,27 @@ export const getAutoMappings = (
       };
   }
   return mappings;
+};
+
+export const getLoadSetPropertiesForCancel = (loadSet: LoadSetData) => {
+  const data: URLParams = {};
+  for (const key in loadSet) {
+    if (
+      !key.endsWith("__name") &&
+      ![
+        "id",
+        "created_at",
+        "created_by",
+        "updated_at",
+        "updated_by",
+        "status_id",
+        "name",
+        "load_set_id",
+      ].includes(key) &&
+      !["function", "object", "symbol"].includes(typeof data[key])
+    ) {
+      data[key] = loadSet[key] as URLParams[string];
+    }
+  }
+  return data;
 };

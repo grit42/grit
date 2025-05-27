@@ -23,7 +23,7 @@ import {
   Spinner,
 } from "@grit42/client-library/components";
 import { useNavigate } from "react-router-dom";
-import { useQueryClient } from "@grit42/api";
+import { getURLParams, useQueryClient } from "@grit42/api";
 import { useMemo, useState } from "react";
 import {
   useConfirmLoadSetMutation,
@@ -38,7 +38,10 @@ import styles from "./loadSetEditor.module.scss";
 import MappingFields from "./MappingFields";
 import LoadSetInfo from "./LoadSetInfo";
 import UpdateLoadSetDataDialog from "./UpdateLoadSetDataDialog";
-import { getAutoMappings } from "../utils/mappings";
+import {
+  getAutoMappings,
+  getLoadSetPropertiesForCancel,
+} from "../utils/mappings";
 import { LoadSetEditorProps } from "../ImportersContext";
 
 const LoadSetEditor = ({
@@ -135,7 +138,9 @@ const LoadSetEditor = ({
     }
     await destroyLoadSetMutation.mutateAsync(loadSet.id);
     navigate(
-      `/core/load_sets/new?entity=${loadSet.entity}&origin_id=${loadSet.origin_id}`,
+      `/core/load_sets/new?${getURLParams(
+        getLoadSetPropertiesForCancel(loadSet),
+      )}`,
     );
   };
 
@@ -301,15 +306,8 @@ const LoadSetEditorWrapper = ({ loadSet }: LoadSetEditorProps) => {
     return <Spinner />;
   }
 
-  if (
-    isFieldsError ||
-    !fields ||
-    isPreviewDataError ||
-    !previewData
-  ) {
-    return (
-      <ErrorPage error={fieldsError ?? previewDataError} />
-    );
+  if (isFieldsError || !fields || isPreviewDataError || !previewData) {
+    return <ErrorPage error={fieldsError ?? previewDataError} />;
   }
 
   return <LoadSetEditor loadSet={loadSet} mappings={mappings} />;

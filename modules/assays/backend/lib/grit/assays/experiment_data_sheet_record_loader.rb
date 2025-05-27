@@ -22,7 +22,7 @@ module Grit::Assays
   class ExperimentDataSheetRecordLoader < Grit::Core::EntityLoader
     protected
     def self.fields(params)
-      [ *Grit::Core::LoadSet.entity_fields.filter { |f| f[:id] != "data" }, *Grit::Assays::ExperimentDataSheetRecordLoadSet.entity_fields ]
+      [ *super(params), *Grit::Assays::ExperimentDataSheetRecordLoadSet.entity_fields ]
     end
 
     def self.show(load_set)
