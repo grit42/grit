@@ -27,7 +27,8 @@ const DEFAULT_IMPORTER: ImporterDef = {
   LoadSetCreator: LoadSetCreator,
   LoadSetEditor: LoadSetEditor,
   LoadSetViewer: LoadSetViewer,
-  guessDataSetValues: guessGenericDataSetValues
+  guessDataSetValues: guessGenericDataSetValues,
+  LoadSetViewerExtraActions: () => null,
 };
 
 const ImportersProvider: React.FC<PropsWithChildren> = ({ children }) => {

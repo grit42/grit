@@ -16,7 +16,12 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Button, ErrorPage, Spinner } from "@grit42/client-library/components";
+import {
+  Button,
+  ButtonGroup,
+  ErrorPage,
+  Spinner,
+} from "@grit42/client-library/components";
 import { useQueryClient } from "@grit42/api";
 import {
   EntityData,
@@ -31,12 +36,14 @@ import { LoadSetData } from "../types";
 import { useTableColumns } from "../../../utils";
 import styles from "./loadSetViewer.module.scss";
 import { useLoadSetLoadedDataColumns } from "../queries";
+import { useImporter } from "../ImportersContext";
 
 interface Props {
   loadSet: LoadSetData;
 }
 
 const LoadSetViewer = ({ loadSet }: Props) => {
+  const { LoadSetViewerExtraActions } = useImporter(loadSet.entity);
   const queryClient = useQueryClient();
   const rollbackLoadSetMutation = useRollbackLoadSetMutation(loadSet.id);
 
@@ -117,13 +124,16 @@ const LoadSetViewer = ({ loadSet }: Props) => {
         tableState={tableState}
         header="Import succeeded"
         headerActions={
-          <Button
-            color="secondary"
-            onClick={onRollback}
-            loading={rollbackLoadSetMutation.isPending}
-          >
-            Undo import
-          </Button>
+          <ButtonGroup>
+            <Button
+              color="secondary"
+              onClick={onRollback}
+              loading={rollbackLoadSetMutation.isPending}
+            >
+              Undo import
+            </Button>
+            <LoadSetViewerExtraActions loadSet={loadSet} />
+          </ButtonGroup>
         }
         pagination={{
           fetchNextPage,

@@ -26,6 +26,8 @@ export type {
   ImporterDef,
   LoadSetCreatorProps,
   LoadSetEditorProps,
+  LoadSetViewerProps,
+  LoadSetViewerExtraActionsProps,
 } from "./ImportersContext";
 
 export { default as ImportersProvider } from "./ImportersProvider";

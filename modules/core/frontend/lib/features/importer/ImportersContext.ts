@@ -28,13 +28,15 @@ export interface LoadSetStageProps {
 }
 
 export type LoadSetEditorProps = LoadSetStageProps;
-export type LoadSetVisualizerProps = LoadSetStageProps;
+export type LoadSetViewerProps = LoadSetStageProps;
+export type LoadSetViewerExtraActionsProps = LoadSetStageProps;
 
 export interface ImporterDef {
   LoadSetCreator: React.ComponentType<LoadSetCreatorProps>;
   LoadSetEditor: React.ComponentType<LoadSetEditorProps>;
-  LoadSetViewer: React.ComponentType<LoadSetVisualizerProps>;
+  LoadSetViewer: React.ComponentType<LoadSetViewerProps>;
   guessDataSetValues: <T,>(data: string) => Promise<Partial<T>>;
+  LoadSetViewerExtraActions: React.ComponentType<LoadSetViewerProps>;
 }
 
 interface ImportersContextValue {
