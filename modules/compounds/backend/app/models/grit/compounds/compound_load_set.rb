@@ -33,7 +33,7 @@ module Grit::Compounds
         fields_map = self.entity_fields_from_properties(
           self.entity_properties
             .select { |p| [ "compound_type_id", "structure_format" ].include?(p[:name]) }
-        ).to_h { |item| [ item[:name], item ] }
+        ).to_h { |item| [ item[:name], item.dup ] }
         fields_map["entity"][:disabled] = true unless fields_map["entity"].nil?
         fields_map["structure_format"] = {
           **fields_map["structure_format"],

@@ -23,7 +23,7 @@ module Grit::Compounds
   class CompoundLoader < Grit::Core::EntityLoader
     protected
     def self.fields(params)
-      load_set_fields = super(params).to_h { |item| [ item[:name], item ] }
+      load_set_fields = super(params).to_h { |item| [ item[:name], item.dup ] }
       load_set_fields["separator"][:select][:options].push({ label: "Molfile ( $$$$ )", value: "$$$$" }) unless load_set_fields["separator"].nil?
       [ *load_set_fields.values, *Grit::Compounds::CompoundLoadSet.entity_fields ]
     end
@@ -300,11 +300,12 @@ module Grit::Compounds
 
       compound_load_set.structure_format = args[:structure_format] unless args[:structure_format].nil?
 
-      load_set.save!
-      compound_load_set.save!
-
-      Grit::Core::LoadSetLoadingRecordPropertyValue.delete_by(load_set_id: load_set.id)
-      Grit::Core::LoadSetLoadingRecord.delete_by(load_set_id: load_set.id)
+      ActiveRecord::Base.transaction do
+        Grit::Core::LoadSetLoadingRecordPropertyValue.delete_by(load_set_id: load_set.id)
+        Grit::Core::LoadSetLoadingRecord.delete_by(load_set_id: load_set.id)
+        load_set.save!
+        compound_load_set.save!
+      end
       load_set
     end
   end

@@ -77,7 +77,7 @@ module Grit::Core
 
     protected
     def self.fields(params)
-      fields = Grit::Core::LoadSet.entity_fields.filter { |f| f[:name] != "data" }.to_h { |item| [ item[:name], item ] }
+      fields = Grit::Core::LoadSet.entity_fields.filter { |f| f[:name] != "data" }.to_h { |item| [ item[:name], item.dup ] }
       fields["entity"][:disabled] = true unless fields["entity"].nil?
       fields["separator"][:required] = true unless fields["separator"].nil?
       fields["separator"][:placeholder] = "Will attempt to guess based on provided data" unless fields["separator"].nil?
@@ -253,21 +253,25 @@ module Grit::Core
       load_set.status_id = Grit::Core::LoadSetStatus.find_by(name: "Mapping").id
       load_set.record_errors = nil
       load_set.record_warnings = nil
-
-      load_set.save!
-
-      Grit::Core::LoadSetLoadingRecordPropertyValue.delete_by(load_set_id: load_set.id)
-      Grit::Core::LoadSetLoadingRecord.delete_by(load_set_id: load_set.id)
+      ActiveRecord::Base.transaction do
+        Grit::Core::LoadSetLoadingRecordPropertyValue.delete_by(load_set_id: load_set.id)
+        Grit::Core::LoadSetLoadingRecord.delete_by(load_set_id: load_set.id)
+        load_set.save!
+      end
       load_set
     end
 
     def self.parse(data, separator)
+      raise ParseException, "Separator must be provided" if separator.blank?
       begin
         parsed = CSV.parse(data,
                           col_sep: separator,
                           liberal_parsing: true,
-                          encoding: "utf-8")
-        return parsed if parsed.map(&:size).uniq.size == 1
+                          encoding: "bom|utf-8"
+                        )
+
+        cleaned = parsed.reject { |row| row.all?(&:blank?) }
+        return cleaned if cleaned.map(&:size).uniq.size == 1
       rescue CSV::MalformedCSVError => e
         raise ParseException.new "Malformed CSV data: #{e.message}"
       rescue ArgumentError => e
