@@ -268,7 +268,7 @@ module Grit::Core
         parsed = CSV.parse(data,
                           col_sep: separator,
                           liberal_parsing: true,
-                          encoding: "bom|utf-8"
+                          encoding: "utf-8"
                         )
 
         cleaned = parsed.reject { |row| row.all?(&:blank?) }
