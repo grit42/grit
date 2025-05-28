@@ -113,15 +113,15 @@ export const useLoadSetData = (
   return useQuery<string, string>({
     queryKey: ["loadSetData", loadSetId],
     queryFn: async (): Promise<string> => {
-      const response = await request<EndpointSuccess<string>, EndpointError>(
+      const response = await request<string, EndpointError>(
         `/grit/core/load_sets/${loadSetId}/data`,
       );
 
-      if (!response.success) {
+      if (typeof response !== "string" && !response.success) {
         throw response.errors;
       }
 
-      return response.data;
+      return response as string;
     },
   });
 };

@@ -32,8 +32,11 @@ export const downloadFile = (url: string) => {
 
 export const downloadBlob = (blob: Blob, fileName: string) => {
   const link = document.createElement("a");
+  const url = URL.createObjectURL(blob);
 
-  link.setAttribute("href", URL.createObjectURL(blob));
+  link.setAttribute("href", url);
   link.setAttribute("download", fileName);
   link.click();
+
+  setTimeout(() => URL.revokeObjectURL(url), 100);
 };
