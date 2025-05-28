@@ -26,15 +26,16 @@ module Grit::Compounds
     end
 
     def self.create(params)
-      data = params[:data].tempfile.read
+      data = read_data(params[:data].tempfile)
+      separator = params[:separator]
 
-      parsed_data = self.parse(data, params[:separator])
+      parsed_data = self.parse(data, separator)
 
       load_set = Grit::Core::LoadSet.new({
         name: params[:name],
         entity: "Grit::Compounds::Batch",
         data: data,
-        separator: params[:separator],
+        separator: separator,
         parsed_data: parsed_data,
         origin_id: params[:origin_id],
         status_id: Grit::Core::LoadSetStatus.find_by(name: "Mapping").id

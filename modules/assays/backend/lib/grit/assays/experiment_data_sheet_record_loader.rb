@@ -31,7 +31,7 @@ module Grit::Assays
     end
 
     def self.create(params)
-      data = params[:data].tempfile.read
+      data = read_data(params[:data].tempfile)
       separator = params[:separator]
 
       parsed_data = self.parse(data, separator)

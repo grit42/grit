@@ -24,7 +24,7 @@ module Grit::Compounds
     protected
     def self.fields(params)
       load_set_fields = super(params).to_h { |item| [ item[:name], item ] }
-      load_set_fields["separator"][:select][:options].push({ label: "Molfile ( $$$$ )", value: "$$$$" })
+      load_set_fields["separator"][:select][:options].push({ label: "Molfile ( $$$$ )", value: "$$$$" }) unless load_set_fields["separator"].nil?
       [ *load_set_fields.values, *Grit::Compounds::CompoundLoadSet.entity_fields ]
     end
 
@@ -43,7 +43,7 @@ module Grit::Compounds
     end
 
     def self.create(params)
-      data = params[:data].tempfile.read
+      data = read_data(params[:data].tempfile)
       structure_format = params[:structure_format]
       separator = params[:separator]
 
@@ -287,7 +287,8 @@ module Grit::Compounds
       Grit::Compounds::Compound.entity_fields(compound_type_id: compound_load_set.compound_type_id).filter { |f| ![ "compound_type_id", "molweight", "logp", "molformula", "number" ].include?(f[:name]) }
     end
 
-    def self.set_data(load_set, data, **args)
+    def self.set_data(load_set, tempfile, **args)
+      data = read_data(tempfile)
       compound_load_set = Grit::Compounds::CompoundLoadSet.find_by(load_set_id: load_set.id)
       parsed_data = self.parse(data, args[:separator], args[:structure_format] || compound_load_set.structure_format)
       load_set.data = data

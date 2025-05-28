@@ -16,9 +16,14 @@
 # grit-core. If not, see <https://www.gnu.org/licenses/>.
 #++
 
+require "active_support/core_ext/numeric/bytes"
+
 module Grit::Core
   class EntityLoader
     class ParseException < RuntimeError
+    end
+
+    class MaxFileSizeExceededError < RuntimeError
     end
 
     def self.loader(load_set_entity)
@@ -88,7 +93,7 @@ module Grit::Core
     end
 
     def self.create(params)
-      data = params[:data].tempfile.read
+      data = read_data(params[:data].tempfile)
 
       parsed_data = self.parse(data, params[:separator])
 
@@ -239,7 +244,8 @@ module Grit::Core
       load_set.entity.constantize.entity_fields
     end
 
-    def self.set_data(load_set, data, **args)
+    def self.set_data(load_set, tempfile, **args)
+      data = read_data(tempfile)
       parsed_data = self.parse(data, args[:separator])
       load_set.data = data
       load_set.separator = args[:separator]
@@ -272,6 +278,22 @@ module Grit::Core
         raise ParseException.new "Failed to parse CSV: #{e.message}"
       end
       raise ParseException.new "Inconsistent column count in CSV rows"
+    end
+
+
+    MAX_FILE_SIZE = 50.megabytes
+
+    def self.read_data(file)
+      if file.size > MAX_FILE_SIZE
+        raise MaxFileSizeExceededError.new "File size exceeds maximum allowed size of 50MB"
+        return
+      end
+
+      data = "".force_encoding("UTF-8")
+      until file.eof?
+        data << file.read(1.megabyte)
+      end
+      data
     end
   end
 end

@@ -29,6 +29,10 @@ module Grit::Core
           record = Grit::Core::EntityLoader.create_load_set(params)
           render json: { success: true, data: record }, status: :created, location: record
           return
+        rescue EntityLoader::MaxFileSizeExceededError => e
+          logger.info e.to_s
+          logger.info e.backtrace.join("\n")
+          render json: { success: false, errors: { data: [ e.to_s ] } }, status: :unprocessable_entity
         rescue EntityLoader::ParseException => e
           logger.info e.to_s
           logger.info e.backtrace.join("\n")
@@ -51,6 +55,8 @@ module Grit::Core
       load_set = Grit::Core::LoadSet.detailed.find(id)
       record = Grit::Core::EntityLoader.show_load_set(load_set)
       render json: { success: true, data: record }
+    rescue ActiveRecord::RecordNotFound
+      render json: { success: false, errors: "Load set not found" }, status: :not_found
     rescue StandardError => e
       logger.info e.to_s
       logger.info e.backtrace.join("\n")
@@ -130,7 +136,7 @@ module Grit::Core
     def data
       load_set = Grit::Core::LoadSet.find(params[:load_set_id])
 
-      render json: { success: true, data: load_set.data }
+      send_data load_set.data, disposition: :inline, type: "text/plain"
     rescue StandardError => e
       logger.info e.to_s
       logger.info e.backtrace.join("\n")
@@ -257,17 +263,21 @@ module Grit::Core
       ActiveRecord::Base.transaction do
         begin
           load_set = Grit::Core::LoadSet.find(params[:load_set_id])
-          data = params[:data].tempfile.read
 
-          load_set = Grit::Core::EntityLoader.set_load_set_data(load_set, data, **params.permit!.to_h.symbolize_keys)
+          load_set = Grit::Core::EntityLoader.set_load_set_data(load_set, params[:data].tempfile, **params.permit!.to_h.symbolize_keys)
 
           render json: { success: true, data: load_set }
+          return
+        rescue EntityLoader::MaxFileSizeExceededError => e
+          logger.info e.to_s
+          logger.info e.backtrace.join("\n")
+          render json: { success: false, errors: e.to_s }, status: :unprocessable_entity
         rescue StandardError => e
           logger.info e.to_s
           logger.info e.backtrace.join("\n")
           render json: { success: false, errors: e.to_s }, status: :internal_server_error
-          raise ActiveRecord::Rollback
         end
+        raise ActiveRecord::Rollback
       end
     end
 
