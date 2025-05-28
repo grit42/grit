@@ -27,13 +27,10 @@ module Grit::Compounds
 
     display_columns [ "number", "name" ]
 
-
     entity_crud_with read: [],
       create: [ "Administrator", "CompoundAdministrator", "CompoundUser" ],
       update: [ "Administrator", "CompoundAdministrator", "CompoundUser" ],
       destroy: [ "Administrator", "CompoundAdministrator", "CompoundUser" ]
-
-    validates :name, uniqueness: { scope: [ :compound_id ], message: "should be unique per compound" }
 
     class_eval do
       _validators.delete("number")
