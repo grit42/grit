@@ -44,7 +44,7 @@ const NewLoadSetForm = ({
   fields,
   initialValues,
 }: NewLoadSetFormProps) => {
-  const { guessDataSetValues } = useImporter(entity)
+  const { guessDataSetValues } = useImporter(entity);
   const navigate = useNavigate();
   const createLoadSetMutation = useCreateLoadSetMutation();
 
@@ -52,7 +52,7 @@ const NewLoadSetForm = ({
     validators: {
       onMount: () => "Provide either a file or text data",
       onChange: ({ value }) =>
-        (value.data && value.data.length > 0)
+        value.data && value.data.length > 0
           ? undefined
           : "Provide either a file or text data",
     },
@@ -87,10 +87,10 @@ const NewLoadSetForm = ({
           },
         }));
       });
-} catch (e: any) {
-     if (e && typeof e.errors === "object" && e.errors !== null) {
+    } catch (e: any) {
+      if (e && typeof e.errors === "object" && e.errors !== null) {
         Object.keys(e.errors).forEach((key) => {
-         if (typeof e.errors[key] === 'string') {
+          if (typeof e.errors[key] === "string") {
             fieldApi.form.setFieldMeta(key, (meta) => ({
               ...meta,
               errorMap: {
@@ -98,7 +98,7 @@ const NewLoadSetForm = ({
                 onSubmit: e.errors[key],
               },
             }));
-         }
+          }
         });
       }
     }

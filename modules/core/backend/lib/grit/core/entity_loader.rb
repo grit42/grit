@@ -263,7 +263,7 @@ module Grit::Core
     end
 
     def self.parse(data, separator)
-      raise ParseException, "Separator must be provided" if separator.blank?
+      raise ParseException, "Separator must be provided" if separator.blank? && separator != "\t"
       begin
         parsed = CSV.parse(data,
                           col_sep: separator,

@@ -22,7 +22,6 @@ export const newLoadSetPayload = <
   for (const field of fields) {
     if (!field.name) continue;
 
-
     const fieldValue = formValue[field.name as keyof T];
     if (fieldValue !== undefined && fieldValue !== null && fieldValue !== "") {
       const stringValue = String(fieldValue);
