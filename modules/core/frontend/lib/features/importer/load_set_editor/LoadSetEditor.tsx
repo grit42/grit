@@ -134,7 +134,7 @@ const LoadSetEditor = ({
 
   const handleCancel = async () => {
     if (isValidated) {
-      return handleRollback();
+      await rollbackLoadSetMutation.mutateAsync();
     }
     await destroyLoadSetMutation.mutateAsync(loadSet.id);
     navigate(
@@ -232,8 +232,16 @@ const LoadSetEditor = ({
                     destroyLoadSetMutation.isPending
                   }
                 >
-                  {isValidated ? "Make changes" : "Cancel import"}
+                  Cancel import
                 </Button>
+                {isValidated && <Button
+                  onClick={handleRollback}
+                  loading={
+                    rollbackLoadSetMutation.isPending
+                  }
+                >
+                  Make changes
+                </Button>}
                 {!isValidated && (
                   <Button onClick={() => setIsOpen(true)}>Edit data set</Button>
                 )}
