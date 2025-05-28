@@ -96,10 +96,10 @@ module Grit::Compounds
                 value = field_entity.loader_find_by!(find_by, datum[header_index]).id
               rescue NameError
                 record_errors[entity_property_name] = [ "#{entity_property[:entity][:full_name]}: No such model" ]
-                value = nil
+                value = 0
               rescue ActiveRecord::RecordNotFound
                 record_errors[entity_property_name] = [ "could not find #{entity_property[:entity][:full_name]} with '#{find_by}' = #{datum[header_index]}" ]
-                value = nil
+                value = 0
               end
             elsif !header_index.nil?
               value = datum[header_index]
