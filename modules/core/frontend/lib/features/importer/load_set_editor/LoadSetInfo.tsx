@@ -17,12 +17,7 @@
  */
 
 import { Tabs } from "@grit42/client-library/components";
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { GritColumnDef, Table } from "@grit42/table";
 import styles from "./loadSetEditor.module.scss";
 import { LoadSetData, LoadSetPreviewData } from "../types";
@@ -105,26 +100,36 @@ const LoadSetInfo = ({
     );
   }, [loadSet.record_errors, loadSet.record_warnings]);
 
-  const columns = useMemo(
+  const dataSetColumns = useMemo(() => {
+    const nonEmptyHeaders = previewData.headers
+      .map((header, index) => ({ header, originalIndex: index }))
+      .filter(({ header }) => header !== null) as {
+      header: string;
+      originalIndex: number;
+    }[];
+
+    return nonEmptyHeaders.map(({ header, originalIndex }) => ({
+      header,
+      id: originalIndex.toString(),
+      type: "string",
+      accessorKey: originalIndex.toString(),
+    }));
+  }, [previewData.headers]);
+
+  const previewDataColumns = useMemo(
     () =>
-      previewData.headers
-        .filter((h) => h !== null)
-        .map(
-          (h, i): GritColumnDef<Record<string, string | number>> => ({
-            accessorKey: i.toString(),
-            header: () => (
-              <div className={styles.previewDataTableHeader}>
-                {h}
-                {headerMappings[i.toString()]?.map((h) => (
-                  <span key={h}>- {h}</span>
-                ))}
-              </div>
-            ),
-            id: i.toString(),
-            type: "string",
-          }),
-        ) ?? [],
-    [previewData.headers, headerMappings],
+      dataSetColumns.map((c) => ({
+        ...c,
+        header: () => (
+          <div className={styles.previewDataTableHeader}>
+            {c.header}
+            {headerMappings[c.accessorKey]?.map((h) => (
+              <span key={h}>- {h}</span>
+            ))}
+          </div>
+        ),
+      })) ?? [],
+    [dataSetColumns, headerMappings],
   );
 
   const errorRowColumns = useMemo(
@@ -136,9 +141,9 @@ const LoadSetInfo = ({
         type: "integer",
         size: 40,
       },
-      ...columns,
+      ...dataSetColumns,
     ],
-    [columns],
+    [dataSetColumns],
   );
 
   const data: Record<string, string | number>[] = useMemo(
@@ -269,7 +274,7 @@ const LoadSetInfo = ({
             },
             panel: (
               <Table
-                columns={columns}
+                columns={previewDataColumns}
                 data={data}
                 disableFooter
                 settings={{
