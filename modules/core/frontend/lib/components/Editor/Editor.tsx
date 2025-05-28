@@ -79,7 +79,7 @@ const Editor = ({
       <MonacoEditor
         height="100%"
         width="100%"
-        theme={theme.colorScheme === "dark" ? "vs-dark" : "light"}
+        theme={theme.colorScheme === "dark" ? "vs-dark" : "vs"}
         options={{
           automaticLayout: true,
           minimap: {

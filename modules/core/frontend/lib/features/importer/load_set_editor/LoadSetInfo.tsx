@@ -160,15 +160,24 @@ const LoadSetInfo = ({
         const rows = [];
         for (const key in e.errors) {
           for (const i of e.errors[key]) {
+            // Validate bounds before accessing arrays
+            const headerIndex = Number(loadSet.mappings?.[key].header);
+            const isValidHeaderIndex =
+              headerIndex >= 0 && headerIndex < previewData.headers.length;
+            const isValidDataIndex =
+              e.index >= 0 && e.index < previewData.data.length;
+
             rows.push({
               index: e.index + 2,
               column: loadSet.mappings?.[key]?.header
-                ? previewData.headers[Number(loadSet.mappings?.[key].header)]
+                ? isValidHeaderIndex
+                  ? previewData.headers[headerIndex]
+                  : "Invalid header"
                 : "Constant value",
               value: loadSet.mappings?.[key]?.header
-                ? previewData.data[e.index][
-                    Number(loadSet.mappings?.[key].header)
-                  ]
+                ? isValidDataIndex && isValidHeaderIndex
+                  ? previewData.data[e.index][headerIndex]
+                  : "Invalid data"
                 : loadSet.mappings?.[key]?.value,
               error: i,
             });
@@ -217,12 +226,29 @@ const LoadSetInfo = ({
     [loadSet.record_warnings],
   );
 
+  const sanitizeForCSV = (value: string | number): string => {
+    const str = String(value);
+    if (
+      str.startsWith("=") ||
+      str.startsWith("+") ||
+      str.startsWith("-") ||
+      str.startsWith("@") ||
+      str.startsWith("\t") ||
+      str.startsWith("\r")
+    ) {
+      return `'${str}`;
+    }
+    return str;
+  };
+
   const exportErrors = useCallback(() => {
     const headerRow = `${ERROR_COLUMNS.map(({ header }) => header).join(
       ",",
     )}\n`;
     const dataRows = (errorData as Record<string, string | number>[])
-      .map((d) => ERROR_COLUMNS.map(({ id }) => d[id]).join(","))
+      .map((d) =>
+        ERROR_COLUMNS.map(({ id }) => sanitizeForCSV(d[id] || "")).join(","),
+      )
       .join("\n");
 
     downloadBlob(new Blob([headerRow, dataRows]), `${loadSet.name}_errors.csv`);
@@ -233,7 +259,9 @@ const LoadSetInfo = ({
       .map(({ header }) => header)
       .join(",")}\n`;
     const dataRows = errorRowData
-      .map((d) => errorRowColumns.map(({ id }) => d[id]).join(","))
+      .map((d) =>
+        errorRowColumns.map(({ id }) => sanitizeForCSV(d[id] || "")).join(","),
+      )
       .join("\n");
 
     downloadBlob(

@@ -1,9 +1,9 @@
 class GritCompoundsAddUniqueIndexesToUniqueColumns < ActiveRecord::Migration[7.2]
   def duplicates(klass, property)
-    klass.select(:name)
-      .group(:name)
-      .having('COUNT(*) > 1')
-      .map(&:name)
+     klass.select(property)
+      .group(property)
+       .having('COUNT(*) > 1')
+      .map(&property)
   end
 
   class DuplicateNameError < RuntimeError

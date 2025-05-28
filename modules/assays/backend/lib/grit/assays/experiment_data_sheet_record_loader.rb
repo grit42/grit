@@ -27,6 +27,7 @@ module Grit::Assays
 
     def self.show(load_set)
       experiment_load_set = Grit::Assays::ExperimentDataSheetRecordLoadSet.find_by(load_set_id: load_set.id)
+      return load_set.as_json if experiment_load_set.nil?
       { **experiment_load_set.as_json, **load_set.as_json }
     end
 

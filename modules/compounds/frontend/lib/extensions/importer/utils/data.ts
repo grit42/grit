@@ -31,19 +31,19 @@ export const guessFormatAndDelimiter = async (
 };
 
 export const guessCompoundDataSetValues = async <
-  T = { separator: string; structure_format: string },
->(
-  content: string,
-) => {
-  const guess = await guessFormatAndDelimiter(content);
-  if (guess) {
+   T = { separator: string; structure_format: string },
+ >(
+   content: string,
+): Promise<T> => {
+   const guess = await guessFormatAndDelimiter(content);
+   if (guess) {
     return guess as T;
-  } else {
-    throw {
-      errors: {
-        separator: "Could not be guessed, please select manually",
-        structure_format: "Could not be guessed, please select manually",
-      },
+   } else {
+    const error = new Error("Could not guess format and delimiter");
+    (error as any).errors = {
+      separator: "Could not be guessed, please select manually",
+      structure_format: "Could not be guessed, please select manually",
     };
-  }
-};
+    throw error;
+   }
+ };

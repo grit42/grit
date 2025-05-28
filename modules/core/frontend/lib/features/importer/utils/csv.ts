@@ -22,7 +22,7 @@ const MAX_SAMPLE_SIZE = 10000;
  *
  * @throws {Error} Doesn't throw - catches and logs all errors, returning null
  */
-export const guessDelimiter = async (str: string, maxSampleSize = MAX_SAMPLE_SIZE): Promise<ValidDelimiter | null> => {
+export const guessDelimiter = (str: string, maxSampleSize = MAX_SAMPLE_SIZE): ValidDelimiter | null => {
   try {
     // Take a sample of the string to analyze
     const sampleText = str.substring(0, maxSampleSize);

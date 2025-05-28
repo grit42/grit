@@ -12,9 +12,9 @@ class GritCoreAddUniqueIndexesToUniqueColumns < ActiveRecord::Migration[7.2]
     duplicate_countries = duplicates(Grit::Core::Country, :name)
     raise DuplicateNameError.new("Duplicate country names: #{duplicate_countries.join(", ")}") if duplicate_countries.any?
     add_index :grit_core_countries, :name, unique: true, name: 'idx_countries_on_name_unique'
-
-    duplicate_countries = duplicates(Grit::Core::Country, :iso)
-    raise DuplicateNameError.new("Duplicate country ISO: #{duplicate_countries.join(", ")}") if duplicate_countries.any?
+    
+    duplicate_country_isos = duplicates(Grit::Core::Country, :iso)
+    raise DuplicateNameError.new("Duplicate country ISO: #{duplicate_country_isos.join(", ")}") if duplicate_country_isos.any?
     add_index :grit_core_countries, :iso, unique: true, name: 'idx_countries_on_iso_unique'
 
     duplicate_locations = duplicates(Grit::Core::Location, :name)

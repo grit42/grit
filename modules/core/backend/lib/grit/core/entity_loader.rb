@@ -17,6 +17,7 @@
 #++
 
 require "active_support/core_ext/numeric/bytes"
+require "csv"
 
 module Grit::Core
   class EntityLoader

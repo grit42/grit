@@ -87,16 +87,18 @@ const NewLoadSetForm = ({
           },
         }));
       });
-    } catch (e: any) {
-      if (typeof e.errors === "object") {
+} catch (e: any) {
+     if (e && typeof e.errors === "object" && e.errors !== null) {
         Object.keys(e.errors).forEach((key) => {
-          fieldApi.form.setFieldMeta(key, (meta) => ({
-            ...meta,
-            errorMap: {
-              ...meta.errorMap,
-              onSubmit: e.errors[key],
-            },
-          }));
+         if (typeof e.errors[key] === 'string') {
+            fieldApi.form.setFieldMeta(key, (meta) => ({
+              ...meta,
+              errorMap: {
+                ...meta.errorMap,
+                onSubmit: e.errors[key],
+              },
+            }));
+         }
         });
       }
     }
