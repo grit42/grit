@@ -9,24 +9,25 @@ export const newLoadSetPayload = <
   formValue: T,
 ): FormData => {
   if (!formValue?.name || !formValue?.data) {
-    throw new Error('Form value must contain name and data properties');
+    throw new Error("Form value must contain name and data properties");
   }
 
-   const formData = new FormData();
-   formData.append(
-     "data",
-     new File([formValue.data], `${formValue.name}.csv`, {
+  const formData = new FormData();
+  formData.append(
+    "data",
+    new File([formValue.data], `${formValue.name}.csv`, {
       type: "text/csv",
-     }),
-   );
-    for (const field of fields) {
+    }),
+  );
+  for (const field of fields) {
     if (!field.name) continue;
 
+
     const fieldValue = formValue[field.name as keyof T];
-    if (fieldValue !== undefined && fieldValue !== null && fieldValue !== '') {
+    if (fieldValue !== undefined && fieldValue !== null && fieldValue !== "") {
       const stringValue = String(fieldValue);
       formData.append(field.name, stringValue);
     }
-   }
+  }
   return formData;
 };

@@ -36,9 +36,8 @@ const LoadSetCreator = ({ entity }: LoadSetCreatorProps) => {
     error,
   } = useLoadSetFields(entity);
 
-  const initialValues = useMemo((): NewLoadSetData => {
-    const values: NewLoadSetData = {
-      origin_id: 0,
+  const initialValues = useMemo((): Partial<NewLoadSetData> => {
+    const values: Partial<NewLoadSetData> = {
       entity,
       name: `${entity}-${new Date().toISOString()}`,
       data: "",

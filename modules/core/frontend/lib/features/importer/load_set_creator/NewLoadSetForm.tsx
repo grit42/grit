@@ -36,7 +36,7 @@ import { useImporter } from "../ImportersContext";
 export interface NewLoadSetFormProps {
   entity: string;
   fields: FormFieldDef[];
-  initialValues: NewLoadSetData;
+  initialValues: Partial<NewLoadSetData>;
 }
 
 const NewLoadSetForm = ({
@@ -48,17 +48,17 @@ const NewLoadSetForm = ({
   const navigate = useNavigate();
   const createLoadSetMutation = useCreateLoadSetMutation();
 
-  const form = useForm<NewLoadSetData>({
+  const form = useForm<Partial<NewLoadSetData>>({
     validators: {
       onMount: () => "Provide either a file or text data",
       onChange: ({ value }) =>
-        value.data.length > 0
+        (value.data && value.data.length > 0)
           ? undefined
           : "Provide either a file or text data",
     },
     onSubmit: genericErrorHandler(async ({ value }) => {
       const loadSet = await createLoadSetMutation.mutateAsync(
-        newLoadSetPayload(fields, value),
+        newLoadSetPayload(fields, value as NewLoadSetData),
       );
       navigate(`../${loadSet.id}`, { relative: "path" });
     }),
