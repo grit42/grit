@@ -38,7 +38,7 @@ const EditorInput = (props: EditorInputProps) => {
       }}
     >
       {props.label && <InputLabel label={props.label} />}
-      <Editor showFilePicker showInitialOverlay={false} {...props} />
+      <Editor {...props} showFilePicker={props.showFilePicker ?? true} showInitialOverlay={props.showInitialOverlay ?? false} />
     </div>
   );
 };

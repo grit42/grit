@@ -145,8 +145,9 @@ const LoadSetEditor = ({
   };
 
   const defaultValues = useMemo(
-    () =>
-      fields?.reduce((acc, f) => {
+    () => {
+      if (!fields) return {};
+      return fields.reduce((acc, f) => {
         return {
           ...acc,
           [`${f.name}-header`]: mappings[f.name]?.header ?? "",
@@ -154,7 +155,8 @@ const LoadSetEditor = ({
           [`${f.name}-find_by`]: mappings[f.name]?.find_by ?? "",
           [`${f.name}-value`]: mappings[f.name]?.value ?? null,
         };
-      }, {}),
+      }, {})
+    },
     [mappings, fields],
   );
 

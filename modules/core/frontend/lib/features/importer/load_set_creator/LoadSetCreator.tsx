@@ -42,15 +42,17 @@ const LoadSetCreator = ({ entity }: LoadSetCreatorProps) => {
       entity,
       name: `${entity}-${new Date().toISOString()}`,
       data: "",
-      separator: null
+      separator: null,
     };
     if (!loadSetFields) return values;
     for (const field of loadSetFields) {
       if (searchParams.has(field.name)) {
         switch (field.type) {
-          case "integer":
-            values[field.name] = Number(searchParams.get(field.name));
+          case "integer": {
+            const paramValue = searchParams.get(field.name);
+            values[field.name] = paramValue !== null ? Number(paramValue) : null;
             break;
+          }
           default:
             values[field.name] = searchParams.get(field.name);
         }
@@ -63,7 +65,11 @@ const LoadSetCreator = ({ entity }: LoadSetCreatorProps) => {
   if (isError || !loadSetFields) return <ErrorPage error={error} />;
 
   return (
-    <NewLoadSetForm initialValues={initialValues} fields={loadSetFields} entity={entity} />
+    <NewLoadSetForm
+      initialValues={initialValues}
+      fields={loadSetFields}
+      entity={entity}
+    />
   );
 };
 

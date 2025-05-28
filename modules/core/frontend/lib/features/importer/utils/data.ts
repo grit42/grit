@@ -9,8 +9,8 @@ export const guessGenericDataSetValues = async <T = { separator: string }>(
       separator: guess,
     } as T;
   } else {
-    throw {
-      errors: { separator: "Could not be guessed, please select manually" },
-    };
+    const error = new Error("Could not guess separator");
+    (error as any).errors = { separator: "Could not be guessed, please select manually" };
+    throw error;
   }
 };

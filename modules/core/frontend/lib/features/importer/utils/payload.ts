@@ -16,6 +16,7 @@ export const newLoadSetPayload = <
     }),
   );
   for (const field of fields) {
+   if (!field.name) continue;
     const stringValue = formValue[field.name]?.toString();
     if (stringValue) formData.append(field.name, stringValue);
   }

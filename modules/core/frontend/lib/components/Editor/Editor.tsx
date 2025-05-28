@@ -18,8 +18,9 @@
 
 import { Button, Surface } from "@grit42/client-library/components";
 import { Editor as MonacoEditor } from "@monaco-editor/react";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTheme } from "@grit42/client-library/hooks";
+import * as monaco from "monaco-editor";
 import { toast } from "@grit42/notifications";
 
 const Editor = ({
@@ -41,44 +42,27 @@ const Editor = ({
   );
   const [isDragging, setIsDragging] = useState(false);
   const editorRef = useRef<any>(null);
+  const listenersRef = useRef<monaco.IDisposable[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
   const handleEditorMount = useCallback(
-    (editor: any) => {
+    (editor: monaco.editor.IStandaloneCodeEditor) => {
       editorRef.current = editor;
       editor.setValue(value);
-      editor.onDropIntoEditor(({ event }: any) => {
-        event.preventDefault();
-
-        const file = event.dataTransfer.files[0];
-        if (file) {
-          const reader = new FileReader();
-
-          reader.onload = (event) => {
-            const fileContent = event.target?.result;
-            editor.setValue(fileContent);
-            if (onBlur) {
-              onBlur();
-            }
-          };
-
-          reader.onerror = () => {
-            toast.error("Could not read the dropped file.");
-          };
-
-          reader.readAsText(file);
-        } else {
-          toast.error("Could not read the dropped file.");
-        }
-      });
 
       if (onBlur) {
-        editor.onDidBlurEditorText(onBlur);
-        editor.onDidBlurEditorWidget(onBlur);
+        listenersRef.current = [
+          editor.onDidBlurEditorText(onBlur),
+          editor.onDidBlurEditorWidget(onBlur),
+        ];
       }
     },
     [onBlur, value],
   );
+
+  useEffect(() => {
+    return () =>
+      listenersRef.current?.forEach((listener) => listener.dispose());
+  }, []);
 
   return (
     <div
@@ -131,7 +115,11 @@ const Editor = ({
               const reader = new FileReader();
 
               reader.onload = (event) => {
-                const fileContent = event.target?.result;
+                const raw = event.target?.result;
+                const fileContent =
+                  typeof raw === "string"
+                    ? raw
+                    : new TextDecoder().decode(raw as ArrayBuffer);
                 editorRef.current?.setValue(fileContent);
                 if (onBlur) {
                   onBlur();
@@ -226,7 +214,11 @@ const Editor = ({
             const reader = new FileReader();
 
             reader.onload = (event) => {
-              const fileContent = event.target?.result;
+              const raw = event.target?.result;
+              const fileContent =
+                typeof raw === "string"
+                  ? raw
+                  : new TextDecoder().decode(raw as ArrayBuffer);
               setOverlayVisible(false);
               editorRef.current?.setValue(fileContent);
               editorRef.current?.focus();

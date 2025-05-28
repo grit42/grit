@@ -37,6 +37,7 @@ import { useTableColumns } from "../../../utils";
 import styles from "./loadSetViewer.module.scss";
 import { useLoadSetLoadedDataColumns } from "../queries";
 import { useImporter } from "../ImportersContext";
+import { toast } from "@grit42/notifications";
 
 interface Props {
   loadSet: LoadSetData;
@@ -94,22 +95,27 @@ const LoadSetViewer = ({ loadSet }: Props) => {
       !window.confirm(
         `Are you sure you want to rollback this data load? Irreversible data loss may occur`,
       )
-    )
+    ) {
       return;
-    await rollbackLoadSetMutation.mutateAsync();
-    await queryClient.invalidateQueries({
-      queryKey: [
-        "entities",
-        "datum",
-        "grit/core/load_sets",
-        loadSet.id.toString(),
-      ],
-      exact: false,
-    });
-    queryClient.invalidateQueries({
-      queryKey: ["entities", "data", info?.path ?? ""],
-      exact: false,
-    });
+    }
+    try {
+      await rollbackLoadSetMutation.mutateAsync();
+      await queryClient.invalidateQueries({
+        queryKey: [
+          "entities",
+          "datum",
+          "grit/core/load_sets",
+          loadSet.id.toString(),
+        ],
+        exact: false,
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["entities", "data", info?.path ?? ""],
+        exact: false,
+      });
+    } catch (e) {
+      toast.error(e as string);
+    }
   };
 
   if (isError || isColumnsError || isInfoError) {
