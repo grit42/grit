@@ -6,7 +6,7 @@ class CreateGritAssaysVocabularyItems < ActiveRecord::Migration[7.2]
       t.datetime :created_at, null: false, default: -> { 'CURRENT_TIMESTAMP' }
       t.string :updated_by, limit: 30
       t.datetime :updated_at
-      t.string :name, null: false, index: { unique: true }
+      t.string :name, null: false, index: true
       t.string :external_name
       t.text :description
 

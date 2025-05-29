@@ -6,7 +6,7 @@ class CreateGritAssaysAssayDataSheetDefinitions < ActiveRecord::Migration[7.2]
       t.datetime :created_at, null: false, default: -> { 'CURRENT_TIMESTAMP' }
       t.string :updated_by, limit: 30
       t.datetime :updated_at
-      t.string :name, null: false, index: { unique: true }
+      t.string :name, null: false, index: true
       t.text :description
 
       t.references :assay_model, null: false, foreign_key: { name: "assays_assay_data_sheet_definitions_assays_assay_model_id_fkey", to_table: "grit_assays_assay_models" }
