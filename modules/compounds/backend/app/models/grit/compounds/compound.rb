@@ -36,10 +36,10 @@ module Grit::Compounds
       update: [ "Administrator", "CompoundAdministrator", "CompoundUser" ],
       destroy: [ "Administrator", "CompoundAdministrator", "CompoundUser" ]
 
-    validate :name_and_synonyms
+    validate :no_synonyms_with_name
 
-    def name_and_synonyms
-      errors.add("name", "is already taken") if Compound.find_by_name_or_synonyms(self.name).count(:all).positive?
+    def no_synonyms_with_name
+      errors.add("name", "has already been taken") if Synonym.unscoped.where(name: self.name).count(:all).positive?
     end
 
     class_eval do
