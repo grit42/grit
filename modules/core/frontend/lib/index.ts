@@ -24,7 +24,13 @@ export type * from "./Registrant";
 
 export { useRegisterAdministrationTabs } from "./features/administration";
 
-export { AuthGuard, NoAuthGuard, useSession, hasRoles, useHasRoles } from "./features/session";
+export {
+  AuthGuard,
+  NoAuthGuard,
+  useSession,
+  hasRoles,
+  useHasRoles,
+} from "./features/session";
 
 export {
   useEntityColumns,
@@ -49,7 +55,11 @@ export type {
   EntityStamps,
 } from "./features/entities";
 
-export * from "./features/importer"
+export * from "./features/importer";
+export type * from "./features/importer";
+
+export * from "./components";
+export type * from "./components";
 
 import React, { lazy } from "react";
 import Registrant from "./Registrant";

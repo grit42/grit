@@ -56,23 +56,27 @@ From here the user can delete the compound again or continue to the [compounds](
 
 ## Bulk registration from file
 
-To initiate the compound import process go to the Compounds grid and click the "Import" button 1) and select "import compounds" in the appearing dropdown.
+Compounds can be imported from SDF or CSV files. To initiate the compound import process go to the Compounds grid and click the "Import" button 1) and select "import compounds" in the appearing dropdown.
 
 ![Compound import](./assets/compound_reg_import.png)
 
 This will take you to the import form:
 
 1.  The name of the load. The platform creates an automatic name, but you can edit. The name can be used to identify this particular load later
-2.  What database table the data will be loaded to. Leave as suggested by the platform unless you know what you are doing!
-3.  Select the relevant origin of the compounds from the dropdown
-4.  Select the compound type. This is important as some compound types have special columns (compound properties) associated with them
-5.  Navigate to the compound (sdf) file you want to upload
+2.  Select the relevant origin of the compounds from the dropdown
+3.  The separator used in the data set. When adding a file, the system will attempt to guess the separator used based on the content of the file
+4.  The format of structures in the data set. Supported formats are Molfile in SDF data sets and SMILES in CSV data sets. When adding a file, the system will attempt to guess the structure format based on the content of the file.
+5.  The compound type. The selected compound type will determine the mappings available in the next step.
+6.  The data set. A data set can be added by:
+  -  dropping a file in the dark area
+  -  opening the file explorer and selecting a file
+  -  clicking the dark area and typing manually or pasting a selection from a spreadsheet or another text editor
 
 ![Compound import form](./assets/compound_reg_import_form.png)
 
 When the form has been filled in it can look like this.
 
-Go to the button of the screen and click "Start import"
+Go to the button of the screen and click "Start import" (7)
 
 ![Compound import form filled](./assets/compound_reg_import_form_filled.png)
 
@@ -93,16 +97,22 @@ The mapping can look something like this:
 
 But in this case the import was aborted by the platform.
 
-Two new tabs (Errors, Warnings) 1) appear next to the file data preview and errors are shown.
+Three new tabs (Errors, Errored rows, Warnings) 1) appear next to the file data preview and errors are shown. The data show in these tabs can be exported for further processing.
 
-In this case the issue is that the value (the DRUGBANK ID we mapped to the name column) 2) must to be unique in the database (so we only have one compound with that name) but as these compounds have been loaded before 3) these DRUGBANK ID's already exist.
+In this case the issue is that the value (the DRUGBANK ID we mapped to the name column) 2) must be unique in the database (so we only have one compound with that name) but as these compounds have been loaded before 3) these DRUGBANK ID's already exist.
 
-The user can re-map the Name column to another relevant name/ID in the file if that exist (most compounds have an ID from the producer). If not the file will have to be edited and some relevant and unique name/ID will have to be added to all the compounds.
+Resolution options are:
+-  Change the mapping of the Name column to another relevant name/ID in the file if that exist (most compounds have an ID from the producer)
+-  Cancel the import now and start over (4)
+-  Edit the data set manually by selecting a new file or manually editing the loaded data set (5)
+-  Ignore the rows producing errors and load only valid records (6)
+-  Validate the data set again, for instance after modifying existing compounds (7)
 
 ![Compound import failed - duplicate names](./assets/compound_reg_import_failed.png)
 
+If there are no issues, the user will be asked to confirm the import.
 
-But, when there are no errors and the compounds are loaded into the database an "Import succeeded" form will be shown.
+Once the import is confirmed or only valid records are loaded, the system will display an 'Import Succeeded' view, indicating that the data set has been successfully added to the database.
 
 1.  The structures from the file are loaded into the Molecule field
 2.  The compounds have automatically been given a grit database ID

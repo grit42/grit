@@ -76,7 +76,7 @@ module Grit::Assays
     end
 
     def data_sheet_for_experiment(zipfile, experiment, data_sheet)
-      columns = Grit::Assays::ExperimentDataSheetRecord.entity_columns(data_sheet_id: data_sheet[:id]).reject { |c| c[:default_hidden] }
+      columns = Grit::Assays::ExperimentDataSheetRecord.entity_columns(experiment_data_sheet_id: data_sheet[:id]).reject { |c| c[:default_hidden] }
 
       data_sheet_filename = "#{experiment[:name]}_#{data_sheet.assay_data_sheet_definition[:name]}.csv"
       temp_file = Tempfile.new(data_sheet_filename)

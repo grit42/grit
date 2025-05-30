@@ -18,21 +18,27 @@
 
 import { PropsWithChildren, useCallback, useMemo, useState } from "react";
 import ImportersContext, { ImporterDef } from "./ImportersContext";
-import NewLoadSet from "./pages/load_set/[id]/NewLoadSet";
-import LoadSet from "./pages/load_set/[id]/LoadSet";
+import { LoadSetCreator } from "./load_set_creator";
+import { LoadSetEditor } from "./load_set_editor";
+import { LoadSetViewer } from "./load_set_viewer";
+import { guessGenericDataSetValues } from "./utils/data";
+
+const DEFAULT_IMPORTER: ImporterDef = {
+  LoadSetCreator: LoadSetCreator,
+  LoadSetEditor: LoadSetEditor,
+  LoadSetViewer: LoadSetViewer,
+  guessDataSetValues: guessGenericDataSetValues,
+  LoadSetViewerExtraActions: () => null,
+};
 
 const ImportersProvider: React.FC<PropsWithChildren> = ({ children }) => {
   const [importers, setImporters] = useState<Record<string, ImporterDef>>({
-    default: {
-      LoadSetCreator: NewLoadSet,
-      LoadSetEditor: LoadSet,
-      SucceededLoadSet: LoadSet,
-    },
+    default: DEFAULT_IMPORTER,
   });
-  const register = useCallback((type: string, importer: ImporterDef) => {
+  const register = useCallback((type: string, importer: Partial<ImporterDef>) => {
     setImporters((prev) => ({
       ...prev,
-      [type]: importer,
+      [type]: { ...DEFAULT_IMPORTER, ...importer },
     }));
     return () =>
       setImporters((prev) => {

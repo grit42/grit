@@ -36,10 +36,10 @@ module Grit::Compounds
       update: [ "Administrator", "CompoundAdministrator", "CompoundUser" ],
       destroy: [ "Administrator", "CompoundAdministrator", "CompoundUser" ]
 
-    validate :name_and_synonyms
+    validate :no_synonyms_with_name
 
-    def name_and_synonyms
-      errors.add("name", "is already taken") if Compound.find_by_name_or_synonyms(self.name).count(:all).positive?
+    def no_synonyms_with_name
+      errors.add("name", "has already been taken") if Synonym.unscoped.where(name: self.name).count(:all).positive?
     end
 
     class_eval do
@@ -108,8 +108,6 @@ module Grit::Compounds
       end
     end
 
-
-
     def self.compound_type_properties(**args)
       compound_type_id = args[:compound_type_id]
       compound_type_ids = args[:compound_type_ids]
@@ -124,6 +122,7 @@ module Grit::Compounds
           description: type_property.description,
           type: type_property.data_type.is_entity ? "entity" : type_property.data_type.name,
           required: type_property.required,
+          unique: false,
           compound_type_id: type_property.compound_type_id,
           compound_type_id__name: type_property.compound_type&.name
         }
@@ -158,16 +157,20 @@ module Grit::Compounds
             type: "mol",
             limit: nil,
             required: false,
+            unique: false,
             default: nil,
             entity: nil,
             compound_type_id: nil,
             compound_type_id__name: nil
-          }, *properties, {
+          },
+          *properties,
+          {
           name: "molweight",
           display_name: "MW",
           type: "decimal",
           limit: nil,
           required: false,
+          unique: false,
           default: nil,
           entity: nil,
           disabled: true,
@@ -179,6 +182,7 @@ module Grit::Compounds
           type: "decimal",
           limit: nil,
           required: false,
+          unique: false,
           default: nil,
           entity: nil,
           disabled: true,
@@ -190,6 +194,7 @@ module Grit::Compounds
           type: "string",
           limit: nil,
           required: false,
+          unique: false,
           default: nil,
           entity: nil,
           disabled: true,

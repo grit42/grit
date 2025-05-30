@@ -23,6 +23,8 @@ module Grit::Core::GritEntityRecord
 
   included do
     @db_foreign_keys = nil
+    @db_indexes = nil
+    @unique_properties = nil
     @db_properties = nil
 
     @display_columns = nil
@@ -80,6 +82,22 @@ module Grit::Core::GritEntityRecord
       @db_foreign_keys ||= ActiveRecord::Base.connection.foreign_keys(self.table_name)
     end
 
+    def indexes
+      @db_indexes ||= ActiveRecord::Base.connection.indexes(self.table_name)
+    end
+
+    def unique_index_columns
+      indexes.select { |index| index.unique }.map { |index| index.columns }.flatten
+    end
+
+    def unique_rails_validated_columns
+      self._validators.select { |key, value| value.any? { |item| item.is_a?(ActiveRecord::Validations::UniquenessValidator) } }.keys.map(&:to_s)
+    end
+
+    def unique_properties
+      @unique_properties ||= [ *unique_index_columns, *unique_rails_validated_columns ].uniq
+    end
+
     def db_properties
       @db_properties ||= self.columns.map do |column|
         foreign_key = self.foreign_keys.find { |key| key.options[:column] == column.name }
@@ -89,7 +107,8 @@ module Grit::Core::GritEntityRecord
           description: column.comment,
           type: foreign_key.nil? ? column.sql_type_metadata.type : "entity",
           limit: column.sql_type_metadata.limit,
-          required: !column.null
+          required: !column.null,
+          unique: unique_properties.include?(column.name.to_s)
         }
         unless foreign_key.nil?
           foreign_key_model_name = Grit::Core::EntityMapper.table_to_model_name(foreign_key.to_table)

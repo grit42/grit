@@ -16,18 +16,24 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Option, Select, ToggleSwitch } from "@grit42/client-library/components";
-import { ReactFormExtendedApi, useStore } from "@tanstack/react-form";
+import {
+  Option,
+  Select,
+  ToggleSwitch,
+} from "@grit42/client-library/components";
+import { ReactFormExtendedApi, useStore } from "@grit42/form";
 import { FormFieldDef, requiredValidator, useFormInputs } from "@grit42/form";
 import { useEffect } from "react";
-import { useEntityColumns } from "../../../../entities";
-import { EntityFormFieldDef } from "../../../../../Registrant";
+import { useEntityColumns } from "../../entities";
+import { EntityFormFieldDef } from "../../../Registrant";
 
-const MappingFormFieldGroup = ({
+const MappingFieldGroup = ({
+  disabled,
   entityField,
   headerOptions,
   form,
 }: {
+  disabled: boolean;
   entityField: FormFieldDef;
   headerOptions: Option<string>[];
   form: ReactFormExtendedApi<
@@ -40,13 +46,10 @@ const MappingFormFieldGroup = ({
     entityField.type === "entity"
       ? (entityField as EntityFormFieldDef).entity.full_name
       : "";
-  const { data, isLoading } = useEntityColumns(
-    entity,
-    undefined,
-    {
-      enabled: entity !== "",
-    },
-  );
+  const { data, isLoading } = useEntityColumns(entity, undefined, {
+    enabled: entity !== "",
+    select: (data) => data.filter(({ unique }) => unique),
+  });
 
   const constant = useStore(
     form.store,
@@ -88,7 +91,7 @@ const MappingFormFieldGroup = ({
                           ...entityField,
                           name: `${entityField.name}-value`,
                         }}
-                        disabled={false}
+                        disabled={disabled}
                         handleChange={field.handleChange}
                         handleBlur={field.handleBlur}
                         value={field.state.value}
@@ -119,7 +122,7 @@ const MappingFormFieldGroup = ({
                   return (
                     <Select
                       name={`${entityField.name}-header`}
-                      disabled={false}
+                      disabled={disabled}
                       label={entityField.display_name}
                       placeholder="Column"
                       isClearable
@@ -153,7 +156,7 @@ const MappingFormFieldGroup = ({
                   return (
                     <Select
                       name={`${entityField.name}-find_by`}
-                      disabled={false}
+                      disabled={disabled}
                       label="Find by:"
                       isClearable
                       isCombobox
@@ -164,10 +167,12 @@ const MappingFormFieldGroup = ({
                       value={field.state.value}
                       isLoading={isLoading}
                       options={
-                        data?.filter(({default_hidden}) => !default_hidden).map((d) => ({
-                          label: d.display_name,
-                          value: d.name,
-                        })) ?? []
+                        data
+                          ?.filter(({ default_hidden }) => !default_hidden)
+                          .map((d) => ({
+                            label: d.display_name,
+                            value: d.name,
+                          })) ?? []
                       }
                     />
                   );
@@ -183,6 +188,7 @@ const MappingFormFieldGroup = ({
           return (
             <ToggleSwitch
               noPadding
+              disabled={disabled}
               label="Use a constant value"
               onChange={(e) => field.handleChange(e.target.checked)}
               onBlur={field.handleBlur}
@@ -195,4 +201,4 @@ const MappingFormFieldGroup = ({
   );
 };
 
-export default MappingFormFieldGroup;
+export default MappingFieldGroup;

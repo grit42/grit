@@ -16,9 +16,15 @@
 # grit-core. If not, see <https://www.gnu.org/licenses/>.
 #++
 
+require "active_support/core_ext/numeric/bytes"
+require "csv"
+
 module Grit::Core
   class EntityLoader
     class ParseException < RuntimeError
+    end
+
+    class MaxFileSizeExceededError < RuntimeError
     end
 
     def self.loader(load_set_entity)
@@ -38,12 +44,24 @@ module Grit::Core
       loader(params[:entity]).create(params)
     end
 
+    def self.load_set_data_fields(load_set)
+      loader(load_set.entity).data_set_fields(load_set)
+    end
+
+    def self.show_load_set(load_set)
+      loader(load_set.entity).show(load_set)
+    end
+
     def self.destroy_load_set(load_set)
       loader(load_set.entity).destroy(load_set)
     end
 
     def self.load_set_mapping_fields(load_set)
       loader(load_set.entity).mapping_fields(load_set)
+    end
+
+    def self.load_set_loaded_data_columns(load_set)
+      loader(load_set.entity).loaded_data_columns(load_set)
     end
 
     def self.confirm_load_set(load_set)
@@ -54,20 +72,37 @@ module Grit::Core
       loader(load_set.entity).validate(load_set)
     end
 
+    def self.set_load_set_data(load_set, data, **args)
+      loader(load_set.entity).set_data(load_set, data, **args)
+    end
+
     protected
     def self.fields(params)
-      Grit::Core::LoadSet.entity_fields.filter { |f| f[:id] != "data" }
+      fields = Grit::Core::LoadSet.entity_fields.filter { |f| f[:name] != "data" }.to_h { |item| [ item[:name], item.dup ] }
+      fields["entity"][:disabled] = true unless fields["entity"].nil?
+      fields["separator"][:required] = true unless fields["separator"].nil?
+      fields["separator"][:placeholder] = "Will attempt to guess based on provided data" unless fields["separator"].nil?
+      fields.values
+    end
+
+    def self.data_set_fields(params)
+      self.fields(params).filter { |f| f[:name] == "separator" }
+    end
+
+    def self.show(load_set)
+      load_set.as_json
     end
 
     def self.create(params)
-      data = params[:data].tempfile.read
+      data = read_data(params[:data].tempfile)
 
-      parsed_data = self.parse(data)
+      parsed_data = self.parse(data, params[:separator])
 
       record = Grit::Core::LoadSet.new({
         name: params[:name],
         entity: params[:entity],
         data: data,
+        separator: params[:separator],
         parsed_data: parsed_data,
         origin_id: params[:origin_id],
         status_id: Grit::Core::LoadSetStatus.find_by(name: "Mapping").id
@@ -81,16 +116,23 @@ module Grit::Core
       load_set.destroy!
     end
 
+    def self.loaded_data_columns(load_set)
+      load_set.entity.constantize.entity_columns(**self.show(load_set).symbolize_keys!)
+    end
+
     def self.validate(load_set)
       load_set_entity = load_set.entity.constantize
       load_set_entity_properties = load_set_entity.entity_properties
       data = load_set.parsed_data[1..]
       errors = []
 
-      ActiveRecord::Base.transaction do
-        data.each_with_index do |datum, index|
-          record_props = {}
-          record_errors = {}
+      Grit::Core::LoadSetLoadingRecordPropertyValue.delete_by(load_set_id: load_set.id)
+      Grit::Core::LoadSetLoadingRecord.delete_by(load_set_id: load_set.id)
+
+      data.each_with_index do |datum, index|
+        record_props = {}
+        record_errors = {}
+        ActiveRecord::Base.transaction(requires_new: true) do
           loading_record = LoadSetLoadingRecord.new({
             load_set_id: load_set.id,
             number: index
@@ -110,10 +152,10 @@ module Grit::Core
                 value = field_entity.loader_find_by!(find_by, datum[header_index]).id
               rescue NameError
                 record_errors[entity_property[:name].to_s] = [ "#{entity_property[:entity][:full_name]}: No such model" ]
-                next
+                value = 0
               rescue ActiveRecord::RecordNotFound
                 record_errors[entity_property[:name].to_s] = [ "could not find #{entity_property[:entity][:full_name]} with '#{find_by}' = #{datum[header_index]}" ]
-                next
+                value = 0
               end
             elsif !header_index.nil?
               value = datum[header_index]
@@ -154,16 +196,14 @@ module Grit::Core
 
           if !record_errors.empty?
             errors.push({ index: index, datum: datum, errors: record_errors })
-            next
+            raise ActiveRecord::Rollback
           end
 
           record = load_set_entity.new(record_props)
           unless record.valid?
             errors.push({ index: index, datum: datum, errors: record.errors })
+            raise ActiveRecord::Rollback
           end
-        end
-        if errors.length > 0
-          raise ActiveRecord::Rollback if errors.length > 0
         end
       end
       { errors: errors }
@@ -175,7 +215,7 @@ module Grit::Core
       load_set_entity_table = load_set_entity.table_name
 
       ActiveRecord::Base.transaction do
-        Grit::Core::LoadSetLoadingRecord.where(load_set_id: load_set.id).each do |loading_record|
+        Grit::Core::LoadSetLoadingRecord.includes(:load_set_loading_record_property_values).where(load_set_id: load_set.id).each do |loading_record|
           record_props = {}
           loading_record.load_set_loading_record_property_values.each do |loading_record_property_value|
             entity_property = load_set_entity_properties.find { |p| p[:name] == loading_record_property_value.name }
@@ -196,8 +236,8 @@ module Grit::Core
           }).save!
         end
 
-        Grit::Core::LoadSetLoadingRecordPropertyValue.destroy_by(load_set_id: load_set.id)
-        Grit::Core::LoadSetLoadingRecord.destroy_by(load_set_id: load_set.id)
+        Grit::Core::LoadSetLoadingRecordPropertyValue.delete_by(load_set_id: load_set.id)
+        Grit::Core::LoadSetLoadingRecord.delete_by(load_set_id: load_set.id)
       end
     end
 
@@ -205,22 +245,60 @@ module Grit::Core
       load_set.entity.constantize.entity_fields
     end
 
-    def self.parse(data)
-      guessed_sep = nil
-      guessed_sep_count = -1
-      [ ",", "\t", ";" ].each do |sep|
-        sep_count = data.scan(/(?=#{sep})/).count
-        if guessed_sep_count < sep_count
-          guessed_sep = sep
-          guessed_sep_count = sep_count
-        end
+    def self.set_data(load_set, tempfile, **args)
+      data = read_data(tempfile)
+      parsed_data = self.parse(data, args[:separator])
+      load_set.data = data
+      load_set.separator = args[:separator]
+      load_set.parsed_data = parsed_data
+      load_set.status_id = Grit::Core::LoadSetStatus.find_by(name: "Mapping").id
+      load_set.record_errors = nil
+      load_set.record_warnings = nil
+      ActiveRecord::Base.transaction do
+        Grit::Core::LoadSetLoadingRecordPropertyValue.delete_by(load_set_id: load_set.id)
+        Grit::Core::LoadSetLoadingRecord.delete_by(load_set_id: load_set.id)
+        load_set.save!
       end
+      load_set
+    end
+
+    def self.parse(data, separator)
+      raise ParseException, "Separator must be provided" if separator.blank? && separator != "\t"
       begin
-        parsed = CSV.parse(data, col_sep: guessed_sep, liberal_parsing: true, encoding: "utf-8")
-        return parsed if parsed.map(&:size).uniq.size == 1
-      rescue StandardError
+        parsed = CSV.parse(data,
+                          col_sep: separator,
+                          liberal_parsing: true,
+                          encoding: "utf-8"
+                        )
+
+        cleaned = parsed.reject { |row| row.all?(&:blank?) }
+        return cleaned if cleaned.map(&:size).uniq.size == 1
+      rescue CSV::MalformedCSVError => e
+        raise ParseException.new "Malformed CSV data: #{e.message}"
+      rescue ArgumentError => e
+        raise ParseException.new "Invalid CSV parameters: #{e.message}"
+      rescue Encoding::InvalidByteSequenceError => e
+        raise ParseException.new "Invalid character encoding in CSV: #{e.message}"
+      rescue StandardError => e
+        raise ParseException.new "Failed to parse CSV: #{e.message}"
       end
-      raise ParseException.new "Unable to guess value delimiter"
+      raise ParseException.new "Inconsistent column count in CSV rows"
+    end
+
+
+    MAX_FILE_SIZE = 50.megabytes
+
+    def self.read_data(file)
+      if file.size > MAX_FILE_SIZE
+        raise MaxFileSizeExceededError.new "File size exceeds maximum allowed size of 50MB"
+        return
+      end
+
+      data = "".force_encoding("UTF-8")
+      until file.eof?
+        data << file.read(1.megabyte)
+      end
+      data
     end
   end
 end

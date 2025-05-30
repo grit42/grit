@@ -16,7 +16,7 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { EntityData } from "../entities";
+import { EntityData, EntityProperties } from "../entities";
 
 export interface LoadSetMapping {
   header: string | null;
@@ -25,8 +25,22 @@ export interface LoadSetMapping {
   value: string | number | boolean | null;
 }
 
+export interface NewLoadSetData extends EntityProperties {
+  name: string;
+  entity: string;
+  data: string;
+  origin_id: number;
+  separator: string | null;
+}
+
+export interface LoadSetDataUpdateData extends EntityProperties {
+  data: string;
+  separator: string | null;
+}
+
 export interface LoadSetData extends EntityData {
   entity: string;
+  separator: string | null;
   origin_id: number;
   origin_id__name: string;
   status_id: number;

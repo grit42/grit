@@ -28,7 +28,7 @@ import Cross from "../../icons/Cross";
 
 export const DialogContext = createContext(false);
 
-interface Props {
+export interface DialogProps {
   /**
    * Dialog contents.
    */
@@ -110,7 +110,7 @@ const DialogContent = ({
   canOutsideClickClose = true,
   autoFocus = true,
   headerMargin = true,
-}: Props & {
+}: DialogProps & {
   showTransition: boolean;
   transitionState: TransitionState;
 }) => {
@@ -214,7 +214,7 @@ const DialogContent = ({
   );
 };
 
-const Dialog = (props: Props) => {
+const Dialog = (props: DialogProps) => {
   const { isOpen, onClose } = props;
   const { transitionState, showTransition } = useMountTransition(isOpen, 350);
 

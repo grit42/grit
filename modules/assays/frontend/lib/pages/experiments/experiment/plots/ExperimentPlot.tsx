@@ -89,7 +89,7 @@ const ExperimentPlot = ({ experiment }: Props) => {
     setPlot(
       experiment.plots[plot_id] ?? NEW_PLOT(experiment.data_sheets[0]?.id),
     );
-  }, [plot_id, experiment.plots]);
+  }, [plot_id, experiment.plots, experiment.data_sheets]);
 
   const editEntityMutation = useEditEntityMutation<ExperimentData>(
     "grit/assays/experiments",

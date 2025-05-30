@@ -28,7 +28,22 @@ module Grit::Core
     entity_crud_with create: [], read: [], update: [], destroy: []
 
     def self.entity_fields
-      @entity_fields ||= self.entity_fields_from_properties(self.db_properties.select { |p| [ "name", "entity", "origin_id" ].include?(p[:name]) })
+      @entity_fields ||= self.entity_fields_from_properties(
+        self.db_properties
+          .select { |p| [ "name", "entity", "origin_id", "separator" ].include?(p[:name]) })
+          .map { |p| p[:name] != "separator" ? p : {
+            **p,
+            type: "select",
+            select: {
+              options: [
+                { label: "Comma ( , )", value: "," },
+                { label: "Tab ( \\t )", value: "\t" },
+                { label: "Semicolon ( ; )", value: ";" },
+                { label: "Colon ( : )", value: ":" },
+                { label: "Pipe ( | )", value: "|" }
+              ]
+            }
+          }}
     end
 
     def self.detailed(params = nil)
@@ -40,6 +55,7 @@ module Grit::Core
       .select("grit_core_load_sets.updated_by")
       .select("grit_core_load_sets.name")
       .select("grit_core_load_sets.entity")
+      .select("grit_core_load_sets.separator")
       .select("grit_core_load_sets.origin_id")
       .select("grit_core_load_sets.status_id")
       .select("grit_core_load_sets.item_count")

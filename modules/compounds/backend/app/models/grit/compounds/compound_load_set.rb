@@ -29,7 +29,28 @@ module Grit::Compounds
       destroy: [ "Administrator", "CompoundAdministrator", "CompoundUser" ]
 
     def self.entity_fields
-      @entity_fields ||= self.entity_fields_from_properties(self.entity_properties.select { |p| [ "compound_type_id" ].include?(p[:name]) })
+      if @entity_fields.nil?
+        fields_map = self.entity_fields_from_properties(
+          self.entity_properties
+            .select { |p| [ "compound_type_id", "structure_format" ].include?(p[:name]) }
+        ).to_h { |item| [ item[:name], item.dup ] }
+        fields_map["entity"][:disabled] = true unless fields_map["entity"].nil?
+        fields_map["structure_format"] = {
+          **fields_map["structure_format"],
+          type: "select",
+          select: {
+            options: [ {
+              label: "Molfile",
+              value: "molfile"
+            }, {
+              label: "SMILES / No structure",
+              value: "smiles"
+            } ]
+          }
+        } unless fields_map["structure_format"].nil?
+        @entity_fields = fields_map.values
+      end
+      @entity_fields
     end
   end
 end
