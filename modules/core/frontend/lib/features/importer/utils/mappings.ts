@@ -62,7 +62,6 @@ export const getLoadSetPropertiesForCancel = (loadSet: LoadSetData) => {
         "updated_at",
         "updated_by",
         "status_id",
-        "name",
         "load_set_id",
       ].includes(key) &&
       !["function", "object", "symbol"].includes(typeof loadSet[key])
