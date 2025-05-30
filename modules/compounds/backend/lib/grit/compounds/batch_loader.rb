@@ -22,7 +22,7 @@ module Grit::Compounds
   class BatchLoader < Grit::Core::EntityLoader
     protected
     def self.fields(params)
-      [ *Grit::Core::LoadSet.entity_fields.filter { |f| f[:id] != "data" }, *Grit::Compounds::BatchLoadSet.entity_fields ]
+      [ *super(params), *Grit::Compounds::BatchLoadSet.entity_fields ]
     end
 
     def self.create(params)
