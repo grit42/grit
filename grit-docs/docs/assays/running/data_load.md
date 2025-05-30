@@ -38,9 +38,10 @@ The Name and Entity fields are automatically populated. Just leave them as is.
 Then select the relevant values:
 
 1) Origin - who made the data
-2) Experiment - you can give the experiment a name that makes sense to you
-3) What data sheet should the data be loaded to. Some experiments have more than one data sheet
-4) Drag/drop the data file or navigate to it
+2) Separator - the delimiter for the CSV file, when a file is added the system will attempt to guess the separator used and fill this field
+3) Experiment - the experiment the data set will be loaded into
+4) Experiment data sheet - the data sheet the data set will be loaded into
+5) Data - the actual data that will be loaded, can be added by selecting or dropping a file, or pasting or typing manually
 
 ![Experiment data import](./assets/experiment_new_data_import.png)
 
@@ -53,14 +54,14 @@ The platform will import the file, display the content of the file and prepare f
 
 ![Experiment data mapping](./assets/experiment_new_data_import_mapping.png)
 
-1) Number column from the file mapped to the Compound field in the data sheet
+1) Compound column from the file mapped to the Compound field in the data sheet
 2) Dropdown from the "Find by" field. Selecting the "Number" column in the database to use for the matching
-3) The "Number" column in the file mapped to the Compound field
+3) The "Compound" column in the file mapped to the Compound field
 
 
 ![Data import. Compound find by](./assets/experiment_new_data_import_mapping2.png)
 
-Mapping is done and the "Continue" button is enabled. Click the button to continue!
+Mapping is done and the "Validate data set" button is enabled. Click the button to continue!
 
 
 ![Data import mapping done](./assets/experiment_new_data_import_mapping_done.png)
