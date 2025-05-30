@@ -43,11 +43,8 @@ module Grit::Compounds
               label: "Molfile",
               value: "molfile"
             }, {
-              label: "SMILES",
+              label: "SMILES / No structure",
               value: "smiles"
-            }, {
-              label: "No structure",
-              value: "none"
             } ]
           }
         } unless fields_map["structure_format"].nil?
