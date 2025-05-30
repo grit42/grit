@@ -22,7 +22,11 @@ module Grit::Assays
   class ExperimentDataSheetRecordLoader < Grit::Core::EntityLoader
     protected
     def self.fields(params)
-      [ *super(params), *Grit::Assays::ExperimentDataSheetRecordLoadSet.entity_fields ]
+      experiment_data_sheet_record_load_set_fields = Grit::Assays::ExperimentDataSheetRecordLoadSet.entity_fields.to_h { |item| [ item[:name], item.dup ] }
+      experiment_data_sheet_record_load_set_fields["experiment_id"][:disabled] = true unless experiment_data_sheet_record_load_set_fields["experiment_id"].nil?
+      experiment_data_sheet_record_load_set_fields["experiment_data_sheet_id"][:disabled] = true unless experiment_data_sheet_record_load_set_fields["experiment_data_sheet_id"].nil?
+
+      [ *super(params), *experiment_data_sheet_record_load_set_fields.values ]
     end
 
     def self.show(load_set)
