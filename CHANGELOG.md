@@ -1,19 +1,36 @@
 # Changelog
 
-## v0.5.0 - Improved data upload flow
+All notable changes to this project will be documented in this file.
 
-- (core) add data set preview before initiating the import
-- (core) add improved manual/pasted data set input
-- (core) add capability to edit or replace the data set in the mapping stage
-- (core) add capability to ignore errors and confirm import in the mapping stage
-- (core) add display and export of rows containing errors after validation
-- (core) add mapped properties' name in the data set table headers
-- (core/compounds) add data set delimiter (and compound structure format) in the
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [0.5.0] - 2025-06-02
+
+Improved data upload flow
+
+### Added
+
+- (core) data set preview before initiating the import
+- (core) improved manual/pasted data set input
+- (core) capability to edit or replace the data set at the mapping stage
+- (core) capability to ignore errors and confirm import at the mapping stage
+- (core) display and export of rows containing errors after validation
+- (core) mapped properties' name in the data set table headers
+- (core/compounds) data set delimiter (and compound structure format) in the
 client
-- (core) change entity fields to show only unique properties as find by options
-- (core) change importer API
-    - add extensible API endpoints for retrieval of the data set,
-    successfully loaded data columns and load set creation form fields
-    - refactor the frontend extension API, add listener for data set update and
-    loaded data viewer actions
-- (core) fix mapping options overflowing
+- (core) extensible importer API endpoints for retrieval of the data set,
+successfully loaded data columns and load set creation form fields
+- (core) extensible importer API endpoints for retrieval of the data set,
+successfully loaded data columns and load set creation form fields
+- (core) listener for updating load set creation form on data set changes
+- (core) extensible loaded data viewer actions
+
+### Changed
+- (core) entity fields show only unique properties as find by options
+- (core) refactor the frontend importer extension API
+
+### Fixed
+- (core) fix properties form overflowing quirk at the mapping stage
+
+### 
