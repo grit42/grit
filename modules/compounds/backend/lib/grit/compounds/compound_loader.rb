@@ -23,30 +23,37 @@ module Grit::Compounds
   class CompoundLoader < Grit::Core::EntityLoader
     protected
     def self.fields(params)
-      [ *Grit::Core::LoadSet.entity_fields.filter { |f| f[:id] != "data" }, *Grit::Compounds::CompoundLoadSet.entity_fields ]
+      load_set_fields = super(params).to_h { |item| [ item[:name], item.dup ] }
+      load_set_fields["separator"][:select][:options].push({ label: "Molfile ( $$$$ )", value: "$$$$" }) unless load_set_fields["separator"].nil?
+      [ *load_set_fields.values, *Grit::Compounds::CompoundLoadSet.entity_fields ]
     end
 
-    def self.parse(data)
-      begin
-        return Grit::Compounds::SDF.parse(data), "molfile"
-      rescue StandardError
-      end
-      begin
-        return Grit::Core::EntityLoader.parse(data), "smiles"
-      rescue StandardError
-      end
-      raise Grit::Core::EntityLoader::ParseException.new "Unable to determine format: file is neither a valid SDF or CSV file"
+    def self.data_set_fields(params)
+      self.fields(params).filter { |f| [ "separator", "structure_format" ].include? f[:name] }
+    end
+
+    def self.parse(data, separator, structure_format)
+      return Grit::Compounds::SDF.parse(data) if structure_format == "molfile"
+      super(data, separator)
+    end
+
+    def self.show(load_set)
+      compound_load_set = Grit::Compounds::CompoundLoadSet.find_by(load_set_id: load_set.id)
+      { **compound_load_set.as_json, **load_set.as_json }
     end
 
     def self.create(params)
-      data = params[:data].tempfile.read
+      data = read_data(params[:data].tempfile)
+      structure_format = params[:structure_format]
+      separator = params[:separator]
 
-      parsed_data, structure_format = Grit::Compounds::CompoundLoader.parse(data)
+      parsed_data = self.parse(data, separator, structure_format)
 
       load_set = Grit::Core::LoadSet.new({
         name: params[:name],
         entity: "Grit::Compounds::Compound",
         data: data,
+        separator: separator,
         parsed_data: parsed_data,
         origin_id: params[:origin_id],
         status_id: Grit::Core::LoadSetStatus.find_by(name: "Mapping").id
@@ -78,11 +85,15 @@ module Grit::Compounds
 
       names_origin_ids = []
 
-      ActiveRecord::Base.transaction do
-        data.each_with_index do |datum, index|
-          record_props = {}
-          record_props["compound_type_id"] = compound_load_set.compound_type_id
+      Grit::Core::LoadSetLoadingRecordPropertyValue.delete_by(load_set_id: load_set.id)
+      Grit::Core::LoadSetLoadingRecord.delete_by(load_set_id: load_set.id)
 
+      data.each_with_index do |datum, index|
+        record_props = {}
+        record_props["compound_type_id"] = compound_load_set.compound_type_id
+        has_errors = false
+
+        ActiveRecord::Base.transaction(requires_new: true) do
           compound_name_origin_id = {}
 
           record_errors = {}
@@ -106,10 +117,10 @@ module Grit::Compounds
                 value = field_entity.loader_find_by!(find_by, datum[header_index]).id
               rescue NameError
                 record_errors[entity_property_name] = [ "#{entity_property[:entity][:full_name]}: No such model" ]
-                next
+                value = 0
               rescue ActiveRecord::RecordNotFound
                 record_errors[entity_property_name] = [ "could not find #{entity_property[:entity][:full_name]} with '#{find_by}' = #{datum[header_index]}" ]
-                next
+                value = 0
               end
             elsif !header_index.nil?
               value = datum[header_index]
@@ -174,9 +185,11 @@ module Grit::Compounds
 
             unless compound.valid?
               errors.push({ index: index, datum: datum, errors: compound.errors })
+              has_errors = true
             end
           else
             errors.push({ index: index, datum: datum, errors: record_errors })
+            has_errors = true
           end
 
 
@@ -186,6 +199,7 @@ module Grit::Compounds
               warnings.push({ index: index, loading_record_id: loading_record.id, warnings: { molecule: [ "structure already registered, this compound will be linked to the existing structure" ] } })
             elsif !ActiveRecord::Base.connection.execute(ActiveRecord::Base.send(:sanitize_sql_array, [ "SELECT is_valid_#{structure_format == "molfile" ? "ctab" : "smiles"}(?) as valid", record_props["molecule"] ])).first["valid"]
               errors.push({ index: index, datum: datum, errors: { molecule: [ "is not a valid structure" ] } })
+              has_errors = true
             end
           end
 
@@ -205,10 +219,11 @@ module Grit::Compounds
             end
           end
 
-          errors.push({ index: index, datum: datum, errors: properties_errors }) unless properties_errors.empty?
-        end
-        if errors.length > 0
-          raise ActiveRecord::Rollback if errors.length > 0
+          unless properties_errors.empty?
+            errors.push({ index: index, datum: datum, errors: properties_errors })
+            has_errors = true
+          end
+          raise ActiveRecord::Rollback if has_errors
         end
       end
       { errors: errors, warnings: warnings }
@@ -219,7 +234,7 @@ module Grit::Compounds
       load_set_entity_properties = Grit::Compounds::Compound.entity_properties(compound_type_id: compound_load_set.compound_type_id)
 
       ActiveRecord::Base.transaction do
-        Grit::Core::LoadSetLoadingRecord.where(load_set_id: load_set.id).each do |loading_record|
+        Grit::Core::LoadSetLoadingRecord.includes(:load_set_loading_record_property_values).where(load_set_id: load_set.id).each do |loading_record|
           record_props = {}
           record_props["compound_type_id"] = compound_load_set.compound_type_id
           loading_record.load_set_loading_record_property_values.each do |loading_record_property_value|
@@ -262,14 +277,36 @@ module Grit::Compounds
           end
         end
 
-        Grit::Core::LoadSetLoadingRecordPropertyValue.destroy_by(load_set_id: load_set.id)
-        Grit::Core::LoadSetLoadingRecord.destroy_by(load_set_id: load_set.id)
+        Grit::Core::LoadSetLoadingRecordPropertyValue.delete_by(load_set_id: load_set.id)
+        Grit::Core::LoadSetLoadingRecord.delete_by(load_set_id: load_set.id)
       end
     end
 
     def self.mapping_fields(load_set)
       compound_load_set = Grit::Compounds::CompoundLoadSet.find_by(load_set_id: load_set.id)
       Grit::Compounds::Compound.entity_fields(compound_type_id: compound_load_set.compound_type_id).filter { |f| ![ "compound_type_id", "molweight", "logp", "molformula", "number" ].include?(f[:name]) }
+    end
+
+    def self.set_data(load_set, tempfile, **args)
+      data = read_data(tempfile)
+      compound_load_set = Grit::Compounds::CompoundLoadSet.find_by(load_set_id: load_set.id)
+      parsed_data = self.parse(data, args[:separator], args[:structure_format] || compound_load_set.structure_format)
+      load_set.data = data
+      load_set.separator = args[:separator]
+      load_set.parsed_data = parsed_data
+      load_set.status_id = Grit::Core::LoadSetStatus.find_by(name: "Mapping").id
+      load_set.record_errors = nil
+      load_set.record_warnings = nil
+
+      compound_load_set.structure_format = args[:structure_format] unless args[:structure_format].nil?
+
+      ActiveRecord::Base.transaction do
+        Grit::Core::LoadSetLoadingRecordPropertyValue.delete_by(load_set_id: load_set.id)
+        Grit::Core::LoadSetLoadingRecord.delete_by(load_set_id: load_set.id)
+        load_set.save!
+        compound_load_set.save!
+      end
+      load_set
     end
   end
 end

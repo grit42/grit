@@ -30,6 +30,17 @@ export const downloadFile = (url: string) => {
   link.click();
 };
 
-export const downloadBlob = (blob: Blob) => {
-  downloadFile(URL.createObjectURL(blob));
+export const downloadBlob = (blob: Blob, fileName: string) => {
+  try {
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+
+    link.setAttribute("href", url);
+    link.setAttribute("download", fileName);
+    link.click();
+
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } catch (error) {
+    console.error(`Failed to create blob URL: ${error}`);
+  }
 };

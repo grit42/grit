@@ -35,14 +35,14 @@ import { Filter, SortingState } from "@grit42/table";
 import { FormFieldDef } from "@grit42/form";
 
 export const useExperimentDataSheetRecordColumns = (
-  dataSheetId: string | number,
+  experimentDataSheetId: string | number,
   params: Record<string, any> = {},
   queryOptions: Partial<UseQueryOptions<EntityPropertyDef[], string>> = {},
 ) => {
   return useEntityColumns<EntityPropertyDef>(
     "Grit::Assays::ExperimentDataSheetRecord",
     {
-      data_sheet_id: dataSheetId.toString(),
+      experiment_data_sheet_id: experimentDataSheetId.toString(),
       ...params,
     },
     queryOptions,
@@ -50,14 +50,14 @@ export const useExperimentDataSheetRecordColumns = (
 };
 
 export const useExperimentDataSheetRecordFields = (
-  dataSheetId: string | number,
+  experimentDataSheetId: string | number,
   params: Record<string, any> = {},
   queryOptions: Partial<UseQueryOptions<FormFieldDef[], string>> = {},
 ) => {
   return useEntityFields<FormFieldDef>(
     "Grit::Assays::ExperimentDataSheetRecord",
     {
-      data_sheet_id: dataSheetId.toString(),
+      experiment_data_sheet_id: experimentDataSheetId.toString(),
       ...params,
     },
     queryOptions,

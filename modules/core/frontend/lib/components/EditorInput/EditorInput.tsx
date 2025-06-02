@@ -16,27 +16,31 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Surface } from "@grit42/client-library/components";
-import { LoadSetData } from "../../../types";
-import { useEffect } from "react";
-import { useEntityDatum } from "../../../../entities";
+import { InputLabel } from "@grit42/client-library/components";
+import Editor from "../Editor";
 
-const ValidatingLoadSet = ({ loadSet }: { loadSet: LoadSetData }) => {
-  const { refetch } = useEntityDatum<LoadSetData>(
-    "grit/core/load_sets",
-    loadSet.id.toString(),
-  );
+interface EditorInputProps {
+  onChange: (value: string) => void;
+  onBlur: () => void;
+  value: string;
+  label?: string;
+  showFilePicker?: boolean;
+  showInitialOverlay?: boolean;
+}
 
-  useEffect(() => {
-    const interval = setInterval(() => refetch({ cancelRefetch: false }), 5000);
-    return () => clearInterval(interval);
-  }, [refetch]);
-
+const EditorInput = (props: EditorInputProps) => {
   return (
-    <Surface>
-      <p>The data set is being validated, hold tight...</p>
-    </Surface>
+    <div
+      style={{
+        display: "grid",
+        height: "100%",
+        gridTemplateRows: "min-content minmax(0px, 1fr)",
+      }}
+    >
+      {props.label && <InputLabel label={props.label} />}
+      <Editor {...props} showFilePicker={props.showFilePicker ?? true} showInitialOverlay={props.showInitialOverlay ?? false} />
+    </div>
   );
 };
 
-export default ValidatingLoadSet;
+export default EditorInput;

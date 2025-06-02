@@ -18,7 +18,7 @@
 
 import { Button, Input } from "@grit42/client-library/components";
 import AuthenticationPage from "../../../components/AuthenticationPage";
-import { useForm, ValidationErrorMap } from "@tanstack/react-form";
+import { useForm, ValidationErrorMap } from "@grit42/form";
 import { useInitResetPasswordMutation } from "../mutations";
 
 const RequestPasswordResetPage = () => {

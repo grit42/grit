@@ -22,19 +22,31 @@ module Grit::Assays
   class ExperimentDataSheetRecordLoader < Grit::Core::EntityLoader
     protected
     def self.fields(params)
-      [ *Grit::Core::LoadSet.entity_fields.filter { |f| f[:id] != "data" }, *Grit::Assays::ExperimentDataSheetRecordLoadSet.entity_fields ]
+      experiment_data_sheet_record_load_set_fields = Grit::Assays::ExperimentDataSheetRecordLoadSet.entity_fields.to_h { |item| [ item[:name], item.dup ] }
+      experiment_data_sheet_record_load_set_fields["experiment_id"][:disabled] = true unless experiment_data_sheet_record_load_set_fields["experiment_id"].nil?
+      experiment_data_sheet_record_load_set_fields["experiment_data_sheet_id"][:disabled] = true unless experiment_data_sheet_record_load_set_fields["experiment_data_sheet_id"].nil?
+
+      [ *super(params), *experiment_data_sheet_record_load_set_fields.values ]
+    end
+
+    def self.show(load_set)
+      experiment_load_set = Grit::Assays::ExperimentDataSheetRecordLoadSet.find_by(load_set_id: load_set.id)
+      return load_set.as_json if experiment_load_set.nil?
+      { **experiment_load_set.as_json, **load_set.as_json }
     end
 
     def self.create(params)
-      data = params[:data].tempfile.read
+      data = read_data(params[:data].tempfile)
+      separator = params[:separator]
 
-      parsed_data = parse(data)
+      parsed_data = self.parse(data, separator)
 
       load_set = Grit::Core::LoadSet.new({
         name: params[:name],
         entity: "Grit::Assays::ExperimentDataSheetRecord",
         data: data,
         parsed_data: parsed_data,
+        separator: separator,
         origin_id: params[:origin_id],
         status_id: Grit::Core::LoadSetStatus.find_by(name: "Mapping").id
       })
@@ -57,18 +69,23 @@ module Grit::Assays
 
     def self.validate(load_set)
       record_load_set = Grit::Assays::ExperimentDataSheetRecordLoadSet.find_by(load_set_id: load_set.id)
-      load_set_entity_properties = Grit::Assays::ExperimentDataSheetRecord.entity_fields(data_sheet_id: record_load_set.experiment_data_sheet_id).filter { |f| f[:name] != "experiment_data_sheet_id" }
+      load_set_entity_properties = Grit::Assays::ExperimentDataSheetRecord.entity_fields(experiment_data_sheet_id: record_load_set.experiment_data_sheet_id).filter { |f| f[:name] != "experiment_data_sheet_id" }
 
       data = load_set.parsed_data[1..]
       errors = []
 
-      ActiveRecord::Base.transaction do
+      Grit::Core::LoadSetLoadingRecordPropertyValue.delete_by(load_set_id: load_set.id)
+      Grit::Core::LoadSetLoadingRecord.delete_by(load_set_id: load_set.id)
+
+
+      data.each_with_index do |datum, index|
+        record_props = {}
+        record_props["experiment_data_sheet_id"] = record_load_set.experiment_data_sheet_id
+        has_errors = false
+
         load_set_loading_record_property_values = []
 
-        data.each_with_index do |datum, index|
-          record_props = {}
-          record_props["experiment_data_sheet_id"] = record_load_set.experiment_data_sheet_id
-
+        ActiveRecord::Base.transaction(requires_new: true) do
           record_errors = {}
           loading_record = Grit::Core::LoadSetLoadingRecord.new({
             load_set_id: load_set.id,
@@ -90,10 +107,10 @@ module Grit::Assays
                 value = field_entity.loader_find_by!(find_by, datum[header_index]).id
               rescue NameError
                 record_errors[entity_property_name] = [ "#{entity_property[:entity][:full_name]}: No such model" ]
-                next
+                value = 0
               rescue ActiveRecord::RecordNotFound
                 record_errors[entity_property_name] = [ "could not find #{entity_property[:entity][:full_name]} with '#{find_by}' = #{datum[header_index]}" ]
-                next
+                value = 0
               end
             elsif !header_index.nil?
               value = datum[header_index]
@@ -149,9 +166,11 @@ module Grit::Assays
 
             unless experiment_data_sheet_record.valid?
               errors.push({ index: index, datum: datum, errors: experiment_data_sheet_record.errors })
+              has_errors = true
             end
           else
             errors.push({ index: index, datum: datum, errors: record_errors })
+            has_errors = true
           end
 
           columns_errors = {}
@@ -168,16 +187,19 @@ module Grit::Assays
               column_value.data_sheet_value
               unless column_value.errors.blank?
                 columns_errors[column.safe_name] = column_value.errors[value_prop_name]
+                has_errors = true
               end
             end
           end
-
-          errors.push({ index: index, datum: datum, errors: columns_errors }) unless columns_errors.empty?
-        end
-        if errors.length > 0
-          raise ActiveRecord::Rollback if errors.length > 0
-        else
-          Grit::Core::LoadSetLoadingRecordPropertyValue.insert_all(load_set_loading_record_property_values)
+          unless columns_errors.empty?
+            errors.push({ index: index, datum: datum, errors: columns_errors })
+            has_errors = true
+          end
+          if has_errors
+            raise ActiveRecord::Rollback
+          else
+            Grit::Core::LoadSetLoadingRecordPropertyValue.insert_all(load_set_loading_record_property_values)
+          end
         end
       end
       { errors: errors }
@@ -185,12 +207,12 @@ module Grit::Assays
 
     def self.confirm(load_set)
       record_load_set = Grit::Assays::ExperimentDataSheetRecordLoadSet.find_by(load_set_id: load_set.id)
-      load_set_entity_properties = Grit::Assays::ExperimentDataSheetRecord.entity_fields(data_sheet_id: record_load_set.experiment_data_sheet_id).filter { |f| f[:name] != "experiment_data_sheet_id" }
+      load_set_entity_properties = Grit::Assays::ExperimentDataSheetRecord.entity_fields(experiment_data_sheet_id: record_load_set.experiment_data_sheet_id).filter { |f| f[:name] != "experiment_data_sheet_id" }
 
       ActiveRecord::Base.transaction do
         load_set_loaded_records = []
 
-        Grit::Core::LoadSetLoadingRecord.where(load_set_id: load_set.id).each do |loading_record|
+        Grit::Core::LoadSetLoadingRecord.includes(:load_set_loading_record_property_values).where(load_set_id: load_set.id).each do |loading_record|
           record_props = {}
           record_props["experiment_data_sheet_id"] = record_load_set.experiment_data_sheet_id
           loading_record.load_set_loading_record_property_values.each do |loading_record_property_value|
@@ -228,7 +250,7 @@ module Grit::Assays
 
     def self.mapping_fields(load_set)
       record_load_set = Grit::Assays::ExperimentDataSheetRecordLoadSet.find_by(load_set_id: load_set.id)
-      Grit::Assays::ExperimentDataSheetRecord.entity_fields(data_sheet_id: record_load_set.experiment_data_sheet_id).filter { |f| f[:name] != "experiment_data_sheet_id" }
+      Grit::Assays::ExperimentDataSheetRecord.entity_fields(experiment_data_sheet_id: record_load_set.experiment_data_sheet_id).filter { |f| f[:name] != "experiment_data_sheet_id" }
     end
   end
 end

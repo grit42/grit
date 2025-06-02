@@ -18,20 +18,22 @@
 
 import { useEffect } from "react";
 import { useRegisterImporter } from "@grit42/core";
-import NewLoadSet from "./experiment-data-sheet-record/NewLoadSet";
-import SucceededLoadSetWrapper from "./experiment-data-sheet-record/SucceededLoadSet";
+import ExperimentDataSheetRecordLoadSetViewerExtraActions from "./experiment-data-sheet-record/ExperimentDataSheetRecordLoadSetViewerExtraActions";
 
 const useRegisterExperimentDataSheetRecordImporter = () => {
   const registerImporter = useRegisterImporter();
 
   useEffect(() => {
-    const unregisterExperimentDataSheetRecordImporter = registerImporter("Grit::Assays::ExperimentDataSheetRecord", {
-        LoadSetCreator: NewLoadSet,
-        SucceededLoadSet: SucceededLoadSetWrapper,
-    });
+    const unregisterExperimentDataSheetRecordImporter = registerImporter(
+      "Grit::Assays::ExperimentDataSheetRecord",
+      {
+        LoadSetViewerExtraActions:
+          ExperimentDataSheetRecordLoadSetViewerExtraActions,
+      },
+    );
 
     return () => {
-        unregisterExperimentDataSheetRecordImporter();
+      unregisterExperimentDataSheetRecordImporter();
     };
   }, [registerImporter]);
 

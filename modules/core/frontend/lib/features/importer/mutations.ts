@@ -16,7 +16,14 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { request, EndpointError, EndpointSuccess, useMutation, EndpointErrorErrors, notifyOnError } from "@grit42/api";
+import {
+  request,
+  EndpointError,
+  EndpointSuccess,
+  useMutation,
+  EndpointErrorErrors,
+  notifyOnError,
+} from "@grit42/api";
 import { LoadSetData, LoadSetMapping } from "./types";
 
 export const useCreateLoadSetMutation = () => {
@@ -40,12 +47,16 @@ export const useCreateLoadSetMutation = () => {
 
       return response.data;
     },
-    onError: notifyOnError
+    onError: notifyOnError,
   });
 };
 
 export const useSetLoadSetMappingsMutation = (loadSetId: number) => {
-  return useMutation<LoadSetData, EndpointErrorErrors<LoadSetData>, Record<string, LoadSetMapping>>({
+  return useMutation<
+    LoadSetData,
+    EndpointErrorErrors<LoadSetData>,
+    Record<string, LoadSetMapping>
+  >({
     mutationKey: ["setLoadSetMappings", loadSetId],
     mutationFn: async (mappings: Record<string, LoadSetMapping>) => {
       const response = await request<
@@ -64,19 +75,23 @@ export const useSetLoadSetMappingsMutation = (loadSetId: number) => {
 
       return response.data;
     },
-    onError: notifyOnError
+    onError: notifyOnError,
   });
 };
 
-export const useValidateLoadSetMutation = (loadSetId: number) => {
-  return useMutation<LoadSetData, EndpointErrorErrors<LoadSetData>>({
-    mutationKey: ["validateLoadSet", loadSetId],
-    mutationFn: async () => {
+export const useSetLoadSetDataMutation = (loadSetId: number) => {
+  return useMutation<LoadSetData, EndpointErrorErrors<LoadSetData>, FormData>({
+    mutationKey: ["setLoadSetData", loadSetId],
+    mutationFn: async (data: FormData) => {
       const response = await request<
         EndpointSuccess<LoadSetData>,
-        EndpointError<EndpointErrorErrors<LoadSetData>>
-      >(`/grit/core/load_sets/${loadSetId}/validate`, {
+        EndpointError
+      >(`/grit/core/load_sets/${loadSetId}/set_data`, {
         method: "POST",
+        data,
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       });
 
       if (!response.success) {
@@ -85,7 +100,35 @@ export const useValidateLoadSetMutation = (loadSetId: number) => {
 
       return response.data;
     },
-    onError: notifyOnError
+    onError: notifyOnError,
+  });
+};
+
+export const useValidateLoadSetMutation = (loadSetId: number) => {
+  return useMutation<
+    LoadSetData,
+    EndpointErrorErrors<LoadSetData>,
+    Record<string, LoadSetMapping> | undefined
+  >({
+    mutationKey: ["validateLoadSet", loadSetId],
+    mutationFn: async (mappings?: Record<string, LoadSetMapping>) => {
+      const response = await request<
+        EndpointSuccess<LoadSetData>,
+        EndpointError<EndpointErrorErrors<LoadSetData>>
+      >(`/grit/core/load_sets/${loadSetId}/validate`, {
+        method: "POST",
+        data: {
+          mappings,
+        },
+      });
+
+      if (!response.success) {
+        throw response.errors;
+      }
+
+      return response.data;
+    },
+    onError: notifyOnError,
   });
 };
 
@@ -106,7 +149,7 @@ export const useConfirmLoadSetMutation = (loadSetId: number) => {
 
       return response.data;
     },
-    onError: notifyOnError
+    onError: notifyOnError,
   });
 };
 
@@ -127,6 +170,6 @@ export const useRollbackLoadSetMutation = (loadSetId: number) => {
 
       return response.data;
     },
-    onError: notifyOnError
+    onError: notifyOnError,
   });
 };

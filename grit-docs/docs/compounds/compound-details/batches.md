@@ -50,33 +50,34 @@ To import a list of batches go to the Compounds grid (OR the Batches tab under C
 
 Fill in the appearing form
 
-1. Select the relevant compound type
-2. Add a .csv file or copy/paste a text with the batch information. Note: Each row needs a compound identifier!
-3. Click Start import
+1. A name for the data set. A default name is generated, but the data set will be easier to find later if the name is meaningful.
+2. The origin of the data set, where the data comes from.
+3. The separator used in the file. When a file is added, the system will attempt to guess it and fill the field if successful.
+4. The compound type of the batches to load. The selected type will determine which properties are shown in the next step.
 
 ![The batch import form](./assets/compound_batch_import2.png)
 
 The importer will now read the file, check that it fits the requirements and then open the mapping form where the user needs to map the columns (the data) in the csv file/provided text to the relevant/matching fields in the database.
 
 1. In the table on the right side is a preview of the data (in the csv file)
-2. The batch name (here the name column) in the provided data need to be mapped to the Name field in the grit database by selecting it in the dropdown menu. Similarly, Description field in the database is mapped to the description column in the csv.
-3. This mapping links the batch information to the relevant (Note: need to exist) compound in the database. The number column from the csv file containing the compound identifier is mapped to the Compound field. "Find by" is the column in the compound table in the database where the system should look for a match, in this case it should lookup the number provided by grit. But other identifiers like the compound name provided by the producer can also be used.
+2. The batch name (here the name column) in the provided data need to be mapped to the Name field in the grit database by selecting it in the dropdown menu.
+3. This mapping links the batch information to the relevant (Note: need to exist) compound in the database. The compound column from the csv file containing the compound identifier is mapped to the Compound field. "Find by" is the column in the compound table in the database where the system should look for a match, in this case it should lookup the compound name provided by the producer. But other identifiers like the number provided by grit can also be used.
 4. The csv file does NOT contain any origin of the batches. But origin is a mandatory field in the batch table in the database. Therefore we use the switch "Use a constant value" and select grit42 from the database origin lookup table (Origins can be added under -> Administration -> General -> Origins -> Records by pressing the New button). Now all batch records will be assigned origin = grit42
 
-When all relevant data from the csv file has been mapped and all mandatory fields in the database have been filled click the Continue button.
+When all relevant data from the csv file has been mapped and all mandatory fields in the database have been filled click the 'Validate data set' button.
 
 
 ![The batch data mapping](./assets/compound_batch_import_mapping.png)
 
-The importer will now check whether the compound number (the compounds) already exist in the database in order to be able to link the batches to the compounds. Then it will check that the batch names does NOT already exist to ensure uniqueness and finally that the data in the file has a format the matches the relevant fields in the database.
+The importer will now check whether the compound names (the compounds) exist in the database in order to be able to link the batches to the compounds. Then it will check that the batch names does NOT already exist to ensure uniqueness and finally that the data in the file has a format the matches the relevant fields in the database.
 
 If the importer finds any errors in the file it will be reported in the front end for the user to see and correct.
 
 If everything goes well the system will show an "Import succeeded" report.
 
 1.  All the imported batches have been assigned an internal grit batch number
-2.  (and 3) The compound GRIT0000855 was assigned two new batches
-4. All the new batches have been assigned grit42 as origin
+2.  The compounds 'DB04874' and 'DB04875' was assigned five new batches
+4.  All the new batches have been assigned grit42 as origin
 
 
 ![The batch import succeeded](./assets/compound_batch_import_succeeded.png)

@@ -94,11 +94,11 @@ module Grit::Assays
       def self.definition_properties(**args)
         assay_data_sheet_definition_id = nil
         begin
-          assay_data_sheet_definition_id = Grit::Assays::ExperimentDataSheet.find(args[:data_sheet_id]).assay_data_sheet_definition_id unless args[:data_sheet_id].nil?
+          assay_data_sheet_definition_id = Grit::Assays::ExperimentDataSheet.find(args[:experiment_data_sheet_id]).assay_data_sheet_definition_id unless args[:experiment_data_sheet_id].nil?
         rescue
-          assay_data_sheet_definition_id = Grit::Assays::AssayDataSheetDefinition.find(args[:data_sheet_id]).id unless args[:data_sheet_id].nil?
+          assay_data_sheet_definition_id = Grit::Assays::AssayDataSheetDefinition.find(args[:experiment_data_sheet_id]).id unless args[:experiment_data_sheet_id].nil?
         rescue
-          raise "Could not resolve data sheet definition from id: #{args[:data_sheet_id]}"
+          raise "Could not resolve data sheet definition from id: #{args[:experiment_data_sheet_id]}"
         end
 
         AssayDataSheetColumn.where(assay_data_sheet_definition_id: assay_data_sheet_definition_id).order("sort ASC NULLS LAST").map do |definition_column|
@@ -107,7 +107,8 @@ module Grit::Assays
             display_name: definition_column.name,
             description: definition_column.description,
             type: definition_column.data_type.is_entity ? "entity" : definition_column.data_type.name,
-            required: definition_column.required
+            required: definition_column.required,
+            unique: false
           }
 
           if definition_column.data_type.is_entity

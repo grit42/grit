@@ -158,7 +158,13 @@ module Grit::Core::GritEntityController
 
     def show
       @record = show_entity(params)
-      render json: { success: true, data: @record }
+      if @record.nil?
+        render json: { success: false, errors: "Not found" } unless @record.nil?
+      else
+        render json: { success: true, data: @record } unless @record.nil?
+      end
+    rescue StandardError => e
+      render json: { success: false, errors: e.to_s }, status: :internal_server_error
     end
 
     def create

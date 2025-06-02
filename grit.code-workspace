@@ -125,6 +125,10 @@
       ]
     },
     "prettier.configPath": "",
+    "search.exclude": {
+      "**/dist/**/*.d.ts": true,
+      "**/dist/**/*.js": true
+    },
   },
   "extensions": {
     "recommendations": [

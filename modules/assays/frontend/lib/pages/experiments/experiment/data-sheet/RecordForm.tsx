@@ -45,11 +45,11 @@ import {
 } from "@grit42/form";
 
 const ExperimentDataSheetRecordForm = ({
-  dataSheetId,
+  experimentDataSheetId,
   fields,
   experimentDataSheetRecord,
 }: {
-  dataSheetId: number | string;
+  experimentDataSheetId: number | string;
   fields: FormFieldDef[];
   experimentDataSheetRecord: Partial<ExperimentDataSheetRecordData>;
 }) => {
@@ -78,7 +78,7 @@ const ExperimentDataSheetRecordForm = ({
           formValue,
           fields,
         ),
-        experiment_data_sheet_id: dataSheetId,
+        experiment_data_sheet_id: experimentDataSheetId,
       };
       if (!experimentDataSheetRecord.id) {
         await createEntityMutation.mutateAsync(
@@ -184,7 +184,7 @@ const ExperimentDataSheetRecordFormWrapper = () => {
     <ExperimentDataSheetRecordForm
       fields={fields}
       experimentDataSheetRecord={data}
-      dataSheetId={sheet_id}
+      experimentDataSheetId={sheet_id}
     />
   );
 };
