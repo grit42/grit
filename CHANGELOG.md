@@ -33,4 +33,3 @@ successfully loaded data columns and load set creation form fields
 ### Fixed
 - (core) fix properties form overflowing quirk at the mapping stage
 
-### 
