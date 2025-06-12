@@ -2,13 +2,9 @@
   "name": "@grit42/compounds",
   "author": "Jonathan Rebourt, grit42 <jonny@grit42.com>",
   "license": "GPL-3.0-or-later",
-  "version": "0.4.0",
+  "version": "0.4.42",
   "type": "module",
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
-    },
     "./meta": {
       "types": "./dist/meta.d.ts",
       "import": "./dist/meta.js"
@@ -74,6 +70,7 @@
     "react-dom": "catalog:",
     "react-router-dom": "catalog:",
     "autoprefixer": "catalog:",
+    "react-helmet-async": "catalog:",
     "eslint": "catalog:",
     "eslint-plugin-react-hooks": "catalog:",
     "eslint-plugin-react-refresh": "catalog:",

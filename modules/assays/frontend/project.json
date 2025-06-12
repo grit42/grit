@@ -1,10 +1,15 @@
 {
+  "implicitDependencies": ["grit-assays"],
   "targets": {
     "dev": {
       "dependsOn": [
         {
-          "projects": ["@grit42/core", "@grit42/assays"],
-          "target": "build:watch"
+          "dependencies": true,
+          "target": "build"
+        },
+        {
+          "projects": ["grit-assays"],
+          "target": "serve"
         }
       ]
     }

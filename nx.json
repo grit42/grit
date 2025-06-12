@@ -2,7 +2,6 @@
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "targetDefaults": {
     "dev": {
-      "dependsOn": ["build"],
       "continuous": true
     },
     "build": {
@@ -11,18 +10,11 @@
       "outputs": ["{projectRoot}/dist"],
       "cache": true
     },
-    "tsc": {
-      "dependsOn": ["^tsc"],
-      "cache": true
-    },
     "build:watch": {
       "dependsOn": ["^build"],
       "inputs": ["{projectRoot}/src/**/*", "{projectRoot}/lib/**/*"],
       "outputs": ["{projectRoot}/dist"],
       "continuous": true
-    },
-    "lint": {
-      "cache": true
     },
     "format:check": {
       "cache": true
@@ -32,6 +24,47 @@
     },
     "lint:check": {
       "cache": true
+    },
+    "lint": {
+      "cache": true
+    }
+  },
+  "plugins": ["./tools/ruby/src/index.ts"],
+  "release": {
+    "changelog": {
+      "projectChangelogs": {
+        "renderOptions": {
+          "authors": false,
+          "applyUsernameToAuthors": false,
+          "commitReferences": false,
+          "versionTitleDate": false
+        }
+      }
+    },
+    "version": {
+      "updateDependents": "never"
+    },
+    "projectsRelationship": "independent",
+    "groups": {
+      "lib": {
+        "projects": [
+          "@grit42/notifications",
+          "@grit42/client-library",
+          "@grit42/form",
+          "@grit42/api",
+          "@grit42/table",
+          "@grit42/plots"
+        ]
+      },
+      "core": {
+        "projects": ["grit-core", "@grit42/core"]
+      },
+      "compounds": {
+        "projects": ["grit-compounds", "@grit42/compounds"]
+      },
+      "assays": {
+        "projects": ["grit-assays", "@grit42/assays"]
+      }
     }
   }
 }

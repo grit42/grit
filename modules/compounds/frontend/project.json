@@ -1,10 +1,11 @@
 {
+  "implicitDependencies": ["grit-compounds"],
   "targets": {
     "dev": {
       "dependsOn": [
         {
-          "projects": ["@grit42/core", "@grit42/compounds"],
-          "target": "build:watch"
+          "dependencies": true,
+          "target": "build"
         }
       ]
     }

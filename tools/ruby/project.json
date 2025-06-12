@@ -1,0 +1,41 @@
+{
+  "name": "ruby",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "tools/ruby/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/tools/ruby",
+        "main": "tools/ruby/src/index.ts",
+        "tsConfig": "tools/ruby/tsconfig.lib.json",
+        "assets": [
+          "tools/ruby/*.md",
+          {
+            "input": "./tools/ruby/src",
+            "glob": "**/!(*.ts)",
+            "output": "./src"
+          },
+          {
+            "input": "./tools/ruby/src",
+            "glob": "**/*.d.ts",
+            "output": "./src"
+          },
+          {
+            "input": "./tools/ruby",
+            "glob": "generators.json",
+            "output": "."
+          },
+          {
+            "input": "./tools/ruby",
+            "glob": "executors.json",
+            "output": "."
+          }
+        ]
+      }
+    }
+  }
+}

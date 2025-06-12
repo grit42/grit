@@ -1,0 +1,7 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "@grit42/grit",
+  "root": "apps/grit/client",
+  "implicitDependencies": ["grit-grit"],
+  "projectType": "application"
+}
