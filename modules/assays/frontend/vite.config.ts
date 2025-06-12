@@ -4,12 +4,12 @@ import dts from "vite-plugin-dts";
 import { extname, relative, resolve } from "path";
 import { glob } from "glob";
 import { fileURLToPath } from "node:url";
-import { externalizeDeps } from 'vite-plugin-externalize-deps'
+import { externalizeDeps } from "vite-plugin-externalize-deps";
 import autoprefixer from "autoprefixer";
-import { libInjectCss } from "vite-plugin-lib-inject-css"
-import { preventOverwritePlugin } from "vite-plugin-prevent-overwrite"
+import { libInjectCss } from "vite-plugin-lib-inject-css";
+import { preventOverwritePlugin } from "vite-plugin-prevent-overwrite";
 
-export default defineConfig(({mode}) => ({
+export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     libInjectCss(),
@@ -35,7 +35,7 @@ export default defineConfig(({mode}) => ({
             // The absolute path to the entry file
             // lib/nested/foo.ts becomes /project/lib/nested/foo.ts
             fileURLToPath(new URL(file, import.meta.url)),
-          ])
+          ]),
       ),
       output: {
         assetFileNames: "assets/[name][extname]",

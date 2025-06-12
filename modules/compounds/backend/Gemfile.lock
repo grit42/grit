@@ -1,7 +1,7 @@
 PATH
   remote: ../../core/backend
   specs:
-    grit-core (0.1.1)
+    grit-core (0.4.42)
       authlogic (~> 6.5, >= 6.5.0)
       rails (~> 7.2, >= 7.2.2)
       scrypt (~> 3.0, >= 3.0.8)
@@ -9,8 +9,8 @@ PATH
 PATH
   remote: .
   specs:
-    grit-compounds (0.1.1)
-      grit-core (~> 0.1, >= 0.1.0)
+    grit-compounds (0.4.42)
+      grit-core (~> 0.4.42)
       rails (~> 7.2, >= 7.2.2)
 
 GEM
@@ -97,11 +97,14 @@ GEM
     benchmark (0.4.0)
     bigdecimal (3.1.9)
     builder (3.3.0)
+    cgi (0.5.0)
     concurrent-ruby (1.3.5)
     connection_pool (2.5.0)
     crass (1.0.6)
     date (3.4.1)
     drb (2.2.1)
+    erb (4.0.4)
+      cgi (>= 0.3.3)
     erubi (1.13.1)
     ffi (1.17.2-x86_64-linux-gnu)
     ffi-compiler (1.3.2)
@@ -120,7 +123,7 @@ GEM
     language_server-protocol (3.17.0.4)
     lint_roller (1.1.0)
     logger (1.6.6)
-    loofah (2.24.0)
+    loofah (2.24.1)
       crass (~> 1.0.2)
       nokogiri (>= 1.12.0)
     mail (2.8.1)
@@ -151,7 +154,7 @@ GEM
     pp (0.6.2)
       prettyprint
     prettyprint (0.2.0)
-    psych (5.2.4)
+    psych (5.2.6)
       date
       stringio
     puma (6.6.0)
@@ -179,7 +182,7 @@ GEM
       activesupport (= 7.2.2.1)
       bundler (>= 1.15.0)
       railties (= 7.2.2.1)
-    rails-dom-testing (2.2.0)
+    rails-dom-testing (2.3.0)
       activesupport (>= 5.0.0)
       minitest
       nokogiri (>= 1.6)
@@ -195,8 +198,9 @@ GEM
       thor (~> 1.0, >= 1.2.2)
       zeitwerk (~> 2.6)
     rainbow (3.1.1)
-    rake (13.2.1)
-    rdoc (6.13.1)
+    rake (13.3.0)
+    rdoc (6.14.0)
+      erb
       psych (>= 4.0.0)
     regexp_parser (2.10.0)
     reline (0.6.1)
@@ -249,7 +253,7 @@ GEM
       unicode-emoji (~> 4.0, >= 4.0.4)
     unicode-emoji (4.0.4)
     useragent (0.16.11)
-    websocket-driver (0.7.7)
+    websocket-driver (0.8.0)
       base64
       websocket-extensions (>= 0.1.0)
     websocket-extensions (0.1.5)

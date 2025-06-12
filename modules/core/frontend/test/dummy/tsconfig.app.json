@@ -20,7 +20,18 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
+    "noUncheckedSideEffectImports": true,
+    "baseUrl": ".",
+    "paths": {
+      "@grit42/core/*": ["../../lib/*"],
+      "@grit42/core/meta": ["../../lib/meta.ts"],
+      "@grit42/core/registrant": ["../../lib/Registrant.tsx"],
+      "@grit42/core/router": ["../../lib/Router.tsx"],
+      "@grit42/core/provider": ["../../lib/Provider.tsx"],
+      "@grit42/core/utils/*": ["../../lib/utils/*"],
+      "@grit42/core/Header/*": ["../../lib/components/Header/*"],
+      "@grit42/core/Toolbar/*": ["../../lib/Toolbar/*"]
+    }
   },
-  "include": ["src"]
+  "include": ["src", "../../lib"]
 }

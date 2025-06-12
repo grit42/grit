@@ -18,6 +18,6 @@
 
 module Grit
   module Core
-    VERSION = "0.1.1"
+    VERSION = "0.4.42"
   end
 end

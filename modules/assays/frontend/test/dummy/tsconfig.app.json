@@ -20,7 +20,15 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
+    "noUncheckedSideEffectImports": true,
+    "baseUrl": ".",
+    "paths": {
+      "@grit42/assays/*": ["../../lib/*"],
+      "@grit42/assays/meta": ["../../lib/meta.ts"],
+      "@grit42/assays/registrant": ["../../lib/Registrant.tsx"],
+      "@grit42/assays/router": ["../../lib/Router.tsx"],
+      "@grit42/assays/provider": ["../../lib/Provider.tsx"],
+    }
   },
-  "include": ["src"]
+  "include": ["src", "../../lib"]
 }
