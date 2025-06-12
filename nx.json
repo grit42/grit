@@ -32,7 +32,14 @@
   "plugins": ["./tools/ruby/src/index.ts"],
   "release": {
     "changelog": {
-      "projectChangelogs": true
+      "projectChangelogs": {
+        "renderOptions": {
+          "authors": false,
+          "applyUsernameToAuthors": false,
+          "commitReferences": false,
+          "versionTitleDate": false
+        }
+      }
     },
     "version": {
       "updateDependents": "never"
