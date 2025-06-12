@@ -37,3 +37,17 @@
     gap: calc(theme.$spacing * 2);
   }
 }
+
+.copyContainer {
+    background-color: theme.$palette-primary-main;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+
+    .copyAction {
+      cursor: pointer;
+      padding: 0.5rem;
+      margin-left: 8px;
+      font-size: 0.75rem;
+    }
+  }

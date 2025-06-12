@@ -193,5 +193,35 @@ module Grit::Core
         logger.warn e.backtrace.join("\n")
         render json: { success: false, errors: e.to_s }, status: :internal_server_error
       end
+      
+      def generate_api_token
+		@user = User.current
+		length = 32
+		token = rand(36**length).to_s(36) # random string of a-z and 0-9
+
+		@user.update(
+		  auth_token: token
+		)
+
+		render json: { success: true, data: { token: token } }
+	  rescue StandardError => e
+		logger.warn e.to_s
+		logger.warn e.backtrace.join("\n")
+		render json: { success: false, msg: e.to_s }, status: :internal_server_error
+	  end
+
+	  def revoke_api_token
+		@user = User.current
+
+		@user.update(
+		  auth_token: nil
+		)
+
+		render json: { success: true }
+	  rescue StandardError => e
+		logger.warn e.to_s
+		logger.warn e.backtrace.join("\n")
+		render json: { success: false, msg: e.to_s }, status: :internal_server_error
+	  end
   end
 end

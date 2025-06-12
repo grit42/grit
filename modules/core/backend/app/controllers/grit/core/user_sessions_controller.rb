@@ -41,6 +41,7 @@ module Grit::Core
               login: current_user_session.record.login,
               name: current_user_session.record.name,
               email: current_user_session.record.email,
+              token: current_user_session.record.auth_token,
               roles: Grit::Core::User.current.roles.select(:name).all.map(&:name),
               settings: current_user_session.record.settings,
               platform_information: platform_information

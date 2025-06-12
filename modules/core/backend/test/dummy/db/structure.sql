@@ -494,7 +494,8 @@ CREATE TABLE public.grit_core_users (
     two_factor_expiry timestamp(6) without time zone,
     settings jsonb DEFAULT '{}'::jsonb,
     origin_id bigint NOT NULL,
-    location_id bigint
+    location_id bigint,
+    auth_token text
 );
 
 
@@ -1233,6 +1234,7 @@ INSERT INTO "schema_migrations" (version) VALUES
 ('20250624081122'),
 ('20250624080646'),
 ('20250622125208'),
+('20250612090042'),
 ('20250522140707'),
 ('20250521124829'),
 ('20250411144141'),
