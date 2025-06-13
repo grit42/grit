@@ -494,8 +494,7 @@ CREATE TABLE public.grit_core_users (
     two_factor_expiry timestamp(6) without time zone,
     settings jsonb DEFAULT '{}'::jsonb,
     origin_id bigint NOT NULL,
-    location_id bigint,
-    auth_token text
+    location_id bigint
 );
 
 
