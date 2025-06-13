@@ -41,7 +41,7 @@ module Grit::Core
               login: current_user_session.record.login,
               name: current_user_session.record.name,
               email: current_user_session.record.email,
-              token: current_user_session.record.auth_token,
+              token: current_user_session.record.single_access_token,
               roles: Grit::Core::User.current.roles.select(:name).all.map(&:name),
               settings: current_user_session.record.settings,
               platform_information: platform_information
@@ -61,7 +61,22 @@ module Grit::Core
       end
       raise "User #{params[:user_session][:login]} not found" if @user.nil?
       raise "User #{params[:user_session][:login]} is inactive" if @user.active? == false
-      raise "Invalid password" unless @user.valid_password?(params[:user_session][:password])
+      #raise "Invalid password" unless @user.valid_password?(params[:user_session][:password])
+      if !@user.valid_password?(params[:user_session][:password]) then
+        @user.failed_login_count ||= 0
+        @user.failed_login_count += 1
+        @user.save!
+        if @user.failed_login_count > Grit::Core::UserSession.consecutive_failed_logins_limit then
+          @user.active = false
+          @user.failed_login_count = 0
+          @user.activation_token = SecureRandom.urlsafe_base64(20)
+          @user.save!
+          Grit::Core::Mailer.deliver_reactivation_instructions(@user).deliver_now
+          raise "Invalid password. Number of failed login attempts exceed limit, account have been disabled"
+        else
+          raise "Invalid password"
+        end
+      end
 
       two_factor = false
       if @user.two_factor == true

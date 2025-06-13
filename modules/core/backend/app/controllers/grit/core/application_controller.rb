@@ -41,7 +41,6 @@ module Grit
         end
 
         def current_user
-          @current_user = Grit::Core::User.find_by(auth_token: params[:token]) if params[:token].present?
           return @current_user if defined?(@current_user)
           @current_user = current_user_session && current_user_session.user
         end
