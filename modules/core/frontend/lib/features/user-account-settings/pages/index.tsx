@@ -15,17 +15,18 @@
  * You should have received a copy of the GNU General Public License along with
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
-
 import { useQueryClient } from "@grit42/api";
 import styles from "./settings.module.scss";
 import {
   ChangePasswordPayload,
   useUpdatePasswordMutation,
   useUpdateUserInfoMutation,
+  useGenerateApiTokenMutation,
+  useRevokeApiTokenMutation,
 } from "../mutations";
 import { classnames } from "@grit42/client-library/utils";
 import { useForm } from "@grit42/form";
-import { Surface } from "@grit42/client-library/components";
+import { Surface, Button, ButtonGroup } from "@grit42/client-library/components";
 import {
   Form,
   FormControls,
@@ -34,6 +35,7 @@ import {
   genericErrorHandler,
 } from "@grit42/form";
 import { useSession } from "../../session";
+import { useEffect, useState } from "react";
 
 const INFO_FIELDS: FormFieldDef[] = [
   {
@@ -83,6 +85,7 @@ interface UserInfo {
   name: string;
   email: string;
   login: string;
+  token: string;
 }
 
 function InfoForm() {
@@ -157,6 +160,95 @@ function ChangePasswordForm() {
   );
 }
 
+function AuthTokenForm() {
+  const info = useSession().data!;
+  const [token, setToken] = useState(info.token);
+
+  const generateTokenMutation = useGenerateApiTokenMutation();
+  const revokeTokenMutation = useRevokeApiTokenMutation();
+
+  const onGenerateApiToken = async () => {
+    const res = await generateTokenMutation.mutateAsync({});
+    setToken(res.token);
+  };
+
+  const onRevokeApiToken = async () => {
+    await revokeTokenMutation.mutateAsync({});
+    setToken("");
+  };
+
+  interface Props {
+    content: string;
+  }
+
+  const CopyableBlock = ({ content }: Props) => {
+    const [text, setText] = useState<"Copy" | "Copied!">("Copy");
+
+    const onCopyToClipboard = () => {
+      navigator.clipboard.writeText(content);
+      setText("Copied!");
+    };
+
+    useEffect(() => {
+      if (text === "Copied!") {
+        const handle = setTimeout(() => setText("Copy"), 1000);
+        return () => clearTimeout(handle);
+      }
+    }, [text]);
+
+    return (
+      <div className={styles.container}>
+        <div className={styles.copyContainer}>
+          <div
+            className={styles.copyAction}
+            onClick={text === "Copy" ? onCopyToClipboard : undefined}
+          >
+            {text}
+          </div>
+        </div>
+        <pre>{content}</pre>
+      </div>
+    );
+  };
+
+  return (
+    <>
+      <h2>API token</h2>
+        <p>Use this API token to authenticate calls to the grit42 API.</p>
+
+        {token && <CopyableBlock content={token} />}
+        {!token && <p>You don&apos;t have an API token yet.</p>}
+        <ButtonGroup>
+          {!token && (
+            <Button
+              key="file-picker-button"
+              color="secondary"
+              onClick={onGenerateApiToken}
+            >
+              Generate API token
+            </Button>
+          )}
+          {token && (
+            <Button
+              color="secondary"
+              onClick={onGenerateApiToken}
+            >
+              Regenerate API token
+            </Button>
+          )}
+          {token && (
+            <Button
+              color="secondary"
+              onClick={onRevokeApiToken}
+            >
+              Revoke API token
+            </Button>
+          )}
+        </ButtonGroup>
+    </>
+  );
+}
+
 export default function UserPage() {
   return (
     <div className={styles.account}>
@@ -166,6 +258,8 @@ export default function UserPage() {
           <InfoForm />
           <div className={styles.divider} />
           <ChangePasswordForm />
+          <div className={styles.divider} />
+          <AuthTokenForm />
         </div>
       </Surface>
     </div>

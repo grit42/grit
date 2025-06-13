@@ -30,4 +30,5 @@ export interface User extends EntityData {
   location_id__name: string;
   status_id: number; // TOCHECK STATUS ID
   status_id__name: string;
+  token: string;
 }

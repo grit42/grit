@@ -31,6 +31,18 @@ module Grit
         )
       end
 
+      def deliver_reactivation_instructions(user)
+        @server_url = ENV.fetch("GRIT_SERVER_URL", nil)
+        @token = user.activation_token
+
+        mail(
+          from: ENV.fetch("SMTP_USER", nil),
+          to: user.email,
+          subject: "Activation Instructions",
+          content_type: "text/html"
+        )
+      end
+
       def deliver_two_factor_instructions(user)
         @token = user.two_factor_token
 
