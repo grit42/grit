@@ -181,36 +181,6 @@ function AuthTokenForm() {
     content: string;
   }
 
-  // const CopyableBlock = ({ content }: Props) => {
-  //   const [text, setText] = useState<"Copy" | "Copied!">("Copy");
-
-  //   const onCopyToClipboard = () => {
-  //     navigator.clipboard.writeText(content);
-  //     setText("Copied!");
-  //   };
-
-  //   useEffect(() => {
-  //     if (text === "Copied!") {
-  //       const handle = setTimeout(() => setText("Copy"), 1000);
-  //       return () => clearTimeout(handle);
-  //     }
-  //   }, [text]);
-
-  //   return (
-  //     <div className={styles.container}>
-  //       <div className={styles.copyContainer}>
-  //         <div
-  //           className={styles.copyAction}
-  //           onClick={text === "Copy" ? onCopyToClipboard : undefined}
-  //         >
-  //           {text}
-  //         </div>
-  //       </div>
-  //       <pre>{content}</pre>
-  //     </div>
-  //   );
-  // };
-
   return (
     <>
       <h2>API token</h2>
