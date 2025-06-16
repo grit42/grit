@@ -26,7 +26,7 @@ import {
 } from "../mutations";
 import { classnames } from "@grit42/client-library/utils";
 import { useForm } from "@grit42/form";
-import { Surface, Button, ButtonGroup } from "@grit42/client-library/components";
+import { Surface, Button, ButtonGroup, CopyableBlock } from "@grit42/client-library/components";
 import {
   Form,
   FormControls,
@@ -181,35 +181,35 @@ function AuthTokenForm() {
     content: string;
   }
 
-  const CopyableBlock = ({ content }: Props) => {
-    const [text, setText] = useState<"Copy" | "Copied!">("Copy");
+  // const CopyableBlock = ({ content }: Props) => {
+  //   const [text, setText] = useState<"Copy" | "Copied!">("Copy");
 
-    const onCopyToClipboard = () => {
-      navigator.clipboard.writeText(content);
-      setText("Copied!");
-    };
+  //   const onCopyToClipboard = () => {
+  //     navigator.clipboard.writeText(content);
+  //     setText("Copied!");
+  //   };
 
-    useEffect(() => {
-      if (text === "Copied!") {
-        const handle = setTimeout(() => setText("Copy"), 1000);
-        return () => clearTimeout(handle);
-      }
-    }, [text]);
+  //   useEffect(() => {
+  //     if (text === "Copied!") {
+  //       const handle = setTimeout(() => setText("Copy"), 1000);
+  //       return () => clearTimeout(handle);
+  //     }
+  //   }, [text]);
 
-    return (
-      <div className={styles.container}>
-        <div className={styles.copyContainer}>
-          <div
-            className={styles.copyAction}
-            onClick={text === "Copy" ? onCopyToClipboard : undefined}
-          >
-            {text}
-          </div>
-        </div>
-        <pre>{content}</pre>
-      </div>
-    );
-  };
+  //   return (
+  //     <div className={styles.container}>
+  //       <div className={styles.copyContainer}>
+  //         <div
+  //           className={styles.copyAction}
+  //           onClick={text === "Copy" ? onCopyToClipboard : undefined}
+  //         >
+  //           {text}
+  //         </div>
+  //       </div>
+  //       <pre>{content}</pre>
+  //     </div>
+  //   );
+  // };
 
   return (
     <>

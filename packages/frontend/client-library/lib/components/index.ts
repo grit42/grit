@@ -28,6 +28,9 @@ export * from "./Checkbox";
 export { default as CheckboxGroup } from "./CheckboxGroup";
 export * from "./CheckboxGroup";
 
+export { default as CopyableBlock } from "./CopyableBlock";
+export * from "./CopyableBlock";
+
 export { default as Dialog } from "./Dialog";
 export * from "./Dialog";
 
