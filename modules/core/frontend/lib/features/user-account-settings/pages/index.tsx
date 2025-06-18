@@ -26,7 +26,12 @@ import {
 } from "../mutations";
 import { classnames } from "@grit42/client-library/utils";
 import { useForm } from "@grit42/form";
-import { Surface, Button, ButtonGroup, CopyableBlock } from "@grit42/client-library/components";
+import {
+  Surface,
+  Button,
+  ButtonGroup,
+  CopyableBlock
+} from "@grit42/client-library/components";
 import {
   Form,
   FormControls,
