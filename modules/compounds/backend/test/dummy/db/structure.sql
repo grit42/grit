@@ -790,6 +790,21 @@ CREATE TABLE public.grit_core_users (
 
 
 --
+-- Name: grit_core_vocabularies; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.grit_core_vocabularies (
+    id bigint DEFAULT nextval('public.grit_seq'::regclass) NOT NULL,
+    created_by character varying(30) DEFAULT 'SYSTEM'::character varying NOT NULL,
+    created_at timestamp(6) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_by character varying(30),
+    updated_at timestamp(6) without time zone,
+    name character varying NOT NULL,
+    description text
+);
+
+
+--
 -- Name: schema_migrations; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1020,6 +1035,14 @@ ALTER TABLE ONLY public.grit_core_user_roles
 
 ALTER TABLE ONLY public.grit_core_users
     ADD CONSTRAINT grit_core_users_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: grit_core_vocabularies grit_core_vocabularies_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.grit_core_vocabularies
+    ADD CONSTRAINT grit_core_vocabularies_pkey PRIMARY KEY (id);
 
 
 --
@@ -1430,6 +1453,13 @@ CREATE UNIQUE INDEX index_grit_core_users_on_single_access_token ON public.grit_
 
 
 --
+-- Name: index_grit_core_vocabularies_on_name; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_grit_core_vocabularies_on_name ON public.grit_core_vocabularies USING btree (name);
+
+
+--
 -- Name: uniq_batch_property_value_per_batch; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1623,6 +1653,13 @@ CREATE TRIGGER manage_stamps_grit_core_user_roles BEFORE INSERT OR UPDATE ON pub
 --
 
 CREATE TRIGGER manage_stamps_grit_core_users BEFORE INSERT OR UPDATE ON public.grit_core_users FOR EACH ROW EXECUTE FUNCTION public.manage_stamps();
+
+
+--
+-- Name: grit_core_vocabularies manage_stamps_grit_core_vocabularies; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER manage_stamps_grit_core_vocabularies BEFORE INSERT OR UPDATE ON public.grit_core_vocabularies FOR EACH ROW EXECUTE FUNCTION public.manage_stamps();
 
 
 --
@@ -1911,6 +1948,7 @@ ALTER TABLE ONLY public.grit_compounds_compound_property_values
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20250612115508'),
 ('20250522140707'),
 ('20250521140707'),
 ('20250521124829'),

@@ -16,6 +16,8 @@
 # grit-compounds. If not, see <https://www.gnu.org/licenses/>.
 #++
 
+require "grit/core/entity_manager"
+
 module Grit::Compounds
   class Batch < ApplicationRecord
     include Grit::Core::GritEntityRecord
@@ -97,7 +99,7 @@ module Grit::Compounds
         }
 
         if type_property.data_type.is_entity
-          foreign_key_model_name = Grit::Core::EntityMapper.table_to_model_name(type_property.data_type.table_name)
+          foreign_key_model_name = Grit::Core::EntityManager.table_to_model_name(type_property.data_type.table_name)
           property[:entity] = {
             full_name: foreign_key_model_name,
             name: foreign_key_model_name.demodulize,
@@ -148,7 +150,7 @@ module Grit::Compounds
           .joins("LEFT OUTER JOIN grit_compounds_batch_property_values grit_compounds_batch_property_values__#{property.safe_name} on grit_compounds_batch_property_values__#{property.safe_name}.batch_property_id = #{property.id} and grit_compounds_batch_property_values__#{property.safe_name}.batch_id = grit_compounds_batches.id")
 
         if property.data_type.is_entity
-          entity_klass = property.data_type.name.constantize
+          entity_klass = Grit::Core::EntityManager.table_to_model_name(property.data_type.table_name).constantize
           query = query
             .joins("LEFT OUTER JOIN #{property.data_type.table_name} #{property.data_type.table_name}__#{property.safe_name} on #{property.data_type.table_name}__#{property.safe_name}.id = grit_compounds_batch_property_values__#{property.safe_name}.entity_id_value")
             .select("grit_compounds_batch_property_values__#{property.safe_name}.entity_id_value as #{property.safe_name}")
