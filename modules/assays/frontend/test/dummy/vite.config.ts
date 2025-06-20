@@ -7,13 +7,13 @@ export default defineConfig(({ mode, ...rest }) => ({
   ...libConfig({ mode, ...rest }),
     resolve: {
     alias: {
-      "@grit42/assays/meta": resolve(__dirname, "./lib/meta.ts"),
+      "@grit42/assays/meta": resolve(__dirname, "../../lib/meta.ts"),
       "@grit42/assays/registrant": resolve(
         __dirname,
-        "./lib/Registrant.tsx",
+        "../../lib/Registrant.tsx",
       ),
-      "@grit42/assays/router": resolve(__dirname, "./lib/Router.tsx"),
-      "@grit42/assays/provider": resolve(__dirname, "./lib/Provider.tsx"),
+      "@grit42/assays/router": resolve(__dirname, "../../lib/Router.tsx"),
+      "@grit42/assays/provider": resolve(__dirname, "../../lib/Provider.tsx"),
     },
   },
   server: {
