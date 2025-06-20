@@ -6,6 +6,10 @@
         {
           "dependencies": true,
           "target": "build"
+        },
+        {
+          "projects": ["grit-compounds"],
+          "target": "serve"
         }
       ]
     }
