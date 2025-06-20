@@ -16,23 +16,16 @@
 # grit-core. If not, see <https://www.gnu.org/licenses/>.
 #++
 
+require "grit/core/entity_manager"
+
 module Grit::Core
   class EntitiesController < ApplicationController
-    @entities = nil
+    @entity = nil
 
-    def entities
-      if @entities.nil?
-        Zeitwerk::Loader.eager_load_namespace(Grit)
-        @entities = ActiveRecord::Base.descendants.each_with_object({}) do |model, memo|
-          next if !model.include?(Grit::Core::GritEntityRecord)
-          memo[model.name] = { full_name: model.name, name: model.name.demodulize.underscore.humanize, plural: model.name.demodulize.underscore.humanize.pluralize, path: model.name.underscore.pluralize, dictionary: true }
-        end
-      end
-      @entities
-    end
+    before_action :ensure_entity_exists, only: [ :show, :columns, :fields ]
 
     def dictionary_entities
-      self.entities.values.select { |entity| entity[:dictionary] }
+      Grit::Core::EntityManager.entities.values.select { |entity| entity[:dictionary] }
     end
 
     def index
@@ -40,18 +33,25 @@ module Grit::Core
     end
 
     def show
-      entity = params[:id]
-      render json: { success: true, data: entities[entity] }
+      render json: { success: true, data: @entity }
     end
 
     def columns
-      klass = params[:entity_id].constantize
+      klass = @entity[:full_name].constantize
       render json: { success: true, data: klass.entity_columns(**params.permit!.to_h.symbolize_keys) }
     end
 
     def fields
-      klass = params[:entity_id].constantize
+      klass = @entity[:full_name].constantize
       render json: { success: true, data: klass.entity_fields(**params.permit!.to_h.symbolize_keys) }
+    end
+
+    def ensure_entity_exists
+      @entity = Grit::Core::EntityManager.entities[params[:id]] unless params[:id].nil?
+      @entity = Grit::Core::EntityManager.entities[params[:entity_id]] unless params[:entity_id].nil?
+      if @entity.nil?
+        render json: { success: false, errors: "Entity #{params[:id]} does not exist" }, status: :not_found
+      end
     end
   end
 end

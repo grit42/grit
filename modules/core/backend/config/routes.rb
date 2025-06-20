@@ -1,4 +1,17 @@
 Grit::Core::Engine.routes.draw do
+  resources :vocabularies
+  resources :vocabulary_items, param: :vocabulary_id, only: [] do
+  member do
+    get "/", to: "vocabulary_items#index"
+    post "/", to: "vocabulary_items#create"
+    get "/export", to: "vocabulary_items#export"
+    get "/:id", to: "vocabulary_items#show"
+    put "/:id", to: "vocabulary_items#update"
+    patch "/:id", to: "vocabulary_items#update"
+    delete "/:id", to: "vocabulary_items#destroy"
+  end
+end
+
   resources :publication_statuses
   resources_with_export :units
   resources_with_export :data_types

@@ -37,12 +37,16 @@ module Grit::Core::GritEntityController
     before_action :check_update, only: :update
     before_action :check_destroy, only: :destroy
 
+    def get_klass
+      controller_path.classify.constantize
+    end
+
     def set_csrf_token
       cookies["csrf-token"] = form_authenticity_token
     end
 
     def filter_and_sort_raw_sql(scope, filter, sort)
-      klass = controller_path.classify.constantize
+      klass = get_klass
 
       scope = klass.unscoped.select("sub.*").from("(#{scope}) sub")
 
@@ -110,7 +114,7 @@ module Grit::Core::GritEntityController
     def csv_from_query(query)
       csv_sql = "COPY (#{query.to_sql}) TO STDOUT WITH DELIMITER ',' CSV HEADER"
 
-      temp_file = Tempfile.new("#{controller_path.classify.demodulize.underscore}.csv")
+      temp_file = Tempfile.new("#{get_klass.display_name}.csv")
 
       ActiveRecord::Base.connection.raw_connection.copy_data(csv_sql) do
         row = ActiveRecord::Base.connection.raw_connection.get_copy_data
@@ -133,13 +137,13 @@ module Grit::Core::GritEntityController
       return if query.nil?
 
       if params[:columns]&.length
-        klass = controller_path.classify.constantize
+        klass = get_klass
         query = klass.unscoped.select(*params[:columns]).from(query, :sub)
       end
 
       file = csv_from_query(query)
 
-      send_data file.read, filename: "#{controller_path.classify.demodulize.underscore}.csv", type: "text/csv"
+      send_data file.read, filename: "#{get_klass.display_name}.csv", type: "text/csv"
     end
 
     def show_existing_entity(params)
@@ -149,7 +153,7 @@ module Grit::Core::GritEntityController
     end
 
     def show_new_entity
-      controller_path.classify.constantize.new()
+      get_klass.new()
     end
 
     def show_entity(params)
@@ -168,12 +172,12 @@ module Grit::Core::GritEntityController
     end
 
     def create
-      klass = controller_path.classify.constantize
+      klass = get_klass
       permitted_params = params.permit(self.permitted_params)
       @record = klass.new(permitted_params)
 
       if @record.save
-        render json: { success: true, data: @record }, status: :created, location: @record
+        render json: { success: true, data: @record }, status: :created
       else
         render json: { success: false, errors: @record.errors }, status: :unprocessable_entity
       end
@@ -182,7 +186,7 @@ module Grit::Core::GritEntityController
     end
 
     def update
-      klass = controller_path.classify.constantize
+      klass = get_klass
       @record = klass.find(params[:id])
       permitted_params = params.permit(self.permitted_params)
 
@@ -198,7 +202,7 @@ module Grit::Core::GritEntityController
     end
 
     def destroy
-      klass = controller_path.classify.constantize
+      klass = get_klass
       klass.destroy(params[:id].split(","))
       render json: { success: true }
     rescue StandardError => e
@@ -208,29 +212,29 @@ module Grit::Core::GritEntityController
     private
 
     def check_read
-      klass = controller_path.classify.constantize
-      render json: { success: false, errors: "You do not have the permissions required to read #{controller_path.classify}" }, status: :forbidden if klass.entity_crud[:read].nil? or (!klass.entity_crud[:read].length.zero? and !current_user.one_of_these_roles?(klass.entity_crud[:read]))
+      klass = get_klass
+      render json: { success: false, errors: "You do not have the permissions required to read #{klass.display_name}" }, status: :forbidden if klass.entity_crud[:read].nil? or (!klass.entity_crud[:read].length.zero? and !current_user.one_of_these_roles?(klass.entity_crud[:read]))
     end
 
     def check_create
-      klass = controller_path.classify.constantize
-      render json: { success: false, errors: "You do not have the permissions required to create #{controller_path.classify}" }, status: :forbidden if klass.entity_crud[:create].nil? or (!klass.entity_crud[:create].length.zero? and !current_user.one_of_these_roles?(klass.entity_crud[:create]))
+      klass = get_klass
+      render json: { success: false, errors: "You do not have the permissions required to create #{klass.display_name}" }, status: :forbidden if klass.entity_crud[:create].nil? or (!klass.entity_crud[:create].length.zero? and !current_user.one_of_these_roles?(klass.entity_crud[:create]))
     end
 
     def check_update
-      klass = controller_path.classify.constantize
-      render json: { success: false, errors: "You do not have the permissions required to update #{controller_path.classify}" }, status: :forbidden  if klass.entity_crud[:update].nil? or (!klass.entity_crud[:update].length.zero? and !current_user.one_of_these_roles?(klass.entity_crud[:update]))
+      klass = get_klass
+      render json: { success: false, errors: "You do not have the permissions required to update #{klass.display_name}" }, status: :forbidden  if klass.entity_crud[:update].nil? or (!klass.entity_crud[:update].length.zero? and !current_user.one_of_these_roles?(klass.entity_crud[:update]))
     end
 
     def check_destroy
-      klass = controller_path.classify.constantize
-      render json: { success: false, errors: "You do not have the permissions required to delete #{controller_path.classify}" }, status: :forbidden if klass.entity_crud[:destroy].nil? or (!klass.entity_crud[:destroy].length.zero? and !current_user.one_of_these_roles?(klass.entity_crud[:destroy]))
+      klass = get_klass
+      render json: { success: false, errors: "You do not have the permissions required to delete #{klass.display_name}" }, status: :forbidden if klass.entity_crud[:destroy].nil? or (!klass.entity_crud[:destroy].length.zero? and !current_user.one_of_these_roles?(klass.entity_crud[:destroy]))
     end
 
     def get_scope(scope, params)
-      klass = controller_path.classify.constantize
+      klass = get_klass
       klass_scope = klass.send(scope, params) if klass.respond_to?(scope)
-      render json: { success: false, errors: "#{controller_path.classify} does not implement scope '#{scope}'" }, status: :bad_request if klass_scope.nil?
+      render json: { success: false, errors: "#{klass.display_name} does not implement scope '#{scope}'" }, status: :bad_request if klass_scope.nil?
       klass_scope
     end
 

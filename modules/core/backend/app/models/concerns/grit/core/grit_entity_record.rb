@@ -16,7 +16,7 @@
 # grit-core. If not, see <https://www.gnu.org/licenses/>.
 #++
 
-require "grit/core/entity_mapper"
+require "grit/core/entity_manager"
 
 module Grit::Core::GritEntityRecord
   extend ActiveSupport::Concern
@@ -111,7 +111,7 @@ module Grit::Core::GritEntityRecord
           unique: unique_properties.include?(column.name.to_s)
         }
         unless foreign_key.nil?
-          foreign_key_model_name = Grit::Core::EntityMapper.table_to_model_name(foreign_key.to_table)
+          foreign_key_model_name = Grit::Core::EntityManager.table_to_model_name(foreign_key.to_table)
           property[:entity] = {
             full_name: foreign_key_model_name,
             name: foreign_key_model_name.demodulize,
@@ -212,7 +212,7 @@ module Grit::Core::GritEntityRecord
       end
 
       self.foreign_keys.each do |foreign_key, memo|
-        foreign_key_model = Grit::Core::EntityMapper.table_to_model_name(foreign_key.to_table).constantize
+        foreign_key_model = Grit::Core::EntityManager.table_to_model_name(foreign_key.to_table).constantize
         query = query.joins("LEFT OUTER JOIN #{foreign_key.to_table} #{foreign_key.to_table}__ ON #{foreign_key.to_table}__.#{foreign_key.options[:primary_key]} = #{self.table_name}.#{foreign_key.options[:column]}")
         foreign_key_model.display_properties.each do |property|
           query = query.select("#{foreign_key.to_table}__.#{property[:name]} as #{foreign_key.options[:column]}__#{property[:name]}")
@@ -232,6 +232,10 @@ module Grit::Core::GritEntityRecord
 
     def loader_find_by!(prop, value)
       find_by!({ prop => value })
+    end
+
+    def display_name
+      self.name.demodulize.underscore.humanize
     end
 
     private

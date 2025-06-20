@@ -16,11 +16,19 @@
 # grit-core. If not, see <https://www.gnu.org/licenses/>.
 #++
 
+require "grit/core/entity_manager"
+require "grit/core/user_defined_vocabularies"
+
 module Grit
   module Core
     class Engine < ::Rails::Engine
       isolate_namespace Grit::Core
       config.generators.api_only = true
+
+      config.after_initialize do
+        Grit::Core::EntityManager.discover
+        Grit::Core::UserDefinedVocabularies.load_all
+      end
 
       def self.seeds
         { auto_seed: true }

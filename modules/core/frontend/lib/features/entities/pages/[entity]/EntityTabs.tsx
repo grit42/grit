@@ -310,9 +310,10 @@ const EntityTable = ({ full_name, path, name, plural }: EntityInfo) => {
       navigate(`/core/entities/${full_name}/${row.original.id}`, {
         state: {
           redirect: pathname,
+          title: `Edit ${name} record`,
         },
       }),
-    [navigate, pathname],
+    [full_name, name, navigate, pathname],
   );
   const {
     data: columns,
@@ -373,6 +374,7 @@ const EntityTable = ({ full_name, path, name, plural }: EntityInfo) => {
             navigate(`/core/entities/${full_name}/new`, {
               state: {
                 redirect: pathname,
+                title: `Create ${name} record`,
               },
             }),
           requiredRoles: ["Administrator"],
@@ -428,7 +430,9 @@ const EntityTable = ({ full_name, path, name, plural }: EntityInfo) => {
       onDelete={async (rows) => {
         if (
           !window.confirm(
-            `Are you sure you want to delete ${rows.length} ${rows.length > 1 ? plural : name}? This action is irreversible`,
+            `Are you sure you want to delete ${rows.length} ${
+              rows.length > 1 ? plural : name
+            }? This action is irreversible`,
           )
         )
           return;

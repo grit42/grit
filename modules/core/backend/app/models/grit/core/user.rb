@@ -16,6 +16,8 @@
 # grit-core. If not, see <https://www.gnu.org/licenses/>.
 #++
 
+require "grit/core/entity_manager"
+
 module Grit::Core
   class User < ApplicationRecord
     include Grit::Core::GritEntityRecord
@@ -136,7 +138,7 @@ module Grit::Core
       end
 
       self.foreign_keys.each do |foreign_key, memo|
-        foreign_key_model = Grit::Core::EntityMapper.table_to_model_name(foreign_key.to_table).constantize
+        foreign_key_model = Grit::Core::EntityManager.table_to_model_name(foreign_key.to_table).constantize
         query = query.joins("LEFT OUTER JOIN #{foreign_key.to_table} #{foreign_key.to_table}__ ON #{foreign_key.to_table}__.#{foreign_key.options[:primary_key]} = #{self.table_name}.#{foreign_key.options[:column]}")
         foreign_key_model.display_properties.each do |property|
           next if @no_show.include?(foreign_key.options[:column])

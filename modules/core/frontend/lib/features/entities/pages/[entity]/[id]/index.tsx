@@ -63,13 +63,13 @@ export const EntityDetails = ({ entity, id }: EntityDetailsProps) => {
     isLoading: isInfoLoading,
     isError: isInfoError,
     error: infoError,
-  } = useEntity(entity!);
+  } = useEntity(entity);
   const {
     data: fields,
     isLoading: isFieldsLoading,
     isError: isFieldsError,
     error: fieldsError,
-  } = useEntityFields(entity!);
+  } = useEntityFields(entity);
 
   const {
     data: datum,
