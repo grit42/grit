@@ -52,20 +52,10 @@ module Grit::Assays
           default: nil,
           entity: {
             name: definition.name,
-            full_name: "Grit::Assays::VocabularyItem",
-            path: "grit/assays/vocabulary_items",
+            full_name: "Grit::Core::VocabularyItem",
+            path: "grit/core/vocabularies/#{definition.vocabulary_id}/vocabulary_items",
             primary_key: "id",
-            primary_key_type: "integer",
-            filters: [ {
-              active: true,
-              id: "vocabulary_id",
-              column: "id",
-              property: "vocabulary_id",
-              property_type: "integer",
-              operator: "eq",
-              type: "integer",
-              value: definition.vocabulary_id
-            } ]
+            primary_key_type: "integer"
           },
           disabled: false,
           metadata_definition_id: definition.id
@@ -106,9 +96,9 @@ module Grit::Assays
         query = query
         .joins("LEFT OUTER JOIN grit_assays_assay_model_metadata grit_assays_assay_model_metadata__#{metadata_definition.id} on grit_assays_assay_model_metadata__#{metadata_definition.id}.assay_metadata_definition_id = #{metadata_definition.id} and grit_assays_assay_model_metadata__#{metadata_definition.id}.assay_model_id = grit_assays_assays.assay_model_id")
         .joins("LEFT OUTER JOIN grit_assays_assay_metadata grit_assays_assay_metadata__#{metadata_definition.id} ON grit_assays_assay_metadata__#{metadata_definition.id}.assay_id = grit_assays_assays.id AND grit_assays_assay_metadata__#{metadata_definition.id}.assay_model_metadatum_id = grit_assays_assay_model_metadata__#{metadata_definition.id}.id")
-        .joins("LEFT OUTER JOIN grit_assays_vocabulary_items grit_assays_vocabulary_items__#{metadata_definition.id} ON grit_assays_vocabulary_items__#{metadata_definition.id}.id = grit_assays_assay_metadata__#{metadata_definition.id}.vocabulary_item_id")
-        .select("grit_assays_vocabulary_items__#{metadata_definition.id}.id as #{metadata_definition.safe_name}")
-        .select("grit_assays_vocabulary_items__#{metadata_definition.id}.name as #{metadata_definition.safe_name}__name")
+        .joins("LEFT OUTER JOIN grit_core_vocabulary_items grit_core_vocabulary_items__#{metadata_definition.id} ON grit_core_vocabulary_items__#{metadata_definition.id}.id = grit_assays_assay_metadata__#{metadata_definition.id}.vocabulary_item_id")
+        .select("grit_core_vocabulary_items__#{metadata_definition.id}.id as #{metadata_definition.safe_name}")
+        .select("grit_core_vocabulary_items__#{metadata_definition.id}.name as #{metadata_definition.safe_name}__name")
       end
       query
     end
