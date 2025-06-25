@@ -1,4 +1,8 @@
 Grit::Core::Engine.routes.draw do
+  resources :vocabulary_items
+  resources :vocabularies do
+    resources :vocabulary_items
+  end
   resources :publication_statuses
   resources_with_export :units
   resources_with_export :data_types

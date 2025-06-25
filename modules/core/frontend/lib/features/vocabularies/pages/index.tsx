@@ -16,30 +16,19 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-export interface ModuleNavItem {
-  name: string;
-  path: string;
-  roles?: string[];
-}
+import { Outlet, Route, Routes } from "react-router-dom";
+import Vocabularies from "../vocabularies";
+import Vocabulary from "../vocabulary";
 
-export interface ModuleMeta {
-  rootRoute: string;
-  navItems: ModuleNavItem[];
-}
-
-const Meta: ModuleMeta = {
-  rootRoute: "/core",
-  navItems: [
-    {
-      name: "Vocabularies",
-      path: "/core/vocabularies",
-    },
-    {
-      name: "Administration",
-      path: "/core/administration",
-      roles: ["Administrator"],
-    },
-  ],
+const VocabulariesTab = () => {
+  return (
+    <Routes>
+      <Route element={<Outlet />}>
+        <Route index element={<Vocabularies />} />
+        <Route path="/:vocabulary_id/*" element={<Vocabulary />} />
+      </Route>
+    </Routes>
+  );
 };
 
-export default Meta;
+export default VocabulariesTab;
