@@ -1,7 +1,7 @@
 PATH
   remote: ../../core/backend
   specs:
-    grit-core (0.4.42)
+    grit-core (0.5.0)
       authlogic (~> 6.5, >= 6.5.0)
       rails (~> 7.2, >= 7.2.2)
       scrypt (~> 3.0, >= 3.0.8)
@@ -9,8 +9,8 @@ PATH
 PATH
   remote: .
   specs:
-    grit-compounds (0.4.42)
-      grit-core (~> 0.4.42)
+    grit-compounds (0.5.0)
+      grit-core (~> 0.5.0)
       rails (~> 7.2, >= 7.2.2)
 
 GEM
@@ -134,7 +134,7 @@ GEM
     marcel (1.0.4)
     mini_mime (1.1.5)
     minitest (5.25.4)
-    net-imap (0.5.8)
+    net-imap (0.5.9)
       date
       net-protocol
     net-pop (0.1.2)
@@ -199,7 +199,7 @@ GEM
       zeitwerk (~> 2.6)
     rainbow (3.1.1)
     rake (13.3.0)
-    rdoc (6.14.0)
+    rdoc (6.14.1)
       erb
       psych (>= 4.0.0)
     regexp_parser (2.10.0)

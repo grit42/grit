@@ -41,6 +41,16 @@ module Grit
           # mount Grit::Compounds::Engine => "/api/#{self.name.underscore.gsub(/\/engine/, "")}"
         end
       end
+
+      initializer :overrides do |app|
+        overrides = "#{Grit::Compounds::Engine.root}/app/overrides"
+        app.autoloaders.main.ignore(overrides)
+        config.to_prepare do
+          Dir.glob("#{overrides}/**/*_override.rb").sort.each do |override|
+            load override
+          end
+        end
+      end
     end
   end
 end
