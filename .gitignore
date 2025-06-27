@@ -43,6 +43,7 @@ frontend/test/playwright/.auth
 
 postgres-data
 postgres-data-prod
+postgres-data-backup
 
 .env
 
