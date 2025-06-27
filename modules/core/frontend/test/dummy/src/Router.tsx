@@ -34,7 +34,7 @@ const Router = () => {
         <Route
           index
           path="*"
-          element={<Navigate to="core/entities" replace />}
+          element={<Navigate to="core/vocabularies" replace />}
         />
       </Routes>
     </Suspense>

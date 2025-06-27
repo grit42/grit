@@ -23,5 +23,35 @@ module Grit::Core
     display_column "name"
 
     entity_crud_with read: []
+
+    def self.entity_columns(**args)
+      @entity_columns ||= self.entity_columns_from_properties(self.db_properties, [ "id", "created_at", "updated_at", "created_by", "updated_by", "meta", "table_name", "is_entity" ])
+    end
+
+    def entity_definition
+      return nil if !self.is_entity
+      options = {}
+      foreign_key_model_name = self.model.name
+      path = foreign_key_model_name.underscore.pluralize
+      name = foreign_key_model_name.demodulize
+      if self.model == Grit::Core::VocabularyItem
+        options[:vocabulary_id] = self.meta["vocabulary_id"]
+        path = "grit/core/vocabularies/#{self.meta["vocabulary_id"]}/vocabulary_items"
+        name = self.name
+      end
+
+      {
+        full_name: foreign_key_model_name,
+        name: name,
+        path: path,
+        primary_key: "id",
+        primary_key_type: "integer",
+        options: options
+      }
+    end
+
+    def model
+      Grit::Core::EntityMapper.table_to_model_name(self.table_name).constantize
+    end
   end
 end

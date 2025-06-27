@@ -333,3 +333,5 @@ Grit::Core::Unit.insert({ unit_type: 'flow dynamics', name: 'milliliter per minu
 Grit::Core::PublicationStatus.insert({ name: "Draft", description: "Actively worked on" }) if Grit::Core::PublicationStatus.find_by(name: "Draft").nil?
 Grit::Core::PublicationStatus.insert({ name: "Published", description: "Available for use" }) if Grit::Core::PublicationStatus.find_by(name: "Published").nil?
 Grit::Core::PublicationStatus.insert({ name: "Withdrawn", description: "Should not be used anymore" }) if Grit::Core::PublicationStatus.find_by(name: "Withdrawn").nil?
+
+Grit::Core::Role.upsert({ name: "VocabularyAdministrator", description: "Can create and modify controlled vocabularies" }) if Grit::Core::Role.find_by(name: "VocabularyAdministrator").nil?

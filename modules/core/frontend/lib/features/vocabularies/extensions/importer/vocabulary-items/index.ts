@@ -16,30 +16,28 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-export interface ModuleNavItem {
-  name: string;
-  path: string;
-  roles?: string[];
-}
+import { useEffect } from "react";
+import { useRegisterImporter } from "../../../../importer";
+import VocabularyItemLoadSetViewerExtraActions from "./VocabularyItemLoadSetViewerExtraActions";
 
-export interface ModuleMeta {
-  rootRoute: string;
-  navItems: ModuleNavItem[];
-}
+const useRegisterVocabularyItemImporter = () => {
+  const registerImporter = useRegisterImporter();
 
-const Meta: ModuleMeta = {
-  rootRoute: "/core",
-  navItems: [
-    {
-      name: "Vocabularies",
-      path: "/core/vocabularies",
-    },
-    {
-      name: "Administration",
-      path: "/core/administration",
-      roles: ["Administrator"],
-    },
-  ],
+  useEffect(() => {
+    const unregisterVocabularyItemImporter = registerImporter(
+      "Grit::Core::VocabularyItem",
+      {
+        LoadSetViewerExtraActions:
+          VocabularyItemLoadSetViewerExtraActions,
+      },
+    );
+
+    return () => {
+      unregisterVocabularyItemImporter();
+    };
+  }, [registerImporter]);
+
+  return null;
 };
 
-export default Meta;
+export default useRegisterVocabularyItemImporter;
