@@ -16,17 +16,18 @@
 # grit-assays. If not, see <https://www.gnu.org/licenses/>.
 #++
 
-module Grit::Assays
-  class Vocabulary < ApplicationRecord
-    include Grit::Core::GritEntityRecord
+Grit::Core::VocabularyItem.class_eval do
+  before_destroy :check_experiment_data_sheet_record_values
 
-    has_many :vocabulary_items, dependent: :destroy
-
-    display_column "name"
-
-    entity_crud_with read: [],
-      create: [ "Administrator",  "VocabularyAdministrator" ],
-      update: [ "Administrator",  "VocabularyAdministrator" ],
-      destroy: [ "Administrator",  "VocabularyAdministrator" ]
+  def check_experiment_data_sheet_record_values
+    used_as_value = Grit::Assays::AssayDataSheetColumn.unscoped
+      .includes(:experiment_data_sheet_values)
+      .where(data_type_id: self.vocabulary.data_type.id)
+      .any? do |assay_data_sheet_column|
+        assay_data_sheet_column.experiment_data_sheet_values.any? do |value|
+          value.entity_id_value == self.id
+        end
+      end
+    raise "'#{self.name}' of '#{self.vocabulary.name}' is used as value of at least one experiment data point" if used_as_value
   end
 end

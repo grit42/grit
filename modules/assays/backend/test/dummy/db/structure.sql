@@ -467,38 +467,6 @@ CREATE TABLE public.grit_assays_experiments (
 
 
 --
--- Name: grit_assays_vocabularies; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.grit_assays_vocabularies (
-    id bigint DEFAULT nextval('public.grit_seq'::regclass) NOT NULL,
-    created_by character varying(30) DEFAULT 'SYSTEM'::character varying NOT NULL,
-    created_at timestamp(6) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_by character varying(30),
-    updated_at timestamp(6) without time zone,
-    name character varying NOT NULL,
-    description text
-);
-
-
---
--- Name: grit_assays_vocabulary_items; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.grit_assays_vocabulary_items (
-    id bigint DEFAULT nextval('public.grit_seq'::regclass) NOT NULL,
-    created_by character varying(30) DEFAULT 'SYSTEM'::character varying NOT NULL,
-    created_at timestamp(6) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_by character varying(30),
-    updated_at timestamp(6) without time zone,
-    name character varying NOT NULL,
-    external_name character varying,
-    description text,
-    vocabulary_id bigint NOT NULL
-);
-
-
---
 -- Name: grit_core_countries; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -526,7 +494,8 @@ CREATE TABLE public.grit_core_data_types (
     name character varying NOT NULL,
     is_entity boolean DEFAULT false,
     table_name character varying,
-    description text
+    description text,
+    meta jsonb DEFAULT '{}'::jsonb
 );
 
 
@@ -761,30 +730,58 @@ CREATE TABLE public.grit_core_users (
 
 
 --
+-- Name: grit_core_vocabularies; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.grit_core_vocabularies (
+    id bigint DEFAULT nextval('public.grit_seq'::regclass) NOT NULL,
+    created_by character varying(30) DEFAULT 'SYSTEM'::character varying NOT NULL,
+    created_at timestamp(6) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_by character varying(30),
+    updated_at timestamp(6) without time zone,
+    name character varying NOT NULL,
+    description text
+);
+
+
+--
+-- Name: grit_core_vocabulary_item_load_sets; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.grit_core_vocabulary_item_load_sets (
+    id bigint DEFAULT nextval('public.grit_seq'::regclass) NOT NULL,
+    created_by character varying(30) DEFAULT 'SYSTEM'::character varying NOT NULL,
+    created_at timestamp(6) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_by character varying(30),
+    updated_at timestamp(6) without time zone,
+    load_set_id bigint NOT NULL,
+    vocabulary_id bigint NOT NULL
+);
+
+
+--
+-- Name: grit_core_vocabulary_items; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.grit_core_vocabulary_items (
+    id bigint DEFAULT nextval('public.grit_seq'::regclass) NOT NULL,
+    created_by character varying(30) DEFAULT 'SYSTEM'::character varying NOT NULL,
+    created_at timestamp(6) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_by character varying(30),
+    updated_at timestamp(6) without time zone,
+    name character varying NOT NULL,
+    description text,
+    vocabulary_id bigint NOT NULL
+);
+
+
+--
 -- Name: schema_migrations; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.schema_migrations (
     version character varying NOT NULL
 );
-
-
---
--- Name: test_vocab; Type: VIEW; Schema: public; Owner: -
---
-
-CREATE VIEW public.test_vocab AS
- SELECT id,
-    created_by,
-    created_at,
-    updated_by,
-    updated_at,
-    name,
-    external_name,
-    description,
-    vocabulary_id
-   FROM public.grit_assays_vocabulary_items
-  WHERE (vocabulary_id = 10298);
 
 
 --
@@ -908,22 +905,6 @@ ALTER TABLE ONLY public.grit_assays_experiments
 
 
 --
--- Name: grit_assays_vocabularies grit_assays_vocabularies_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.grit_assays_vocabularies
-    ADD CONSTRAINT grit_assays_vocabularies_pkey PRIMARY KEY (id);
-
-
---
--- Name: grit_assays_vocabulary_items grit_assays_vocabulary_items_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.grit_assays_vocabulary_items
-    ADD CONSTRAINT grit_assays_vocabulary_items_pkey PRIMARY KEY (id);
-
-
---
 -- Name: grit_core_countries grit_core_countries_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1033,6 +1014,30 @@ ALTER TABLE ONLY public.grit_core_user_roles
 
 ALTER TABLE ONLY public.grit_core_users
     ADD CONSTRAINT grit_core_users_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: grit_core_vocabularies grit_core_vocabularies_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.grit_core_vocabularies
+    ADD CONSTRAINT grit_core_vocabularies_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: grit_core_vocabulary_item_load_sets grit_core_vocabulary_item_load_sets_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.grit_core_vocabulary_item_load_sets
+    ADD CONSTRAINT grit_core_vocabulary_item_load_sets_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: grit_core_vocabulary_items grit_core_vocabulary_items_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.grit_core_vocabulary_items
+    ADD CONSTRAINT grit_core_vocabulary_items_pkey PRIMARY KEY (id);
 
 
 --
@@ -1324,27 +1329,6 @@ CREATE INDEX index_grit_assays_experiments_on_publication_status_id ON public.gr
 
 
 --
--- Name: index_grit_assays_vocabularies_on_name; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE UNIQUE INDEX index_grit_assays_vocabularies_on_name ON public.grit_assays_vocabularies USING btree (name);
-
-
---
--- Name: index_grit_assays_vocabulary_items_on_name; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX index_grit_assays_vocabulary_items_on_name ON public.grit_assays_vocabulary_items USING btree (name);
-
-
---
--- Name: index_grit_assays_vocabulary_items_on_vocabulary_id; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX index_grit_assays_vocabulary_items_on_vocabulary_id ON public.grit_assays_vocabulary_items USING btree (vocabulary_id);
-
-
---
 -- Name: index_grit_core_data_types_on_name; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1457,6 +1441,41 @@ CREATE UNIQUE INDEX index_grit_core_users_on_single_access_token ON public.grit_
 
 
 --
+-- Name: index_grit_core_vocabularies_on_name; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_grit_core_vocabularies_on_name ON public.grit_core_vocabularies USING btree (name);
+
+
+--
+-- Name: index_grit_core_vocabulary_item_load_sets_on_load_set_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_grit_core_vocabulary_item_load_sets_on_load_set_id ON public.grit_core_vocabulary_item_load_sets USING btree (load_set_id);
+
+
+--
+-- Name: index_grit_core_vocabulary_item_load_sets_on_vocabulary_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_grit_core_vocabulary_item_load_sets_on_vocabulary_id ON public.grit_core_vocabulary_item_load_sets USING btree (vocabulary_id);
+
+
+--
+-- Name: index_grit_core_vocabulary_items_on_name; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_grit_core_vocabulary_items_on_name ON public.grit_core_vocabulary_items USING btree (name);
+
+
+--
+-- Name: index_grit_core_vocabulary_items_on_vocabulary_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_grit_core_vocabulary_items_on_vocabulary_id ON public.grit_core_vocabulary_items USING btree (vocabulary_id);
+
+
+--
 -- Name: uniq_assay_data_sheet_definition_name_per_assay_model; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1485,17 +1504,10 @@ CREATE UNIQUE INDEX uniq_experiment_name_per_assay ON public.grit_assays_experim
 
 
 --
--- Name: uniq_vocabulary_item_external_name_per_vocabulary; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE UNIQUE INDEX uniq_vocabulary_item_external_name_per_vocabulary ON public.grit_assays_vocabulary_items USING btree (external_name, vocabulary_id);
-
-
---
 -- Name: uniq_vocabulary_item_name_per_vocabulary; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX uniq_vocabulary_item_name_per_vocabulary ON public.grit_assays_vocabulary_items USING btree (name, vocabulary_id);
+CREATE UNIQUE INDEX uniq_vocabulary_item_name_per_vocabulary ON public.grit_core_vocabulary_items USING btree (name, vocabulary_id);
 
 
 --
@@ -1587,20 +1599,6 @@ CREATE TRIGGER manage_stamps_grit_assays_experiment_data_sheets BEFORE INSERT OR
 --
 
 CREATE TRIGGER manage_stamps_grit_assays_experiments BEFORE INSERT OR UPDATE ON public.grit_assays_experiments FOR EACH ROW EXECUTE FUNCTION public.manage_stamps();
-
-
---
--- Name: grit_assays_vocabularies manage_stamps_grit_assays_vocabularies; Type: TRIGGER; Schema: public; Owner: -
---
-
-CREATE TRIGGER manage_stamps_grit_assays_vocabularies BEFORE INSERT OR UPDATE ON public.grit_assays_vocabularies FOR EACH ROW EXECUTE FUNCTION public.manage_stamps();
-
-
---
--- Name: grit_assays_vocabulary_items manage_stamps_grit_assays_vocabulary_items; Type: TRIGGER; Schema: public; Owner: -
---
-
-CREATE TRIGGER manage_stamps_grit_assays_vocabulary_items BEFORE INSERT OR UPDATE ON public.grit_assays_vocabulary_items FOR EACH ROW EXECUTE FUNCTION public.manage_stamps();
 
 
 --
@@ -1702,6 +1700,27 @@ CREATE TRIGGER manage_stamps_grit_core_users BEFORE INSERT OR UPDATE ON public.g
 
 
 --
+-- Name: grit_core_vocabularies manage_stamps_grit_core_vocabularies; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER manage_stamps_grit_core_vocabularies BEFORE INSERT OR UPDATE ON public.grit_core_vocabularies FOR EACH ROW EXECUTE FUNCTION public.manage_stamps();
+
+
+--
+-- Name: grit_core_vocabulary_item_load_sets manage_stamps_grit_core_vocabulary_item_load_sets; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER manage_stamps_grit_core_vocabulary_item_load_sets BEFORE INSERT OR UPDATE ON public.grit_core_vocabulary_item_load_sets FOR EACH ROW EXECUTE FUNCTION public.manage_stamps();
+
+
+--
+-- Name: grit_core_vocabulary_items manage_stamps_grit_core_vocabulary_items; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER manage_stamps_grit_core_vocabulary_items BEFORE INSERT OR UPDATE ON public.grit_core_vocabulary_items FOR EACH ROW EXECUTE FUNCTION public.manage_stamps();
+
+
+--
 -- Name: grit_assays_assay_data_sheet_columns assays_assay_data_sheet_columns_assays_assay_data_sheet_definit; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1750,27 +1769,27 @@ ALTER TABLE ONLY public.grit_assays_assay_metadata
 
 
 --
--- Name: grit_assays_assay_metadata assays_assay_metadata_assays_vocabulary_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: grit_assays_assay_metadata assays_assay_metadata_core_vocabulary_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.grit_assays_assay_metadata
-    ADD CONSTRAINT assays_assay_metadata_assays_vocabulary_id_fkey FOREIGN KEY (vocabulary_id) REFERENCES public.grit_assays_vocabularies(id);
+    ADD CONSTRAINT assays_assay_metadata_core_vocabulary_id_fkey FOREIGN KEY (vocabulary_id) REFERENCES public.grit_core_vocabularies(id);
 
 
 --
--- Name: grit_assays_assay_metadata assays_assay_metadata_assays_vocabulary_item_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: grit_assays_assay_metadata assays_assay_metadata_core_vocabulary_item_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.grit_assays_assay_metadata
-    ADD CONSTRAINT assays_assay_metadata_assays_vocabulary_item_id_fkey FOREIGN KEY (vocabulary_item_id) REFERENCES public.grit_assays_vocabulary_items(id);
+    ADD CONSTRAINT assays_assay_metadata_core_vocabulary_item_id_fkey FOREIGN KEY (vocabulary_item_id) REFERENCES public.grit_core_vocabulary_items(id);
 
 
 --
--- Name: grit_assays_assay_metadata_definitions assays_assay_metadata_definitions_assays_vocabulary_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: grit_assays_assay_metadata_definitions assays_assay_metadata_definitions_core_vocabulary_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.grit_assays_assay_metadata_definitions
-    ADD CONSTRAINT assays_assay_metadata_definitions_assays_vocabulary_id_fkey FOREIGN KEY (vocabulary_id) REFERENCES public.grit_assays_vocabularies(id);
+    ADD CONSTRAINT assays_assay_metadata_definitions_core_vocabulary_id_fkey FOREIGN KEY (vocabulary_id) REFERENCES public.grit_core_vocabularies(id);
 
 
 --
@@ -1859,14 +1878,6 @@ ALTER TABLE ONLY public.grit_assays_experiment_data_sheets
 
 ALTER TABLE ONLY public.grit_assays_experiments
     ADD CONSTRAINT assays_experiments_assays_assay_id_fkey FOREIGN KEY (assay_id) REFERENCES public.grit_assays_assays(id);
-
-
---
--- Name: grit_assays_vocabulary_items assays_vocabulary_items_assays_vocabulary_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.grit_assays_vocabulary_items
-    ADD CONSTRAINT assays_vocabulary_items_assays_vocabulary_id_fkey FOREIGN KEY (vocabulary_id) REFERENCES public.grit_assays_vocabularies(id);
 
 
 --
@@ -1966,6 +1977,30 @@ ALTER TABLE ONLY public.grit_core_users
 
 
 --
+-- Name: grit_core_vocabulary_item_load_sets core_vocabulary_item_load_sets_core_load_set_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.grit_core_vocabulary_item_load_sets
+    ADD CONSTRAINT core_vocabulary_item_load_sets_core_load_set_id_fkey FOREIGN KEY (load_set_id) REFERENCES public.grit_core_load_sets(id);
+
+
+--
+-- Name: grit_core_vocabulary_item_load_sets core_vocabulary_item_load_sets_core_vocabularies_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.grit_core_vocabulary_item_load_sets
+    ADD CONSTRAINT core_vocabulary_item_load_sets_core_vocabularies_fkey FOREIGN KEY (vocabulary_id) REFERENCES public.grit_core_vocabularies(id);
+
+
+--
+-- Name: grit_core_vocabulary_items core_vocabulary_items_core_vocabulary_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.grit_core_vocabulary_items
+    ADD CONSTRAINT core_vocabulary_items_core_vocabulary_id_fkey FOREIGN KEY (vocabulary_id) REFERENCES public.grit_core_vocabularies(id);
+
+
+--
 -- Name: grit_assays_experiment_data_sheet_record_load_sets data_sheet_record_load_sets_data_sheet_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2012,6 +2047,12 @@ ALTER TABLE ONLY public.grit_assays_assays
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20250625074209'),
+('20250624115056'),
+('20250624081122'),
+('20250624080646'),
+('20250624080000'),
+('20250622125208'),
 ('20250522140707'),
 ('20250521124829'),
 ('20250411144141'),

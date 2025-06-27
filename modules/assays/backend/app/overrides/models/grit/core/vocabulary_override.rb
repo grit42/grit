@@ -16,14 +16,12 @@
 # grit-assays. If not, see <https://www.gnu.org/licenses/>.
 #++
 
-module Grit::Assays
-  class VocabularyItemsController < ApplicationController
-    include Grit::Core::GritEntityController
+Grit::Core::Vocabulary.class_eval do
+  before_destroy :check_data_sheet_column
 
-    private
-
-    def permitted_params
-      %i[ vocabulary_id name external_name description ]
+  def check_data_sheet_column
+    if Grit::Assays::AssayDataSheetColumn.unscoped.where(data_type_id: self.data_type.id).count.positive?
+      raise ActiveRecord::RecordNotDestroyed.new "Vocabulary '#{self.name}' is used as data type of a column of at least one experiment data sheet"
     end
   end
 end

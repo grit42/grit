@@ -17,6 +17,4 @@ Grit::Assays::Engine.routes.draw do
     post :update_metadata
   end
   resources :assay_types
-  resources :vocabulary_items
-  resources :vocabularies
 end
