@@ -23,9 +23,9 @@ module Grit::Compounds
     belongs_to :compound_type, optional: true
     belongs_to :data_type, class_name: "Grit::Core::DataType"
     belongs_to :unit, class_name: "Grit::Core::Unit", optional: true
+    has_many :compound_property_values
 
     display_column "name"
-
 
     entity_crud_with read: [],
       create: [ "Administrator", "CompoundAdministrator" ],
