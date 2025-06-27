@@ -25,7 +25,7 @@ module Grit::Compounds
 
     has_many :synonym, dependent: :destroy
     has_many :batch, dependent: :destroy
-    has_many :compound_property_value, dependent: :destroy
+    has_many :compound_property_values, dependent: :destroy
     has_one :molecules_compound, required: false, dependent: :destroy
 
     display_columns [ "number", "name" ]
@@ -124,19 +124,9 @@ module Grit::Compounds
           required: type_property.required,
           unique: false,
           compound_type_id: type_property.compound_type_id,
-          compound_type_id__name: type_property.compound_type&.name
+          compound_type_id__name: type_property.compound_type&.name,
+          entity: type_property.data_type.entity_definition
         }
-
-        if type_property.data_type.is_entity
-          foreign_key_model_name = Grit::Core::EntityMapper.table_to_model_name(type_property.data_type.table_name)
-          property[:entity] = {
-            full_name: foreign_key_model_name,
-            name: foreign_key_model_name.demodulize,
-            path: foreign_key_model_name.underscore.pluralize,
-            primary_key: "id",
-            primary_key_type: "integer"
-          }
-        end
         property
       end
     end
@@ -218,7 +208,7 @@ module Grit::Compounds
       self.detailed({ filter: ActiveSupport::JSON.encode([ { property: "name", operator: "eq", value: value } ]) }).where(ActiveRecord::Base.sanitize_sql_array([ "grit_compounds_compounds.name = ?", value ]))
     end
 
-    def self.loader_find_by(prop, value)
+    def self.loader_find_by(prop, value, **args)
       if prop == "name"
         self.find_by_name_or_synonyms(value).take
       else
@@ -226,7 +216,7 @@ module Grit::Compounds
       end
     end
 
-    def self.loader_find_by!(prop, value)
+    def self.loader_find_by!(prop, value, **args)
       if prop == "name"
         self.find_by_name_or_synonyms(value).take!
       else
@@ -334,7 +324,7 @@ module Grit::Compounds
           .joins("LEFT OUTER JOIN grit_compounds_compound_property_values grit_compounds_compound_property_values__#{property.safe_name} on grit_compounds_compound_property_values__#{property.safe_name}.compound_property_id = #{property.id} and grit_compounds_compound_property_values__#{property.safe_name}.compound_id = grit_compounds_compounds.id")
 
         if property.data_type.is_entity
-          entity_klass = property.data_type.name.constantize
+          entity_klass = property.data_type.model
           query = query
             .joins("LEFT OUTER JOIN #{property.data_type.table_name} #{property.data_type.table_name}__#{property.safe_name} on #{property.data_type.table_name}__#{property.safe_name}.id = grit_compounds_compound_property_values__#{property.safe_name}.entity_id_value")
             .select("grit_compounds_compound_property_values__#{property.safe_name}.entity_id_value as #{property.safe_name}")

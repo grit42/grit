@@ -108,19 +108,9 @@ module Grit::Assays
             description: definition_column.description,
             type: definition_column.data_type.is_entity ? "entity" : definition_column.data_type.name,
             required: definition_column.required,
-            unique: false
+            unique: false,
+            entity: definition_column.data_type.entity_definition
           }
-
-          if definition_column.data_type.is_entity
-            foreign_key_model_name = Grit::Core::EntityMapper.table_to_model_name(definition_column.data_type.table_name)
-            property[:entity] = {
-              full_name: foreign_key_model_name,
-              name: foreign_key_model_name.demodulize,
-              path: foreign_key_model_name.underscore.pluralize,
-              primary_key: "id",
-              primary_key_type: "integer"
-            }
-          end
           property
         end
       end
@@ -152,7 +142,7 @@ module Grit::Assays
             .joins("LEFT OUTER JOIN grit_assays_experiment_data_sheet_values grit_assays_experiment_data_sheet_values__#{column.safe_name} on grit_assays_experiment_data_sheet_values__#{column.safe_name}.assay_data_sheet_column_id = #{column.id} and grit_assays_experiment_data_sheet_values__#{column.safe_name}.experiment_data_sheet_record_id = grit_assays_experiment_data_sheet_records.id")
 
           if column.data_type.is_entity
-            entity_klass = column.data_type.name.constantize
+            entity_klass = column.data_type.model
             query = query
               .joins("LEFT OUTER JOIN #{column.data_type.table_name} #{column.data_type.table_name}__#{column.safe_name} on #{column.data_type.table_name}__#{column.safe_name}.id = grit_assays_experiment_data_sheet_values__#{column.safe_name}.entity_id_value")
               .select("grit_assays_experiment_data_sheet_values__#{column.safe_name}.entity_id_value as #{column.safe_name}")

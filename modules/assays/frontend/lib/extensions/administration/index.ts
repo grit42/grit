@@ -17,7 +17,6 @@
  */
 
 import { useEffect } from "react";
-import VocabulariesAdministrationTab from "./tabs/vocabularies";
 import { useRegisterAdministrationTabs } from "@grit42/core";
 import AssaysAdministrationTab from "./tabs/assays";
 
@@ -26,11 +25,6 @@ const useRegisterAssaysAdministration = () => {
 
   useEffect(() => {
     const unregisterAdministrationTabs = registerAdministrationTabs([
-      {
-        id: "vocabularies",
-        label: "Vocabularies",
-        Tab: VocabulariesAdministrationTab,
-      },
       {
         id: "assays",
         label: "Assays",

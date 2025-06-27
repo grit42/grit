@@ -2,3 +2,4 @@
 **/dist
 **/postgres-data
 **/postgres-data-prod
+**/postgres-data-backup
