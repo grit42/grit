@@ -1,8 +1,0 @@
-{
-    "label": "Administration",
-    "position": 1,
-    "link": {
-      "type": "generated-index",
-      "description": "In order to ensure good meta data control - and FAIRness - the grit platform offers an ability to define meta data vocabularies. Meta data naturally need to be carefully designed and agreed cross the platform users and have therefore been placed under the Administration menu and users need the admin role to be able to add/edit the vocabularies."
-    }
-  }

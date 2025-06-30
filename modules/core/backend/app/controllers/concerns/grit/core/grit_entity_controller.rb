@@ -128,6 +128,10 @@ module Grit::Core::GritEntityController
       index_entity(params)
     end
 
+    def export_file_name
+      "#{controller_path.classify.demodulize.underscore}.csv"
+    end
+
     def export
       query = index_entity_for_export(params)
       return if query.nil?
@@ -139,7 +143,7 @@ module Grit::Core::GritEntityController
 
       file = csv_from_query(query)
 
-      send_data file.read, filename: "#{controller_path.classify.demodulize.underscore}.csv", type: "text/csv"
+      send_data file.read, filename: export_file_name, type: "text/csv"
     end
 
     def show_existing_entity(params)

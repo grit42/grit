@@ -20,7 +20,7 @@ module Grit::Assays
   class AssayMetadataDefinition < ApplicationRecord
     include Grit::Core::GritEntityRecord
 
-    belongs_to :vocabulary
+    belongs_to :vocabulary, class_name: "Grit::Core::Vocabulary"
     has_many :assay_model_metadata, dependent: :destroy
 
     display_column "name"

@@ -23,6 +23,8 @@ module Grit::Assays
     belongs_to :assay_data_sheet_definition
     belongs_to :data_type, class_name: "Grit::Core::DataType"
     belongs_to :unit, class_name: "Grit::Core::Unit", optional: true
+    has_many :experiment_data_sheet_values
+
     before_destroy :delete_dependents
 
     display_column "name"

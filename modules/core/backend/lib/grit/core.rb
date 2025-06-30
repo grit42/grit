@@ -19,6 +19,7 @@
 require "grit/core/version"
 require "grit/core/engine"
 require "grit/core/filter_provider"
+require "grit/core/vocabulary_item_loader"
 require "test_entity_loader"
 require "authlogic"
 
