@@ -26,4 +26,5 @@ export interface Session {
   roles: string[];
   settings: UserSettings;
   platform_information: { modules: Record<string, string> };
+  token: string;
 }

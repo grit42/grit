@@ -23,6 +23,7 @@ import {
   useMutation,
   useQueryClient,
   EndpointErrorErrors,
+  notifyOnError,
 } from "@grit42/api";
 import { UserSettings } from "./types";
 
@@ -30,6 +31,10 @@ export interface ChangePasswordPayload {
   old_password: string;
   password: string;
   password_confirmation: string;
+}
+
+export interface AuthToken {
+  token: string;
 }
 
 export const useUpdatePasswordMutation = () => {
@@ -110,5 +115,54 @@ export const useUpdateUserInfoMutation = () => {
 
       return response.success;
     },
+  });
+};
+
+export const useRevokeApiTokenMutation = () => {
+  return useMutation<
+      boolean,
+      EndpointErrorErrors<Partial<UserSettings>>,
+      Partial<UserSettings>
+    >({
+    mutationKey: ["revokeApiToken"],
+    mutationFn:  async () => {
+      const response = await request<
+        EndpointSuccess,
+        EndpointError<EndpointErrorErrors<UserSettings>>
+      >(`/grit/core/user/revoke_api_token`, {
+        method: "POST",
+      });
+
+      if (!response.success) {
+        throw response.errors;
+      }
+
+      return response.success;
+    }
+  });
+};
+
+export const useGenerateApiTokenMutation = () => {
+  return useMutation<
+    AuthToken,
+    EndpointErrorErrors<AuthToken>,
+    Record<string, AuthToken>
+  >({
+    mutationKey: ["generateApiToken"],
+    mutationFn: async () => {
+      const response = await request<
+        EndpointSuccess<AuthToken>,
+        EndpointError
+      >(`/grit/core/user/generate_api_token`, {
+        method: "POST",
+      });
+
+      if (!response.success) {
+        throw response.errors;
+      }
+
+      return response.data;
+    },
+    onError: notifyOnError,
   });
 };
