@@ -1,5 +1,3 @@
 **/node_modules
 **/dist
-**/postgres-data
-**/postgres-data-prod
-**/postgres-data-backup
+**/postgres-data*

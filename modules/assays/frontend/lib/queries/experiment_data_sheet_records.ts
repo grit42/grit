@@ -45,7 +45,7 @@ export const useExperimentDataSheetRecordColumns = (
       experiment_data_sheet_id: experimentDataSheetId.toString(),
       ...params,
     },
-    queryOptions,
+    { staleTime: 0, ...queryOptions },
   );
 };
 
@@ -60,7 +60,7 @@ export const useExperimentDataSheetRecordFields = (
       experiment_data_sheet_id: experimentDataSheetId.toString(),
       ...params,
     },
-    queryOptions,
+    { staleTime: 0, ...queryOptions },
   );
 };
 
@@ -69,7 +69,8 @@ export interface ExperimentDataSheetRecordData extends EntityData {
   [key: string]: string | number | boolean | null;
 }
 
-export interface AssayDataSheetRecordData extends ExperimentDataSheetRecordData {
+export interface AssayDataSheetRecordData
+  extends ExperimentDataSheetRecordData {
   experiment_id: number;
   experiment_id__name: string;
 }
