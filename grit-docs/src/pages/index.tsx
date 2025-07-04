@@ -17,8 +17,8 @@ function HomepageHeader() {
         </Heading>
         <p className="hero__subtitle">
           Bring clarity and structure to your preclinical research data.
-          Configure metadata for your experimental modalities, define
-          standardized data models for your assays, and confidently capture data
+          Configure metadata for your therapeutic modalities, define
+          standardized models for your experimental data, and confidently capture data
           aligned with FAIR principles using controlled vocabularies.
         </p>
         <p className="hero__subtitle">
