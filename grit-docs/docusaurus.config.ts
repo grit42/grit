@@ -6,7 +6,7 @@ import type * as Preset from "@docusaurus/preset-classic";
 
 const config: Config = {
   title: "grit",
-  tagline: "Modular research tools",
+  tagline: "Open Source Scientific Data Management System",
   favicon: "img/favicon.ico",
 
   // Set the production url of your site here
@@ -21,7 +21,7 @@ const config: Config = {
   projectName: "grit", // Usually your repo name.
 
   onBrokenLinks: "throw",
-  onBrokenMarkdownLinks: "warn",
+  onBrokenMarkdownLinks: "throw",
 
   // Even if you don't use internationalization, you can use this field to set
   // useful metadata like html lang. For example, if your site is Chinese, you
@@ -41,22 +41,7 @@ const config: Config = {
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           editUrl:
-            "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/",
-        },
-        blog: {
-          showReadingTime: true,
-          feedOptions: {
-            type: ["rss", "atom"],
-            xslt: true,
-          },
-          // Please change this to your repo.
-          // Remove this to remove the "edit this page" links.
-          editUrl:
-            "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/",
-          // Useful options to enforce blogging best practices
-          onInlineTags: "warn",
-          onInlineAuthors: "warn",
-          onUntruncatedBlogPosts: "warn",
+            "https://github.com/grit42/grit/tree/main/grit-docs/",
         },
         theme: {
           customCss: "./src/css/custom.css",
@@ -66,8 +51,6 @@ const config: Config = {
   ],
 
   themeConfig: {
-    // Replace with your project's social card
-    image: "img/docusaurus-social-card.jpg",
     navbar: {
       style: "dark",
       title: "grit",
@@ -82,7 +65,6 @@ const config: Config = {
           position: "left",
           label: "Docs",
         },
-        // {to: '/blog', label: 'Blog', position: 'left'},
         {
           href: "https://github.com/grit42/grit",
           label: "GitHub",
@@ -106,19 +88,6 @@ const config: Config = {
             },
           ],
         },
-        // {
-        //   title: 'More',
-        //   items: [
-        //     {
-        //       label: 'Blog',
-        //       to: '/blog',
-        //     },
-        //     {
-        //       label: 'GitHub',
-        //       href: 'https://github.com/grit42/grit',
-        //     },
-        //   ],
-        // },
       ],
       copyright: `Copyright © ${new Date().getFullYear()} grit42`,
     },
