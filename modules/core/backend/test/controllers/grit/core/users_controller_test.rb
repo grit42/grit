@@ -151,5 +151,14 @@ module Grit::Core
 
       assert_response :forbidden
     end
+
+    test "user should be disabled after 50 wrong password attempts" do
+      login_attempts = Grit::Core::UserSession.consecutive_failed_logins_limit + 1
+      login_attempts.times {
+        login(@user, "wrongpassword")
+      }
+      @user_record = Grit::Core::User.find_by(login: "notadmin")
+      assert @user_record.active == false
+    end
   end
 end
