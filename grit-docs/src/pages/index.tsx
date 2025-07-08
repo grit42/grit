@@ -18,12 +18,12 @@ function HomepageHeader() {
         <p className="hero__subtitle">
           Bring clarity and structure to your preclinical research data.
           Configure metadata for your therapeutic modalities, define
-          standardized models for your experimental data, and confidently capture data
+          standardized templates for your experimental data, and confidently capture data
           aligned with FAIR principles using controlled vocabularies.
         </p>
         <p className="hero__subtitle">
           grit helps ensure consistency, traceability, and interoperability from
-          the start.
+          the start (and retrospectively).
         </p>
         <div className={styles.buttons}>
           <Link className="button button--primary button--lg" to="/docs/intro">
