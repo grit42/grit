@@ -160,5 +160,19 @@ module Grit::Core
       @user_record = Grit::Core::User.find_by(login: "notadmin")
       assert @user_record.active == false
     end
+
+    test "user should pull an API token" do
+      login(@user)
+
+      post generate_api_token_user_url
+      assert_response :success
+    end
+
+    test "user should revoke an API token" do
+      login(@user)
+
+      post revoke_api_token_user_url
+      assert_response :success
+    end
   end
 end
