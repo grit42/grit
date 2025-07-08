@@ -1,6 +1,6 @@
 ---
 sidebar_label: 'User administration'
-sidebar_position: 3
+sidebar_position: 4
 ---
 
 
