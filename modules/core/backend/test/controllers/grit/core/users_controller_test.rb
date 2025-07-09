@@ -175,14 +175,29 @@ module Grit::Core
       assert_response :success
     end
 
-    test "user should be allowed access with valid token" do
+    test "user should authenticate with valid token" do
       logout
 
-      @user_record = Grit::Core::User.find_by(login: "notadmin")
-      get hello_world_api_user_url + "?user_credentials=" + @user_record.single_access_token
+      get hello_world_api_user_url, params: { user_credentials: @user.single_access_token }
       assert_response :success
+    end
 
-      get hello_world_api_user_url + "?user_credentials=" + "nottherightapitoken"
+    test "user should not authenticate with a revoked token" do
+      login(@user)
+
+      @single_access_token = @user.single_access_token
+      post revoke_api_token_user_url
+
+      logout
+
+      get hello_world_api_user_url, params: { user_credentials: @single_access_token }
+      assert_response :unauthorized
+    end
+
+    test "user should not authenticate with an invalid token" do
+      logout
+
+      get hello_world_api_user_url, params: { user_credentials: "not a valid token" }
       assert_response :unauthorized
     end
   end

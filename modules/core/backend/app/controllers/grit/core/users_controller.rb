@@ -200,7 +200,7 @@ module Grit::Core
       @user.reset_single_access_token
 
       render json: { success: true, data: { token: @user.single_access_token } }
-      rescue StandardError => e
+    rescue StandardError => e
       logger.warn e.to_s
       logger.warn e.backtrace.join("\n")
       render json: { success: false, msg: e.to_s }, status: :internal_server_error
@@ -214,7 +214,7 @@ module Grit::Core
       )
 
       render json: { success: true }
-      rescue StandardError => e
+    rescue StandardError => e
       logger.warn e.to_s
       logger.warn e.backtrace.join("\n")
       render json: { success: false, msg: e.to_s }, status: :internal_server_error
