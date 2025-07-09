@@ -9,7 +9,7 @@ grit offers a consistent data upload experience across most parts of the system.
 
 Imported data sets are referred to as **Load Sets**. A Load Set can be undone to remove all associated data from the system, provided the data is not linked to other entities.
 
-When a view supports data import, the _Import_ toolbar action will be enabled. The import flow is started by clicking the _Import_ toolbar action.
+When a view supports data import, the _Import_ toolbar action will be enabled. The import flow is started by clicking the _Import_ toolbar action. Some views may support importing different kind of data, requiring choosing the appropriate data type in a menu before continuing.
 
 ![Toolbar with Import action highlighted](./assets/toolbar_with_import_highlighted.png)
 
@@ -119,10 +119,18 @@ After confirming a valid Load Set or choosing to proceed with only valid records
 
 Specific actions may be available in this view depending on the type of data imported.
 
-## Deleting records from a Load Set
+![Successful import with actions highlighted](./assets/successful_import_actions.png)
 
-Records from a **Load Set** can be deleted by clicking **Undo Import** in the final step of the import process, provided none of the records are in use elsewhere in the system. Undoing an import restarts the process at the mapping step, including any previously ignored rows, allowing mappings and data to be modified as needed. The data set will undergo validation again even if no modifications were made.
+## Deleting all records created by a Load Set
 
-:::tip
-A list of **Load Sets** for a given type of data can usually be found close to the view where the import process was started. Click a Load Set to open the import process at the current stage.
-:::
+All records from a **Load Set** can be deleted by clicking **Undo Import** in the final step of the import process, provided none of the records are in use elsewhere in the system. Undoing an import restarts the process at the mapping step, including any previously ignored rows, allowing mappings and data to be modified as needed. The data set will undergo validation again even if no modifications were made.
+
+![Successful import with undo highlighted](./assets/successful_import_actions.png)
+
+### Finding Load Sets
+
+A list of **Load Sets** for a given type of data can usually be found close to the view where the import process was started. Click a Load Set in the list to open the importer and continue mapping, edit the data set or undo the import.<br />
+The management of _Locations_ in the system is done in the **Administration** section. All related **Load Sets** can be found in the tab next to the list of _Locations_.
+
+![Locations load sets](./assets/locations_load_sets.png)
+
