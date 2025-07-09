@@ -60,9 +60,13 @@ Data set columns with headers matching property names will be mapped automatical
 
 To map a simple property to a column, select the appropriate column from the dropdown menu under the property name in the form on the left.
 
+![Mapping form with simple property highlighted](./assets/mapping_simple_property.png)
+
 ### Mapping an entity property
 
 To map an entity property to a column, first select the appropriate column from the dropdown menu under the property name in the form on the left. Then, use the dropdown menu labelled _Find by_ to choose the entity property that should be used to match the record based on the value in the data set.
+
+![Mapping form with entity property highlighted](./assets/mapping_entity_property.png)
 
 :::info
 Only unique properties show up in the _Find by_ menu to ensure the correct record is resolved.
@@ -72,25 +76,39 @@ Only unique properties show up in the _Find by_ menu to ensure the correct recor
 
 To use a constant value, enable the switch labelled _Use a constant value_ located below the property’s dropdown menu. This will replace the dropdown with an input field where a default value can be entered.
 
+![Mapping form with constant value switch highlighted](./assets/mapping_property_constant_value.png)
+
+1.  A property mapped to a data set column
+2.  A property set to a constant value
+
 ## Validating the Data Set
 
 The third step in the import process is validation. Once all required properties have been configured, the data set can be validated by clicking the **Validate Data Set** button.
 
+:::info
 Depending on system load and the size of the data set, the validation process may take some time.
+:::
+
+![Mapped data set with validate button highlighted](./assets/validate_data_set.png)
 
 If the data set contains errors (such as missing or incorrectly formatted values, unresolved entities, or conflicting unique constraints) or warnings, additional tabs will appear next to the _Data Set Preview_ tab, showing:
 
-1. A detailed list of all errors
-2. All rows that produced errors
-3. A detailed list of all warnings
+* A detailed list of all errors
+* All rows that produced errors
+* A detailed list of all warnings
+
+These list can be exported as CSV files for further processing by clicking the _Export_ toolbar action in the relevant tab.
+
+![Validation failed with tabs and export highlighted](./assets/import_validation_failed.png)
 
 There are three ways to address errors in a data set:
 
 1. Update the data set
+  * Clicking this button will reveal a text editor where you can manually edit the data or replace the file
 2. Cancel the import and start over with a clean data set
 3. Ignore records with errors and proceed with the valid ones
 
-   * Records with errors can be exported as a CSV file to be corrected and imported later
+![Validation failed with actions highlighted](./assets/import_validation_failed_actions.png)
 
 If the data set is free of errors, the property mapping form will be locked, allowing you to review the mappings before confirming.
 
