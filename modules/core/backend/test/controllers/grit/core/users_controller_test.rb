@@ -174,5 +174,16 @@ module Grit::Core
       post revoke_api_token_user_url
       assert_response :success
     end
+
+    test "user should be allowed access with valid token" do
+      logout
+
+      @user_record = Grit::Core::User.find_by(login: "notadmin")
+      get hello_world_api_user_url + "?user_credentials=" + @user_record.single_access_token
+      assert_response :success
+
+      get hello_world_api_user_url + "?user_credentials=" + "nottherightapitoken"
+      assert_response :unauthorized
+    end
   end
 end
