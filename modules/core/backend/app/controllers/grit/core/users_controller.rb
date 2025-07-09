@@ -22,7 +22,7 @@ module Grit::Core
 
     before_action :require_administrator, only: %i[create update destroy]
     before_action :require_no_user, only: %i[activate request_password_reset request_password_reset]
-    before_action :require_user, only: %i[index show update_password]
+    before_action :require_user, only: %i[index show update_password generate_api_token revoke_api_token hello_world_api]
 
     def create
       user = params.require(:user).permit(:origin_id, :location_id, :login, :name, :active, :email, :two_factor, role_ids: [])
@@ -195,7 +195,7 @@ module Grit::Core
     end
 
     def generate_api_token
-      @user = User.current
+      @user = Grit::Core::User.current
 
       @user.reset_single_access_token
 
@@ -207,7 +207,7 @@ module Grit::Core
     end
 
     def revoke_api_token
-      @user = User.current
+      @user = Grit::Core::User.current
 
       @user.update(
         single_access_token: nil
@@ -218,6 +218,16 @@ module Grit::Core
       logger.warn e.to_s
       logger.warn e.backtrace.join("\n")
       render json: { success: false, msg: e.to_s }, status: :internal_server_error
+    end
+
+    def hello_world_api
+      render json: { success: true, msg: "Hello" }
+    end
+
+    private
+
+    def single_access_allowed?
+      action_name == "hello_world_api"
     end
   end
 end
