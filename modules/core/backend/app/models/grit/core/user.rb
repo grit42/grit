@@ -189,6 +189,7 @@ module Grit::Core
           SELECT role_id FROM grit_core_user_roles WHERE grit_core_user_roles.user_id = grit_core_users.id
         ) as user_roles__
       ) as role_ids")
+      .select("grit_core_users.active")
     end
 
     private
