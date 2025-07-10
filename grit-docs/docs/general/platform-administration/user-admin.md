@@ -1,16 +1,27 @@
 ---
 sidebar_label: 'User administration'
-sidebar_position: 4
+sidebar_position: 1
 ---
 
-
 # User administration
+
+User accounts are managed by an _Administrator_ in the **Administration** section under the **User management** tab. _Administrators_ can create user accounts, updated user information, enable two-factor authentication, and deactivate accounts.
+
+:::note
+Account activation links, password reset links, and two-factor authentication tokens are sent via email. An email service must be configured as described in the [Installation guide](/docs/getting-started/installation.md) for these features to function properly.
+:::
+
+## Creating user account
+
+User accounts are created in the **Administration** section under the **User management** tab.
+
+
 
 :::info
 
 🚧 This section is under construction. 🚧
 
-The initial start up will create/activate the admin user as described under [quick-start](../getting-started/quick-start.md).
+The initial start up will create/activate the admin user as described under [quick-start](../../getting-started/quick-start.md).
 
 The other users on the platform should be added by the admin and given a relevant role depending on the work they will do on the platform.
 
@@ -43,7 +54,7 @@ But a different way to implement adding users with activation and 2FA may be bet
 
 :::
 
-![Showing new user reg form with 2FA](./assets/user_reg_new.png)
+![Showing new user reg form with 2FA](../assets/user_reg_new.png)
 
 
 

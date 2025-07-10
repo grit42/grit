@@ -33,7 +33,7 @@ grit fully supports Ontologies for high quality, consistent and interoperable da
 
 ### Security and user management
 
-grit features Role-Based Access Control and two-factor authentication. Data is stored securely and accessible only by authorized users.
+grit features Role-Based Access Control and optional two-factor authentication. Data is stored securely and accessible only by authorized users.
 
 TODO: [Learn more about security and user management]
 
