@@ -8,33 +8,16 @@ Learn more and read the docs [here](https://grit42.github.io/grit/intro).
 
 ## Getting started
 
-### Running grit locally
+The easiest way to start using grit is to use the docker compose configuration and guide found in the [starter repo](https://github.com/grit42/grit-starter).
 
-**The intent of this guide is to quickly launch a sandbox that you can use to evaluate the grit platform. This guide is not intended for production environments**
+## Machine Requirements
 
-Run the grit platform via the provided Docker image:
-1. Ensure docker is running on your machine, start it if it's not
+grit has been shown to run smoothly on modest hardware such as [Hetzner CPX21](https://www.hetzner.com/cloud/) with over 200 millions data points. Modern laptops should have no problem running grit for evaluation purposes.
 
-```
-docker info
-```
-
-2. Download the [docker compose file](./docker-compose.yml) and put it in an empty directory somewhere
-
-3. Go to the directory where you just added the docker-compose.yml file and run
-```
-docker compose pull
-docker compose up
-```
-
-4. Navigate to http://localhost:3000/app/core/activate/admin the first time to set a password. Every subsequent time, navigate
-to http://localhost:3000/
-
-5. Enjoy!
-
-### Running grit in production
-
-As we are transitioning to a new way of distributing our software, the configuration of a production instance of grit is not yet straightforward. If you are interested in running grit in production, we encourage you to get in touch with us at [marvin@grit42.com](mailto:marvin@grit42.com).
+Indicative requirements:
+- 2 vCPUs @ 3 GHz
+- 4 GB RAM
+- 40 GB storage
 
 ## Contributing
 

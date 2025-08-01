@@ -8,7 +8,7 @@ sidebar_position: 1
 User accounts are managed by an _Administrator_ in the **Administration** section under the **User management** tab. _Administrators_ can create user accounts, updated user information, enable two-factor authentication, and deactivate accounts.
 
 :::note
-Account activation links, password reset links, and two-factor authentication tokens are sent via email. An email service must be configured as described in the [Installation Guide](/docs/getting-started/installation.md) for these features to function properly.
+Account activation links, password reset links, and two-factor authentication tokens are sent via email. An email service must be configured as described in the [Installation Guide](/getting-started#mail-service-configuration) for these features to function properly.
 :::
 
 ## Roles
