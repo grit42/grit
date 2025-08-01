@@ -10,18 +10,15 @@ const config: Config = {
   favicon: "img/favicon.ico",
 
   // Set the production url of your site here
-  url: "https://your-docusaurus-site.example.com",
+  url: "https://someinstance.grit42.com",
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: "/docs",
 
-  // GitHub pages deployment config.
-  // If you aren't using GitHub pages, you don't need these.
-  organizationName: "grit42", // Usually your GitHub org/user name.
-  projectName: "grit", // Usually your repo name.
+  trailingSlash: false,
 
   onBrokenLinks: "throw",
-  onBrokenMarkdownLinks: "throw",
+  onBrokenMarkdownLinks: "warn",
 
   // Even if you don't use internationalization, you can use this field to set
   // useful metadata like html lang. For example, if your site is Chinese, you
@@ -38,10 +35,6 @@ const config: Config = {
         docs: {
           routeBasePath: "/",
           sidebarPath: "./sidebars.ts",
-          // Please change this to your repo.
-          // Remove this to remove the "edit this page" links.
-          editUrl:
-            "https://github.com/grit42/grit/tree/main/grit-docs/",
         },
         theme: {
           customCss: "./src/css/custom.css",
