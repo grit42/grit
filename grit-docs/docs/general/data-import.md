@@ -30,7 +30,7 @@ The first step in the import process prompts to provide a text-based data set al
   -  clicking the dark area and manually typing or pasting a selection from a spreadsheet or another text editor
 
 :::tip
-Copying a selection in most spreadsheet applications will produce delimiter-separated text, which can be pasted directly into the input area.
+In most spreadsheet applications, selecting an area of the spreadsheet and copying it will result in delimiter-separated text which can be pasted directly into the input area.
 :::
 
 When all fields have been filled and a data set has been added, click on the **Start import** above the data set to continue.
@@ -47,7 +47,9 @@ The second step in the import process consists of mapping columns from the data 
 2.  The form to map data set column to properties in grit
 
 There are two categories of properties: **simple properties** and **entity properties**.
+
 Simple properties, such as numbers, text, dates, and booleans, only need to be mapped to a column in the data set.
+
 Entity properties refer to more complex data types, such as Units or Origins. Like simple properties, they must be mapped to a column in the data set, but they also require a unique field to identify the corresponding record in the database using the value from the data set.
 
 There may be cases where a property does not have a corresponding column in the data set. If the missing property has the same value for all records, you can specify a default value to be applied uniformly. However, if the value varies between records, the data set should be updated accordingly, or the import should be cancelled and restarted with a complete data set.
@@ -83,7 +85,7 @@ To use a constant value, enable the switch labelled _Use a constant value_ locat
 
 ## Validating the Data Set
 
-The third step in the import process is validation. Once all required properties have been configured, the data set can be validated by clicking the **Validate Data Set** button.
+The third step in the import process is validation. Once all required properties have been configured, the data set can be validated by clicking the **Validate data set** button.
 
 :::info
 Depending on system load and the size of the data set, the validation process may take some time.
@@ -93,18 +95,18 @@ Depending on system load and the size of the data set, the validation process ma
 
 If the data set contains errors (such as missing or incorrectly formatted values, unresolved entities, or conflicting unique constraints) or warnings, additional tabs will appear next to the _Data Set Preview_ tab, showing:
 
-* A detailed list of all errors
-* All rows that produced errors
-* A detailed list of all warnings
+* _Errors_: A detailed list of all errors
+* _Errored rows_: All rows that produced errors
+* _Warnings_: A detailed list of all warnings
 
-These list can be exported as CSV files for further processing by clicking the _Export_ toolbar action in the relevant tab.
+These lists can be exported as CSV files for further processing by clicking the _Export_ toolbar action in the relevant tab.
 
 ![Validation failed with tabs and export highlighted](./assets/import_validation_failed.png)
 
 There are three ways to address errors in a data set:
 
-1. Update the data set
-  * Clicking this button will reveal a text editor where you can manually edit the data or replace the file
+1. Edit the data set
+    * Clicking this button will reveal a text editor where you can manually edit the data or replace the file
 2. Cancel the import and start over with a clean data set
 3. Ignore records with errors and proceed with the valid ones
 
@@ -123,7 +125,7 @@ Specific actions may be available in this view depending on the type of data imp
 
 ## Deleting all records created by a Load Set
 
-All records from a **Load Set** can be deleted by clicking **Undo Import** in the final step of the import process, provided none of the records are in use elsewhere in the system. Undoing an import restarts the process at the mapping step, including any previously ignored rows, allowing mappings and data to be modified as needed. The data set will undergo validation again even if no modifications were made.
+All records from a **Load Set** can be deleted by clicking **Undo Import** in the final step of the import process, provided none of the records are in use elsewhere in the system. Undoing an import resumes the process at the mapping step, including any previously ignored rows, allowing mappings and data to be modified as needed. The data set will undergo validation again even if no modifications were made.
 
 ![Successful import with undo highlighted](./assets/successful_import_actions.png)
 

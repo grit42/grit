@@ -35,10 +35,10 @@ grit fully supports Ontologies for high quality, consistent and interoperable da
 
 grit features Role-Based Access Control and optional two-factor authentication. Data is stored securely and accessible only by authorized users.
 
-TODO: [Learn more about security and user management]
+[Learn more about security and user management](./general/platform-administration/user-admin.md)
 
-### General functionalities
+### Basic functionalities
 
 grit provides unified experiences for viewing tabular data with filtering and sorting, importing data in bulk, and exporting data.
 
-TODO: [Learn more about general use of the platform]
+[Learn more about general use of the platform](./category/basic-functionalities)

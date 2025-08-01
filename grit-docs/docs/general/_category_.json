@@ -1,8 +1,8 @@
 {
-  "label": "General",
+  "label": "Basic functionalities",
   "position": 3,
   "link": {
     "type": "generated-index",
-    "description": "General information about the grit platform"
+    "description": "Basic functionalities of the grit platform"
   }
 }

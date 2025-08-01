@@ -55,7 +55,7 @@ User login cannot be modified.
 
 ## Deactivating user accounts
 
-If a user's access to the system is revoked, their account can be deactivated. Deactivating an account prevents system access while preserving data integrity by retaining ownership records. A deactivated account can be reactivated at any time and will resume normal function using the last configured password
+If a user's access to the system is revoked, their account can be deactivated. Deactivating an account prevents system access while preserving data integrity by retaining ownership records. A deactivated account can be reactivated at any time and will resume normal function using the last configured password.
 
 To deactivate a user account, click the account in the list under the **User management** view, toggle off the **Active** switch and click **Save**.
 
