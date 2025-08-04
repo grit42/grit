@@ -9,7 +9,7 @@ sidebar_position: 1
 grit is a Scientific Data Management System (SDMS) designed for preclinical drug discovery.<br />
 It provides structured storage for experimental data—including, but not limited to, results from in vitro, in vivo, DMPK, and toxicology studies—alongside metadata for therapeutic modalities such as small molecules, oligonucleotides, and antibodies.
 
-grit enables the creation and management of high-quality datasets with configurable metadata through intuitive forms and a robust import process. It features full ontology support and strict data validation. Administrators define the data structure, allowing scientists and data managers to enter information quickly and confidently, ensuring consistency and interoperability
+grit enables the creation and management of high-quality datasets with configurable metadata through intuitive forms and a robust import process. It features full ontology support and strict data validation. Administrators define the data structure, allowing scientists and data managers to enter information quickly and confidently, ensuring consistency and interoperability.
 
 ### Therapeutic modalities
 
