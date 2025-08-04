@@ -6,7 +6,7 @@ sidebar_position: 1
 # Compounds grid
 
 The Compounds grid shows the modalities currently in the database at the compounds/structure level. This grid can be filtered and sorted as
-described in the [Data grids](/docs/general/data-grids), including by structure if available. By default, the Compounds grid shows all columns
+described in the [Data grids](/general/data-grids), including by structure if available. By default, the Compounds grid shows all columns
 of all compound types, and columns belonging to the same compound types are grouped.
 
 Above the grid is a selector used to display only a subset of all compounds based on their type. Using this selector will filter the compounds displayed in the list, as well as the columns visible.
