@@ -40,7 +40,7 @@ import {
   genericErrorHandler,
 } from "@grit42/form";
 import { useSession } from "../../session";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 const INFO_FIELDS: FormFieldDef[] = [
   {
@@ -181,10 +181,6 @@ function AuthTokenForm() {
     await revokeTokenMutation.mutateAsync({});
     setToken("");
   };
-
-  interface Props {
-    content: string;
-  }
 
   return (
     <>

@@ -61,7 +61,7 @@ module Grit::Core
       end
       raise "User #{params[:user_session][:login]} not found" if @user.nil?
       raise "User #{params[:user_session][:login]} is inactive" if @user.active? == false
-      #raise "Invalid password" unless @user.valid_password?(params[:user_session][:password])
+
       if !@user.valid_password?(params[:user_session][:password]) then
         @user.failed_login_count ||= 0
         @user.failed_login_count += 1
