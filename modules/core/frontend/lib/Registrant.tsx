@@ -42,6 +42,7 @@ import {
   useEntityData,
 } from "./features/entities";
 import { getColumnEntityDef } from "./utils";
+import useRegisterVocabularyItemImporter from "./features/vocabularies/extensions/importer/vocabulary-items";
 
 export type GritColumnDefEntity = ForeignEntityPropertyDef & {
   filters?: Filter[];
@@ -239,6 +240,7 @@ const operators = (
 const Registrant = () => {
   const registerFormInput = useRegisterFormInput();
   const registerColumnTypeDef = useRegisterColumnTypeDef();
+  useRegisterVocabularyItemImporter()
 
   useEffect(() => {
     const unregisterEntityFormInput = registerFormInput("entity", EntityInput);

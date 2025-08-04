@@ -40,6 +40,9 @@ const LazyEntityDetailsPage = lazy(
   () => import("./features/entities/pages/[entity]/[id]"),
 );
 
+const LazyVocabulariesPage = lazy(
+  () => import("./features/vocabularies/pages"),
+);
 const LazyAdministrationPage = lazy(
   () => import("./features/administration/pages"),
 );
@@ -114,6 +117,14 @@ const Router = () => {
         element={
           <AuthGuard>
             <LazyEntityDetailsPage />
+          </AuthGuard>
+        }
+      />
+      <Route
+        path="/vocabularies/*"
+        element={
+          <AuthGuard>
+            <LazyVocabulariesPage />
           </AuthGuard>
         }
       />

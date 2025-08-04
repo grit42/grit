@@ -31,6 +31,10 @@ const Meta: ModuleMeta = {
   rootRoute: "/core",
   navItems: [
     {
+      name: "Vocabularies",
+      path: "/core/vocabularies",
+    },
+    {
       name: "Administration",
       path: "/core/administration",
       roles: ["Administrator"],

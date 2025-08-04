@@ -13,7 +13,7 @@ The assay models are stored under Administration -> Assays -> Models.
 The Assay models overview also show what assay type the model is linked to 3) and what the current status is 4).
 
 
-![Vocabularies items](./assets/assay_models.png)
+![Assay models](./assets/assay_models.png)
 
 Opening an assay model (clicking it once) enables diving in to the underlying information stored on each model:
 
@@ -33,7 +33,7 @@ The metadata tab lists the metadata fields currently added to the assay model. T
 
 ![Assay model metadata](./assets/assay_models_metadata.png)
 
-The appearing metadata form displays the metadata currently available in the platform 2) as well as the ones already added to the assay model 1). In the screen below 3) there are no more metadata fields available to select/add to the assay model. (To add new metadata fields to the platform go to [Vocabularies](../administration/vocabularies.md)).
+The appearing metadata form displays the metadata currently available in the platform 2) as well as the ones already added to the assay model 1). In the screen below 3) there are no more metadata fields available to select/add to the assay model. (To add new metadata fields to the platform go to [Vocabularies](../../general/vocabularies/)).
 
 
 
@@ -76,6 +76,6 @@ When adding a new column to the data sheet the user have to select the data type
 Adding a new assay model:
 
 
-![Vocabularies items](./assets/assay_models_new.png)
+![New assay model](./assets/assay_models_new.png)
 
 

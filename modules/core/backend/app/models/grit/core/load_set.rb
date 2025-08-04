@@ -72,6 +72,12 @@ module Grit::Core
       self.detailed.where([ "grit_core_load_sets.entity = ?", params[:entity] ])
     end
 
+    def self.by_vocabulary(params = nil)
+      self.detailed
+      .joins("INNER JOIN grit_core_vocabulary_item_load_sets grit_core_vocabulary_item_load_sets__ on grit_core_vocabulary_item_load_sets__.load_set_id = grit_core_load_sets.id")
+      .where(ActiveRecord::Base.sanitize_sql_array([ "grit_core_vocabulary_item_load_sets__.vocabulary_id = ?", params[:vocabulary_id] ]))
+    end
+
     def self.with_data
       self.details
       .select("
