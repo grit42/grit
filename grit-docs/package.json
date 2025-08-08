@@ -7,10 +7,13 @@
     "start": "docusaurus start",
     "start:docker": "docusaurus start -p 4242 -h 0.0.0.0",
     "build": "docusaurus build",
+    "build:pages": "docusaurus build --config pages.docusaurus.config.ts",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
+    "deploy:pages": "docusaurus deploy --config pages.docusaurus.config.ts",
     "clear": "docusaurus clear",
     "serve": "docusaurus serve",
+    "serve:pages": "docusaurus serve --config pages.docusaurus.config.ts",
     "write-translations": "docusaurus write-translations",
     "write-heading-ids": "docusaurus write-heading-ids",
     "typecheck": "tsc"

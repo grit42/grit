@@ -2,7 +2,7 @@
   "name": "@grit42/table",
   "author": "Jonathan Rebourt, grit42 <jonny@grit42.com>",
   "license": "GPL-3.0-or-later",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "type": "module",
   "scripts": {
     "tsc": "tsc -b",

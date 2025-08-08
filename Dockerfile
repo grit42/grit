@@ -7,40 +7,6 @@
 # Make sure RUBY_VERSION matches the Ruby version in .ruby-version
 ARG RUBY_VERSION=3.1.4
 ARG APP=grit
-FROM node:lts AS frontend
-
-ARG APP
-ENV APP_DIR=apps/${APP}/client
-ENV APP_WORKDIR=/workspace/${APP_DIR}
-
-WORKDIR /workspace
-
-RUN npm install -g pnpm@10.0.0-alpha.4
-
-COPY --parents package.json pnpm-workspace.yaml pnpm-lock.yaml nx.json ./**/package.json ./
-
-RUN pnpm install --frozen-lockfile
-
-COPY --parents ./**/frontend/**/* ./${APP_DIR}/**/* ./
-
-WORKDIR ${APP_WORKDIR}
-
-RUN pnpm exec nx build
-
-FROM node:lts AS docs
-
-WORKDIR /docs
-
-RUN npm install -g pnpm@10.0.0-alpha.4
-
-COPY grit-docs/package.json grit-docs/pnpm-lock.yaml ./
-
-RUN pnpm install --frozen-lockfile
-
-COPY grit-docs .
-
-RUN pnpm build
-
 FROM docker.io/library/ruby:$RUBY_VERSION-slim AS base
 
 ARG APP
@@ -60,6 +26,57 @@ ENV RAILS_ENV="production" \
     BUNDLE_DEPLOYMENT="1" \
     BUNDLE_PATH="/usr/local/bundle" \
     BUNDLE_WITHOUT="development"
+
+
+# Throw-away build stage to reduce size of final image
+FROM base AS frontend
+
+ARG APP
+ENV APP_DIR=apps/${APP}
+ENV APP_WORKDIR=/workspace/${APP_DIR}
+
+WORKDIR /workspace
+
+# Install base packages
+RUN apt-get update -qq && \
+    apt-get install --no-install-recommends -y nodejs npm && \
+    rm -rf /var/lib/apt/lists /var/cache/apt/archives
+
+RUN gem update --system
+
+RUN npm install -g pnpm@10.0.0-alpha.4
+
+COPY --parents package.json pnpm-workspace.yaml pnpm-lock.yaml nx.json tsconfig.base.json ./**/package.json ./
+
+RUN pnpm install --frozen-lockfile
+
+COPY --parents ./**/frontend/**/* \
+    ./**/backend/**/*.gemspec \
+    ./**/backend/**/Gemfile \
+    ./**/backend/**/version.rb \
+    ./**/backend/**/project.json \
+    ./tools/**/* \
+    ./${APP_DIR}/**/* \
+    ./
+
+WORKDIR ${APP_WORKDIR}
+
+RUN pnpm exec nx build @grit42/grit
+
+# Throw-away build stage to reduce size of final image
+FROM node:lts AS docs
+
+WORKDIR /docs
+
+RUN npm install -g pnpm@10.0.0-alpha.4
+
+COPY grit-docs/package.json grit-docs/pnpm-lock.yaml ./
+
+RUN pnpm install --frozen-lockfile
+
+COPY grit-docs .
+
+RUN pnpm build
 
 # Throw-away build stage to reduce size of final image
 FROM base AS build

@@ -230,7 +230,7 @@ module Grit::Core::GritEntityRecord
       @entity_crud
     end
 
-    def loader_find_by!(prop, value)
+    def loader_find_by!(prop, value, **args)
       find_by!({ prop => value })
     end
 

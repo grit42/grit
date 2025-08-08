@@ -120,6 +120,7 @@
     "ltex.hiddenFalsePositives": {
       "en-GB": [
         "{\"rule\":\"MORFOLOGIK_RULE_EN_GB\",\"sentence\":\"^\\\\Q:::warningCaution\\\\E$\"}",
+        "{\"rule\":\"TO_NON_BASE\",\"sentence\":\"^\\\\QOnce registered, therapeutics modalities can be linked to assays and animal models.\\\\E$\"}",
         "{\"rule\":\"UPPERCASE_SENTENCE_START\",\"sentence\":\"^\\\\Qgrit is a platform for scientific research.\\\\E$\"}",
         "{\"rule\":\"UPPERCASE_SENTENCE_START\",\"sentence\":\"^\\\\Qgrit42 can also do it for you.\\\\E$\"}"
       ]
