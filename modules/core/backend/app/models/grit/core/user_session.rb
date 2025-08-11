@@ -23,5 +23,9 @@ module Grit::Core
     def cookie_key
       "grit_core_user_credentials"
     end
+
+    def params_key
+      "user_credentials"
+    end
   end
 end

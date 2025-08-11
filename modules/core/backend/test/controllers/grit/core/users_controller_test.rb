@@ -151,5 +151,54 @@ module Grit::Core
 
       assert_response :forbidden
     end
+
+    test "user should be disabled after 50 wrong password attempts" do
+      login_attempts = Grit::Core::UserSession.consecutive_failed_logins_limit + 1
+      login_attempts.times {
+        login(@user, "wrongpassword")
+      }
+      @user_record = Grit::Core::User.find_by(login: "notadmin")
+      assert @user_record.active == false
+    end
+
+    test "user should pull an API token" do
+      login(@user)
+
+      post generate_api_token_user_url
+      assert_response :success
+    end
+
+    test "user should revoke an API token" do
+      login(@user)
+
+      post revoke_api_token_user_url
+      assert_response :success
+    end
+
+    test "user should authenticate with valid token" do
+      logout
+
+      get hello_world_api_user_url, params: { user_credentials: @user.single_access_token }
+      assert_response :success
+    end
+
+    test "user should not authenticate with a revoked token" do
+      login(@user)
+
+      @single_access_token = @user.single_access_token
+      post revoke_api_token_user_url
+
+      logout
+
+      get hello_world_api_user_url, params: { user_credentials: @single_access_token }
+      assert_response :unauthorized
+    end
+
+    test "user should not authenticate with an invalid token" do
+      logout
+
+      get hello_world_api_user_url, params: { user_credentials: "not a valid token" }
+      assert_response :unauthorized
+    end
   end
 end

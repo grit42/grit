@@ -20,178 +20,215 @@ module Grit::Core
   class UsersController < ApplicationController
     include Grit::Core::GritEntityController
 
-      before_action :require_administrator, only: %i[create update destroy]
-      before_action :require_no_user, only: %i[activate request_password_reset request_password_reset]
-      before_action :require_user, only: %i[update_password]
+    before_action :require_administrator, only: %i[create update destroy]
+    before_action :require_no_user, only: %i[activate request_password_reset request_password_reset]
+    before_action :require_user, only: %i[index show update_password generate_api_token revoke_api_token hello_world_api]
 
-      def create
-        user = params.require(:user).permit(:origin_id, :location_id, :login, :name, :active, :email, :two_factor, role_ids: [])
-        record = Grit::Core::User.new(user)
-        record.activation_token = SecureRandom.urlsafe_base64(20)
+    def create
+      user = params.require(:user).permit(:origin_id, :location_id, :login, :name, :active, :email, :two_factor, role_ids: [])
+      record = Grit::Core::User.new(user)
+      record.activation_token = SecureRandom.urlsafe_base64(20)
 
-        Grit::Core::Mailer.deliver_activation_instructions(record).deliver_now
+      Grit::Core::Mailer.deliver_activation_instructions(record).deliver_now
 
-        if record.save
-          scope = get_scope(params[:scope] || "detailed", params)
-          record = scope.find(record.id)
-          render json: { success: true, data: record }, status: :created, location: record
-        else
-          render json: { success: false, errors: record.errors }, status: :unprocessable_entity
+      if record.save
+        scope = get_scope(params[:scope] || "detailed", params)
+        record = scope.find(record.id)
+        render json: { success: true, data: record }, status: :created, location: record
+      else
+        render json: { success: false, errors: record.errors }, status: :unprocessable_entity
+      end
+    rescue StandardError => e
+      logger.warn e.to_s
+      logger.warn e.backtrace.join("\n")
+      render json: { success: false, errors: e.to_s }, status: :internal_server_error
+    end
+
+    def update
+      permitted_params = params.permit([ :name, :email, :origin_id, :location_id, :two_factor, :active, role_ids: [] ])
+
+      @record = Grit::Core::User.find(params[:id])
+
+      if permitted_params[:role_ids]
+        @record.user_roles.each do |user_role|
+          user_role.destroy unless permitted_params[:role_ids].include?(user_role.role_id)
         end
-      rescue StandardError => e
-        logger.warn e.to_s
-        logger.warn e.backtrace.join("\n")
-        render json: { success: false, errors: e.to_s }, status: :internal_server_error
+        permitted_params[:role_ids].each do |role_id|
+          @record.user_roles << Grit::Core::UserRole.new(role_id: role_id, user_id: @record.id)
+        end
+        @record.save!
       end
 
-      def update
-        permitted_params = params.permit([ :name, :email, :origin_id, :location_id, :two_factor, :active, role_ids: [] ])
+      if @record.update(permitted_params)
+        scope = get_scope(params[:scope] || "detailed", params)
+        @record = scope.find(params[:id])
+        render json: { success: true, data: @record }
+      else
+        render json: { success: false, errors: @record.errors }, status: :unprocessable_entity
+      end
+    rescue StandardError => e
+      logger.warn e.to_s
+      logger.warn e.backtrace.join("\n")
+      render json: { success: false, errors: e.to_s }, status: :internal_server_error
+    end
 
-        @record = Grit::Core::User.find(params[:id])
+    def activate
+      @user = Grit::Core::User.find_by(activation_token: params[:activation_token])
 
-        if permitted_params[:role_ids]
-          @record.user_roles.each do |user_role|
-            user_role.destroy unless permitted_params[:role_ids].include?(user_role.role_id)
-          end
-          permitted_params[:role_ids].each do |role_id|
-            @record.user_roles << Grit::Core::UserRole.new(role_id: role_id, user_id: @record.id)
-          end
-          @record.save!
-        end
+      raise "This token does not exist" unless @user
+      raise "Password and password confirmation do not match" if params[:password] != params[:password_confirmation]
 
-        if @record.update(permitted_params)
-          scope = get_scope(params[:scope] || "detailed", params)
-          @record = scope.find(params[:id])
-          render json: { success: true, data: @record }
-        else
-          render json: { success: false, errors: @record.errors }, status: :unprocessable_entity
-        end
-      rescue StandardError => e
-        logger.warn e.to_s
-        logger.warn e.backtrace.join("\n")
-        render json: { success: false, errors: e.to_s }, status: :internal_server_error
+      params[:login] = @user.login unless params[:login]
+
+      @user.update(
+        password: params[:password],
+        password_confirmation: params[:password_confirmation],
+        activation_token: nil,
+        active: true
+      )
+
+      Grit::Core::UserSession.create(@user)
+      render json: { success: true }
+    rescue StandardError => e
+      logger.warn e.to_s
+      logger.warn e.backtrace.join("\n")
+      render json: { success: false, errors: e.to_s }, status: :internal_server_error
+    end
+
+    def request_password_reset
+      if params[:user].nil? || !params[:user].is_a?(String)
+        render json: { success: false, errors: "No user specified" }, status: :bad_request
+        return
       end
 
-      def activate
-        @user = Grit::Core::User.find_by(activation_token: params[:activation_token])
+      @user = Grit::Core::User.find_by(login: params[:user]&.downcase)
+      @user = Grit::Core::User.find_by(email: params[:user]&.downcase)
 
-        raise "This token does not exist" unless @user
-        raise "Password and password confirmation do not match" if params[:password] != params[:password_confirmation]
+      if @user.nil?
+        render json: { success: false, errors: "No user found" }, status: :not_found
+        return
+      end
 
-        params[:login] = @user.login unless params[:login]
-
+      if @user
         @user.update(
-          password: params[:password],
-          password_confirmation: params[:password_confirmation],
-          activation_token: nil,
-          active: true
+          forgot_token: SecureRandom.urlsafe_base64(20)
         )
-
-        Grit::Core::UserSession.create(@user)
-        render json: { success: true }
-      rescue StandardError => e
-        logger.warn e.to_s
-        logger.warn e.backtrace.join("\n")
-        render json: { success: false, errors: e.to_s }, status: :internal_server_error
       end
 
-      def request_password_reset
-        if params[:user].nil? || !params[:user].is_a?(String)
-          render json: { success: false, errors: "No user specified" }, status: :bad_request
-          return
-        end
+      Grit::Core::Mailer.deliver_password_reset(@user).deliver_now
+      render json: { success: true }
+    rescue StandardError => e
+      logger.warn e.to_s
+      logger.warn e.backtrace.join("\n")
+      render json: { success: false, errors: e.to_s }, status: :internal_server_error
+    end
 
-        @user = Grit::Core::User.find_by(login: params[:user]&.downcase)
-        @user = Grit::Core::User.find_by(email: params[:user]&.downcase)
+    def password_reset
+      raise "No token specified" if params[:forgot_token].nil?
 
-        if @user.nil?
-          render json: { success: false, errors: "No user found" }, status: :not_found
-          return
-        end
+      @user = Grit::Core::User.find_by(forgot_token: params[:forgot_token])
 
-        if @user
-          @user.update(
-            forgot_token: SecureRandom.urlsafe_base64(20)
-          )
-        end
+      raise "This token does not exist" unless @user
+      raise "Password and password confirmation do not match" if params[:password] != params[:password_confirmation]
 
-        Grit::Core::Mailer.deliver_password_reset(@user).deliver_now
-        render json: { success: true }
-      rescue StandardError => e
-        logger.warn e.to_s
-        logger.warn e.backtrace.join("\n")
-        render json: { success: false, errors: e.to_s }, status: :internal_server_error
+      params[:login] = @user.login unless params[:login]
+
+      @user.update(
+        password: params[:password],
+        password_confirmation: params[:password_confirmation],
+        forgot_token: nil,
+        active: true
+      )
+
+      Grit::Core::UserSession.create(@user)
+      render json: { success: true }
+    rescue StandardError => e
+      logger.warn e.to_s
+      logger.warn e.backtrace.join("\n")
+      render json: { success: false, errors: e.to_s }, status: :internal_server_error
+    end
+
+    def update_password
+      user = Grit::Core::User.current
+      unless user.valid_password?(params[:old_password])
+        render json: { success: false, errors: { old_password: [ "Wrong password" ] } }, status: :unauthorized
+        return
       end
+      user.password = params[:password]
+      user.password_confirmation = params[:password_confirmation]
 
-      def password_reset
-        raise "No token specified" if params[:forgot_token].nil?
-
-        @user = Grit::Core::User.find_by(forgot_token: params[:forgot_token])
-
-        raise "This token does not exist" unless @user
-        raise "Password and password confirmation do not match" if params[:password] != params[:password_confirmation]
-
-        params[:login] = @user.login unless params[:login]
-
-        @user.update(
-          password: params[:password],
-          password_confirmation: params[:password_confirmation],
-          forgot_token: nil,
-          active: true
-        )
-
-        Grit::Core::UserSession.create(@user)
+      if user.save
         render json: { success: true }
-      rescue StandardError => e
-        logger.warn e.to_s
-        logger.warn e.backtrace.join("\n")
-        render json: { success: false, errors: e.to_s }, status: :internal_server_error
+      else
+      render json: { success: false, errors: user.errors }, status: :unprocessable_entity
       end
+    rescue StandardError => e
+      logger.warn e.to_s
+      logger.warn e.backtrace.join("\n")
+      render json: { success: false, errors: e.to_s }, status: :internal_server_error
+    end
 
-      def update_password
-        user = Grit::Core::User.current
-        unless user.valid_password?(params[:old_password])
-          render json: { success: false, errors: { old_password: [ "Wrong password" ] } }, status: :unauthorized
-          return
-        end
-        user.password = params[:password]
-        user.password_confirmation = params[:password_confirmation]
+    def update_settings
+      user = Grit::Core::User.current
+      user.settings = params[:settings]
+      user.save!
 
-        if user.save
-          render json: { success: true }
-        else
+      render json: { success: true }
+    rescue StandardError => e
+      logger.warn e.to_s
+      logger.warn e.backtrace.join("\n")
+      render json: { success: false, errors: e.to_s }, status: :internal_server_error
+    end
+
+    def update_info
+      user = Grit::Core::User.current
+
+      if user.update(params.permit([ :name ]))
+        render json: { success: true }
+      else
         render json: { success: false, errors: user.errors }, status: :unprocessable_entity
-        end
-      rescue StandardError => e
-        logger.warn e.to_s
-        logger.warn e.backtrace.join("\n")
-        render json: { success: false, errors: e.to_s }, status: :internal_server_error
       end
+    rescue StandardError => e
+      logger.warn e.to_s
+      logger.warn e.backtrace.join("\n")
+      render json: { success: false, errors: e.to_s }, status: :internal_server_error
+    end
 
-      def update_settings
-        user = Grit::Core::User.current
-        user.settings = params[:settings]
-        user.save!
+    def generate_api_token
+      @user = Grit::Core::User.current
 
-        render json: { success: true }
-      rescue StandardError => e
-        logger.warn e.to_s
-        logger.warn e.backtrace.join("\n")
-        render json: { success: false, errors: e.to_s }, status: :internal_server_error
-      end
+      @user.reset_single_access_token
+      @user.save!
 
-      def update_info
-        user = Grit::Core::User.current
+      render json: { success: true, data: { token: @user.single_access_token } }
+    rescue StandardError => e
+      logger.warn e.to_s
+      logger.warn e.backtrace.join("\n")
+      render json: { success: false, msg: e.to_s }, status: :internal_server_error
+    end
 
-        if user.update(params.permit([ :name ]))
-          render json: { success: true }
-        else
-          render json: { success: false, errors: user.errors }, status: :unprocessable_entity
-        end
-      rescue StandardError => e
-        logger.warn e.to_s
-        logger.warn e.backtrace.join("\n")
-        render json: { success: false, errors: e.to_s }, status: :internal_server_error
-      end
+    def revoke_api_token
+      @user = Grit::Core::User.current
+
+      @user.update(
+        single_access_token: nil
+      )
+
+      render json: { success: true }
+    rescue StandardError => e
+      logger.warn e.to_s
+      logger.warn e.backtrace.join("\n")
+      render json: { success: false, msg: e.to_s }, status: :internal_server_error
+    end
+
+    def hello_world_api
+      render json: { success: true, msg: "Hello" }
+    end
+
+    private
+
+    def single_access_allowed?
+      action_name == "hello_world_api"
+    end
   end
 end

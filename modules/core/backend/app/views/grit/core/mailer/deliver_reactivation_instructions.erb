@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta content='text/html; charset=UTF-8' http-equiv='Content-Type' />
+    </head>
+    <body>
+        <p>Your account has been disabled because the allowed maximum number of consecutive failed login attemps was exceded.</p>
+
+        <p>Follow the link below to reactivate your account.</p>
+
+        <p><a href='<%= @server_url %>/app/core/activate/<%= @token%>'>Reactivate my account</a></p>
+
+        <p>If the above link does not work try copying and pasting it into your browser.</p>
+    </body>
+</html>
