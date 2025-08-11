@@ -198,6 +198,7 @@ module Grit::Core
       @user = Grit::Core::User.current
 
       @user.reset_single_access_token
+      @user.save!
 
       render json: { success: true, data: { token: @user.single_access_token } }
     rescue StandardError => e
