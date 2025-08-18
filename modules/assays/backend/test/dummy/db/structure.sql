@@ -380,6 +380,22 @@ CREATE TABLE public.grit_assays_assays (
 
 
 --
+-- Name: grit_assays_data_table_columns; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.grit_assays_data_table_columns (
+    id bigint DEFAULT nextval('public.grit_seq'::regclass) NOT NULL,
+    created_by character varying(30) DEFAULT 'SYSTEM'::character varying NOT NULL,
+    created_at timestamp(6) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_by character varying(30),
+    updated_at timestamp(6) without time zone,
+    data_table_id bigint NOT NULL,
+    data_sheet_column_id bigint NOT NULL,
+    meta jsonb DEFAULT '{}'::jsonb
+);
+
+
+--
 -- Name: grit_assays_data_table_entities; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -897,6 +913,14 @@ ALTER TABLE ONLY public.grit_assays_assays
 
 
 --
+-- Name: grit_assays_data_table_columns grit_assays_data_table_columns_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.grit_assays_data_table_columns
+    ADD CONSTRAINT grit_assays_data_table_columns_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: grit_assays_data_table_entities grit_assays_data_table_entities_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1349,6 +1373,20 @@ CREATE INDEX index_grit_assays_assays_on_publication_status_id ON public.grit_as
 
 
 --
+-- Name: index_grit_assays_data_table_columns_on_data_sheet_column_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_grit_assays_data_table_columns_on_data_sheet_column_id ON public.grit_assays_data_table_columns USING btree (data_sheet_column_id);
+
+
+--
+-- Name: index_grit_assays_data_table_columns_on_data_table_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_grit_assays_data_table_columns_on_data_table_id ON public.grit_assays_data_table_columns USING btree (data_table_id);
+
+
+--
 -- Name: index_grit_assays_data_table_entities_on_data_table_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1636,6 +1674,13 @@ CREATE TRIGGER manage_stamps_grit_assays_assays BEFORE INSERT OR UPDATE ON publi
 
 
 --
+-- Name: grit_assays_data_table_columns manage_stamps_grit_assays_data_table_columns; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER manage_stamps_grit_assays_data_table_columns BEFORE INSERT OR UPDATE ON public.grit_assays_data_table_columns FOR EACH ROW EXECUTE FUNCTION public.manage_stamps();
+
+
+--
 -- Name: grit_assays_data_table_entities manage_stamps_grit_assays_data_table_entities; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -1908,19 +1953,35 @@ ALTER TABLE ONLY public.grit_assays_assays
 
 
 --
+-- Name: grit_assays_data_table_columns assays_data_table_entities_assays_assay_data_sheet_column_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.grit_assays_data_table_columns
+    ADD CONSTRAINT assays_data_table_entities_assays_assay_data_sheet_column_id_fk FOREIGN KEY (data_sheet_column_id) REFERENCES public.grit_assays_assay_data_sheet_columns(id);
+
+
+--
+-- Name: grit_assays_data_table_entities assays_data_table_entities_assays_data_table_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.grit_assays_data_table_entities
+    ADD CONSTRAINT assays_data_table_entities_assays_data_table_id_fkey FOREIGN KEY (data_table_id) REFERENCES public.grit_assays_data_tables(id);
+
+
+--
+-- Name: grit_assays_data_table_columns assays_data_table_entities_assays_data_table_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.grit_assays_data_table_columns
+    ADD CONSTRAINT assays_data_table_entities_assays_data_table_id_fkey FOREIGN KEY (data_table_id) REFERENCES public.grit_assays_data_tables(id);
+
+
+--
 -- Name: grit_assays_data_tables assays_data_tables_core_data_type_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.grit_assays_data_tables
     ADD CONSTRAINT assays_data_tables_core_data_type_id_fkey FOREIGN KEY (entity_data_type_id) REFERENCES public.grit_core_data_types(id);
-
-
---
--- Name: grit_assays_data_table_entities assays_data_tables_core_data_type_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.grit_assays_data_table_entities
-    ADD CONSTRAINT assays_data_tables_core_data_type_id_fkey FOREIGN KEY (data_table_id) REFERENCES public.grit_core_data_types(id);
 
 
 --
@@ -2146,6 +2207,7 @@ ALTER TABLE ONLY public.grit_assays_assays
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20250818115347'),
 ('20250818113922'),
 ('20250818111536'),
 ('20250625074209'),

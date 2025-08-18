@@ -6,7 +6,7 @@ class CreateGritAssaysDataTableEntities < ActiveRecord::Migration[7.2]
       t.datetime :created_at, null: false, default: -> { 'CURRENT_TIMESTAMP' }
       t.string :updated_by, limit: 30
       t.datetime :updated_at
-      t.references :data_table, null: false, foreign_key: { name: "assays_data_tables_core_data_type_id_fkey", to_table: "grit_core_data_types" }
+      t.references :data_table, null: false, foreign_key: { name: "assays_data_table_entities_assays_data_table_id_fkey", to_table: "grit_assays_data_tables" }
       t.bigint :entity_id, null: false
     end
 

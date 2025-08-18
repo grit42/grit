@@ -1,4 +1,5 @@
 Grit::Assays::Engine.routes.draw do
+  resources :data_table_columns
   resources :data_table_entities
   resources :data_tables
   resources :experiment_data_sheet_values
