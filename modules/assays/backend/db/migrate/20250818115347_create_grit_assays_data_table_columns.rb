@@ -7,8 +7,9 @@ class CreateGritAssaysDataTableColumns < ActiveRecord::Migration[7.2]
       t.string :updated_by, limit: 30
       t.datetime :updated_at
       t.references :data_table, null: false, foreign_key: { name: "assays_data_table_entities_assays_data_table_id_fkey", to_table: "grit_assays_data_tables" }
-      t.references :data_sheet_column, null: false, foreign_key: { name: "assays_data_table_entities_assays_assay_data_sheet_column_id_fkey", to_table: "grit_assays_assay_data_sheet_columns" }
+      t.references :assay_data_sheet_column, null: false, foreign_key: { name: "assays_data_table_entities_assays_assay_data_sheet_column_id_fkey", to_table: "grit_assays_assay_data_sheet_columns" }
       t.jsonb :meta, default: {}
+      t.integer :sort
     end
 
     execute "CREATE TRIGGER manage_stamps_grit_assays_data_table_columns BEFORE INSERT OR UPDATE ON public.grit_assays_data_table_columns FOR EACH ROW EXECUTE FUNCTION public.manage_stamps();"

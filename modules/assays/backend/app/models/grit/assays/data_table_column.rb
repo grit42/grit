@@ -18,5 +18,6 @@
 
 module Grit::Assays
   class DataTableColumn < ApplicationRecord
+    belongs_to :assay_data_sheet_column
   end
 end

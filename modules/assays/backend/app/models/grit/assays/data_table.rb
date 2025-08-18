@@ -20,6 +20,8 @@ module Grit::Assays
   class DataTable < ApplicationRecord
     include Grit::Core::GritEntityRecord
 
+    belongs_to :entity_data_type, class_name: "Grit::Core::DataType"
+
     display_column "name"
 
     entity_crud_with read: [],

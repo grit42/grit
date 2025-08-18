@@ -390,8 +390,9 @@ CREATE TABLE public.grit_assays_data_table_columns (
     updated_by character varying(30),
     updated_at timestamp(6) without time zone,
     data_table_id bigint NOT NULL,
-    data_sheet_column_id bigint NOT NULL,
-    meta jsonb DEFAULT '{}'::jsonb
+    assay_data_sheet_column_id bigint NOT NULL,
+    meta jsonb DEFAULT '{}'::jsonb,
+    sort integer
 );
 
 
@@ -1149,6 +1150,13 @@ CREATE INDEX idx_on_assay_data_sheet_column_id_afe0d153c1 ON public.grit_assays_
 
 
 --
+-- Name: idx_on_assay_data_sheet_column_id_c4cb5d8972; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_on_assay_data_sheet_column_id_c4cb5d8972 ON public.grit_assays_data_table_columns USING btree (assay_data_sheet_column_id);
+
+
+--
 -- Name: idx_on_assay_data_sheet_definition_id_438432fccb; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1370,13 +1378,6 @@ CREATE UNIQUE INDEX index_grit_assays_assays_on_name ON public.grit_assays_assay
 --
 
 CREATE INDEX index_grit_assays_assays_on_publication_status_id ON public.grit_assays_assays USING btree (publication_status_id);
-
-
---
--- Name: index_grit_assays_data_table_columns_on_data_sheet_column_id; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX index_grit_assays_data_table_columns_on_data_sheet_column_id ON public.grit_assays_data_table_columns USING btree (data_sheet_column_id);
 
 
 --
@@ -1957,7 +1958,7 @@ ALTER TABLE ONLY public.grit_assays_assays
 --
 
 ALTER TABLE ONLY public.grit_assays_data_table_columns
-    ADD CONSTRAINT assays_data_table_entities_assays_assay_data_sheet_column_id_fk FOREIGN KEY (data_sheet_column_id) REFERENCES public.grit_assays_assay_data_sheet_columns(id);
+    ADD CONSTRAINT assays_data_table_entities_assays_assay_data_sheet_column_id_fk FOREIGN KEY (assay_data_sheet_column_id) REFERENCES public.grit_assays_assay_data_sheet_columns(id);
 
 
 --
