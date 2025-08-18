@@ -1,6 +1,7 @@
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
+SET transaction_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SELECT pg_catalog.set_config('search_path', '', false);
@@ -375,6 +376,37 @@ CREATE TABLE public.grit_assays_assays (
     description text,
     assay_model_id bigint NOT NULL,
     publication_status_id bigint DEFAULT 10000 NOT NULL
+);
+
+
+--
+-- Name: grit_assays_data_table_entities; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.grit_assays_data_table_entities (
+    id bigint DEFAULT nextval('public.grit_seq'::regclass) NOT NULL,
+    created_by character varying(30) DEFAULT 'SYSTEM'::character varying NOT NULL,
+    created_at timestamp(6) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_by character varying(30),
+    updated_at timestamp(6) without time zone,
+    data_table_id bigint NOT NULL,
+    entity_id bigint NOT NULL
+);
+
+
+--
+-- Name: grit_assays_data_tables; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.grit_assays_data_tables (
+    id bigint DEFAULT nextval('public.grit_seq'::regclass) NOT NULL,
+    created_by character varying(30) DEFAULT 'SYSTEM'::character varying NOT NULL,
+    created_at timestamp(6) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_by character varying(30),
+    updated_at timestamp(6) without time zone,
+    name character varying NOT NULL,
+    description text,
+    entity_data_type_id bigint NOT NULL
 );
 
 
@@ -865,6 +897,22 @@ ALTER TABLE ONLY public.grit_assays_assays
 
 
 --
+-- Name: grit_assays_data_table_entities grit_assays_data_table_entities_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.grit_assays_data_table_entities
+    ADD CONSTRAINT grit_assays_data_table_entities_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: grit_assays_data_tables grit_assays_data_tables_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.grit_assays_data_tables
+    ADD CONSTRAINT grit_assays_data_tables_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: grit_assays_experiment_data_sheet_record_load_sets grit_assays_experiment_data_sheet_record_load_sets_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1301,6 +1349,27 @@ CREATE INDEX index_grit_assays_assays_on_publication_status_id ON public.grit_as
 
 
 --
+-- Name: index_grit_assays_data_table_entities_on_data_table_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_grit_assays_data_table_entities_on_data_table_id ON public.grit_assays_data_table_entities USING btree (data_table_id);
+
+
+--
+-- Name: index_grit_assays_data_tables_on_entity_data_type_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_grit_assays_data_tables_on_entity_data_type_id ON public.grit_assays_data_tables USING btree (entity_data_type_id);
+
+
+--
+-- Name: index_grit_assays_data_tables_on_name; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_grit_assays_data_tables_on_name ON public.grit_assays_data_tables USING btree (name);
+
+
+--
 -- Name: index_grit_assays_experiment_data_sheets_on_experiment_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1567,6 +1636,20 @@ CREATE TRIGGER manage_stamps_grit_assays_assays BEFORE INSERT OR UPDATE ON publi
 
 
 --
+-- Name: grit_assays_data_table_entities manage_stamps_grit_assays_data_table_entities; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER manage_stamps_grit_assays_data_table_entities BEFORE INSERT OR UPDATE ON public.grit_assays_data_table_entities FOR EACH ROW EXECUTE FUNCTION public.manage_stamps();
+
+
+--
+-- Name: grit_assays_data_tables manage_stamps_grit_assays_data_tables; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER manage_stamps_grit_assays_data_tables BEFORE INSERT OR UPDATE ON public.grit_assays_data_tables FOR EACH ROW EXECUTE FUNCTION public.manage_stamps();
+
+
+--
 -- Name: grit_assays_experiment_data_sheet_record_load_sets manage_stamps_grit_assays_experiment_data_sheet_record_load_set; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -1825,6 +1908,22 @@ ALTER TABLE ONLY public.grit_assays_assays
 
 
 --
+-- Name: grit_assays_data_tables assays_data_tables_core_data_type_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.grit_assays_data_tables
+    ADD CONSTRAINT assays_data_tables_core_data_type_id_fkey FOREIGN KEY (entity_data_type_id) REFERENCES public.grit_core_data_types(id);
+
+
+--
+-- Name: grit_assays_data_table_entities assays_data_tables_core_data_type_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.grit_assays_data_table_entities
+    ADD CONSTRAINT assays_data_tables_core_data_type_id_fkey FOREIGN KEY (data_table_id) REFERENCES public.grit_core_data_types(id);
+
+
+--
 -- Name: grit_assays_experiment_data_sheet_record_load_sets assays_experiment_data_sheet_record_load_sets_core_load_set_id_; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2047,6 +2146,8 @@ ALTER TABLE ONLY public.grit_assays_assays
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20250818113922'),
+('20250818111536'),
 ('20250625074209'),
 ('20250624115056'),
 ('20250624081122'),
