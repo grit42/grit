@@ -2,15 +2,16 @@ module Grit::Assays
   class DataTableRow < ApplicationRecord
     include Grit::Core::GritEntityRecord
 
+    entity_crud_with read: []
+
     def self.entity_properties(**args)
       data_table_id = args[:data_table_id]
       data_table = DataTable.find(data_table_id)
       data_table_data_type_model = data_table.entity_data_type.model
 
       [
-        { name: "id", display_name: "Id", type: "integer", required: true },
-        *data_table_data_type_model.display_properties,
-        DataTableColumn.where(data_table_id: data_table_id).order("sort ASC NULLS LAST").map do |table_colum|
+        { name: "id", display_name: data_table.entity_data_type.name, type: "entity", required: true, entity: data_table.entity_data_type.entity_definition },
+        *DataTableColumn.where(data_table_id: data_table_id).order("sort ASC NULLS LAST").map do |table_colum|
           property = {
             name: table_colum.assay_data_sheet_column.safe_name,
             display_name: table_colum.assay_data_sheet_column.name,
@@ -39,7 +40,7 @@ module Grit::Assays
       # query = data_table.data_type.model.unscoped.from(data_table.data_type.table_name, "targets").joins("JOIN grit_assays_data_table_entities ON grit_assays_data_table_entities.entity_id = #{data_table.data_type.table_name}.id AND grit_assays_data_table_entities.data_table_id = #{data_table_id}")
       # query = data_table.data_type.model.unscoped.joins("JOIN grit_assays_data_table_entities ON grit_assays_data_table_entities.entity_id = #{data_table.data_type.table_name}.id").where("grit_assays_data_table_entities.data_table_id" => data_table_id)
 
-      query = query.select("targets.id as id", "targets.name as name")
+      query = query.select("targets.id as id", "targets.name as id__name")
 
       DataTableColumn.where(data_table_id: data_table_id).order("sort ASC NULLS LAST").all.each do |table_colum|
         join = <<-SQL
@@ -72,7 +73,7 @@ LEFT OUTER JOIN (
 
     def self.detailed(params = nil)
       params = params.as_json
-      return self.for_data_table(sheet.assay_data_sheet_definition_id, sheet.id) unless params["data_table_id"].nil?
+      return self.for_data_table(params["data_table_id"]) unless params["data_table_id"].nil?
       raise "'data_table_id' is required"
     end
   end
