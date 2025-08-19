@@ -1,17 +1,12 @@
-import { Tabs } from "@grit42/client-library/components";
-import { useState } from "react";
-import styles from "./vocabulary.module.scss"
-import VocabularyLoadSets from "./VocabularyLoadSets";
-import VocabularyItemsTable from "./VocabularyItemsTable";
+import DataTableRowsTable from "./DataTableRowsTable";
 
 interface Props {
-  vocabularyId: string | number;
+  dataTableId: string | number;
 }
 
-const VocabularyTabs = ({ vocabularyId }: Props) => {
-  const [selectedTab, setSelectedTab] = useState(0);
+const DataTableTabs = ({ dataTableId }: Props) => {
 
-  if (vocabularyId === "new") return null;
+  if (dataTableId === "new") return null;
 
   return (
     <div
@@ -22,10 +17,11 @@ const VocabularyTabs = ({ vocabularyId }: Props) => {
         width: "100%",
       }}
     >
-      <Tabs
+      <DataTableRowsTable dataTableId={dataTableId} />
+      {/* <Tabs
         selectedTab={selectedTab}
         onTabChange={setSelectedTab}
-        className={styles.vocabularyTabs}
+        className={styles.dataTableTabs}
         tabs={[
           {
             key: "items",
@@ -35,7 +31,7 @@ const VocabularyTabs = ({ vocabularyId }: Props) => {
                 overflowY: "auto",
               },
             },
-            panel: <VocabularyItemsTable vocabularyId={vocabularyId} />,
+            panel: <DataTableRowsTable vocabularyId={vocabularyId} />,
           },
           {
             key: "load_sets",
@@ -48,9 +44,9 @@ const VocabularyTabs = ({ vocabularyId }: Props) => {
             panel: <VocabularyLoadSets vocabularyId={vocabularyId} />,
           },
         ]}
-      />
+      /> */}
     </div>
   );
 };
 
-export default VocabularyTabs;
+export default DataTableTabs;

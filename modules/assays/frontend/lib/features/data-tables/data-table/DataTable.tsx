@@ -16,33 +16,33 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import styles from "./vocabulary.module.scss";
+import styles from "./dataTable.module.scss";
 import { Outlet } from "react-router-dom";
 import {
   useDataTable,
   useDataTableFields,
 } from "../queries/data_tables";
 import { useHasRoles } from "@grit42/core";
-import VocabularyForm from "./VocabularyForm";
+import DataTableForm from "./DataTableForm";
 
 interface Props {
-  vocabularyId: string | number;
+  dataTableId: string | number;
 }
 
-const Vocabulary = ({ vocabularyId }: Props) => {
-  const canEditVocabularies = useHasRoles(["Administrator", "VocabularyAdministrator"])
-  const { data: vocabulary } = useDataTable(vocabularyId);
-  const { data: vocabularyFields } = useDataTableFields(undefined, {
+const DataTable = ({ dataTableId }: Props) => {
+  const canEditDataTables = useHasRoles(["Administrator", "AssayAdministrator", "AssayUser"])
+  const { data: dataTable } = useDataTable(dataTableId);
+  const { data: dataTableFields } = useDataTableFields(undefined, {
     select: (data) =>
-      canEditVocabularies ? data : data.map((f) => ({ ...f, disabled: true })),
+      canEditDataTables ? data : data.map((f) => ({ ...f, disabled: true })),
   });
 
   return (
-    <div className={styles.vocabulary}>
-      <VocabularyForm fields={vocabularyFields!} vocabulary={vocabulary!} />
+    <div className={styles.dataTable}>
+      <DataTableForm fields={dataTableFields!} dataTable={dataTable!} />
       <Outlet />
     </div>
   );
 };
 
-export default Vocabulary;
+export default DataTable;

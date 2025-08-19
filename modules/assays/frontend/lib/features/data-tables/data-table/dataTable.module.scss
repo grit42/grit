@@ -1,4 +1,4 @@
-.vocabulary {
+.dataTable {
   width: 100%;
   max-width: 100%;
   height: 100%;
@@ -9,7 +9,7 @@
   grid-template-columns: 480px auto;
 }
 
-.vocabularyTabs {
+.dataTableTabs {
   display: grid;
   grid-template-rows: min-content 1fr;
   max-height: 100%;

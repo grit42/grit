@@ -20,36 +20,28 @@ import { ErrorPage, Spinner } from "@grit42/client-library/components";
 import {
   useDataTableRowColumns,
   useDataTableRows,
-} from "../queries/vocabulary_items";
+} from "../queries/data_table_rows";
 import { Route, Routes, useParams } from "react-router-dom";
-import Vocabulary from "./Vocabulary";
+import DataTable from "./DataTable";
 import { useDataTable, useDataTableFields } from "../queries/data_tables";
-import VocabularyTabs from "./VocabularyItems";
-import { useHasRoles } from "@grit42/core";
-// import VocabularyItem from "./VocabularyItem";
-import VocabularyItemsTable from "./VocabularyItemsTable";
+import DataTableRowsTable from "./DataTableRowsTable";
 
-const VocabularyPage = () => {
+const DataTablePage = () => {
   const { data_table_id } = useParams() as { data_table_id: string };
-  const canEditVocabularies = useHasRoles([
-    "Administrator",
-    "VocabularyAdministrator",
-  ]);
-
   const {
-    isLoading: isVocabularyLoading,
-    isError: isVocabularyError,
-    error: vocabularyError,
+    isLoading: isDataTableLoading,
+    isError: isDataTableError,
+    error: dataTableError,
   } = useDataTable(data_table_id);
   const {
-    isLoading: isVocabularyFieldsLoading,
-    isError: isVocabularyFieldsError,
-    error: vocabularyFieldsError,
+    isLoading: isDataTableFieldsLoading,
+    isError: isDataTableFieldsError,
+    error: dataTableFieldsError,
   } = useDataTableFields();
   const {
-    isLoading: isItemsLoading,
-    isError: isItemsError,
-    error: itemsError,
+    isLoading: isRowsLoading,
+    isError: isRowsError,
+    error: rowsError,
   } = useDataTableRows(data_table_id, undefined, undefined, undefined, {
     enabled: data_table_id !== "new",
   });
@@ -60,23 +52,23 @@ const VocabularyPage = () => {
   } = useDataTableRowColumns({ data_table_id });
 
   if (
-    isItemsLoading ||
+    isRowsLoading ||
     isColumnsLoading ||
-    isVocabularyLoading ||
-    isVocabularyFieldsLoading
+    isDataTableLoading ||
+    isDataTableFieldsLoading
   )
     return <Spinner />;
 
   if (
-    isItemsError ||
+    isRowsError ||
     isColumnsError ||
-    isVocabularyError ||
-    isVocabularyFieldsError
+    isDataTableError ||
+    isDataTableFieldsError
   ) {
     return (
       <ErrorPage
         error={
-          itemsError ?? columnsError ?? vocabularyError ?? vocabularyFieldsError
+          rowsError ?? columnsError ?? dataTableError ?? dataTableFieldsError
         }
       />
     );
@@ -84,21 +76,16 @@ const VocabularyPage = () => {
 
   return (
     <Routes>
-      <Route element={<Vocabulary vocabularyId={data_table_id} />}>
+      <Route element={<DataTable dataTableId={data_table_id} />}>
         <Route
           index
           element={
-            canEditVocabularies ? (
-              <VocabularyTabs vocabularyId={data_table_id} />
-            ) : (
-              <VocabularyItemsTable vocabularyId={data_table_id} />
-            )
+            <DataTableRowsTable dataTableId={data_table_id} />
           }
         />
-        {/* <Route path="/:vocabulary_item_id" element={<VocabularyItem />} /> */}
       </Route>
     </Routes>
   );
 };
 
-export default VocabularyPage;
+export default DataTablePage;

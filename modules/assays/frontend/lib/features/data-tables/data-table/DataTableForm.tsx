@@ -37,32 +37,33 @@ import {
 } from "@grit42/core";
 import { useQueryClient } from "@grit42/api";
 
-const VocabularyForm = ({
+const DataTableForm = ({
   fields,
-  vocabulary,
+  dataTable: dataTable,
 }: {
   fields: FormFieldDef[];
-  vocabulary: Partial<DataTableData>;
+  dataTable: Partial<DataTableData>;
 }) => {
   const navigate = useNavigate();
-  const canEditVocabularies = useHasRoles([
+  const canEditDataTable = useHasRoles([
     "Administrator",
-    "VocabularyAdministrator",
+    "AssayAdministrator",
+    "AssayUser",
   ]);
   const queryClient = useQueryClient();
-  const [formData, setFormData] = useState<Partial<DataTableData>>(vocabulary);
+  const [formData, setFormData] = useState<Partial<DataTableData>>(dataTable);
 
   const createEntityMutation = useCreateEntityMutation<DataTableData>(
-    "grit/core/vocabularies",
+    "grit/assays/data_tables",
   );
 
   const editEntityMutation = useEditEntityMutation<DataTableData>(
-    "grit/core/vocabularies",
-    vocabulary.id ?? -1,
+    "grit/assays/data_tables",
+    dataTable.id ?? -1,
   );
 
   const destroyEntityMutation = useDestroyEntityMutation(
-    "grit/core/vocabularies",
+    "grit/assays/data_tables",
   );
 
   const form = useForm<Partial<DataTableData>>({
@@ -72,7 +73,7 @@ const VocabularyForm = ({
         formValue,
         fields,
       );
-      if (!vocabulary.id) {
+      if (!dataTable.id) {
         const newEntity = await createEntityMutation.mutateAsync(
           value as DataTableData,
         );
@@ -80,7 +81,7 @@ const VocabularyForm = ({
           [
             "entities",
             "datum",
-            "grit/core/vocabularies",
+            "grit/assays/data_tables",
             newEntity.id.toString(),
           ],
           newEntity,
@@ -102,13 +103,13 @@ const VocabularyForm = ({
 
   const onDelete = async () => {
     if (
-      !vocabulary.id ||
+      !dataTable.id ||
       !window.confirm(
-        `Are you sure you want to delete this vocabulary? This action is irreversible`,
+        `Are you sure you want to delete this data table? This action is irreversible`,
       )
     )
       return;
-    await destroyEntityMutation.mutateAsync(vocabulary.id);
+    await destroyEntityMutation.mutateAsync(dataTable.id);
     navigate("..");
   };
 
@@ -142,7 +143,7 @@ const VocabularyForm = ({
         <FormControls
           form={form}
           onDelete={onDelete}
-          showDelete={!!vocabulary.id && canEditVocabularies}
+          showDelete={!!dataTable.id && canEditDataTable}
           showCancel
           cancelLabel="Back"
           onCancel={() => navigate("..")}
@@ -152,4 +153,4 @@ const VocabularyForm = ({
   );
 };
 
-export default VocabularyForm;
+export default DataTableForm;

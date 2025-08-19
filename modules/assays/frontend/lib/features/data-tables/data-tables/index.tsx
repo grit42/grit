@@ -21,7 +21,7 @@ import {
   useDataTables,
   useDataTableColumns,
 } from "../queries/data_tables";
-import { useDataTableRowColumns } from "../queries/vocabulary_items";
+import { useDataTableRowColumns } from "../queries/data_table_rows";
 import DataTablesTable from "./VocabulariesTable";
 
 const VocabulariesAdministrationPage = () => {
