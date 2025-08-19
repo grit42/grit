@@ -2,7 +2,7 @@ Grit::Assays::Engine.routes.draw do
   resources :data_table_columns
   resources :data_table_entities
   resources :data_tables do
-    resources :data_table_rows
+    resources_with_export :data_table_rows
   end
   resources :experiment_data_sheet_values
   resources :experiment_data_sheet_records
