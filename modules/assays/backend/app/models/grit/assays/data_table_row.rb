@@ -11,10 +11,10 @@ module Grit::Assays
 
       [
         { name: "id", display_name: data_table.entity_data_type.name, type: "entity", required: true, entity: data_table.entity_data_type.entity_definition },
-        *DataTableColumn.where(data_table_id: data_table_id).order("sort ASC NULLS LAST").map do |table_colum|
+        *DataTableColumn.pivotted.where(data_table_id: data_table_id).order("sort ASC NULLS LAST").map do |table_colum|
           property = {
-            name: table_colum.assay_data_sheet_column.safe_name,
-            display_name: table_colum.assay_data_sheet_column.name,
+            name: table_colum.full_safe_name,
+            display_name: table_colum.full_name,
             description: table_colum.assay_data_sheet_column.description,
             type: table_colum.assay_data_sheet_column.data_type.is_entity ? "entity" : table_colum.assay_data_sheet_column.data_type.name,
             required: table_colum.assay_data_sheet_column.required,
@@ -43,29 +43,7 @@ module Grit::Assays
       query = query.select("targets.id as id", "targets.name as id__name")
 
       DataTableColumn.where(data_table_id: data_table_id).order("sort ASC NULLS LAST").all.each do |table_colum|
-        join = <<-SQL
-LEFT OUTER JOIN (
-  SELECT
-    targets.entity_id_value AS target_id,
-    data_sources.assay_data_sheet_column_id AS data_source_id,
-    avg(data_sources.integer_value) AS value
-  FROM
-    grit_assays_experiment_data_sheet_values targets
-    JOIN grit_assays_experiment_data_sheet_values data_sources ON data_sources.experiment_data_sheet_record_id = targets.experiment_data_sheet_record_id
-    AND data_sources.assay_data_sheet_column_id = #{table_colum.assay_data_sheet_column_id}
-    -- JOIN grit_assays_experiment_data_sheet_records ON grit_assays_experiment_data_sheet_records.id = targets.experiment_data_sheet_record_id
-    -- JOIN grit_assays_experiment_data_sheets ON grit_assays_experiment_data_sheets.id = grit_assays_experiment_data_sheet_records.experiment_data_sheet_id
-    -- JOIN grit_assays_experiments ON grit_assays_experiments.id = grit_assays_experiment_data_sheets.experiment_id
-    -- JOIN grit_assays_assay_metadata ON grit_assays_assay_metadata.assay_id = grit_assays_experiments.assay_id
-    -- AND grit_assays_assay_metadata.vocabulary_item_id = 10303
-    -- JOIN grit_assays_assay_model_metadata ON grit_assays_assay_model_metadata.id = grit_assays_assay_metadata.assay_model_metadatum_id
-    -- AND grit_assays_assay_model_metadata.assay_metadata_definition_id = 10307
-  GROUP BY
-    target_id,
-    data_source_id
-) #{table_colum.assay_data_sheet_column.safe_name}_join ON #{table_colum.assay_data_sheet_column.safe_name}_join.target_id = targets.id
-        SQL
-        query = query.joins(join).select("#{table_colum.assay_data_sheet_column.safe_name}_join.value as #{table_colum.assay_data_sheet_column.safe_name}")
+        query = table_colum.data_table_statements(query)
       end
       query
     end
