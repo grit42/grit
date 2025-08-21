@@ -44,8 +44,8 @@ module Grit::Assays
       end
       full_name_selector = full_name_selector.join(", ") + ") as full_name"
       full_safe_name_selector = full_safe_name_selector.join(", ") +  ")), '[^a-z0-9]','_','g') as full_safe_name"
-      model_metadatum_ids_selector = "array[" + model_metadatum_ids_selector.join(", ") + "] as model_metadatum_ids"
-      vocabulary_item_ids_selector = "array[" + vocabulary_item_ids_selector.join(", ") + "] as vocabulary_item_ids"
+      model_metadatum_ids_selector = "array[" + model_metadatum_ids_selector.join(", ") + "]::bigint[] as model_metadatum_ids"
+      vocabulary_item_ids_selector = "array[" + vocabulary_item_ids_selector.join(", ") + "]::bigint[] as vocabulary_item_ids"
       query
         .select(full_name_selector)
         .select(full_safe_name_selector)
