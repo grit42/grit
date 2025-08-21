@@ -53,5 +53,13 @@ module Grit::Core
     def model
       Grit::Core::EntityMapper.table_to_model_name(self.table_name).constantize
     end
+
+    def model_scope(scope = "detailed", params = nil)
+      model = self.model
+      raise "#{model.name} does not implement scope '#{scope}'" unless model.respond_to?(scope)
+      model_scope = model.send(scope, params)
+      model_scope = model_scope.where(vocabulary_id: self.meta["vocabulary_id"]) if model == Grit::Core::VocabularyItem
+      model_scope
+    end
   end
 end

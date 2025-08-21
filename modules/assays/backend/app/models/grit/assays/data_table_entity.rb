@@ -47,11 +47,9 @@ module Grit::Assays
 
     def self.available(params = nil)
       data_type = DataTable.find(params[:data_table_id]).entity_data_type
-      model = data_type.model
-      query = model.detailed(params)
-        .joins("LEFT OUTER JOIN grit_assays_data_table_entities ON grit_assays_data_table_entities.entity_id = #{model.table_name}.id AND grit_assays_data_table_entities.data_table_id = #{params[:data_table_id]}")
+      query = data_type.model_scope("detailed", params)
+        .joins("LEFT OUTER JOIN grit_assays_data_table_entities ON grit_assays_data_table_entities.entity_id = #{data_type.table_name}.id AND grit_assays_data_table_entities.data_table_id = #{params[:data_table_id]}")
         .where("grit_assays_data_table_entities.id IS NULL")
-      query = query.where("#{model.table_name}.vocabulary_id = #{data_type.meta["vocabulary_id"]}") unless data_type.meta.nil? || data_type.meta["vocabulary_id"].nil?
       query
     end
   end
