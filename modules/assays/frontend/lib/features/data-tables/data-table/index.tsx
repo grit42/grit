@@ -21,10 +21,11 @@ import {
   useDataTableRowColumns,
   useDataTableRows,
 } from "../queries/data_table_rows";
-import { Route, Routes, useParams } from "react-router-dom";
+import { Navigate, Route, Routes, useParams } from "react-router-dom";
 import DataTable from "./DataTable";
 import { useDataTable, useDataTableFields } from "../queries/data_tables";
-import DataTableRowsTable from "./DataTableRowsTable";
+import DataTableTabs from "./DataTableTabs";
+import { useDataTableEntityColumns } from "../queries/data_table_entities";
 
 const DataTablePage = () => {
   const { data_table_id } = useParams() as { data_table_id: string };
@@ -50,12 +51,18 @@ const DataTablePage = () => {
     isError: isColumnsError,
     error: columnsError,
   } = useDataTableRowColumns({ data_table_id });
+  const {
+    isLoading: isDataTableEntityColumnsLoading,
+    isError: isDataTableEntityColumnsError,
+    error: dataTableEntityColumnsError,
+  } = useDataTableEntityColumns(data_table_id);
 
   if (
     isRowsLoading ||
     isColumnsLoading ||
     isDataTableLoading ||
-    isDataTableFieldsLoading
+    isDataTableFieldsLoading ||
+    isDataTableEntityColumnsLoading
   )
     return <Spinner />;
 
@@ -63,12 +70,13 @@ const DataTablePage = () => {
     isRowsError ||
     isColumnsError ||
     isDataTableError ||
-    isDataTableFieldsError
+    isDataTableFieldsError ||
+    isDataTableEntityColumnsError
   ) {
     return (
       <ErrorPage
         error={
-          rowsError ?? columnsError ?? dataTableError ?? dataTableFieldsError
+          rowsError ?? columnsError ?? dataTableError ?? dataTableFieldsError ?? dataTableEntityColumnsError
         }
       />
     );
@@ -78,11 +86,12 @@ const DataTablePage = () => {
     <Routes>
       <Route element={<DataTable dataTableId={data_table_id} />}>
         <Route
-          index
+          path=":tab/*"
           element={
-            <DataTableRowsTable dataTableId={data_table_id} />
+            <DataTableTabs dataTableId={data_table_id} />
           }
         />
+        <Route index element={<Navigate to="data" replace />} />
       </Route>
     </Routes>
   );

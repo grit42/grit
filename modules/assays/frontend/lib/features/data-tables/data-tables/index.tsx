@@ -22,7 +22,7 @@ import {
   useDataTableColumns,
 } from "../queries/data_tables";
 import { useDataTableRowColumns } from "../queries/data_table_rows";
-import DataTablesTable from "./VocabulariesTable";
+import DataTablesTable from "./DataTablesTable";
 
 const VocabulariesAdministrationPage = () => {
   const {

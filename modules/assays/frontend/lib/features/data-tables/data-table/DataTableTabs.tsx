@@ -1,10 +1,59 @@
+import { CSSProperties, useEffect, useMemo, useState } from "react";
+import { Tabs } from "@grit42/client-library/components";
 import DataTableRowsTable from "./DataTableRowsTable";
+import styles from "./dataTable.module.scss";
+import { useNavigate, useParams } from "react-router-dom";
+import Entities from "./entities";
 
 interface Props {
   dataTableId: string | number;
 }
 
 const DataTableTabs = ({ dataTableId }: Props) => {
+  const navigate = useNavigate();
+  const params = useParams() as { tab: string };
+
+  const tabs = useMemo(
+    () => [
+      {
+        key: "data",
+        name: "Data",
+        url: "data",
+        panelProps: {
+          style: {
+            overflowY: "auto",
+          } as CSSProperties,
+        },
+        panel: <DataTableRowsTable dataTableId={dataTableId} />,
+      },
+      {
+        key: "entities",
+        name: "Entities",
+        url: "entities",
+        panelProps: {
+          style: {
+            overflowY: "auto",
+          } as CSSProperties,
+        },
+        panel: <Entities />,
+      },
+    ],
+    [dataTableId],
+  );
+
+  const tab = params.tab ?? "data";
+
+  const [selectedTab, setSelectedTab] = useState(
+    tabs.findIndex(({ url }) => tab === url),
+  );
+
+  useEffect(() => {
+    setSelectedTab(tabs.findIndex(({ url }) => tab === url));
+  }, [tab, tabs]);
+
+  const handleTabChange = (index: number) => {
+    navigate(`../${tabs[index].url}`);
+  };
 
   if (dataTableId === "new") return null;
 
@@ -17,34 +66,12 @@ const DataTableTabs = ({ dataTableId }: Props) => {
         width: "100%",
       }}
     >
-      <DataTableRowsTable dataTableId={dataTableId} />
-      {/* <Tabs
+      <Tabs
         selectedTab={selectedTab}
-        onTabChange={setSelectedTab}
+        onTabChange={handleTabChange}
         className={styles.dataTableTabs}
-        tabs={[
-          {
-            key: "items",
-            name: "Items",
-            panelProps: {
-              style: {
-                overflowY: "auto",
-              },
-            },
-            panel: <DataTableRowsTable vocabularyId={vocabularyId} />,
-          },
-          {
-            key: "load_sets",
-            name: "Load sets",
-            panelProps: {
-              style: {
-                overflowY: "auto",
-              },
-            },
-            panel: <VocabularyLoadSets vocabularyId={vocabularyId} />,
-          },
-        ]}
-      /> */}
+        tabs={tabs}
+      />
     </div>
   );
 };
