@@ -51,17 +51,23 @@ const DataTablePage = () => {
     isLoading: isColumnsLoading,
     isError: isColumnsError,
     error: columnsError,
-  } = useDataTableRowColumns({ data_table_id });
+  } = useDataTableRowColumns({ data_table_id }, {
+    enabled: data_table_id !== "new",
+  });
   const {
     isLoading: isDataTableEntityColumnsLoading,
     isError: isDataTableEntityColumnsError,
     error: dataTableEntityColumnsError,
-  } = useDataTableEntityColumns(data_table_id);
+  } = useDataTableEntityColumns(data_table_id, undefined, {
+    enabled: data_table_id !== "new",
+  });
   const {
     isLoading: isDataTableColumnColumnsLoading,
     isError: isDataTableColumnColumnsError,
     error: dataTableColumnColumnsError,
-  } = useDataTableColumnColumns();
+  } = useDataTableColumnColumns(undefined, {
+    enabled: data_table_id !== "new",
+  });
 
   if (
     isRowsLoading ||

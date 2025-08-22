@@ -6,7 +6,7 @@
 
   display: grid;
   gap: 1rem;
-  grid-template-columns: 480px auto;
+  grid-template-columns: max-content auto;
 }
 
 .dataTableTabs {

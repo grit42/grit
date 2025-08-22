@@ -40,7 +40,7 @@ const DataTable = ({ dataTableId }: Props) => {
   return (
     <div className={styles.dataTable}>
       <DataTableForm fields={dataTableFields!} dataTable={dataTable!} />
-      <Outlet />
+      {dataTableId === "new" ? null : <Outlet />}
     </div>
   );
 };

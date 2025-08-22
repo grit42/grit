@@ -59,9 +59,10 @@ module Grit::Assays
       query = self.detailed(params)
         .joins("JOIN GRIT_ASSAYS_ASSAY_DATA_SHEET_DEFINITIONS ON GRIT_ASSAYS_ASSAY_DATA_SHEET_DEFINITIONS.ID = GRIT_ASSAYS_ASSAY_DATA_SHEET_COLUMNS__.ASSAY_DATA_SHEET_DEFINITION_ID")
         .joins("JOIN GRIT_ASSAYS_ASSAY_MODELS ON GRIT_ASSAYS_ASSAY_MODELS.ID = GRIT_ASSAYS_ASSAY_DATA_SHEET_DEFINITIONS.ASSAY_MODEL_ID")
+        .joins("LEFT OUTER JOIN GRIT_CORE_UNITS ON GRIT_CORE_UNITS.id = GRIT_ASSAYS_ASSAY_DATA_SHEET_COLUMNS__.unit_id")
 
-      full_name_selector = ["concat_ws(' ', GRIT_ASSAYS_ASSAY_DATA_SHEET_COLUMNS__.NAME"]
-      full_safe_name_selector = ["regexp_replace(lower(concat_ws('_', GRIT_ASSAYS_ASSAY_DATA_SHEET_COLUMNS__.NAME"]
+      full_name_selector = ["concat_ws('\n', concat_ws(' ', GRIT_ASSAYS_ASSAY_MODELS.name, GRIT_ASSAYS_ASSAY_DATA_SHEET_DEFINITIONS.name), concat_ws(' ', GRIT_ASSAYS_ASSAY_DATA_SHEET_COLUMNS__.NAME, (CASE WHEN GRIT_CORE_UNITS.abbreviation IS NOT NULL THEN '(' || GRIT_CORE_UNITS.abbreviation || ')' END))"]
+      full_safe_name_selector = ["regexp_replace(lower(concat_ws('_', GRIT_ASSAYS_ASSAY_MODELS.name, GRIT_ASSAYS_ASSAY_DATA_SHEET_DEFINITIONS.name, GRIT_ASSAYS_ASSAY_DATA_SHEET_COLUMNS__.NAME"]
       model_metadatum_ids_selector = []
       vocabulary_item_ids_selector = []
 
@@ -99,9 +100,9 @@ module Grit::Assays
       when "string","text","date","datetime"
         return subquery.select("STRING_AGG(data_sources.#{assay_data_sheet_column.data_type.name}_value, ',') AS value")
       when "integer","decimal"
-        return subquery.select("#{meta["aggregate_method"]}(data_sources.#{assay_data_sheet_column.data_type.name}_value) AS value")
+        return subquery.select("#{meta["aggregate_method"] || "avg"}(data_sources.#{assay_data_sheet_column.data_type.name}_value) AS value")
       when "boolean"
-        return subquery.select("#{meta["aggregate_method"]}(data_sources.boolean_value) AS value")
+        return subquery.select("#{meta["aggregate_method"] || "boolean_and"}(data_sources.boolean_value) AS value")
       else
         return subquery.select(*[
           "ARRAY_AGG(data_sources.entity_id_value) AS value",
@@ -151,8 +152,8 @@ AND GRIT_ASSAYS_ASSAY_METADATA_#{i}.ASSAY_MODEL_METADATUM_ID = #{pivotted_column
 
         if assay_data_sheet_column.data_type.is_entity
           entity_join = <<-SQL
-LEFT OUTER JOIN #{assay_data_sheet_column.data_type.table_name} #{assay_data_sheet_column.data_type.table_name}__#{pivotted_column.full_safe_name} ON
-#{assay_data_sheet_column.data_type.table_name}__#{pivotted_column.full_safe_name}.id = data_sources.entity_id_value
+LEFT OUTER JOIN #{assay_data_sheet_column.data_type.table_name} #{assay_data_sheet_column.data_type.table_name}__#{assay_data_sheet_column.safe_name} ON
+#{assay_data_sheet_column.data_type.table_name}__#{assay_data_sheet_column.safe_name}.id = data_sources.entity_id_value
           SQL
 
           subquery = subquery.joins(entity_join)
