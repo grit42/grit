@@ -173,7 +173,7 @@
         align-items: center;
         padding: theme.$spacing;
         overflow: hidden;
-        white-space: nowrap;
+        white-space: pre;
         text-overflow: ellipsis;
         border-block-end: 1px solid theme.$palette-primary-dark;
         border-inline-end: 1px solid theme.$palette-primary-dark;
@@ -184,7 +184,7 @@
 
 .cellContentContainer {
   overflow: hidden;
-  white-space: nowrap;
+  white-space: pre;
   text-overflow: ellipsis;
   text-align: start;
   flex: 1;
@@ -258,7 +258,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    white-space: nowrap;
+    white-space: pre;
     color: theme.$palette-secondary-main;
     top: 50%;
     transform: translateY(-50%);
