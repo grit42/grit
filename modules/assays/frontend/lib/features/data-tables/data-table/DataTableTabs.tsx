@@ -4,6 +4,7 @@ import DataTableRowsTable from "./DataTableRowsTable";
 import styles from "./dataTable.module.scss";
 import { useNavigate, useParams } from "react-router-dom";
 import Entities from "./entities";
+import Columns from "./columns";
 
 interface Props {
   dataTableId: string | number;
@@ -36,6 +37,17 @@ const DataTableTabs = ({ dataTableId }: Props) => {
           } as CSSProperties,
         },
         panel: <Entities />,
+      },
+      {
+        key: "columns",
+        name: "Columns",
+        url: "columns",
+        panelProps: {
+          style: {
+            overflowY: "auto",
+          } as CSSProperties,
+        },
+        panel: <Columns />,
       },
     ],
     [dataTableId],

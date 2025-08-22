@@ -26,6 +26,7 @@ import DataTable from "./DataTable";
 import { useDataTable, useDataTableFields } from "../queries/data_tables";
 import DataTableTabs from "./DataTableTabs";
 import { useDataTableEntityColumns } from "../queries/data_table_entities";
+import { useDataTableColumnColumns } from "../queries/data_table_columns";
 
 const DataTablePage = () => {
   const { data_table_id } = useParams() as { data_table_id: string };
@@ -56,13 +57,19 @@ const DataTablePage = () => {
     isError: isDataTableEntityColumnsError,
     error: dataTableEntityColumnsError,
   } = useDataTableEntityColumns(data_table_id);
+  const {
+    isLoading: isDataTableColumnColumnsLoading,
+    isError: isDataTableColumnColumnsError,
+    error: dataTableColumnColumnsError,
+  } = useDataTableColumnColumns();
 
   if (
     isRowsLoading ||
     isColumnsLoading ||
     isDataTableLoading ||
     isDataTableFieldsLoading ||
-    isDataTableEntityColumnsLoading
+    isDataTableEntityColumnsLoading ||
+    isDataTableColumnColumnsLoading
   )
     return <Spinner />;
 
@@ -71,12 +78,18 @@ const DataTablePage = () => {
     isColumnsError ||
     isDataTableError ||
     isDataTableFieldsError ||
-    isDataTableEntityColumnsError
+    isDataTableEntityColumnsError ||
+    isDataTableColumnColumnsError
   ) {
     return (
       <ErrorPage
         error={
-          rowsError ?? columnsError ?? dataTableError ?? dataTableFieldsError ?? dataTableEntityColumnsError
+          rowsError ??
+          columnsError ??
+          dataTableError ??
+          dataTableFieldsError ??
+          dataTableEntityColumnsError ??
+          dataTableColumnColumnsError
         }
       />
     );
@@ -87,9 +100,7 @@ const DataTablePage = () => {
       <Route element={<DataTable dataTableId={data_table_id} />}>
         <Route
           path=":tab/*"
-          element={
-            <DataTableTabs dataTableId={data_table_id} />
-          }
+          element={<DataTableTabs dataTableId={data_table_id} />}
         />
         <Route index element={<Navigate to="data" replace />} />
       </Route>

@@ -20,6 +20,38 @@ module Grit::Assays
   class DataTableColumn < ApplicationRecord
     include Grit::Core::GritEntityRecord
     belongs_to :assay_data_sheet_column
+    belongs_to :data_table
+
+    entity_crud_with read: [],
+      create: ["Administrator", "AssayAdministrator", "AssayUser"],
+      update: ["Administrator", "AssayAdministrator", "AssayUser"],
+      destroy: ["Administrator", "AssayAdministrator", "AssayUser"]
+
+    def self.selected(params = nil)
+      params = params.as_json
+      raise "'data_table_id' is required" if params["data_table_id"].nil?
+      self.detailed(params)
+      .joins("JOIN grit_assays_assay_data_sheet_definitions ON grit_assays_assay_data_sheet_definitions.id = grit_assays_assay_data_sheet_columns__.assay_data_sheet_definition_id")
+      .joins("JOIN grit_assays_assay_models ON grit_assays_assay_models.id = grit_assays_assay_data_sheet_definitions.assay_model_id")
+      .select("grit_assays_assay_data_sheet_definitions.id as assay_data_sheet_definition_id")
+      .select("grit_assays_assay_data_sheet_definitions.name as assay_data_sheet_definition_id__name")
+      .select("grit_assays_assay_models.id as assay_model_id")
+      .select("grit_assays_assay_models.name as assay_model_id__name")
+      .where(data_table_id: params["data_table_id"])
+    end
+
+    def self.available(params = nil)
+      params = params.as_json
+      raise "'data_table_id' is required" if params["data_table_id"].nil?
+      data_table = DataTable.find(params["data_table_id"])
+      AssayDataSheetColumn.detailed(params)
+        .joins("JOIN grit_assays_assay_models ON grit_assays_assay_models.id = grit_assays_assay_data_sheet_definitions__.assay_model_id")
+        .joins("JOIN grit_assays_assay_data_sheet_columns grit_assays_assay_data_sheet_columns__source_data_type ON grit_assays_assay_data_sheet_columns__source_data_type.assay_data_sheet_definition_id = grit_assays_assay_data_sheet_columns.assay_data_sheet_definition_id AND grit_assays_assay_data_sheet_columns__source_data_type.data_type_id = #{data_table.entity_data_type_id} AND grit_assays_assay_data_sheet_columns.data_type_id <> #{data_table.entity_data_type_id}")
+        .joins("LEFT OUTER JOIN grit_assays_data_table_columns ON grit_assays_data_table_columns.assay_data_sheet_column_id = grit_assays_assay_data_sheet_columns.id AND grit_assays_data_table_columns.data_table_id = #{params["data_table_id"]}")
+        .select("grit_assays_assay_models.id as assay_model_id")
+        .select("grit_assays_assay_models.name as assay_model_id__name")
+        .where("grit_assays_data_table_columns.id IS NULL")
+    end
 
     def self.pivotted(params = nil)
       max_pivot_count = self.unscoped.select("MAX(CARDINALITY(pivots))")[0][:max]
