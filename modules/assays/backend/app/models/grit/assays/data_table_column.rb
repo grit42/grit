@@ -100,9 +100,9 @@ module Grit::Assays
       when "string","text","date","datetime"
         return subquery.select("STRING_AGG(data_sources.#{assay_data_sheet_column.data_type.name}_value, ',') AS value")
       when "integer","decimal"
-        return subquery.select("#{meta["aggregate_method"] || "avg"}(data_sources.#{assay_data_sheet_column.data_type.name}_value) AS value")
+        return subquery.select("#{aggregation_method || "avg"}(data_sources.#{assay_data_sheet_column.data_type.name}_value) AS value")
       when "boolean"
-        return subquery.select("#{meta["aggregate_method"] || "boolean_and"}(data_sources.boolean_value) AS value")
+        return subquery.select("#{aggregation_method || "boolean_and"}(data_sources.boolean_value) AS value")
       else
         return subquery.select(*[
           "ARRAY_AGG(data_sources.entity_id_value) AS value",
