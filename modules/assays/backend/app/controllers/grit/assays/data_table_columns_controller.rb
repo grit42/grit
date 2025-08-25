@@ -23,7 +23,7 @@ module Grit::Assays
     private
 
     def permitted_params
-      %i[ data_table_id assay_data_sheet_column_id ]
+      %i[ data_table_id assay_data_sheet_column_id aggregation_method ]
     end
   end
 end

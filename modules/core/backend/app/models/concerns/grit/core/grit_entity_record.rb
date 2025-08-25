@@ -53,7 +53,7 @@ module Grit::Core::GritEntityRecord
 
     def numbers_in_range
       self.class.columns.each do |column|
-        next if ![ :integer, :float ].include?(column.sql_type_metadata.type)
+        next if ![ :integer, :float ].include?(column.sql_type_metadata.type) or column.sql_type_metadata.sql_type.end_with? "[]"
 
         if column.sql_type_metadata.type == :integer && self[column.name].present? && self[column.name].to_i.bit_length > column.sql_type_metadata.limit * 8
           errors.add(column.name, "is out of range")

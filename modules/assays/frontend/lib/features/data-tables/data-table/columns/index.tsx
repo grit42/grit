@@ -1,27 +1,32 @@
 import { ErrorPage, Spinner } from "@grit42/client-library/components";
 import { Route, Routes, useParams } from "react-router-dom";
 import DataTableColumnsTable from "./DataTableColumnsTable";
-import {
-  useDataTableEntityColumns,
-} from "../../queries/data_table_entities";
 import DataTableColumnSelector from "./DataTableColumnSelector";
-
+import DataTableColumn from "./DataTableColumn";
+import { useDataTableColumnColumns } from "../../queries/data_table_columns";
+import { useAssayDataSheetColumnColumns } from "../../../../queries/assay_data_sheet_columns";
 
 const Columns = () => {
   const { data_table_id } = useParams() as { data_table_id: string };
   const {
-    data: columns,
-    isLoading,
-    isError,
-    error,
-  } = useDataTableEntityColumns(data_table_id);
+    data: dataTableColumnColumns,
+    isLoading: isDataTableColumnColumnsLoading,
+    isError: isDataTableColumnColumnsError,
+    error: dataTableColumnError,
+  } = useDataTableColumnColumns();
+  const {
+    data: dataSheetColumnColumns,
+    isLoading: isDataSheetColumnColumnsLoading,
+    isError: isDataSheetColumnColumnsError,
+    error: dataSheetColumnError,
+  } = useAssayDataSheetColumnColumns();
 
-  if (isLoading) {
+  if (isDataSheetColumnColumnsLoading || isDataTableColumnColumnsLoading) {
     return <Spinner />;
   }
 
-  if (isError || !columns) {
-    return <ErrorPage error={error} />;
+  if (isDataTableColumnColumnsError || !dataTableColumnColumns || isDataSheetColumnColumnsError || !dataSheetColumnColumns) {
+    return <ErrorPage error={dataTableColumnError ?? dataSheetColumnError} />;
   }
 
   return (
@@ -30,13 +35,10 @@ const Columns = () => {
         index
         element={<DataTableColumnsTable dataTableId={data_table_id} />}
       />
+      <Route path="edit/:data_table_column_id" element={<DataTableColumn />} />
       <Route
-        path="edit"
-        element={
-          <DataTableColumnSelector
-            dataTableId={data_table_id}
-          />
-        }
+        path="select"
+        element={<DataTableColumnSelector dataTableId={data_table_id} />}
       />
     </Routes>
   );

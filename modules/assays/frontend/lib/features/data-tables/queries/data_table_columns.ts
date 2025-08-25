@@ -21,16 +21,31 @@ import {
   EntityPropertyDef,
   EntityData,
   useEntityData,
+  useEntityFields,
+  useEntityDatum,
 } from "@grit42/core";
 import { UseQueryOptions, URLParams } from "@grit42/api";
 
 import { Filter, SortingState } from "@grit42/table";
+import { FormFieldDef } from "@grit42/form";
+import { AssayDataSheetColumnData } from "../../../queries/assay_data_sheet_columns";
 
 export const useDataTableColumnColumns = (
   params: Record<string, any> = {},
   queryOptions: Partial<UseQueryOptions<EntityPropertyDef[], string>> = {},
 ) => {
   return useEntityColumns<EntityPropertyDef>(
+    "Grit::Assays::DataTableColumn",
+    params,
+    queryOptions,
+  );
+};
+
+export const useDataTableColumnFields = (
+  params: Record<string, any> = {},
+  queryOptions: Partial<UseQueryOptions<FormFieldDef[], string>> = {},
+) => {
+  return useEntityFields<FormFieldDef>(
     "Grit::Assays::DataTableColumn",
     params,
     queryOptions,
@@ -68,13 +83,27 @@ export const useAvailableDataTableColumns = (
   sort?: SortingState,
   filter?: Filter[],
   params: URLParams = {},
-  queryOptions: Partial<UseQueryOptions<DataTableColumnData[], string>> = {},
+  queryOptions: Partial<UseQueryOptions<AssayDataSheetColumnData[], string>> = {},
 ) => {
-  return useEntityData<DataTableColumnData>(
+  return useEntityData<AssayDataSheetColumnData>(
     `grit/assays/data_tables/${dataTableId}/data_table_columns`,
     sort ?? [],
     filter ?? [],
     { scope: "available", ...params },
+    queryOptions,
+  );
+};
+
+
+export const useDataTableColumn = (
+  dataTableColumnId: string | number,
+  params: URLParams = {},
+  queryOptions: Partial<UseQueryOptions<DataTableColumnData | null, string>> = {},
+) => {
+  return useEntityDatum<DataTableColumnData>(
+    `grit/assays/data_table_columns`,
+    dataTableColumnId,
+    params,
     queryOptions,
   );
 };

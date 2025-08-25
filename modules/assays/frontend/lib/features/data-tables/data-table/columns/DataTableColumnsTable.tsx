@@ -16,13 +16,13 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Table, useSetupTableState } from "@grit42/table";
+import { Row, Table, useSetupTableState } from "@grit42/table";
 import styles from "../dataTable.module.scss";
 import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTableColumns } from "@grit42/core/utils";
 import { useHasRoles } from "@grit42/core";
-import { useSelectedDataTableColumns, useDataTableColumnColumns } from "../../queries/data_table_columns";
+import { useSelectedDataTableColumns, useDataTableColumnColumns, DataTableColumnData } from "../../queries/data_table_columns";
 import { Button } from "@grit42/client-library/components";
 
 interface Props {
@@ -35,7 +35,7 @@ export const DataTableColumnsTable = ({ dataTableId }: Props) => {
 
   const { data: columns } = useDataTableColumnColumns();
 
-  const tableColumns = useTableColumns(columns);
+  const tableColumns = useTableColumns<DataTableColumnData>(columns);
 
   const tableState = useSetupTableState(`data-table-columns-${dataTableId}`, tableColumns);
 
@@ -48,19 +48,21 @@ export const DataTableColumnsTable = ({ dataTableId }: Props) => {
       { enabled: dataTableId !== "new" },
     );
 
-  const navigateToEdit = useCallback(() => navigate("edit"), [navigate]);
+  const navigateToSelect = useCallback(() => navigate("select"), [navigate]);
+  const navigateToEdit = useCallback((row: Row<DataTableColumnData>) => navigate(`edit/${row.original.id}`), [navigate]);
 
   return (
     <>
       {dataTableId !== "new" && (
         <Table
           tableState={tableState}
+          onRowClick={navigateToEdit}
           // header={canEditDataTable ? undefined : "Items"}
           loading={isRowsLoading}
           headerActions={
             canEditDataTable ? (
-              <Button disabled={dataTableId === "new"} onClick={navigateToEdit}>
-                Edit
+              <Button disabled={dataTableId === "new"} onClick={navigateToSelect}>
+                Select columns
               </Button>
             ) : undefined
           }

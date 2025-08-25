@@ -37,6 +37,7 @@ module Grit::Assays
       .select("grit_assays_assay_data_sheet_definitions.name as assay_data_sheet_definition_id__name")
       .select("grit_assays_assay_models.id as assay_model_id")
       .select("grit_assays_assay_models.name as assay_model_id__name")
+      .select("grit_assays_assay_data_sheet_columns__.name || ' (' || concat_ws(' - ', grit_assays_assay_models.name, grit_assays_assay_data_sheet_definitions.name) || ')' as assay_data_sheet_column_id__name") # TODO: proper columns
       .where(data_table_id: params["data_table_id"])
     end
 
@@ -50,6 +51,7 @@ module Grit::Assays
         .joins("LEFT OUTER JOIN grit_assays_data_table_columns ON grit_assays_data_table_columns.assay_data_sheet_column_id = grit_assays_assay_data_sheet_columns.id AND grit_assays_data_table_columns.data_table_id = #{params["data_table_id"]}")
         .select("grit_assays_assay_models.id as assay_model_id")
         .select("grit_assays_assay_models.name as assay_model_id__name")
+        .select("grit_assays_assay_data_sheet_columns.name || ' (' || concat_ws(' - ', grit_assays_assay_models.name, grit_assays_assay_data_sheet_definitions__.name) || ')' as name") # TODO: proper columns
         .where("grit_assays_data_table_columns.id IS NULL")
     end
 

@@ -14,8 +14,12 @@ import {
   useDestroyEntityMutation,
 } from "@grit42/core";
 import { useQueryClient } from "@grit42/api";
+import {
+  AssayDataSheetColumnData,
+  useAssayDataSheetColumnColumns,
+} from "../../../../queries/assay_data_sheet_columns";
 
-const getRowId = (data: DataTableColumnData) => data.id.toString();
+const getRowId = (data: DataTableColumnData | AssayDataSheetColumnData) => data.id.toString();
 
 const DataTableColumnSelector = ({
   dataTableId,
@@ -23,25 +27,13 @@ const DataTableColumnSelector = ({
   dataTableId: string | number;
 }) => {
   const queryClient = useQueryClient();
-  const { data: columns } = useDataTableColumnColumns();
-  const tableColumns = useTableColumns<DataTableColumnData>(columns);
-  const availableTableState = useSetupTableState(
-    "data-table-available-columns",
-    tableColumns,
-    {
-      saveState: {
-        columnSizing: true,
-      },
-      settings: {
-        disableColumnReorder: true,
-        disableVisibilitySettings: true,
-      },
-    },
+  const { data: dataTableColumnColumns } = useDataTableColumnColumns();
+  const selectedTableColumns = useTableColumns<DataTableColumnData>(
+    dataTableColumnColumns,
   );
-
   const selectedTableState = useSetupTableState(
     "data-table-selected-columns",
-    tableColumns,
+    selectedTableColumns,
     {
       saveState: {
         columnSizing: true,
@@ -52,7 +44,6 @@ const DataTableColumnSelector = ({
       },
     },
   );
-
   const {
     data: selectedDataTableColumns,
     isLoading: isSelectedDataTableColumnsLoading,
@@ -64,6 +55,23 @@ const DataTableColumnSelector = ({
     selectedTableState.filters,
   );
 
+  const { data: dataSheetColumnColumns } = useAssayDataSheetColumnColumns();
+  const availableTableColumns = useTableColumns<AssayDataSheetColumnData>(
+    dataSheetColumnColumns,
+  );
+  const availableTableState = useSetupTableState(
+    "data-table-available-columns",
+    availableTableColumns,
+    {
+      saveState: {
+        columnSizing: true,
+      },
+      settings: {
+        disableColumnReorder: true,
+        disableVisibilitySettings: true,
+      },
+    },
+  );
   const {
     data: availableDataTableColumns,
     isLoading: isAvailableDataTableColumnsLoading,
@@ -88,7 +96,7 @@ const DataTableColumnSelector = ({
   );
 
   const onAvailableRowClick = useCallback(
-    async (row: Row<DataTableColumnData>) => {
+    async (row: Row<AssayDataSheetColumnData>) => {
       await createEntityMutation.mutateAsync({
         assay_data_sheet_column_id: row.id,
       });
@@ -145,7 +153,7 @@ const DataTableColumnSelector = ({
             : undefined) ?? "No columns selected"
         }
       />
-      <Table<DataTableColumnData>
+      <Table<AssayDataSheetColumnData>
         header="Available"
         getRowId={getRowId}
         onRowClick={onAvailableRowClick}
