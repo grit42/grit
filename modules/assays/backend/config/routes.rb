@@ -1,5 +1,7 @@
 Grit::Assays::Engine.routes.draw do
-  resources :data_table_columns
+  resources :data_table_columns do
+    get :pivot_options
+  end
   resources :data_table_entities
   resources :data_tables do
     resources_with_export :data_table_rows

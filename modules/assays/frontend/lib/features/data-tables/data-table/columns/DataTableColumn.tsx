@@ -21,6 +21,7 @@ import { ErrorPage, Spinner } from "@grit42/client-library/components";
 import {
   useDataTableColumn,
   useDataTableColumnFields,
+  useDataTableColumnPivotOptions,
 } from "../../queries/data_table_columns";
 import DataTableColumnForm from "./DataTableColumnForm";
 
@@ -35,6 +36,7 @@ export const DataTableColumn = () => {
     isError: isDataTableColumnError,
     error: dataTableColumnError,
   } = useDataTableColumn(data_table_column_id);
+
   const {
     data: dataTableColumnFields,
     isLoading: isDataTableColumnFieldsLoading,
@@ -54,17 +56,36 @@ export const DataTableColumn = () => {
       ),
   });
 
-  if (isDataTableColumnLoading || isDataTableColumnFieldsLoading)
+  const {
+    data: pivotOptions,
+    isLoading: isPivotOptionsLoading,
+    isError: isPivotOptionsError,
+    error: pivotOptionsError,
+  } = useDataTableColumnPivotOptions(data_table_column_id);
+
+  if (
+    isDataTableColumnLoading ||
+    isDataTableColumnFieldsLoading ||
+    isPivotOptionsLoading
+  )
     return <Spinner />;
 
   if (
     isDataTableColumnError ||
     !dataTableColumn ||
     isDataTableColumnFieldsError ||
-    !dataTableColumnFields
+    !dataTableColumnFields ||
+    isPivotOptionsError ||
+    !pivotOptions
   ) {
     return (
-      <ErrorPage error={dataTableColumnError ?? dataTableColumnFieldsError} />
+      <ErrorPage
+        error={
+          dataTableColumnError ??
+          dataTableColumnFieldsError ??
+          pivotOptionsError
+        }
+      />
     );
   }
 
@@ -72,6 +93,7 @@ export const DataTableColumn = () => {
     <DataTableColumnForm
       fields={dataTableColumnFields}
       dataTableColumn={dataTableColumn}
+      pivotOptions={pivotOptions}
     />
   );
 };

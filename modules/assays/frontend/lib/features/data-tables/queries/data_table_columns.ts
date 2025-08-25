@@ -29,6 +29,9 @@ import { UseQueryOptions, URLParams } from "@grit42/api";
 import { Filter, SortingState } from "@grit42/table";
 import { FormFieldDef } from "@grit42/form";
 import { AssayDataSheetColumnData } from "../../../queries/assay_data_sheet_columns";
+import {
+  AssayModelMetadatumData,
+} from "../../../queries/assay_model_metadata";
 
 export const useDataTableColumnColumns = (
   params: Record<string, any> = {},
@@ -60,6 +63,7 @@ export interface DataTableColumnData extends EntityData {
   assay_data_sheet_definition_id__name: string;
   assay_model_id: number;
   assay_model_id__name: string;
+  pivots: number[];
 }
 
 export const useSelectedDataTableColumns = (
@@ -83,7 +87,9 @@ export const useAvailableDataTableColumns = (
   sort?: SortingState,
   filter?: Filter[],
   params: URLParams = {},
-  queryOptions: Partial<UseQueryOptions<AssayDataSheetColumnData[], string>> = {},
+  queryOptions: Partial<
+    UseQueryOptions<AssayDataSheetColumnData[], string>
+  > = {},
 ) => {
   return useEntityData<AssayDataSheetColumnData>(
     `grit/assays/data_tables/${dataTableId}/data_table_columns`,
@@ -94,15 +100,32 @@ export const useAvailableDataTableColumns = (
   );
 };
 
-
 export const useDataTableColumn = (
   dataTableColumnId: string | number,
   params: URLParams = {},
-  queryOptions: Partial<UseQueryOptions<DataTableColumnData | null, string>> = {},
+  queryOptions: Partial<
+    UseQueryOptions<DataTableColumnData | null, string>
+  > = {},
 ) => {
   return useEntityDatum<DataTableColumnData>(
     `grit/assays/data_table_columns`,
     dataTableColumnId,
+    params,
+    queryOptions,
+  );
+};
+
+export const useDataTableColumnPivotOptions = (
+  dataTableColumnId: string | number,
+  params: URLParams = {},
+  queryOptions: Partial<
+    UseQueryOptions<AssayModelMetadatumData[], string>
+  > = {},
+) => {
+  return useEntityData<AssayModelMetadatumData>(
+    `grit/assays/data_table_columns/${dataTableColumnId}/pivot_options`,
+    undefined,
+    undefined,
     params,
     queryOptions,
   );
