@@ -71,15 +71,19 @@ module Grit::Assays
       model_metadatum_ids_selector = []
       vocabulary_item_ids_selector = []
 
-      for i in 1..max_pivot_count do
-        query = query.joins("LEFT OUTER JOIN GRIT_ASSAYS_ASSAY_METADATA GRIT_ASSAYS_ASSAY_METADATA_#{i} ON GRIT_ASSAYS_ASSAY_METADATA_#{i}.ASSAY_MODEL_METADATUM_ID = (SELECT array_agg(jsonb_object_keys)::bigint[] FROM jsonb_object_keys(pivots))[#{i}]") if i == 1
-        query = query.joins("LEFT OUTER JOIN GRIT_ASSAYS_ASSAY_METADATA GRIT_ASSAYS_ASSAY_METADATA_#{i} ON GRIT_ASSAYS_ASSAY_METADATA_#{i}.ASSAY_MODEL_METADATUM_ID = (SELECT array_agg(jsonb_object_keys)::bigint[] FROM jsonb_object_keys(pivots))[#{i}] AND GRIT_ASSAYS_ASSAY_METADATA_#{2}.ASSAY_ID = GRIT_ASSAYS_ASSAY_METADATA_1.ASSAY_ID") unless i == 1
-        query = query.joins("LEFT OUTER JOIN GRIT_CORE_VOCABULARY_ITEMS GRIT_CORE_VOCABULARY_ITEMS_#{i} ON GRIT_CORE_VOCABULARY_ITEMS_#{i}.ID = GRIT_ASSAYS_ASSAY_METADATA_#{i}.VOCABULARY_ITEM_ID")
-        full_name_selector += ["GRIT_CORE_VOCABULARY_ITEMS_#{i}.name"]
-        full_safe_name_selector += ["GRIT_CORE_VOCABULARY_ITEMS_#{i}.name"]
-        model_metadatum_ids_selector += ["GRIT_ASSAYS_ASSAY_METADATA_#{i}.ASSAY_MODEL_METADATUM_ID"]
-        vocabulary_item_ids_selector += ["GRIT_ASSAYS_ASSAY_METADATA_#{i}.VOCABULARY_ITEM_ID"]
-      end unless max_pivot_count < 1
+      if max_pivot_count.positive?
+        for i in 1..max_pivot_count do
+          query = query.joins("LEFT OUTER JOIN GRIT_ASSAYS_ASSAY_METADATA GRIT_ASSAYS_ASSAY_METADATA_#{i} ON GRIT_ASSAYS_ASSAY_METADATA_#{i}.ASSAY_MODEL_METADATUM_ID = (SELECT array_agg(jsonb_object_keys)::bigint[] FROM jsonb_object_keys(pivots))[#{i}]") if i == 1
+          query = query.joins("LEFT OUTER JOIN GRIT_ASSAYS_ASSAY_METADATA GRIT_ASSAYS_ASSAY_METADATA_#{i} ON GRIT_ASSAYS_ASSAY_METADATA_#{i}.ASSAY_MODEL_METADATUM_ID = (SELECT array_agg(jsonb_object_keys)::bigint[] FROM jsonb_object_keys(pivots))[#{i}] AND GRIT_ASSAYS_ASSAY_METADATA_#{i}.ASSAY_ID = GRIT_ASSAYS_ASSAY_METADATA_1.ASSAY_ID") unless i == 1
+          query = query.joins("LEFT OUTER JOIN GRIT_CORE_VOCABULARY_ITEMS GRIT_CORE_VOCABULARY_ITEMS_#{i} ON GRIT_CORE_VOCABULARY_ITEMS_#{i}.ID = GRIT_ASSAYS_ASSAY_METADATA_#{i}.VOCABULARY_ITEM_ID")
+          query = query.where("GRIT_CORE_VOCABULARY_ITEMS_#{i}.ID IN (SELECT JSONB_ARRAY_ELEMENTS_TEXT(JSONB_EXTRACT_PATH(GRIT_ASSAYS_DATA_TABLE_COLUMNS.pivots,(SELECT array_agg(jsonb_object_keys) FROM jsonb_object_keys(pivots))[#{i}]))::bigint)")
+          full_name_selector += ["GRIT_CORE_VOCABULARY_ITEMS_#{i}.name"]
+          full_safe_name_selector += ["GRIT_CORE_VOCABULARY_ITEMS_#{i}.name"]
+          model_metadatum_ids_selector += ["GRIT_ASSAYS_ASSAY_METADATA_#{i}.ASSAY_MODEL_METADATUM_ID"]
+          vocabulary_item_ids_selector += ["GRIT_ASSAYS_ASSAY_METADATA_#{i}.VOCABULARY_ITEM_ID"]
+        end
+      end
+
       full_name_selector = full_name_selector.join(", ") + ") as full_name"
       full_safe_name_selector = full_safe_name_selector.join(", ") +  ")), '[^a-z0-9]','_','g') as full_safe_name"
       model_metadatum_ids_selector = "array[" + model_metadatum_ids_selector.join(", ") + "]::bigint[] as model_metadatum_ids"
@@ -120,8 +124,6 @@ module Grit::Assays
 
     def data_table_statements query
       pivotted_columns = DataTableColumn.pivotted(data_table_id: self.data_table_id).where(id: self.id)
-
-      logger.info "yo"
 
       pivotted_columns.each do |pivotted_column|
         query = query.select("#{pivotted_column.full_safe_name}_join.value as #{pivotted_column.full_safe_name}")

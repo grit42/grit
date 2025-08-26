@@ -51,9 +51,17 @@ const PivotValuesField = ({
 
   useEffect(() => {
     if (!enabled) {
-      form.setFieldValue(`pivot-${pivotId}-values`, []);
+      form.setFieldValue(`pivot-${pivotId}-values`, null);
+    } else if (
+      enabled &&
+      form.getFieldValue(`pivot-${pivotId}-values`) === null
+    ) {
+      form.setFieldValue(
+        `pivot-${pivotId}-values`,
+        pivotOptions.map(({ value }) => value),
+      );
     }
-  }, [form, enabled, pivotId]);
+  }, [form, enabled, pivotId, pivotOptions]);
 
   return (
     <form.Field
@@ -203,12 +211,10 @@ const DataTableColumnForm = ({
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(max-content, 4)",
+                gridTemplateColumns: "1fr",
               }}
             >
-              <h3 style={{ gridColumnStart: 1, gridColumnEnd: 5 }}>
-                Split by:
-              </h3>
+              <h3>Split by:</h3>
               {pivotOptions.map((o) => (
                 <Fragment key={o.id}>
                   <FormField
