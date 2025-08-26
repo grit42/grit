@@ -17,7 +17,7 @@
  */
 
 import { useNavigate, useParams } from "react-router-dom";
-import { Surface } from "@grit42/client-library/components";
+import { CheckboxGroup, Surface } from "@grit42/client-library/components";
 import {
   Form,
   FormControls,
@@ -25,13 +25,54 @@ import {
   FormFieldDef,
   genericErrorHandler,
   getVisibleFieldData,
+  ReactFormExtendedApi,
   useForm,
+  useStore,
 } from "@grit42/form";
 import { useDestroyEntityMutation, useEditEntityMutation } from "@grit42/core";
 import { DataTableColumnData } from "../../queries/data_table_columns";
 import { useQueryClient } from "@grit42/api";
 import { AssayModelMetadatumData } from "../../../../queries/assay_model_metadata";
-import { useMemo } from "react";
+import { Fragment, useEffect, useMemo } from "react";
+
+const PivotValuesField = ({
+  form,
+  pivotId,
+  pivotOptions,
+}: {
+  pivotOptions: { value: number; label: string }[];
+  form: ReactFormExtendedApi<Partial<DataTableColumnData>, undefined>;
+  pivotId: number;
+}) => {
+  const enabled = useStore(
+    form.baseStore,
+    (state) => (state.values as any)[`pivot-${pivotId}`] as boolean,
+  );
+
+  useEffect(() => {
+    if (!enabled) {
+      form.setFieldValue(`pivot-${pivotId}-values`, []);
+    }
+  }, [form, enabled, pivotId]);
+
+  return (
+    <form.Field
+      name={`pivot-${pivotId}-values`}
+      children={(field) => (
+        <CheckboxGroup
+          disabled={!enabled}
+          onChange={field.handleChange}
+          value={(field.state.value as number[]) ?? []}
+          options={pivotOptions.map((v: any) => ({
+            id: v.value,
+            value: v.value,
+            label: v.label,
+          }))}
+        />
+      )}
+    />
+  );
+};
 
 const DataTableColumnForm = ({
   fields,
@@ -61,10 +102,11 @@ const DataTableColumnForm = ({
   const defaultValue = useMemo(
     () => ({
       ...dataTableColumn,
-      ...(dataTableColumn.pivots ?? []).reduce(
-        (acc, p) => ({
+      ...Object.entries(dataTableColumn.pivots ?? {}).reduce(
+        (acc, [key, value]) => ({
           ...acc,
-          [`pivot-${p}`]: true,
+          [`pivot-${key}`]: true,
+          [`pivot-${key}-values`]: value,
         }),
         {},
       ),
@@ -75,10 +117,11 @@ const DataTableColumnForm = ({
   const form = useForm<Partial<DataTableColumnData>>({
     defaultValues: defaultValue,
     onSubmit: genericErrorHandler(async ({ value: formValue }) => {
-      const pivots = [];
+      const pivots: Record<string, number[]> = {};
       for (const key in formValue) {
-        if (key.startsWith("pivot-") && formValue[key]) {
-          pivots.push(Number(key.split("-")[1]));
+        if (/^pivot-\d+$/.test(key) && formValue[key]) {
+          pivots[key.split("-")[1]] =
+            (formValue[`${key}-values`] as number[]) ?? [];
         }
       }
 
@@ -167,15 +210,26 @@ const DataTableColumnForm = ({
                 Split by:
               </h3>
               {pivotOptions.map((o) => (
-                <FormField
-                  form={form}
-                  fieldDef={{
-                    type: "boolean",
-                    name: `pivot-${o.id}`,
-                    display_name: o.assay_metadata_definition_id__name,
-                  }}
-                  key={o.id}
-                />
+                <Fragment key={o.id}>
+                  <FormField
+                    form={form}
+                    fieldDef={{
+                      type: "boolean",
+                      name: `pivot-${o.id}`,
+                      display_name: o.assay_metadata_definition_id__name,
+                    }}
+                  />
+                  <PivotValuesField
+                    form={form}
+                    pivotId={o.id}
+                    pivotOptions={
+                      o.metadatum_values as {
+                        value: number;
+                        label: string;
+                      }[]
+                    }
+                  />
+                </Fragment>
               ))}
             </div>
           </div>

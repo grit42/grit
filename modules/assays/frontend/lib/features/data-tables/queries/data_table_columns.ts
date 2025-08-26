@@ -63,7 +63,7 @@ export interface DataTableColumnData extends EntityData {
   assay_data_sheet_definition_id__name: string;
   assay_model_id: number;
   assay_model_id__name: string;
-  pivots: number[];
+  pivots: Record<string, number[]>;
 }
 
 export const useSelectedDataTableColumns = (
