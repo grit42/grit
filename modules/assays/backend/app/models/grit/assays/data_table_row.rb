@@ -11,7 +11,7 @@ module Grit::Assays
 
       [
         { name: "id", display_name: data_table.entity_data_type.name, type: "entity", required: true, entity: data_table.entity_data_type.entity_definition },
-        *DataTableColumn.pivotted.where(data_table_id: data_table_id).order("sort ASC NULLS LAST").map do |table_colum|
+        *DataTableColumn.pivotted({data_table_id: data_table_id}).order("sort ASC NULLS LAST").map do |table_colum|
           property = {
             name: table_colum.full_safe_name,
             display_name: table_colum.full_name,
@@ -37,8 +37,6 @@ module Grit::Assays
     def self.for_data_table(data_table_id)
       data_table = DataTable.find(data_table_id)
       query = data_table.entity_data_type.model.unscoped.from("#{data_table.entity_data_type.table_name} as targets").joins("JOIN grit_assays_data_table_entities ON grit_assays_data_table_entities.entity_id = targets.id AND grit_assays_data_table_entities.data_table_id = #{data_table_id}")
-      # query = data_table.data_type.model.unscoped.from(data_table.data_type.table_name, "targets").joins("JOIN grit_assays_data_table_entities ON grit_assays_data_table_entities.entity_id = #{data_table.data_type.table_name}.id AND grit_assays_data_table_entities.data_table_id = #{data_table_id}")
-      # query = data_table.data_type.model.unscoped.joins("JOIN grit_assays_data_table_entities ON grit_assays_data_table_entities.entity_id = #{data_table.data_type.table_name}.id").where("grit_assays_data_table_entities.data_table_id" => data_table_id)
 
       query = query.select("targets.id as id", "targets.name as id__name")
 

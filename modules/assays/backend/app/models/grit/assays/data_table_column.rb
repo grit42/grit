@@ -60,7 +60,35 @@ module Grit::Assays
       pivot_query = pivot_query.where(data_table_id: params[:data_table_id]) unless params[:data_table_id].blank?
       max_pivot_count = pivot_query[0][:max_pivot_count]
 
-      query = self.detailed(params)
+      with_pivot_ids = self
+        .unscoped
+        .select(:id, :pivots)
+        .select("array_agg(pivot_metadata_ids) pivot_metadata_ids")
+        .joins("LEFT JOIN LATERAL jsonb_object_keys(pivots) pivot_metadata_ids ON TRUE")
+        .group(:id)
+        .order(:id)
+        .where(data_table_id: params[:data_table_id])
+
+      with_pivot_ids = with_pivot_ids.where(id: params[:id]) unless params[:id].nil?
+
+      with_pivot_ids_and_values = self
+        .unscoped
+        .from("with_pivot_ids")
+        .select(:id)
+
+      if max_pivot_count.positive?
+        for i in 1..max_pivot_count do
+          with_pivot_ids_and_values = with_pivot_ids_and_values
+            .select("with_pivot_ids.pivot_metadata_ids [#{i}]::bigint AS pivot_metadata_#{i}_id")
+            .select("with_pivot_ids.pivots->with_pivot_ids.pivot_metadata_ids [#{i}] AS pivot_metadata_#{i}_values")
+        end
+      end
+
+      query = self
+        .with(with_pivot_ids: with_pivot_ids)
+        .with(with_pivot_ids_and_values: with_pivot_ids_and_values)
+        .detailed(params)
+        .joins("JOIN with_pivot_ids_and_values ON with_pivot_ids_and_values.id = grit_assays_data_table_columns.id")
         .joins("JOIN GRIT_ASSAYS_ASSAY_DATA_SHEET_DEFINITIONS ON GRIT_ASSAYS_ASSAY_DATA_SHEET_DEFINITIONS.ID = GRIT_ASSAYS_ASSAY_DATA_SHEET_COLUMNS__.ASSAY_DATA_SHEET_DEFINITION_ID")
         .joins("JOIN GRIT_ASSAYS_ASSAY_MODELS ON GRIT_ASSAYS_ASSAY_MODELS.ID = GRIT_ASSAYS_ASSAY_DATA_SHEET_DEFINITIONS.ASSAY_MODEL_ID")
         .joins("LEFT OUTER JOIN GRIT_CORE_UNITS ON GRIT_CORE_UNITS.id = GRIT_ASSAYS_ASSAY_DATA_SHEET_COLUMNS__.unit_id")
@@ -72,10 +100,11 @@ module Grit::Assays
 
       if max_pivot_count.positive?
         for i in 1..max_pivot_count do
-          query = query.joins("LEFT OUTER JOIN GRIT_ASSAYS_ASSAY_METADATA GRIT_ASSAYS_ASSAY_METADATA_#{i} ON GRIT_ASSAYS_ASSAY_METADATA_#{i}.ASSAY_MODEL_METADATUM_ID = (SELECT array_agg(jsonb_object_keys)::bigint[] FROM jsonb_object_keys(pivots))[#{i}]") if i == 1
-          query = query.joins("LEFT OUTER JOIN GRIT_ASSAYS_ASSAY_METADATA GRIT_ASSAYS_ASSAY_METADATA_#{i} ON GRIT_ASSAYS_ASSAY_METADATA_#{i}.ASSAY_MODEL_METADATUM_ID = (SELECT array_agg(jsonb_object_keys)::bigint[] FROM jsonb_object_keys(pivots))[#{i}] AND GRIT_ASSAYS_ASSAY_METADATA_#{i}.ASSAY_ID = GRIT_ASSAYS_ASSAY_METADATA_1.ASSAY_ID") unless i == 1
+          query = query.joins("LEFT OUTER JOIN GRIT_ASSAYS_ASSAY_METADATA GRIT_ASSAYS_ASSAY_METADATA_#{i} ON GRIT_ASSAYS_ASSAY_METADATA_#{i}.ASSAY_MODEL_METADATUM_ID = with_pivot_ids_and_values.pivot_metadata_#{i}_id") if i == 1
+          query = query.joins("LEFT OUTER JOIN GRIT_ASSAYS_ASSAY_METADATA GRIT_ASSAYS_ASSAY_METADATA_#{i} ON GRIT_ASSAYS_ASSAY_METADATA_#{i}.ASSAY_MODEL_METADATUM_ID = with_pivot_ids_and_values.pivot_metadata_#{i}_id AND GRIT_ASSAYS_ASSAY_METADATA_#{i}.ASSAY_ID = GRIT_ASSAYS_ASSAY_METADATA_1.ASSAY_ID") unless i == 1
           query = query.joins("LEFT OUTER JOIN GRIT_CORE_VOCABULARY_ITEMS GRIT_CORE_VOCABULARY_ITEMS_#{i} ON GRIT_CORE_VOCABULARY_ITEMS_#{i}.ID = GRIT_ASSAYS_ASSAY_METADATA_#{i}.VOCABULARY_ITEM_ID")
-          query = query.where("GRIT_CORE_VOCABULARY_ITEMS_#{i}.ID IN (SELECT JSONB_ARRAY_ELEMENTS_TEXT(JSONB_EXTRACT_PATH(GRIT_ASSAYS_DATA_TABLE_COLUMNS.pivots,(SELECT array_agg(jsonb_object_keys) FROM jsonb_object_keys(pivots))[#{i}]))::bigint)")
+          query = query.joins("LEFT JOIN LATERAL jsonb_array_elements_text(with_pivot_ids_and_values.pivot_metadata_#{i}_values) pivot_metadata_#{i}_values(value) ON with_pivot_ids_and_values.pivot_metadata_#{i}_values IS NOT NULL")
+          query = query.where("with_pivot_ids_and_values.pivot_metadata_#{i}_values IS NULL OR GRIT_CORE_VOCABULARY_ITEMS_#{i}.id::text = pivot_metadata_#{i}_values.value")
           full_name_selector += ["GRIT_CORE_VOCABULARY_ITEMS_#{i}.name"]
           full_safe_name_selector += ["GRIT_CORE_VOCABULARY_ITEMS_#{i}.name"]
           model_metadatum_ids_selector += ["GRIT_ASSAYS_ASSAY_METADATA_#{i}.ASSAY_MODEL_METADATUM_ID"]
@@ -122,7 +151,7 @@ module Grit::Assays
     end
 
     def data_table_statements query
-      pivotted_columns = DataTableColumn.pivotted(data_table_id: self.data_table_id).where(id: self.id)
+      pivotted_columns = DataTableColumn.pivotted({data_table_id: self.data_table_id, id: self.id})
 
       pivotted_columns.each do |pivotted_column|
         query = query.select("#{pivotted_column.full_safe_name}_join.value as #{pivotted_column.full_safe_name}")
