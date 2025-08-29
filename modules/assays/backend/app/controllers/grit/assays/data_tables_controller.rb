@@ -23,7 +23,7 @@ module Grit::Assays
     private
 
     def permitted_params
-      %i[ name description entity_data_type_id ]
+      [ :name, :description, :entity_data_type_id, plots: {}]
     end
   end
 end

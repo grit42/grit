@@ -27,6 +27,7 @@ import {
 import { UseQueryOptions, URLParams } from "@grit42/api";
 import { Filter, SortingState } from "@grit42/table";
 import { FormFieldDef } from "@grit42/form";
+import { PlotDefinition } from "@grit42/plots";
 
 export const useDataTableColumns = (
   params: Record<string, any> = {},
@@ -50,11 +51,17 @@ export const useDataTableFields = (
   );
 };
 
+export interface DataTablePlotDefinition {
+  id: string;
+  def: PlotDefinition;
+}
+
 export interface DataTableData extends EntityData {
   name: string;
   description: string | null;
   entity_data_type_id: number;
   entity_data_type_id__name: string;
+  plots: Record<string, DataTablePlotDefinition>;
 }
 
 export const useDataTables = (

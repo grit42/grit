@@ -9,6 +9,7 @@ class CreateGritAssaysDataTables < ActiveRecord::Migration[7.2]
       t.string :name, null: false, index: { unique: true }
       t.text :description
       t.references :entity_data_type, null: false, foreign_key: { name: "assays_data_tables_core_data_type_id_fkey", to_table: "grit_core_data_types" }
+      t.jsonb :plots, default: {}
     end
 
     execute "CREATE TRIGGER manage_stamps_grit_assays_data_tables BEFORE INSERT OR UPDATE ON public.grit_assays_data_tables FOR EACH ROW EXECUTE FUNCTION public.manage_stamps();"

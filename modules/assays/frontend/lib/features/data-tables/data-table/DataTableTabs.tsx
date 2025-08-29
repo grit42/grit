@@ -6,6 +6,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import Entities from "./entities";
 import Columns from "./columns";
 import DataTable from "./DataTable";
+import DataTablePlots from "./plots";
 
 interface Props {
   dataTableId: string | number;
@@ -38,6 +39,17 @@ const DataTableTabs = ({ dataTableId }: Props) => {
           } as CSSProperties,
         },
         panel: <DataTableRowsTable dataTableId={dataTableId} />,
+      },
+      {
+        key: "plots",
+        name: "Plots",
+        url: "plots",
+        panelProps: {
+          style: {
+            overflowY: "auto",
+          } as CSSProperties,
+        },
+        panel: <DataTablePlots dataTableId={dataTableId} />,
       },
       {
         key: "entities",
