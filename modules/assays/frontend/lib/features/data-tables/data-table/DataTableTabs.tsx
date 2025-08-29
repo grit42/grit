@@ -5,6 +5,7 @@ import styles from "./dataTable.module.scss";
 import { useNavigate, useParams } from "react-router-dom";
 import Entities from "./entities";
 import Columns from "./columns";
+import DataTable from "./DataTable";
 
 interface Props {
   dataTableId: string | number;
@@ -16,6 +17,17 @@ const DataTableTabs = ({ dataTableId }: Props) => {
 
   const tabs = useMemo(
     () => [
+      {
+        key: "details",
+        name: "Details",
+        url: "details",
+        panelProps: {
+          style: {
+            overflowY: "auto",
+          } as CSSProperties,
+        },
+        panel: <DataTable dataTableId={dataTableId} />,
+      },
       {
         key: "data",
         name: "Data",
@@ -67,7 +79,7 @@ const DataTableTabs = ({ dataTableId }: Props) => {
     navigate(`../${tabs[index].url}`);
   };
 
-  if (dataTableId === "new") return null;
+  if (dataTableId === "new") return <DataTable dataTableId={dataTableId} />;
 
   return (
     <div

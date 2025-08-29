@@ -22,11 +22,11 @@ import {
   useDataTableRows,
 } from "../queries/data_table_rows";
 import { Navigate, Route, Routes, useParams } from "react-router-dom";
-import DataTable from "./DataTable";
 import { useDataTable, useDataTableFields } from "../queries/data_tables";
 import DataTableTabs from "./DataTableTabs";
 import { useDataTableEntityColumns } from "../queries/data_table_entities";
 import { useDataTableColumnColumns } from "../queries/data_table_columns";
+import DataTable from "./DataTable";
 
 const DataTablePage = () => {
   const { data_table_id } = useParams() as { data_table_id: string };
@@ -51,9 +51,12 @@ const DataTablePage = () => {
     isLoading: isColumnsLoading,
     isError: isColumnsError,
     error: columnsError,
-  } = useDataTableRowColumns({ data_table_id }, {
-    enabled: data_table_id !== "new",
-  });
+  } = useDataTableRowColumns(
+    { data_table_id },
+    {
+      enabled: data_table_id !== "new",
+    },
+  );
   const {
     isLoading: isDataTableEntityColumnsLoading,
     isError: isDataTableEntityColumnsError,
@@ -101,15 +104,15 @@ const DataTablePage = () => {
     );
   }
 
+  if (data_table_id === "new") return <DataTable dataTableId={data_table_id} />;
+
   return (
     <Routes>
-      <Route element={<DataTable dataTableId={data_table_id} />}>
-        <Route
-          path=":tab/*"
-          element={<DataTableTabs dataTableId={data_table_id} />}
-        />
-        <Route index element={<Navigate to="data" replace />} />
-      </Route>
+      <Route
+        path=":tab/*"
+        element={<DataTableTabs dataTableId={data_table_id} />}
+      />
+      <Route index element={<Navigate to="data" replace />} />
     </Routes>
   );
 };

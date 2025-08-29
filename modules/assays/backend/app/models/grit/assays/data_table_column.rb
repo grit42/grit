@@ -76,7 +76,7 @@ module Grit::Assays
         .from("with_pivot_ids")
         .select(:id)
 
-      if max_pivot_count.positive?
+      if max_pivot_count&.positive?
         for i in 1..max_pivot_count do
           with_pivot_ids_and_values = with_pivot_ids_and_values
             .select("with_pivot_ids.pivot_metadata_ids [#{i}]::bigint AS pivot_metadata_#{i}_id")
@@ -98,7 +98,7 @@ module Grit::Assays
       model_metadatum_ids_selector = []
       vocabulary_item_ids_selector = []
 
-      if max_pivot_count.positive?
+      if max_pivot_count&.positive?
         for i in 1..max_pivot_count do
           query = query.joins("LEFT OUTER JOIN GRIT_ASSAYS_ASSAY_METADATA GRIT_ASSAYS_ASSAY_METADATA_#{i} ON GRIT_ASSAYS_ASSAY_METADATA_#{i}.ASSAY_MODEL_METADATUM_ID = with_pivot_ids_and_values.pivot_metadata_#{i}_id") if i == 1
           query = query.joins("LEFT OUTER JOIN GRIT_ASSAYS_ASSAY_METADATA GRIT_ASSAYS_ASSAY_METADATA_#{i} ON GRIT_ASSAYS_ASSAY_METADATA_#{i}.ASSAY_MODEL_METADATUM_ID = with_pivot_ids_and_values.pivot_metadata_#{i}_id AND GRIT_ASSAYS_ASSAY_METADATA_#{i}.ASSAY_ID = GRIT_ASSAYS_ASSAY_METADATA_1.ASSAY_ID") unless i == 1

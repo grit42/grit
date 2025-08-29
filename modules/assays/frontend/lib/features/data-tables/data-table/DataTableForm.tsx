@@ -114,7 +114,7 @@ const DataTableForm = ({
   };
 
   return (
-    <Surface style={{ width: "100%" }}>
+    <Surface style={{ width: "100%", height: "100%" }}>
       <Form<Partial<DataTableData>> form={form}>
         <div
           style={{
@@ -146,7 +146,7 @@ const DataTableForm = ({
           showDelete={!!dataTable.id && canEditDataTable}
           showCancel
           cancelLabel="Back"
-          onCancel={() => navigate("..")}
+          onCancel={() => navigate(dataTable.id ? "../.." : "..")}
         />
       </Form>
     </Surface>

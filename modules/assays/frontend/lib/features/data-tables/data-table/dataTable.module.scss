@@ -1,12 +1,10 @@
 .dataTable {
   width: 100%;
-  max-width: 100%;
+  max-width: 1140px;
   height: 100%;
   max-height: 100%;
 
-  display: grid;
-  gap: 1rem;
-  grid-template-columns: max-content auto;
+  overflow-y: auto;
 }
 
 .dataTableTabs {

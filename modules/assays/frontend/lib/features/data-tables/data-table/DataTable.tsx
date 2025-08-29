@@ -17,7 +17,6 @@
  */
 
 import styles from "./dataTable.module.scss";
-import { Outlet } from "react-router-dom";
 import {
   useDataTable,
   useDataTableFields,
@@ -40,7 +39,6 @@ const DataTable = ({ dataTableId }: Props) => {
   return (
     <div className={styles.dataTable}>
       <DataTableForm fields={dataTableFields!} dataTable={dataTable!} />
-      {dataTableId === "new" ? null : <Outlet />}
     </div>
   );
 };
