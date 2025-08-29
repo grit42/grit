@@ -1,97 +1,58 @@
-import { CSSProperties, useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Tabs } from "@grit42/client-library/components";
-import DataTableRowsTable from "./DataTableRowsTable";
 import styles from "./dataTable.module.scss";
-import { useNavigate, useParams } from "react-router-dom";
-import Entities from "./entities";
-import Columns from "./columns";
-import DataTable from "./DataTable";
-import DataTablePlots from "./plots";
+import { Outlet, useMatch, useNavigate } from "react-router-dom";
 
-interface Props {
-  dataTableId: string | number;
-}
+const TABS = [
+  {
+    key: "details",
+    name: "Details",
+    url: "details",
+    panel: <></>,
+  },
+  {
+    key: "data",
+    name: "Data",
+    url: "data",
+    panel: <></>,
+  },
+  {
+    key: "plots",
+    name: "Plots",
+    url: "plots",
+    panel: <></>,
+  },
+  {
+    key: "entities",
+    name: "Entities",
+    url: "entities",
+    panel: <></>,
+  },
+  {
+    key: "columns",
+    name: "Columns",
+    url: "columns",
+    panel: <></>,
+  },
+];
 
-const DataTableTabs = ({ dataTableId }: Props) => {
+const DataTableTabs = () => {
   const navigate = useNavigate();
-  const params = useParams() as { tab: string };
+  const match = useMatch("/assays/data_tables/:data_table_id/:tab/*");
 
-  const tabs = useMemo(
-    () => [
-      {
-        key: "details",
-        name: "Details",
-        url: "details",
-        panelProps: {
-          style: {
-            overflowY: "auto",
-          } as CSSProperties,
-        },
-        panel: <DataTable dataTableId={dataTableId} />,
-      },
-      {
-        key: "data",
-        name: "Data",
-        url: "data",
-        panelProps: {
-          style: {
-            overflowY: "auto",
-          } as CSSProperties,
-        },
-        panel: <DataTableRowsTable dataTableId={dataTableId} />,
-      },
-      {
-        key: "plots",
-        name: "Plots",
-        url: "plots",
-        panelProps: {
-          style: {
-            overflowY: "auto",
-          } as CSSProperties,
-        },
-        panel: <DataTablePlots dataTableId={dataTableId} />,
-      },
-      {
-        key: "entities",
-        name: "Entities",
-        url: "entities",
-        panelProps: {
-          style: {
-            overflowY: "auto",
-          } as CSSProperties,
-        },
-        panel: <Entities />,
-      },
-      {
-        key: "columns",
-        name: "Columns",
-        url: "columns",
-        panelProps: {
-          style: {
-            overflowY: "auto",
-          } as CSSProperties,
-        },
-        panel: <Columns />,
-      },
-    ],
-    [dataTableId],
-  );
-
-  const tab = params.tab ?? "data";
+  const tab = match?.params.tab ?? "data";
 
   const [selectedTab, setSelectedTab] = useState(
-    tabs.findIndex(({ url }) => tab === url),
+    TABS.findIndex(({ url }) => tab === url),
   );
 
   useEffect(() => {
-    setSelectedTab(tabs.findIndex(({ url }) => tab === url));
-  }, [tab, tabs]);
+    setSelectedTab(TABS.findIndex(({ url }) => tab === url));
+  }, [tab]);
 
   const handleTabChange = (index: number) => {
-    navigate(`../${tabs[index].url}`);
+    navigate(`${TABS[index].url}`);
   };
-
-  if (dataTableId === "new") return <DataTable dataTableId={dataTableId} />;
 
   return (
     <div
@@ -100,14 +61,17 @@ const DataTableTabs = ({ dataTableId }: Props) => {
         height: "100%",
         overflow: "auto",
         width: "100%",
+        display: "grid",
+        gridTemplateRows: "min-content 1fr",
       }}
     >
       <Tabs
         selectedTab={selectedTab}
         onTabChange={handleTabChange}
         className={styles.dataTableTabs}
-        tabs={tabs}
+        tabs={TABS}
       />
+      <Outlet />
     </div>
   );
 };

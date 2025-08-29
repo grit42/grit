@@ -23,8 +23,6 @@ const DataTablePlotTabs = ({ dataTable }: Props) => {
     "AssayUser",
   ]);
 
- console.log(dataTable.plots)
-
   const navigate = useNavigate();
   const { plot_id } = useParams() as { plot_id: string };
 
@@ -49,7 +47,7 @@ const DataTablePlotTabs = ({ dataTable }: Props) => {
   }, [plot_id, tabs]);
 
   if (selectedTab === -1) {
-    <Navigate to={Object.keys(dataTable.plots)[0] ?? "new"} replace />;
+    return <Navigate to={Object.keys(dataTable.plots)[0] ?? "new"} replace />;
   }
 
   const handleTabChange = (index: number) => {
@@ -79,8 +77,6 @@ const DataTablePlots = ({ dataTableId }: { dataTableId: string | number }) => {
 
   if (!dataTable) return null;
 
-  console.log(dataTable.plots[0]?.id ?? "new")
-
   return (
     <Routes>
       <Route element={<DataTablePlotTabs dataTable={dataTable} />}>
@@ -89,8 +85,10 @@ const DataTablePlots = ({ dataTableId }: { dataTableId: string | number }) => {
           element={<DataTablePlot dataTable={dataTable} />}
         />
         <Route
-          index
-          element={<Navigate to={Object.values(dataTable.plots)[0]?.id ?? "new"} replace />}
+          path="*"
+          element={
+            <Navigate to={Object.keys(dataTable.plots)[0] ?? "new"} replace />
+          }
         />
       </Route>
     </Routes>

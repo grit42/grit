@@ -1,19 +1,19 @@
 /**
  * Copyright 2025 grit42 A/S. <https://grit42.com/>
  *
- * This file is part of @grit42/core.
+ * This file is part of @grit42/assays.
  *
- * @grit42/core is free software: you can redistribute it and/or modify it
+ * @grit42/assays is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
  * Software Foundation, either version 3 of the License, or  any later version.
  *
- * @grit42/core is distributed in the hope that it will be useful, but
+ * @grit42/assays is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
  * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
  * more details.
  *
  * You should have received a copy of the GNU General Public License along with
- * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
+ * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
  */
 
 import { ErrorPage, Spinner } from "@grit42/client-library/components";
@@ -21,37 +21,34 @@ import {
   useDataTables,
   useDataTableColumns,
 } from "../queries/data_tables";
-import { useDataTableRowColumns } from "../queries/data_table_rows";
 import DataTablesTable from "./DataTablesTable";
 
-const VocabulariesAdministrationPage = () => {
+const DataTablesPage = () => {
   const {
-    data: vocabularies,
-    isLoading: isVocabulariesLoading,
-    isError: isVocabulariesError,
-    error: vocabulariesError,
+    data: dataTables,
+    isLoading: isDataTablesLoading,
+    isError: isDataTablesError,
+    error: dataTablesError,
   } = useDataTables();
   const {
-    data: vocabularyColumns,
-    isLoading: isVocabularyColumnsLoading,
-    isError: isVocabularyColumnsError,
-    error: vocabularyColumnsError,
+    data: dataTableColumns,
+    isLoading: isDataTableColumnsLoading,
+    isError: isDataTableColumnsError,
+    error: dataTableColumnsError,
   } = useDataTableColumns();
 
-  useDataTableRowColumns();
-
-  if (isVocabulariesLoading || isVocabularyColumnsLoading) return <Spinner />;
+  if (isDataTablesLoading || isDataTableColumnsLoading) return <Spinner />;
 
   if (
-    !vocabularies ||
-    isVocabulariesError ||
-    !vocabularyColumns ||
-    isVocabularyColumnsError
+    !dataTables ||
+    isDataTablesError ||
+    !dataTableColumns ||
+    isDataTableColumnsError
   ) {
-    return <ErrorPage error={vocabulariesError ?? vocabularyColumnsError} />;
+    return <ErrorPage error={dataTablesError ?? dataTableColumnsError} />;
   }
 
   return <DataTablesTable />;
 };
 
-export default VocabulariesAdministrationPage;
+export default DataTablesPage;

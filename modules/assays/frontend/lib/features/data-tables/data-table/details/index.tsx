@@ -1,25 +1,25 @@
 /**
  * Copyright 2025 grit42 A/S. <https://grit42.com/>
  *
- * This file is part of @grit42/core.
+ * This file is part of @grit42/assays.
  *
- * @grit42/core is free software: you can redistribute it and/or modify it
+ * @grit42/assays is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
  * Software Foundation, either version 3 of the License, or  any later version.
  *
- * @grit42/core is distributed in the hope that it will be useful, but
+ * @grit42/assays is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
  * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
  * more details.
  *
  * You should have received a copy of the GNU General Public License along with
- * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
+ * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
  */
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Surface } from "@grit42/client-library/components";
-import { DataTableData } from "../queries/data_tables";
+import { DataTableData, useDataTable, useDataTableFields } from "../../queries/data_tables";
 import {
   Form,
   FormControls,
@@ -36,22 +36,26 @@ import {
   useHasRoles,
 } from "@grit42/core";
 import { useQueryClient } from "@grit42/api";
+import styles from "../dataTable.module.scss"
+interface Props {
+  dataTableId: string | number;
+}
 
-const DataTableForm = ({
-  fields,
-  dataTable: dataTable,
-}: {
-  fields: FormFieldDef[];
-  dataTable: Partial<DataTableData>;
-}) => {
+const DataTableDetails = ({ dataTableId }: Props) => {
   const navigate = useNavigate();
   const canEditDataTable = useHasRoles([
     "Administrator",
     "AssayAdministrator",
     "AssayUser",
   ]);
+
+  const { data: dataTable } = useDataTable(dataTableId) as { data: DataTableData };
+  const { data: fields } = useDataTableFields(undefined, {
+    select: (data) =>
+      canEditDataTable ? data : data.map((f) => ({ ...f, disabled: true })),
+  }) as { data: FormFieldDef[] };
   const queryClient = useQueryClient();
-  const [formData, setFormData] = useState<Partial<DataTableData>>(dataTable);
+  const [formData, setFormData] = useState<Partial<DataTableData>>(dataTable ?? {});
 
   const createEntityMutation = useCreateEntityMutation<DataTableData>(
     "grit/assays/data_tables",
@@ -114,7 +118,7 @@ const DataTableForm = ({
   };
 
   return (
-    <Surface style={{ width: "100%", height: "100%" }}>
+    <Surface className={styles.dataTable} style={{ width: "100%", height: "100%" }}>
       <Form<Partial<DataTableData>> form={form}>
         <div
           style={{
@@ -153,4 +157,4 @@ const DataTableForm = ({
   );
 };
 
-export default DataTableForm;
+export default DataTableDetails;
