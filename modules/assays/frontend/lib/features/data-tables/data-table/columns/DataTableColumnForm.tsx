@@ -181,7 +181,7 @@ const DataTableColumnForm = ({
   };
 
   return (
-    <>
+    <div>
       <h1>Edit column</h1>
       <Surface style={{ width: "100%" }}>
         <Form<Partial<DataTableColumnData>> form={form}>
@@ -248,7 +248,7 @@ const DataTableColumnForm = ({
           />
         </Form>
       </Surface>
-    </>
+    </div>
   );
 };
 
