@@ -40,8 +40,8 @@ module Grit::Assays
 
       query = query.select("targets.id as id", "targets.name as id__name")
 
-      DataTableColumn.where(data_table_id: data_table_id).order("sort ASC NULLS LAST").all.each do |table_colum|
-        query = table_colum.data_table_statements(query)
+      DataTableColumn.pivotted({data_table_id: data_table_id}).order("sort ASC NULLS LAST").all.each do |table_colum|
+        query = table_colum.data_table_statement(query)
       end
       query
     end
