@@ -16,7 +16,9 @@ Grit::Assays::Engine.routes.draw do
     get :export
   end
 
-  resources :assay_data_sheet_columns
+  resources :assay_data_sheet_columns do
+    get :pivot_options
+  end
   resources :assay_data_sheet_definitions
   resources :assay_metadata_definitions
   resources :assay_metadata

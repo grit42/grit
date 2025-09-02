@@ -1,5 +1,5 @@
 import { Button } from "@grit42/client-library/components";
-import { Link } from "react-router-dom";
+import { createSearchParams, Link, useNavigate } from "react-router-dom";
 import {
   DataTableColumnData,
   useAvailableDataTableColumns,
@@ -10,7 +10,6 @@ import { useTableColumns } from "@grit42/core/utils";
 import { Row, Table, useSetupTableState } from "@grit42/table";
 import { useCallback, useMemo } from "react";
 import {
-  useCreateEntityMutation,
   useDestroyEntityMutation,
 } from "@grit42/core";
 import { useQueryClient } from "@grit42/api";
@@ -19,7 +18,8 @@ import {
   useAssayDataSheetColumnColumns,
 } from "../../../../queries/assay_data_sheet_columns";
 
-const getRowId = (data: DataTableColumnData | AssayDataSheetColumnData) => data.id.toString();
+const getRowId = (data: DataTableColumnData | AssayDataSheetColumnData) =>
+  data.id.toString();
 
 const DataTableColumnSelector = ({
   dataTableId,
@@ -27,6 +27,7 @@ const DataTableColumnSelector = ({
   dataTableId: string | number;
 }) => {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const { data: dataTableColumnColumns } = useDataTableColumnColumns();
   const selectedTableColumns = useTableColumns<DataTableColumnData>(
     dataTableColumnColumns,
@@ -88,28 +89,8 @@ const DataTableColumnSelector = ({
     [dataTableId],
   );
 
-  const createEntityMutation =
-    useCreateEntityMutation<DataTableColumnData>(dataTableColumnsUrl);
-
   const destroyEntityMutation = useDestroyEntityMutation(
     "grit/assays/data_table_columns",
-  );
-
-  const onAvailableRowClick = useCallback(
-    async (row: Row<AssayDataSheetColumnData>) => {
-      await createEntityMutation.mutateAsync({
-        assay_data_sheet_column_id: row.id,
-      });
-      await Promise.all([
-        queryClient.invalidateQueries({
-          queryKey: ["entities", "columns", "Grit::Assays::DataTableRow"],
-        }),
-        queryClient.invalidateQueries({
-          queryKey: ["entities", "data", dataTableColumnsUrl],
-        }),
-      ]);
-    },
-    [createEntityMutation, dataTableColumnsUrl, queryClient],
   );
 
   const onSelectedRowClick = useCallback(
@@ -156,7 +137,14 @@ const DataTableColumnSelector = ({
       <Table<AssayDataSheetColumnData>
         header="Available"
         getRowId={getRowId}
-        onRowClick={onAvailableRowClick}
+        onRowClick={(row) =>
+          navigate({
+            pathname: "new",
+            search: createSearchParams({
+              assay_data_sheet_column_id: row.original.id.toString(),
+            }).toString(),
+          })
+        }
         headerActions={
           <Link to="..">
             <Button color="secondary">Done</Button>

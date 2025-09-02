@@ -49,7 +49,7 @@ module Grit::Assays
     private
 
     def permitted_params
-       [:data_table_id, :assay_data_sheet_column_id, :aggregation_method, :sort, pivots: {}]
+       [:data_table_id, :assay_data_sheet_column_id, :aggregation_method, :sort, :name, :safe_name, pivots: {}]
     end
   end
 end

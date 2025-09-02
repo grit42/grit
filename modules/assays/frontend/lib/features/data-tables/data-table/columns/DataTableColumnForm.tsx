@@ -29,7 +29,11 @@ import {
   useForm,
   useStore,
 } from "@grit42/form";
-import { useDestroyEntityMutation, useEditEntityMutation } from "@grit42/core";
+import {
+  useCreateEntityMutation,
+  useDestroyEntityMutation,
+  useEditEntityMutation,
+} from "@grit42/core";
 import { DataTableColumnData } from "../../queries/data_table_columns";
 import { useQueryClient } from "@grit42/api";
 import { AssayModelMetadatumData } from "../../../../queries/assay_model_metadata";
@@ -50,12 +54,10 @@ const PivotValuesField = ({
   );
 
   useEffect(() => {
-    if (!enabled) {
+    const currentValue = form.getFieldValue(`pivot-${pivotId}-values`);
+    if (!enabled && currentValue) {
       form.setFieldValue(`pivot-${pivotId}-values`, null);
-    } else if (
-      enabled &&
-      form.getFieldValue(`pivot-${pivotId}-values`) === null
-    ) {
+    } else if (enabled && currentValue) {
       form.setFieldValue(
         `pivot-${pivotId}-values`,
         pivotOptions.map(({ value }) => value),
@@ -98,6 +100,10 @@ const DataTableColumnForm = ({
   };
   const navigate = useNavigate();
 
+  const createEntityMutation = useCreateEntityMutation<DataTableColumnData>(
+    `grit/assays/data_tables/${dataTableColumn.data_table_id!}/data_table_columns`,
+  );
+
   const editEntityMutation = useEditEntityMutation<DataTableColumnData>(
     "grit/assays/data_table_columns",
     dataTableColumn.id ?? -1,
@@ -134,11 +140,13 @@ const DataTableColumnForm = ({
       }
 
       const value = {
+        ...dataTableColumn,
         ...getVisibleFieldData<Partial<DataTableColumnData>>(formValue, fields),
-        data_table_column_id: Number(data_table_column_id),
         pivots,
       };
-      await editEntityMutation.mutateAsync(value as DataTableColumnData);
+      await (data_table_column_id === "new"
+        ? createEntityMutation.mutateAsync(value as DataTableColumnData)
+        : editEntityMutation.mutateAsync(value as DataTableColumnData));
       await Promise.all([
         queryClient.invalidateQueries({
           queryKey: ["entities", "columns", "Grit::Assays::DataTableRow"],
@@ -242,7 +250,9 @@ const DataTableColumnForm = ({
           <FormControls
             form={form}
             onDelete={onDelete}
-            showDelete={!!dataTableColumn.id}
+            showDelete={
+              !!data_table_column_id && data_table_column_id !== "new"
+            }
             showCancel
             onCancel={() => navigate("..")}
           />

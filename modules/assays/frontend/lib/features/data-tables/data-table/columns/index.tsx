@@ -1,10 +1,12 @@
 import { ErrorPage, Spinner } from "@grit42/client-library/components";
-import { Route, Routes } from "react-router-dom";
+import { Outlet, Route, Routes } from "react-router-dom";
 import DataTableColumnsTable from "./DataTableColumnsTable";
 import DataTableColumnSelector from "./DataTableColumnSelector";
 import DataTableColumn from "./DataTableColumn";
 import { useDataTableColumnColumns } from "../../queries/data_table_columns";
 import { useAssayDataSheetColumnColumns } from "../../../../queries/assay_data_sheet_columns";
+import NewDataTableColumn from "./NewDataTableColumn";
+import CloneDataTableColumn from "./CloneDataTableColumn";
 
 const DataTableColumns = ({
   dataTableId,
@@ -44,10 +46,14 @@ const DataTableColumns = ({
         element={<DataTableColumnsTable dataTableId={dataTableId} />}
       />
       <Route path="edit/:data_table_column_id" element={<DataTableColumn />} />
-      <Route
-        path="select"
-        element={<DataTableColumnSelector dataTableId={dataTableId} />}
-      />
+      <Route path="clone/:data_table_column_id" element={<CloneDataTableColumn />} />
+      <Route path="select" element={<Outlet />}>
+        <Route
+          index
+          element={<DataTableColumnSelector dataTableId={dataTableId} />}
+        />
+        <Route path=":data_table_column_id" element={<NewDataTableColumn />} />
+      </Route>
     </Routes>
   );
 };

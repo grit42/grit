@@ -13,8 +13,8 @@ module Grit::Assays
         { name: "id", display_name: data_table.entity_data_type.name, type: "entity", required: true, entity: data_table.entity_data_type.entity_definition },
         *DataTableColumn.pivotted({data_table_id: data_table_id}).order("sort ASC NULLS LAST").map do |table_colum|
           property = {
-            name: table_colum.full_safe_name,
-            display_name: table_colum.full_name,
+            name: table_colum.safe_name,
+            display_name: table_colum.name,
             description: table_colum.assay_data_sheet_column.description,
             type: table_colum.assay_data_sheet_column.data_type.is_entity ? "entity" : table_colum.assay_data_sheet_column.data_type.name,
             required: table_colum.assay_data_sheet_column.required,

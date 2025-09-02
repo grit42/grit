@@ -117,7 +117,7 @@ module Grit::Assays
     end
 
     def data_table_statement query
-        query = query.select("#{self.full_safe_name}_join.value as #{self.full_safe_name}")
+        query = query.select("#{self.safe_name}_join.value as #{self.safe_name}")
 
         subquery = ExperimentDataSheetValue.unscoped
           .from("grit_assays_experiment_data_sheet_values targets")
@@ -158,75 +158,15 @@ LEFT OUTER JOIN #{assay_data_sheet_column.data_type.table_name} #{assay_data_she
           subquery = subquery.joins(entity_join)
 
           assay_data_sheet_column.data_type.model.display_properties.map do |display_property|
-            query = query.select("#{self.full_safe_name}_join.value__#{display_property[:name]} as #{self.full_safe_name}__#{display_property[:name]}")
+            query = query.select("#{self.safe_name}_join.value__#{display_property[:name]} as #{self.safe_name}__#{display_property[:name]}")
           end
         end
         column_join = <<-SQL
 LEFT OUTER JOIN (
       #{subquery.to_sql}
-) #{self.full_safe_name}_join ON #{self.full_safe_name}_join.target_id = targets.id
+) #{self.safe_name}_join ON #{self.safe_name}_join.target_id = targets.id
         SQL
       query.joins(column_join)
-    end
-
-    def data_table_statements query
-      pivotted_columns = DataTableColumn.pivotted({data_table_id: self.data_table_id, id: self.id})
-
-      pivotted_columns.each do |pivotted_column|
-        query = query.select("#{pivotted_column.full_safe_name}_join.value as #{pivotted_column.full_safe_name}")
-
-        subquery = ExperimentDataSheetValue.unscoped
-          .from("grit_assays_experiment_data_sheet_values targets")
-          .select("targets.entity_id_value AS target_id")
-          .select("data_sources.assay_data_sheet_column_id AS data_source_id")
-
-        subquery = sql_aggregate_method(subquery)
-
-        join = <<-SQL
-JOIN grit_assays_experiment_data_sheet_values data_sources ON data_sources.experiment_data_sheet_record_id = targets.experiment_data_sheet_record_id
-AND data_sources.assay_data_sheet_column_id = #{assay_data_sheet_column_id}
-        SQL
-        subquery = subquery.joins(join).group(:target_id, :data_source_id)
-
-        if pivotted_columns.length > 1
-          join = <<-SQL
-JOIN GRIT_ASSAYS_EXPERIMENT_DATA_SHEET_RECORDS ON GRIT_ASSAYS_EXPERIMENT_DATA_SHEET_RECORDS.ID = TARGETS.EXPERIMENT_DATA_SHEET_RECORD_ID
-JOIN GRIT_ASSAYS_EXPERIMENT_DATA_SHEETS ON GRIT_ASSAYS_EXPERIMENT_DATA_SHEETS.ID = GRIT_ASSAYS_EXPERIMENT_DATA_SHEET_RECORDS.EXPERIMENT_DATA_SHEET_ID
-JOIN GRIT_ASSAYS_EXPERIMENTS ON GRIT_ASSAYS_EXPERIMENTS.ID = GRIT_ASSAYS_EXPERIMENT_DATA_SHEETS.EXPERIMENT_ID
-          SQL
-          subquery = subquery.joins(join)
-
-          pivotted_column.model_metadatum_ids.each_index do |i|
-            next if pivotted_column.model_metadatum_ids[i].nil?
-            join = <<-SQL
-JOIN GRIT_ASSAYS_ASSAY_METADATA GRIT_ASSAYS_ASSAY_METADATA_#{i} ON GRIT_ASSAYS_ASSAY_METADATA_#{i}.ASSAY_ID = GRIT_ASSAYS_EXPERIMENTS.ASSAY_ID
-AND GRIT_ASSAYS_ASSAY_METADATA_#{i}.ASSAY_MODEL_METADATUM_ID = #{pivotted_column.model_metadatum_ids[i]} AND GRIT_ASSAYS_ASSAY_METADATA_#{i}.VOCABULARY_ITEM_ID = #{pivotted_column.vocabulary_item_ids[i]}
-            SQL
-            subquery = subquery.joins(join)
-          end
-        end
-
-        if assay_data_sheet_column.data_type.is_entity
-          entity_join = <<-SQL
-LEFT OUTER JOIN #{assay_data_sheet_column.data_type.table_name} #{assay_data_sheet_column.data_type.table_name}__#{assay_data_sheet_column.safe_name} ON
-#{assay_data_sheet_column.data_type.table_name}__#{assay_data_sheet_column.safe_name}.id = data_sources.entity_id_value
-          SQL
-
-          subquery = subquery.joins(entity_join)
-
-          assay_data_sheet_column.data_type.model.display_properties.map do |display_property|
-            query = query.select("#{pivotted_column.full_safe_name}_join.value__#{display_property[:name]} as #{pivotted_column.full_safe_name}__#{display_property[:name]}")
-          end
-        end
-
-        column_join = <<-SQL
-LEFT OUTER JOIN (
-      #{subquery.to_sql}
-) #{pivotted_column.full_safe_name}_join ON #{pivotted_column.full_safe_name}_join.target_id = targets.id
-        SQL
-        query = query.joins(column_join)
-      end
-      query
     end
   end
 end

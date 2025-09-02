@@ -389,10 +389,13 @@ CREATE TABLE public.grit_assays_data_table_columns (
     created_at timestamp(6) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_by character varying(30),
     updated_at timestamp(6) without time zone,
+    name character varying NOT NULL,
+    safe_name character varying NOT NULL,
     data_table_id bigint NOT NULL,
     assay_data_sheet_column_id bigint NOT NULL,
-    meta jsonb DEFAULT '{}'::jsonb,
-    sort integer
+    sort integer,
+    aggregation_method character varying,
+    pivots jsonb DEFAULT '{}'::jsonb
 );
 
 
@@ -423,7 +426,8 @@ CREATE TABLE public.grit_assays_data_tables (
     updated_at timestamp(6) without time zone,
     name character varying NOT NULL,
     description text,
-    entity_data_type_id bigint NOT NULL
+    entity_data_type_id bigint NOT NULL,
+    plots jsonb DEFAULT '{}'::jsonb
 );
 
 
@@ -1119,6 +1123,14 @@ ALTER TABLE ONLY public.grit_core_vocabulary_items
 
 ALTER TABLE ONLY public.schema_migrations
     ADD CONSTRAINT schema_migrations_pkey PRIMARY KEY (version);
+
+
+--
+-- Name: grit_assays_data_table_columns unique_safe_name_data_table_id; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.grit_assays_data_table_columns
+    ADD CONSTRAINT unique_safe_name_data_table_id UNIQUE (safe_name, data_table_id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --

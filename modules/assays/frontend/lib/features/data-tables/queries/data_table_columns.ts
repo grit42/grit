@@ -130,3 +130,19 @@ export const useDataTableColumnPivotOptions = (
     queryOptions,
   );
 };
+
+export const useAssayDataSheetColumnPivotOptions = (
+  assayDataSheetColumnId: string | number,
+  params: URLParams = {},
+  queryOptions: Partial<
+    UseQueryOptions<AssayModelMetadatumData[], string>
+  > = {},
+) => {
+  return useEntityData<AssayModelMetadatumData>(
+    `grit/assays/assay_data_sheet_columns/${assayDataSheetColumnId}/pivot_options`,
+    undefined,
+    undefined,
+    params,
+    queryOptions,
+  );
+};
