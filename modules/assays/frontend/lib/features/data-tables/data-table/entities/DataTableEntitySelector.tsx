@@ -1,67 +1,35 @@
 import { Button } from "@grit42/client-library/components";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
-  DataTableEntityData,
   useAvailableDataTableEntities,
-  useDataTableEntities,
   useDataTableEntityColumns,
 } from "../../queries/data_table_entities";
 import { useTableColumns } from "@grit42/core/utils";
 import { Row, Table, useSetupTableState } from "@grit42/table";
-import { useCallback, useMemo } from "react";
-import {
-  useCreateEntityMutation,
-  useDestroyEntityMutation,
-} from "@grit42/core";
+import { useCallback } from "react";
+import { EntityData, useCreateEntityMutation } from "@grit42/core";
 import { useQueryClient } from "@grit42/api";
 
-const getRowId = (data: DataTableEntityData) => data.id.toString();
+const getRowId = (data: EntityData) => data.id.toString();
 
 const DataTableEntitySelector = ({
   dataTableId,
 }: {
   dataTableId: string | number;
 }) => {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { data: columns } = useDataTableEntityColumns(dataTableId);
-  const tableColumns = useTableColumns<DataTableEntityData>(columns);
-  const availableTableState = useSetupTableState(
-    "data-table-available-entities",
+  const tableColumns = useTableColumns<EntityData>(columns);
+  const tableState = useSetupTableState(
+    `data-table-${dataTableId}-available-entities`,
     tableColumns,
     {
-      saveState: {
-        columnSizing: true,
-      },
+      saveState: true,
       settings: {
-        disableColumnReorder: true,
-        disableVisibilitySettings: true,
+        enableSelection: true,
       },
     },
-  );
-
-  const selectedTableState = useSetupTableState(
-    "data-table-selected-entities",
-    tableColumns,
-    {
-      saveState: {
-        columnSizing: true,
-      },
-      settings: {
-        disableColumnReorder: true,
-        disableVisibilitySettings: true,
-      },
-    },
-  );
-
-  const {
-    data: selectedDataTableEntities,
-    isLoading: isSelectedDataTableEntitiesLoading,
-    isError: isSelectedDataTableEntitiesError,
-    error: selectedDataTableEntitiesError,
-  } = useDataTableEntities(
-    dataTableId,
-    availableTableState.sorting,
-    availableTableState.filters,
   );
 
   const {
@@ -71,86 +39,90 @@ const DataTableEntitySelector = ({
     error: availableDataTableEntitiesError,
   } = useAvailableDataTableEntities(
     dataTableId,
-    availableTableState.sorting,
-    availableTableState.filters,
+    tableState.sorting,
+    tableState.filters,
   );
 
-  const dataTableEntitiesUrl = useMemo(
-    () => `grit/assays/data_tables/${dataTableId}/data_table_entities`,
-    [dataTableId],
+  const createEntityMutation = useCreateEntityMutation<EntityData>(
+    "grit/assays/data_table_entities/create_bulk",
   );
 
-  const createEntityMutation =
-    useCreateEntityMutation<DataTableEntityData>(dataTableEntitiesUrl);
+  const onRowClick = (row: Row<EntityData>) => {
+    tableState.setRowSelection((prev) => {
+      if (prev[row.id]) {
+        delete prev[row.id];
+        return { ...prev };
+      }
+      return { ...prev, [row.id]: true };
+    });
+  };
 
-  const destroyEntityMutation = useDestroyEntityMutation(
-    "grit/assays/data_table_entities",
-  );
-
-  const onAvailableRowClick = useCallback(
-    async (row: Row<DataTableEntityData>) => {
-      await createEntityMutation.mutateAsync({
-        entity_id: row.id,
-      });
-      await queryClient.invalidateQueries({
-        queryKey: ["entities", "data", dataTableEntitiesUrl],
-      });
-    },
-    [createEntityMutation, dataTableEntitiesUrl, queryClient],
-  );
-
-  const onSelectedRowClick = useCallback(
-    async (row: Row<DataTableEntityData>) => {
-      await destroyEntityMutation.mutateAsync(
-        (row.original as DataTableEntityData).data_table_entity_id,
+  const onAdd = useCallback(
+    async (selectedIds: string[]) => {
+      await createEntityMutation.mutateAsync(
+        selectedIds.map((entity_id) => ({
+          data_table_id: dataTableId,
+          entity_id,
+        })),
       );
-      await queryClient.invalidateQueries({
-        queryKey: ["entities", "data", dataTableEntitiesUrl],
-      });
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: [
+            "entities",
+            "data",
+            `grit/assays/data_tables/${dataTableId}/data_table_entities`,
+          ],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [
+            "entities",
+            "data",
+            `grit/assays/data_tables/${dataTableId}/data_table_rows`,
+          ],
+        }),
+      ]);
+      navigate("..");
     },
-    [dataTableEntitiesUrl, destroyEntityMutation, queryClient],
+    [createEntityMutation, dataTableId, navigate, queryClient],
   );
+
+  console.log(tableState.rowSelection);
+  console.log(tableState.selectAllState);
 
   return (
     <div
       style={{
         display: "grid",
-        gridTemplateColumns: "1fr 1fr",
-        gap: "calc(var(--spacing) * 2 )",
-        width: "100%",
+        gridTemplateColumns: "1fr",
+        margin: "auto",
+        maxWidth: "100%",
         height: "100%",
       }}
     >
-      <Table
-        header="Selected"
+      <Table<EntityData>
+        header="Select entities to add"
         getRowId={getRowId}
-        onRowClick={onSelectedRowClick}
-        loading={isSelectedDataTableEntitiesLoading}
-        tableState={selectedTableState}
-        disableFooter
-        data={selectedDataTableEntities}
-        noDataMessage={
-          (isSelectedDataTableEntitiesError
-            ? selectedDataTableEntitiesError
-            : undefined) ?? "No entities selected"
-        }
-      />
-      <Table<DataTableEntityData>
-        header="Available"
-        getRowId={getRowId}
-        onRowClick={onAvailableRowClick}
-        headerActions={
+        onRowClick={onRowClick}
+        headerActions={[
+          <Button
+            onClick={() => onAdd(Object.keys(tableState.rowSelection))}
+            disabled={Object.keys(tableState.rowSelection).length == 0}
+            color="secondary"
+          >
+            Add selected
+          </Button>,
           <Link to="..">
-            <Button color="secondary">Done</Button>
-          </Link>
-        }
+            <Button color="primary">Cancel</Button>
+          </Link>,
+        ]}
         loading={isAvailableDataTableEntitiesLoading}
-        tableState={availableTableState}
+        tableState={tableState}
         disableFooter
         data={availableDataTableEntities}
         noDataMessage={
-          (isAvailableDataTableEntitiesError ? availableDataTableEntitiesError : undefined) ??
-          "No more entities available"
+          (isAvailableDataTableEntitiesError
+            ? availableDataTableEntitiesError
+            : undefined) ?? "No more entities available"
         }
       />
     </div>

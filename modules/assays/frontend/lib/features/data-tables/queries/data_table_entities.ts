@@ -64,9 +64,9 @@ export const useAvailableDataTableEntities = (
   sort?: SortingState,
   filter?: Filter[],
   params: URLParams = {},
-  queryOptions: Partial<UseQueryOptions<DataTableEntityData[], string>> = {},
+  queryOptions: Partial<UseQueryOptions<EntityData[], string>> = {},
 ) => {
-  return useEntityData<DataTableEntityData>(
+  return useEntityData<EntityData>(
     `grit/assays/data_tables/${dataTableId}/data_table_entities`,
     sort ?? [],
     filter ?? [],

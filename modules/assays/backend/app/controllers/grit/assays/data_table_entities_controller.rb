@@ -20,6 +20,20 @@ module Grit::Assays
   class DataTableEntitiesController < ApplicationController
     include Grit::Core::GritEntityController
 
+    def create_bulk
+      permitted = params.require(:_json).map { |params| params.permit(self.permitted_params) }
+
+      ActiveRecord::Base.transaction do
+        created = permitted.map { |p| DataTableEntity.create!(p) }
+        render json: { success: true, data: created }
+      rescue StandardError => e
+        logger.info e.to_s
+        logger.info e.backtrace.join("\n")
+        render json: { success: false, errors: e.to_s }, status: :internal_server_error
+        raise ActiveRecord::Rollback
+      end
+    end
+
     private
 
     def permitted_params

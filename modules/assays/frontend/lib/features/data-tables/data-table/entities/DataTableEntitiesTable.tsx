@@ -109,7 +109,7 @@ export const DataTableEntitiesTable = ({ dataTableId }: Props) => {
           headerActions={
             canEditDataTable ? (
               <Button disabled={dataTableId === "new"} onClick={navigateToEdit}>
-                Edit
+                Add
               </Button>
             ) : undefined
           }
