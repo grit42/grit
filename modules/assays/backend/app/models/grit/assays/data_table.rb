@@ -28,5 +28,17 @@ module Grit::Assays
       create: [ "Administrator", "AssayAdministrator", "AssayUser" ],
       update: [ "Administrator", "AssayAdministrator", "AssayUser" ],
       destroy: [ "Administrator", "AssayAdministrator", "AssayUser" ]
+
+    def self.entity_properties(**args)
+      @entity_properties ||= self.db_properties.filter { |p| p[:name] != "plots" }
+    end
+
+    def self.entity_fields(**args)
+      @entity_fields ||= self.entity_fields_from_properties(self.entity_properties(**args))
+    end
+
+    def self.entity_columns(**args)
+      @entity_columns ||= self.entity_columns_from_properties(self.entity_properties(**args))
+    end
   end
 end
