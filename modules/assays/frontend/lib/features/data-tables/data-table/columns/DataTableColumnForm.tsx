@@ -16,8 +16,17 @@
  * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { useNavigate, useParams } from "react-router-dom";
-import { CheckboxGroup, Surface } from "@grit42/client-library/components";
+import {
+  createSearchParams,
+  Link,
+  useNavigate,
+  useParams,
+} from "react-router-dom";
+import {
+  Button,
+  CheckboxGroup,
+  Surface,
+} from "@grit42/client-library/components";
 import {
   Form,
   FormControls,
@@ -57,7 +66,7 @@ const PivotValuesField = ({
     const currentValue = form.getFieldValue(`pivot-${pivotId}-values`);
     if (!enabled && currentValue) {
       form.setFieldValue(`pivot-${pivotId}-values`, null);
-    } else if (enabled && currentValue) {
+    } else if (enabled && !currentValue) {
       form.setFieldValue(
         `pivot-${pivotId}-values`,
         pivotOptions.map(({ value }) => value),
@@ -133,7 +142,12 @@ const DataTableColumnForm = ({
     onSubmit: genericErrorHandler(async ({ value: formValue }) => {
       const pivots: Record<string, number[]> = {};
       for (const key in formValue) {
-        if (/^pivot-\d+$/.test(key) && formValue[key]) {
+        if (
+          /^pivot-\d+$/.test(key) &&
+          formValue[key] &&
+          formValue[`${key}-values`] &&
+          (formValue[`${key}-values`] as Array<unknown>).length > 1
+        ) {
           pivots[key.split("-")[1]] =
             (formValue[`${key}-values`] as number[]) ?? [];
         }
@@ -255,7 +269,20 @@ const DataTableColumnForm = ({
             }
             showCancel
             onCancel={() => navigate("..")}
-          />
+          >
+            {!!data_table_column_id && data_table_column_id !== "new" && (
+              <Link
+                to={{
+                  pathname: "../clone/new",
+                  search: createSearchParams({
+                    source_data_table_column_id: data_table_column_id,
+                  }).toString(),
+                }}
+              >
+                <Button color="secondary">Clone</Button>
+              </Link>
+            )}
+          </FormControls>
         </Form>
       </Surface>
     </div>

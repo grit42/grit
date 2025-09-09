@@ -37,7 +37,9 @@ export const CloneDataTableColumn = () => {
     isLoading: isDataTableColumnLoading,
     isError: isDataTableColumnError,
     error: dataTableColumnError,
-  } = useDataTableColumn(source_data_table_column_id!);
+  } = useDataTableColumn(source_data_table_column_id!, undefined, {
+    select: (data) => data ? ({...data, name: `${data.name} (copy)`, safe_name: `${data.safe_name}_copy`}) : null
+  });
 
   const {
     data: dataTableColumnFields,
@@ -52,7 +54,6 @@ export const CloneDataTableColumn = () => {
             "data_table_id",
             "assay_data_sheet_column_id",
             "pivots",
-            // "sort",
             // "aggregation_method",
           ].includes(f.name),
       ),
