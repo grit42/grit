@@ -21,9 +21,14 @@ import styles from "../dataTable.module.scss";
 import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTableColumns } from "@grit42/core/utils";
-import { useHasRoles } from "@grit42/core";
-import { useSelectedDataTableColumns, useDataTableColumnColumns, DataTableColumnData } from "../../queries/data_table_columns";
+import { useDestroyEntityMutation, useHasRoles } from "@grit42/core";
+import {
+  useSelectedDataTableColumns,
+  useDataTableColumnColumns,
+  DataTableColumnData,
+} from "../../queries/data_table_columns";
 import { Button } from "@grit42/client-library/components";
+import { useQueryClient } from "@grit42/api";
 
 interface Props {
   dataTableId: string | number;
@@ -31,25 +36,44 @@ interface Props {
 
 export const DataTableColumnsTable = ({ dataTableId }: Props) => {
   const navigate = useNavigate();
-  const canEditDataTable = useHasRoles(["Administrator", "AssayAdministrator", "AssayUser"])
+  const canEditDataTable = useHasRoles([
+    "Administrator",
+    "AssayAdministrator",
+    "AssayUser",
+  ]);
+
+  const queryClient = useQueryClient();
+  const destroyColumnsMutation = useDestroyEntityMutation(
+    "grit/assays/data_table_columns",
+  );
 
   const { data: columns } = useDataTableColumnColumns();
 
   const tableColumns = useTableColumns<DataTableColumnData>(columns);
 
-  const tableState = useSetupTableState(`data-table-columns-${dataTableId}`, tableColumns);
+  const tableState = useSetupTableState(
+    `data-table-columns-${dataTableId}`,
+    tableColumns,
+    {
+      settings: {
+        enableSelection: true,
+      },
+    },
+  );
 
-  const { data: rows, isLoading: isRowsLoading } =
-    useSelectedDataTableColumns(
-      dataTableId,
-      tableState.sorting,
-      tableState.filters,
-      undefined,
-      { enabled: dataTableId !== "new" },
-    );
+  const { data: rows, isLoading: isRowsLoading } = useSelectedDataTableColumns(
+    dataTableId,
+    tableState.sorting,
+    tableState.filters,
+    undefined,
+    { enabled: dataTableId !== "new" },
+  );
 
   const navigateToSelect = useCallback(() => navigate("select"), [navigate]);
-  const navigateToEdit = useCallback((row: Row<DataTableColumnData>) => navigate(`edit/${row.original.id}`), [navigate]);
+  const navigateToEdit = useCallback(
+    (row: Row<DataTableColumnData>) => navigate(`edit/${row.original.id}`),
+    [navigate],
+  );
 
   return (
     <>
@@ -57,11 +81,39 @@ export const DataTableColumnsTable = ({ dataTableId }: Props) => {
         <Table
           tableState={tableState}
           onRowClick={navigateToEdit}
-          // header={canEditDataTable ? undefined : "Items"}
+          rowActions={canEditDataTable ? ["delete"] : []}
+          onDelete={async (rows) => {
+            if (
+              !window.confirm(
+                `Are you sure you want to delete ${
+                  rows.length > 1 ? `${rows.length} columns` : "this column"
+                }? This action is irreversible`,
+              )
+            )
+              return;
+            await destroyColumnsMutation.mutateAsync(
+              rows.map(({ original }) => original.id),
+            );
+            await Promise.all([
+              queryClient.invalidateQueries({
+                queryKey: ["entities", "columns", "Grit::Assays::DataTableRow"],
+              }),
+              await queryClient.invalidateQueries({
+                queryKey: [
+                  "entities",
+                  "data",
+                  `grit/assays/data_tables/${dataTableId}/data_table_columns`,
+                ],
+              }),
+            ]);
+          }}
           loading={isRowsLoading}
           headerActions={
             canEditDataTable ? (
-              <Button disabled={dataTableId === "new"} onClick={navigateToSelect}>
+              <Button
+                disabled={dataTableId === "new"}
+                onClick={navigateToSelect}
+              >
                 Select columns
               </Button>
             ) : undefined
