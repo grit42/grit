@@ -19,6 +19,7 @@
 import styles from "./form.module.scss";
 import { Button, ButtonGroup } from "@grit42/client-library/components";
 import { ReactFormExtendedApi } from "@tanstack/react-form";
+import { PropsWithChildren } from "react";
 
 interface Props<T> {
   form: ReactFormExtendedApi<T>;
@@ -44,7 +45,8 @@ const FormControls = <T,>({
   onDelete,
   isDeleting,
   style,
-}: Props<T>) => {
+  children,
+}: PropsWithChildren<Props<T>>) => {
   return (
     <form.Subscribe
       selector={(state) => [state.canSubmit, state.isSubmitting, state.isDirty]}
@@ -79,6 +81,7 @@ const FormControls = <T,>({
                   {deleteLabel}
                 </Button>
               )}
+              {children}
             </ButtonGroup>
           </div>
         );
