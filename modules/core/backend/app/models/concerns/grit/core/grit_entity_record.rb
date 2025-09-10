@@ -209,6 +209,7 @@ module Grit::Core::GritEntityRecord
       query = self.from(self.table_name)
       self.columns.each do |column|
         query = query.select("#{self.table_name}.#{column.name}")
+        query = query.order(Arel.sql("#{self.table_name}.sort ASC NULLS LAST")) if column.name == "sort"
       end
 
       self.foreign_keys.each do |foreign_key, memo|
