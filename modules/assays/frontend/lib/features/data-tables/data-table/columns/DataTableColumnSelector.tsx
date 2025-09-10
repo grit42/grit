@@ -15,6 +15,18 @@ import { EntityPropertyDef } from "@grit42/core";
 const getRowId = (data: DataTableColumnData | AssayDataSheetColumnData) =>
   `${data.assay_model_id}-${data.assay_id}-${data.id}`;
 
+const defaultOrder = [
+  "assay_model_id__name",
+  "assay_data_sheet_definition_id__name",
+  "name",
+  "description",
+  "safe_name",
+  "data_type_id__name",
+  "unit_id__abbreviation",
+  "sort",
+  "required",
+];
+
 const DataTableColumnSelector = ({
   dataTableId,
 }: {
@@ -26,29 +38,37 @@ const DataTableColumnSelector = ({
     undefined,
     {
       select: (data): EntityPropertyDef[] =>
-        data
+        (data
           ? [
               {
                 display_name: "Assay model",
-                name: "assay_model_name",
-                type: "string",
+                name: "assay_model_id__name",
+                type: "entity",
                 default_hidden: false,
                 required: false,
                 unique: false,
-              },
-              {
-                display_name: "Assay",
-                name: "assay_name",
-                type: "string",
-                default_hidden: false,
-                required: false,
-                unique: false,
+                entity: {
+                  column: "assay_model_id",
+                  full_name: "Grit::Assays::AssayModel",
+                  name: "AssayModel",
+                  path: "grit/assays/assay_models",
+                  primary_key: "id",
+                  primary_key_type: "integer",
+                  display_column: "name",
+                  display_column_type: "string",
+                },
               },
               ...data,
             ]
-          : [],
+          : []
+        ).toSorted(
+          (a, b) =>
+            defaultOrder.indexOf(a.name as string) -
+            defaultOrder.indexOf(b.name as string),
+        ),
     },
   );
+
   const availableTableColumns = useTableColumns<AssayDataSheetColumnData>(
     dataSheetColumnColumns,
   );

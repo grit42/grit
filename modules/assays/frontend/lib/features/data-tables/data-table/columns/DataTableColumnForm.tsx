@@ -24,7 +24,7 @@ import {
 } from "react-router-dom";
 import {
   Button,
-  CheckboxGroup,
+  Select,
   Surface,
 } from "@grit42/client-library/components";
 import {
@@ -36,7 +36,6 @@ import {
   getVisibleFieldData,
   ReactFormExtendedApi,
   useForm,
-  useStore,
 } from "@grit42/form";
 import {
   useCreateEntityMutation,
@@ -50,43 +49,40 @@ import { Fragment, useEffect, useMemo } from "react";
 
 const PivotValuesField = ({
   form,
-  pivotId,
+  pivot,
   pivotOptions,
 }: {
   pivotOptions: { value: number; label: string }[];
   form: ReactFormExtendedApi<Partial<DataTableColumnData>, undefined>;
-  pivotId: number;
+  pivot: any;
 }) => {
-  const enabled = useStore(
-    form.baseStore,
-    (state) => (state.values as any)[`pivot-${pivotId}`] as boolean,
-  );
-
   useEffect(() => {
-    const currentValue = form.getFieldValue(`pivot-${pivotId}-values`);
-    if (!enabled && currentValue) {
-      form.setFieldValue(`pivot-${pivotId}-values`, null);
-    } else if (enabled && !currentValue) {
+    const currentValue = form.getFieldValue(`pivot-${pivot.id}-values`);
+    if (!currentValue) {
       form.setFieldValue(
-        `pivot-${pivotId}-values`,
+        `pivot-${pivot.id}-values`,
         pivotOptions.map(({ value }) => value),
       );
     }
-  }, [form, enabled, pivotId, pivotOptions]);
+  }, [form, pivot.id, pivotOptions]);
 
   return (
     <form.Field
-      name={`pivot-${pivotId}-values`}
+      name={`pivot-${pivot.id}-values`}
       children={(field) => (
-        <CheckboxGroup
-          disabled={!enabled}
-          onChange={field.handleChange}
-          value={(field.state.value as number[]) ?? []}
+        <Select
+          label={pivot.assay_metadata_definition_id__name}
           options={pivotOptions.map((v: any) => ({
             id: v.value,
             value: v.value,
             label: v.label,
           }))}
+          onChange={(yo) => {
+            console.log(yo);
+            field.handleChange(yo);
+          }}
+          value={field.state.value}
+          multiple
         />
       )}
     />
@@ -128,7 +124,6 @@ const DataTableColumnForm = ({
       ...Object.entries(dataTableColumn.pivots ?? {}).reduce(
         (acc, [key, value]) => ({
           ...acc,
-          [`pivot-${key}`]: true,
           [`pivot-${key}-values`]: value,
         }),
         {},
@@ -143,13 +138,11 @@ const DataTableColumnForm = ({
       const pivots: Record<string, number[]> = {};
       for (const key in formValue) {
         if (
-          /^pivot-\d+$/.test(key) &&
+          /^pivot-\d+-values$/.test(key) &&
           formValue[key] &&
-          formValue[`${key}-values`] &&
-          (formValue[`${key}-values`] as Array<unknown>).length > 1
+          (formValue[key] as Array<unknown>).length > 0
         ) {
-          pivots[key.split("-")[1]] =
-            (formValue[`${key}-values`] as number[]) ?? [];
+          pivots[key.split("-")[1]] = (formValue[key] as number[]) ?? [];
         }
       }
 
@@ -210,7 +203,7 @@ const DataTableColumnForm = ({
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "1fr",
+              gridTemplateColumns: "1fr 1fr",
               gridAutoRows: "max-content",
               gap: "calc(var(--spacing) * 2)",
               paddingBottom: "calc(var(--spacing) * 2)",
@@ -227,29 +220,38 @@ const DataTableColumnForm = ({
                 {form.state.errorMap.onSubmit?.toString()}
               </div>
             )}
-            {fields.map((f) => (
-              <FormField form={form} fieldDef={f} key={f.name} />
-            ))}
             <div
               style={{
                 display: "grid",
                 gridTemplateColumns: "1fr",
+                gap: "calc(var(--spacing) * 2)",
               }}
             >
-              <h3>Split by:</h3>
+              {fields.map((f) => (
+                <FormField form={form} fieldDef={f} key={f.name} />
+              ))}
+            </div>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr",
+              gridAutoRows: "max-content",
+                gap: "calc(var(--spacing) * 2)",
+              }}
+            >
+              <div>
+                <h3>Metadata filters</h3>
+                <p>
+                  Aggregate results from experiments with the selected metadata.
+                  <br />
+                  No selection includes all experiments of the assay model.
+                </p>
+              </div>
               {pivotOptions.map((o) => (
                 <Fragment key={o.id}>
-                  <FormField
-                    form={form}
-                    fieldDef={{
-                      type: "boolean",
-                      name: `pivot-${o.id}`,
-                      display_name: o.assay_metadata_definition_id__name,
-                    }}
-                  />
                   <PivotValuesField
                     form={form}
-                    pivotId={o.id}
+                    pivot={o}
                     pivotOptions={
                       o.metadatum_values as {
                         value: number;
