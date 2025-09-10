@@ -45,7 +45,7 @@ import {
 import { DataTableColumnData } from "../../queries/data_table_columns";
 import { useQueryClient } from "@grit42/api";
 import { AssayModelMetadatumData } from "../../../../queries/assay_model_metadata";
-import { Fragment, useEffect, useMemo } from "react";
+import { Fragment, useMemo } from "react";
 
 const PivotValuesField = ({
   form,
@@ -56,15 +56,6 @@ const PivotValuesField = ({
   form: ReactFormExtendedApi<Partial<DataTableColumnData>, undefined>;
   pivot: any;
 }) => {
-  useEffect(() => {
-    const currentValue = form.getFieldValue(`pivot-${pivot.id}-values`);
-    if (!currentValue) {
-      form.setFieldValue(
-        `pivot-${pivot.id}-values`,
-        [],
-      );
-    }
-  }, [form, pivot.id, pivotOptions]);
 
   return (
     <form.Field
@@ -77,11 +68,8 @@ const PivotValuesField = ({
             value: v.value,
             label: v.label,
           }))}
-          onChange={(yo) => {
-            console.log(yo);
-            field.handleChange(yo);
-          }}
-          value={field.state.value}
+          onChange={field.handleChange}
+          value={field.state.value ?? []}
           multiple
         />
       )}
