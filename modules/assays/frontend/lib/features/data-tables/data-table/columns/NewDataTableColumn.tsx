@@ -16,7 +16,12 @@
  * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Link, useParams, useSearchParams } from "react-router-dom";
+import {
+  Link,
+  useLocation,
+  useParams,
+  useSearchParams,
+} from "react-router-dom";
 import { Button, ErrorPage, Spinner } from "@grit42/client-library/components";
 import {
   useAssayDataSheetColumnPivotOptions,
@@ -24,8 +29,11 @@ import {
 } from "../../queries/data_table_columns";
 import DataTableColumnForm from "./DataTableColumnForm";
 import { useAssayDataSheetColumn } from "../../../../queries/assay_data_sheet_columns";
+import { useMemo } from "react";
 
 export const NewDataTableColumn = () => {
+  const state = useLocation().state;
+
   const { data_table_id } = useParams() as {
     data_table_id: string;
   };
@@ -45,6 +53,16 @@ export const NewDataTableColumn = () => {
     select: (data) =>
       data ? { ...data, assay_data_sheet_column_id, data_table_id } : null,
   });
+
+  const dataWithPivots = useMemo(() => {
+    if (dataTableColumn && state?.assay_data_sheet_column?.metadata_summary) {
+      return {
+        ...dataTableColumn,
+        pivots: state.assay_data_sheet_column?.metadata_summary,
+      };
+    }
+    return dataTableColumn;
+  }, [state, dataTableColumn]);
 
   const {
     data: dataTableColumnFields,
@@ -111,7 +129,7 @@ export const NewDataTableColumn = () => {
   return (
     <DataTableColumnForm
       fields={dataTableColumnFields}
-      dataTableColumn={dataTableColumn}
+      dataTableColumn={dataWithPivots as any}
       pivotOptions={pivotOptions}
     />
   );

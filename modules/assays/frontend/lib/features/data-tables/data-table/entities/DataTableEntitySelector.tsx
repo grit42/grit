@@ -86,9 +86,6 @@ const DataTableEntitySelector = ({
     [createEntityMutation, dataTableId, navigate, queryClient],
   );
 
-  console.log(tableState.rowSelection);
-  console.log(tableState.selectAllState);
-
   return (
     <div
       style={{
@@ -97,6 +94,7 @@ const DataTableEntitySelector = ({
         margin: "auto",
         maxWidth: "100%",
         height: "100%",
+        overflow: "auto"
       }}
     >
       <Table<EntityData>

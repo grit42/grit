@@ -3,63 +3,56 @@ import { createSearchParams, Link, useNavigate } from "react-router-dom";
 import {
   DataTableColumnData,
   useAvailableDataTableColumns,
-  useDataTableColumnColumns,
-  useSelectedDataTableColumns,
 } from "../../queries/data_table_columns";
 import { useTableColumns } from "@grit42/core/utils";
-import { Row, Table, useSetupTableState } from "@grit42/table";
-import { useCallback, useMemo } from "react";
-import {
-  useDestroyEntityMutation,
-} from "@grit42/core";
-import { useQueryClient } from "@grit42/api";
+import { Table, useSetupTableState } from "@grit42/table";
 import {
   AssayDataSheetColumnData,
   useAssayDataSheetColumnColumns,
 } from "../../../../queries/assay_data_sheet_columns";
+import { EntityPropertyDef } from "@grit42/core";
 
 const getRowId = (data: DataTableColumnData | AssayDataSheetColumnData) =>
-  data.id.toString();
+  `${data.assay_model_id}-${data.assay_id}-${data.id}`;
 
 const DataTableColumnSelector = ({
   dataTableId,
 }: {
   dataTableId: string | number;
 }) => {
-  const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const { data: dataTableColumnColumns } = useDataTableColumnColumns();
-  const selectedTableColumns = useTableColumns<DataTableColumnData>(
-    dataTableColumnColumns,
-  );
-  const selectedTableState = useSetupTableState(
-    "data-table-selected-columns",
-    selectedTableColumns,
+
+  const { data: dataSheetColumnColumns } = useAssayDataSheetColumnColumns(
+    undefined,
     {
-      saveState: {
-        columnSizing: true,
-      },
-      settings: {
-        disableColumnReorder: true,
-        disableVisibilitySettings: true,
-      },
+      select: (data): EntityPropertyDef[] =>
+        data
+          ? [
+              {
+                display_name: "Assay model",
+                name: "assay_model_name",
+                type: "string",
+                default_hidden: false,
+                required: false,
+                unique: false,
+              },
+              {
+                display_name: "Assay",
+                name: "assay_name",
+                type: "string",
+                default_hidden: false,
+                required: false,
+                unique: false,
+              },
+              ...data,
+            ]
+          : [],
     },
   );
-  const {
-    data: selectedDataTableColumns,
-    isLoading: isSelectedDataTableColumnsLoading,
-    isError: isSelectedDataTableColumnsError,
-    error: selectedDataTableColumnsError,
-  } = useSelectedDataTableColumns(
-    dataTableId,
-    selectedTableState.sorting,
-    selectedTableState.filters,
-  );
-
-  const { data: dataSheetColumnColumns } = useAssayDataSheetColumnColumns();
   const availableTableColumns = useTableColumns<AssayDataSheetColumnData>(
     dataSheetColumnColumns,
   );
+
   const availableTableState = useSetupTableState(
     "data-table-available-columns",
     availableTableColumns,
@@ -84,70 +77,38 @@ const DataTableColumnSelector = ({
     availableTableState.filters,
   );
 
-  const dataTableColumnsUrl = useMemo(
-    () => `grit/assays/data_tables/${dataTableId}/data_table_columns`,
-    [dataTableId],
-  );
-
-  const destroyEntityMutation = useDestroyEntityMutation(
-    "grit/assays/data_table_columns",
-  );
-
-  const onSelectedRowClick = useCallback(
-    async (row: Row<DataTableColumnData>) => {
-      await destroyEntityMutation.mutateAsync(
-        (row.original as DataTableColumnData).id,
-      );
-      await Promise.all([
-        queryClient.invalidateQueries({
-          queryKey: ["entities", "columns", "Grit::Assays::DataTableRow"],
-        }),
-        queryClient.invalidateQueries({
-          queryKey: ["entities", "data", dataTableColumnsUrl],
-        }),
-      ]);
-    },
-    [dataTableColumnsUrl, destroyEntityMutation, queryClient],
-  );
-
   return (
     <div
       style={{
         display: "grid",
-        gridTemplateColumns: "1fr 1fr",
-        gap: "calc(var(--spacing) * 2 )",
-        width: "100%",
+        gridTemplateColumns: "1fr",
+        margin: "auto",
+        maxWidth: "100%",
         height: "100%",
+        overflow: "auto",
       }}
     >
-      <Table
-        header="Selected"
-        getRowId={getRowId}
-        onRowClick={onSelectedRowClick}
-        loading={isSelectedDataTableColumnsLoading}
-        tableState={selectedTableState}
-        disableFooter
-        data={selectedDataTableColumns}
-        noDataMessage={
-          (isSelectedDataTableColumnsError
-            ? selectedDataTableColumnsError
-            : undefined) ?? "No columns selected"
-        }
-      />
       <Table<AssayDataSheetColumnData>
         header="Available"
         getRowId={getRowId}
         onRowClick={(row) =>
-          navigate({
-            pathname: "new",
-            search: createSearchParams({
-              assay_data_sheet_column_id: row.original.id.toString(),
-            }).toString(),
-          })
+          navigate(
+            {
+              pathname: "new",
+              search: createSearchParams({
+                assay_data_sheet_column_id: row.original.id.toString(),
+              }).toString(),
+            },
+            {
+              state: {
+                assay_data_sheet_column: row.original,
+              },
+            },
+          )
         }
         headerActions={
           <Link to="..">
-            <Button color="secondary">Done</Button>
+            <Button color="primary">Cancel</Button>
           </Link>
         }
         loading={isAvailableDataTableColumnsLoading}
