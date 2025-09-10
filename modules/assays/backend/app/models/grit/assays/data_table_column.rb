@@ -102,7 +102,17 @@ AND GRIT_ASSAYS_ASSAY_DATA_SHEET_COLUMNS.DATA_TYPE_ID <> #{data_table.entity_dat
     end
 
     def sql_aggregate_method subquery
-      # TODO: latest
+      if aggregation_method == "latest"
+        if assay_data_sheet_column.data_type.is_entity
+          return subquery.select(*[
+            "data_sources.entity_id_value as value",
+            assay_data_sheet_column.data_type.model.display_properties.map do |display_property|
+              "#{assay_data_sheet_column.data_type.table_name}__#{assay_data_sheet_column.safe_name}.#{display_property[:name]} AS value__#{display_property[:name]}"
+            end
+          ])
+        end
+        return subquery.select("data_sources.#{assay_data_sheet_column.data_type.name}_value as value")
+      end
       case assay_data_sheet_column.data_type.name
       when "string","text","date","datetime"
         return subquery.select("STRING_AGG(data_sources.#{assay_data_sheet_column.data_type.name}_value, ',') AS value")
@@ -125,8 +135,13 @@ AND GRIT_ASSAYS_ASSAY_DATA_SHEET_COLUMNS.DATA_TYPE_ID <> #{data_table.entity_dat
 
         subquery = ExperimentDataSheetValue.unscoped
           .from("grit_assays_experiment_data_sheet_values targets")
-          .select("targets.entity_id_value AS target_id")
-          .select("data_sources.assay_data_sheet_column_id AS data_source_id")
+        if aggregation_method == "latest"
+          subquery = subquery.select("DISTINCT ON (target_id, data_source_id) targets.entity_id_value AS target_id, data_sources.assay_data_sheet_column_id AS data_source_id")
+            .order(:target_id, :data_source_id, Arel.sql("COALESCE(data_sources.updated_at, data_sources.created_at) DESC"))
+        else
+          subquery = subquery.select("targets.entity_id_value AS target_id", "data_sources.assay_data_sheet_column_id AS data_source_id")
+            .group(:target_id, :data_source_id)
+        end
 
         subquery = sql_aggregate_method(subquery)
 
@@ -134,7 +149,7 @@ AND GRIT_ASSAYS_ASSAY_DATA_SHEET_COLUMNS.DATA_TYPE_ID <> #{data_table.entity_dat
 JOIN grit_assays_experiment_data_sheet_values data_sources ON data_sources.experiment_data_sheet_record_id = targets.experiment_data_sheet_record_id
 AND data_sources.assay_data_sheet_column_id = #{assay_data_sheet_column_id}
         SQL
-        subquery = subquery.joins(join).group(:target_id, :data_source_id)
+        subquery = subquery.joins(join)
 
         if self.pivots.keys.length.positive?
           join = <<-SQL
