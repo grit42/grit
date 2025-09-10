@@ -61,7 +61,7 @@ const PivotValuesField = ({
     if (!currentValue) {
       form.setFieldValue(
         `pivot-${pivot.id}-values`,
-        pivotOptions.map(({ value }) => value),
+        [],
       );
     }
   }, [form, pivot.id, pivotOptions]);
