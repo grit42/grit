@@ -52,7 +52,7 @@ const DataTableDetails = ({ dataTableId }: Props) => {
   const { data: dataTable } = useDataTable(dataTableId) as { data: DataTableData };
   const { data: fields } = useDataTableFields(undefined, {
     select: (data) =>
-      canEditDataTable ? data : data.map((f) => ({ ...f, disabled: true })),
+      canEditDataTable ? data.map((f) => ({ ...f, disabled: f.name === "entity_data_type_id" && !!dataTable.id })) : data.map((f) => ({ ...f, disabled: true })),
   }) as { data: FormFieldDef[] };
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState<Partial<DataTableData>>(dataTable ?? {});
