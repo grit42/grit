@@ -8,6 +8,7 @@ class CreateGritAssaysDataTableEntities < ActiveRecord::Migration[7.2]
       t.datetime :updated_at
       t.references :data_table, null: false, foreign_key: { name: "assays_data_table_entities_assays_data_table_id_fkey", to_table: "grit_assays_data_tables" }
       t.bigint :entity_id, null: false
+      t.integer :sort
     end
 
     execute "CREATE TRIGGER manage_stamps_grit_assays_data_table_entities BEFORE INSERT OR UPDATE ON public.grit_assays_data_table_entities FOR EACH ROW EXECUTE FUNCTION public.manage_stamps();"

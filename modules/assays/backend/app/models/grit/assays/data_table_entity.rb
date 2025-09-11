@@ -43,6 +43,8 @@ module Grit::Assays
         .joins("JOIN grit_assays_data_table_entities ON grit_assays_data_table_entities.entity_id = #{model.table_name}.id AND grit_assays_data_table_entities.data_table_id = #{params[:data_table_id]}")
         .select("grit_assays_data_table_entities.id as data_table_entity_id")
         .select("grit_assays_data_table_entities.data_table_id")
+        .select("grit_assays_data_table_entities.sort")
+        .order("grit_assays_data_table_entities.sort ASC NULLS LAST")
     end
 
     def self.available(params = nil)

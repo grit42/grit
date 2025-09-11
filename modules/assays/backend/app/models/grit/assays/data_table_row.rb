@@ -46,7 +46,7 @@ module Grit::Assays
 
     def self.for_data_table(data_table_id)
       data_table = DataTable.find(data_table_id)
-      query = data_table.entity_data_type.model.unscoped.from("#{data_table.entity_data_type.table_name} as targets").joins("JOIN grit_assays_data_table_entities ON grit_assays_data_table_entities.entity_id = targets.id AND grit_assays_data_table_entities.data_table_id = #{data_table_id}")
+      query = data_table.entity_data_type.model.unscoped.from("#{data_table.entity_data_type.table_name} as targets").joins("JOIN grit_assays_data_table_entities ON grit_assays_data_table_entities.entity_id = targets.id AND grit_assays_data_table_entities.data_table_id = #{data_table_id}").order("grit_assays_data_table_entities.sort ASC NULLS LAST")
 
       query = query.select("targets.id as id", "targets.name as id__name")
 
