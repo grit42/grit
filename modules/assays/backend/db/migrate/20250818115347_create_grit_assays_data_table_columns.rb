@@ -9,9 +9,11 @@ class CreateGritAssaysDataTableColumns < ActiveRecord::Migration[7.2]
       t.string :name, null: false
       t.string :safe_name, null: false
       t.references :data_table, null: false, foreign_key: { name: "assays_data_table_entities_assays_data_table_id_fkey", to_table: "grit_assays_data_tables" }
-      t.references :assay_data_sheet_column, null: false, foreign_key: { name: "assays_data_table_entities_assays_assay_data_sheet_column_id_fkey", to_table: "grit_assays_assay_data_sheet_columns" }
+      t.references :assay_data_sheet_column, foreign_key: { name: "assays_data_table_entities_assays_assay_data_sheet_column_id_fkey", to_table: "grit_assays_assay_data_sheet_columns" }
       t.integer :sort
       t.string :aggregation_method
+      t.string :source_type, null: false, default: "assay_data_sheet_column"
+      t.string :entity_attribute_name
       t.jsonb :pivots, default: {}
 
       t.unique_constraint([:safe_name,:data_table_id], name: "unique_safe_name_data_table_id", deferrable: :deferred)

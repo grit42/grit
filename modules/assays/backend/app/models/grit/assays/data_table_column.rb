@@ -19,7 +19,7 @@
 module Grit::Assays
   class DataTableColumn < ApplicationRecord
     include Grit::Core::GritEntityRecord
-    belongs_to :assay_data_sheet_column
+    belongs_to :assay_data_sheet_column, optional: true
     belongs_to :data_table
 
     entity_crud_with read: [],
@@ -80,8 +80,8 @@ AND GRIT_ASSAYS_ASSAY_DATA_SHEET_COLUMNS.DATA_TYPE_ID <> #{data_table.entity_dat
         .select("grit_assays_assay_data_sheet_columns__.name as full_name")
         .select("'p' || grit_assays_data_table_columns.id as full_safe_name")
         .joins("JOIN with_pivot_ids on with_pivot_ids.id = grit_assays_data_table_columns.id")
-        .joins("JOIN grit_assays_assay_data_sheet_definitions ON grit_assays_assay_data_sheet_definitions.id = grit_assays_assay_data_sheet_columns__.assay_data_sheet_definition_id")
-        .joins("JOIN grit_assays_assay_models ON grit_assays_assay_models.id = grit_assays_assay_data_sheet_definitions.assay_model_id")
+        .joins("LEFT OUTER JOIN grit_assays_assay_data_sheet_definitions ON grit_assays_assay_data_sheet_definitions.id = grit_assays_assay_data_sheet_columns__.assay_data_sheet_definition_id")
+        .joins("LEFT OUTER JOIN grit_assays_assay_models ON grit_assays_assay_models.id = grit_assays_assay_data_sheet_definitions.assay_model_id")
 
 
       if max_pivot_count&.positive?
@@ -131,6 +131,27 @@ AND GRIT_ASSAYS_ASSAY_DATA_SHEET_COLUMNS.DATA_TYPE_ID <> #{data_table.entity_dat
     end
 
     def data_table_statement query
+      return assay_data_sheet_column_query(query) if source_type == "assay_data_sheet_column"
+      return entity_attribute_query(query) if source_type == "entity_attribute"
+      raise "Unsupported source type: '#{source_type}'"
+    end
+
+    def entity_attribute_query query
+      query = query.select("#{self.safe_name}_join.#{entity_attribute_name} as #{self.safe_name}")
+      if data_table.entity_data_type.is_entity
+        entity_klass = data_table.entity_data_type.model
+        query = query.select("#{self.safe_name}_join.#{entity_attribute_name}__#{entity_klass.display_properties[0][:name]} as #{self.safe_name}__#{entity_klass.display_properties[0][:name]}")
+      end
+      subquery = self.data_table.entity_data_type.model_scope.select("\"#{data_table.entity_data_type.table_name}\".id as target_id")
+        column_join = <<-SQL
+LEFT OUTER JOIN (
+      #{subquery.to_sql}
+) #{self.safe_name}_join ON #{self.safe_name}_join.target_id = targets.id
+        SQL
+      query.joins(column_join)
+    end
+
+    def assay_data_sheet_column_query query
         query = query.select("#{self.safe_name}_join.value as #{self.safe_name}")
 
         subquery = ExperimentDataSheetValue.unscoped
