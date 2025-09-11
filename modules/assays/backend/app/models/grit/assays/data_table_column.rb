@@ -39,7 +39,7 @@ module Grit::Assays
       else
         begin
           # This is needed because of how active_support handles serialization as_json
-          Grit::Compounds::Compound.send(self.safe_name)
+          Grit::Assays::DataTableColumn.send(self.safe_name)
         rescue NoMethodError => e
         rescue StandardError => e
           errors.add("safe_name", "cannot be used as a safe name")
@@ -52,8 +52,8 @@ module Grit::Assays
       params = params.as_json
       raise "'data_table_id' is required" if params["data_table_id"].nil?
       self.detailed(params)
-      .joins("JOIN grit_assays_assay_data_sheet_definitions ON grit_assays_assay_data_sheet_definitions.id = grit_assays_assay_data_sheet_columns__.assay_data_sheet_definition_id")
-      .joins("JOIN grit_assays_assay_models ON grit_assays_assay_models.id = grit_assays_assay_data_sheet_definitions.assay_model_id")
+      .joins("LEFT OUTER JOIN grit_assays_assay_data_sheet_definitions ON grit_assays_assay_data_sheet_definitions.id = grit_assays_assay_data_sheet_columns__.assay_data_sheet_definition_id")
+      .joins("LEFT OUTER JOIN grit_assays_assay_models ON grit_assays_assay_models.id = grit_assays_assay_data_sheet_definitions.assay_model_id")
       .select("grit_assays_assay_data_sheet_definitions.id as assay_data_sheet_definition_id")
       .select("grit_assays_assay_data_sheet_definitions.name as assay_data_sheet_definition_id__name")
       .select("grit_assays_assay_models.id as assay_model_id")
