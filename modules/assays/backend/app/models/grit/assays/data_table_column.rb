@@ -27,6 +27,27 @@ module Grit::Assays
       update: ["Administrator", "AssayAdministrator", "AssayUser"],
       destroy: ["Administrator", "AssayAdministrator", "AssayUser"]
 
+    validates :safe_name, uniqueness: true, length: { minimum: 3 }
+    validates :safe_name, format: { with: /\A[a-z_]{2}/, message: "should start with two lowercase letters or underscores" }
+    validates :safe_name, format: { with: /\A[a-z0-9_]*\z/, message: "should contain only lowercase letters, numbers and underscores" }
+    validate :safe_name_not_conflict
+
+    def safe_name_not_conflict
+      return unless self.safe_name_changed?
+      if Grit::Assays::DataTableColumn.where(data_table_id: data_table_id, safe_name: safe_name).count.positive?
+        errors.add("safe_name", "cannot be used as a safe name")
+      else
+        begin
+          # This is needed because of how active_support handles serialization as_json
+          Grit::Compounds::Compound.send(self.safe_name)
+        rescue NoMethodError => e
+        rescue StandardError => e
+          errors.add("safe_name", "cannot be used as a safe name")
+        end
+      end
+    end
+
+
     def self.selected(params = nil)
       params = params.as_json
       raise "'data_table_id' is required" if params["data_table_id"].nil?

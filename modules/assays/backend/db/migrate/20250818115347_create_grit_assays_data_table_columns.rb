@@ -7,7 +7,7 @@ class CreateGritAssaysDataTableColumns < ActiveRecord::Migration[7.2]
       t.string :updated_by, limit: 30
       t.datetime :updated_at
       t.string :name, null: false
-      t.string :safe_name, null: false
+      t.string :safe_name, null: false, limit: 32
       t.references :data_table, null: false, foreign_key: { name: "assays_data_table_entities_assays_data_table_id_fkey", to_table: "grit_assays_data_tables" }
       t.references :assay_data_sheet_column, foreign_key: { name: "assays_data_table_entities_assays_assay_data_sheet_column_id_fkey", to_table: "grit_assays_assay_data_sheet_columns" }
       t.integer :sort
