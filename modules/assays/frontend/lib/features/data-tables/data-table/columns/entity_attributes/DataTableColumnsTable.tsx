@@ -47,7 +47,16 @@ export const DataTableColumnsTable = ({ dataTableId }: Props) => {
     "grit/assays/data_table_columns",
   );
 
-  const { data: columns } = useDataTableColumnColumns();
+  const { data: columns } = useDataTableColumnColumns(undefined, {
+    select: (data) =>
+      data.filter(
+        ({ name }) =>
+          !["source_type", "pivots", "assay_data_sheet_column_id__name", "sort", "aggregation_method"].includes(
+            name as string,
+          ),
+      ),
+  });
+
 
   const tableColumns = useTableColumns<DataTableColumnData>(columns);
 
@@ -114,7 +123,7 @@ export const DataTableColumnsTable = ({ dataTableId }: Props) => {
                 disabled={dataTableId === "new"}
                 onClick={navigateToSelect}
               >
-                Select columns
+                Select entity attributes
               </Button>
             ) : undefined
           }

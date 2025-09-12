@@ -47,12 +47,20 @@ export const DataTableColumnsTable = ({ dataTableId }: Props) => {
     "grit/assays/data_table_columns",
   );
 
-  const { data: columns } = useDataTableColumnColumns();
+  const { data: columns } = useDataTableColumnColumns(undefined, {
+    select: (data) =>
+      data.filter(
+        ({ name }) =>
+          !["source_type", "pivots", "entity_attribute_name", "sort"].includes(
+            name as string,
+          ),
+      ),
+  });
 
   const tableColumns = useTableColumns<DataTableColumnData>(columns);
 
   const tableState = useSetupTableState(
-    `data-table-columns-${dataTableId}`,
+    `data-table-assay-data-sheet-columns-${dataTableId}`,
     tableColumns,
     {
       settings: {
@@ -61,13 +69,14 @@ export const DataTableColumnsTable = ({ dataTableId }: Props) => {
     },
   );
 
-  const { data: rows, isLoading: isRowsLoading } = useSelectedAssayDataSheetDataTableColumns(
-    dataTableId,
-    tableState.sorting,
-    tableState.filters,
-    undefined,
-    { enabled: dataTableId !== "new" },
-  );
+  const { data: rows, isLoading: isRowsLoading } =
+    useSelectedAssayDataSheetDataTableColumns(
+      dataTableId,
+      tableState.sorting,
+      tableState.filters,
+      undefined,
+      { enabled: dataTableId !== "new" },
+    );
 
   const navigateToSelect = useCallback(() => navigate("select"), [navigate]);
   const navigateToEdit = useCallback(
@@ -114,7 +123,7 @@ export const DataTableColumnsTable = ({ dataTableId }: Props) => {
                 disabled={dataTableId === "new"}
                 onClick={navigateToSelect}
               >
-                Select columns
+                Select assay columns
               </Button>
             ) : undefined
           }
