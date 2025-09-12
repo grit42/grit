@@ -17,7 +17,7 @@
  */
 
 import { Row, Table, useSetupTableState } from "@grit42/table";
-import styles from "../dataTable.module.scss";
+import styles from "./dataTableEntities.module.scss";
 import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTableColumns } from "@grit42/core/utils";
@@ -76,7 +76,7 @@ export const DataTableColumnsTable = ({ dataTableId }: Props) => {
   );
 
   return (
-    <>
+    <div className={styles.columnsTableContainer}>
       {dataTableId !== "new" && (
         <Table
           tableState={tableState}
@@ -85,7 +85,7 @@ export const DataTableColumnsTable = ({ dataTableId }: Props) => {
           onDelete={async (rows) => {
             if (
               !window.confirm(
-                `Are you sure you want to delete ${
+                `Are you sure you want to remove ${
                   rows.length > 1 ? `${rows.length} columns` : "this column"
                 }? This action is irreversible`,
               )
@@ -118,11 +118,10 @@ export const DataTableColumnsTable = ({ dataTableId }: Props) => {
               </Button>
             ) : undefined
           }
-          className={styles.typesTable}
           data={rows ?? []}
         />
       )}
-    </>
+    </div>
   );
 };
 

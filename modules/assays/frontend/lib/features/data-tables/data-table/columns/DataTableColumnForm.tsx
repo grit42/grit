@@ -162,7 +162,7 @@ const DataTableColumnForm = ({
     if (
       !dataTableColumn.id ||
       !window.confirm(
-        `Are you sure you want to delete this column? This action is irreversible`,
+        `Are you sure you want to remove this column? This action is irreversible`,
       )
     ) {
       return;

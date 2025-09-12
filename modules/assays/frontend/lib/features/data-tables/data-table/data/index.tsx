@@ -17,7 +17,7 @@
  */
 
 import { Filter, SortingState, Table, useSetupTableState } from "@grit42/table";
-import styles from "../dataTable.module.scss";
+import styles from "./dataTableData.module.scss";
 import { useCallback, useEffect, useMemo } from "react";
 import { useToolbar } from "@grit42/core/Toolbar";
 import { useNavigate } from "react-router-dom";
@@ -119,16 +119,15 @@ export const DataTableData = ({ dataTableId }: Props) => {
   ]);
 
   return (
-    <>
+    <div className={styles.dataTableContainer}>
       {dataTableId !== "new" && (
         <Table
           tableState={tableState}
           loading={isRowsLoading}
-          className={styles.typesTable}
           data={rows ?? []}
         />
       )}
-    </>
+    </div>
   );
 };
 

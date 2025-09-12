@@ -27,6 +27,7 @@ import { Row, Table, useSetupTableState } from "@grit42/table";
 import { useCallback } from "react";
 import { EntityData, useCreateEntityMutation } from "@grit42/core";
 import { useQueryClient } from "@grit42/api";
+import styles from "./dataTableEntities.module.scss";
 
 const getRowId = (data: EntityData) => data.id.toString();
 
@@ -105,16 +106,7 @@ const DataTableEntitySelector = ({
   );
 
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "1fr",
-        margin: "auto",
-        maxWidth: "100%",
-        height: "100%",
-        overflow: "auto"
-      }}
-    >
+    <div className={styles.entitiesTableContainer}>
       <Table<EntityData>
         header="Select entities to add"
         getRowId={getRowId}

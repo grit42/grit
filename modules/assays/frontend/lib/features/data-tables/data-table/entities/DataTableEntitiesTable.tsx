@@ -17,7 +17,7 @@
  */
 
 import { Table, useSetupTableState } from "@grit42/table";
-import styles from "../dataTable.module.scss";
+import styles from "./dataTableEntities.module.scss";
 import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTableColumns } from "@grit42/core/utils";
@@ -71,15 +71,16 @@ export const DataTableEntitiesTable = ({ dataTableId }: Props) => {
   const navigateToEdit = useCallback(() => navigate("edit"), [navigate]);
 
   return (
-    <>
+    <div className={styles.entitiesTableContainer}>
       {dataTableId !== "new" && (
         <Table
+          header="Entities"
           tableState={tableState}
           rowActions={canEditDataTable ? ["delete"] : []}
           onDelete={async (rows) => {
             if (
               !window.confirm(
-                `Are you sure you want to delete ${
+                `Are you sure you want to remove ${
                   rows.length > 1 ? `${rows.length} entities` : "this entity"
                 }? This action is irreversible`,
               )
@@ -113,11 +114,10 @@ export const DataTableEntitiesTable = ({ dataTableId }: Props) => {
               </Button>
             ) : undefined
           }
-          className={styles.typesTable}
           data={rows ?? []}
         />
       )}
-    </>
+    </div>
   );
 };
 

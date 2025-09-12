@@ -118,7 +118,7 @@ const DataTableDetails = ({ dataTableId }: Props) => {
   };
 
   return (
-    <Surface className={styles.dataTable} style={{ width: "100%", height: "100%" }}>
+    <Surface className={styles.dataTable}>
       <Form<Partial<DataTableData>> form={form}>
         <div className={styles.dataTableForm}>
           {form.state.errorMap.onSubmit && (
