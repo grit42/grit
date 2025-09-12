@@ -21,13 +21,13 @@ import { createSearchParams, Link, useNavigate } from "react-router-dom";
 import {
   DataTableColumnData,
   useAvailableDataTableColumns,
-} from "../../queries/data_table_columns";
+} from "../../../queries/data_table_columns";
 import { useTableColumns } from "@grit42/core/utils";
 import { Table, useSetupTableState } from "@grit42/table";
 import {
   AssayDataSheetColumnData,
   useAssayDataSheetColumnColumns,
-} from "../../../../queries/assay_data_sheet_columns";
+} from "../../../../../queries/assay_data_sheet_columns";
 import { EntityPropertyDef } from "@grit42/core";
 
 const getRowId = (data: DataTableColumnData | AssayDataSheetColumnData) =>

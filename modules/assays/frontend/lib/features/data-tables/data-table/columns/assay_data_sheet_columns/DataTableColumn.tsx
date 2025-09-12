@@ -22,7 +22,7 @@ import {
   useDataTableColumn,
   useDataTableColumnFields,
   useDataTableColumnPivotOptions,
-} from "../../queries/data_table_columns";
+} from "../../../queries/data_table_columns";
 import DataTableColumnForm from "./DataTableColumnForm";
 
 export const DataTableColumn = () => {

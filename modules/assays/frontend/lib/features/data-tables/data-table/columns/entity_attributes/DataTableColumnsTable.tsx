@@ -23,10 +23,10 @@ import { useNavigate } from "react-router-dom";
 import { useTableColumns } from "@grit42/core/utils";
 import { useDestroyEntityMutation, useHasRoles } from "@grit42/core";
 import {
-  useSelectedDataTableColumns,
   useDataTableColumnColumns,
   DataTableColumnData,
-} from "../../queries/data_table_columns";
+  useSelectedEntityAttributeDataTableColumns,
+} from "../../../queries/data_table_columns";
 import { Button } from "@grit42/client-library/components";
 import { useQueryClient } from "@grit42/api";
 
@@ -61,7 +61,7 @@ export const DataTableColumnsTable = ({ dataTableId }: Props) => {
     },
   );
 
-  const { data: rows, isLoading: isRowsLoading } = useSelectedDataTableColumns(
+  const { data: rows, isLoading: isRowsLoading } = useSelectedEntityAttributeDataTableColumns(
     dataTableId,
     tableState.sorting,
     tableState.filters,

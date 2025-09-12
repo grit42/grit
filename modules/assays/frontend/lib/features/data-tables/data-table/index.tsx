@@ -29,8 +29,8 @@ import { useDataTableColumnColumns } from "../queries/data_table_columns";
 import DataTableData from "./data";
 import DataTablePlots from "./plots";
 import DataTableEntities from "./entities";
-import DataTableColumns from "./columns";
 import DataTableDetails from "./details";
+import DataTableColumns from "./columns";
 
 const DataTablePage = () => {
   const { data_table_id } = useParams() as { data_table_id: string };

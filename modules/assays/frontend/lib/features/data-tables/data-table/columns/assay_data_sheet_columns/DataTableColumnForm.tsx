@@ -42,9 +42,9 @@ import {
   useDestroyEntityMutation,
   useEditEntityMutation,
 } from "@grit42/core";
-import { DataTableColumnData } from "../../queries/data_table_columns";
+import { DataTableColumnData } from "../../../queries/data_table_columns";
 import { useQueryClient } from "@grit42/api";
-import { AssayModelMetadatumData } from "../../../../queries/assay_model_metadata";
+import { AssayModelMetadatumData } from "../../../../../queries/assay_model_metadata";
 import { Fragment, useMemo } from "react";
 
 const PivotValuesField = ({

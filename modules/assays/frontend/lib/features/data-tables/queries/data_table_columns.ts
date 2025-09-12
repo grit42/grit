@@ -82,6 +82,38 @@ export const useSelectedDataTableColumns = (
   );
 };
 
+export const useSelectedAssayDataSheetDataTableColumns = (
+  dataTableId: number | string,
+  sort?: SortingState,
+  filter?: Filter[],
+  params: URLParams = {},
+  queryOptions: Partial<UseQueryOptions<DataTableColumnData[], string>> = {},
+) => {
+  return useEntityData<DataTableColumnData>(
+    `grit/assays/data_tables/${dataTableId}/data_table_columns`,
+    sort ?? [],
+    filter ?? [],
+    { scope: "selected", source_type: "assay_data_sheet_column", ...params },
+    queryOptions,
+  );
+};
+
+export const useSelectedEntityAttributeDataTableColumns = (
+  dataTableId: number | string,
+  sort?: SortingState,
+  filter?: Filter[],
+  params: URLParams = {},
+  queryOptions: Partial<UseQueryOptions<DataTableColumnData[], string>> = {},
+) => {
+  return useEntityData<DataTableColumnData>(
+    `grit/assays/data_tables/${dataTableId}/data_table_columns`,
+    sort ?? [],
+    filter ?? [],
+    { scope: "selected", source_type: "entity_attribute", ...params },
+    queryOptions,
+  );
+};
+
 export const useAvailableDataTableColumns = (
   dataTableId: number | string,
   sort?: SortingState,

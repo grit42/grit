@@ -16,32 +16,20 @@
  * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import {
-  Link,
-  useLocation,
-  useParams,
-  useSearchParams,
-} from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { Button, ErrorPage, Spinner } from "@grit42/client-library/components";
 import {
-  useAssayDataSheetColumnPivotOptions,
+  useDataTableColumn,
   useDataTableColumnFields,
-} from "../../queries/data_table_columns";
+  useDataTableColumnPivotOptions,
+} from "../../../queries/data_table_columns";
 import DataTableColumnForm from "./DataTableColumnForm";
-import { useAssayDataSheetColumn } from "../../../../queries/assay_data_sheet_columns";
-import { useMemo } from "react";
 
-export const NewDataTableColumn = () => {
-  const state = useLocation().state;
-
-  const { data_table_id } = useParams() as {
-    data_table_id: string;
-  };
-
+export const CloneDataTableColumn = () => {
   const [urlSearchParams] = useSearchParams();
 
-  const assay_data_sheet_column_id = urlSearchParams.get(
-    "assay_data_sheet_column_id",
+  const source_data_table_column_id = urlSearchParams.get(
+    "source_data_table_column_id",
   );
 
   const {
@@ -49,20 +37,9 @@ export const NewDataTableColumn = () => {
     isLoading: isDataTableColumnLoading,
     isError: isDataTableColumnError,
     error: dataTableColumnError,
-  } = useAssayDataSheetColumn(assay_data_sheet_column_id!, undefined, {
-    select: (data) =>
-      data ? { ...data, assay_data_sheet_column_id, data_table_id } : null,
+  } = useDataTableColumn(source_data_table_column_id!, undefined, {
+    select: (data) => data ? ({...data, name: `${data.name} (copy)`, safe_name: `${data.safe_name}_copy`}) : null
   });
-
-  const dataWithPivots = useMemo(() => {
-    if (dataTableColumn && state?.assay_data_sheet_column?.metadata_summary) {
-      return {
-        ...dataTableColumn,
-        pivots: state.assay_data_sheet_column?.metadata_summary,
-      };
-    }
-    return dataTableColumn;
-  }, [state, dataTableColumn]);
 
   const {
     data: dataTableColumnFields,
@@ -77,7 +54,6 @@ export const NewDataTableColumn = () => {
             "data_table_id",
             "assay_data_sheet_column_id",
             "pivots",
-            // "sort",
             // "aggregation_method",
           ].includes(f.name),
       ),
@@ -88,17 +64,18 @@ export const NewDataTableColumn = () => {
     isLoading: isPivotOptionsLoading,
     isError: isPivotOptionsError,
     error: pivotOptionsError,
-  } = useAssayDataSheetColumnPivotOptions(assay_data_sheet_column_id!);
+  } = useDataTableColumnPivotOptions(source_data_table_column_id!);
 
-  if (!assay_data_sheet_column_id) {
+  if (!source_data_table_column_id) {
     return (
-      <ErrorPage error="'assay_data_sheet_column_id' not specified">
+      <ErrorPage error="'source_data_table_column_id' not specified">
         <Link to="..">
           <Button>Back</Button>
         </Link>
       </ErrorPage>
     );
   }
+
 
   if (
     isDataTableColumnLoading ||
@@ -129,10 +106,10 @@ export const NewDataTableColumn = () => {
   return (
     <DataTableColumnForm
       fields={dataTableColumnFields}
-      dataTableColumn={dataWithPivots as any}
+      dataTableColumn={dataTableColumn}
       pivotOptions={pivotOptions}
     />
   );
 };
 
-export default NewDataTableColumn;
+export default CloneDataTableColumn;

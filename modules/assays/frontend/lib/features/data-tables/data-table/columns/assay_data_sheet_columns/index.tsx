@@ -17,14 +17,16 @@
  */
 
 import { ErrorPage, Spinner } from "@grit42/client-library/components";
-import { Navigate, Route, Routes } from "react-router-dom";
-import AssayDataSheetDataTableColumns from "./assay_data_sheet_columns";
-import DataTableColumnsTabs from "./DataTableColumnsTabs";
-import { useAssayDataSheetColumnColumns } from "../../../../queries/assay_data_sheet_columns";
-import { useDataTableColumnColumns } from "../../queries/data_table_columns";
-import EntityDataTableColumns from "./entity_attributes";
+import { Outlet, Route, Routes } from "react-router-dom";
+import DataTableColumnsTable from "./DataTableColumnsTable";
+import DataTableColumnSelector from "./DataTableColumnSelector";
+import DataTableColumn from "./DataTableColumn";
+import { useDataTableColumnColumns } from "../../../queries/data_table_columns";
+import { useAssayDataSheetColumnColumns } from "../../../../../queries/assay_data_sheet_columns";
+import NewDataTableColumn from "./NewDataTableColumn";
+import CloneDataTableColumn from "./CloneDataTableColumn";
 
-const DataTableColumns = ({
+const AssayDataSheetDataTableColumns = ({
   dataTableId,
 }: {
   dataTableId: string | number;
@@ -57,19 +59,21 @@ const DataTableColumns = ({
 
   return (
     <Routes>
-      <Route element={<DataTableColumnsTabs />}>
+      <Route
+        index
+        element={<DataTableColumnsTable dataTableId={dataTableId} />}
+      />
+      <Route path="edit/:data_table_column_id" element={<DataTableColumn />} />
+      <Route path="clone/:data_table_column_id" element={<CloneDataTableColumn />} />
+      <Route path="select" element={<Outlet />}>
         <Route
-          path="assay/*"
-          element={<AssayDataSheetDataTableColumns dataTableId={dataTableId} />}
+          index
+          element={<DataTableColumnSelector dataTableId={dataTableId} />}
         />
-        <Route
-          path="entity/*"
-          element={<EntityDataTableColumns dataTableId={dataTableId} />}
-        />
-        <Route path="*" element={<Navigate to="assay" replace />} />
+        <Route path=":data_table_column_id" element={<NewDataTableColumn />} />
       </Route>
     </Routes>
   );
 };
 
-export default DataTableColumns;
+export default AssayDataSheetDataTableColumns;
