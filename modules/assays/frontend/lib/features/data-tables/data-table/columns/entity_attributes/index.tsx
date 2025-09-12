@@ -17,16 +17,28 @@
  */
 
 import { ErrorPage, Spinner } from "@grit42/client-library/components";
-import { Outlet, Route, Routes } from "react-router-dom";
-import DataTableColumnsTable from "./DataTableColumnsTable";
-import DataTableColumnSelector from "./DataTableColumnSelector";
-import DataTableColumn from "./DataTableColumn";
-import { useDataTableColumnColumns } from "../../../queries/data_table_columns";
+import {
+  Route,
+  Routes,
+  useParams,
+} from "react-router-dom";
+import EntityAttributeDataTableColumnsTable from "./EntityAttributeDataTableColumnsTable";
+import EntityAttributeDataTableColumnSelector from "./EntityAttributeDataTableColumnSelector";
+import {
+  useDataTableColumnColumns,
+} from "../../../queries/data_table_columns";
 import { useAssayDataSheetColumnColumns } from "../../../../../queries/assay_data_sheet_columns";
-import NewDataTableColumn from "./NewDataTableColumn";
-import CloneDataTableColumn from "./CloneDataTableColumn";
+import NewEntityAttributeDataTableColumn from "./NewAssayDataSheetDataTableColumn";
+import EditEntityAttributeDataTableColumn from "./EditEntityAttributeDataTableColumn";
 
-const EntityDataTableColumns = ({
+const AssayDataSheetDataTableColumn = () => {
+  const { data_table_column_id } = useParams();
+  if (data_table_column_id === "new")
+    return <NewEntityAttributeDataTableColumn />;
+  return <EditEntityAttributeDataTableColumn />;
+};
+
+const EntityAttributeDataTableColumns = ({
   dataTableId,
 }: {
   dataTableId: string | number;
@@ -61,19 +73,18 @@ const EntityDataTableColumns = ({
     <Routes>
       <Route
         index
-        element={<DataTableColumnsTable dataTableId={dataTableId} />}
+        element={<EntityAttributeDataTableColumnsTable dataTableId={dataTableId} />}
       />
-      <Route path="edit/:data_table_column_id" element={<DataTableColumn />} />
-      <Route path="clone/:data_table_column_id" element={<CloneDataTableColumn />} />
-      <Route path="select" element={<Outlet />}>
-        <Route
-          index
-          element={<DataTableColumnSelector dataTableId={dataTableId} />}
-        />
-        <Route path=":data_table_column_id" element={<NewDataTableColumn />} />
-      </Route>
+      <Route
+        path="select"
+        element={<EntityAttributeDataTableColumnSelector dataTableId={dataTableId} />}
+      />
+      <Route
+        path=":data_table_column_id"
+        element={<AssayDataSheetDataTableColumn />}
+      />
     </Routes>
   );
 };
 
-export default EntityDataTableColumns;
+export default EntityAttributeDataTableColumns;

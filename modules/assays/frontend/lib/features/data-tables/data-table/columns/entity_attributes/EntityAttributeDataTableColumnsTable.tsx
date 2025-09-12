@@ -17,7 +17,7 @@
  */
 
 import { Row, Table, useSetupTableState } from "@grit42/table";
-import styles from "./dataTableEntities.module.scss";
+import styles from "../dataTableColumns.module.scss";
 import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTableColumns } from "@grit42/core/utils";
@@ -34,7 +34,7 @@ interface Props {
   dataTableId: string | number;
 }
 
-export const DataTableColumnsTable = ({ dataTableId }: Props) => {
+export const EntityAttributeDataTableColumnsTable = ({ dataTableId }: Props) => {
   const navigate = useNavigate();
   const canEditDataTable = useHasRoles([
     "Administrator",
@@ -51,17 +51,16 @@ export const DataTableColumnsTable = ({ dataTableId }: Props) => {
     select: (data) =>
       data.filter(
         ({ name }) =>
-          !["source_type", "pivots", "assay_data_sheet_column_id__name", "sort", "aggregation_method"].includes(
+          !["source_type", "pivots", "entity_attribute_name", "sort"].includes(
             name as string,
           ),
       ),
   });
 
-
   const tableColumns = useTableColumns<DataTableColumnData>(columns);
 
   const tableState = useSetupTableState(
-    `data-table-columns-${dataTableId}`,
+    `data-table-assay-data-sheet-columns-${dataTableId}`,
     tableColumns,
     {
       settings: {
@@ -70,17 +69,18 @@ export const DataTableColumnsTable = ({ dataTableId }: Props) => {
     },
   );
 
-  const { data: rows, isLoading: isRowsLoading } = useSelectedEntityAttributeDataTableColumns(
-    dataTableId,
-    tableState.sorting,
-    tableState.filters,
-    undefined,
-    { enabled: dataTableId !== "new" },
-  );
+  const { data: rows, isLoading: isRowsLoading } =
+    useSelectedEntityAttributeDataTableColumns(
+      dataTableId,
+      tableState.sorting,
+      tableState.filters,
+      undefined,
+      { enabled: dataTableId !== "new" },
+    );
 
   const navigateToSelect = useCallback(() => navigate("select"), [navigate]);
   const navigateToEdit = useCallback(
-    (row: Row<DataTableColumnData>) => navigate(`edit/${row.original.id}`),
+    (row: Row<DataTableColumnData>) => navigate(row.original.id.toString()),
     [navigate],
   );
 
@@ -134,4 +134,4 @@ export const DataTableColumnsTable = ({ dataTableId }: Props) => {
   );
 };
 
-export default DataTableColumnsTable;
+export default EntityAttributeDataTableColumnsTable;

@@ -22,7 +22,7 @@ import AssayDataSheetDataTableColumns from "./assay_data_sheet_columns";
 import DataTableColumnsTabs from "./DataTableColumnsTabs";
 import { useAssayDataSheetColumnColumns } from "../../../../queries/assay_data_sheet_columns";
 import { useDataTableColumnColumns } from "../../queries/data_table_columns";
-import EntityDataTableColumns from "./entity_attributes";
+import EntityAttributeDataTableColumns from "./entity_attributes";
 
 const DataTableColumns = ({
   dataTableId,
@@ -64,7 +64,7 @@ const DataTableColumns = ({
         />
         <Route
           path="entity/*"
-          element={<EntityDataTableColumns dataTableId={dataTableId} />}
+          element={<EntityAttributeDataTableColumns dataTableId={dataTableId} />}
         />
         <Route path="*" element={<Navigate to="assay" replace />} />
       </Route>

@@ -132,6 +132,24 @@ export const useAvailableDataTableColumns = (
   );
 };
 
+export const useAvailableEntityAttributes = (
+  dataTableId: number | string,
+  sort?: SortingState,
+  filter?: Filter[],
+  params: URLParams = {},
+  queryOptions: Partial<
+    UseQueryOptions<any[], string>
+  > = {},
+) => {
+  return useEntityData<any>(
+    `grit/assays/data_tables/${dataTableId}/data_table_columns`,
+    sort ?? [],
+    filter ?? [],
+    { scope: "available_entity_attributes", ...params },
+    queryOptions,
+  );
+};
+
 export const useDataTableColumn = (
   dataTableColumnId: string | number,
   params: URLParams = {},

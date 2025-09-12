@@ -17,7 +17,7 @@
  */
 
 import { Row, Table, useSetupTableState } from "@grit42/table";
-import styles from "./dataTableColumns.module.scss";
+import styles from "../dataTableColumns.module.scss";
 import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTableColumns } from "@grit42/core/utils";
