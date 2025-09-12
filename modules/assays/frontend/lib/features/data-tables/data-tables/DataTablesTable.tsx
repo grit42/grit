@@ -65,7 +65,7 @@ const DataTablesTable = () => {
           icon: <Circle1NewIcon />,
           label: "New Data Table",
           onClick: navigateToNew,
-          disabled: canManageDataTable
+          disabled: !canManageDataTable
         },
       ],
     });
