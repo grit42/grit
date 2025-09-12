@@ -38,6 +38,16 @@ module Grit::Assays
       end
     end
 
+    def self.detailed(params = {})
+      self.detailed_scope(params)
+        .joins("LEFT OUTER JOIN grit_assays_assay_data_sheet_definitions ON grit_assays_assay_data_sheet_definitions.id = grit_assays_assay_data_sheet_columns__.assay_data_sheet_definition_id")
+        .joins("LEFT OUTER JOIN grit_assays_assay_models ON grit_assays_assay_models.id = grit_assays_assay_data_sheet_definitions.assay_model_id")
+        .select("grit_assays_assay_data_sheet_definitions.id as assay_data_sheet_definition_id")
+        .select("grit_assays_assay_data_sheet_definitions.name as assay_data_sheet_definition_id__name")
+        .select("grit_assays_assay_models.id as assay_model_id")
+        .select("grit_assays_assay_models.name as assay_model_id__name")
+    end
+
     def self.selected(params = {})
       params = params.as_json
       raise "'data_table_id' is required" if params["data_table_id"].nil?
@@ -48,7 +58,6 @@ module Grit::Assays
         .select("grit_assays_assay_data_sheet_definitions.name as assay_data_sheet_definition_id__name")
         .select("grit_assays_assay_models.id as assay_model_id")
         .select("grit_assays_assay_models.name as assay_model_id__name")
-        .select("grit_assays_assay_data_sheet_columns__.name || ' (' || concat_ws(' - ', grit_assays_assay_models.name, grit_assays_assay_data_sheet_definitions.name) || ')' as assay_data_sheet_column_id__name") # TODO: proper columns
         .where(data_table_id: params["data_table_id"])
 
       query = query.where(source_type: params["source_type"]) unless params["source_type"].nil?

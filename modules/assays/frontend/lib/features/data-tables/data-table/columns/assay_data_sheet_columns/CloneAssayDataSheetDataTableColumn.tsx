@@ -49,8 +49,26 @@ const CloneAssayDataSheetDataTableColumn = () => {
     isError: isDataTableColumnFieldsError,
     error: dataTableColumnFieldsError,
   } = useDataTableColumnFields(undefined, {
-    select: (fields) =>
-      fields.filter(
+    select: (fields) => [
+      {
+        name: "assay_model_id__name",
+        display_name: "Assay model",
+        type: "string",
+        disabled: true,
+      },
+      {
+        name: "assay_data_sheet_definition_id__name",
+        display_name: "Data sheet",
+        type: "string",
+        disabled: true,
+      },
+      {
+        name: "assay_data_sheet_column_id__name",
+        display_name: "Data sheet column",
+        type: "string",
+        disabled: true,
+      },
+      ...fields.filter(
         (f) =>
           ![
             "data_table_id",
@@ -61,6 +79,7 @@ const CloneAssayDataSheetDataTableColumn = () => {
             // "aggregation_method",
           ].includes(f.name),
       ),
+    ],
   });
 
   const {
@@ -83,6 +102,9 @@ const CloneAssayDataSheetDataTableColumn = () => {
             name: `${data.name} (copy)`,
             safe_name: `${data.safe_name}_copy`,
             assay_data_sheet_column_id: data.assay_data_sheet_column_id,
+            assay_data_sheet_column_id__name: data.assay_data_sheet_column_id__name,
+            assay_model_id__name: data.assay_model_id__name,
+            assay_data_sheet_definition_id__name: data.assay_data_sheet_definition_id__name,
             aggregation_method: data.aggregation_method,
             sort: data.sort,
             pivots: data.pivots,

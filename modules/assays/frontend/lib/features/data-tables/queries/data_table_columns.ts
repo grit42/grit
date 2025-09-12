@@ -57,6 +57,8 @@ export const useDataTableColumnFields = (
 
 export interface DataTableColumnData extends EntityData {
   data_table_id: number;
+  name: string;
+  safe_name: string;
   assay_data_sheet_column_id: number;
   assay_data_sheet_column_id__name: string;
   assay_data_sheet_definition_id: number;

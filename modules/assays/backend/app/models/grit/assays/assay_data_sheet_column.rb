@@ -58,6 +58,13 @@ module Grit::Assays
       end
     end
 
+    def self.detailed(params = {})
+      self.detailed_scope(params)
+        .joins("LEFT OUTER JOIN grit_assays_assay_models ON grit_assays_assay_models.id = grit_assays_assay_data_sheet_definitions__.assay_model_id")
+        .select("grit_assays_assay_models.id as assay_model_id")
+        .select("grit_assays_assay_models.name as assay_model_id__name")
+    end
+
     def delete_dependents
       Grit::Assays::ExperimentDataSheetValue.unscoped.where(assay_data_sheet_column_id: self.id).delete_all
     end

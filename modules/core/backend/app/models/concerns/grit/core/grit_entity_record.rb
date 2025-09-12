@@ -205,7 +205,7 @@ module Grit::Core::GritEntityRecord
       @entity_columns ||= self.entity_columns_from_properties(self.db_properties)
     end
 
-    def detailed(params = nil)
+    def detailed_scope(params = nil)
       query = self.from(self.table_name)
       self.columns.each do |column|
         query = query.select("#{self.table_name}.#{column.name}")
@@ -220,6 +220,10 @@ module Grit::Core::GritEntityRecord
         end
       end
       query
+    end
+
+    def detailed(params = nil)
+      self.detailed_scope(params)
     end
 
     def by_load_set(params)

@@ -51,7 +51,7 @@ export const EntityAttributeDataTableColumnsTable = ({ dataTableId }: Props) => 
     select: (data) =>
       data.filter(
         ({ name }) =>
-          !["source_type", "pivots", "entity_attribute_name", "sort"].includes(
+          !["source_type", "pivots", "assay_data_sheet_column_id__name", "data_table_id__name", "sort"].includes(
             name as string,
           ),
       ),

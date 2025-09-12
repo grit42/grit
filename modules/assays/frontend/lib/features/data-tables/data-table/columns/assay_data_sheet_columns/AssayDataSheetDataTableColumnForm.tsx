@@ -185,7 +185,7 @@ const AssayDataSheetDataTableColumnForm = ({
         overflow: "auto",
       }}
     >
-      <h1>Edit column</h1>
+      <h1>{dataTableColumnId === "new" ? "Add" : "Edit"} column</h1>
       <Surface style={{ width: "100%", height: "100%" }}>
         <Form<Partial<DataTableColumnData>> form={form}>
           <div

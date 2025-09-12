@@ -28,7 +28,7 @@ import {
   useDataTableColumnColumns,
 } from "../../../queries/data_table_columns";
 import { useAssayDataSheetColumnColumns } from "../../../../../queries/assay_data_sheet_columns";
-import NewEntityAttributeDataTableColumn from "./NewAssayDataSheetDataTableColumn";
+import NewEntityAttributeDataTableColumn from "./NewEntityAttributeDataTableColumn";
 import EditEntityAttributeDataTableColumn from "./EditEntityAttributeDataTableColumn";
 
 const AssayDataSheetDataTableColumn = () => {

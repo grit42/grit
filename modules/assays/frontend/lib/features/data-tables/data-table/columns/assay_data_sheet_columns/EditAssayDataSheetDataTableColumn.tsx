@@ -41,8 +41,26 @@ const EditAssayDataSheetDataTableColumn = () => {
     isError: isDataTableColumnFieldsError,
     error: dataTableColumnFieldsError,
   } = useDataTableColumnFields(undefined, {
-    select: (fields) =>
-      fields.filter(
+    select: (fields) => [
+      {
+        name: "assay_model_id__name",
+        display_name: "Assay model",
+        type: "string",
+        disabled: true,
+      },
+      {
+        name: "assay_data_sheet_definition_id__name",
+        display_name: "Data sheet",
+        type: "string",
+        disabled: true,
+      },
+      {
+        name: "assay_data_sheet_column_id__name",
+        display_name: "Data sheet column",
+        type: "string",
+        disabled: true,
+      },
+      ...fields.filter(
         (f) =>
           ![
             "data_table_id",
@@ -53,6 +71,7 @@ const EditAssayDataSheetDataTableColumn = () => {
             // "aggregation_method",
           ].includes(f.name),
       ),
+    ],
   });
 
   const {

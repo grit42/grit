@@ -48,13 +48,50 @@ export const AssayDataSheetDataTableColumnsTable = ({ dataTableId }: Props) => {
   );
 
   const { data: columns } = useDataTableColumnColumns(undefined, {
-    select: (data) =>
-      data.filter(
-        ({ name }) =>
-          !["source_type", "pivots", "entity_attribute_name", "sort"].includes(
-            name as string,
-          ),
+    select: (fields) => [
+      {
+        name: "assay_model_id__name",
+        display_name: "Assay model",
+        type: "entity",
+        disabled: true,
+        entity: {
+          column: "assay_model_id",
+          name: "AssayModel",
+          full_name: "Grit::Assays::AssayModel",
+          path: "grit/assays/assay_models",
+          display_column: "name",
+          display_column_type: "string",
+          primary_key: "id",
+          primary_key_type: "integer"
+        }
+      },
+      {
+        name: "assay_data_sheet_definition_id__name",
+        display_name: "Data sheet",
+        type: "entity",
+        disabled: true,
+        entity: {
+          column: "assay_data_sheet_definition_id",
+          name: "AssayDataSheetDefinition",
+          full_name: "Grit::Assays::AssayDataSheetDefinition",
+          path: "grit/assays/assay_data_sheet_definitions",
+          display_column: "name",
+          display_column_type: "string",
+          primary_key: "id",
+          primary_key_type: "integer"
+        }
+      },
+      ...fields.filter(
+        (f) =>
+          ![
+            "data_table_id__name",
+            "entity_attribute_name",
+            "source_type",
+            "pivots",
+            "sort",
+          ].includes(f.name as string),
       ),
+    ],
   });
 
   const tableColumns = useTableColumns<DataTableColumnData>(columns);
