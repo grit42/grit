@@ -26,11 +26,7 @@ import {
   useDataTableRowColumns,
   useDataTableRows,
 } from "../../queries/data_table_rows";
-import {
-  getFilterParams,
-  getSortParams,
-  getURLParams,
-} from "@grit42/api";
+import { getFilterParams, getSortParams, getURLParams } from "@grit42/api";
 import { useHasRoles } from "@grit42/core";
 import { downloadFile } from "@grit42/client-library/utils";
 
@@ -54,22 +50,30 @@ const getExportFileUrl = (
 export const DataTableData = ({ dataTableId }: Props) => {
   const registerToolbarActions = useToolbar();
   const navigate = useNavigate();
-  const canEditDataTable = useHasRoles(["Administrator", "AssayAdministrator", "AssayUser"])
+  const canEditDataTable = useHasRoles([
+    "Administrator",
+    "AssayAdministrator",
+    "AssayUser",
+  ]);
 
-  const { data: columns } = useDataTableRowColumns({data_table_id: dataTableId});
+  const { data: columns } = useDataTableRowColumns({
+    data_table_id: dataTableId,
+  });
 
   const tableColumns = useTableColumns(columns);
 
-  const tableState = useSetupTableState(`data-table-${dataTableId}`, tableColumns);
+  const tableState = useSetupTableState(
+    `data-table-${dataTableId}`,
+    tableColumns,
+  );
 
-  const { data: rows, isLoading: isRowsLoading } =
-    useDataTableRows(
-      dataTableId,
-      tableState.sorting,
-      tableState.filters,
-      undefined,
-      { enabled: dataTableId !== "new" },
-    );
+  const { data: rows, isLoading: isRowsLoading } = useDataTableRows(
+    dataTableId,
+    tableState.sorting,
+    tableState.filters,
+    undefined,
+    { enabled: dataTableId !== "new" },
+  );
 
   const navigateToNew = useCallback(() => navigate("new"), [navigate]);
 
