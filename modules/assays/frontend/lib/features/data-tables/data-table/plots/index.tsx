@@ -29,6 +29,7 @@ import { Tabs } from "@grit42/client-library/components";
 import DataTablePlot from "./DataTablePlot";
 import { useHasRoles } from "@grit42/core";
 import { DataTableData, useDataTable } from "../../queries/data_tables";
+import styles from "./plots.module.scss";
 
 interface Props {
   dataTable: DataTableData;
@@ -73,13 +74,7 @@ const DataTablePlotTabs = ({ dataTable }: Props) => {
   };
 
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateRows: "min-content 1fr",
-        height: "100%",
-      }}
-    >
+    <div className={styles.plotTabs}>
       <Tabs
         onTabChange={handleTabChange}
         selectedTab={selectedTab}

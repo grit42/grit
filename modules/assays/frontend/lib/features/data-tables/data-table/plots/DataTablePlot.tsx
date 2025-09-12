@@ -40,8 +40,15 @@ import {
   useHasRoles,
 } from "@grit42/core";
 import { generateUniqueID } from "@grit42/client-library/utils";
-import { DataTableData, DataTablePlotDefinition } from "../../queries/data_tables";
-import { useDataTableRowColumns, useDataTableRows } from "../../queries/data_table_rows";
+import {
+  DataTableData,
+  DataTablePlotDefinition,
+} from "../../queries/data_tables";
+import {
+  useDataTableRowColumns,
+  useDataTableRows,
+} from "../../queries/data_table_rows";
+import styles from "./plots.module.scss";
 
 interface Props {
   dataTable: DataTableData;
@@ -96,9 +103,7 @@ const DataTablePlot = ({ dataTable }: Props) => {
   );
 
   useEffect(() => {
-    setPlot(
-      dataTable.plots[plot_id] ?? NEW_PLOT,
-    );
+    setPlot(dataTable.plots[plot_id] ?? NEW_PLOT);
   }, [plot_id, dataTable.plots]);
 
   const editEntityMutation = useEditEntityMutation<DataTableData>(
@@ -145,9 +150,7 @@ const DataTablePlot = ({ dataTable }: Props) => {
 
   const onRevert = () => {
     setDirty(false);
-    setPlot(
-      dataTable.plots[plot_id] ?? NEW_PLOT,
-    );
+    setPlot(dataTable.plots[plot_id] ?? NEW_PLOT);
   };
 
   const {
@@ -161,9 +164,7 @@ const DataTablePlot = ({ dataTable }: Props) => {
     isLoading: isColumnsLoading,
     isError: isColumnsError,
     error: columnsError,
-  } = useDataTableRowColumns(
-    { data_table_id: dataTable.id },
-  );
+  } = useDataTableRowColumns({ data_table_id: dataTable.id });
 
   const plotData = useMemo(
     () => getPlotData(data ?? [], columns ?? []),
@@ -193,19 +194,11 @@ const DataTablePlot = ({ dataTable }: Props) => {
   );
 
   if (!canCrudPlots && plot_id === "new") {
-    return <ErrorPage error="Nothing to see here..."/>
+    return <ErrorPage error="Nothing to see here..." />;
   }
 
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "8fr 2fr",
-        gap: "var(--spacing)",
-        height: "100%",
-        overflow: "auto",
-      }}
-    >
+    <div className={styles.plotContainer}>
       {isLoading && <Spinner />}
       {isError && <ErrorPage error={columnsError ?? dataError} />}
       {canDisplayPlot && (
@@ -215,15 +208,7 @@ const DataTablePlot = ({ dataTable }: Props) => {
           def={plot.def}
         />
       )}
-      <Surface
-        style={{
-          width: "auto",
-          display: "grid",
-          gap: "calc(var(--spacing) * 2)",
-          gridAutoRows: "min-content",
-          overflow: "auto"
-        }}
-      >
+      <Surface className={styles.plotSettingsContainer}>
         <ButtonGroup>
           {dirty && (
             <Button onClick={onSave} loading={saving} color="secondary">

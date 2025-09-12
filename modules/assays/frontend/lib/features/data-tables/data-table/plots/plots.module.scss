@@ -1,0 +1,21 @@
+.plotTabs {
+  display: grid;
+  grid-template-rows: min-content 1fr;
+  height: 100%;
+}
+
+.plotContainer {
+  display: grid;
+  grid-template-columns: 8fr 2fr;
+  gap: var(--spacing);
+  height: 100%;
+  overflow: auto;
+}
+
+.plotSettingsContainer {
+  width: auto;
+  display: grid;
+  gap: calc(var(--spacing) * 2);
+  grid-auto-rows: min-content;
+  overflow: auto;
+}
