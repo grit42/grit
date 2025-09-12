@@ -27,14 +27,13 @@ module Grit::Assays
       update: ["Administrator", "AssayAdministrator", "AssayUser"],
       destroy: ["Administrator", "AssayAdministrator", "AssayUser"]
 
-    validates :safe_name, uniqueness: true, length: { minimum: 3 }
     validates :safe_name, format: { with: /\A[a-z_]{2}/, message: "should start with two lowercase letters or underscores" }
     validates :safe_name, format: { with: /\A[a-z0-9_]*\z/, message: "should contain only lowercase letters, numbers and underscores" }
     validate :safe_name_not_conflict
 
     def safe_name_not_conflict
       return unless self.safe_name_changed?
-      if Grit::Assays::DataTableColumn.where(data_table_id: data_table_id, safe_name: safe_name).count.positive? || Grit::Assays::DataTableColumn.respond_to?(self.safe_name)
+      if Grit::Assays::DataTableColumn.respond_to?(self.safe_name)
         errors.add("safe_name", "cannot be used as a safe name")
       end
     end

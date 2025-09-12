@@ -17,7 +17,7 @@
  */
 
 import { Row, Table, useSetupTableState } from "@grit42/table";
-import styles from "./dataTableEntities.module.scss";
+import styles from "./dataTableColumns.module.scss";
 import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTableColumns } from "@grit42/core/utils";
@@ -34,7 +34,7 @@ interface Props {
   dataTableId: string | number;
 }
 
-export const DataTableColumnsTable = ({ dataTableId }: Props) => {
+export const AssayDataSheetDataTableColumnsTable = ({ dataTableId }: Props) => {
   const navigate = useNavigate();
   const canEditDataTable = useHasRoles([
     "Administrator",
@@ -80,7 +80,7 @@ export const DataTableColumnsTable = ({ dataTableId }: Props) => {
 
   const navigateToSelect = useCallback(() => navigate("select"), [navigate]);
   const navigateToEdit = useCallback(
-    (row: Row<DataTableColumnData>) => navigate(`edit/${row.original.id}`),
+    (row: Row<DataTableColumnData>) => navigate(row.original.id.toString()),
     [navigate],
   );
 
@@ -134,4 +134,4 @@ export const DataTableColumnsTable = ({ dataTableId }: Props) => {
   );
 };
 
-export default DataTableColumnsTable;
+export default AssayDataSheetDataTableColumnsTable;

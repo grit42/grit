@@ -55,7 +55,7 @@ const DataTableColumnsTabs = () => {
   };
 
   return (
-    <div className={styles.dataTableContainer} style={{maxWidth: 960, margin: "auto"}}>
+    <div className={styles.dataTableContainer}>
       <Tabs
         selectedTab={selectedTab}
         onTabChange={handleTabChange}

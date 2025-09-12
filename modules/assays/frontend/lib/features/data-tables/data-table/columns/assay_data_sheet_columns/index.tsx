@@ -17,14 +17,29 @@
  */
 
 import { ErrorPage, Spinner } from "@grit42/client-library/components";
-import { Outlet, Route, Routes } from "react-router-dom";
-import DataTableColumnsTable from "./DataTableColumnsTable";
-import DataTableColumnSelector from "./DataTableColumnSelector";
-import DataTableColumn from "./DataTableColumn";
-import { useDataTableColumnColumns } from "../../../queries/data_table_columns";
+import {
+  Route,
+  Routes,
+  useParams,
+} from "react-router-dom";
+import AssayDataSheetDataTableColumnsTable from "./AssayDataSheetDataTableColumnsTable";
+import AssayDataSheetDataTableColumnSelector from "./AssayDataSheetDataTableColumnSelector";
+import {
+  useDataTableColumnColumns,
+} from "../../../queries/data_table_columns";
 import { useAssayDataSheetColumnColumns } from "../../../../../queries/assay_data_sheet_columns";
-import NewDataTableColumn from "./NewDataTableColumn";
-import CloneDataTableColumn from "./CloneDataTableColumn";
+import NewAssayDataSheetDataTableColumn from "./NewAssayDataSheetDataTableColumn";
+import CloneAssayDataSheetDataTableColumn from "./CloneAssayDataSheetDataTableColumn";
+import EditAssayDataSheetDataTableColumn from "./EditAssayDataSheetDataTableColumn";
+
+const AssayDataSheetDataTableColumn = () => {
+  const { data_table_column_id } = useParams();
+  if (data_table_column_id === "new")
+    return <NewAssayDataSheetDataTableColumn />;
+  if (data_table_column_id === "clone")
+    return <CloneAssayDataSheetDataTableColumn />;
+  return <EditAssayDataSheetDataTableColumn />;
+};
 
 const AssayDataSheetDataTableColumns = ({
   dataTableId,
@@ -61,17 +76,16 @@ const AssayDataSheetDataTableColumns = ({
     <Routes>
       <Route
         index
-        element={<DataTableColumnsTable dataTableId={dataTableId} />}
+        element={<AssayDataSheetDataTableColumnsTable dataTableId={dataTableId} />}
       />
-      <Route path="edit/:data_table_column_id" element={<DataTableColumn />} />
-      <Route path="clone/:data_table_column_id" element={<CloneDataTableColumn />} />
-      <Route path="select" element={<Outlet />}>
-        <Route
-          index
-          element={<DataTableColumnSelector dataTableId={dataTableId} />}
-        />
-        <Route path=":data_table_column_id" element={<NewDataTableColumn />} />
-      </Route>
+      <Route
+        path="select"
+        element={<AssayDataSheetDataTableColumnSelector dataTableId={dataTableId} />}
+      />
+      <Route
+        path=":data_table_column_id"
+        element={<AssayDataSheetDataTableColumn />}
+      />
     </Routes>
   );
 };

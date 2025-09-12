@@ -45,7 +45,7 @@ const defaultOrder = [
   "required",
 ];
 
-const DataTableColumnSelector = ({
+const AssayDataSheetDataTableColumnSelector = ({
   dataTableId,
 }: {
   dataTableId: string | number;
@@ -127,20 +127,15 @@ const DataTableColumnSelector = ({
       }}
     >
       <Table<AssayDataSheetColumnData>
-        header="Available"
+        header="Select a column"
         getRowId={getRowId}
         onRowClick={(row) =>
           navigate(
             {
-              pathname: "new",
+              pathname: "../new",
               search: createSearchParams({
                 assay_data_sheet_column_id: row.original.id.toString(),
               }).toString(),
-            },
-            {
-              state: {
-                assay_data_sheet_column: row.original,
-              },
             },
           )
         }
@@ -156,11 +151,11 @@ const DataTableColumnSelector = ({
         noDataMessage={
           (isAvailableDataTableColumnsError
             ? availableDataTableColumnsError
-            : undefined) ?? "No more columns available"
+            : undefined) ?? "No columns available for this source entity"
         }
       />
     </div>
   );
 };
 
-export default DataTableColumnSelector;
+export default AssayDataSheetDataTableColumnSelector;

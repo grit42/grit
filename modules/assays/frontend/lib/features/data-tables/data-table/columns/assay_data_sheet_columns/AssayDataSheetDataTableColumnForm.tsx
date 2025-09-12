@@ -16,18 +16,10 @@
  * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
  */
 
+import { createSearchParams, Link, useNavigate } from "react-router-dom";
+import { Button, Select, Surface } from "@grit42/client-library/components";
 import {
-  createSearchParams,
-  Link,
-  useNavigate,
-  useParams,
-} from "react-router-dom";
-import {
-  Button,
-  Select,
-  Surface,
-} from "@grit42/client-library/components";
-import {
+  AddFormControl,
   Form,
   FormControls,
   FormField,
@@ -56,7 +48,6 @@ const PivotValuesField = ({
   form: ReactFormExtendedApi<Partial<DataTableColumnData>, undefined>;
   pivot: any;
 }) => {
-
   return (
     <form.Field
       name={`pivot-${pivot.id}-values`}
@@ -77,24 +68,25 @@ const PivotValuesField = ({
   );
 };
 
-const DataTableColumnForm = ({
+const AssayDataSheetDataTableColumnForm = ({
   fields,
   dataTableColumn,
   pivotOptions,
+  dataTableId,
+  dataTableColumnId,
 }: {
   fields: FormFieldDef[];
   dataTableColumn: Partial<DataTableColumnData>;
   pivotOptions: AssayModelMetadatumData[];
+  dataTableId: string | number;
+  dataTableColumnId: string | number;
 }) => {
   const queryClient = useQueryClient();
-  const { data_table_column_id, data_table_id } = useParams() as {
-    data_table_column_id: string;
-    data_table_id: string;
-  };
+
   const navigate = useNavigate();
 
   const createEntityMutation = useCreateEntityMutation<DataTableColumnData>(
-    `grit/assays/data_tables/${dataTableColumn.data_table_id!}/data_table_columns`,
+    `grit/assays/data_tables/${dataTableId}/data_table_columns`,
   );
 
   const editEntityMutation = useEditEntityMutation<DataTableColumnData>(
@@ -139,7 +131,7 @@ const DataTableColumnForm = ({
         ...getVisibleFieldData<Partial<DataTableColumnData>>(formValue, fields),
         pivots,
       };
-      await (data_table_column_id === "new"
+      await (dataTableColumnId === "new"
         ? createEntityMutation.mutateAsync(value as DataTableColumnData)
         : editEntityMutation.mutateAsync(value as DataTableColumnData));
       await Promise.all([
@@ -150,7 +142,7 @@ const DataTableColumnForm = ({
           queryKey: [
             "entities",
             "data",
-            `grit/assays/data_tables/${data_table_id}/data_table_rows`,
+            `grit/assays/data_tables/${dataTableId}/data_table_rows`,
           ],
         }),
       ]);
@@ -176,7 +168,7 @@ const DataTableColumnForm = ({
         queryKey: [
           "entities",
           "data",
-          `grit/assays/data_tables/${data_table_id}/data_table_rows`,
+          `grit/assays/data_tables/${dataTableId}/data_table_rows`,
         ],
       }),
     ]);
@@ -184,9 +176,17 @@ const DataTableColumnForm = ({
   };
 
   return (
-    <div>
+    <div
+      style={{
+        marginInline: "auto",
+        height: "100%",
+        display: "grid",
+        gridTemplateRows: "min-content 1fr",
+        overflow: "auto",
+      }}
+    >
       <h1>Edit column</h1>
-      <Surface style={{ width: "100%" }}>
+      <Surface style={{ width: "100%", height: "100%" }}>
         <Form<Partial<DataTableColumnData>> form={form}>
           <div
             style={{
@@ -223,7 +223,7 @@ const DataTableColumnForm = ({
               style={{
                 display: "grid",
                 gridTemplateColumns: "1fr",
-              gridAutoRows: "max-content",
+                gridAutoRows: "max-content",
                 gap: "calc(var(--spacing) * 2)",
               }}
             >
@@ -251,32 +251,40 @@ const DataTableColumnForm = ({
               ))}
             </div>
           </div>
-          <FormControls
-            form={form}
-            onDelete={onDelete}
-            showDelete={
-              !!data_table_column_id && data_table_column_id !== "new"
-            }
-            showCancel
-            onCancel={() => navigate("..")}
-          >
-            {!!data_table_column_id && data_table_column_id !== "new" && (
-              <Link
-                to={{
-                  pathname: "../clone/new",
-                  search: createSearchParams({
-                    source_data_table_column_id: data_table_column_id,
-                  }).toString(),
-                }}
-              >
-                <Button color="secondary">Clone</Button>
+          {dataTableColumnId === "new" && (
+            <AddFormControl form={form} label="Save">
+              <Link to="..">
+                <Button>Cancel</Button>
               </Link>
-            )}
-          </FormControls>
+            </AddFormControl>
+          )}
+          {dataTableColumnId !== "new" && (
+            <FormControls
+              form={form}
+              onDelete={onDelete}
+              showDelete={dataTableColumnId !== "new"}
+              showCancel
+              cancelLabel={dataTableColumnId === "new" ? "Cancel" : "Back"}
+              onCancel={() => navigate("..")}
+            >
+              {dataTableColumnId !== "new" && (
+                <Link
+                  to={{
+                    pathname: "../clone",
+                    search: createSearchParams({
+                      data_table_column_id: dataTableColumnId.toString(),
+                    }).toString(),
+                  }}
+                >
+                  <Button color="secondary">Clone</Button>
+                </Link>
+              )}
+            </FormControls>
+          )}
         </Form>
       </Surface>
     </div>
   );
 };
 
-export default DataTableColumnForm;
+export default AssayDataSheetDataTableColumnForm;

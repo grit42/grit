@@ -16,53 +16,32 @@
  * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import {
-  Link,
-  useLocation,
-  useParams,
-  useSearchParams,
-} from "react-router-dom";
 import { Button, ErrorPage, Spinner } from "@grit42/client-library/components";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import {
-  useAssayDataSheetColumnPivotOptions,
+  DataTableColumnData,
   useDataTableColumnFields,
+  useDataTableColumnPivotOptions,
 } from "../../../queries/data_table_columns";
-import DataTableColumnForm from "./DataTableColumnForm";
-import { useAssayDataSheetColumn } from "../../../../../queries/assay_data_sheet_columns";
+import { useEntityDatum } from "@grit42/core";
+import AssayDataSheetDataTableColumnForm from "./AssayDataSheetDataTableColumnForm";
 import { useMemo } from "react";
 
-export const NewDataTableColumn = () => {
-  const state = useLocation().state;
-
+const CloneAssayDataSheetDataTableColumn = () => {
   const { data_table_id } = useParams() as {
     data_table_id: string;
+    data_table_column_id: string;
   };
-
-  const [urlSearchParams] = useSearchParams();
-
-  const assay_data_sheet_column_id = urlSearchParams.get(
-    "assay_data_sheet_column_id",
-  );
-
-  const {
-    data: dataTableColumn,
-    isLoading: isDataTableColumnLoading,
-    isError: isDataTableColumnError,
-    error: dataTableColumnError,
-  } = useAssayDataSheetColumn(assay_data_sheet_column_id!, undefined, {
-    select: (data) =>
-      data ? { ...data, assay_data_sheet_column_id, data_table_id } : null,
-  });
-
-  const dataWithPivots = useMemo(() => {
-    if (dataTableColumn && state?.assay_data_sheet_column?.metadata_summary) {
-      return {
-        ...dataTableColumn,
-        pivots: state.assay_data_sheet_column?.metadata_summary,
-      };
-    }
-    return dataTableColumn;
-  }, [state, dataTableColumn]);
+  const [searchParams] = useSearchParams();
+  const { data, isLoading, isError, error } =
+    useEntityDatum<DataTableColumnData>(
+      "grit/assays/data_table_columns",
+      searchParams.get("data_table_column_id") ?? -1,
+      undefined,
+      {
+        enabled: searchParams.has("data_table_column_id"),
+      },
+    );
 
   const {
     data: dataTableColumnFields,
@@ -76,8 +55,9 @@ export const NewDataTableColumn = () => {
           ![
             "data_table_id",
             "assay_data_sheet_column_id",
+            "entity_attribute_name",
+            "source_type",
             "pivots",
-            // "sort",
             // "aggregation_method",
           ].includes(f.name),
       ),
@@ -88,11 +68,33 @@ export const NewDataTableColumn = () => {
     isLoading: isPivotOptionsLoading,
     isError: isPivotOptionsError,
     error: pivotOptionsError,
-  } = useAssayDataSheetColumnPivotOptions(assay_data_sheet_column_id!);
+  } = useDataTableColumnPivotOptions(
+    searchParams.get("data_table_column_id") ?? -1,
+    undefined,
+    {
+      enabled: searchParams.has("data_table_column_id"),
+    },
+  );
 
-  if (!assay_data_sheet_column_id) {
+  const dataTableColumn = useMemo(
+    () =>
+      data
+        ? {
+            name: `${data.name} (copy)`,
+            safe_name: `${data.safe_name}_copy`,
+            assay_data_sheet_column_id: data.assay_data_sheet_column_id,
+            aggregation_method: data.aggregation_method,
+            sort: data.sort,
+            pivots: data.pivots,
+            source_type: "assay_data_sheet_column",
+          }
+        : null,
+    [data],
+  );
+
+  if (!searchParams.has("data_table_column_id")) {
     return (
-      <ErrorPage error="'assay_data_sheet_column_id' not specified">
+      <ErrorPage error="'data_table_column_id' not specified">
         <Link to="..">
           <Button>Back</Button>
         </Link>
@@ -100,15 +102,10 @@ export const NewDataTableColumn = () => {
     );
   }
 
-  if (
-    isDataTableColumnLoading ||
-    isDataTableColumnFieldsLoading ||
-    isPivotOptionsLoading
-  )
+  if (isLoading || isDataTableColumnFieldsLoading || isPivotOptionsLoading)
     return <Spinner />;
-
   if (
-    isDataTableColumnError ||
+    isError ||
     !dataTableColumn ||
     isDataTableColumnFieldsError ||
     !dataTableColumnFields ||
@@ -117,22 +114,24 @@ export const NewDataTableColumn = () => {
   ) {
     return (
       <ErrorPage
-        error={
-          dataTableColumnError ??
-          dataTableColumnFieldsError ??
-          pivotOptionsError
-        }
-      />
+        error={error ?? dataTableColumnFieldsError ?? pivotOptionsError}
+      >
+        <Link to="..">
+          <Button>Back</Button>
+        </Link>
+      </ErrorPage>
     );
   }
 
   return (
-    <DataTableColumnForm
+    <AssayDataSheetDataTableColumnForm
+      dataTableId={data_table_id}
+      dataTableColumnId="new"
+      dataTableColumn={dataTableColumn}
       fields={dataTableColumnFields}
-      dataTableColumn={dataWithPivots as any}
       pivotOptions={pivotOptions}
     />
   );
 };
 
-export default NewDataTableColumn;
+export default CloneAssayDataSheetDataTableColumn;
