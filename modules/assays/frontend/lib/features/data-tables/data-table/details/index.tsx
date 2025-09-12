@@ -36,7 +36,7 @@ import {
   useHasRoles,
 } from "@grit42/core";
 import { useQueryClient } from "@grit42/api";
-import styles from "../dataTable.module.scss"
+import styles from "./dataTableDetails.module.scss"
 interface Props {
   dataTableId: string | number;
 }
@@ -120,23 +120,9 @@ const DataTableDetails = ({ dataTableId }: Props) => {
   return (
     <Surface className={styles.dataTable} style={{ width: "100%", height: "100%" }}>
       <Form<Partial<DataTableData>> form={form}>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr",
-            gridAutoRows: "max-content",
-            gap: "calc(var(--spacing) * 2)",
-            paddingBottom: "calc(var(--spacing) * 2)",
-          }}
-        >
+        <div className={styles.dataTableForm}>
           {form.state.errorMap.onSubmit && (
-            <div
-              style={{
-                gridColumnStart: 1,
-                gridColumnEnd: -1,
-                color: "var(--palette-error-main)",
-              }}
-            >
+            <div className={styles.dataTableFormError}>
               {form.state.errorMap.onSubmit?.toString()}
             </div>
           )}
@@ -148,9 +134,8 @@ const DataTableDetails = ({ dataTableId }: Props) => {
           form={form}
           onDelete={onDelete}
           showDelete={!!dataTable.id && canEditDataTable}
-          showCancel
-          cancelLabel="Back"
-          onCancel={() => navigate(dataTable.id ? "../.." : "..")}
+          showCancel={!dataTable.id}
+          onCancel={() => navigate("..")}
         />
       </Form>
     </Surface>

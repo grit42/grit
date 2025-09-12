@@ -73,16 +73,7 @@ const DataTableTabs = () => {
   };
 
   return (
-    <div
-      style={{
-        maxHeight: "100%",
-        height: "100%",
-        overflow: "auto",
-        width: "100%",
-        display: "grid",
-        gridTemplateRows: "min-content 1fr",
-      }}
-    >
+    <div className={styles.dataTableContainer}>
       <Tabs
         selectedTab={selectedTab}
         onTabChange={handleTabChange}
