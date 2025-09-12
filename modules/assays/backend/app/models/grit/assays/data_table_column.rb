@@ -34,16 +34,8 @@ module Grit::Assays
 
     def safe_name_not_conflict
       return unless self.safe_name_changed?
-      if Grit::Assays::DataTableColumn.where(data_table_id: data_table_id, safe_name: safe_name).count.positive?
+      if Grit::Assays::DataTableColumn.where(data_table_id: data_table_id, safe_name: safe_name).count.positive? || Grit::Assays::DataTableColumn.respond_to?(self.safe_name)
         errors.add("safe_name", "cannot be used as a safe name")
-      else
-        begin
-          # This is needed because of how active_support handles serialization as_json
-          Grit::Assays::DataTableColumn.send(self.safe_name)
-        rescue NoMethodError => e
-        rescue StandardError => e
-          errors.add("safe_name", "cannot be used as a safe name")
-        end
       end
     end
 
@@ -71,55 +63,12 @@ module Grit::Assays
         .joins("JOIN grit_assays_assay_models grit_assays_assay_models__ ON grit_assays_assay_models__.id = grit_assays_assay_data_sheet_definitions__.assay_model_id")
         .select("grit_assays_assay_models__.id as assay_model_id")
         .select("grit_assays_assay_models__.name as assay_model_id__name")
+        .reorder("grit_assays_assay_data_sheet_definitions__.assay_model_id ASC", "grit_assays_assay_data_sheet_definitions__.sort ASC NULLS LAST", "grit_assays_assay_data_sheet_definitions__.id ASC", "grit_assays_assay_data_sheet_columns.sort ASC NULLS LAST")
         .joins <<-SQL
 JOIN GRIT_ASSAYS_ASSAY_DATA_SHEET_COLUMNS GRIT_ASSAYS_ASSAY_DATA_SHEET_COLUMNS__SOURCE_DATA_TYPE ON GRIT_ASSAYS_ASSAY_DATA_SHEET_COLUMNS__SOURCE_DATA_TYPE.ASSAY_DATA_SHEET_DEFINITION_ID = GRIT_ASSAYS_ASSAY_DATA_SHEET_COLUMNS.ASSAY_DATA_SHEET_DEFINITION_ID
 AND GRIT_ASSAYS_ASSAY_DATA_SHEET_COLUMNS__SOURCE_DATA_TYPE.DATA_TYPE_ID = #{data_table.entity_data_type_id}
 AND GRIT_ASSAYS_ASSAY_DATA_SHEET_COLUMNS.DATA_TYPE_ID <> #{data_table.entity_data_type_id}
       SQL
-    end
-
-    def self.pivotted(params = {})
-      pivot_query = self.unscoped.select("MAX((SELECT COUNT(*) FROM jsonb_object_keys(pivots))) max_pivot_count")
-      pivot_query = pivot_query.where(data_table_id: params[:data_table_id]) unless params[:data_table_id].blank?
-      max_pivot_count = pivot_query[0][:max_pivot_count]
-
-      with_pivot_ids = self
-        .unscoped
-        .select(:id, :pivots)
-        .select("array_agg(pivot_metadata_ids) pivot_metadata_ids")
-        .joins("LEFT JOIN LATERAL jsonb_object_keys(pivots) pivot_metadata_ids ON TRUE")
-        .group(:id)
-        .order(:id)
-        .where(data_table_id: params[:data_table_id])
-
-      with_pivot_ids = with_pivot_ids.where(id: params[:id]) unless params[:id].nil?
-
-      with_pivot_ids_and_values = self
-        .detailed(params)
-        .with(with_pivot_ids: with_pivot_ids)
-        .select(:id)
-        .select("grit_assays_assay_data_sheet_columns__.name as full_name")
-        .select("'p' || grit_assays_data_table_columns.id as full_safe_name")
-        .joins("JOIN with_pivot_ids on with_pivot_ids.id = grit_assays_data_table_columns.id")
-        .joins("LEFT OUTER JOIN grit_assays_assay_data_sheet_definitions ON grit_assays_assay_data_sheet_definitions.id = grit_assays_assay_data_sheet_columns__.assay_data_sheet_definition_id")
-        .joins("LEFT OUTER JOIN grit_assays_assay_models ON grit_assays_assay_models.id = grit_assays_assay_data_sheet_definitions.assay_model_id")
-
-
-      if max_pivot_count&.positive?
-        for i in 1..max_pivot_count do
-          with_pivot_ids_and_values = with_pivot_ids_and_values
-            .select("with_pivot_ids.pivot_metadata_ids [#{i}]::bigint AS pivot_metadata_#{i}_id")
-            .select("with_pivot_ids.pivots->with_pivot_ids.pivot_metadata_ids [#{i}] AS pivot_metadata_#{i}_values")
-        end
-      end
-      with_pivot_ids_and_values
-    end
-
-    def entity_join_statement
-      if assay_data_sheet_column.data_type.is_entity
-        return "LEFT OUTER JOIN #{assay_data_sheet_column.data_type.table_name} #{assay_data_sheet_column.data_type.table_name}__#{assay_data_sheet_column.safe_name} on #{assay_data_sheet_column.data_type.table_name}__#{assay_data_sheet_column.safe_name}.id = data_sources.entity_id_value"
-      end
-      ""
     end
 
     def sql_aggregate_method subquery
@@ -167,7 +116,7 @@ AND GRIT_ASSAYS_ASSAY_DATA_SHEET_COLUMNS.DATA_TYPE_ID <> #{data_table.entity_dat
         column_join = <<-SQL
 LEFT OUTER JOIN (
       #{subquery.to_sql}
-) #{self.safe_name}_join ON #{self.safe_name}_join.target_id = targets.id
+) \"#{self.safe_name}_join\" ON \"#{self.safe_name}_join\".target_id = targets.id
         SQL
       query.joins(column_join)
     end

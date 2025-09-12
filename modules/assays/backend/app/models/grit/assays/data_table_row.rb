@@ -11,7 +11,7 @@ module Grit::Assays
 
       [
         { name: "id", display_name: data_table.entity_data_type.name, type: "entity", required: true, entity: data_table.entity_data_type.entity_definition },
-        *DataTableColumn.pivotted({data_table_id: data_table_id}).order("sort ASC NULLS LAST").map do |table_colum|
+        *DataTableColumn.detailed.where(data_table_id: data_table_id).map do |table_colum|
           if table_colum.source_type == "assay_data_sheet_column"
             property = {
               name: table_colum.safe_name,
@@ -50,7 +50,7 @@ module Grit::Assays
 
       query = query.select("targets.id as id", "targets.name as id__name")
 
-      DataTableColumn.pivotted({data_table_id: data_table_id}).order("sort ASC NULLS LAST").all.each do |table_colum|
+      DataTableColumn.detailed.where(data_table_id: data_table_id).each do |table_colum|
         query = table_colum.data_table_statement(query)
       end
       query
