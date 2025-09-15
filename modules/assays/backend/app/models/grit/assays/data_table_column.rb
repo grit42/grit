@@ -42,10 +42,13 @@ module Grit::Assays
       self.detailed_scope(params)
         .joins("LEFT OUTER JOIN grit_assays_assay_data_sheet_definitions ON grit_assays_assay_data_sheet_definitions.id = grit_assays_assay_data_sheet_columns__.assay_data_sheet_definition_id")
         .joins("LEFT OUTER JOIN grit_assays_assay_models ON grit_assays_assay_models.id = grit_assays_assay_data_sheet_definitions.assay_model_id")
+        .joins("LEFT OUTER JOIN grit_core_data_types ON grit_core_data_types.id = grit_assays_assay_data_sheet_columns__.data_type_id")
         .select("grit_assays_assay_data_sheet_definitions.id as assay_data_sheet_definition_id")
         .select("grit_assays_assay_data_sheet_definitions.name as assay_data_sheet_definition_id__name")
         .select("grit_assays_assay_models.id as assay_model_id")
         .select("grit_assays_assay_models.name as assay_model_id__name")
+        .select("grit_core_data_types.id as data_type_id")
+        .select("grit_core_data_types.name as data_type_id__name")
     end
 
     def self.selected(params = {})
@@ -102,20 +105,46 @@ AND GRIT_ASSAYS_ASSAY_DATA_SHEET_COLUMNS.DATA_TYPE_ID <> #{data_table.entity_dat
         return subquery.select("data_sources.#{assay_data_sheet_column.data_type.name}_value as value")
       end
       case assay_data_sheet_column.data_type.name
-      when "string","text","date","datetime"
-        return subquery.select("STRING_AGG(data_sources.#{assay_data_sheet_column.data_type.name}_value, ',') AS value")
       when "integer","decimal"
-        return subquery.select("#{aggregation_method || "avg"}(data_sources.#{assay_data_sheet_column.data_type.name}_value) AS value")
+        case aggregation_method
+        when "avg","min","max","count","stddev"
+          return subquery.select("#{aggregation_method}(data_sources.#{assay_data_sheet_column.data_type.name}_value) AS value")
+        end
+      when "date","datetime"
+        case aggregation_method
+        when "min","max","count"
+          return subquery.select("#{aggregation_method}(data_sources.#{assay_data_sheet_column.data_type.name}_value) AS value")
+        when "csv"
+          return subquery.select("STRING_AGG(data_sources.#{assay_data_sheet_column.data_type.name}_value::text, ', ') AS value")
+        end
       when "boolean"
-        return subquery.select("#{aggregation_method || "boolean_and"}(data_sources.boolean_value) AS value")
+        case aggregation_method
+        when "and","or"
+          return subquery.select("boolean_#{aggregation_method}(data_sources.boolean_value) AS value")
+        when "count"
+          return subquery.select("count(data_sources.boolean_value) AS value")
+        end
+      when "string","text"
+        case aggregation_method
+        when "count"
+          return subquery.select("count(data_sources.#{assay_data_sheet_column.data_type.name}_value) AS value")
+        when "csv"
+          return subquery.select("STRING_AGG(data_sources.#{assay_data_sheet_column.data_type.name}_value, ', ') AS value")
+        end
       else
-        return subquery.select(*[
-          "ARRAY_AGG(data_sources.entity_id_value) AS value",
-          assay_data_sheet_column.data_type.model.display_properties.map do |display_property|
-            "STRING_AGG(#{assay_data_sheet_column.data_type.table_name}__#{assay_data_sheet_column.safe_name}.#{display_property[:name]}, ', ') AS value__#{display_property[:name]}"
-          end
-        ])
+        case aggregation_method
+        when "count"
+          return subquery.select("count(data_sources.entity_id_value) AS value")
+        when "csv"
+          return subquery.select(*[
+            "ARRAY_AGG(data_sources.entity_id_value) AS value",
+            assay_data_sheet_column.data_type.model.display_properties.map do |display_property|
+              "STRING_AGG(#{assay_data_sheet_column.data_type.table_name}__#{assay_data_sheet_column.safe_name}.#{display_property[:name]}, ', ') AS value__#{display_property[:name]}"
+            end
+          ])
+        end
       end
+      raise "Unsupported aggregation method '#{aggregation_method}' for data table column with id='#{id}'"
     end
 
     def data_table_statement query

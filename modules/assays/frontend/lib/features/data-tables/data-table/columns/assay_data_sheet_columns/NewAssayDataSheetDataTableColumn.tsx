@@ -27,6 +27,41 @@ import { useEntityDatum } from "@grit42/core";
 import AssayDataSheetDataTableColumnForm from "./AssayDataSheetDataTableColumnForm";
 import { useMemo } from "react";
 
+const AGGREGATE_METHODS_FOR_DATA_TYPE = (dataTypeName?: string) => {
+  if (!dataTypeName) return [];
+  if (dataTypeName === "decimal" || dataTypeName === "integer") {
+    return [
+      { label: "Average", value: "avg" },
+      { label: "Minimum", value: "min" },
+      { label: "Maximum", value: "max" },
+      { label: "Standard deviation", value: "stddev" },
+      { label: "Latest", value: "latest" },
+      { label: "Count", value: "count" },
+    ];
+  } else if (dataTypeName === "datetime" || dataTypeName === "date") {
+    return [
+      { label: "Minimum", value: "min" },
+      { label: "Maximum", value: "max" },
+      { label: "Latest", value: "latest" },
+      { label: "Comma separated", value: "csv" },
+      { label: "Count", value: "count" },
+    ];
+  } else if (dataTypeName === "boolean") {
+    return [
+      { label: "AND", value: "and" },
+      { label: "OR", value: "or" },
+      { label: "Latest", value: "latest" },
+      { label: "Count", value: "count" },
+    ];
+  } else {
+    return [
+      { label: "Latest", value: "latest" },
+      { label: "Comma separated", value: "csv" },
+      { label: "Count", value: "count" },
+    ];
+  }
+};
+
 const NewAssayDataSheetDataTableColumn = () => {
   const { data_table_id } = useParams() as {
     data_table_id: string;
@@ -54,12 +89,14 @@ const NewAssayDataSheetDataTableColumn = () => {
         display_name: "Assay model",
         type: "string",
         disabled: true,
-      },{
+      },
+      {
         name: "assay_data_sheet_definition_id__name",
         display_name: "Data sheet",
         type: "string",
         disabled: true,
-      },{
+      },
+      {
         name: "assay_data_sheet_column_id__name",
         display_name: "Data sheet column",
         type: "string",
@@ -73,9 +110,21 @@ const NewAssayDataSheetDataTableColumn = () => {
             "entity_attribute_name",
             "source_type",
             "pivots",
-            // "aggregation_method",
+            "aggregation_method",
           ].includes(f.name),
       ),
+      {
+        name: "aggregation_method",
+        display_name: "Aggregation method",
+        type: "select",
+        required: true,
+        select: {
+          isClearable: true,
+          options: AGGREGATE_METHODS_FOR_DATA_TYPE(
+            data?.data_type_id__name as string | undefined,
+          ),
+        },
+      },
     ],
   });
 
@@ -95,15 +144,21 @@ const NewAssayDataSheetDataTableColumn = () => {
   const dataTableColumn = useMemo(
     () =>
       data
-        ? {
+        ? ({
             name: data.name,
             safe_name: data.safe_name,
             assay_data_sheet_column_id: data.id,
+            assay_data_sheet_column_id__name: data.name,
             assay_model_id__name: data.assay_model_id__name,
-            assay_data_sheet_definition_id__name: data.assay_data_sheet_definition_id__name,
-            assay_data_sheet_column_id__name: data.assay_data_sheet_column_id__name,
+            assay_data_sheet_definition_id__name:
+              data.assay_data_sheet_definition_id__name,
+            data_type_id: data.data_type_id,
+            data_type_id__name: data.data_type_id__name,
             source_type: "assay_data_sheet_column",
-          } as Partial<DataTableColumnData>
+            aggregation_method: AGGREGATE_METHODS_FOR_DATA_TYPE(
+              data?.data_type_id__name as string | undefined,
+            )[0]?.value,
+          } as Partial<DataTableColumnData>)
         : null,
     [data],
   );

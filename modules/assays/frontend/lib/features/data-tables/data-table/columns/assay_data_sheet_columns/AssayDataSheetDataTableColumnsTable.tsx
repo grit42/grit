@@ -54,6 +54,9 @@ export const AssayDataSheetDataTableColumnsTable = ({ dataTableId }: Props) => {
         display_name: "Assay model",
         type: "entity",
         disabled: true,
+        required: false,
+        default_hidden: false,
+        unique: false,
         entity: {
           column: "assay_model_id",
           name: "AssayModel",
@@ -62,14 +65,17 @@ export const AssayDataSheetDataTableColumnsTable = ({ dataTableId }: Props) => {
           display_column: "name",
           display_column_type: "string",
           primary_key: "id",
-          primary_key_type: "integer"
-        }
+          primary_key_type: "integer",
+        },
       },
       {
         name: "assay_data_sheet_definition_id__name",
         display_name: "Data sheet",
         type: "entity",
         disabled: true,
+        required: false,
+        default_hidden: false,
+        unique: false,
         entity: {
           column: "assay_data_sheet_definition_id",
           name: "AssayDataSheetDefinition",
@@ -78,8 +84,8 @@ export const AssayDataSheetDataTableColumnsTable = ({ dataTableId }: Props) => {
           display_column: "name",
           display_column_type: "string",
           primary_key: "id",
-          primary_key_type: "integer"
-        }
+          primary_key_type: "integer",
+        },
       },
       ...fields.filter(
         (f) =>

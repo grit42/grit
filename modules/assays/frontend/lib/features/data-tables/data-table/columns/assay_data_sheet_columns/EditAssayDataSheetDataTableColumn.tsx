@@ -25,6 +25,41 @@ import {
 import { useEntityDatum } from "@grit42/core";
 import AssayDataSheetDataTableColumnForm from "./AssayDataSheetDataTableColumnForm";
 
+const AGGREGATE_METHODS_FOR_DATA_TYPE = (dataTypeName?: string) => {
+  if (!dataTypeName) return [];
+  if (dataTypeName === "decimal" || dataTypeName === "integer") {
+    return [
+      { label: "Average", value: "avg" },
+      { label: "Minimum", value: "min" },
+      { label: "Maximum", value: "max" },
+      { label: "Standard deviation", value: "stddev" },
+      { label: "Latest", value: "latest" },
+      { label: "Count", value: "count" },
+    ];
+  } else if (dataTypeName === "datetime" || dataTypeName === "date") {
+    return [
+      { label: "Minimum", value: "min" },
+      { label: "Maximum", value: "max" },
+      { label: "Latest", value: "latest" },
+      { label: "Comma separated", value: "csv" },
+      { label: "Count", value: "count" },
+    ];
+  } else if (dataTypeName === "boolean") {
+    return [
+      { label: "AND", value: "and" },
+      { label: "OR", value: "or" },
+      { label: "Latest", value: "latest" },
+      { label: "Count", value: "count" },
+    ];
+  } else {
+    return [
+      { label: "Latest", value: "latest" },
+      { label: "Comma separated", value: "csv" },
+      { label: "Count", value: "count" },
+    ];
+  }
+};
+
 const EditAssayDataSheetDataTableColumn = () => {
   const { data_table_id, data_table_column_id } = useParams() as {
     data_table_id: string;
@@ -68,9 +103,21 @@ const EditAssayDataSheetDataTableColumn = () => {
             "entity_attribute_name",
             "source_type",
             "pivots",
-            // "aggregation_method",
+            "aggregation_method",
           ].includes(f.name),
       ),
+      {
+        name: "aggregation_method",
+        display_name: "Aggregation method",
+        type: "select",
+        required: true,
+        select: {
+          isClearable: true,
+          options: AGGREGATE_METHODS_FOR_DATA_TYPE(
+            data?.data_type_id__name as string | undefined,
+          ),
+        },
+      },
     ],
   });
 
