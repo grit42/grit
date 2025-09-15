@@ -49,6 +49,7 @@ module Grit::Assays
         .select("grit_assays_assay_models.name as assay_model_id__name")
         .select("grit_core_data_types.id as data_type_id")
         .select("grit_core_data_types.name as data_type_id__name")
+        .order("id ASC NULLS LAST")
     end
 
     def self.selected(params = {})
@@ -134,12 +135,17 @@ AND GRIT_ASSAYS_ASSAY_DATA_SHEET_COLUMNS.DATA_TYPE_ID <> #{data_table.entity_dat
       else
         case aggregation_method
         when "count"
-          return subquery.select("count(data_sources.entity_id_value) AS value")
+          return subquery.select(*[
+            "count(data_sources.entity_id_value) AS value",
+            assay_data_sheet_column.data_type.model.display_properties.map do |display_property|
+              "count(#{assay_data_sheet_column.data_type.table_name}__#{assay_data_sheet_column.safe_name}.#{display_property[:name]}) AS value__#{display_property[:name]}"
+            end
+          ])
         when "csv"
           return subquery.select(*[
             "ARRAY_AGG(data_sources.entity_id_value) AS value",
             assay_data_sheet_column.data_type.model.display_properties.map do |display_property|
-              "STRING_AGG(#{assay_data_sheet_column.data_type.table_name}__#{assay_data_sheet_column.safe_name}.#{display_property[:name]}, ', ') AS value__#{display_property[:name]}"
+              "STRING_AGG(#{assay_data_sheet_column.data_type.table_name}__#{assay_data_sheet_column.safe_name}.#{display_property[:name]}) AS value__#{display_property[:name]}"
             end
           ])
         end

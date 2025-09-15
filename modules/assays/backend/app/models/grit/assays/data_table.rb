@@ -30,7 +30,15 @@ module Grit::Assays
       destroy: [ "Administrator", "AssayAdministrator", "AssayUser" ]
 
     def self.entity_properties(**args)
-      @entity_properties ||= self.db_properties.filter { |p| p[:name] != "plots" }
+      @entity_properties ||= self.db_properties.filter { |p| p[:name] != "plots" }.map { |p| p[:name] == "entity_data_type_id" ? {
+        **p,
+        entity: {
+          **p[:entity],
+          params: {
+            scope: "entity_data_types"
+          }
+        }
+      } : p }
     end
 
     def self.entity_fields(**args)

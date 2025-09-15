@@ -33,7 +33,7 @@ module Grit::Assays
           if table_colum.source_type == "assay_data_sheet_column"
             property = {
               name: table_colum.safe_name,
-              display_name: table_colum.name,
+              display_name: (table_colum.assay_data_sheet_column&.unit&.abbreviation.nil? || table_colum.aggregation_method == "count") ? table_colum.name : "#{table_colum.name} (#{table_colum.assay_data_sheet_column.unit.abbreviation})",
               description: table_colum.assay_data_sheet_column.description,
               type: table_colum.assay_data_sheet_column.data_type.is_entity ? "entity" : table_colum.assay_data_sheet_column.data_type.name,
               required: table_colum.assay_data_sheet_column.required,
@@ -59,16 +59,19 @@ module Grit::Assays
     end
 
     def self.entity_columns(**args)
-      self.entity_columns_from_properties(self.entity_properties(**args))
+      self.entity_columns_from_properties(self.entity_properties(**args),[ "id" ])
     end
 
     def self.for_data_table(data_table_id)
       data_table = DataTable.find(data_table_id)
-      query = data_table.entity_data_type.model.unscoped.from("#{data_table.entity_data_type.table_name} as targets").joins("JOIN grit_assays_data_table_entities ON grit_assays_data_table_entities.entity_id = targets.id AND grit_assays_data_table_entities.data_table_id = #{data_table_id}").order("grit_assays_data_table_entities.sort ASC NULLS LAST")
+      query = data_table.entity_data_type.model.unscoped.from("#{data_table.entity_data_type.table_name} as targets")
+       .joins("JOIN grit_assays_data_table_entities ON grit_assays_data_table_entities.entity_id = targets.id AND grit_assays_data_table_entities.data_table_id = #{data_table.id}")
+       .order("grit_assays_data_table_entities.sort ASC NULLS LAST")
+       .order("grit_assays_data_table_entities.id ASC NULLS LAST")
 
       query = query.select("targets.id as id", "targets.name as id__name")
 
-      DataTableColumn.detailed.where(data_table_id: data_table_id).each do |table_colum|
+      DataTableColumn.detailed.where(data_table_id: data_table.id).each do |table_colum|
         query = table_colum.data_table_statement(query)
       end
       query

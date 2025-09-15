@@ -20,7 +20,7 @@ import { Filter, SortingState, Table, useSetupTableState } from "@grit42/table";
 import styles from "./dataTableData.module.scss";
 import { useCallback, useEffect, useMemo } from "react";
 import { useToolbar } from "@grit42/core/Toolbar";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useTableColumns } from "@grit42/core/utils";
 import {
   useDataTableRowColumns,
@@ -29,6 +29,11 @@ import {
 import { getFilterParams, getSortParams, getURLParams } from "@grit42/api";
 import { useHasRoles } from "@grit42/core";
 import { downloadFile } from "@grit42/client-library/utils";
+import {
+  Button,
+  ButtonGroup,
+  ErrorPage,
+} from "@grit42/client-library/components";
 
 interface Props {
   dataTableId: string | number;
@@ -117,6 +122,21 @@ export const DataTableData = ({ dataTableId }: Props) => {
     canEditDataTable,
     exportUrl,
   ]);
+
+  if (!isRowsLoading && rows?.length == 0) {
+    return (
+      <ErrorPage error="Add entities and columns to see data">
+        <ButtonGroup>
+          <Link to="../entities/edit">
+            <Button>Add entities</Button>
+          </Link>
+          <Link to="../columns/assay/select">
+            <Button>Add columns</Button>
+          </Link>
+        </ButtonGroup>
+      </ErrorPage>
+    );
+  }
 
   return (
     <div className={styles.dataTableContainer}>
