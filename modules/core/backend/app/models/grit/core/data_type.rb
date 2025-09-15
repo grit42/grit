@@ -28,6 +28,10 @@ module Grit::Core
       @entity_columns ||= self.entity_columns_from_properties(self.db_properties, [ "id", "created_at", "updated_at", "created_by", "updated_by", "meta", "table_name", "is_entity" ])
     end
 
+    def self.entity_data_types(params = nil)
+      self.detailed(params).where(is_entity: true)
+    end
+
     def entity_definition
       return nil if !self.is_entity
       options = {}
