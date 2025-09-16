@@ -114,7 +114,7 @@ const AssayDataSheetDataTableColumnForm = ({
 
   const form = useForm<Partial<DataTableColumnData>>({
     defaultValues: defaultValue,
-    onSubmit: genericErrorHandler(async ({ value: formValue }) => {
+    onSubmit: genericErrorHandler(async ({ value: formValue, formApi }) => {
       const pivots: Record<string, number[]> = {};
       for (const key in formValue) {
         if (
@@ -131,7 +131,7 @@ const AssayDataSheetDataTableColumnForm = ({
         ...getVisibleFieldData<Partial<DataTableColumnData>>(formValue, fields),
         pivots,
       };
-      await (dataTableColumnId === "new"
+      const res = await (dataTableColumnId === "new"
         ? createEntityMutation.mutateAsync(value as DataTableColumnData)
         : editEntityMutation.mutateAsync(value as DataTableColumnData));
       await Promise.all([
@@ -142,11 +142,19 @@ const AssayDataSheetDataTableColumnForm = ({
           queryKey: [
             "entities",
             "data",
+            `grit/assays/data_tables/${dataTableId}/data_table_columns`,
+          ],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [
+            "entities",
+            "data",
             `grit/assays/data_tables/${dataTableId}/data_table_rows`,
           ],
         }),
       ]);
-      navigate("..");
+      formApi.reset(res);
+      navigate(`../${res.id}`);
     }),
   });
 
