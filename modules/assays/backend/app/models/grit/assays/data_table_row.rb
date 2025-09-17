@@ -69,7 +69,10 @@ module Grit::Assays
        .order("grit_assays_data_table_entities.sort ASC NULLS LAST")
        .order("grit_assays_data_table_entities.id ASC NULLS LAST")
 
-      query = query.select("targets.id as id", "targets.name as id__name")
+      query = query.select("targets.id as id")
+      data_table.entity_data_type.model.display_properties.each do |display_property|
+        query = query.select("targets.#{display_property[:name]} as id__#{display_property[:name]}")
+      end
 
       DataTableColumn.detailed.where(data_table_id: data_table.id).each do |table_colum|
         query = table_colum.data_table_statement(query)

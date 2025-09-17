@@ -25,6 +25,7 @@
 }
 
 .entityAttributeColumnFormContainer {
+  width: 100%;
   max-width: 960px;
 }
 
@@ -39,6 +40,10 @@
   grid-auto-rows: max-content;
   gap: calc(theme.$spacing * 2);
   padding: calc(theme.$spacing * 2);
+}
+
+.entityAttributeColumnForm {
+  grid-template-columns: 1fr;
 }
 
 .columnFormError {

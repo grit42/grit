@@ -390,11 +390,13 @@ CREATE TABLE public.grit_assays_data_table_columns (
     updated_by character varying(30),
     updated_at timestamp(6) without time zone,
     name character varying NOT NULL,
-    safe_name character varying NOT NULL,
+    safe_name character varying(32) NOT NULL,
     data_table_id bigint NOT NULL,
-    assay_data_sheet_column_id bigint NOT NULL,
+    assay_data_sheet_column_id bigint,
     sort integer,
     aggregation_method character varying,
+    source_type character varying DEFAULT 'assay_data_sheet_column'::character varying NOT NULL,
+    entity_attribute_name character varying,
     pivots jsonb DEFAULT '{}'::jsonb
 );
 
@@ -410,7 +412,8 @@ CREATE TABLE public.grit_assays_data_table_entities (
     updated_by character varying(30),
     updated_at timestamp(6) without time zone,
     data_table_id bigint NOT NULL,
-    entity_id bigint NOT NULL
+    entity_id bigint NOT NULL,
+    sort integer
 );
 
 

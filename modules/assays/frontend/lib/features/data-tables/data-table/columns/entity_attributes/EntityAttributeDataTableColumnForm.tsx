@@ -154,17 +154,18 @@ const EntityAttributeDataTableColumnForm = ({
       <h1>Edit column</h1>
       <Surface className={styles.columnFormSurface}>
         <Form<Partial<DataTableColumnData>> form={form}>
-          <div className={styles.columnForm}
+          <div
+            className={classnames(
+              styles.columnForm,
+              styles.entityAttributeColumnForm,
+            )}
           >
             {form.state.errorMap.onSubmit && (
-              <div className={styles.columnFormError}
-              >
+              <div className={styles.columnFormError}>
                 {form.state.errorMap.onSubmit?.toString()}
               </div>
             )}
-            <div
-               className={styles.columnFormFields}
-            >
+            <div className={styles.columnFormFields}>
               {fields.map((f) => (
                 <FormField form={form} fieldDef={f} key={f.name} />
               ))}
