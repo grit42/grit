@@ -16,4 +16,5 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-export * from "./table"
+export * from "./table";
+export * from "./safe_name";
