@@ -16,15 +16,22 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { GritColumnDef, GritTypedColumnDef } from "@grit42/table";
+import {
+  ColumnTypeDef,
+  GritColumnDef,
+  GritTypedColumnDef,
+  useColumnTypeDefs,
+} from "@grit42/table";
 import { EntityData, EntityPropertyDef } from "../features/entities";
 import { useMemo } from "react";
 
 export function getTableColumns<T extends EntityData>(
   properties?: EntityPropertyDef<T>[],
+  columnTypeDefs?: Record<string, ColumnTypeDef>,
 ): GritTypedColumnDef<T>[] {
-  return (
-    properties?.map((property) => ({
+  if (!properties) return [];
+  return properties.map((property) => {
+    return {
       id: property.name as string,
       accessorKey: property.name as string,
       type: property.type,
@@ -34,14 +41,22 @@ export function getTableColumns<T extends EntityData>(
       meta: {
         entity: property.entity,
       },
-    })) ?? []
-  );
+      ...((property.type &&
+        columnTypeDefs &&
+        columnTypeDefs[property.type]?.column) ??
+        {}),
+    } as GritTypedColumnDef<T>;
+  });
 }
 
 export function useTableColumns<T extends EntityData>(
   properties?: EntityPropertyDef<T>[],
 ): GritColumnDef<T>[] {
-  return useMemo(() => getTableColumns(properties), [properties]);
+  const columnTypeDefs = useColumnTypeDefs();
+  return useMemo(
+    () => getTableColumns(properties, columnTypeDefs),
+    [properties, columnTypeDefs],
+  );
 }
 
 export function getColumnEntityDef(column: GritTypedColumnDef) {
