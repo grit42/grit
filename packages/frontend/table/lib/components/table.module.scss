@@ -68,7 +68,7 @@
 
     &.compact {
       tr {
-        height: 2em !important;
+        min-height: 2em;
       }
     }
   }
@@ -162,7 +162,7 @@
     tr {
       display: flex;
       position: absolute;
-      height: 3em;
+      min-height: 3em;
 
       &.emphasized {
         background-color: rgb(from theme.$palette-error-main r g b / 20%);
