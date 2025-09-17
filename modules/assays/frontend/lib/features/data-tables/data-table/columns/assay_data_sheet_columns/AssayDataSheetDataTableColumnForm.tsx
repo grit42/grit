@@ -28,6 +28,7 @@ import {
   getVisibleFieldData,
   ReactFormExtendedApi,
   useForm,
+  useStore,
 } from "@grit42/form";
 import {
   useCreateEntityMutation,
@@ -38,6 +39,7 @@ import { DataTableColumnData } from "../../../queries/data_table_columns";
 import { useQueryClient } from "@grit42/api";
 import { AssayModelMetadatumData } from "../../../../../queries/assay_model_metadata";
 import { Fragment, useMemo } from "react";
+import { toSafeIdentifier } from "@grit42/core/utils";
 
 const PivotValuesField = ({
   form,
@@ -67,6 +69,36 @@ const PivotValuesField = ({
     />
   );
 };
+
+function deriveProposedName(
+  values: Partial<DataTableColumnData>,
+  pivotOptions: AssayModelMetadatumData[],
+) {
+  const { aggregation_method, assay_data_sheet_column_id__name } = values;
+  const pivotValuesNames = Object.keys(values)
+    .filter((key) => /^pivot-\d+-values$/.test(key))
+    .map((key) => {
+      const pivotId = key.split("-")[1];
+      const pivot = pivotOptions.find(({ id }) => id.toString() === pivotId);
+      return (values[key] as number[])
+        ?.map(
+          (v) =>
+            (pivot?.metadatum_values as any[])?.find(
+              ({ value }: { value: number }) => value === v,
+            )?.label,
+        )
+        .join(" ");
+    })
+    .join(" ")
+    .trim();
+  return [
+    assay_data_sheet_column_id__name,
+    pivotValuesNames,
+    aggregation_method,
+  ]
+    .filter((v) => !!v && v !== "")
+    .join(" ");
+}
 
 const AssayDataSheetDataTableColumnForm = ({
   fields,
@@ -158,6 +190,26 @@ const AssayDataSheetDataTableColumnForm = ({
     }),
   });
 
+  const { safe_name, proposed_safe_name, name, proposed_name } = useStore(
+    form.baseStore,
+    ({ values }) => {
+      const isPivotTouched = Object.entries(form.fieldMetaDerived.state)
+        .filter(([key]) => /^pivot-\d+-values$/.test(key))
+        .some(([, { isDirty }]) => isDirty);
+      const {
+        name,
+        safe_name,
+      } = values;
+      const proposed_name =
+        isPivotTouched || form.getFieldMeta("aggregation_method")?.isDirty
+          ? deriveProposedName(values, pivotOptions) : name;
+      const proposed_safe_name = form.getFieldMeta("name")?.isDirty
+        ? toSafeIdentifier(name as string)
+        : safe_name;
+      return { name, safe_name, proposed_safe_name, proposed_name };
+    },
+  );
+
   const onDelete = async () => {
     if (
       !dataTableColumn.id ||
@@ -224,7 +276,45 @@ const AssayDataSheetDataTableColumnForm = ({
               }}
             >
               {fields.map((f) => (
-                <FormField form={form} fieldDef={f} key={f.name} />
+                <Fragment key={f.name}>
+                  <FormField form={form} fieldDef={f} />
+                  {f.name === "safe_name" &&
+                    safe_name !== proposed_safe_name &&
+                    form.state.isDirty && (
+                      <em
+                        role="button"
+                        style={{
+                          cursor: "pointer",
+                          width: "max-content",
+                          color: "var(--palette-background-contrast-text)",
+                          opacity: 0.75,
+                        }}
+                        onClick={() =>
+                          form.setFieldValue("safe_name", proposed_safe_name)
+                        }
+                      >
+                        Use "{proposed_safe_name}"
+                      </em>
+                    )}
+                  {f.name === "name" &&
+                    name !== proposed_name &&
+                    form.state.isDirty && (
+                      <em
+                        role="button"
+                        style={{
+                          cursor: "pointer",
+                          width: "max-content",
+                          color: "var(--palette-background-contrast-text)",
+                          opacity: 0.75,
+                        }}
+                        onClick={() =>
+                          form.setFieldValue("name", proposed_name)
+                        }
+                      >
+                        Use "{proposed_name}"
+                      </em>
+                    )}
+                </Fragment>
               ))}
             </div>
             <div
