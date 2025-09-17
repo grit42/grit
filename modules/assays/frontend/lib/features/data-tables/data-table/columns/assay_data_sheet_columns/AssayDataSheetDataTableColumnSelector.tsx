@@ -29,6 +29,7 @@ import {
   useAssayDataSheetColumnColumns,
 } from "../../../../../queries/assay_data_sheet_columns";
 import { EntityPropertyDef } from "@grit42/core";
+import styles from "../dataTableColumns.module.scss";
 
 const getRowId = (data: DataTableColumnData | AssayDataSheetColumnData) =>
   `${data.assay_model_id}-${data.assay_id}-${data.id}`;
@@ -116,28 +117,17 @@ const AssayDataSheetDataTableColumnSelector = ({
   );
 
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "1fr",
-        margin: "auto",
-        maxWidth: "100%",
-        height: "100%",
-        overflow: "auto",
-      }}
-    >
+    <div className={styles.selectorContainer}>
       <Table<AssayDataSheetColumnData>
         header="Select a column"
         getRowId={getRowId}
         onRowClick={(row) =>
-          navigate(
-            {
-              pathname: "../new",
-              search: createSearchParams({
-                assay_data_sheet_column_id: row.original.id.toString(),
-              }).toString(),
-            },
-          )
+          navigate({
+            pathname: "../new",
+            search: createSearchParams({
+              assay_data_sheet_column_id: row.original.id.toString(),
+            }).toString(),
+          })
         }
         headerActions={
           <Link to="..">

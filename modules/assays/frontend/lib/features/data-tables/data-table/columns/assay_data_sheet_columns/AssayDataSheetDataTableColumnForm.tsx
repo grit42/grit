@@ -40,6 +40,7 @@ import { useQueryClient } from "@grit42/api";
 import { AssayModelMetadatumData } from "../../../../../queries/assay_model_metadata";
 import { Fragment, useMemo } from "react";
 import { toSafeIdentifier } from "@grit42/core/utils";
+import styles from "../dataTableColumns.module.scss";
 
 const PivotValuesField = ({
   form,
@@ -196,13 +197,11 @@ const AssayDataSheetDataTableColumnForm = ({
       const isPivotTouched = Object.entries(form.fieldMetaDerived.state)
         .filter(([key]) => /^pivot-\d+-values$/.test(key))
         .some(([, { isDirty }]) => isDirty);
-      const {
-        name,
-        safe_name,
-      } = values;
+      const { name, safe_name } = values;
       const proposed_name =
         isPivotTouched || form.getFieldMeta("aggregation_method")?.isDirty
-          ? deriveProposedName(values, pivotOptions) : name;
+          ? deriveProposedName(values, pivotOptions)
+          : name;
       const proposed_safe_name = form.getFieldMeta("name")?.isDirty
         ? toSafeIdentifier(name as string)
         : safe_name;
@@ -236,95 +235,52 @@ const AssayDataSheetDataTableColumnForm = ({
   };
 
   return (
-    <div
-      style={{
-        marginInline: "auto",
-        height: "100%",
-        display: "grid",
-        gridTemplateRows: "min-content 1fr",
-        overflow: "auto",
-      }}
-    >
+    <div className={styles.columnFormContainer}>
       <h1>{dataTableColumnId === "new" ? "Add" : "Edit"} column</h1>
-      <Surface style={{ width: "100%", height: "100%" }}>
+      <Surface className={styles.columnFormSurface}>
         <Form<Partial<DataTableColumnData>> form={form}>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gridAutoRows: "max-content",
-              gap: "calc(var(--spacing) * 2)",
-              paddingBottom: "calc(var(--spacing) * 2)",
-            }}
-          >
+          <div className={styles.columnForm}>
             {form.state.errorMap.onSubmit && (
-              <div
-                style={{
-                  gridColumnStart: 1,
-                  gridColumnEnd: -1,
-                  color: "var(--palette-error-main)",
-                }}
-              >
+              <div className={styles.columnFormError}>
                 {form.state.errorMap.onSubmit?.toString()}
               </div>
             )}
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr",
-                gap: "calc(var(--spacing) * 2)",
-              }}
-            >
+            <div className={styles.columnFormFields}>
               {fields.map((f) => (
-                <Fragment key={f.name}>
+                <div className={styles.columnFormField} key={f.name}>
                   <FormField form={form} fieldDef={f} />
                   {f.name === "safe_name" &&
                     safe_name !== proposed_safe_name &&
                     form.state.isDirty && (
-                      <em
-                        role="button"
-                        style={{
-                          cursor: "pointer",
-                          width: "max-content",
-                          color: "var(--palette-background-contrast-text)",
-                          opacity: 0.75,
-                        }}
-                        onClick={() =>
-                          form.setFieldValue("safe_name", proposed_safe_name)
-                        }
-                      >
-                        Use "{proposed_safe_name}"
-                      </em>
+                      <div className={styles.columnFormFieldSuggestion}>
+                        <em
+                          role="button"
+                          onClick={() =>
+                            form.setFieldValue("safe_name", proposed_safe_name)
+                          }
+                        >
+                          Use "{proposed_safe_name}"
+                        </em>
+                      </div>
                     )}
                   {f.name === "name" &&
                     name !== proposed_name &&
                     form.state.isDirty && (
-                      <em
-                        role="button"
-                        style={{
-                          cursor: "pointer",
-                          width: "max-content",
-                          color: "var(--palette-background-contrast-text)",
-                          opacity: 0.75,
-                        }}
-                        onClick={() =>
-                          form.setFieldValue("name", proposed_name)
-                        }
-                      >
-                        Use "{proposed_name}"
-                      </em>
+                      <div className={styles.columnFormFieldSuggestion}>
+                        <em
+                          role="button"
+                          onClick={() =>
+                            form.setFieldValue("name", proposed_name)
+                          }
+                        >
+                          Use "{proposed_name}"
+                        </em>
+                      </div>
                     )}
-                </Fragment>
+                </div>
               ))}
             </div>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr",
-                gridAutoRows: "max-content",
-                gap: "calc(var(--spacing) * 2)",
-              }}
-            >
+            <div className={styles.columnPivots}>
               <div>
                 <h3>Metadata filters</h3>
                 <p>

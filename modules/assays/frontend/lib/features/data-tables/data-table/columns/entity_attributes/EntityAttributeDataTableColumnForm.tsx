@@ -36,6 +36,8 @@ import {
 import { DataTableColumnData } from "../../../queries/data_table_columns";
 import { useQueryClient } from "@grit42/api";
 import { useMemo } from "react";
+import styles from "../dataTableColumns.module.scss";
+import { classnames } from "@grit42/client-library/utils";
 
 const EntityAttributeDataTableColumnForm = ({
   fields,
@@ -144,45 +146,24 @@ const EntityAttributeDataTableColumnForm = ({
 
   return (
     <div
-      style={{
-        marginInline: "auto",
-        height: "100%",
-        display: "grid",
-        gridTemplateRows: "min-content 1fr",
-        overflow: "auto",
-        width: "100%",
-        maxWidth: 960
-      }}
+      className={classnames(
+        styles.columnFormContainer,
+        styles.entityAttributeColumnFormContainer,
+      )}
     >
       <h1>Edit column</h1>
-      <Surface style={{ width: "100%", height: "100%",  }}>
+      <Surface className={styles.columnFormSurface}>
         <Form<Partial<DataTableColumnData>> form={form}>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr",
-              gridAutoRows: "max-content",
-              gap: "calc(var(--spacing) * 2)",
-              paddingBottom: "calc(var(--spacing) * 2)",
-            }}
+          <div className={styles.columnForm}
           >
             {form.state.errorMap.onSubmit && (
-              <div
-                style={{
-                  gridColumnStart: 1,
-                  gridColumnEnd: -1,
-                  color: "var(--palette-error-main)",
-                }}
+              <div className={styles.columnFormError}
               >
                 {form.state.errorMap.onSubmit?.toString()}
               </div>
             )}
             <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr",
-                gap: "calc(var(--spacing) * 2)",
-              }}
+               className={styles.columnFormFields}
             >
               {fields.map((f) => (
                 <FormField form={form} fieldDef={f} key={f.name} />

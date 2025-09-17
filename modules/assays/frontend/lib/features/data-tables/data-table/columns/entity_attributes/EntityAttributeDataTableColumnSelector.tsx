@@ -20,6 +20,7 @@ import { Button } from "@grit42/client-library/components";
 import { createSearchParams, Link, useNavigate } from "react-router-dom";
 import { useAvailableEntityAttributes } from "../../../queries/data_table_columns";
 import { GritColumnDef, Table, useSetupTableState } from "@grit42/table";
+import styles from "../dataTableColumns.module.scss";
 
 const COLUMNS: GritColumnDef[] = [
   {
@@ -69,16 +70,7 @@ const EntityAttributeDataTableColumnSelector = ({
   );
 
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "1fr",
-        margin: "auto",
-        maxWidth: "100%",
-        height: "100%",
-        overflow: "auto",
-      }}
-    >
+    <div className={styles.selectorContainer}>
       <Table
         header="Select an attribute"
         onRowClick={(row) =>
