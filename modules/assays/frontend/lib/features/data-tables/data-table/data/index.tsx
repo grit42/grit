@@ -132,7 +132,7 @@ export const DataTableData = ({ dataTableId }: Props) => {
   if (
     !isRowsLoading &&
     rows?.length == 0 &&
-    !tableState.filters.every((f) => getIsFilterActive(f))
+    tableState.filters.every((f) => !getIsFilterActive(f))
   ) {
     return (
       <ErrorPage error="Add entities and columns to see data">
