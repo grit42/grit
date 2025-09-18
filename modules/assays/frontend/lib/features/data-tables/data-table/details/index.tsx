@@ -19,7 +19,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Surface } from "@grit42/client-library/components";
-import { DataTableData, useDataTable, useDataTableFields } from "../../queries/data_tables";
+import {
+  DataTableData,
+  useDataTable,
+  useDataTableFields,
+} from "../../queries/data_tables";
 import {
   Form,
   FormControls,
@@ -36,7 +40,7 @@ import {
   useHasRoles,
 } from "@grit42/core";
 import { useQueryClient } from "@grit42/api";
-import styles from "./dataTableDetails.module.scss"
+import styles from "./dataTableDetails.module.scss";
 interface Props {
   dataTableId: string | number;
 }
@@ -49,13 +53,22 @@ const DataTableDetails = ({ dataTableId }: Props) => {
     "AssayUser",
   ]);
 
-  const { data: dataTable } = useDataTable(dataTableId) as { data: DataTableData };
+  const { data: dataTable } = useDataTable(dataTableId) as {
+    data: DataTableData;
+  };
   const { data: fields } = useDataTableFields(undefined, {
     select: (data) =>
-      canEditDataTable ? data.map((f) => ({ ...f, disabled: f.name === "entity_data_type_id" && !!dataTable.id })) : data.map((f) => ({ ...f, disabled: true })),
+      canEditDataTable
+        ? data.map((f) => ({
+            ...f,
+            disabled: f.name === "entity_data_type_id" && !!dataTable.id,
+          }))
+        : data.map((f) => ({ ...f, disabled: true })),
   }) as { data: FormFieldDef[] };
   const queryClient = useQueryClient();
-  const [formData, setFormData] = useState<Partial<DataTableData>>(dataTable ?? {});
+  const [formData, setFormData] = useState<Partial<DataTableData>>(
+    dataTable ?? {},
+  );
 
   const createEntityMutation = useCreateEntityMutation<DataTableData>(
     "grit/assays/data_tables",
@@ -114,7 +127,10 @@ const DataTableDetails = ({ dataTableId }: Props) => {
     )
       return;
     await destroyEntityMutation.mutateAsync(dataTable.id);
-    navigate("..");
+    await queryClient.invalidateQueries({
+      queryKey: ["entities", "data", "grit/assays/data_tables"],
+    });
+    navigate("../..");
   };
 
   return (

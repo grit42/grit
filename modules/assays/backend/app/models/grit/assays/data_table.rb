@@ -20,6 +20,7 @@ module Grit::Assays
   class DataTable < ApplicationRecord
     include Grit::Core::GritEntityRecord
     after_create :add_entity_type_display_columns
+    before_destroy :delete_dependents
 
     belongs_to :entity_data_type, class_name: "Grit::Core::DataType"
 
@@ -67,6 +68,11 @@ module Grit::Assays
           logger.info e.backtrace.join("\n")
         end
       end
+    end
+
+    def delete_dependents
+      Grit::Assays::DataTableColumn.unscoped.where(data_table_id: self.id).delete_all
+      Grit::Assays::DataTableEntity.unscoped.where(data_table_id: self.id).delete_all
     end
   end
 end
