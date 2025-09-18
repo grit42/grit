@@ -36,7 +36,12 @@ module Grit::Assays
             type: table_colum.assay_data_sheet_column.data_type.is_entity ? "entity" : table_colum.assay_data_sheet_column.data_type.name,
             required: table_colum.assay_data_sheet_column.required,
             unique: false,
-            entity: table_colum.assay_data_sheet_column.data_type.entity_definition
+            entity: table_colum.assay_data_sheet_column.data_type.entity_definition,
+            meta: {
+              data_table: {
+                source_type: "assay_data_sheet_column"
+              }
+            }
           }
         elsif table_colum.source_type == "entity_attribute"
           attribute = data_table_data_type_model.entity_properties.find { |p| p[:name] == table_colum.entity_attribute_name }
@@ -44,7 +49,12 @@ module Grit::Assays
           property = {
             **attribute,
             name: table_colum.safe_name,
-            display_name: table_colum.name
+            display_name: table_colum.name,
+            meta: {
+              data_table: {
+                source_type: "entity_attribute"
+              }
+            }
           }
         end
         property
@@ -57,6 +67,33 @@ module Grit::Assays
 
     def self.entity_columns(**args)
       self.entity_columns_from_properties(self.entity_properties(**args),[ "id" ])
+    end
+
+    def self.full_perspective(params = nil)
+      params = params.as_json
+      raise "'data_table_id' is required" if params["data_table_id"].nil?
+      raise "'data_table_row_id' is required" if params["data_table_row_id"].nil?
+      raise "'column_safe_name' is required" if params["column_safe_name"].nil?
+
+      data_table = DataTable.find(params["data_table_id"])
+      data_table_column = DataTableColumn.unscoped.find_by(data_table_id: params["data_table_id"], safe_name: params["column_safe_name"])
+
+      query = data_table.entity_data_type.model.unscoped.from("#{data_table.entity_data_type.table_name} as targets")
+       .where("targets.id" => params["data_table_row_id"])
+       .joins("JOIN grit_assays_data_table_entities ON grit_assays_data_table_entities.entity_id = targets.id AND grit_assays_data_table_entities.data_table_id = #{data_table.id}")
+       .order("grit_assays_data_table_entities.sort ASC NULLS LAST")
+       .order("grit_assays_data_table_entities.id ASC NULLS LAST")
+
+      query = query.select("targets.id as id")
+
+      DataTableColumn.detailed
+        .where(data_table_id: data_table.id)
+        .where(source_type: "entity_attribute")
+        .or(DataTableColumn.detailed.where(data_table_id: data_table.id).where(id: data_table_column.id))
+        .each do |table_colum|
+        query = table_colum.full_perspective_statement(query)
+      end
+      return query
     end
 
     def self.for_data_table(data_table_id)

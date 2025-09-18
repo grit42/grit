@@ -20,6 +20,22 @@ module Grit::Assays
   class DataTableRowsController < ApplicationController
     include Grit::Core::GritEntityController
 
+    def full_perspective
+      limit = params[:limit] ||= 50
+      offset = params[:offset] ||= 0
+
+      params[:scope] = "full_perspective"
+      params[:entity_id] = params[:id]
+
+      query = index_entity(params)
+
+      return if query.nil?
+
+      @record_count = query.count(:all)
+      @records = limit.to_i != -1 ? query.limit(limit).offset(offset) : query.all
+      render json: { success: true, data: @records, cursor: offset.to_i + @records.length, total: @record_count }
+    end
+
     def export
       params[:scope] = "detailed"
       query = index_entity_for_export(params)

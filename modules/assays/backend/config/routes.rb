@@ -7,6 +7,11 @@ Grit::Assays::Engine.routes.draw do
       post :create_bulk
     end
   end
+
+  resources :data_table_rows, only: [] do
+    get :full_perspective
+  end
+
   resources :data_tables do
     resources_with_export :data_table_rows
     resources :data_table_entities

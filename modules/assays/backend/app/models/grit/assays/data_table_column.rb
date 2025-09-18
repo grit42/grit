@@ -177,6 +177,63 @@ LEFT OUTER JOIN (
       query.joins(column_join)
     end
 
+    def join_data_sources subquery
+        join = <<-SQL
+JOIN grit_assays_experiment_data_sheet_values data_sources ON data_sources.experiment_data_sheet_record_id = targets.experiment_data_sheet_record_id
+AND data_sources.assay_data_sheet_column_id = #{assay_data_sheet_column_id}
+        SQL
+        subquery.joins(join)
+    end
+
+    def metadata_filters subquery
+      if self.pivots.keys.length.positive?
+        join = <<-SQL
+JOIN GRIT_ASSAYS_EXPERIMENT_DATA_SHEET_RECORDS ON GRIT_ASSAYS_EXPERIMENT_DATA_SHEET_RECORDS.ID = TARGETS.EXPERIMENT_DATA_SHEET_RECORD_ID
+JOIN GRIT_ASSAYS_EXPERIMENT_DATA_SHEETS ON GRIT_ASSAYS_EXPERIMENT_DATA_SHEETS.ID = GRIT_ASSAYS_EXPERIMENT_DATA_SHEET_RECORDS.EXPERIMENT_DATA_SHEET_ID
+JOIN GRIT_ASSAYS_EXPERIMENTS ON GRIT_ASSAYS_EXPERIMENTS.ID = GRIT_ASSAYS_EXPERIMENT_DATA_SHEETS.EXPERIMENT_ID
+        SQL
+        subquery = subquery.joins(join)
+
+        self.pivots.keys.each_with_index do |key, i|
+          join = <<-SQL
+JOIN GRIT_ASSAYS_ASSAY_METADATA GRIT_ASSAYS_ASSAY_METADATA_#{i} ON GRIT_ASSAYS_ASSAY_METADATA_#{i}.ASSAY_ID = GRIT_ASSAYS_EXPERIMENTS.ASSAY_ID
+AND GRIT_ASSAYS_ASSAY_METADATA_#{i}.ASSAY_MODEL_METADATUM_ID = #{key} AND GRIT_ASSAYS_ASSAY_METADATA_#{i}.VOCABULARY_ITEM_ID IN (#{self.pivots[key].join(',')})
+          SQL
+          subquery = subquery.joins(join)
+        end
+      end
+      subquery
+    end
+
+    def join_entity_table subquery
+      if assay_data_sheet_column.data_type.is_entity
+        entity_join = <<-SQL
+LEFT OUTER JOIN #{assay_data_sheet_column.data_type.table_name} #{assay_data_sheet_column.data_type.table_name}__#{assay_data_sheet_column.safe_name} ON
+#{assay_data_sheet_column.data_type.table_name}__#{assay_data_sheet_column.safe_name}.id = data_sources.entity_id_value
+        SQL
+        subquery = subquery.joins(entity_join)
+      end
+      subquery
+    end
+
+    def select_entity_display_properties query
+      if assay_data_sheet_column.data_type.is_entity
+        assay_data_sheet_column.data_type.model.display_properties.map do |display_property|
+          query = query.select("#{self.safe_name}_join.value__#{display_property[:name]} as #{self.safe_name}__#{display_property[:name]}")
+        end
+      end
+      query
+    end
+
+    def left_join_subquery query, subquery
+      column_join = <<-SQL
+LEFT OUTER JOIN (
+  #{subquery.to_sql}
+) #{self.safe_name}_join ON #{self.safe_name}_join.target_id = targets.id
+      SQL
+      query.joins(column_join)
+    end
+
     def assay_data_sheet_column_query query
         query = query.select("#{self.safe_name}_join.value as #{self.safe_name}")
 
@@ -191,48 +248,71 @@ LEFT OUTER JOIN (
         end
 
         subquery = sql_aggregate_method(subquery)
+        subquery = join_data_sources(subquery)
+        subquery = metadata_filters(subquery)
 
-        join = <<-SQL
-JOIN grit_assays_experiment_data_sheet_values data_sources ON data_sources.experiment_data_sheet_record_id = targets.experiment_data_sheet_record_id
-AND data_sources.assay_data_sheet_column_id = #{assay_data_sheet_column_id}
-        SQL
-        subquery = subquery.joins(join)
+        subquery = join_entity_table(subquery)
+        query = select_entity_display_properties(query)
+        left_join_subquery(query, subquery)
+    end
 
-        if self.pivots.keys.length.positive?
-          join = <<-SQL
-JOIN GRIT_ASSAYS_EXPERIMENT_DATA_SHEET_RECORDS ON GRIT_ASSAYS_EXPERIMENT_DATA_SHEET_RECORDS.ID = TARGETS.EXPERIMENT_DATA_SHEET_RECORD_ID
-JOIN GRIT_ASSAYS_EXPERIMENT_DATA_SHEETS ON GRIT_ASSAYS_EXPERIMENT_DATA_SHEETS.ID = GRIT_ASSAYS_EXPERIMENT_DATA_SHEET_RECORDS.EXPERIMENT_DATA_SHEET_ID
-JOIN GRIT_ASSAYS_EXPERIMENTS ON GRIT_ASSAYS_EXPERIMENTS.ID = GRIT_ASSAYS_EXPERIMENT_DATA_SHEETS.EXPERIMENT_ID
-          SQL
-          subquery = subquery.joins(join)
+    def full_perspective_statement query
+      return entity_attribute_query(query) if source_type == "entity_attribute"
+      return full_perspective_query(query)
+    end
 
-          self.pivots.keys.each_with_index do |key, i|
-            join = <<-SQL
-JOIN GRIT_ASSAYS_ASSAY_METADATA GRIT_ASSAYS_ASSAY_METADATA_#{i} ON GRIT_ASSAYS_ASSAY_METADATA_#{i}.ASSAY_ID = GRIT_ASSAYS_EXPERIMENTS.ASSAY_ID
-AND GRIT_ASSAYS_ASSAY_METADATA_#{i}.ASSAY_MODEL_METADATUM_ID = #{key} AND GRIT_ASSAYS_ASSAY_METADATA_#{i}.VOCABULARY_ITEM_ID IN (#{self.pivots[key].join(',')})
-            SQL
-            subquery = subquery.joins(join)
-          end
-        end
-
-        if assay_data_sheet_column.data_type.is_entity
-          entity_join = <<-SQL
-LEFT OUTER JOIN #{assay_data_sheet_column.data_type.table_name} #{assay_data_sheet_column.data_type.table_name}__#{assay_data_sheet_column.safe_name} ON
-#{assay_data_sheet_column.data_type.table_name}__#{assay_data_sheet_column.safe_name}.id = data_sources.entity_id_value
-          SQL
-
-          subquery = subquery.joins(entity_join)
-
-          assay_data_sheet_column.data_type.model.display_properties.map do |display_property|
-            query = query.select("#{self.safe_name}_join.value__#{display_property[:name]} as #{self.safe_name}__#{display_property[:name]}")
-          end
-        end
-        column_join = <<-SQL
-LEFT OUTER JOIN (
-      #{subquery.to_sql}
+    def join_subquery query, subquery
+      column_join = <<-SQL
+JOIN (
+  #{subquery.to_sql}
 ) #{self.safe_name}_join ON #{self.safe_name}_join.target_id = targets.id
-        SQL
+      SQL
       query.joins(column_join)
+    end
+
+
+    def full_perspective_query query
+      query = query.select(
+        "#{self.safe_name}_join.value as #{self.safe_name}",
+        "#{self.safe_name}_join.experiment_data_sheet_record_id as experiment_data_sheet_record_id",
+        "#{self.safe_name}_join.experiment_data_sheet_id as experiment_data_sheet_id",
+        "#{self.safe_name}_join.experiment_id as experiment_id",
+        "#{self.safe_name}_join.experiment_id__name as experiment_id__name",
+      )
+
+      subquery = ExperimentDataSheetValue.unscoped
+        .from("grit_assays_experiment_data_sheet_values targets")
+        .select(
+          "targets.entity_id_value AS target_id",
+          "data_sources.assay_data_sheet_column_id AS data_source_id",
+          "targets.experiment_data_sheet_record_id",
+          "grit_assays_experiment_data_sheet_records.experiment_data_sheet_id",
+          "grit_assays_experiment_data_sheets.experiment_id",
+          "grit_assays_experiments.name as experiment_id__name"
+        )
+
+      if assay_data_sheet_column.data_type.is_entity
+        subquery = subquery.select(*[
+          "data_sources.entity_id_value as value",
+          assay_data_sheet_column.data_type.model.display_properties.map do |display_property|
+            "#{assay_data_sheet_column.data_type.table_name}__#{assay_data_sheet_column.safe_name}.#{display_property[:name]} AS value__#{display_property[:name]}"
+          end
+        ])
+      else
+        subquery = subquery.select("data_sources.#{assay_data_sheet_column.data_type.name}_value as value")
+      end
+
+      if aggregation_method == "latest"
+        subquery = subquery.order(Arel.sql("COALESCE(data_sources.updated_at, data_sources.created_at) DESC")).limit(1)
+      end
+
+
+      subquery = join_data_sources(subquery)
+      subquery = metadata_filters(subquery)
+
+      subquery = join_entity_table(subquery)
+      query = select_entity_display_properties(query)
+      join_subquery(query, subquery)
     end
   end
 end

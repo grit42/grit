@@ -24,7 +24,7 @@ import {
   useSetupTableState,
 } from "@grit42/table";
 import styles from "./dataTableData.module.scss";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useToolbar } from "@grit42/core/Toolbar";
 import { Link, useNavigate } from "react-router-dom";
 import { useTableColumns } from "@grit42/core/utils";
@@ -32,14 +32,21 @@ import {
   useDataTableRowColumns,
   useDataTableRows,
 } from "../../queries/data_table_rows";
-import { getFilterParams, getSortParams, getURLParams } from "@grit42/api";
-import { useHasRoles } from "@grit42/core";
+import {
+  getFilterParams,
+  getSortParams,
+  getURLParams,
+} from "@grit42/api";
+import {
+  useHasRoles,
+} from "@grit42/core";
 import { downloadFile } from "@grit42/client-library/utils";
 import {
   Button,
   ButtonGroup,
   ErrorPage,
 } from "@grit42/client-library/components";
+import FullPerspectiveDialog from "./FullPerspectiveDialog";
 
 interface Props {
   dataTableId: string | number;
@@ -58,6 +65,11 @@ const getExportFileUrl = (
   })}`;
 };
 
+interface ClickedCellInfo {
+  id: number;
+  column: string;
+}
+
 export const DataTableData = ({ dataTableId }: Props) => {
   const registerToolbarActions = useToolbar();
   const navigate = useNavigate();
@@ -66,6 +78,8 @@ export const DataTableData = ({ dataTableId }: Props) => {
     "AssayAdministrator",
     "AssayUser",
   ]);
+
+  const [clickedCell, setClickedCell] = useState<ClickedCellInfo | null>(null);
 
   const { data: columns } = useDataTableRowColumns({
     data_table_id: dataTableId,
@@ -110,6 +124,16 @@ export const DataTableData = ({ dataTableId }: Props) => {
     tableColumns,
   ]);
 
+  const assay_data_sheet_columns = useMemo(
+    () =>
+      tableColumns
+        ?.filter(
+          (c) => c.meta?.data_table?.source_type === "assay_data_sheet_column",
+        )
+        .map((c) => c.id),
+    [tableColumns],
+  );
+
   useEffect(() => {
     return registerToolbarActions({
       exportItems: [
@@ -150,11 +174,23 @@ export const DataTableData = ({ dataTableId }: Props) => {
 
   return (
     <div className={styles.dataTableContainer}>
+      <FullPerspectiveDialog
+        column={clickedCell?.column}
+        id={clickedCell?.id}
+        onClose={() => setClickedCell(null)}
+        columns={tableColumns}
+        dataTableId={dataTableId}
+      />
       {dataTableId !== "new" && (
         <Table
           tableState={tableState}
           loading={isRowsLoading}
           data={rows ?? []}
+          onCellClick={[
+            assay_data_sheet_columns,
+            ({ original }, column) =>
+              setClickedCell({ id: original.id, column: column.toString() }),
+          ]}
         />
       )}
     </div>
