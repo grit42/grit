@@ -19,6 +19,7 @@
 module Grit::Assays
   class DataTable < ApplicationRecord
     include Grit::Core::GritEntityRecord
+    after_create :add_entity_type_display_columns
 
     belongs_to :entity_data_type, class_name: "Grit::Core::DataType"
 
@@ -47,6 +48,25 @@ module Grit::Assays
 
     def self.entity_columns(**args)
       @entity_columns ||= self.entity_columns_from_properties(self.entity_properties(**args))
+    end
+
+    def add_entity_type_display_columns
+      logger.info entity_data_type.model.name
+      self.entity_data_type.model.display_properties.each do |display_property|
+        logger.info display_property.as_json
+        begin
+          DataTableColumn.create!(
+            data_table_id: self.id,
+            source_type: "entity_attribute",
+            entity_attribute_name: display_property[:name],
+            safe_name: "entity_#{display_property[:name]}",
+            name: display_property[:display_name]
+          )
+        rescue StandardError => e
+          logger.info e.to_s
+          logger.info e.backtrace.join("\n")
+        end
+      end
     end
   end
 end

@@ -27,31 +27,28 @@ module Grit::Assays
       data_table = DataTable.find(data_table_id)
       data_table_data_type_model = data_table.entity_data_type.model
 
-      [
-        { name: "id", display_name: data_table.entity_data_type.name, type: "entity", required: true, entity: data_table.entity_data_type.entity_definition },
-        *DataTableColumn.detailed.where(data_table_id: data_table_id).map do |table_colum|
-          if table_colum.source_type == "assay_data_sheet_column"
-            property = {
-              name: table_colum.safe_name,
-              display_name: (table_colum.assay_data_sheet_column&.unit&.abbreviation.nil? || table_colum.aggregation_method == "count") ? table_colum.name : "#{table_colum.name} (#{table_colum.assay_data_sheet_column.unit.abbreviation})",
-              description: table_colum.assay_data_sheet_column.description,
-              type: table_colum.assay_data_sheet_column.data_type.is_entity ? "entity" : table_colum.assay_data_sheet_column.data_type.name,
-              required: table_colum.assay_data_sheet_column.required,
-              unique: false,
-              entity: table_colum.assay_data_sheet_column.data_type.entity_definition
-            }
-          else table_colum.source_type == "entity_attribute"
-            attribute = data_table_data_type_model.entity_properties.find { |p| p[:name] == table_colum.entity_attribute_name }
-            raise "Entity attribute '#{table_colum.entity_attribute_name}' does not exist" if attribute.nil?
-            property = {
-              **attribute,
-              name: table_colum.safe_name,
-              display_name: table_colum.name
-            }
-          end
-          property
+      DataTableColumn.detailed.where(data_table_id: data_table_id).map do |table_colum|
+        if table_colum.source_type == "assay_data_sheet_column"
+          property = {
+            name: table_colum.safe_name,
+            display_name: (table_colum.assay_data_sheet_column&.unit&.abbreviation.nil? || table_colum.aggregation_method == "count") ? table_colum.name : "#{table_colum.name} (#{table_colum.assay_data_sheet_column.unit.abbreviation})",
+            description: table_colum.assay_data_sheet_column.description,
+            type: table_colum.assay_data_sheet_column.data_type.is_entity ? "entity" : table_colum.assay_data_sheet_column.data_type.name,
+            required: table_colum.assay_data_sheet_column.required,
+            unique: false,
+            entity: table_colum.assay_data_sheet_column.data_type.entity_definition
+          }
+        elsif table_colum.source_type == "entity_attribute"
+          attribute = data_table_data_type_model.entity_properties.find { |p| p[:name] == table_colum.entity_attribute_name }
+          raise "Entity attribute '#{table_colum.entity_attribute_name}' does not exist" if attribute.nil?
+          property = {
+            **attribute,
+            name: table_colum.safe_name,
+            display_name: table_colum.name
+          }
         end
-      ]
+        property
+      end
     end
 
     def self.entity_fields(**args)
