@@ -111,6 +111,13 @@ const EntityAttributeDataTableColumnForm = ({
           queryKey: [
             "entities",
             "data",
+            `grit/assays/data_tables/${dataTableId}/data_table_columns`,
+          ],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [
+            "entities",
+            "data",
             `grit/assays/data_tables/${dataTableId}/data_table_rows`,
           ],
         }),
@@ -132,6 +139,13 @@ const EntityAttributeDataTableColumnForm = ({
     await Promise.all([
       queryClient.invalidateQueries({
         queryKey: ["entities", "columns", "Grit::Assays::DataTableRow"],
+      }),
+      queryClient.invalidateQueries({
+        queryKey: [
+          "entities",
+          "data",
+          `grit/assays/data_tables/${dataTableId}/data_table_columns`,
+        ],
       }),
       queryClient.invalidateQueries({
         queryKey: [

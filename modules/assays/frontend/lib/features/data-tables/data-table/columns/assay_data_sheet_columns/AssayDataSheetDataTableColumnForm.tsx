@@ -227,6 +227,13 @@ const AssayDataSheetDataTableColumnForm = ({
         queryKey: [
           "entities",
           "data",
+          `grit/assays/data_tables/${dataTableId}/data_table_columns`,
+        ],
+      }),
+      queryClient.invalidateQueries({
+        queryKey: [
+          "entities",
+          "data",
           `grit/assays/data_tables/${dataTableId}/data_table_rows`,
         ],
       }),
