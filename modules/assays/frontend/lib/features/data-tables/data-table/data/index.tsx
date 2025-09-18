@@ -16,7 +16,13 @@
  * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Filter, SortingState, Table, useSetupTableState } from "@grit42/table";
+import {
+  Filter,
+  getIsFilterActive,
+  SortingState,
+  Table,
+  useSetupTableState,
+} from "@grit42/table";
 import styles from "./dataTableData.module.scss";
 import { useCallback, useEffect, useMemo } from "react";
 import { useToolbar } from "@grit42/core/Toolbar";
@@ -123,7 +129,11 @@ export const DataTableData = ({ dataTableId }: Props) => {
     exportUrl,
   ]);
 
-  if (!isRowsLoading && rows?.length == 0) {
+  if (
+    !isRowsLoading &&
+    rows?.length == 0 &&
+    !tableState.filters.every((f) => getIsFilterActive(f))
+  ) {
     return (
       <ErrorPage error="Add entities and columns to see data">
         <ButtonGroup>
