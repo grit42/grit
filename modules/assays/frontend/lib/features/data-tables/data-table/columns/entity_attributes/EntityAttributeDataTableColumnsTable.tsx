@@ -123,7 +123,7 @@ export const EntityAttributeDataTableColumnsTable = ({ dataTableId }: Props) => 
                 disabled={dataTableId === "new"}
                 onClick={navigateToSelect}
               >
-                Select entity attributes
+                Add entity attribute
               </Button>
             ) : undefined
           }
