@@ -166,7 +166,7 @@ export const AssayDataSheetDataTableColumnsTable = ({ dataTableId }: Props) => {
                 disabled={dataTableId === "new"}
                 onClick={navigateToSelect}
               >
-                Select assay columns
+                Add assay column
               </Button>
             ) : undefined
           }
