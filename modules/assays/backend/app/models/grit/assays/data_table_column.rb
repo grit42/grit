@@ -145,7 +145,7 @@ AND GRIT_ASSAYS_ASSAY_DATA_SHEET_COLUMNS.DATA_TYPE_ID <> #{data_table.entity_dat
           return subquery.select(*[
             "ARRAY_AGG(data_sources.entity_id_value) AS value",
             assay_data_sheet_column.data_type.model.display_properties.map do |display_property|
-              "STRING_AGG(#{assay_data_sheet_column.data_type.table_name}__#{assay_data_sheet_column.safe_name}.#{display_property[:name]}) AS value__#{display_property[:name]}"
+              "STRING_AGG(#{assay_data_sheet_column.data_type.table_name}__#{assay_data_sheet_column.safe_name}.#{display_property[:name]}, ', ') AS value__#{display_property[:name]}"
             end
           ])
         end
@@ -269,7 +269,6 @@ JOIN (
       SQL
       query.joins(column_join)
     end
-
 
     def full_perspective_query query
       query = query.select(
