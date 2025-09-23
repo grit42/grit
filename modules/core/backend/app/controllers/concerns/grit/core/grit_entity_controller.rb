@@ -105,6 +105,7 @@ module Grit::Core::GritEntityController
       return if query.nil?
 
       @record_count = query.count(:all)
+      @record_count = @record_count.values.sum unless @record_count.is_a? Integer
       @records = limit.to_i != -1 ? query.limit(limit).offset(offset) : query.all
       render json: { success: true, data: @records, cursor: offset.to_i + @records.length, total: @record_count }
     end
