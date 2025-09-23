@@ -50,7 +50,7 @@ const AssaysTable = ({
     [setSelectedAssays, selection],
   );
 
-  const tableState = useSetupTableState("assays-list", tableColumns, {
+  const tableState = useSetupTableState("data-table-assays-list", tableColumns, {
     settings: {
       enableSelection: true,
       disableColumnReorder: true,
