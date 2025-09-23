@@ -151,6 +151,7 @@ const CloneAssayDataSheetDataTableColumn = () => {
             assay_data_sheet_column_id: data.assay_data_sheet_column_id,
             assay_data_sheet_column_id__name:
               data.assay_data_sheet_column_id__name,
+            assay_model_id: data.assay_model_id,
             assay_model_id__name: data.assay_model_id__name,
             assay_data_sheet_definition_id__name:
               data.assay_data_sheet_definition_id__name,

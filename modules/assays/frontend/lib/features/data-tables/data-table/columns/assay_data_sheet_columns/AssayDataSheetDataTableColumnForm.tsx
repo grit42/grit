@@ -17,7 +17,7 @@
  */
 
 import { createSearchParams, Link, useNavigate } from "react-router-dom";
-import { Button, Select, Surface } from "@grit42/client-library/components";
+import { Button, Surface } from "@grit42/client-library/components";
 import {
   AddFormControl,
   Form,
@@ -38,33 +38,50 @@ import {
 import { DataTableColumnData } from "../../../queries/data_table_columns";
 import { useQueryClient } from "@grit42/api";
 import { AssayModelMetadatumData } from "../../../../../queries/assay_model_metadata";
-import { Fragment, useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { toSafeIdentifier } from "@grit42/core/utils";
 import styles from "../dataTableColumns.module.scss";
+import {
+  AssayData,
+  usePublishedAssaysOfModel,
+} from "../../../../../queries/assays";
+import AssaySelector from "./AssaySelector";
 
-const PivotValuesField = ({
+const AssaysFilter = ({
+  assayModelId,
+  initialPivots = {},
   form,
-  pivot,
-  pivotOptions,
 }: {
-  pivotOptions: { value: number; label: string }[];
+  assayModelId: string | number;
+  initialPivots?: Record<string, number[]>;
   form: ReactFormExtendedApi<Partial<DataTableColumnData>, undefined>;
-  pivot: any;
 }) => {
+  const [assay_model_id] = useStore(form.baseStore, ({ values }) => [
+    values.assay_model_id,
+  ]);
+
+  const { data } = usePublishedAssaysOfModel(assayModelId);
+
+  useEffect(() => {
+    if (!data) return;
+
+    form.setFieldValue(
+      "selectedAssays",
+      data.filter((d) => isAssaySelected(initialPivots, d)).map(({ id }) => id),
+      {
+        dontUpdateMeta: true,
+      },
+    );
+  }, [form, data, initialPivots]);
+
   return (
     <form.Field
-      name={`pivot-${pivot.id}-values`}
+      name="selectedAssays"
       children={(field) => (
-        <Select
-          label={pivot.assay_metadata_definition_id__name}
-          options={pivotOptions.map((v: any) => ({
-            id: v.value,
-            value: v.value,
-            label: v.label,
-          }))}
-          onChange={field.handleChange}
-          value={field.state.value ?? []}
-          multiple
+        <AssaySelector
+          assayModelId={assay_model_id!}
+          selectedAssays={field.state.value as number[]}
+          setSelectedAssays={field.handleChange}
         />
       )}
     />
@@ -101,6 +118,15 @@ function deriveProposedName(
     .join(" ");
 }
 
+const isAssaySelected = (
+  pivots: Record<string, number[]>,
+  assay: AssayData,
+) => {
+  return Object.keys(assay.jsonb_object_agg).every((k) =>
+    pivots[k]?.includes(assay.jsonb_object_agg[k]),
+  );
+};
+
 const AssayDataSheetDataTableColumnForm = ({
   fields,
   dataTableColumn,
@@ -131,33 +157,32 @@ const AssayDataSheetDataTableColumnForm = ({
     "grit/assays/data_table_columns",
   );
 
+  const { data } = usePublishedAssaysOfModel(dataTableColumn.assay_model_id!);
+
   const defaultValue = useMemo(
     () => ({
       ...dataTableColumn,
-      ...Object.entries(dataTableColumn.pivots ?? {}).reduce(
-        (acc, [key, value]) => ({
-          ...acc,
-          [`pivot-${key}-values`]: value,
-        }),
-        {},
-      ),
+      selectedAssays: data?.filter((d) => isAssaySelected(dataTableColumn.pivots ?? {}, d)).map(({ id }) => id) ?? [],
     }),
-    [dataTableColumn],
+    [data, dataTableColumn],
   );
+
 
   const form = useForm<Partial<DataTableColumnData>>({
     defaultValues: defaultValue,
     onSubmit: genericErrorHandler(async ({ value: formValue, formApi }) => {
-      const pivots: Record<string, number[]> = {};
-      for (const key in formValue) {
-        if (
-          /^pivot-\d+-values$/.test(key) &&
-          formValue[key] &&
-          (formValue[key] as Array<unknown>).length > 0
-        ) {
-          pivots[key.split("-")[1]] = (formValue[key] as number[]) ?? [];
-        }
-      }
+      const pivots: Record<string, number[]> =
+        data?.reduce((acc, d) => {
+          if ((formValue.selectedAssays as number[])?.includes(d.id)) {
+            Object.keys(d.jsonb_object_agg)?.forEach((key) => {
+              if (!acc[key]) {
+                acc[key] = [];
+              }
+              acc[key].push(d.jsonb_object_agg[key]);
+            });
+          }
+          return acc;
+        }, {} as Record<string, number[]>) ?? {};
 
       const value = {
         ...dataTableColumn,
@@ -244,8 +269,11 @@ const AssayDataSheetDataTableColumnForm = ({
   return (
     <div className={styles.columnFormContainer}>
       <h1>{dataTableColumnId === "new" ? "Add" : "Edit"} column</h1>
-      <Surface className={styles.columnFormSurface}>
-        <Form<Partial<DataTableColumnData>> form={form}>
+      <Form<Partial<DataTableColumnData>>
+        form={form}
+        className={styles.dataSheetColumnForm}
+      >
+        <Surface className={styles.columnFormSurface}>
           <div className={styles.columnForm}>
             {form.state.errorMap.onSubmit && (
               <div className={styles.columnFormError}>
@@ -287,30 +315,6 @@ const AssayDataSheetDataTableColumnForm = ({
                 </div>
               ))}
             </div>
-            <div className={styles.columnPivots}>
-              <div>
-                <h3>Metadata filters</h3>
-                <p>
-                  Aggregate results from experiments with the selected metadata.
-                  <br />
-                  No selection includes all experiments of the assay model.
-                </p>
-              </div>
-              {pivotOptions.map((o) => (
-                <Fragment key={o.id}>
-                  <PivotValuesField
-                    form={form}
-                    pivot={o}
-                    pivotOptions={
-                      o.metadatum_values as {
-                        value: number;
-                        label: string;
-                      }[]
-                    }
-                  />
-                </Fragment>
-              ))}
-            </div>
           </div>
           {dataTableColumnId === "new" && (
             <AddFormControl form={form} label="Save">
@@ -342,8 +346,23 @@ const AssayDataSheetDataTableColumnForm = ({
               )}
             </FormControls>
           )}
-        </Form>
-      </Surface>
+        </Surface>
+        <div className={styles.columnPivots}>
+          <div>
+            <h3>Assays filter</h3>
+            <p>
+              Aggregate results from experiments of the selected assays.
+              <br />
+              No selection includes all experiments of all assays.
+            </p>
+          </div>
+          <AssaysFilter
+            assayModelId={dataTableColumn.assay_model_id!}
+            initialPivots={dataTableColumn.pivots}
+            form={form}
+          />
+        </div>
+      </Form>
     </div>
   );
 };
