@@ -18,6 +18,7 @@
 
 module Grit::Assays
   class DataTableRow < ApplicationRecord
+    self.table_name = "grit_assays_data_table_entities"
     include Grit::Core::GritEntityRecord
 
     entity_crud_with read: []
