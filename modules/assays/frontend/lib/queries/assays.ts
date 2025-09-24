@@ -62,7 +62,7 @@ export interface AssayData extends EntityData {
   assay_model_id: number;
   assay_model_id__name: string;
   data_sheet_definitions: AssayDataSheetDefinitionData[];
-  jsonb_object_agg: Record<string, number>;
+  metadata_values: Record<string, number>;
   [key: string]:
     | string
     | number
@@ -101,7 +101,7 @@ export const usePublishedAssays = (
   );
 };
 
-export const usePublishedAssaysOfModel = (
+export const usePublishedAssaysOfModelWithMetadata = (
   assayModelId: string | number,
   sort?: SortingState,
   filter?: Filter[],
@@ -124,7 +124,7 @@ export const usePublishedAssaysOfModel = (
       },
       ...(filter ?? []),
     ],
-    { ...params, scope: "published" },
+    { ...params, scope: "published_with_metadata_values" },
     queryOptions,
   );
 };

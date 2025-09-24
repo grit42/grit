@@ -43,7 +43,7 @@ import { toSafeIdentifier } from "@grit42/core/utils";
 import styles from "../dataTableColumns.module.scss";
 import {
   AssayData,
-  usePublishedAssaysOfModel,
+  usePublishedAssaysOfModelWithMetadata,
 } from "../../../../../queries/assays";
 import AssaySelector from "./AssaySelector";
 
@@ -60,7 +60,7 @@ const AssaysFilter = ({
     values.assay_model_id,
   ]);
 
-  const { data } = usePublishedAssaysOfModel(assayModelId);
+  const { data } = usePublishedAssaysOfModelWithMetadata(assayModelId);
 
   useEffect(() => {
     if (!data) return;
@@ -122,8 +122,8 @@ const isAssaySelected = (
   pivots: Record<string, number[]>,
   assay: AssayData,
 ) => {
-  return Object.keys(assay.jsonb_object_agg).every((k) =>
-    pivots[k]?.includes(assay.jsonb_object_agg[k]),
+  return Object.keys(assay.metadata_values).every((k) =>
+    pivots[k]?.includes(assay.metadata_values[k]),
   );
 };
 
@@ -157,7 +157,7 @@ const AssayDataSheetDataTableColumnForm = ({
     "grit/assays/data_table_columns",
   );
 
-  const { data } = usePublishedAssaysOfModel(dataTableColumn.assay_model_id!);
+  const { data } = usePublishedAssaysOfModelWithMetadata(dataTableColumn.assay_model_id!);
 
   const defaultValue = useMemo(
     () => ({
@@ -174,11 +174,11 @@ const AssayDataSheetDataTableColumnForm = ({
       const pivots: Record<string, number[]> =
         data?.reduce((acc, d) => {
           if ((formValue.selectedAssays as number[])?.includes(d.id)) {
-            Object.keys(d.jsonb_object_agg)?.forEach((key) => {
+            Object.keys(d.metadata_values)?.forEach((key) => {
               if (!acc[key]) {
                 acc[key] = [];
               }
-              acc[key].push(d.jsonb_object_agg[key]);
+              acc[key].push(d.metadata_values[key]);
             });
           }
           return acc;

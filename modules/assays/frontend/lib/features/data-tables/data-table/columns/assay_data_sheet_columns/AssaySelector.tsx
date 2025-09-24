@@ -1,7 +1,7 @@
 import { ErrorPage, Spinner } from "@grit42/client-library/components";
 import {
   useAssayColumns,
-  usePublishedAssaysOfModel,
+  usePublishedAssaysOfModelWithMetadata,
 } from "../../../../../queries/assays";
 import { RowSelectionState, Table, useSetupTableState } from "@grit42/table";
 import { useTableColumns } from "@grit42/core/utils";
@@ -63,7 +63,7 @@ const AssaysTable = ({
 
   useEffect(() => {}, [tableState.rowSelection]);
 
-  const { data, isLoading, isError, error } = usePublishedAssaysOfModel(
+  const { data, isLoading, isError, error } = usePublishedAssaysOfModelWithMetadata(
     assayModelId,
     tableState.sorting,
   );
