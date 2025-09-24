@@ -83,7 +83,7 @@ const AssaysTable = ({
 interface Props {
   assayModelId: string | number;
   selectedAssays: number[];
-  setSelectedAssays: React.Dispatch<React.SetStateAction<number[]>>;
+  setSelectedAssays: React.Dispatch<React.SetStateAction<number[] | undefined>>;
 }
 
 const AssaySelector = (props: Props) => {

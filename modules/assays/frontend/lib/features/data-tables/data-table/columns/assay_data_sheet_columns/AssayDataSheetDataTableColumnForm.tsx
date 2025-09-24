@@ -38,48 +38,23 @@ import {
 import { DataTableColumnData } from "../../../queries/data_table_columns";
 import { useQueryClient } from "@grit42/api";
 import { AssayModelMetadatumData } from "../../../../../queries/assay_model_metadata";
-import { useEffect, useMemo } from "react";
 import { toSafeIdentifier } from "@grit42/core/utils";
 import styles from "../dataTableColumns.module.scss";
-import {
-  AssayData,
-  usePublishedAssaysOfModelWithMetadata,
-} from "../../../../../queries/assays";
 import AssaySelector from "./AssaySelector";
 
 const AssaysFilter = ({
   assayModelId,
-  initialPivots = {},
   form,
 }: {
   assayModelId: string | number;
-  initialPivots?: Record<string, number[]>;
   form: ReactFormExtendedApi<Partial<DataTableColumnData>, undefined>;
 }) => {
-  const [assay_model_id] = useStore(form.baseStore, ({ values }) => [
-    values.assay_model_id,
-  ]);
-
-  const { data } = usePublishedAssaysOfModelWithMetadata(assayModelId);
-
-  useEffect(() => {
-    if (!data) return;
-
-    form.setFieldValue(
-      "selectedAssays",
-      data.filter((d) => isAssaySelected(initialPivots, d)).map(({ id }) => id),
-      {
-        dontUpdateMeta: true,
-      },
-    );
-  }, [form, data, initialPivots]);
-
   return (
     <form.Field
-      name="selectedAssays"
+      name="pivots"
       children={(field) => (
         <AssaySelector
-          assayModelId={assay_model_id!}
+          assayModelId={assayModelId}
           selectedAssays={field.state.value as number[]}
           setSelectedAssays={field.handleChange}
         />
@@ -118,15 +93,6 @@ function deriveProposedName(
     .join(" ");
 }
 
-const isAssaySelected = (
-  pivots: Record<string, number[]>,
-  assay: AssayData,
-) => {
-  return Object.keys(assay.metadata_values).every((k) =>
-    pivots[k]?.includes(assay.metadata_values[k]),
-  );
-};
-
 const AssayDataSheetDataTableColumnForm = ({
   fields,
   dataTableColumn,
@@ -157,37 +123,13 @@ const AssayDataSheetDataTableColumnForm = ({
     "grit/assays/data_table_columns",
   );
 
-  const { data } = usePublishedAssaysOfModelWithMetadata(dataTableColumn.assay_model_id!);
-
-  const defaultValue = useMemo(
-    () => ({
-      ...dataTableColumn,
-      selectedAssays: data?.filter((d) => isAssaySelected(dataTableColumn.pivots ?? {}, d)).map(({ id }) => id) ?? [],
-    }),
-    [data, dataTableColumn],
-  );
-
-
   const form = useForm<Partial<DataTableColumnData>>({
-    defaultValues: defaultValue,
+    defaultValues: dataTableColumn,
     onSubmit: genericErrorHandler(async ({ value: formValue, formApi }) => {
-      const pivots: Record<string, number[]> =
-        data?.reduce((acc, d) => {
-          if ((formValue.selectedAssays as number[])?.includes(d.id)) {
-            Object.keys(d.metadata_values)?.forEach((key) => {
-              if (!acc[key]) {
-                acc[key] = [];
-              }
-              acc[key].push(d.metadata_values[key]);
-            });
-          }
-          return acc;
-        }, {} as Record<string, number[]>) ?? {};
-
       const value = {
         ...dataTableColumn,
         ...getVisibleFieldData<Partial<DataTableColumnData>>(formValue, fields),
-        pivots,
+        pivots: formValue.pivots ?? []
       };
       const res = await (dataTableColumnId === "new"
         ? createEntityMutation.mutateAsync(value as DataTableColumnData)
@@ -358,7 +300,6 @@ const AssayDataSheetDataTableColumnForm = ({
           </div>
           <AssaysFilter
             assayModelId={dataTableColumn.assay_model_id!}
-            initialPivots={dataTableColumn.pivots}
             form={form}
           />
         </div>
