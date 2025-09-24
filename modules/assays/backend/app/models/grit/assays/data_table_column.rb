@@ -178,11 +178,20 @@ LEFT OUTER JOIN (
     end
 
     def join_data_sources subquery
-        join = <<-SQL
+      join = <<-SQL
 JOIN grit_assays_experiment_data_sheet_values data_sources ON data_sources.experiment_data_sheet_record_id = targets.experiment_data_sheet_record_id
 AND data_sources.assay_data_sheet_column_id = #{assay_data_sheet_column_id}
-        SQL
-        subquery.joins(join)
+JOIN GRIT_ASSAYS_EXPERIMENT_DATA_SHEET_RECORDS ON GRIT_ASSAYS_EXPERIMENT_DATA_SHEET_RECORDS.ID = TARGETS.EXPERIMENT_DATA_SHEET_RECORD_ID
+JOIN GRIT_ASSAYS_EXPERIMENT_DATA_SHEETS ON GRIT_ASSAYS_EXPERIMENT_DATA_SHEETS.ID = GRIT_ASSAYS_EXPERIMENT_DATA_SHEET_RECORDS.EXPERIMENT_DATA_SHEET_ID
+JOIN GRIT_ASSAYS_EXPERIMENTS ON GRIT_ASSAYS_EXPERIMENTS.ID = GRIT_ASSAYS_EXPERIMENT_DATA_SHEETS.EXPERIMENT_ID#{" AND GRIT_ASSAYS_EXPERIMENTS.ASSAY_ID IN (#{self.pivots.join(',')})" if self.pivots.length.positive?}
+JOIN GRIT_CORE_PUBLICATION_STATUSES GRIT_CORE_PUBLICATION_STATUSES__experiments ON GRIT_CORE_PUBLICATION_STATUSES__experiments.id = GRIT_ASSAYS_EXPERIMENTS.publication_status_id AND GRIT_CORE_PUBLICATION_STATUSES__experiments.name = 'Published'
+JOIN GRIT_ASSAYS_ASSAYS ON GRIT_ASSAYS_ASSAYS.id = GRIT_ASSAYS_EXPERIMENTS.assay_id
+JOIN GRIT_CORE_PUBLICATION_STATUSES GRIT_CORE_PUBLICATION_STATUSES__assays ON GRIT_CORE_PUBLICATION_STATUSES__assays.id = GRIT_ASSAYS_ASSAYS.publication_status_id AND GRIT_CORE_PUBLICATION_STATUSES__assays.name = 'Published'
+JOIN GRIT_ASSAYS_ASSAY_MODELS ON GRIT_ASSAYS_ASSAY_MODELS.id = GRIT_ASSAYS_ASSAYS.assay_model_id
+JOIN GRIT_CORE_PUBLICATION_STATUSES GRIT_CORE_PUBLICATION_STATUSES__assay_models ON GRIT_CORE_PUBLICATION_STATUSES__assay_models.id = GRIT_ASSAYS_ASSAYS.publication_status_id AND GRIT_CORE_PUBLICATION_STATUSES__assay_models.name = 'Published'
+      SQL
+
+      subquery.joins(join)
     end
 
     def metadata_filters subquery
@@ -240,8 +249,6 @@ LEFT OUTER JOIN (
 
         subquery = sql_aggregate_method(subquery)
         subquery = join_data_sources(subquery)
-        subquery = metadata_filters(subquery)
-
         subquery = join_entity_table(subquery)
         query = select_entity_display_properties(query)
         left_join_subquery(query, subquery)
@@ -297,7 +304,6 @@ JOIN (
       end
 
       subquery = join_data_sources(subquery)
-      subquery = metadata_filters(subquery)
       subquery = join_entity_table(subquery)
       query = select_entity_display_properties(query)
       join_subquery(query, subquery)

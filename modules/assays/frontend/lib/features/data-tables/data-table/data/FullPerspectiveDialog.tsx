@@ -26,19 +26,9 @@ import {
 import styles from "./dataTableData.module.scss";
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  URLParams,
-  UseQueryOptions,
-} from "@grit42/api";
-import {
-  EntityData,
-  EntityProperties,
-  useEntityData,
-} from "@grit42/core";
-import {
-  Dialog,
-  DialogProps,
-} from "@grit42/client-library/components";
+import { URLParams, UseQueryOptions } from "@grit42/api";
+import { EntityData, EntityProperties, useEntityData } from "@grit42/core";
+import { Dialog, DialogProps } from "@grit42/client-library/components";
 
 interface FullPerspectiveDialogProps extends Omit<DialogProps, "isOpen"> {
   column?: string;
@@ -68,13 +58,13 @@ const useDataTableRowFullPerspective = (
 const FullPerspectiveDialog = ({
   id,
   column,
-  columns: columnFromProps,
+  columns: columnsFromProps,
   dataTableId,
   ...props
 }: FullPerspectiveDialogProps) => {
   const columns = useMemo(
     () => [
-      ...columnFromProps.filter(
+      ...columnsFromProps.filter(
         (c) =>
           c.meta?.data_table?.source_type === "entity_attribute" ||
           c.id === column,
@@ -87,19 +77,26 @@ const FullPerspectiveDialog = ({
         default_hidden: false,
         required: false,
         unique: false,
-        entity: {
-          column: "experiment_id",
-          full_name: "Grit::Assays::Experiment",
-          name: "Experiment",
-          path: "grit/assays/experiments",
-          primary_key: "id",
-          primary_key_type: "integer",
-          display_column: "name",
-          display_column_type: "string",
+        meta: {
+          entity: {
+            column: "experiment_id",
+            full_name: "Grit::Assays::Experiment",
+            name: "Experiment",
+            path: "grit/assays/experiments",
+            primary_key: "id",
+            primary_key_type: "integer",
+            display_column: "name",
+            display_column_type: "string",
+          },
         },
       },
     ],
-    [columnFromProps, column],
+    [columnsFromProps, column],
+  );
+
+  const columnFromProps = useMemo(
+    () => columnsFromProps.find((c) => c.id === column),
+    [columnsFromProps, column],
   );
 
   const tableState = useSetupTableState(`data-table-full-perspective`, columns);
@@ -110,7 +107,9 @@ const FullPerspectiveDialog = ({
     useDataTableRowFullPerspective(
       id ?? -1,
       dataTableId,
-      column ?? "",
+      (columnFromProps?.type === "entity"
+        ? columnFromProps?.meta?.entity?.column
+        : column) ?? "",
       tableState.sorting,
       tableState.filters,
       undefined,

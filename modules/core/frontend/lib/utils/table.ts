@@ -39,6 +39,7 @@ export function getTableColumns<T extends EntityData>(
       size: property.defaultColumnSize,
       defaultVisibility: property.default_hidden ? "hidden" : "visible",
       meta: {
+        entity: property.entity,
         ...property.meta,
       },
       ...((property.type &&
