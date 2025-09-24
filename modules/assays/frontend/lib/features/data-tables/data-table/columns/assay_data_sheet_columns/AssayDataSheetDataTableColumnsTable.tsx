@@ -57,15 +57,17 @@ export const AssayDataSheetDataTableColumnsTable = ({ dataTableId }: Props) => {
         required: false,
         default_hidden: false,
         unique: false,
-        entity: {
-          column: "assay_model_id",
-          name: "AssayModel",
-          full_name: "Grit::Assays::AssayModel",
-          path: "grit/assays/assay_models",
-          display_column: "name",
-          display_column_type: "string",
-          primary_key: "id",
-          primary_key_type: "integer",
+        meta: {
+          entity: {
+            column: "assay_model_id",
+            name: "AssayModel",
+            full_name: "Grit::Assays::AssayModel",
+            path: "grit/assays/assay_models",
+            display_column: "name",
+            display_column_type: "string",
+            primary_key: "id",
+            primary_key_type: "integer",
+          },
         },
       },
       {
@@ -76,15 +78,17 @@ export const AssayDataSheetDataTableColumnsTable = ({ dataTableId }: Props) => {
         required: false,
         default_hidden: false,
         unique: false,
-        entity: {
-          column: "assay_data_sheet_definition_id",
-          name: "AssayDataSheetDefinition",
-          full_name: "Grit::Assays::AssayDataSheetDefinition",
-          path: "grit/assays/assay_data_sheet_definitions",
-          display_column: "name",
-          display_column_type: "string",
-          primary_key: "id",
-          primary_key_type: "integer",
+        meta: {
+          entity: {
+            column: "assay_data_sheet_definition_id",
+            name: "AssayDataSheetDefinition",
+            full_name: "Grit::Assays::AssayDataSheetDefinition",
+            path: "grit/assays/assay_data_sheet_definitions",
+            display_column: "name",
+            display_column_type: "string",
+            primary_key: "id",
+            primary_key_type: "integer",
+          },
         },
       },
       ...fields.filter(
