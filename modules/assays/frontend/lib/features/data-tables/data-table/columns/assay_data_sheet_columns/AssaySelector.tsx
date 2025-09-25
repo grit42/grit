@@ -33,7 +33,8 @@ const AssaysTable = ({
 
   const selection = useMemo(
     () =>
-      selectedAssays?.reduce((acc, assay) => ({ ...acc, [assay]: true }), {}) ?? {},
+      selectedAssays?.reduce((acc, assay) => ({ ...acc, [assay]: true }), {}) ??
+      {},
     [selectedAssays],
   );
 
@@ -50,26 +51,35 @@ const AssaysTable = ({
     [setSelectedAssays, selection],
   );
 
-  const tableState = useSetupTableState("data-table-assays-list", tableColumns, {
-    settings: {
-      enableSelection: true,
-      disableColumnReorder: true,
-      disableFilters: true,
+  const tableState = useSetupTableState(
+    "data-table-assays-list",
+    tableColumns,
+    {
+      settings: {
+        enableSelection: true,
+        disableColumnReorder: true,
+        disableFilters: true,
+      },
+      controlledState: {
+        select: [selection, setSelection],
+      },
     },
-    controlledState: {
-      select: [selection, setSelection],
-    },
-  });
-
-  const { data, isLoading, isError, error } = usePublishedAssaysOfModelWithMetadata(
-    assayModelId,
-    tableState.sorting,
   );
+
+  const { data, isLoading, isError, error } =
+    usePublishedAssaysOfModelWithMetadata(assayModelId, tableState.sorting);
 
   return (
     <Table
       getRowId={getRowId}
       tableState={tableState}
+      onRowClick={({ id }) =>
+        setSelectedAssays(
+          selectedAssays.includes(Number(id))
+            ? selectedAssays.filter((selectedId) => Number(id) !== selectedId)
+            : [...selectedAssays, Number(id)],
+        )
+      }
       data={data}
       loading={isLoading}
       noDataMessage={isError ? error : "No published assays"}
