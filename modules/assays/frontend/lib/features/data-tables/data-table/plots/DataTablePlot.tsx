@@ -49,6 +49,7 @@ import {
   useDataTableRows,
 } from "../../queries/data_table_rows";
 import styles from "./plots.module.scss";
+import { useQueryClient } from "@grit42/api";
 
 interface Props {
   dataTable: DataTableData;
@@ -88,6 +89,7 @@ const NEW_PLOT = {
 
 const DataTablePlot = ({ dataTable }: Props) => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const canCrudPlots = useHasRoles([
     "Administrator",
     "AssayAdministrator",
@@ -122,6 +124,9 @@ const DataTablePlot = ({ dataTable }: Props) => {
       },
     };
     await editEntityMutation.mutateAsync({ ...dataTable, plots });
+    await queryClient.invalidateQueries({
+      queryKey: ["entities", "datum", "grit/assays/data_tables"],
+    });
     setDirty(false);
     setSaving(false);
     if (plot_id === "new") {
@@ -143,6 +148,9 @@ const DataTablePlot = ({ dataTable }: Props) => {
     };
     delete plots[plot_id];
     await editEntityMutation.mutateAsync({ ...dataTable, plots });
+    await queryClient.invalidateQueries({
+      queryKey: ["entities", "datum", "grit/assays/data_tables"],
+    });
     setDeleting(false);
     setDirty(false);
     navigate(`../${Object.keys(plots)[0] ?? "new"}`);
