@@ -35,7 +35,6 @@ import {
 } from "@grit42/core";
 import { DataTableColumnData } from "../../../queries/data_table_columns";
 import { useQueryClient } from "@grit42/api";
-import { useMemo } from "react";
 import styles from "../dataTableColumns.module.scss";
 import { classnames } from "@grit42/client-library/utils";
 
@@ -67,38 +66,12 @@ const EntityAttributeDataTableColumnForm = ({
     "grit/assays/data_table_columns",
   );
 
-  const defaultValue = useMemo(
-    () => ({
-      ...dataTableColumn,
-      ...Object.entries(dataTableColumn.pivots ?? {}).reduce(
-        (acc, [key, value]) => ({
-          ...acc,
-          [`pivot-${key}-values`]: value,
-        }),
-        {},
-      ),
-    }),
-    [dataTableColumn],
-  );
-
   const form = useForm<Partial<DataTableColumnData>>({
-    defaultValues: defaultValue,
+    defaultValues: dataTableColumn,
     onSubmit: genericErrorHandler(async ({ value: formValue }) => {
-      const pivots: Record<string, number[]> = {};
-      for (const key in formValue) {
-        if (
-          /^pivot-\d+-values$/.test(key) &&
-          formValue[key] &&
-          (formValue[key] as Array<unknown>).length > 0
-        ) {
-          pivots[key.split("-")[1]] = (formValue[key] as number[]) ?? [];
-        }
-      }
-
       const value = {
         ...dataTableColumn,
         ...getVisibleFieldData<Partial<DataTableColumnData>>(formValue, fields),
-        pivots,
       };
       await (dataTableColumnId === "new"
         ? createEntityMutation.mutateAsync(value as DataTableColumnData)

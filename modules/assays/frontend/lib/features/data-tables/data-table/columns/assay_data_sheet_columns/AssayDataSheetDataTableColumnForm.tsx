@@ -37,7 +37,6 @@ import {
 } from "@grit42/core";
 import { DataTableColumnData } from "../../../queries/data_table_columns";
 import { useQueryClient } from "@grit42/api";
-import { AssayModelMetadatumData } from "../../../../../queries/assay_model_metadata";
 import { toSafeIdentifier } from "@grit42/core/utils";
 import styles from "../dataTableColumns.module.scss";
 import AssaySelector from "./AssaySelector";
@@ -63,46 +62,14 @@ const AssaysFilter = ({
   );
 };
 
-function deriveProposedName(
-  values: Partial<DataTableColumnData>,
-  pivotOptions: AssayModelMetadatumData[],
-) {
-  const { aggregation_method, assay_data_sheet_column_id__name } = values;
-  const pivotValuesNames = Object.keys(values)
-    .filter((key) => /^pivot-\d+-values$/.test(key))
-    .map((key) => {
-      const pivotId = key.split("-")[1];
-      const pivot = pivotOptions.find(({ id }) => id.toString() === pivotId);
-      return (values[key] as number[])
-        ?.map(
-          (v) =>
-            (pivot?.metadatum_values as any[])?.find(
-              ({ value }: { value: number }) => value === v,
-            )?.label,
-        )
-        .join(" ");
-    })
-    .join(" ")
-    .trim();
-  return [
-    assay_data_sheet_column_id__name,
-    pivotValuesNames,
-    aggregation_method,
-  ]
-    .filter((v) => !!v && v !== "")
-    .join(" ");
-}
-
 const AssayDataSheetDataTableColumnForm = ({
   fields,
   dataTableColumn,
-  pivotOptions,
   dataTableId,
   dataTableColumnId,
 }: {
   fields: FormFieldDef[];
   dataTableColumn: Partial<DataTableColumnData>;
-  pivotOptions: AssayModelMetadatumData[];
   dataTableId: string | number;
   dataTableColumnId: string | number;
 }) => {
@@ -158,21 +125,14 @@ const AssayDataSheetDataTableColumnForm = ({
     }),
   });
 
-  const { safe_name, proposed_safe_name, name, proposed_name } = useStore(
+  const { safe_name, proposed_safe_name } = useStore(
     form.baseStore,
     ({ values }) => {
-      const isPivotTouched = Object.entries(form.fieldMetaDerived.state)
-        .filter(([key]) => /^pivot-\d+-values$/.test(key))
-        .some(([, { isDirty }]) => isDirty);
       const { name, safe_name } = values;
-      const proposed_name =
-        isPivotTouched || form.getFieldMeta("aggregation_method")?.isDirty
-          ? deriveProposedName(values, pivotOptions)
-          : name;
       const proposed_safe_name = form.getFieldMeta("name")?.isDirty
         ? toSafeIdentifier(name as string)
         : safe_name;
-      return { name, safe_name, proposed_safe_name, proposed_name };
+      return { safe_name, proposed_safe_name };
     },
   );
 
@@ -237,20 +197,6 @@ const AssayDataSheetDataTableColumnForm = ({
                           }
                         >
                           Use "{proposed_safe_name}"
-                        </em>
-                      </div>
-                    )}
-                  {f.name === "name" &&
-                    name !== proposed_name &&
-                    form.state.isDirty && (
-                      <div className={styles.columnFormFieldSuggestion}>
-                        <em
-                          role="button"
-                          onClick={() =>
-                            form.setFieldValue("name", proposed_name)
-                          }
-                        >
-                          Use "{proposed_name}"
                         </em>
                       </div>
                     )}

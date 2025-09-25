@@ -1,7 +1,5 @@
 Grit::Assays::Engine.routes.draw do
-  resources :data_table_columns do
-    get :pivot_options
-  end
+  resources :data_table_columns
   resources :data_table_entities do
     collection do
       post :create_bulk
@@ -25,9 +23,7 @@ Grit::Assays::Engine.routes.draw do
     get :export
   end
 
-  resources :assay_data_sheet_columns do
-    get :pivot_options
-  end
+  resources :assay_data_sheet_columns
   resources :assay_data_sheet_definitions
   resources :assay_metadata_definitions
   resources :assay_metadata

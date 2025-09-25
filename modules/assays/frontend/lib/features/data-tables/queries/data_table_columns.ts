@@ -29,9 +29,6 @@ import { UseQueryOptions, URLParams } from "@grit42/api";
 import { Filter, SortingState } from "@grit42/table";
 import { FormFieldDef } from "@grit42/form";
 import { AssayDataSheetColumnData } from "../../../queries/assay_data_sheet_columns";
-import {
-  AssayModelMetadatumData,
-} from "../../../queries/assay_model_metadata";
 
 export const useDataTableColumnColumns = (
   params: Record<string, any> = {},
@@ -162,38 +159,6 @@ export const useDataTableColumn = (
   return useEntityDatum<DataTableColumnData>(
     `grit/assays/data_table_columns`,
     dataTableColumnId,
-    params,
-    queryOptions,
-  );
-};
-
-export const useDataTableColumnPivotOptions = (
-  dataTableColumnId: string | number,
-  params: URLParams = {},
-  queryOptions: Partial<
-    UseQueryOptions<AssayModelMetadatumData[], string>
-  > = {},
-) => {
-  return useEntityData<AssayModelMetadatumData>(
-    `grit/assays/data_table_columns/${dataTableColumnId}/pivot_options`,
-    undefined,
-    undefined,
-    params,
-    queryOptions,
-  );
-};
-
-export const useAssayDataSheetColumnPivotOptions = (
-  assayDataSheetColumnId: string | number,
-  params: URLParams = {},
-  queryOptions: Partial<
-    UseQueryOptions<AssayModelMetadatumData[], string>
-  > = {},
-) => {
-  return useEntityData<AssayModelMetadatumData>(
-    `grit/assays/assay_data_sheet_columns/${assayDataSheetColumnId}/pivot_options`,
-    undefined,
-    undefined,
     params,
     queryOptions,
   );

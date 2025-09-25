@@ -20,7 +20,6 @@ import { Button, ErrorPage, Spinner } from "@grit42/client-library/components";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import {
   DataTableColumnData,
-  useAssayDataSheetColumnPivotOptions,
   useDataTableColumnFields,
 } from "../../../queries/data_table_columns";
 import { useEntityDatum } from "@grit42/core";
@@ -128,19 +127,6 @@ const NewAssayDataSheetDataTableColumn = () => {
     ],
   });
 
-  const {
-    data: pivotOptions,
-    isLoading: isPivotOptionsLoading,
-    isError: isPivotOptionsError,
-    error: pivotOptionsError,
-  } = useAssayDataSheetColumnPivotOptions(
-    searchParams.get("assay_data_sheet_column_id") ?? -1,
-    undefined,
-    {
-      enabled: searchParams.has("assay_data_sheet_column_id"),
-    },
-  );
-
   const dataTableColumn = useMemo(
     () =>
       data
@@ -174,19 +160,17 @@ const NewAssayDataSheetDataTableColumn = () => {
     );
   }
 
-  if (isLoading || isDataTableColumnFieldsLoading || isPivotOptionsLoading)
+  if (isLoading || isDataTableColumnFieldsLoading)
     return <Spinner />;
   if (
     isError ||
     !dataTableColumn ||
     isDataTableColumnFieldsError ||
-    !dataTableColumnFields ||
-    isPivotOptionsError ||
-    !pivotOptions
+    !dataTableColumnFields
   ) {
     return (
       <ErrorPage
-        error={error ?? dataTableColumnFieldsError ?? pivotOptionsError}
+        error={error ?? dataTableColumnFieldsError}
       >
         <Link to="..">
           <Button>Back</Button>
@@ -201,7 +185,6 @@ const NewAssayDataSheetDataTableColumn = () => {
       dataTableColumnId="new"
       dataTableColumn={dataTableColumn}
       fields={dataTableColumnFields}
-      pivotOptions={pivotOptions}
     />
   );
 };

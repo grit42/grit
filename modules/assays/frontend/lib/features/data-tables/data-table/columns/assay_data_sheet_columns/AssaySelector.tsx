@@ -5,7 +5,7 @@ import {
 } from "../../../../../queries/assays";
 import { RowSelectionState, Table, useSetupTableState } from "@grit42/table";
 import { useTableColumns } from "@grit42/core/utils";
-import { SetStateAction, useCallback, useEffect, useMemo } from "react";
+import { SetStateAction, useCallback, useMemo } from "react";
 import { EntityData } from "@grit42/core";
 
 const getRowId = (data: EntityData) => data.id.toString();
@@ -60,8 +60,6 @@ const AssaysTable = ({
       select: [selection, setSelection],
     },
   });
-
-  useEffect(() => {}, [tableState.rowSelection]);
 
   const { data, isLoading, isError, error } = usePublishedAssaysOfModelWithMetadata(
     assayModelId,

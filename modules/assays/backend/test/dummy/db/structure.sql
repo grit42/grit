@@ -397,7 +397,7 @@ CREATE TABLE public.grit_assays_data_table_columns (
     aggregation_method character varying,
     source_type character varying DEFAULT 'assay_data_sheet_column'::character varying NOT NULL,
     entity_attribute_name character varying,
-    pivots jsonb DEFAULT '{}'::jsonb
+    pivots jsonb DEFAULT '[]'::jsonb
 );
 
 
