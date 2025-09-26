@@ -22,13 +22,13 @@ In the form, configure the column details and click **Save**.
 2. A machine-friendly name, only alphanumerical characters and underscores (**\_**).
 3. An optional sort indication used to define the default position of the column, a lower value is closer to the start.
 4. The [aggregation method](#aggregation-methods) that should be used to produce a single value when there are multiple results for the entity.
-5. [Metadata filters](#metadata-filters) to select a specific subset of assays to get results from.
-
-:::info
-Suggestion for updating the _Name_ and _Safe name_ of the column will be displayed below the relevant input when making changes. Click it to update the relevant field to the suggested value.
-:::
+5. [Assay filters](#assay-filters) to select a specific subset of assays to get results from.
 
 ![Add assay column form](./assets/add_assay_column_form.png)
+
+:::info
+Suggestion for updating the _Safe name_ of the column will be displayed below the input when making changes to the _Name_. Click it to accept the suggested value.
+:::
 
 Assay data sheet columns can be cloned by clicking an existing column, then clicking **Clone** (1).
 
@@ -58,16 +58,8 @@ Available aggregation methods depend on the data type of the assay data sheet co
   - AND: true if all values are true
   - OR: true if any value is true
 
-## Metadata filters
+## Assays filter
 
-Assay data sheet columns data is aggregated from **Published Experiments** of the corresponding **Assay model**. Metadata filters can be used to target specific **Assays**. If metadata filters are set, only data from **Experiments** belonging to **Assay Models** with metadata matching the filters will be aggregated. If no filters are set, all **Experiments** are used.
+Assay data sheet columns data is aggregated from **Published Experiments** of the corresponding **Assay model**. The Assays filter can be used to target specific **Assays** of the model. If **Assays** are selected, only data from **Experiments** belonging to the selected **Assays** will be aggregated. If no **Assays** are selected, all **Experiments** from all **Assays** of the **Assay Model** are used.
 
-### Example
-
-Suppose an **Assay model** defining two metadata, Species and Strain, and four **Assays**, with metadata defined as follows:
-- Species: Rat, Strain: Wistar Han
-- Species: Rat, Strain: Sprague Dawley
-- Species: Mouse, Strain: C57BL/6
-- Species: Mouse, Strain: BALB/c
-
-Metadata filters 
+This enables grouping data from **Assays** that may differ only by some **Metadata**, such as the site or lab the **Assay** was run in.
