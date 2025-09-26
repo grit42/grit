@@ -17,6 +17,9 @@ Once constructed, a data table can be explored interactively. Users can filter a
 
 ![A data table](./assets/data_table.png)
 
+Clicking on a cell with experimental data opens a dialog showing all aggregated values. Clicking a row in this table will navigate to the **Experiment data sheet**.
+
+![Aggregated values table](./assets/aggregated_values_table.png)
 
 ```mdx-code-block
 import DocCardList from '@theme/DocCardList';
