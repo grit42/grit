@@ -5,7 +5,7 @@ sidebar_position: 2
 
 # Assay Data Sheet columns
 
-Data tables **Assay Data Sheet columns** display experimental data. **Assay Data Sheet columns** are selected from [Assay Models](../assays/setting-up/assay_models.md) and aggregate data from **Published** experiments belonging to the **Assay Model**. **Assay Metadata** filters can be configured to aggregate data from specific **Assays**.
+Data tables **Assay Data Sheet columns** display experimental data. **Assay Data Sheet columns** are selected from [Assay Models](../assays/setting-up/assay_models.md) and aggregate data from **Published** experiments belonging to the **Assay Model**. **Assays** filter can be configured to aggregate data from specific **Assays**.
 
 **Assay Data Sheet columns** are managed under the **Columns** > **Assay columns** tab (1).
 Click **Add entity attribute** (2) to add a column displaying an entity attribute to the data table.
