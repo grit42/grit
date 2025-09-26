@@ -11,7 +11,7 @@ import { EntityData } from "@grit42/core";
 const getRowId = (data: EntityData) => data.id.toString();
 
 const AssaysTable = ({
-  selectedAssays,
+  selectedAssays = [],
   setSelectedAssays,
   assayModelId,
 }: Props) => {
@@ -75,7 +75,7 @@ const AssaysTable = ({
       tableState={tableState}
       onRowClick={({ id }) =>
         setSelectedAssays(
-          selectedAssays.includes(Number(id))
+          selectedAssays?.includes(Number(id))
             ? selectedAssays.filter((selectedId) => Number(id) !== selectedId)
             : [...selectedAssays, Number(id)],
         )
