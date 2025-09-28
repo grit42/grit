@@ -41,15 +41,19 @@ const LoginPage = () => {
           navigate("/");
         }
       } catch (e: unknown) {
-        formApi.setErrorMap({ onSubmit: (e as Error).message });
+        if (typeof e === "string") {
+          formApi.setErrorMap({ onSubmit: e });
+        } else {
+          formApi.setErrorMap({ onSubmit: (e as Error).message });
+        }
       }
     },
   });
 
-  const hasError = !!form.state.errorMap.onSubmit;
+  const error = form.state.errorMap.onSubmit;
 
   return (
-    <AuthenticationPage hasError={!!hasError}>
+    <AuthenticationPage hasError={!!error}>
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -57,7 +61,18 @@ const LoginPage = () => {
           form.handleSubmit();
         }}
       >
-        {loginMutation.isError ? <h1>Ooops. Try again!</h1> : <h1>Sign in</h1>}
+        <div id="authentication-hint-container">
+          <h1>Sign in</h1>
+          {error && (
+            <p
+              style={{
+                color: "var(--palette-error-main)",
+              }}
+            >
+              {error.toString()}
+            </p>
+          )}
+        </div>
 
         <form.Field
           name="login"
@@ -71,7 +86,8 @@ const LoginPage = () => {
                 required
                 name={field.name}
                 type="text"
-                placeholder="Username"
+                label="Username or email"
+                placeholder="Username or email"
                 onChange={(e) => field.handleChange(e.target.value)}
                 onBlur={field.handleBlur}
                 value={field.state.value ?? ""}
@@ -92,6 +108,7 @@ const LoginPage = () => {
               <Input
                 required
                 name={field.name}
+                label="Password"
                 placeholder="Password"
                 type="password"
                 onChange={(e) => field.handleChange(e.target.value)}

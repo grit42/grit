@@ -17,7 +17,7 @@
  */
 
 import { useNavigate, useParams } from "react-router-dom";
-import { useForm, useStore } from "@grit42/form";
+import { useForm } from "@grit42/form";
 import { Button, Input } from "@grit42/client-library/components";
 import { useTwoFactorMutation } from "../mutations";
 import AuthenticationPage from "../../../components/AuthenticationPage";
@@ -36,24 +36,19 @@ const TwoFactor = () => {
         await twoFactorMutation.mutateAsync(value);
         navigate("/");
       } catch (e: unknown) {
-        formApi.setFieldMeta("token", (m) => ({
-          ...m,
-          errors: [(e as Error).message],
-          errorMap: {
-            onSubmit: (e as Error).message,
-          },
-        }));
+        if (typeof e === "string") {
+          formApi.setErrorMap({ onSubmit: e });
+        } else {
+          formApi.setErrorMap({ onSubmit: (e as Error).message });
+        }
       }
     },
   });
 
-  const hasError = useStore(
-    form.store,
-    (state) => state.fieldMeta.token.errors.length > 0,
-  );
+  const error = form.state.errorMap.onSubmit;
 
   return (
-    <AuthenticationPage hasError={hasError}>
+    <AuthenticationPage hasError={!!error}>
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -61,14 +56,20 @@ const TwoFactor = () => {
           form.handleSubmit();
         }}
       >
-        {hasError ? (
-          <h1>Ooops. Try again!</h1>
-        ) : (
-          <div id="authentication-hint-container">
-            <h1>2FA</h1>
-            <p>Please enter the received one-time password</p>
-          </div>
-        )}
+        <div id="authentication-hint-container">
+          <h1>Two-factor authentication</h1>
+          <p>Please enter the token received by email.</p>
+          {error && (
+            <p
+              style={{
+                color: "var(--palette-error-main)",
+              }}
+            >
+              {error.toString()}
+            </p>
+          )}
+        </div>
+
 
         <form.Field
           name="token"
@@ -80,7 +81,8 @@ const TwoFactor = () => {
             <Input
               required
               name={field.name}
-              placeholder="One-time password"
+              label="Token"
+              placeholder="Token"
               type="text"
               onChange={(e) => field.handleChange(e.target.value)}
               onBlur={field.handleBlur}

@@ -75,7 +75,7 @@ module Grit::Core
     def activate
       @user = Grit::Core::User.find_by(activation_token: params[:activation_token])
 
-      raise "This token does not exist" unless @user
+      raise "This activation token does not exist" unless @user
       raise "Password and password confirmation do not match" if params[:password] != params[:password_confirmation]
 
       params[:login] = @user.login unless params[:login]
@@ -128,7 +128,7 @@ module Grit::Core
 
       @user = Grit::Core::User.find_by(forgot_token: params[:forgot_token])
 
-      raise "This token does not exist" unless @user
+      raise "This password recovery token does not exist" unless @user
       raise "Password and password confirmation do not match" if params[:password] != params[:password_confirmation]
 
       params[:login] = @user.login unless params[:login]

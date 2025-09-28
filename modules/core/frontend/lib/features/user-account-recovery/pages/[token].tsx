@@ -37,15 +37,19 @@ const PasswordResetPage = () => {
         await resetPasswordMutation.mutateAsync(value);
         navigate("/");
       } catch (e: unknown) {
-        formApi.setErrorMap({ onSubmit: (e as Error).message });
+        if (typeof e === "string") {
+          formApi.setErrorMap({ onSubmit: e });
+        } else {
+          formApi.setErrorMap({ onSubmit: (e as Error).message });
+        }
       }
     },
   });
 
-  const hasError = !!form.state.errorMap.onSubmit;
+  const error = form.state.errorMap.onSubmit;
 
   return (
-    <AuthenticationPage hasError={!!hasError}>
+    <AuthenticationPage hasError={!!error}>
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -53,15 +57,19 @@ const PasswordResetPage = () => {
           form.handleSubmit();
         }}
       >
-        {resetPasswordMutation.isError ? (
-          <h1>Ooops. Try again!</h1>
-        ) : (
-          <div id="authentication-hint-container">
-            <h1>Reset password</h1>
-            <p>Enter and confirm your new password below</p>
-          </div>
-        )}
-
+        <div id="authentication-hint-container">
+          <h1>Reset password</h1>
+          <p>Enter and confirm your new password below</p>
+          {error && (
+            <p
+              style={{
+                color: "var(--palette-error-main)",
+              }}
+            >
+              {error.toString()}
+            </p>
+          )}
+        </div>
         <form.Field
           name={"password"}
           validators={{
@@ -73,6 +81,7 @@ const PasswordResetPage = () => {
               <Input
                 required
                 name={field.name}
+                label="Password"
                 placeholder="Password"
                 type="password"
                 onChange={(e) => field.handleChange(e.target.value)}
@@ -94,6 +103,7 @@ const PasswordResetPage = () => {
               <Input
                 required
                 name={field.name}
+                label="Confirm password"
                 placeholder="Confirm password"
                 type="password"
                 onChange={(e) => field.handleChange(e.target.value)}
@@ -104,7 +114,6 @@ const PasswordResetPage = () => {
             );
           }}
         />
-
         <form.Subscribe
           selector={(state) => [state.canSubmit, state.isSubmitting]}
           children={([canSubmit, isSubmitting]) => (

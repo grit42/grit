@@ -38,15 +38,19 @@ const ActivatePage = () => {
         await activateMutation.mutateAsync(value);
         navigate("/");
       } catch (e: unknown) {
-        formApi.setErrorMap({ onSubmit: (e as Error).message });
+        if (typeof e === "string") {
+          formApi.setErrorMap({ onSubmit: e });
+        } else {
+          formApi.setErrorMap({ onSubmit: (e as Error).message });
+        }
       }
     },
   });
 
-  const hasError = !!form.state.errorMap.onSubmit;
+  const error = form.state.errorMap.onSubmit;
 
   return (
-    <AuthenticationPage hasError={!!hasError}>
+    <AuthenticationPage hasError={!!error}>
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -54,14 +58,19 @@ const ActivatePage = () => {
           form.handleSubmit();
         }}
       >
-        {hasError ? (
-          <h1>Ooops. Try again!</h1>
-        ) : (
-          <div id="authentication-hint-container">
-            <h1>Activate account</h1>
-            <p>Please activate your account by setting a password.</p>
-          </div>
-        )}
+        <div id="authentication-hint-container">
+          <h1>Activate account</h1>
+          <p>Please activate your account by setting a password.</p>
+          {error && (
+            <p
+              style={{
+                color: "var(--palette-error-main)",
+              }}
+            >
+              {error.toString()}
+            </p>
+          )}
+        </div>
 
         <form.Field
           name={"password"}
@@ -72,6 +81,7 @@ const ActivatePage = () => {
           children={(field) => {
             return (
               <Input
+                label="Password"
                 required
                 name={field.name}
                 placeholder="Password"
@@ -93,6 +103,7 @@ const ActivatePage = () => {
           children={(field) => {
             return (
               <Input
+                label="Confirm password"
                 required
                 name={field.name}
                 placeholder="Confirm password"
