@@ -75,20 +75,21 @@ module Grit::Core
     def activate
       @user = Grit::Core::User.find_by(activation_token: params[:activation_token])
 
-      raise "This token does not exist" unless @user
+      raise "This activation token does not exist" unless @user
       raise "Password and password confirmation do not match" if params[:password] != params[:password_confirmation]
 
       params[:login] = @user.login unless params[:login]
 
-      @user.update(
-        password: params[:password],
-        password_confirmation: params[:password_confirmation],
-        activation_token: nil,
-        active: true
-      )
+      @user.password = params[:password]
+      @user.password_confirmation = params[:password_confirmation]
+      @user.activation_token = nil
+      @user.active = true
 
-      Grit::Core::UserSession.create(@user)
-      render json: { success: true }
+      if @user.save
+        render json: { success: true }
+      else
+        render json: { success: false, errors: @user.errors }, status: :unprocessable_entity
+      end
     rescue StandardError => e
       logger.warn e.to_s
       logger.warn e.backtrace.join("\n")
@@ -128,20 +129,21 @@ module Grit::Core
 
       @user = Grit::Core::User.find_by(forgot_token: params[:forgot_token])
 
-      raise "This token does not exist" unless @user
+      raise "This password recovery token does not exist" unless @user
       raise "Password and password confirmation do not match" if params[:password] != params[:password_confirmation]
 
       params[:login] = @user.login unless params[:login]
 
-      @user.update(
-        password: params[:password],
-        password_confirmation: params[:password_confirmation],
-        forgot_token: nil,
-        active: true
-      )
+      @user.password = params[:password]
+      @user.password_confirmation = params[:password_confirmation]
+      @user.forgot_token = nil
+      @user.active = true
 
-      Grit::Core::UserSession.create(@user)
-      render json: { success: true }
+      if @user.save
+        render json: { success: true }
+      else
+        render json: { success: false, errors: @user.errors }, status: :unprocessable_entity
+      end
     rescue StandardError => e
       logger.warn e.to_s
       logger.warn e.backtrace.join("\n")
@@ -160,7 +162,7 @@ module Grit::Core
       if user.save
         render json: { success: true }
       else
-      render json: { success: false, errors: user.errors }, status: :unprocessable_entity
+        render json: { success: false, errors: user.errors }, status: :unprocessable_entity
       end
     rescue StandardError => e
       logger.warn e.to_s

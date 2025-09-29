@@ -18,7 +18,7 @@
 
 import { useNavigate, useParams } from "react-router-dom";
 import AuthenticationPage from "../../../components/AuthenticationPage";
-import { useForm } from "@grit42/form";
+import { genericErrorHandler, useForm } from "@grit42/form";
 import { Button, Input } from "@grit42/client-library/components";
 import { useResetPasswordMutation } from "../mutations";
 
@@ -32,20 +32,16 @@ const PasswordResetPage = () => {
       password: "",
       password_confirmation: "",
     },
-    onSubmit: async ({ value, formApi }) => {
-      try {
-        await resetPasswordMutation.mutateAsync(value);
-        navigate("/");
-      } catch (e: unknown) {
-        formApi.setErrorMap({ onSubmit: (e as Error).message });
-      }
-    },
+    onSubmit: genericErrorHandler(async ({ value }) => {
+      await resetPasswordMutation.mutateAsync(value);
+      navigate("/");
+    }),
   });
 
-  const hasError = !!form.state.errorMap.onSubmit;
+  const error = form.state.errorMap.onSubmit;
 
   return (
-    <AuthenticationPage hasError={!!hasError}>
+    <AuthenticationPage hasError={!!error}>
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -53,26 +49,35 @@ const PasswordResetPage = () => {
           form.handleSubmit();
         }}
       >
-        {resetPasswordMutation.isError ? (
-          <h1>Ooops. Try again!</h1>
-        ) : (
-          <div id="authentication-hint-container">
-            <h1>Reset password</h1>
-            <p>Enter and confirm your new password below</p>
-          </div>
-        )}
-
+        <div id="authentication-hint-container">
+          <h1>Reset password</h1>
+          <p>Enter and confirm your new password below</p>
+          {error && (
+            <p
+              style={{
+                color: "var(--palette-error-main)",
+              }}
+            >
+              {error.toString()}
+            </p>
+          )}
+        </div>
         <form.Field
           name={"password"}
           validators={{
             onChange: ({ value }) =>
-              value.length === 0 ? "Required" : undefined,
+              value.length === 0
+                ? "Required"
+                : value.length < 8
+                ? "Minimum 8 characters"
+                : undefined,
           }}
           children={(field) => {
             return (
               <Input
                 required
                 name={field.name}
+                label="Password"
                 placeholder="Password"
                 type="password"
                 onChange={(e) => field.handleChange(e.target.value)}
@@ -87,13 +92,18 @@ const PasswordResetPage = () => {
           name={"password_confirmation"}
           validators={{
             onChange: ({ value }) =>
-              value.length === 0 ? "Required" : undefined,
+              value.length === 0
+                ? "Required"
+                : value.length < 8
+                ? "Minimum 8 characters"
+                : undefined,
           }}
           children={(field) => {
             return (
               <Input
                 required
                 name={field.name}
+                label="Confirm password"
                 placeholder="Confirm password"
                 type="password"
                 onChange={(e) => field.handleChange(e.target.value)}
@@ -104,7 +114,6 @@ const PasswordResetPage = () => {
             );
           }}
         />
-
         <form.Subscribe
           selector={(state) => [state.canSubmit, state.isSubmitting]}
           children={([canSubmit, isSubmitting]) => (

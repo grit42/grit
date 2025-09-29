@@ -18,7 +18,7 @@
 
 import { useNavigate, useParams } from "react-router-dom";
 
-import { useForm } from "@grit42/form";
+import { genericErrorHandler, useForm } from "@grit42/form";
 import { Button, Input } from "@grit42/client-library/components";
 import { useActivateMutation } from "../mutations";
 import AuthenticationPage from "../../../components/AuthenticationPage";
@@ -33,20 +33,16 @@ const ActivatePage = () => {
       password: "",
       password_confirmation: "",
     },
-    onSubmit: async ({ value, formApi }) => {
-      try {
-        await activateMutation.mutateAsync(value);
-        navigate("/");
-      } catch (e: unknown) {
-        formApi.setErrorMap({ onSubmit: (e as Error).message });
-      }
-    },
+    onSubmit: genericErrorHandler(async ({ value }) => {
+      await activateMutation.mutateAsync(value);
+      navigate("/");
+    }),
   });
 
-  const hasError = !!form.state.errorMap.onSubmit;
+  const error = form.state.errorMap.onSubmit;
 
   return (
-    <AuthenticationPage hasError={!!hasError}>
+    <AuthenticationPage hasError={!!error}>
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -54,24 +50,34 @@ const ActivatePage = () => {
           form.handleSubmit();
         }}
       >
-        {hasError ? (
-          <h1>Ooops. Try again!</h1>
-        ) : (
-          <div id="authentication-hint-container">
-            <h1>Activate account</h1>
-            <p>Please activate your account by setting a password.</p>
-          </div>
-        )}
+        <div id="authentication-hint-container">
+          <h1>Activate account</h1>
+          <p>Please activate your account by setting a password.</p>
+          {error && (
+            <p
+              style={{
+                color: "var(--palette-error-main)",
+              }}
+            >
+              {error.toString()}
+            </p>
+          )}
+        </div>
 
         <form.Field
           name={"password"}
           validators={{
             onChange: ({ value }) =>
-              value.length === 0 ? "Required" : undefined,
+              value.length === 0
+                ? "Required"
+                : value.length < 8
+                ? "Minimum 8 characters"
+                : undefined,
           }}
           children={(field) => {
             return (
               <Input
+                label="Password"
                 required
                 name={field.name}
                 placeholder="Password"
@@ -88,11 +94,16 @@ const ActivatePage = () => {
           name={"password_confirmation"}
           validators={{
             onChange: ({ value }) =>
-              value.length === 0 ? "Required" : undefined,
+              value.length === 0
+                ? "Required"
+                : value.length < 8
+                ? "Minimum 8 characters"
+                : undefined,
           }}
           children={(field) => {
             return (
               <Input
+                label="Confirm password"
                 required
                 name={field.name}
                 placeholder="Confirm password"

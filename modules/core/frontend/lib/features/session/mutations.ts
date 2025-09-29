@@ -67,7 +67,6 @@ export const useLoginMutation = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["session"] });
     },
-    onError: notifyOnError
   });
 };
 
@@ -132,6 +131,5 @@ export const useTwoFactorMutation = (user: string) => {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["session"] });
     },
-    onError: notifyOnError
   });
 };
