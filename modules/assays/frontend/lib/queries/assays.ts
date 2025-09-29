@@ -62,7 +62,13 @@ export interface AssayData extends EntityData {
   assay_model_id: number;
   assay_model_id__name: string;
   data_sheet_definitions: AssayDataSheetDefinitionData[];
-  [key: string]: string | number | null | AssayDataSheetDefinitionData[];
+  metadata_values: Record<string, number>;
+  [key: string]:
+    | string
+    | number
+    | null
+    | AssayDataSheetDefinitionData[]
+    | Record<string, number>;
 }
 
 export const useAssays = (
@@ -91,6 +97,34 @@ export const usePublishedAssays = (
     sort,
     filter,
     { ...params, scope: "published" },
+    queryOptions,
+  );
+};
+
+export const usePublishedAssaysOfModelWithMetadata = (
+  assayModelId: string | number,
+  sort?: SortingState,
+  filter?: Filter[],
+  params: URLParams = {},
+  queryOptions: Partial<UseQueryOptions<AssayData[], string>> = {},
+) => {
+  return useEntityData<AssayData>(
+    "grit/assays/assays",
+    sort,
+    [
+      {
+        active: true,
+        column: "assay_model_id",
+        id: "assay_model_id",
+        operator: "eq",
+        type: "integer",
+        value: assayModelId,
+        property: "assay_model_id",
+        property_type: "integer",
+      },
+      ...(filter ?? []),
+    ],
+    { ...params, scope: "published_with_metadata_values" },
     queryOptions,
   );
 };

@@ -103,7 +103,8 @@ export const useEditEntityMutation = <T extends EntityProperties>(
 
       return response.data;
     },
-    onSuccess: () => handleMutationSuccess(queryClient, entityPath, entityId.toString()),
+    onSuccess: () =>
+      handleMutationSuccess(queryClient, entityPath, entityId.toString()),
     onError: notifyOnError,
     ...mutationOptions,
   });
@@ -124,7 +125,10 @@ export const useDestroyEntityMutation = <
   return useMutation({
     mutationKey: ["destroyEntity", entityPath],
     mutationFn: async (entityIds: TId) => {
-      const url = `${entityPath}/${(Array.isArray(entityIds) ? entityIds : [entityIds]).join(",")}`;
+      const url = `${entityPath}/${(Array.isArray(entityIds)
+        ? entityIds
+        : [entityIds]
+      ).join(",")}`;
       const response = await request<
         EndpointSuccess<EntityData<TData>>,
         EndpointError

@@ -29,6 +29,10 @@ const Meta: ModuleMeta = {
       name: "Experiments",
       path: "/assays/experiments",
     },
+    {
+      name: "Data Tables",
+      path: "/assays/data_tables",
+    },
   ],
 };
 

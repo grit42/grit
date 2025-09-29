@@ -1,0 +1,94 @@
+@use "@grit42/client-library/theme.scss";
+
+.columnsTableContainer {
+  display: grid;
+  grid-template-columns: 1fr;
+  margin: auto;
+  max-width: 100%;
+  height: 100%;
+  overflow: auto;
+  min-width: 960px;
+}
+
+@media (max-width: 1000px) {
+  .columnsTableContainer {
+    min-width: none;
+  }
+}
+
+.columnFormContainer {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-rows: min-content 1fr;
+  overflow: auto;
+}
+
+.entityAttributeColumnFormContainer {
+  margin-inline: auto;
+  max-width: 960px;
+}
+
+.columnFormSurface {
+  width: 100%;
+  height: 100%;
+}
+
+.columnForm {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-auto-rows: max-content;
+  gap: calc(theme.$spacing * 2);
+}
+
+.entityAttributeColumnForm {
+  grid-template-columns: 1fr;
+}
+
+.dataSheetColumnForm {
+  max-width: unset;
+  display: grid;
+  grid-template-columns: 480px minmax(auto, 1fr);
+  gap: calc(theme.$spacing * 2);
+  overflow: auto;
+}
+
+.columnFormError {
+  grid-column-start: 1;
+  grid-column-end: -1;
+  color: theme.$palette-error-main;
+}
+
+.columnFormFields {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: calc(theme.$spacing * 2);
+}
+
+.columnFormField {
+  display: block;
+  width: 100%;
+}
+
+.columnFormFieldSuggestion {
+  cursor: pointer;
+  width: max-content;
+  color: theme.$palette-background-contrast-text;
+  opacity: 0.75;
+  padding-top: theme.$spacing;
+}
+
+.columnPivots {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: min-content 1fr;
+}
+
+.selectorContainer {
+  display: grid;
+  grid-template-columns: 1fr;
+  margin: auto;
+  max-width: 100%;
+  height: 100%;
+  overflow: auto;
+}

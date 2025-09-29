@@ -108,5 +108,83 @@ module Grit::Assays
       .joins("LEFT OUTER JOIN grit_core_publication_statuses grit_core_publication_statuses__models ON grit_assays_assay_models__.publication_status_id = grit_core_publication_statuses__.id")
       .where("grit_core_publication_statuses__.name = 'Published' and grit_core_publication_statuses__models.name = 'Published'")
     end
+
+    def self.published_with_metadata_values(params = nil)
+      base_scope = self.unscoped
+        .select("grit_assays_assays.id")
+        .select("grit_assays_assays.created_by")
+        .select("grit_assays_assays.updated_by")
+        .select("grit_assays_assays.created_at")
+        .select("grit_assays_assays.updated_at")
+        .select("grit_assays_assays.name")
+        .select("grit_assays_assays.description")
+        .select("grit_assays_assays.assay_model_id")
+        .select("grit_assays_assays.publication_status_id")
+        .select("grit_assays_assay_models__.name as assay_model_id__name")
+        .select("grit_assays_assay_types__.id as assay_type_id")
+        .select("grit_assays_assay_types__.name as assay_type_id__name")
+        .select("grit_core_publication_statuses__.name as publication_status_id__name")
+        .joins("LEFT OUTER JOIN grit_assays_assay_models grit_assays_assay_models__ ON grit_assays_assays.assay_model_id = grit_assays_assay_models__.id")
+        .joins("LEFT OUTER JOIN grit_assays_assay_types grit_assays_assay_types__ ON grit_assays_assay_models__.assay_type_id = grit_assays_assay_types__.id")
+        .joins("LEFT OUTER JOIN grit_core_publication_statuses grit_core_publication_statuses__ ON grit_assays_assays.publication_status_id = grit_core_publication_statuses__.id")
+        .joins("LEFT OUTER JOIN grit_core_publication_statuses grit_core_publication_statuses__models ON grit_assays_assay_models__.publication_status_id = grit_core_publication_statuses__.id")
+        .where("grit_core_publication_statuses__.name = 'Published' and grit_core_publication_statuses__models.name = 'Published'")
+
+      query = self.unscoped
+        .select(
+          "sub.id",
+          "sub.created_by",
+          "sub.updated_by",
+          "sub.created_at",
+          "sub.updated_at",
+          "sub.name",
+          "sub.description",
+          "sub.assay_model_id",
+          "sub.publication_status_id",
+          "sub.assay_model_id__name",
+          "sub.assay_type_id",
+          "sub.assay_type_id__name",
+          "sub.publication_status_id__name",
+          "sub.metadata_values"
+        )
+
+
+      with_metadata = base_scope.joins("JOIN grit_assays_assay_metadata grit_assays_assay_metadata__ ON grit_assays_assay_metadata__.assay_id = grit_assays_assays.id")
+        .select("jsonb_object_agg(grit_assays_assay_metadata__.assay_model_metadatum_id, grit_assays_assay_metadata__.vocabulary_item_id) as metadata_values")
+        .group(
+          "grit_assays_assays.id",
+          "grit_assays_assays.created_by",
+          "grit_assays_assays.updated_by",
+          "grit_assays_assays.created_at",
+          "grit_assays_assays.updated_at",
+          "grit_assays_assays.name",
+          "grit_assays_assays.description",
+          "grit_assays_assays.assay_model_id",
+          "grit_assays_assays.publication_status_id",
+          "grit_assays_assay_models__.name",
+          "grit_assays_assay_types__.id",
+          "grit_assays_assay_types__.name",
+          "grit_core_publication_statuses__.name"
+        )
+
+      without_metadata = base_scope.joins("LEFT OUTER JOIN grit_assays_assay_metadata grit_assays_assay_metadata__ ON grit_assays_assay_metadata__.assay_id = grit_assays_assays.id")
+        .select("'{}'::jsonb as metadata_values")
+        .where("grit_assays_assay_metadata__.id IS NULL")
+
+      Grit::Assays::AssayMetadataDefinition.unscoped.each do |metadata_definition|
+        with_metadata = with_metadata
+          .joins("LEFT OUTER JOIN grit_assays_assay_model_metadata grit_assays_assay_model_metadata__#{metadata_definition.id} on grit_assays_assay_model_metadata__#{metadata_definition.id}.assay_metadata_definition_id = #{metadata_definition.id} and grit_assays_assay_model_metadata__#{metadata_definition.id}.assay_model_id = grit_assays_assays.assay_model_id")
+          .joins("LEFT OUTER JOIN grit_assays_assay_metadata grit_assays_assay_metadata__#{metadata_definition.id} ON grit_assays_assay_metadata__#{metadata_definition.id}.assay_id = grit_assays_assays.id AND grit_assays_assay_metadata__#{metadata_definition.id}.assay_model_metadatum_id = grit_assays_assay_model_metadata__#{metadata_definition.id}.id")
+          .joins("LEFT OUTER JOIN grit_core_vocabulary_items grit_core_vocabulary_items__#{metadata_definition.id} ON grit_core_vocabulary_items__#{metadata_definition.id}.id = grit_assays_assay_metadata__#{metadata_definition.id}.vocabulary_item_id")
+          .select("grit_core_vocabulary_items__#{metadata_definition.id}.id as #{metadata_definition.safe_name}")
+          .group("grit_core_vocabulary_items__#{metadata_definition.id}.id")
+          .select("grit_core_vocabulary_items__#{metadata_definition.id}.name as #{metadata_definition.safe_name}__name")
+          .group("grit_core_vocabulary_items__#{metadata_definition.id}.name")
+        without_metadata = without_metadata.select("NULL as #{metadata_definition.safe_name}").select("NULL as #{metadata_definition.safe_name}__name")
+        query = query.select(metadata_definition.safe_name).select("#{metadata_definition.safe_name}__name")
+      end
+
+      query.from("(#{with_metadata.to_sql} UNION ALL #{without_metadata.to_sql}) sub")
+    end
   end
 end

@@ -52,6 +52,7 @@ export type EntityPropertyDef<T extends EntityData = EntityData> = {
   default_hidden: boolean;
   entity?: ForeignEntityPropertyDef;
   defaultColumnSize?: number;
+  meta?: any;
 };
 
 export type EntityStamps = {

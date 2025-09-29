@@ -1,4 +1,20 @@
 Grit::Assays::Engine.routes.draw do
+  resources :data_table_columns
+  resources :data_table_entities do
+    collection do
+      post :create_bulk
+    end
+  end
+
+  resources :data_table_rows, only: [] do
+    get :full_perspective
+  end
+
+  resources :data_tables do
+    resources_with_export :data_table_rows
+    resources :data_table_entities
+    resources :data_table_columns
+  end
   resources :experiment_data_sheet_values
   resources :experiment_data_sheet_records
   resources :experiment_data_sheets

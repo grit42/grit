@@ -53,7 +53,7 @@ module Grit::Core::GritEntityRecord
 
     def numbers_in_range
       self.class.columns.each do |column|
-        next if ![ :integer, :float ].include?(column.sql_type_metadata.type)
+        next if ![ :integer, :float ].include?(column.sql_type_metadata.type) or column.sql_type_metadata.sql_type.end_with? "[]"
 
         if column.sql_type_metadata.type == :integer && self[column.name].present? && self[column.name].to_i.bit_length > column.sql_type_metadata.limit * 8
           errors.add(column.name, "is out of range")
@@ -205,10 +205,11 @@ module Grit::Core::GritEntityRecord
       @entity_columns ||= self.entity_columns_from_properties(self.db_properties)
     end
 
-    def detailed(params = nil)
+    def detailed_scope(params = nil)
       query = self.from(self.table_name)
       self.columns.each do |column|
         query = query.select("#{self.table_name}.#{column.name}")
+        query = query.order(Arel.sql("#{self.table_name}.sort ASC NULLS LAST")) if column.name == "sort"
       end
 
       self.foreign_keys.each do |foreign_key, memo|
@@ -219,6 +220,10 @@ module Grit::Core::GritEntityRecord
         end
       end
       query
+    end
+
+    def detailed(params = nil)
+      self.detailed_scope(params)
     end
 
     def by_load_set(params)

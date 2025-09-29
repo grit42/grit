@@ -1,7 +1,8 @@
 #!/usr/bin/env ruby
 require 'bundler'
+require 'json'
 
-# Usage: ruby print_gem_dependencies.rb path/to/your.gemspec
+# Usage: ruby print_gem_dependencies.rb path/to/your/Gemfile
 
 gemfile_path = ARGV[0]
 
@@ -10,19 +11,17 @@ unless gemfile_path && File.exist?(gemfile_path)
   exit 1
 end
 
-# Load the Gemfile
-definition = Bundler::Definition.build(gemfile_path, nil, nil)
+gemfile_path = File.expand_path(gemfile_path)
+gemfile_dir  = File.dirname(gemfile_path)
 
-if definition.nil?
-  puts "Could not load Gemfile at #{gemfile_path}"
-  exit 1
+definition = nil
+
+# Change into the Gemfile's directory so Bundler.root works
+Dir.chdir(gemfile_dir) do
+  definition = Bundler::Definition.build(gemfile_path, nil, {})
 end
 
-# Get all dependencies from the Gemfile
 dependencies = definition.dependencies
-
-# Print the name of each dependency
 dependency_names = dependencies.map(&:name).uniq
 
-# Output as JSON array of strings
-puts dependency_names.join(',')
+puts JSON.pretty_generate(dependency_names)

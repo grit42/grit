@@ -16,8 +16,18 @@
  * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
  */
 
+import { RowData } from "@grit42/table";
 import useRegisterAssaysAdministration from "./extensions/administration";
 import useRegisterExperimentDataSheetRecordImporter from "./extensions/importer";
+
+declare module "@grit42/table" {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  interface GritColumnMeta<TData extends RowData, TValue> {
+    data_table?: {
+      source_type: "assay_data_sheet_column" | "entity_attribute"
+    };
+  }
+}
 
 const Registrant = () => {
   useRegisterAssaysAdministration();

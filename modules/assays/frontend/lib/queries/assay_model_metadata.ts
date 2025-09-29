@@ -52,7 +52,9 @@ export const useAssayModelMetadatumFields = (
 
 export interface AssayModelMetadatumData extends EntityData {
   assay_model_id: number;
+  assay_model_id__name: string;
   assay_metadata_definition_id: number;
+  assay_metadata_definition_id__name: string;
 }
 
 export const useAssayModelMetadata = (

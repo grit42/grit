@@ -18,7 +18,8 @@
 
 import { ReactFormExtendedApi } from "@tanstack/react-form";
 import styles from "./form.module.scss";
-import { Button } from "@grit42/client-library/components";
+import { Button, ButtonGroup } from "@grit42/client-library/components";
+import { PropsWithChildren } from "react";
 
 interface Props<T> {
   form: ReactFormExtendedApi<T>;
@@ -26,19 +27,27 @@ interface Props<T> {
   style?: React.CSSProperties;
 }
 
-const AddFormControl = <T,>({ form, label, style }: Props<T>) => (
+const AddFormControl = <T,>({
+  form,
+  label,
+  style,
+  children,
+}: PropsWithChildren<Props<T>>) => (
   <form.Subscribe
     selector={(state) => [state.canSubmit, state.isSubmitting]}
     children={([canSubmit, isSubmitting]) => (
       <div style={style} className={styles.controls}>
-        <Button
-          color="secondary"
-          disabled={!canSubmit}
-          type="submit"
-          loading={isSubmitting}
-        >
-          {label ?? "Save"}
-        </Button>
+        <ButtonGroup>
+          <Button
+            color="secondary"
+            disabled={!canSubmit}
+            type="submit"
+            loading={isSubmitting}
+          >
+            {label ?? "Save"}
+          </Button>
+          {children}
+        </ButtonGroup>
       </div>
     )}
   />

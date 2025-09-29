@@ -68,7 +68,9 @@ module Grit::Core::GritEntityController
       end
 
       sort.each do |sort_item|
-        scope = scope.order(ActiveRecord::Base.send(:sanitize_sql_array, [ "#{select_values_map[sort_item["property"]]} #{sort_item["direction"]} NULLS LAST" ]))
+        default_order_values = scope.order_values
+        scope = scope.reorder(ActiveRecord::Base.send(:sanitize_sql_array, [ "#{select_values_map[sort_item["property"]]} #{sort_item["direction"]} NULLS LAST" ]))
+        scope.order_values = [ *scope.order_values, *default_order_values ]
       end
 
       filter.each do |filter_item|
@@ -103,6 +105,7 @@ module Grit::Core::GritEntityController
       return if query.nil?
 
       @record_count = query.count(:all)
+      @record_count = @record_count.values.sum unless @record_count.is_a? Integer
       @records = limit.to_i != -1 ? query.limit(limit).offset(offset) : query.all
       render json: { success: true, data: @records, cursor: offset.to_i + @records.length, total: @record_count }
     end
