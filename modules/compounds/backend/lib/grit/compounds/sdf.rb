@@ -45,7 +45,7 @@ module Grit
               record[prop_name] = prop_lines.join("\n")
               prop_name = nil
               prop_lines = []
-            elsif prop_def = /^> <(?<prop_name>\w+)>$/.match(line)
+            elsif prop_def = /^>\s+<(?<prop_name>\w+)>$/.match(line)
               raise Grit::Core::EntityLoader::ParseException.new "Malformed SDF file" unless prop_name.nil?
               prop_name = prop_def[:prop_name]
               prop_names.add(prop_name)
