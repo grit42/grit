@@ -18,7 +18,7 @@
 
 import { useNavigate, useParams } from "react-router-dom";
 
-import { useForm } from "@grit42/form";
+import { genericErrorHandler, useForm } from "@grit42/form";
 import { Button, Input } from "@grit42/client-library/components";
 import { useActivateMutation } from "../mutations";
 import AuthenticationPage from "../../../components/AuthenticationPage";
@@ -33,18 +33,10 @@ const ActivatePage = () => {
       password: "",
       password_confirmation: "",
     },
-    onSubmit: async ({ value, formApi }) => {
-      try {
-        await activateMutation.mutateAsync(value);
-        navigate("/");
-      } catch (e: unknown) {
-        if (typeof e === "string") {
-          formApi.setErrorMap({ onSubmit: e });
-        } else {
-          formApi.setErrorMap({ onSubmit: (e as Error).message });
-        }
-      }
-    },
+    onSubmit: genericErrorHandler(async ({ value }) => {
+      await activateMutation.mutateAsync(value);
+      navigate("/");
+    }),
   });
 
   const error = form.state.errorMap.onSubmit;
@@ -76,7 +68,11 @@ const ActivatePage = () => {
           name={"password"}
           validators={{
             onChange: ({ value }) =>
-              value.length === 0 ? "Required" : undefined,
+              value.length === 0
+                ? "Required"
+                : value.length < 8
+                ? "Minimum 8 characters"
+                : undefined,
           }}
           children={(field) => {
             return (
@@ -98,7 +94,11 @@ const ActivatePage = () => {
           name={"password_confirmation"}
           validators={{
             onChange: ({ value }) =>
-              value.length === 0 ? "Required" : undefined,
+              value.length === 0
+                ? "Required"
+                : value.length < 8
+                ? "Minimum 8 characters"
+                : undefined,
           }}
           children={(field) => {
             return (

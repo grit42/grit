@@ -18,7 +18,7 @@
 
 import { useNavigate, useParams } from "react-router-dom";
 import AuthenticationPage from "../../../components/AuthenticationPage";
-import { useForm } from "@grit42/form";
+import { genericErrorHandler, useForm } from "@grit42/form";
 import { Button, Input } from "@grit42/client-library/components";
 import { useResetPasswordMutation } from "../mutations";
 
@@ -32,18 +32,10 @@ const PasswordResetPage = () => {
       password: "",
       password_confirmation: "",
     },
-    onSubmit: async ({ value, formApi }) => {
-      try {
-        await resetPasswordMutation.mutateAsync(value);
-        navigate("/");
-      } catch (e: unknown) {
-        if (typeof e === "string") {
-          formApi.setErrorMap({ onSubmit: e });
-        } else {
-          formApi.setErrorMap({ onSubmit: (e as Error).message });
-        }
-      }
-    },
+    onSubmit: genericErrorHandler(async ({ value }) => {
+      await resetPasswordMutation.mutateAsync(value);
+      navigate("/");
+    }),
   });
 
   const error = form.state.errorMap.onSubmit;
@@ -74,7 +66,11 @@ const PasswordResetPage = () => {
           name={"password"}
           validators={{
             onChange: ({ value }) =>
-              value.length === 0 ? "Required" : undefined,
+              value.length === 0
+                ? "Required"
+                : value.length < 8
+                ? "Minimum 8 characters"
+                : undefined,
           }}
           children={(field) => {
             return (
@@ -96,7 +92,11 @@ const PasswordResetPage = () => {
           name={"password_confirmation"}
           validators={{
             onChange: ({ value }) =>
-              value.length === 0 ? "Required" : undefined,
+              value.length === 0
+                ? "Required"
+                : value.length < 8
+                ? "Minimum 8 characters"
+                : undefined,
           }}
           children={(field) => {
             return (
