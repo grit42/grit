@@ -206,7 +206,7 @@ const ExperimentForm = ({
     if (
       !experiment.id ||
       !window.confirm(
-        `Are you sure you want to delete this assay type? This action is irreversible`,
+        `Are you sure you want to delete this experiment? This action is irreversible`,
       )
     ) {
       return;

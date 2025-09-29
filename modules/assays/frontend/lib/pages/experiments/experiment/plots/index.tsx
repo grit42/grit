@@ -8,7 +8,7 @@ import {
 } from "react-router-dom";
 import { ExperimentData } from "../../../../queries/experiments";
 import { useEffect, useMemo, useState } from "react";
-import { Tabs } from "@grit42/client-library/components";
+import { ErrorPage, Tabs } from "@grit42/client-library/components";
 import ExperimentPlot from "./ExperimentPlot";
 import { useHasRoles } from "@grit42/core";
 
@@ -17,7 +17,11 @@ interface Props {
 }
 
 const ExperimentPlotTabs = ({ experiment }: Props) => {
-  const canCrudPlots = useHasRoles(["Administrator", "AssayAdministrator", "AssayUser"])
+  const canCrudPlots = useHasRoles([
+    "Administrator",
+    "AssayAdministrator",
+    "AssayUser",
+  ]);
   const navigate = useNavigate();
   const { plot_id } = useParams() as { plot_id: string };
 
@@ -30,7 +34,7 @@ const ExperimentPlotTabs = ({ experiment }: Props) => {
       })),
       ...(canCrudPlots ? [{ key: "new", name: "New plot", panel: <></> }] : []),
     ],
-    [experiment.plots],
+    [canCrudPlots, experiment.plots],
   );
 
   const [selectedTab, setSelectedTab] = useState(
@@ -68,6 +72,12 @@ const ExperimentPlotTabs = ({ experiment }: Props) => {
 };
 
 const ExperimentPlots = ({ experiment }: Props) => {
+  if (!experiment.data_sheets.length) {
+    return (
+      <ErrorPage error="The assay model does not define data sheets, plots cannot be added." />
+    );
+  }
+
   return (
     <Routes>
       <Route element={<ExperimentPlotTabs experiment={experiment} />}>
