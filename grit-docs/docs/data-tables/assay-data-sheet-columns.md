@@ -22,7 +22,7 @@ In the form, configure the column details and click **Save**.
 2. A machine-friendly name, only alphanumerical characters and underscores (**\_**).
 3. An optional sort indication used to define the default position of the column, a lower value is closer to the start.
 4. The [aggregation method](#aggregation-methods) that should be used to produce a single value when there are multiple results for the entity.
-5. [Assay filters](#assay-filters) to select a specific subset of assays to get results from.
+5. [Assay filters](#assays-filter) to select a specific subset of assays to get results from.
 
 ![Add assay column form](./assets/add_assay_column_form.png)
 
