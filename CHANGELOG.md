@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - 2025-10-01
+
+Data tables
+
+### Added
+- (assays) data tables
+- (core) token authentication in query parameters
+
+### Changed
+- (core) `detailed` scope sorted by default if the entity has a `sort` column
+- (core) improved UX of login, account recovery and two factor views
+
+### Fixed
+- (assays) plots tab crashing if the assay model does not define sheets
+- (table) rows grow to the tallest cell
+- (compounds) handle DataWarrior SDF exports with a less strict SDF parser
+
+
 ## [0.6.0] - 2025-08-04
 
 Vocabularies as data types
