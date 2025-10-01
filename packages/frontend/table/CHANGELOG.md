@@ -1,3 +1,14 @@
+## 0.6.1
+
+### 🩹 Fixes
+
+- preserve whitespace in table headers
+- fix rows not growing to tallest cell
+
+### 🧱 Updated Dependencies
+
+- Updated @grit42/client-library to 0.7.0
+
 ## 0.6.0
 
 ### 🚀 Features

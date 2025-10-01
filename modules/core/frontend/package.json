@@ -2,7 +2,7 @@
   "name": "@grit42/core",
   "author": "Jonathan Rebourt, grit42 <jonny@grit42.com>",
   "license": "GPL-3.0-or-later",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "type": "module",
   "exports": {
     ".": {

@@ -1,3 +1,9 @@
+## 0.7.0
+
+### 🚀 Features
+
+- `CopyableBlock` component
+
 ## 0.6.0
 
 ### 🚀 Features

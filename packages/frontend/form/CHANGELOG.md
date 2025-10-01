@@ -1,3 +1,14 @@
+## 0.6.1
+
+### 🩹 Fixes
+
+- add `children` props to `FormControls` component
+- add children to `AddFormControl`
+
+### 🧱 Updated Dependencies
+
+- Updated @grit42/client-library to 0.7.0
+
 ## 0.6.0
 
 ### 🚀 Features
