@@ -27,4 +27,5 @@ export interface Session {
   settings: UserSettings;
   platform_information: { modules: Record<string, string> };
   token: string;
+  server_settings: ServerSettings
 }

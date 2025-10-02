@@ -16,14 +16,19 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { ColorScheme, DisplayDensity } from "@grit42/client-library/theme";
+import { Outlet, Route, Routes } from "react-router-dom";
+import UsersList from "../../UserList";
+import UserDetails from "./[id]";
 
-export interface UserSettings {
-    theme: ColorScheme;
-    display_density: DisplayDensity;
-  }
+const UserAdministrationTab = () => {
+  return (
+    <Routes>
+      <Route element={<Outlet />}>
+        <Route path=":id" element={<UserDetails />} />
+        <Route index element={<UsersList />} />
+      </Route>
+    </Routes>
+  );
+};
 
-export interface ServerSettings {
-    two_factor: boolean;
-  }
-
+export default UserAdministrationTab;

@@ -18,7 +18,7 @@
 
 import { PropsWithChildren, useCallback, useMemo, useState } from "react";
 import AdministrationTabsContext, { TabDef } from "./AdministrationContext";
-import UserAdministrationTab from "./tabs/user-administration";
+import AccessAdministrationTab from "./tabs/access";
 import GeneralAdministrationTab from "./tabs/general";
 
 const AdministrationTabsProvider: React.FC<PropsWithChildren> = ({
@@ -27,8 +27,8 @@ const AdministrationTabsProvider: React.FC<PropsWithChildren> = ({
   const [tabs, setTabs] = useState<Record<string, TabDef>>({
     users: {
       id: "user-management",
-      label: "User management",
-      Tab: UserAdministrationTab,
+      label: "Access",
+      Tab: AccessAdministrationTab,
     },
     general: {
       id: "general",

@@ -32,3 +32,8 @@ export interface User extends EntityData {
   status_id__name: string;
   token: string;
 }
+
+export interface Role extends EntityData {
+  name: string;
+  description: string;
+}

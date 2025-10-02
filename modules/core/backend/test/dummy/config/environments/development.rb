@@ -29,7 +29,17 @@ Rails.application.configure do
   end
 
   # Don't care if the mailer can't send.
-  config.action_mailer.raise_delivery_errors = false
+  config.action_mailer.raise_delivery_errors = true
+  
+  config.action_mailer.delivery_method = :smtp  
+  config.action_mailer.smtp_settings = {
+    :address              => "smtp.protonmail.ch",
+    :port                 => 587,
+    :user_name            => "marvin@grit42.com",
+    :password             => "LDYBLLNTW99CDBHQ",
+    :authentication       => "plain",
+    :enable_starttls_auto => true
+  }
 
   # Disable caching for Action Mailer templates even if Action Controller
   # caching is enabled.

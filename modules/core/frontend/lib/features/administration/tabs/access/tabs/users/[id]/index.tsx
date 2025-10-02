@@ -27,113 +27,12 @@ import {
   FormFieldDef,
   FieldDef,
 } from "@grit42/form";
-import { EntityFormFieldDef } from "../../../../../Registrant";
-import { useCreateUpdateUserMutation } from "../mutations";
-import { useDestroyEntityMutation, useEntityDatum } from "../../../../entities";
-import { User } from "../types";
-import { useSession } from "../../../../session";
+import { EntityFormFieldDef } from "../../../../../../../Registrant";
+import { useCreateUpdateUserMutation } from "../../../mutations";
+import { useDestroyEntityMutation, useEntityDatum } from "../../../../../../entities";
+import { User } from "../../../types";
+import { useSession } from "../../../../../../session";
 import { useQueryClient } from "@grit42/api";
-
-function FIELDS(id: string): FormFieldDef[] {
-  const fields: FieldDef[] = [
-    {
-      name: "login",
-      display_name: "Login",
-      type: "string",
-      required: true,
-      minLength: 2,
-      disabled: id !== "new",
-    },
-    { name: "name", display_name: "Name", type: "string", required: true },
-    {
-      name: "email",
-      display_name: "Email",
-      type: "email",
-      required: true,
-    },
-    {
-      name: "origin_id",
-      display_name: "Origin",
-      type: "entity",
-      required: true,
-      entity: {
-        name: "Origin",
-        full_name: "Grit::Core::Origin",
-        path: "grit/core/origins",
-        column: "origin_id",
-        primary_key: "id",
-        primary_key_type: "integer",
-        display_column: "name",
-        display_column_type: "string",
-      },
-    } as EntityFormFieldDef,
-    {
-      name: "location_id",
-      display_name: "Location",
-      type: "entity",
-      entity: {
-        name: "Location",
-        full_name: "Grit::Core::Location",
-        path: "grit/core/locations",
-        column: "location_id",
-        primary_key: "id",
-        primary_key_type: "integer",
-        display_column: "name",
-        display_column_type: "string",
-      },
-    } as EntityFormFieldDef,
-    // { // TOCHECK STATUS ID
-    //   id: "status_id__name",
-    //   label: "Visibility",
-    //   type: "string",
-    //   is_entity: true,
-    //   entity: {
-    //     name: "Grit::Core::UserStatus",
-    //     path: "grit/core/user_status",
-    //     column: "status_id",
-    //     id_column: "id",
-    //     display_column: "name",
-    //   },
-    //   enabled: false,
-    //   null: false,
-    // },
-    {
-      name: "active",
-      display_name: "Active",
-      type: "boolean",
-      default: false,
-    },
-    // {
-    //   id: "molecules",
-    //   label: "User can see molecules",
-    //   type: "switch",
-    // },
-    {
-      name: "two_factor",
-      display_name: "Two factor authentication",
-      type: "boolean",
-      default: false,
-    },
-    {
-      name: "role_ids",
-      display_name: "Roles",
-      type: "entity",
-      default: [],
-      entity: {
-        name: "Role",
-        full_name: "Grit::Core::Role",
-        path: "grit/core/roles",
-        column: "role_ids",
-        primary_key: "id",
-        primary_key_type: "integer",
-        display_column: "name",
-        display_column_type: "string",
-        multiple: true,
-      },
-    } as EntityFormFieldDef,
-  ];
-  return fields;
-}
 
 function UserForm({ user, id }: { user: User; id: string }) {
   const navigate = useNavigate();
@@ -142,6 +41,88 @@ function UserForm({ user, id }: { user: User; id: string }) {
   const createUpdateUserMutation = useCreateUpdateUserMutation(id);
   const destroyUserMutation = useDestroyEntityMutation("/grit/core/users");
   const queryClient = useQueryClient();
+
+  function FIELDS(id: string): FormFieldDef[] {
+    const fields: FieldDef[] = [
+      {
+        name: "login",
+        display_name: "Login",
+        type: "string",
+        required: true,
+        minLength: 2,
+        disabled: id !== "new",
+      },
+      { name: "name", display_name: "Name", type: "string", required: true },
+      {
+        name: "email",
+        display_name: "Email",
+        type: "email",
+        required: true,
+      },
+      {
+        name: "origin_id",
+        display_name: "Origin",
+        type: "entity",
+        required: true,
+        entity: {
+          name: "Origin",
+          full_name: "Grit::Core::Origin",
+          path: "grit/core/origins",
+          column: "origin_id",
+          primary_key: "id",
+          primary_key_type: "integer",
+          display_column: "name",
+          display_column_type: "string",
+        },
+      } as EntityFormFieldDef,
+      {
+        name: "location_id",
+        display_name: "Location",
+        type: "entity",
+        entity: {
+          name: "Location",
+          full_name: "Grit::Core::Location",
+          path: "grit/core/locations",
+          column: "location_id",
+          primary_key: "id",
+          primary_key_type: "integer",
+          display_column: "name",
+          display_column_type: "string",
+        },
+      } as EntityFormFieldDef,
+      {
+        name: "active",
+        display_name: "Active",
+        type: "boolean",
+        default: false,
+      },
+      {
+        name: "two_factor",
+        display_name: "Two factor authentication",
+        type: "boolean",
+        default: false,
+        disabled: session?.server_settings.two_factor ? false : true
+      },
+      {
+        name: "role_ids",
+        display_name: "Roles",
+        type: "entity",
+        default: [],
+        entity: {
+          name: "Role",
+          full_name: "Grit::Core::Role",
+          path: "grit/core/roles",
+          column: "role_ids",
+          primary_key: "id",
+          primary_key_type: "integer",
+          display_column: "name",
+          display_column_type: "string",
+          multiple: true,
+        },
+      } as EntityFormFieldDef,
+    ];
+    return fields;
+  }
 
   const fields = useMemo(() => FIELDS(id), [id]);
 
