@@ -19,7 +19,7 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useCallback, useMemo, useState } from "react";
 import { useForm } from "@grit42/form";
-import { ErrorPage, Spinner } from "@grit42/client-library/components";
+import { Button, ButtonGroup, ErrorPage, Spinner, CopyableBlock, Surface } from "@grit42/client-library/components";
 import {
   FormField,
   Form,
@@ -28,16 +28,93 @@ import {
   FieldDef,
 } from "@grit42/form";
 import { EntityFormFieldDef } from "../../../../../../../Registrant";
-import { useCreateUpdateUserMutation } from "../../../mutations";
+import {
+  useCreateUpdateUserMutation,
+  useGenerateApiTokenMutationForUser,
+} from "../../../mutations";
 import { useDestroyEntityMutation, useEntityDatum } from "../../../../../../entities";
 import { User } from "../../../types";
 import { useSession } from "../../../../../../session";
 import { useQueryClient } from "@grit42/api";
+import styles from "../../../settings.module.scss";
+
+function ActivationForm({ user, id }: { user: User; id: string }) {
+  const { data: session } = useSession();
+  const [formData, setFormData] = useState<User>(user);
+  if (id && id !== "new") {
+      const url = `${session?.server_settings.server_url ? session.server_settings.server_url : "http://localhost:3001"}/app/core/activate/${formData.activation_token}`;
+      return (
+        <>
+          <div className={styles.divider} />
+          <h2>Activation link</h2>
+          <CopyableBlock content={url} />
+        </>
+    )
+  }
+}
+
+function ForgotForm({ user, id }: { user: User; id: string }) {
+  const { data: session } = useSession();
+  const [formData, setFormData] = useState<User>(user);
+  if (id && id !== "new") {
+    const url = `${session?.server_settings.server_url ? session.server_settings.server_url : "http://localhost:3001"}/app/core/password_reset/${formData.forgot_token}`;
+    return (
+        <>
+          <div className={styles.divider} />
+          <h2>Reset password link</h2>
+          <CopyableBlock content={url} />
+        </>
+    )
+  }
+}
+
+function AuthTokenForm({ user, id }: { user: User; id: string }) {
+    const [formData, setFormData] = useState<User>(user);
+    if (id && id !== "new") {
+      const generateTokenMutation = useGenerateApiTokenMutationForUser();
+
+      const onGenerateApiToken = async () => {
+        const res = await generateTokenMutation.mutateAsync({});
+        formData.single_access_token = res.token;
+        setFormData(formData);
+      };
+
+      return (
+        <>
+          <div className={styles.divider} />
+          <h2>API token</h2>
+            <p>Use this API token to authenticate calls to the grit42 API.</p>
+            {formData.single_access_token && <CopyableBlock content={formData.single_access_token} />}
+            {!formData.single_access_token && <p>User don&apos;t have an API token yet.</p>}
+            <ButtonGroup>
+              {!formData.single_access_token && (
+                <Button
+                  key="file-picker-button"
+                  color="secondary"
+                  onClick={onGenerateApiToken}
+                >
+                  Generate API token
+                </Button>
+              )}
+              {formData.single_access_token && (
+                <Button
+                  color="secondary"
+                  onClick={onGenerateApiToken}
+                >
+                  Regenerate API token
+                </Button>
+              )}
+            </ButtonGroup>
+        </>
+      );
+    }
+  }
 
 function UserForm({ user, id }: { user: User; id: string }) {
   const navigate = useNavigate();
   const { data: session } = useSession();
   const [formData, setFormData] = useState<User>(user);
+  console.log("!", formData);
   const createUpdateUserMutation = useCreateUpdateUserMutation(id);
   const destroyUserMutation = useDestroyEntityMutation("/grit/core/users");
   const queryClient = useQueryClient();
@@ -157,7 +234,7 @@ function UserForm({ user, id }: { user: User; id: string }) {
 
   return (
     <Form<User> form={form}>
-      <div
+      <div className={styles.formGrid}
         style={{
           display: "grid",
           gridTemplateColumns: "1fr 1fr",
@@ -197,17 +274,15 @@ export default function UserDetails() {
   }
 
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateRows: "min-content 1fr",
-        height: "100%",
-        backgroundColor: "var(--palette-background-surface)",
-        borderRadius: "var(--border-radius)",
-        padding: "calc(var(--spacing) * 2)",
-      }}
-    >
-      <UserForm user={data} id={id ?? "new"} />
+    <div className={styles.account}>
+      <Surface className={styles.surface}>
+        <div className={styles.formsContainer}>
+        <UserForm user={data} id={id ?? "new"} />
+        <AuthTokenForm user={data} id={id ?? "new"}/>
+        <ActivationForm user={data} id={id ?? "new"}/>
+        <ForgotForm user={data} id={id ?? "new"}/>
+        </div>
+      </Surface>
     </div>
   );
 }

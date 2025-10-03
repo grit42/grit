@@ -53,3 +53,28 @@ export const useCreateUpdateUserMutation = (id: string | number) => {
     onError: notifyOnError
   });
 };
+
+export const useGenerateApiTokenMutationForUser = () => {
+  return useMutation<
+    AuthToken,
+    EndpointErrorErrors<AuthToken>,
+    Record<string, AuthToken>
+  >({
+    mutationKey: ["generateApiToken"],
+    mutationFn: async () => {
+      const response = await request<
+        EndpointSuccess<AuthToken>,
+        EndpointError
+      >(`/grit/core/user/generate_api_token`, {
+        method: "POST",
+      });
+
+      if (!response.success) {
+        throw response.errors;
+      }
+
+      return response.data;
+    },
+    onError: notifyOnError,
+  });
+};

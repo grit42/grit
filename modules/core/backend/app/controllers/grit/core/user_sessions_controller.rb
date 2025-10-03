@@ -34,7 +34,10 @@ module Grit::Core
     end
 
     def server_settings
-      { two_factor: ENV.fetch("SMTP_SERVER", nil) ? true : false }
+      {
+        two_factor: ENV.fetch("SMTP_SERVER", nil) ? true : false,
+        server_url: ENV.fetch("GRIT_SERVER_URL", nil)
+      }
     end
 
     def show(_params = nil)

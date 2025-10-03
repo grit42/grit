@@ -21,8 +21,8 @@ module Grit::Core
     include Grit::Core::GritEntityController
 
     before_action :require_administrator, only: %i[create update destroy]
-    before_action :require_no_user, only: %i[activate request_password_reset request_password_reset]
-    before_action :require_user, only: %i[index show update_password generate_api_token revoke_api_token hello_world_api]
+    before_action :require_no_user, only: %i[activate request_password_reset password_reset]
+    before_action :require_user, only: %i[index show update_password generate_api_token hello_world_api]
 
     def create
       user = params.require(:user).permit(:origin_id, :location_id, :login, :name, :active, :email, :two_factor, role_ids: [])
@@ -111,9 +111,8 @@ module Grit::Core
       end
 
       if @user
-        @user.update(
-          forgot_token: SecureRandom.urlsafe_base64(20)
-        )
+        sql = "UPDATE grit_core_users SET forgot_token='#{SecureRandom.urlsafe_base64(20)}' WHERE id=#{@user.id}"
+        ActiveRecord::Base.connection.execute(sql)
       end
 
       Grit::Core::Mailer.deliver_password_reset(@user).deliver_now
@@ -209,22 +208,22 @@ module Grit::Core
       render json: { success: false, msg: e.to_s }, status: :internal_server_error
     end
 
-    def revoke_api_token
-      @user = Grit::Core::User.current
+    def hello_world_api
+      render json: { success: true, msg: "Hello" }
+    end
 
-      @user.update(
-        single_access_token: nil
-      )
+    def generate_api_token_for_user
+      raise "not allowed" unless Grit::Core::User.current.role?("Administrator")
+      @user = Grit::Core::User.find(params[:id])
 
-      render json: { success: true }
+      @user.reset_single_access_token
+      @user.save!
+
+      render json: { success: true, data: { token: @user.single_access_token } }
     rescue StandardError => e
       logger.warn e.to_s
       logger.warn e.backtrace.join("\n")
       render json: { success: false, msg: e.to_s }, status: :internal_server_error
-    end
-
-    def hello_world_api
-      render json: { success: true, msg: "Hello" }
     end
 
     private

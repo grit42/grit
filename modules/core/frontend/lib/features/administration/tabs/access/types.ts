@@ -31,6 +31,7 @@ export interface User extends EntityData {
   status_id: number; // TOCHECK STATUS ID
   status_id__name: string;
   token: string;
+  single_access_token: string | null;
 }
 
 export interface Role extends EntityData {

@@ -1,0 +1,53 @@
+@use "@grit42/client-library/theme.scss";
+
+.account {
+  display: grid;
+  grid-template-rows: min-content 1fr;
+
+  h1 {
+    color: theme.$palette-secondary-main;
+    margin-bottom: calc(theme.$spacing * 2);
+  }
+
+  h2 {
+    margin-bottom: calc(theme.$spacing * 2);
+  }
+
+  .surface {
+    height: 100%;
+    width: 100%;
+  }
+
+  .formsContainer {
+    display: "grid";
+    grid-template-rows: "min-content 1fr";
+    height: "100%";
+    background-color: "var(--palette-background-surface)";
+    border-radius: "var(--border-radius)";
+    padding: "calc(var(--spacing) * 2)";
+  }
+
+  .divider {
+    margin-top: calc(theme.$spacing * 4);
+    margin-bottom: calc(theme.$spacing * 2);
+    height: 1px;
+    background-color: rgb(
+      from var(--palette-background-contrast-text) r g b / 20%
+    );
+  }
+
+  .formFields {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: calc(theme.$spacing * 2);
+  }
+
+  .formGrid {
+    display: "grid";
+    grid-template-rows: "min-content 1fr";
+    height: "100%";
+    background-color: "var(--palette-background-surface)";
+    border-radius: "var(--border-radius)";
+    padding: "calc(var(--spacing) * 2)";
+  }
+}

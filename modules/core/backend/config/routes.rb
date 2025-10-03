@@ -54,7 +54,7 @@ Grit::Core::Engine.routes.draw do
     post :generate_auth_token
     post :revoke_auth_token
     post :generate_api_token
-    post :revoke_api_token
+    post :generate_api_token_for_user
     get :hello_world_api
   end
 

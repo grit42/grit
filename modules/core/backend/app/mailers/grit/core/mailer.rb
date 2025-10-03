@@ -20,6 +20,7 @@ module Grit
   module Core
     class Mailer < ApplicationMailer
       def deliver_activation_instructions(user)
+        return unless ENV.fetch("SMTP_SERVER", nil)
         @server_url = ENV.fetch("GRIT_SERVER_URL", nil)
         @token = user.activation_token
 
@@ -32,6 +33,7 @@ module Grit
       end
 
       def deliver_reactivation_instructions(user)
+        return unless ENV.fetch("SMTP_SERVER", nil)
         @server_url = ENV.fetch("GRIT_SERVER_URL", nil)
         @token = user.activation_token
 
@@ -44,6 +46,7 @@ module Grit
       end
 
       def deliver_two_factor_instructions(user)
+        return unless ENV.fetch("SMTP_SERVER", nil)
         @token = user.two_factor_token
 
         mail(
@@ -55,6 +58,7 @@ module Grit
       end
 
       def deliver_password_reset(user)
+        return unless ENV.fetch("SMTP_SERVER", nil)
         @server_url = ENV.fetch("GRIT_SERVER_URL", nil)
         @token = user.forgot_token
 

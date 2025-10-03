@@ -22,7 +22,6 @@ import {
   useUpdatePasswordMutation,
   useUpdateUserInfoMutation,
   useGenerateApiTokenMutation,
-  useRevokeApiTokenMutation,
 } from "../mutations";
 import { classnames } from "@grit42/client-library/utils";
 import { useForm } from "@grit42/form";
@@ -170,16 +169,10 @@ function AuthTokenForm() {
   const [token, setToken] = useState(info.token);
 
   const generateTokenMutation = useGenerateApiTokenMutation();
-  const revokeTokenMutation = useRevokeApiTokenMutation();
 
   const onGenerateApiToken = async () => {
     const res = await generateTokenMutation.mutateAsync({});
     setToken(res.token);
-  };
-
-  const onRevokeApiToken = async () => {
-    await revokeTokenMutation.mutateAsync({});
-    setToken("");
   };
 
   return (
@@ -205,14 +198,6 @@ function AuthTokenForm() {
               onClick={onGenerateApiToken}
             >
               Regenerate API token
-            </Button>
-          )}
-          {token && (
-            <Button
-              color="secondary"
-              onClick={onRevokeApiToken}
-            >
-              Revoke API token
             </Button>
           )}
         </ButtonGroup>

@@ -168,13 +168,6 @@ module Grit::Core
       assert_response :success
     end
 
-    test "user should revoke an API token" do
-      login(@user)
-
-      post revoke_api_token_user_url
-      assert_response :success
-    end
-
     test "user should authenticate with valid token" do
       logout
 
