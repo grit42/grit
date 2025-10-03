@@ -213,13 +213,13 @@ module Grit::Core
         self.email = email.downcase
         return if settings.present?
 
-        self.settings = { "light_theme": false }
+        self.settings = { "theme": "dark" }
       end
 
       def check_who
         # It is only admin and the user self that can edit user accounts
         # Exception when activating process is in progress
-        raise "Not allowed" unless activation_token_was.blank? || (activation_token.blank? && !activation_token_was.nil?) || Grit::Core::User.current.role?("Administrator") || (login == Grit::Core::User.current.login)
+        raise "Not allowed" unless forgot_token_was.blank? || (forgot_token.blank? && !forgot_token_was.nil?) || activation_token_was.blank? || (activation_token.blank? && !activation_token_was.nil?) || Grit::Core::User.current.role?("Administrator") || (login == Grit::Core::User.current.login)
 
         true
       end
