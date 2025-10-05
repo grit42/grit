@@ -47,6 +47,7 @@ Grit::Core::Engine.routes.draw do
   resource :user, only: [] do
     post :activate
     post :request_password_reset
+    post :request_password_reset_for_user
     post :password_reset
     post :update_password
     post :update_info

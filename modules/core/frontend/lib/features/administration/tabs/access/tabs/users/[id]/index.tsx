@@ -31,6 +31,7 @@ import { EntityFormFieldDef } from "../../../../../../../Registrant";
 import {
   useCreateUpdateUserMutation,
   useGenerateApiTokenMutationForUser,
+  useGeneratePasswordResetTokenMutation,
 } from "../../../mutations";
 import { useDestroyEntityMutation, useEntityDatum } from "../../../../../../entities";
 import { User } from "../../../types";
@@ -47,7 +48,7 @@ function ActivationForm({ user, id }: { user: User; id: string }) {
         <>
           <div className={styles.divider} />
           <h2>Activation link</h2>
-          <CopyableBlock content={url} />
+          {formData.activation_token && <CopyableBlock content={url} />}
         </>
     )
   }
@@ -58,11 +59,26 @@ function ForgotForm({ user, id }: { user: User; id: string }) {
   const [formData, setFormData] = useState<User>(user);
   if (id && id !== "new") {
     const url = `${session?.server_settings.server_url ? session.server_settings.server_url : "http://localhost:3001"}/app/core/password_reset/${formData.forgot_token}`;
+    const generateTokenMutation = useGeneratePasswordResetTokenMutation(formData.email);
+    const onGenerateForgotToken = async () => {
+        const res = await generateTokenMutation.mutateAsync({});
+        formData.forgot_token = res.token;
+        console.log("!", res);
+        setFormData(formData);
+      };
+
     return (
         <>
           <div className={styles.divider} />
           <h2>Reset password link</h2>
-          <CopyableBlock content={url} />
+          {formData.forgot_token && <CopyableBlock content={url} />}
+          <Button
+            key="file-picker-button"
+            color="secondary"
+            onClick={onGenerateForgotToken}
+          >
+            Generate reset password token
+          </Button>
         </>
     )
   }
@@ -83,7 +99,6 @@ function AuthTokenForm({ user, id }: { user: User; id: string }) {
         <>
           <div className={styles.divider} />
           <h2>API token</h2>
-            <p>Use this API token to authenticate calls to the grit42 API.</p>
             {formData.single_access_token && <CopyableBlock content={formData.single_access_token} />}
             {!formData.single_access_token && <p>User don&apos;t have an API token yet.</p>}
             <ButtonGroup>

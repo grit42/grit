@@ -78,3 +78,33 @@ export const useGenerateApiTokenMutationForUser = () => {
     onError: notifyOnError,
   });
 };
+
+export const useGeneratePasswordResetTokenMutation = (email: string) => {
+  return useMutation<
+    ForgotToken,
+    EndpointErrorErrors<ForgotToken>,
+    Record<string, ForgotToken>
+  >({
+    mutationKey: ["generatePasswordResetToken"],
+    mutationFn: async () => {
+      const response = await request<
+        EndpointSuccess<ForgotToken>,
+        EndpointError
+      >(`/grit/core/user/request_password_reset_for_user`, {
+        method: "POST",
+        data: {
+          user: email
+        }
+      });
+
+      if (!response.success) {
+        throw response.errors;
+      }
+      console.log("! mutation", response);
+      return response;
+    },
+    onError: notifyOnError,
+  });
+};
+
+

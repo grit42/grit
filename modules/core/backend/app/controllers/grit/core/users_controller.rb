@@ -149,6 +149,36 @@ module Grit::Core
       render json: { success: false, errors: e.to_s }, status: :internal_server_error
     end
 
+    def request_password_reset_for_user
+      raise "not allowed" unless Grit::Core::User.current.role?("Administrator")
+      if params[:user].nil? || !params[:user].is_a?(String)
+        render json: { success: false, errors: "No user specified" }, status: :bad_request
+        return
+      end
+
+      @user = Grit::Core::User.find_by(login: params[:user]&.downcase)
+      @user = Grit::Core::User.find_by(email: params[:user]&.downcase)
+
+      if @user.nil?
+        render json: { success: false, errors: "No user found" }, status: :not_found
+        return
+      end
+
+      token =SecureRandom.urlsafe_base64(20)
+
+      if @user
+        sql = "UPDATE grit_core_users SET forgot_token='#{token}' WHERE id=#{@user.id}"
+        ActiveRecord::Base.connection.execute(sql)
+      end
+
+      Grit::Core::Mailer.deliver_password_reset(@user).deliver_now
+      render json: { success: true, token: token }
+    rescue StandardError => e
+      logger.warn e.to_s
+      logger.warn e.backtrace.join("\n")
+      render json: { success: false, errors: e.to_s }, status: :internal_server_error
+    end
+
     def update_password
       user = Grit::Core::User.current
       unless user.valid_password?(params[:old_password])
