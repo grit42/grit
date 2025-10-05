@@ -97,21 +97,20 @@ function ForgotForm({ user, id }: { user: User; id: string }) {
           <h2>Reset password link</h2>
           {formData.forgot_token && <CopyableBlock content={url} />}
           <ButtonGroup>
-          <Button
-            key="file-picker-button"
-            color="secondary"
-            onClick={onGenerateForgotToken}
-          >
-            Generate reset password token
-          </Button>
-          {formData.forgot_token && (
+            <Button
+              color="secondary"
+              onClick={onGenerateForgotToken}
+            >
+              Generate reset password token
+            </Button>
+            {formData.forgot_token && (
             <Button
               color="secondary"
               onClick={onRevokeForgotToken}
             >
               Revoke reset password token
             </Button>
-          )}
+            )}
           </ButtonGroup>
         </>
     )
