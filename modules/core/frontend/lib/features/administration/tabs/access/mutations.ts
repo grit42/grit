@@ -54,7 +54,7 @@ export const useCreateUpdateUserMutation = (id: string | number) => {
   });
 };
 
-export const useGenerateApiTokenMutationForUser = () => {
+export const useGenerateApiTokenMutationForUser = (email: string) => {
   return useMutation<
     AuthToken,
     EndpointErrorErrors<AuthToken>,
@@ -65,8 +65,11 @@ export const useGenerateApiTokenMutationForUser = () => {
       const response = await request<
         EndpointSuccess<AuthToken>,
         EndpointError
-      >(`/grit/core/user/generate_api_token`, {
+      >(`/grit/core/user/generate_api_token_for_user`, {
         method: "POST",
+        data: {
+          user: email
+        }
       });
 
       if (!response.success) {
@@ -107,7 +110,7 @@ export const useGeneratePasswordResetTokenMutation = (email: string) => {
   });
 };
 
-export const useRevokeActivationTokenMutation = () => {
+export const useRevokeActivationTokenMutation = (email: string) => {
   return useMutation<
       boolean,
       EndpointErrorErrors<Partial<UserSettings>>,
@@ -118,8 +121,11 @@ export const useRevokeActivationTokenMutation = () => {
       const response = await request<
         EndpointSuccess,
         EndpointError<EndpointErrorErrors<UserSettings>>
-      >(`/grit/core/user/revoke_activation_token`, {
+      >(`/grit/core/user/revoke_activation_token_for_user`, {
         method: "POST",
+        data: {
+          user: email
+        }
       });
 
       if (!response.success) {
@@ -130,3 +136,31 @@ export const useRevokeActivationTokenMutation = () => {
     }
   });
 };
+
+export const useRevokeForgotTokenMutation = (email: string) => {
+  return useMutation<
+      boolean,
+      EndpointErrorErrors<Partial<UserSettings>>,
+      Partial<UserSettings>
+    >({
+    mutationKey: ["revokeApiToken"],
+    mutationFn:  async () => {
+      const response = await request<
+        EndpointSuccess,
+        EndpointError<EndpointErrorErrors<UserSettings>>
+      >(`/grit/core/user/revoke_forgot_token_for_user`, {
+        method: "POST",
+        data: {
+          user: email
+        }
+      });
+
+      if (!response.success) {
+        throw response.errors;
+      }
+
+      return response.success;
+    }
+  });
+};
+

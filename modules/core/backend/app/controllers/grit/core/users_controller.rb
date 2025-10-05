@@ -244,12 +244,42 @@ module Grit::Core
 
     def generate_api_token_for_user
       raise "not allowed" unless Grit::Core::User.current.role?("Administrator")
-      @user = Grit::Core::User.find(params[:id])
+      @user = Grit::Core::User.find_by_email(params[:user])
 
       @user.reset_single_access_token
       @user.save!
 
       render json: { success: true, data: { token: @user.single_access_token } }
+    rescue StandardError => e
+      logger.warn e.to_s
+      logger.warn e.backtrace.join("\n")
+      render json: { success: false, msg: e.to_s }, status: :internal_server_error
+    end
+
+    def revoke_activation_token_for_user
+      raise "not allowed" unless Grit::Core::User.current.role?("Administrator")
+      @user = Grit::Core::User.find_by_email(params[:user])
+
+      @user.update(
+        activation_token: nil
+      )
+
+      render json: { success: true }
+    rescue StandardError => e
+      logger.warn e.to_s
+      logger.warn e.backtrace.join("\n")
+      render json: { success: false, msg: e.to_s }, status: :internal_server_error
+    end
+
+    def revoke_forgot_token_for_user
+      raise "not allowed" unless Grit::Core::User.current.role?("Administrator")
+      @user = Grit::Core::User.find_by_email(params[:user])
+
+      @user.update(
+        forgot_token: nil
+      )
+
+      render json: { success: true }
     rescue StandardError => e
       logger.warn e.to_s
       logger.warn e.backtrace.join("\n")
