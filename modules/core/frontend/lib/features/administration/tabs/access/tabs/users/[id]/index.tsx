@@ -32,6 +32,7 @@ import {
   useCreateUpdateUserMutation,
   useGenerateApiTokenMutationForUser,
   useGeneratePasswordResetTokenMutation,
+  useRevokeActivationTokenMutation,
 } from "../../../mutations";
 import { useDestroyEntityMutation, useEntityDatum } from "../../../../../../entities";
 import { User } from "../../../types";
@@ -41,7 +42,14 @@ import styles from "../../../settings.module.scss";
 
 function ActivationForm({ user, id }: { user: User; id: string }) {
   const { data: session } = useSession();
-  const [formData, setFormData] = useState<User>(user);
+  const [formData] = useState<User>(user);
+  const revokeActivationTokenMutation = useRevokeActivationTokenMutation();
+
+  const onRevokeActivationToken = async () => {
+    await revokeActivationTokenMutation.mutateAsync({});
+    //setToken("");
+  };
+
   if (id && id !== "new") {
       const url = `${session?.server_settings.server_url ? session.server_settings.server_url : "http://localhost:3001"}/app/core/activate/${formData.activation_token}`;
       return (
@@ -49,7 +57,16 @@ function ActivationForm({ user, id }: { user: User; id: string }) {
           <div className={styles.divider} />
           <h2>Activation link</h2>
           {formData.activation_token && <CopyableBlock content={url} />}
+          {formData.activation_token && (
+            <Button
+              color="secondary"
+              onClick={onRevokeActivationToken}
+            >
+              Revoke activation token
+            </Button>
+          )}
         </>
+
     )
   }
 }

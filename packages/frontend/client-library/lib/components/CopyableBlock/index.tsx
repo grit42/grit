@@ -42,6 +42,7 @@ const CopyableBlock = ({ content }: Props) => {
     return (
       <div className={styles.container}>
         <div className={styles.copyContainer}>
+          <pre>{content}</pre>
           <div
             className={styles.copyAction}
             onClick={text === "Copy" ? onCopyToClipboard : undefined}
@@ -49,7 +50,7 @@ const CopyableBlock = ({ content }: Props) => {
             {text}
           </div>
         </div>
-        <pre>{content}</pre>
+
       </div>
     );
   };

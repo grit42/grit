@@ -107,4 +107,26 @@ export const useGeneratePasswordResetTokenMutation = (email: string) => {
   });
 };
 
+export const useRevokeActivationTokenMutation = () => {
+  return useMutation<
+      boolean,
+      EndpointErrorErrors<Partial<UserSettings>>,
+      Partial<UserSettings>
+    >({
+    mutationKey: ["revokeApiToken"],
+    mutationFn:  async () => {
+      const response = await request<
+        EndpointSuccess,
+        EndpointError<EndpointErrorErrors<UserSettings>>
+      >(`/grit/core/user/revoke_activation_token`, {
+        method: "POST",
+      });
 
+      if (!response.success) {
+        throw response.errors;
+      }
+
+      return response.success;
+    }
+  });
+};
