@@ -150,12 +150,14 @@ module Grit::Core
     end
 
     def request_password_reset_for_user
-      raise "not allowed" unless Grit::Core::User.current.role?("Administrator")
+      if  !Grit::Core::User.current.role?("Administrator")
+        render json: { success: false, errors: "Not allowed" }, status: :unauthorized
+        return
+      end
       if params[:user].nil? || !params[:user].is_a?(String)
         render json: { success: false, errors: "No user specified" }, status: :bad_request
         return
       end
-
       @user = Grit::Core::User.find_by(login: params[:user]&.downcase)
       @user = Grit::Core::User.find_by(email: params[:user]&.downcase)
 
@@ -248,8 +250,16 @@ module Grit::Core
     end
 
     def generate_api_token_for_user
-      raise "not allowed" unless Grit::Core::User.current.role?("Administrator")
-      @user = Grit::Core::User.find_by_email(params[:user])
+      if  !Grit::Core::User.current.role?("Administrator")
+        render json: { success: false, errors: "Not allowed" }, status: :unauthorized
+        return
+      end
+      if params[:user].nil? || !params[:user].is_a?(String)
+        render json: { success: false, errors: "No user specified" }, status: :bad_request
+        return
+      end
+      @user = Grit::Core::User.find_by(login: params[:user]&.downcase)
+      @user = Grit::Core::User.find_by(email: params[:user]&.downcase)
 
       @user.reset_single_access_token
       @user.save!
@@ -262,8 +272,16 @@ module Grit::Core
     end
 
     def revoke_activation_token_for_user
-      raise "not allowed" unless Grit::Core::User.current.role?("Administrator")
-      @user = Grit::Core::User.find_by_email(params[:user])
+      if  !Grit::Core::User.current.role?("Administrator")
+        render json: { success: false, errors: "Not allowed" }, status: :unauthorized
+        return
+      end
+      if params[:user].nil? || !params[:user].is_a?(String)
+        render json: { success: false, errors: "No user specified" }, status: :bad_request
+        return
+      end
+      @user = Grit::Core::User.find_by(login: params[:user]&.downcase)
+      @user = Grit::Core::User.find_by(email: params[:user]&.downcase)
 
       @user.update(
         activation_token: nil
@@ -277,8 +295,16 @@ module Grit::Core
     end
 
     def revoke_forgot_token_for_user
-      raise "not allowed" unless Grit::Core::User.current.role?("Administrator")
-      @user = Grit::Core::User.find_by_email(params[:user])
+      if  !Grit::Core::User.current.role?("Administrator")
+        render json: { success: false, errors: "Not allowed" }, status: :unauthorized
+        return
+      end
+      if params[:user].nil? || !params[:user].is_a?(String)
+        render json: { success: false, errors: "No user specified" }, status: :bad_request
+        return
+      end
+      @user = Grit::Core::User.find_by(login: params[:user]&.downcase)
+      @user = Grit::Core::User.find_by(email: params[:user]&.downcase)
 
       @user.update(
         forgot_token: nil
