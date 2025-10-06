@@ -19,12 +19,7 @@
   }
 
   .formsContainer {
-    display: "grid";
-    grid-template-rows: "min-content 1fr";
-    height: "100%";
-    background-color: "var(--palette-background-surface)";
-    border-radius: "var(--border-radius)";
-    padding: "calc(var(--spacing) * 2)";
+    max-width: 960px;
   }
 
   .divider {
@@ -34,20 +29,5 @@
     background-color: rgb(
       from var(--palette-background-contrast-text) r g b / 20%
     );
-  }
-
-  .formFields {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: calc(theme.$spacing * 2);
-  }
-
-  .formGrid {
-    display: "grid";
-    grid-template-rows: "min-content 1fr";
-    height: "100%";
-    background-color: "var(--palette-background-surface)";
-    border-radius: "var(--border-radius)";
-    padding: "calc(var(--spacing) * 2)";
   }
 }

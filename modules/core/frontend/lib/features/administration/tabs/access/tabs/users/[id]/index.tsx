@@ -130,6 +130,7 @@ function AuthTokenForm({ user, id }: { user: User; id: string }) {
 
       return (
         <>
+
           <div className={styles.divider} />
           <h2>API token</h2>
             {formData.single_access_token && <CopyableBlock content={formData.single_access_token} />}
@@ -220,6 +221,7 @@ function UserForm({ user, id }: { user: User; id: string }) {
         display_name: "Active",
         type: "boolean",
         default: false,
+        disabled: id === "new" ? true : false
       },
       {
         name: "two_factor",
@@ -282,7 +284,7 @@ function UserForm({ user, id }: { user: User; id: string }) {
 
   return (
     <Form<User> form={form}>
-      <div className={styles.formGrid}
+      <div
         style={{
           display: "grid",
           gridTemplateColumns: "1fr 1fr",

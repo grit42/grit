@@ -42,7 +42,7 @@ const CopyableBlock = ({ content }: Props) => {
     return (
       <div className={styles.container}>
         <div className={styles.copyContainer}>
-          <pre>{content}</pre>
+          <pre className={styles.preContainer}>{content}</pre>
           <div
             className={styles.copyAction}
             onClick={text === "Copy" ? onCopyToClipboard : undefined}

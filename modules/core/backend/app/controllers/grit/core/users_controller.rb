@@ -164,6 +164,11 @@ module Grit::Core
         return
       end
 
+      if !@user.active
+        render json: { success: false, errors: "Not allowed to make reset password token for inactive user" }, status: :not_found
+        return
+      end
+
       token =SecureRandom.urlsafe_base64(20)
 
       if @user
