@@ -100,7 +100,6 @@ module Grit::Core
     @no_show = [  "crypted_password",
     "password_salt",
     "persistence_token",
-    # "single_access_token",
     "perishable_token",
     "login_count",
     "failed_login_count",
@@ -109,9 +108,6 @@ module Grit::Core
     "last_login_at",
     "current_login_ip",
     "last_login_ip",
-    # "active",
-    # "activation_token",
-    # "forgot_token",
     "two_factor_token",
     "two_factor_expiry"
   ]
