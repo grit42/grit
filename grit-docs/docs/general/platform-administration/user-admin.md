@@ -17,7 +17,7 @@ Roles define what users can see and modify in the system. These roles are predef
 
 ## Creating user accounts
 
-User accounts are created in the **Administration** section under the **User management** tab by clicking the _New_ toolbar action.
+User accounts are created in the **Administration** section under the **Access** / **Users** tab by clicking the _New_ toolbar action.
 
 ![User administration tab](./assets/user_administration.png)
 
