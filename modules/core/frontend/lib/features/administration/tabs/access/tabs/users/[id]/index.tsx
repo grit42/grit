@@ -86,11 +86,17 @@ function ActivationForm({ user, id }: { user: User; id: string }) {
     formData.forgot_token = undefined;
     setFormData(formData);
   };
-  const url = `${
+  const activationUrl = `${
       session?.server_settings.server_url
         ? session.server_settings.server_url
         : "http://localhost:3001"
     }/app/core/activate/${formData.activation_token}`;
+
+  const resetPasswordUrl = `${
+      session?.server_settings.server_url
+        ? session.server_settings.server_url
+        : "http://localhost:3001"
+    }/app/core/password_reset/${formData.forgot_token}`;
 
   if (id && id !== "new") {
     return (
@@ -99,7 +105,7 @@ function ActivationForm({ user, id }: { user: User; id: string }) {
           <>
           <div className={styles.divider} />
           <h2>Activation link</h2>
-          {formData.activation_token && <CopyableBlock content={url} />}
+          {formData.activation_token && <CopyableBlock content={activationUrl} />}
           {formData.activation_token && (
             <Button color="secondary" onClick={onRevokeActivationToken}>
               Revoke activation token
@@ -109,7 +115,7 @@ function ActivationForm({ user, id }: { user: User; id: string }) {
         )}
         <div className={styles.divider} />
         <h2>Reset password link</h2>
-        {formData.forgot_token && <CopyableBlock content={url} />}
+        {formData.forgot_token && <CopyableBlock content={resetPasswordUrl} />}
         <ButtonGroup>
           <Button color="secondary" onClick={onGenerateForgotToken}>
             Generate reset password token
