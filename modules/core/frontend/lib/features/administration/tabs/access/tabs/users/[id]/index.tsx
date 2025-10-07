@@ -57,62 +57,56 @@ function ActivationForm({ user, id }: { user: User; id: string }) {
   const revokeActivationTokenMutation = useRevokeActivationTokenMutation(
     formData.email,
   );
-
   const onRevokeActivationToken = async () => {
     await revokeActivationTokenMutation.mutateAsync({});
     formData.activation_token = undefined;
     setFormData(formData);
   };
-
-  if (id && id !== "new" && formData.activation_token) {
-    const url = `${
+  const generateApiTokenMutation = useGenerateApiTokenMutationForUser(
+    formData.email,
+  );
+  const onGenerateApiToken = async () => {
+    const res = await generateApiTokenMutation.mutateAsync({});
+    formData.single_access_token = res.token;
+    setFormData(formData);
+  };
+  const generateResetPasswordTokenMutation = useGeneratePasswordResetTokenMutation(
+    formData.email,
+  );
+  const revokeForgotTokenMutation = useRevokeForgotTokenMutation(
+    formData.email,
+  );
+  const onGenerateForgotToken = async () => {
+    const res = await generateResetPasswordTokenMutation.mutateAsync({});
+    formData.forgot_token = res.token;
+    setFormData(formData);
+  };
+  const onRevokeForgotToken = async () => {
+    await revokeForgotTokenMutation.mutateAsync({});
+    formData.forgot_token = undefined;
+    setFormData(formData);
+  };
+  const url = `${
       session?.server_settings.server_url
         ? session.server_settings.server_url
         : "http://localhost:3001"
     }/app/core/activate/${formData.activation_token}`;
-    return (
-      <>
-        <div className={styles.divider} />
-        <h2>Activation link</h2>
-        {formData.activation_token && <CopyableBlock content={url} />}
-        {formData.activation_token && (
-          <Button color="secondary" onClick={onRevokeActivationToken}>
-            Revoke activation token
-          </Button>
-        )}
-      </>
-    );
-  }
-}
 
-function ForgotForm({ user, id }: { user: User; id: string }) {
-  const { data: session } = useSession();
-  const [formData, setFormData] = useState<User>(user);
   if (id && id !== "new") {
-    const url = `${
-      session?.server_settings.server_url
-        ? session.server_settings.server_url
-        : "http://localhost:3001"
-    }/app/core/password_reset/${formData.forgot_token}`;
-    const generateTokenMutation = useGeneratePasswordResetTokenMutation(
-      formData.email,
-    );
-    const revokeForgotTokenMutation = useRevokeForgotTokenMutation(
-      formData.email,
-    );
-    const onGenerateForgotToken = async () => {
-      const res = await generateTokenMutation.mutateAsync({});
-      formData.forgot_token = res.token;
-      setFormData(formData);
-    };
-    const onRevokeForgotToken = async () => {
-      await revokeForgotTokenMutation.mutateAsync({});
-      formData.forgot_token = undefined;
-      setFormData(formData);
-    };
-
     return (
       <>
+        {formData.activation_token && (
+          <>
+          <div className={styles.divider} />
+          <h2>Activation link</h2>
+          {formData.activation_token && <CopyableBlock content={url} />}
+          {formData.activation_token && (
+            <Button color="secondary" onClick={onRevokeActivationToken}>
+              Revoke activation token
+            </Button>
+          )}
+          </>
+        )}
         <div className={styles.divider} />
         <h2>Reset password link</h2>
         {formData.forgot_token && <CopyableBlock content={url} />}
@@ -120,33 +114,10 @@ function ForgotForm({ user, id }: { user: User; id: string }) {
           <Button color="secondary" onClick={onGenerateForgotToken}>
             Generate reset password token
           </Button>
-
-          {formData.forgot_token && (
-            <Button color="secondary" onClick={onRevokeForgotToken}>
-              Revoke reset password token
-            </Button>
-          )}
+          <Button color="secondary" onClick={onRevokeForgotToken}>
+            Revoke reset password token
+          </Button>
         </ButtonGroup>
-      </>
-    );
-  }
-}
-
-function AuthTokenForm({ user, id }: { user: User; id: string }) {
-  const [formData, setFormData] = useState<User>(user);
-  if (id && id !== "new") {
-    const generateTokenMutation = useGenerateApiTokenMutationForUser(
-      formData.email,
-    );
-
-    const onGenerateApiToken = async () => {
-      const res = await generateTokenMutation.mutateAsync({});
-      formData.single_access_token = res.token;
-      setFormData(formData);
-    };
-
-    return (
-      <>
         <div className={styles.divider} />
         <h2>API token</h2>
         {formData.single_access_token && (
@@ -363,8 +334,6 @@ export default function UserDetails() {
         <div className={styles.formsContainer}>
           <UserForm user={data} id={id ?? "new"} />
           <ActivationForm user={data} id={id ?? "new"} />
-          <ForgotForm user={data} id={id ?? "new"} />
-          <AuthTokenForm user={data} id={id ?? "new"} />
         </div>
       </Surface>
     </div>
