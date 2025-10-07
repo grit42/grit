@@ -39,7 +39,7 @@ const TABS = [
     label: "Roles",
   },
 ];
-console.log("!", TABS);
+
 const AccessAdministration = () => {
   const navigate = useNavigate();
 

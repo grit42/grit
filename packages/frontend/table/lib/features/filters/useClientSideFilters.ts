@@ -20,7 +20,6 @@ import { useMemo } from "react";
 import { Filter, getIsFiltersActive } from ".";
 
 const getFilteredItems = <T>(data: T[], filters: Filter[]) => {
-  console.log(filters)
   return data;
 };
 

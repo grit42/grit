@@ -103,7 +103,6 @@ export const useGeneratePasswordResetTokenMutation = (email: string) => {
       if (!response.success) {
         throw response.errors;
       }
-      console.log("! mutation", response);
       return response;
     },
     onError: notifyOnError,

@@ -163,7 +163,6 @@ function UserForm({ user, id }: { user: User; id: string }) {
   const navigate = useNavigate();
   const { data: session } = useSession();
   const [formData, setFormData] = useState<User>(user);
-  console.log("!", formData);
   const createUpdateUserMutation = useCreateUpdateUserMutation(id);
   const destroyUserMutation = useDestroyEntityMutation("/grit/core/users");
   const queryClient = useQueryClient();
