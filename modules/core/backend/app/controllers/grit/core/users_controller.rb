@@ -111,8 +111,8 @@ module Grit::Core
       end
 
       if @user
-        sql = "UPDATE grit_core_users SET forgot_token='#{SecureRandom.urlsafe_base64(20)}' WHERE id=#{@user.id}"
-        ActiveRecord::Base.connection.execute(sql)
+        @user.forgot_token = SecureRandom.urlsafe_base64(20)
+        @user.save_without_session_maintenance
       end
 
       Grit::Core::Mailer.deliver_password_reset(@user).deliver_now
@@ -172,11 +172,8 @@ module Grit::Core
       end
 
       token =SecureRandom.urlsafe_base64(20)
-
-      if @user
-        sql = "UPDATE grit_core_users SET forgot_token='#{token}' WHERE id=#{@user.id}"
-        ActiveRecord::Base.connection.execute(sql)
-      end
+      @user.forgot_token = token
+      @user.save_without_session_maintenance
 
       Grit::Core::Mailer.deliver_password_reset(@user).deliver_now
       render json: { success: true, token: token }

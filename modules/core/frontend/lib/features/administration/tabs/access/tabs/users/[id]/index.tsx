@@ -103,6 +103,7 @@ function ForgotForm({ user, id }: { user: User; id: string }) {
             >
               Generate reset password token
             </Button>
+
             {formData.forgot_token && (
             <Button
               color="secondary"
@@ -111,6 +112,7 @@ function ForgotForm({ user, id }: { user: User; id: string }) {
               Revoke reset password token
             </Button>
             )}
+
           </ButtonGroup>
         </>
     )
