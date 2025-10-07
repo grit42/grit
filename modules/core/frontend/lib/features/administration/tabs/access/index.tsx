@@ -43,7 +43,7 @@ const TABS = [
 const AccessAdministration = () => {
   const navigate = useNavigate();
 
-  const match = useMatch("/core/administration/user-management/:childPath");
+  const match = useMatch("/core/administration/user-management/:childPath/*");
   const childPath = match?.params.childPath ?? "users";
 
   const [selectedTab, setSelectedTab] = useState(

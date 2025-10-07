@@ -19,7 +19,14 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useCallback, useMemo, useState } from "react";
 import { useForm } from "@grit42/form";
-import { Button, ButtonGroup, ErrorPage, Spinner, CopyableBlock, Surface } from "@grit42/client-library/components";
+import {
+  Button,
+  ButtonGroup,
+  ErrorPage,
+  Spinner,
+  CopyableBlock,
+  Surface,
+} from "@grit42/client-library/components";
 import {
   FormField,
   Form,
@@ -35,7 +42,10 @@ import {
   useRevokeActivationTokenMutation,
   useRevokeForgotTokenMutation,
 } from "../../../mutations";
-import { useDestroyEntityMutation, useEntityDatum } from "../../../../../../entities";
+import {
+  useDestroyEntityMutation,
+  useEntityDatum,
+} from "../../../../../../entities";
 import { User } from "../../../types";
 import { useSession } from "../../../../../../session";
 import { useQueryClient } from "@grit42/api";
@@ -44,7 +54,9 @@ import styles from "../../../settings.module.scss";
 function ActivationForm({ user, id }: { user: User; id: string }) {
   const { data: session } = useSession();
   const [formData, setFormData] = useState<User>(user);
-  const revokeActivationTokenMutation = useRevokeActivationTokenMutation(formData.email);
+  const revokeActivationTokenMutation = useRevokeActivationTokenMutation(
+    formData.email,
+  );
 
   const onRevokeActivationToken = async () => {
     await revokeActivationTokenMutation.mutateAsync({});
@@ -53,23 +65,23 @@ function ActivationForm({ user, id }: { user: User; id: string }) {
   };
 
   if (id && id !== "new") {
-      const url = `${session?.server_settings.server_url ? session.server_settings.server_url : "http://localhost:3001"}/app/core/activate/${formData.activation_token}`;
-      return (
-        <>
-          <div className={styles.divider} />
-          <h2>Activation link</h2>
-          {formData.activation_token && <CopyableBlock content={url} />}
-          {formData.activation_token && (
-            <Button
-              color="secondary"
-              onClick={onRevokeActivationToken}
-            >
-              Revoke activation token
-            </Button>
-          )}
-        </>
-
-    )
+    const url = `${
+      session?.server_settings.server_url
+        ? session.server_settings.server_url
+        : "http://localhost:3001"
+    }/app/core/activate/${formData.activation_token}`;
+    return (
+      <>
+        <div className={styles.divider} />
+        <h2>Activation link</h2>
+        {formData.activation_token && <CopyableBlock content={url} />}
+        {formData.activation_token && (
+          <Button color="secondary" onClick={onRevokeActivationToken}>
+            Revoke activation token
+          </Button>
+        )}
+      </>
+    );
   }
 }
 
@@ -77,14 +89,22 @@ function ForgotForm({ user, id }: { user: User; id: string }) {
   const { data: session } = useSession();
   const [formData, setFormData] = useState<User>(user);
   if (id && id !== "new") {
-    const url = `${session?.server_settings.server_url ? session.server_settings.server_url : "http://localhost:3001"}/app/core/password_reset/${formData.forgot_token}`;
-    const generateTokenMutation = useGeneratePasswordResetTokenMutation(formData.email);
-    const revokeForgotTokenMutation = useRevokeForgotTokenMutation(formData.email);
+    const url = `${
+      session?.server_settings.server_url
+        ? session.server_settings.server_url
+        : "http://localhost:3001"
+    }/app/core/password_reset/${formData.forgot_token}`;
+    const generateTokenMutation = useGeneratePasswordResetTokenMutation(
+      formData.email,
+    );
+    const revokeForgotTokenMutation = useRevokeForgotTokenMutation(
+      formData.email,
+    );
     const onGenerateForgotToken = async () => {
-        const res = await generateTokenMutation.mutateAsync({});
-        formData.forgot_token = res.token;
-        setFormData(formData);
-      };
+      const res = await generateTokenMutation.mutateAsync({});
+      formData.forgot_token = res.token;
+      setFormData(formData);
+    };
     const onRevokeForgotToken = async () => {
       await revokeForgotTokenMutation.mutateAsync({});
       formData.forgot_token = undefined;
@@ -92,74 +112,69 @@ function ForgotForm({ user, id }: { user: User; id: string }) {
     };
 
     return (
-        <>
-          <div className={styles.divider} />
-          <h2>Reset password link</h2>
-          {formData.forgot_token && <CopyableBlock content={url} />}
-          <ButtonGroup>
-            <Button
-              color="secondary"
-              onClick={onGenerateForgotToken}
-            >
-              Generate reset password token
-            </Button>
+      <>
+        <div className={styles.divider} />
+        <h2>Reset password link</h2>
+        {formData.forgot_token && <CopyableBlock content={url} />}
+        <ButtonGroup>
+          <Button color="secondary" onClick={onGenerateForgotToken}>
+            Generate reset password token
+          </Button>
 
-            {formData.forgot_token && (
-            <Button
-              color="secondary"
-              onClick={onRevokeForgotToken}
-            >
+          {formData.forgot_token && (
+            <Button color="secondary" onClick={onRevokeForgotToken}>
               Revoke reset password token
             </Button>
-            )}
-
-          </ButtonGroup>
-        </>
-    )
+          )}
+        </ButtonGroup>
+      </>
+    );
   }
 }
 
 function AuthTokenForm({ user, id }: { user: User; id: string }) {
-    const [formData, setFormData] = useState<User>(user);
-    if (id && id !== "new") {
-      const generateTokenMutation = useGenerateApiTokenMutationForUser(formData.email);
+  const [formData, setFormData] = useState<User>(user);
+  if (id && id !== "new") {
+    const generateTokenMutation = useGenerateApiTokenMutationForUser(
+      formData.email,
+    );
 
-      const onGenerateApiToken = async () => {
-        const res = await generateTokenMutation.mutateAsync({});
-        formData.single_access_token = res.token;
-        setFormData(formData);
-      };
+    const onGenerateApiToken = async () => {
+      const res = await generateTokenMutation.mutateAsync({});
+      formData.single_access_token = res.token;
+      setFormData(formData);
+    };
 
-      return (
-        <>
-
-          <div className={styles.divider} />
-          <h2>API token</h2>
-            {formData.single_access_token && <CopyableBlock content={formData.single_access_token} />}
-            {!formData.single_access_token && <p>User don&apos;t have an API token yet.</p>}
-            <ButtonGroup>
-              {!formData.single_access_token && (
-                <Button
-                  key="file-picker-button"
-                  color="secondary"
-                  onClick={onGenerateApiToken}
-                >
-                  Generate API token
-                </Button>
-              )}
-              {formData.single_access_token && (
-                <Button
-                  color="secondary"
-                  onClick={onGenerateApiToken}
-                >
-                  Regenerate API token
-                </Button>
-              )}
-            </ButtonGroup>
-        </>
-      );
-    }
+    return (
+      <>
+        <div className={styles.divider} />
+        <h2>API token</h2>
+        {formData.single_access_token && (
+          <CopyableBlock content={formData.single_access_token} />
+        )}
+        {!formData.single_access_token && (
+          <p>User don&apos;t have an API token yet.</p>
+        )}
+        <ButtonGroup>
+          {!formData.single_access_token && (
+            <Button
+              key="file-picker-button"
+              color="secondary"
+              onClick={onGenerateApiToken}
+            >
+              Generate API token
+            </Button>
+          )}
+          {formData.single_access_token && (
+            <Button color="secondary" onClick={onGenerateApiToken}>
+              Regenerate API token
+            </Button>
+          )}
+        </ButtonGroup>
+      </>
+    );
   }
+}
 
 function UserForm({ user, id }: { user: User; id: string }) {
   const navigate = useNavigate();
@@ -222,14 +237,14 @@ function UserForm({ user, id }: { user: User; id: string }) {
         display_name: "Active",
         type: "boolean",
         default: false,
-        disabled: id === "new" ? true : false
+        disabled: id === "new" ? true : false,
       },
       {
         name: "two_factor",
         display_name: "Two factor authentication",
         type: "boolean",
         default: false,
-        disabled: session?.server_settings.two_factor ? false : true
+        disabled: session?.server_settings.two_factor ? false : true,
       },
       {
         name: "role_ids",
@@ -265,7 +280,7 @@ function UserForm({ user, id }: { user: User; id: string }) {
       await destroyUserMutation.mutateAsync(id);
       navigate("..", { relative: "path" });
     }
-  }, [destroyUserMutation, id, navigate]);
+  }, [destroyUserMutation, id, navigate, user.login, user.name]);
 
   const form = useForm<User>({
     defaultValues: formData,
@@ -274,10 +289,19 @@ function UserForm({ user, id }: { user: User; id: string }) {
       if (id === "new") {
         navigate(`../${updatedUser.id}`, { relative: "path" });
       } else {
+        setFormData(updatedUser);
+        formApi.reset(updatedUser);
         if (session?.id.toString() === id) {
-          setFormData(updatedUser);
-          formApi.reset(updatedUser);
           await queryClient.invalidateQueries({ queryKey: ["session"] });
+        } else {
+          await Promise.all([
+            queryClient.invalidateQueries({
+              queryKey: ["entities", "datum", "grit/core/users"],
+            }),
+            queryClient.invalidateQueries({
+              queryKey: ["entities", "data", "grit/core/users"],
+            }),
+          ]);
         }
       }
     },
@@ -328,10 +352,10 @@ export default function UserDetails() {
     <div className={styles.account}>
       <Surface className={styles.surface}>
         <div className={styles.formsContainer}>
-        <UserForm user={data} id={id ?? "new"} />
-        <AuthTokenForm user={data} id={id ?? "new"}/>
-        <ActivationForm user={data} id={id ?? "new"}/>
-        <ForgotForm user={data} id={id ?? "new"}/>
+          <UserForm user={data} id={id ?? "new"} />
+          <AuthTokenForm user={data} id={id ?? "new"} />
+          <ActivationForm user={data} id={id ?? "new"} />
+          <ForgotForm user={data} id={id ?? "new"} />
         </div>
       </Surface>
     </div>

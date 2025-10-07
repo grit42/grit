@@ -280,9 +280,8 @@ module Grit::Core
       @user = Grit::Core::User.find_by(login: params[:user]&.downcase)
       @user = Grit::Core::User.find_by(email: params[:user]&.downcase)
 
-      @user.update(
-        activation_token: nil
-      )
+      @user.activation_token = nil
+      @user.save_without_session_maintenance
 
       render json: { success: true }
     rescue StandardError => e
@@ -303,9 +302,8 @@ module Grit::Core
       @user = Grit::Core::User.find_by(login: params[:user]&.downcase)
       @user = Grit::Core::User.find_by(email: params[:user]&.downcase)
 
-      @user.update(
-        forgot_token: nil
-      )
+      @user.forgot_token = nil
+      @user.save_without_session_maintenance
 
       render json: { success: true }
     rescue StandardError => e
