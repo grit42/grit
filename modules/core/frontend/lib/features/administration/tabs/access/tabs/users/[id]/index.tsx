@@ -289,7 +289,7 @@ function UserForm({ user, id }: { user: User; id: string }) {
       ]);
       navigate("..", { relative: "path" });
     }
-  }, [destroyUserMutation, id, navigate, user.login, user.name]);
+  }, [destroyUserMutation, id, navigate, queryClient, user.login, user.name]);
 
   const form = useForm<User>({
     defaultValues: formData,
@@ -362,9 +362,9 @@ export default function UserDetails() {
       <Surface className={styles.surface}>
         <div className={styles.formsContainer}>
           <UserForm user={data} id={id ?? "new"} />
-          <AuthTokenForm user={data} id={id ?? "new"} />
           <ActivationForm user={data} id={id ?? "new"} />
           <ForgotForm user={data} id={id ?? "new"} />
+          <AuthTokenForm user={data} id={id ?? "new"} />
         </div>
       </Surface>
     </div>

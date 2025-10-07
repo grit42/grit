@@ -8,7 +8,7 @@ sidebar_position: 1
 User accounts are managed by an _Administrator_ in the **Administration** section under the **User management** tab. _Administrators_ can create user accounts, updated user information, enable two-factor authentication, and deactivate accounts.
 
 :::note
-Account activation links, password reset links, and two-factor authentication tokens are sent via email. An email service must be configured as described in the [Installation Guide](/getting-started#mail-service-configuration) for these features to function properly.
+Account activation links, password reset links, and two-factor authentication tokens can be sent via email. To enable this, an email service must be configured as described in the [Installation Guide](/getting-started#mail-service-configuration).
 :::
 
 ## Roles
@@ -60,3 +60,23 @@ If a user's access to the system is revoked, their account can be deactivated. D
 To deactivate a user account, click the account in the list under the **User management** view, toggle off the **Active** switch and click **Save**.
 
 ![User update form with active switch highlighted](./assets/deactivate_user.png)
+
+## Manage tokens
+
+### Activation token
+
+A link to a form where a new user can activate can be copied (1). It is also possible to revoke the activation token (2).
+
+![User update form with activation token highlighted](./assets/activation_token.png)
+
+### Reset password token
+
+A link to a form where a user can set a new password can be created and copied. It is also possible to revoke the password reset token. This can only be done for active users.
+
+![User update form with password reset token highlighted](./assets/reset_password_token.png)
+
+### API token
+
+A field to copy a users API token can also be found. There is also an option to create a new token for a user.
+
+![User update form with API token highlighted](./assets/api_token.png)
