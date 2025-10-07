@@ -64,7 +64,7 @@ function ActivationForm({ user, id }: { user: User; id: string }) {
     setFormData(formData);
   };
 
-  if (id && id !== "new") {
+  if (id && id !== "new" && formData.activation_token) {
     const url = `${
       session?.server_settings.server_url
         ? session.server_settings.server_url
@@ -277,7 +277,16 @@ function UserForm({ user, id }: { user: User; id: string }) {
         )
       )
         return;
-      await destroyUserMutation.mutateAsync(id);
+
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["entities", "datum", "grit/core/users"],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["entities", "data", "grit/core/users"],
+        }),
+        await destroyUserMutation.mutateAsync(id)
+      ]);
       navigate("..", { relative: "path" });
     }
   }, [destroyUserMutation, id, navigate, user.login, user.name]);
