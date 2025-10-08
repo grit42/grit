@@ -1,3 +1,13 @@
+## 0.7.1
+
+### 🩹 Fixes
+
+- User management without mailer service
+
+### 🧱 Updated Dependencies
+
+- Updated @grit42/client-library to 0.7.1
+
 ## 0.7.0
 
 ### 🚀 Features

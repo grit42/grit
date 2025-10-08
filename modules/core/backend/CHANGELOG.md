@@ -1,3 +1,9 @@
+## 0.7.1
+
+### 🩹 Fixes
+
+- User management without mailer service
+
 ## 0.7.0
 
 ### 🚀 Features

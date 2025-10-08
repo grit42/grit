@@ -1,3 +1,9 @@
+## 0.7.1
+
+### 🩹 Fixes
+
+- Changed `CopyableBlock` to use entire parent width
+
 ## 0.7.0
 
 ### 🚀 Features
