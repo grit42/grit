@@ -32,10 +32,6 @@ Optionally:
 6.  Enable two-factor authentication
 7.  Roles
 
-:::note
-Do not set the _active_ status of a user when creating an account, it will be set automatically when the user activate its account.
-:::
-
 To create a user, fill in the form and click **Save**.
 
 :::note
