@@ -33,10 +33,14 @@ Optionally:
 7.  Roles
 
 :::note
-Do not set the _active_ status of a user when creating an account, it will be set automatically when the user activate its account via the link received by email.
+Do not set the _active_ status of a user when creating an account, it will be set automatically when the user activate its account.
 :::
 
-To create a user, fill in the form and click **Save**. An email will be sent to the specified address with a link to activate the account by setting a password.
+To create a user, fill in the form and click **Save**.
+
+:::note
+If an email service have been setup an email will be sent to the user. If not the admin must distribute the activation link found on the user detail page.
+:::
 
 ![User creation form](./assets/create_user.png)
 
@@ -65,7 +69,7 @@ To deactivate a user account, click the account in the list under the **User man
 
 ### Activation token
 
-A link to a form where a new user can activate can be copied (1). It is also possible to revoke the activation token (2).
+A link can be copied to a form where a new user can activate its account (1). It is also possible to revoke the activation token (2).
 
 ![User update form with activation token highlighted](./assets/activation_token.png)
 
