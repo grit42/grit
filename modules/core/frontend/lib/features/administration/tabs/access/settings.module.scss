@@ -1,0 +1,33 @@
+@use "@grit42/client-library/theme.scss";
+
+.account {
+  display: grid;
+  grid-template-rows: min-content 1fr;
+
+  h1 {
+    color: theme.$palette-secondary-main;
+    margin-bottom: calc(theme.$spacing * 2);
+  }
+
+  h2 {
+    margin-bottom: calc(theme.$spacing * 2);
+  }
+
+  .surface {
+    height: 100%;
+    width: 100%;
+  }
+
+  .formsContainer {
+    max-width: 960px;
+  }
+
+  .divider {
+    margin-top: calc(theme.$spacing * 4);
+    margin-bottom: calc(theme.$spacing * 2);
+    height: 1px;
+    background-color: rgb(
+      from var(--palette-background-contrast-text) r g b / 20%
+    );
+  }
+}

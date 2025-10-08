@@ -46,9 +46,17 @@ The `admin` user must be activated to start using the application the first time
 
 Navigate to `/app/core/activate/admin` (e.g. when running locally http://localhost:3000/app/core/activate/admin) to activate the `admin` user by configuring its password.
 
-## Mail service configuration
+## User management
 
-User management, password recovery and two-factor authentication require an SMTP mail service.
+The admin user can add and manage other users.
+
+Navigate to `/app/core/administration/user-management/users` (e.g. when running locally http://localhost:3000/app/core/administration/user-management/users) to add new users.
+
+### Mail service configuration
+
+User management can be handled manually by an administrator by copying activation and password reset links from the system and delivering them to users by preferred communication media, but the system can also be configured to automatically send emails to users.
+
+To do this a SMTP mail service has to be configured.
 
 The SMTP mail service can be configured through environment variables in the `.env` file.
 

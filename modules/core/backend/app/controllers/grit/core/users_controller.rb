@@ -21,8 +21,8 @@ module Grit::Core
     include Grit::Core::GritEntityController
 
     before_action :require_administrator, only: %i[create update destroy]
-    before_action :require_no_user, only: %i[activate request_password_reset request_password_reset]
-    before_action :require_user, only: %i[index show update_password generate_api_token revoke_api_token hello_world_api]
+    before_action :require_no_user, only: %i[activate request_password_reset password_reset]
+    before_action :require_user, only: %i[index show update_password generate_api_token hello_world_api]
 
     def create
       user = params.require(:user).permit(:origin_id, :location_id, :login, :name, :active, :email, :two_factor, role_ids: [])
@@ -111,9 +111,8 @@ module Grit::Core
       end
 
       if @user
-        @user.update(
-          forgot_token: SecureRandom.urlsafe_base64(20)
-        )
+        @user.forgot_token = SecureRandom.urlsafe_base64(20)
+        @user.save_without_session_maintenance
       end
 
       Grit::Core::Mailer.deliver_password_reset(@user).deliver_now
@@ -144,6 +143,40 @@ module Grit::Core
       else
         render json: { success: false, errors: @user.errors }, status: :unprocessable_entity
       end
+    rescue StandardError => e
+      logger.warn e.to_s
+      logger.warn e.backtrace.join("\n")
+      render json: { success: false, errors: e.to_s }, status: :internal_server_error
+    end
+
+    def request_password_reset_for_user
+      if  !Grit::Core::User.current.role?("Administrator")
+        render json: { success: false, errors: "Not allowed" }, status: :unauthorized
+        return
+      end
+      if params[:user].nil? || !params[:user].is_a?(String)
+        render json: { success: false, errors: "No user specified" }, status: :bad_request
+        return
+      end
+      @user = Grit::Core::User.find_by(login: params[:user]&.downcase)
+      @user = Grit::Core::User.find_by(email: params[:user]&.downcase)
+
+      if @user.nil?
+        render json: { success: false, errors: "No user found" }, status: :not_found
+        return
+      end
+
+      if !@user.active
+        render json: { success: false, errors: "Not allowed to make reset password token for inactive user" }, status: :not_found
+        return
+      end
+
+      token =SecureRandom.urlsafe_base64(20)
+      @user.forgot_token = token
+      @user.save_without_session_maintenance
+
+      Grit::Core::Mailer.deliver_password_reset(@user).deliver_now
+      render json: { success: true, token: token }
     rescue StandardError => e
       logger.warn e.to_s
       logger.warn e.backtrace.join("\n")
@@ -209,12 +242,46 @@ module Grit::Core
       render json: { success: false, msg: e.to_s }, status: :internal_server_error
     end
 
-    def revoke_api_token
-      @user = Grit::Core::User.current
+    def hello_world_api
+      render json: { success: true, msg: "Hello" }
+    end
 
-      @user.update(
-        single_access_token: nil
-      )
+    def generate_api_token_for_user
+      if  !Grit::Core::User.current.role?("Administrator")
+        render json: { success: false, errors: "Not allowed" }, status: :unauthorized
+        return
+      end
+      if params[:user].nil? || !params[:user].is_a?(String)
+        render json: { success: false, errors: "No user specified" }, status: :bad_request
+        return
+      end
+      @user = Grit::Core::User.find_by(login: params[:user]&.downcase)
+      @user = Grit::Core::User.find_by(email: params[:user]&.downcase)
+
+      @user.reset_single_access_token
+      @user.save!
+
+      render json: { success: true, data: { token: @user.single_access_token } }
+    rescue StandardError => e
+      logger.warn e.to_s
+      logger.warn e.backtrace.join("\n")
+      render json: { success: false, msg: e.to_s }, status: :internal_server_error
+    end
+
+    def revoke_activation_token_for_user
+      if  !Grit::Core::User.current.role?("Administrator")
+        render json: { success: false, errors: "Not allowed" }, status: :unauthorized
+        return
+      end
+      if params[:user].nil? || !params[:user].is_a?(String)
+        render json: { success: false, errors: "No user specified" }, status: :bad_request
+        return
+      end
+      @user = Grit::Core::User.find_by(login: params[:user]&.downcase)
+      @user = Grit::Core::User.find_by(email: params[:user]&.downcase)
+
+      @user.activation_token = nil
+      @user.save_without_session_maintenance
 
       render json: { success: true }
     rescue StandardError => e
@@ -223,8 +290,26 @@ module Grit::Core
       render json: { success: false, msg: e.to_s }, status: :internal_server_error
     end
 
-    def hello_world_api
-      render json: { success: true, msg: "Hello" }
+    def revoke_forgot_token_for_user
+      if  !Grit::Core::User.current.role?("Administrator")
+        render json: { success: false, errors: "Not allowed" }, status: :unauthorized
+        return
+      end
+      if params[:user].nil? || !params[:user].is_a?(String)
+        render json: { success: false, errors: "No user specified" }, status: :bad_request
+        return
+      end
+      @user = Grit::Core::User.find_by(login: params[:user]&.downcase)
+      @user = Grit::Core::User.find_by(email: params[:user]&.downcase)
+
+      @user.forgot_token = nil
+      @user.save_without_session_maintenance
+
+      render json: { success: true }
+    rescue StandardError => e
+      logger.warn e.to_s
+      logger.warn e.backtrace.join("\n")
+      render json: { success: false, msg: e.to_s }, status: :internal_server_error
     end
 
     private

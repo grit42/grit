@@ -16,17 +16,25 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { UserSettings } from "../user-account-settings";
-import { ServerSettings } from "../user-account-settings/types";
+import { EntityData } from "../../../entities";
 
-export interface Session {
-  id: number;
-  login: string;
+export interface User extends EntityData {
   name: string;
+  login: string;
   email: string;
-  roles: string[];
-  settings: UserSettings;
-  platform_information: { modules: Record<string, string> };
+  active: boolean;
+  two_factor: boolean;
+  origin_id: number;
+  origin_id__name: string;
+  location_id: number;
+  location_id__name: string;
+  status_id: number; // TOCHECK STATUS ID
+  status_id__name: string;
   token: string;
-  server_settings: ServerSettings;
+  single_access_token: string | null;
+}
+
+export interface Role extends EntityData {
+  name: string;
+  description: string;
 }

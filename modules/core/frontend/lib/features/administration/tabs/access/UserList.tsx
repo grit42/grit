@@ -61,6 +61,12 @@ const USER_TABLE_COLUMNS: GritColumnDef<EntityData>[] = [
       },
     },
   },
+  {
+    accessorKey: "active",
+    header: "Active",
+    id: "active",
+    type: "boolean",
+  },
 ];
 
 export default function UsersList() {

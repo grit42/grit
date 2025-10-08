@@ -1,3 +1,8 @@
+\restrict wZR5kBZGeUyRzSAQDffHkDimJFieQvu9IiEquwLCsz3Hz7Pu4PrV3CwwUCkkGgw
+
+-- Dumped from database version 16.3 (Debian 16.3-1.pgdg120+1)
+-- Dumped by pg_dump version 16.10 (Ubuntu 16.10-0ubuntu0.24.04.1)
+
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
@@ -1226,6 +1231,8 @@ ALTER TABLE ONLY public.test_entities
 -- PostgreSQL database dump complete
 --
 
+\unrestrict wZR5kBZGeUyRzSAQDffHkDimJFieQvu9IiEquwLCsz3Hz7Pu4PrV3CwwUCkkGgw
+
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
@@ -1233,7 +1240,6 @@ INSERT INTO "schema_migrations" (version) VALUES
 ('20250624081122'),
 ('20250624080646'),
 ('20250622125208'),
-('20250612090042'),
 ('20250522140707'),
 ('20250521124829'),
 ('20250411144141'),

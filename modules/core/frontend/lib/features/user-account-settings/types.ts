@@ -19,6 +19,11 @@
 import { ColorScheme, DisplayDensity } from "@grit42/client-library/theme";
 
 export interface UserSettings {
-    theme: ColorScheme;
-    display_density: DisplayDensity;
-  }
+  theme: ColorScheme;
+  display_density: DisplayDensity;
+}
+
+export interface ServerSettings {
+  server_url?: string;
+  two_factor: boolean;
+}

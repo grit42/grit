@@ -17,18 +17,18 @@
  */
 
 import { Outlet, Route, Routes } from "react-router-dom";
-import UsersList from "./UserList";
-import UserDetails from "./[id]";
+import RoleList from "../../RoleList";
+import RoleDetails from "../roles/[id]";
 
-const UserAdministrationTab = () => {
+const RoleAdministrationTab = () => {
   return (
     <Routes>
       <Route element={<Outlet />}>
-        <Route path=":id" element={<UserDetails />} />
-        <Route index element={<UsersList />} />
+        <Route path=":id" element={<RoleDetails />} />
+        <Route index element={<RoleList />} />
       </Route>
     </Routes>
   );
 };
 
-export default UserAdministrationTab;
+export default RoleAdministrationTab;

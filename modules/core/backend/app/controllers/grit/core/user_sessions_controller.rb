@@ -33,6 +33,13 @@ module Grit::Core
       { modules: modules }
     end
 
+    def server_settings
+      {
+        two_factor: ENV.fetch("SMTP_SERVER", nil) ? true : false,
+        server_url: ENV.fetch("GRIT_SERVER_URL", nil)
+      }
+    end
+
     def show(_params = nil)
       render json: {
             success: true,
@@ -44,7 +51,8 @@ module Grit::Core
               token: current_user_session.record.single_access_token,
               roles: Grit::Core::User.current.roles.select(:name).all.map(&:name),
               settings: current_user_session.record.settings,
-              platform_information: platform_information
+              platform_information: platform_information,
+              server_settings: server_settings
             }
           }
     rescue StandardError => e

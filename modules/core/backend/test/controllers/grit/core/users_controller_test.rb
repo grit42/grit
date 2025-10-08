@@ -168,13 +168,6 @@ module Grit::Core
       assert_response :success
     end
 
-    test "user should revoke an API token" do
-      login(@user)
-
-      post revoke_api_token_user_url
-      assert_response :success
-    end
-
     test "user should authenticate with valid token" do
       logout
 
@@ -182,11 +175,11 @@ module Grit::Core
       assert_response :success
     end
 
-    test "user should not authenticate with a revoked token" do
+    test "user should not authenticate with an old token" do
       login(@user)
 
       @single_access_token = @user.single_access_token
-      post revoke_api_token_user_url
+      post generate_api_token_user_url
 
       logout
 
@@ -198,6 +191,46 @@ module Grit::Core
       logout
 
       get hello_world_api_user_url, params: { user_credentials: "not a valid token" }
+      assert_response :unauthorized
+    end
+
+    test "Admin should request a API token for user" do
+      @user = grit_core_users(:admin)
+      login(@user)
+
+      post generate_api_token_for_user_user_url, params: { user: "notadmin@example.com" }, as: :json
+      assert_response :success
+    end
+
+    test "Non admins should not request an API token for uesr" do
+      @user = grit_core_users(:notadmin)
+      login(@user)
+
+      post generate_api_token_for_user_user_url, params: { user: "notadmin@example.com" }, as: :json
+      assert_response :unauthorized
+    end
+
+    test "Admin should request a password reset for user" do
+      @user = grit_core_users(:admin)
+      login(@user)
+
+      post request_password_reset_for_user_user_url, params: { user: "notadmin@example.com" }, as: :json
+      assert_response :success
+    end
+
+    test "Admin should revoke a reset password token" do
+      @user = grit_core_users(:admin)
+      login(@user)
+
+      post revoke_forgot_token_for_user_user_url, params: { user: "notadmin@example.com" }, as: :json
+      assert_response :success
+    end
+
+    test "Non admins should not revoke a reset password token" do
+      @user = grit_core_users(:notadmin)
+      login(@user)
+
+      post revoke_forgot_token_for_user_user_url, params: { user: "notadmin@example.com" }, as: :json
       assert_response :unauthorized
     end
   end

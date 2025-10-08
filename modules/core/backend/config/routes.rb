@@ -47,6 +47,7 @@ Grit::Core::Engine.routes.draw do
   resource :user, only: [] do
     post :activate
     post :request_password_reset
+    post :request_password_reset_for_user
     post :password_reset
     post :update_password
     post :update_info
@@ -54,7 +55,9 @@ Grit::Core::Engine.routes.draw do
     post :generate_auth_token
     post :revoke_auth_token
     post :generate_api_token
-    post :revoke_api_token
+    post :generate_api_token_for_user
+    post :revoke_activation_token_for_user
+    post :revoke_forgot_token_for_user
     get :hello_world_api
   end
 

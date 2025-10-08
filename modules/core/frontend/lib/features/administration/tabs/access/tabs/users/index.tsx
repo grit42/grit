@@ -16,19 +16,19 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { EntityData } from "../../../entities";
+import { Outlet, Route, Routes } from "react-router-dom";
+import UsersList from "../../UserList";
+import UserDetails from "./[id]";
 
-export interface User extends EntityData {
-  name: string;
-  login: string;
-  email: string;
-  active: boolean;
-  two_factor: boolean;
-  origin_id: number;
-  origin_id__name: string;
-  location_id: number;
-  location_id__name: string;
-  status_id: number; // TOCHECK STATUS ID
-  status_id__name: string;
-  token: string;
-}
+const UserAdministrationTab = () => {
+  return (
+    <Routes>
+      <Route element={<Outlet />}>
+        <Route path=":id" element={<UserDetails />} />
+        <Route index element={<UsersList />} />
+      </Route>
+    </Routes>
+  );
+};
+
+export default UserAdministrationTab;
