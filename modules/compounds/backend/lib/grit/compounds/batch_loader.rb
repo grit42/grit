@@ -90,7 +90,7 @@ module Grit::Compounds
             value = nil
             if mapping["constant"]
               value = mapping["value"]
-            elsif !find_by.blank?
+            elsif !find_by.blank? and !datum[header_index].blank?
               begin
                 field_entity = entity_property[:entity][:full_name].constantize
                 value = field_entity.loader_find_by!(find_by, datum[header_index], options: entity_property[:entity][:options]).id
