@@ -1,7 +1,11 @@
+\restrict VjslgDtIEAVy0bMdV8i3hSAnJkc2JQuasqkWsLhfK7fWC2pwHuC242cRfgrGmpb
+
+-- Dumped from database version 16.3 (Debian 16.3-1.pgdg120+1)
+-- Dumped by pg_dump version 16.10 (Ubuntu 16.10-0ubuntu0.24.04.1)
+
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
-SET transaction_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SELECT pg_catalog.set_config('search_path', '', false);
@@ -2219,6 +2223,8 @@ ALTER TABLE ONLY public.grit_assays_assays
 --
 -- PostgreSQL database dump complete
 --
+
+\unrestrict VjslgDtIEAVy0bMdV8i3hSAnJkc2JQuasqkWsLhfK7fWC2pwHuC242cRfgrGmpb
 
 SET search_path TO "$user", public;
 

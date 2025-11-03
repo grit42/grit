@@ -111,11 +111,13 @@ const FilterItem = ({
         options={columnOptions}
         value={filter.column}
         onChange={onSelectColumn}
+        disabled={filter.active ? false: true}
       />
       <Select
         options={operatorOptions}
         value={filter.operator}
         onChange={onSelectOperator}
+        disabled={filter.active ? false: true}
       />
       <InputComponent
         key={filter.id + filter.column}

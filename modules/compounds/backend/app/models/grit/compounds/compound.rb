@@ -328,8 +328,10 @@ module Grit::Compounds
           query = query
             .joins("LEFT OUTER JOIN #{property.data_type.table_name} #{property.data_type.table_name}__#{property.safe_name} on #{property.data_type.table_name}__#{property.safe_name}.id = grit_compounds_compound_property_values__#{property.safe_name}.entity_id_value")
             .select("grit_compounds_compound_property_values__#{property.safe_name}.entity_id_value as #{property.safe_name}")
-          query = query
-            .select("#{property.data_type.table_name}__#{property.safe_name}.#{entity_klass.display_properties[0][:name]} as #{property.safe_name}__#{entity_klass.display_properties[0][:name]}") unless entity_klass.display_properties.nil?
+            entity_klass.display_properties&.each do |display_property|
+              query = query
+              .select("#{property.data_type.table_name}__#{property.safe_name}.#{display_property[:name]} as #{property.safe_name}__#{display_property[:name]}")
+            end
         else
           query = query.select("grit_compounds_compound_property_values__#{property.safe_name}.#{property.data_type.name}_value as #{property.safe_name}")
         end
