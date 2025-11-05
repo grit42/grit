@@ -55,10 +55,10 @@
     "@grit42/notifications": "workspace:*",
     "@grit42/plots": "workspace:*",
     "@grit42/table": "workspace:*",
+    "@grit42/spreadsheet": "workspace:*",
     "openchemlib": "8.18.1",
     "react-ocl": "7.0.2",
-    "usehooks-ts": "3",
-    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
+    "usehooks-ts": "3"
   },
   "peerDependencies": {
     "react": "catalog:",

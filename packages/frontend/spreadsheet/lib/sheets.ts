@@ -7,20 +7,9 @@ import type {
 import { read, utils } from "./xlsx-wrapper";
 import { maybeBoolean, toSafeIdentifier } from "./utils";
 
-interface ColDef {
-  name: string;
-  safe_name: string;
-  data_type_id: number;
-}
+export type { CellObject, ExcelDataType, Range, XLSXSheet };
 
-interface SheetDef {
-  name: string;
-  rows: number;
-  cols: number;
-  colDefs: ColDef[];
-}
-
-type DetailedDataType =
+export type DetailedDataType =
   | "integer"
   | "decimal"
   | "string"
@@ -29,7 +18,7 @@ type DetailedDataType =
   | "date"
   | "datetime";
 
-interface Column {
+export interface Column {
   name: string;
   identifier?: string;
   description?: string;
@@ -37,7 +26,7 @@ interface Column {
   detailed_data_type: DetailedDataType;
 }
 
-interface Sheet {
+export interface Sheet {
   sheet: XLSXSheet;
   name: string;
   range: Range;
@@ -65,6 +54,7 @@ export const sheetDefinitionsFromFile = async (
       : workbook.SheetNames[sheetIdx];
     const sheet = workbook.Sheets?.[workbook.SheetNames[sheetIdx]];
     const range = utils.decode_range(sheet?.["!ref"] ?? "A1:A1");
+
     sheets.push({
       sheet,
       name,
@@ -74,6 +64,16 @@ export const sheetDefinitionsFromFile = async (
 
   return sheets;
 };
+
+export const sampleSheetData = ({ sheet, range }: Sheet, rows = 50) =>
+  utils.sheet_to_json<Record<string, any>>(sheet, {
+    blankrows: true,
+    header: "A",
+    range: utils.encode_range({
+      ...range,
+      e: { ...range.e, r: Math.min(range.e.r, rows) },
+    }),
+  });
 
 export const sheetDefinitionsFromFiles = async (files: File[]) => {
   return (
@@ -154,10 +154,7 @@ const guessColumnDataType = (
   if (excelDataType === "n") {
     detailedDataType = detailedDataTypes.decimal ? "decimal" : "integer";
   } else if (excelDataType === "d") {
-    detailedDataType =
-      detailedDataTypes.datetime
-        ? "datetime"
-        : "date";
+    detailedDataType = detailedDataTypes.datetime ? "datetime" : "date";
   } else if (excelDataType === "s") {
     detailedDataType = detailedDataTypes.text ? "text" : "string";
   }
@@ -198,7 +195,6 @@ export const columnDefinitionsFromSheet = async (
     columnIndex < nameRow.length;
     columnIndex++
   ) {
-
     const { excelDataType, detailedDataType } = guessColumnDataType(
       columnIndex,
       sampleDataRows,
@@ -206,18 +202,18 @@ export const columnDefinitionsFromSheet = async (
 
     columns.push({
       name:
-        nameRow[columnIndex].w?.toString() ??
-        nameRow[columnIndex].v?.toString() ??
+        nameRow[columnIndex]?.w?.toString() ??
+        nameRow[columnIndex]?.v?.toString() ??
         `col${columnIndex}`,
       identifier: toSafeIdentifier(
-        (identifierRow?.[columnIndex].v as string) ??
-          nameRow[columnIndex].w?.toString() ??
-          nameRow[columnIndex].v?.toString() ??
+        (identifierRow?.[columnIndex]?.v as string) ??
+          nameRow[columnIndex]?.w?.toString() ??
+          nameRow[columnIndex]?.v?.toString() ??
           `col${columnIndex}`,
       ),
       excel_data_type: excelDataType,
       detailed_data_type: detailedDataType,
-      description: descriptionRow?.[columnIndex].v as string,
+      description: descriptionRow?.[columnIndex]?.v as string,
     });
   }
 

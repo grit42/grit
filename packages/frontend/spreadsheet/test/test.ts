@@ -1,9 +1,7 @@
-import { openAsBlob, existsSync } from "fs";
 import { basename, resolve } from "path";
 import { readFile } from "fs/promises";
 
 import { test as baseTest } from "vitest";
-import { arrayBuffer } from "stream/consumers";
 
 const xlsx_file_paths = ["./assets/all_types.xlsx"];
 const xlsx_files: File[] = [];
@@ -23,75 +21,51 @@ interface Fixtures {
   tsv: File[];
 }
 
+const getFileFromPath = async (path: string): Promise<File> => {
+  const buffer = await readFile(resolve(__dirname, path));
+  const name = basename(path);
+  return new File([buffer.buffer as ArrayBuffer], name);
+};
+
 export const test = baseTest.extend<Fixtures>({
   xlsx_offset: async ({}, use) => {
     const path = "./assets/all_types_offset.xlsx";
-    const buffer = await readFile(resolve(__dirname, path));
-    const arrayBuffer = Buffer.from(buffer);
-    const name = basename(path);
-    xlsx_files.push(new File([arrayBuffer], name));
-
+    xlsx_files.push(await getFileFromPath(path));
     await use(xlsx_files);
-
     xlsx_files.length = 0;
   },
   xlsx_full_config: async ({}, use) => {
     const path = "./assets/all_types_full_config.xlsx";
-    const buffer = await readFile(resolve(__dirname, path));
-    const arrayBuffer = Buffer.from(buffer);
-    const name = basename(path);
-    xlsx_files.push(new File([arrayBuffer], name));
-
+    xlsx_files.push(await getFileFromPath(path));
     await use(xlsx_files);
-
     xlsx_files.length = 0;
   },
   xlsx: async ({}, use) => {
     for (const path of xlsx_file_paths) {
-      const buffer = await readFile(resolve(__dirname, path));
-      const arrayBuffer = Buffer.from(buffer);
-      const name = basename(path);
-      xlsx_files.push(new File([arrayBuffer], name));
+      xlsx_files.push(await getFileFromPath(path));
     }
-
     await use(xlsx_files);
-
     xlsx_files.length = 0;
   },
   ods: async ({}, use) => {
     for (const path of ods_file_paths) {
-      const buffer = await readFile(resolve(__dirname, path));
-      const arrayBuffer = Buffer.from(buffer);
-      const name = basename(path);
-      ods_files.push(new File([arrayBuffer], name));
+      ods_files.push(await getFileFromPath(path));
     }
-
     await use(ods_files);
-
     ods_files.length = 0;
   },
   csv: async ({}, use) => {
     for (const path of csv_file_paths) {
-      const buffer = await readFile(resolve(__dirname, path));
-      const arrayBuffer = Buffer.from(buffer);
-      const name = basename(path);
-      csv_files.push(new File([arrayBuffer], name));
+      csv_files.push(await getFileFromPath(path));
     }
-
     await use(csv_files);
-
     csv_files.length = 0;
   },
   tsv: async ({}, use) => {
     for (const path of tsv_file_paths) {
-      const buffer = await readFile(resolve(__dirname, path));
-      const arrayBuffer = Buffer.from(buffer);
-      const name = basename(path);
-      tsv_files.push(new File([arrayBuffer], name));
+      tsv_files.push(await getFileFromPath(path));
     }
-
     await use(tsv_files);
-
     tsv_files.length = 0;
   },
 });

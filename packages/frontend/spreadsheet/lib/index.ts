@@ -17,3 +17,5 @@
  */
 
 export * from "./xlsx-wrapper";
+export * from "./sheets";
+export type * from "./sheets";
