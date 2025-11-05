@@ -11,7 +11,8 @@
     "lint": "eslint . --fix",
     "lint:check": "eslint .",
     "format": "prettier . -w",
-    "format:check": "prettier . -c"
+    "format:check": "prettier . -c",
+    "test": "vitest"
   },
   "exports": {
     ".": {
@@ -40,6 +41,7 @@
     "typescript": "catalog:",
     "typescript-eslint": "catalog:",
     "vite": "catalog:",
+    "vitest": "catalog:",
     "vite-plugin-dts": "catalog:",
     "vite-plugin-externalize-deps": "catalog:"
   }

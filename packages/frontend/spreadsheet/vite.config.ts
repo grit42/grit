@@ -1,3 +1,5 @@
+/// <reference types="vitest/config" />
+
 import { defineConfig } from "vite";
 import dts from "vite-plugin-dts";
 import { extname, relative, resolve } from "path";
@@ -12,6 +14,9 @@ export default defineConfig(({mode}) => ({
     }),
     externalizeDeps(),
   ],
+  test: {
+    dir: "test"
+  },
   build: {
     minify: false,
     copyPublicDir: false,
