@@ -38,11 +38,12 @@
     "eslint": "catalog:",
     "glob": "catalog:",
     "globals": "catalog:",
+    "ts-node": "^10.9.2",
     "typescript": "catalog:",
     "typescript-eslint": "catalog:",
     "vite": "catalog:",
-    "vitest": "catalog:",
     "vite-plugin-dts": "catalog:",
-    "vite-plugin-externalize-deps": "catalog:"
+    "vite-plugin-externalize-deps": "catalog:",
+    "vitest": "catalog:"
   }
 }
