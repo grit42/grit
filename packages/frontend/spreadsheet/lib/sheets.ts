@@ -78,7 +78,7 @@ export const sheetDefinitionsFromFiles = async (files: File[]) => {
 
 interface ColumnDefinitionsFromSheetOptions {
   nameRowIndex: number;
-  safeNameRowIndex?: number;
+  identifierRowIndex?: number;
   descriptionRowIndex?: number;
   dataTypeRowIndex?: number;
   requiredRowIndex?: number;
@@ -103,6 +103,8 @@ export const columnDefinitionsFromSheet = async (
 
   const columns: Column[] = [];
   const headerRow = sheet.sheet["!data"]?.[options.nameRowIndex] ?? [];
+  const identifierRow = options.identifierRowIndex !== undefined ? sheet.sheet["!data"]?.[options.identifierRowIndex] : undefined;
+  const descriptionRow = options.descriptionRowIndex !== undefined ? sheet.sheet["!data"]?.[options.descriptionRowIndex] : undefined;
   const sampleDataRows =
     sheet.sheet["!data"]?.slice(
       options.dataRowOffset,
@@ -180,13 +182,14 @@ export const columnDefinitionsFromSheet = async (
         headerRow[cellIndex].w?.toString() ??
         headerRow[cellIndex].v?.toString() ??
         `col${cellIndex}`,
-      identifier: toSafeIdentifier(
+      identifier:  toSafeIdentifier(identifierRow?.[cellIndex].v as string ??
         headerRow[cellIndex].w?.toString() ??
           headerRow[cellIndex].v?.toString() ??
           `col${cellIndex}`,
       ),
       excel_data_type: excelDataType,
       detailed_data_type: detailedDataType,
+      description: descriptionRow?.[cellIndex].v as string,
     });
   }
 

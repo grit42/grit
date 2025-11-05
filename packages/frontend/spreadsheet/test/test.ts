@@ -15,6 +15,7 @@ const tsv_file_paths = ["./assets/all_types.tsv"];
 const tsv_files: File[] = [];
 
 interface Fixtures {
+  xlsx_full_config: File[];
   xlsx_offset: File[];
   xlsx: File[];
   ods: File[];
@@ -25,6 +26,17 @@ interface Fixtures {
 export const test = baseTest.extend<Fixtures>({
   xlsx_offset: async ({}, use) => {
     const path = "./assets/all_types_offset.xlsx";
+    const buffer = await readFile(resolve(__dirname, path));
+    const arrayBuffer = Buffer.from(buffer);
+    const name = basename(path);
+    xlsx_files.push(new File([arrayBuffer], name));
+
+    await use(xlsx_files);
+
+    xlsx_files.length = 0;
+  },
+  xlsx_full_config: async ({}, use) => {
+    const path = "./assets/all_types_full_config.xlsx";
     const buffer = await readFile(resolve(__dirname, path));
     const arrayBuffer = Buffer.from(buffer);
     const name = basename(path);
