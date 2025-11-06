@@ -65,7 +65,7 @@ const SHEET_OPTIONS_FORM_FIELDS: FormFieldDef[] = [
   {
     name: "columnOffset",
     display_name: "Index of the first column containing data",
-    type: "number",
+    type: "string",
     reference: "ignore",
     disabled: (ref) => ref,
   },
@@ -114,7 +114,7 @@ const SheetOptionsForm = ({
             </div>
           )}
           {SHEET_OPTIONS_FORM_FIELDS.map((f) => (
-            <FormField form={form} fieldDef={f} />
+            <FormField form={form} fieldDef={f} key={f.name} />
           ))}
         </div>
       </Form>
@@ -216,6 +216,7 @@ const DataSheetStructureEditor = ({
           ),
         })) ?? [],
     );
+
     for (const sheet of sheetsWithColumns) {
       const assayDataSheetDefinition =
         await createSheetDefinitionMutation.mutateAsync({

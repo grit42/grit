@@ -85,7 +85,7 @@ export const sheetDefinitionsFromFiles = async (files: File[]) => {
 
 export interface ColumnDefinitionsFromSheetOptions {
   nameRowIndex: number;
-  columnOffset: number;
+  columnOffset: string;
   dataRowOffset: number;
   identifierRowIndex?: number;
   descriptionRowIndex?: number;
@@ -94,12 +94,13 @@ export interface ColumnDefinitionsFromSheetOptions {
   ignore?: boolean;
 }
 
-export const defaultColumnDefinitionsFromSheetOptions = {
-  nameRowIndex: 0,
-  columnOffset: 0,
-  dataRowOffset: 1,
-  ignore: true,
-};
+export const defaultColumnDefinitionsFromSheetOptions: ColumnDefinitionsFromSheetOptions =
+  {
+    nameRowIndex: 1,
+    columnOffset: "A",
+    dataRowOffset: 1,
+    ignore: true,
+  };
 
 const guessColumnDataType = (
   columnIndex: number,
@@ -176,26 +177,26 @@ export const columnDefinitionsFromSheet = async (
 
   const columns: Column[] = [];
 
-  const nameRow = sheet.sheet["!data"]?.[options.nameRowIndex] ?? [];
+  const nameRow = sheet.sheet["!data"]?.[options.nameRowIndex - 1] ?? [];
 
   const identifierRow =
     options.identifierRowIndex !== undefined
-      ? sheet.sheet["!data"]?.[options.identifierRowIndex]
+      ? sheet.sheet["!data"]?.[options.identifierRowIndex - 1]
       : undefined;
 
   const descriptionRow =
     options.descriptionRowIndex !== undefined
-      ? sheet.sheet["!data"]?.[options.descriptionRowIndex]
+      ? sheet.sheet["!data"]?.[options.descriptionRowIndex - 1]
       : undefined;
 
   const sampleDataRows =
     sheet.sheet["!data"]?.slice(
-      options.dataRowOffset,
-      options.dataRowOffset + 10,
+      options.dataRowOffset - 1,
+      options.dataRowOffset + 9,
     ) ?? [];
 
   for (
-    let columnIndex = options.columnOffset;
+    let columnIndex = utils.decode_col(options.columnOffset.toUpperCase());
     columnIndex < nameRow.length;
     columnIndex++
   ) {

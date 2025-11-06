@@ -75,9 +75,9 @@ test("get columns from first sheet in xlsx with offset", async ({
 }) => {
   const sheets = await sheetDefinitionsFromFiles(xlsx_offset);
   const columns = await columnDefinitionsFromSheet(sheets[0], {
-    columnOffset: 2,
-    dataRowOffset: 3,
-    nameRowIndex: 1,
+    columnOffset: "C",
+    dataRowOffset: 4,
+    nameRowIndex: 2,
   });
 
   expect(
@@ -122,11 +122,11 @@ test("get columns from first sheet in xlsx with full config", async ({
 }) => {
   const sheets = await sheetDefinitionsFromFiles(xlsx_full_config);
   const columns = await columnDefinitionsFromSheet(sheets[0], {
-    columnOffset: 2,
-    dataRowOffset: 4,
-    nameRowIndex: 2,
-    descriptionRowIndex: 3,
-    identifierRowIndex: 0,
+    columnOffset: "C",
+    dataRowOffset: 5,
+    nameRowIndex: 3,
+    descriptionRowIndex: 4,
+    identifierRowIndex: 1,
   });
 
   expect(
