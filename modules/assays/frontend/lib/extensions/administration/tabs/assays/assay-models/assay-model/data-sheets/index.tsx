@@ -56,7 +56,6 @@ import {
 } from "../../../../../../../queries/assay_data_sheet_definitions";
 import styles from "../../assayModels.module.scss";
 import DataSheetColumns from "./DataSheetColumns";
-import DataSheetStructureLoader from "./data-sheet-structure-loader";
 
 interface Props {
   sheetDefinitions: AssayDataSheetDefinitionData[];
@@ -346,10 +345,6 @@ const DataSheets = () => {
   return (
     <Routes>
       <Route element={<DataSheetTabs sheetDefinitions={data} />}>
-        <Route
-          path="load/*"
-          element={<DataSheetStructureLoader assayModelId={assay_model_id} />}
-        />
         <Route
           path=":sheet_id?/*"
           element={<DataSheet assayModelId={assay_model_id} />}

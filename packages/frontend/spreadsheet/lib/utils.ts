@@ -27,3 +27,10 @@ export function toSafeIdentifier(input: string, replacement = "_"): string {
 
   return /^[0-9]/.test(normalized) ? `__${normalized}` : normalized;
 }
+
+export const generateUniqueID = (prefix = "") => {
+  const timePart = new Date().getTime().toString(36);
+  const randomPart = Math.random().toString(36).slice(2, 15);
+
+  return `${prefix}${timePart}${randomPart}`;
+};

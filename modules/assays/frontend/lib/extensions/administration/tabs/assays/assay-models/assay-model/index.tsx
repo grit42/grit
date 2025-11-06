@@ -27,11 +27,18 @@ import {
   useNavigate,
   useParams,
 } from "react-router-dom";
-import { Button, ErrorPage, Spinner, Tabs } from "@grit42/client-library/components";
+import {
+  Button,
+  ErrorPage,
+  Spinner,
+  Tabs,
+} from "@grit42/client-library/components";
 import { useAssayModel } from "../../../../../../queries/assay_models";
 import Details from "./details";
 import Metadata from "./metadata";
 import DataSheets from "./data-sheets";
+import { useToolbar } from "@grit42/core/Toolbar";
+import DataSheetLoader from "./data-sheet-loader";
 
 const TABS = [
   {
@@ -71,17 +78,21 @@ const AssayModelTabs = ({ name }: { name: string }) => {
     navigate(TABS[index].url);
   };
 
+  if (tab === "data-sheet-loader") {
+    return <Outlet />;
+  }
+
   return (
     <div
       style={{
         display: "grid",
-        gridTemplateRows: "min-content min-content 1fr",
+        gridTemplateRows: tab === "data-sheet-loader" ? "min-content 1fr" : "min-content min-content 1fr",
         height: "100%",
-        alignSelf: "stretch"
+        alignSelf: "stretch",
       }}
     >
       <h2 style={{ alignSelf: "baseline", marginBottom: ".5em" }}>{name}</h2>
-      <Tabs
+      {tab !== "data-sheet-loader" && <Tabs
         onTabChange={handleTabChange}
         selectedTab={selectedTab}
         tabs={TABS.map((t) => ({
@@ -89,7 +100,7 @@ const AssayModelTabs = ({ name }: { name: string }) => {
           name: t.label,
           panel: <></>,
         }))}
-      />
+      />}
       <Outlet />
     </div>
   );
@@ -99,6 +110,21 @@ const AssayModel = () => {
   const { assay_model_id } = useParams() as { assay_model_id: string };
 
   const { data, isLoading, isError, error } = useAssayModel(assay_model_id);
+
+  const navigate = useNavigate();
+  const registerToolbarActions = useToolbar();
+  useEffect(() => {
+    return registerToolbarActions({
+      importItems: [
+        {
+          id: "IMPORT_SHEETS",
+          text: "Import data sheets",
+          onClick: () => navigate("data-sheet-loader/files"),
+          disabled: assay_model_id === "new",
+        },
+      ],
+    });
+  }, [assay_model_id, navigate, registerToolbarActions]);
 
   if (isLoading) return <Spinner />;
   if (isError || !data)
@@ -120,6 +146,10 @@ const AssayModel = () => {
         {TABS.map(({ url, Tab }) => (
           <Route key={url} path={`${url}/*`} element={<Tab />} />
         ))}
+        <Route
+          path="data-sheet-loader/*"
+          element={<DataSheetLoader assayModel={data} />}
+        />
         <Route path="*" element={<Navigate to={TABS[0].url} replace />} />
       </Route>
     </Routes>

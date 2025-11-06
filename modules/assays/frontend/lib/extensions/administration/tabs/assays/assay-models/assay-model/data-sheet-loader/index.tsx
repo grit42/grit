@@ -3,27 +3,26 @@ import FileLoader from "./FileLoader";
 import { useState } from "react";
 import { useEntityData } from "@grit42/core";
 import DataSheetStructureEditor from "./Editor";
+import { AssayModelData } from "../../../../../../../queries/assay_models";
 
-const DataSheetStructureLoader = ({
-  assayModelId,
+const DataSheetLoader = ({
+  assayModel,
 }: {
-  assayModelId: string;
+  assayModel: AssayModelData;
 }) => {
   const [files, setFiles] = useState<File[]>([]);
   useEntityData("grit/core/data_types");
-
-  if (files)
 
   return (
     <Routes>
       <Route
         path="files"
-        element={<FileLoader files={files} setFiles={setFiles} />}
+        element={<FileLoader files={files} setFiles={setFiles} assayModelName={assayModel.name}/>}
       />
       <Route
         path="edit"
         element={
-          <DataSheetStructureEditor assayModelId={assayModelId} files={files} />
+          <DataSheetStructureEditor assayModelId={assayModel.id.toString()} files={files} />
         }
       />
       <Route index element={<Navigate to="files" />} />
@@ -31,4 +30,4 @@ const DataSheetStructureLoader = ({
   );
 };
 
-export default DataSheetStructureLoader;
+export default DataSheetLoader;
