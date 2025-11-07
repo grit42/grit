@@ -31,7 +31,11 @@ import {
   Spinner,
   Surface,
 } from "@grit42/client-library/components";
-import { EntityData, EntityPropertyDef } from "@grit42/core";
+import {
+  EntityData,
+  EntityPropertyDef,
+  useCreateEntityMutation,
+} from "@grit42/core";
 import {
   Form,
   FormField,
@@ -43,6 +47,7 @@ import {
 import { useToolbar } from "@grit42/core/Toolbar";
 import Circle1NewIcon from "@grit42/client-library/icons/Circle1New";
 import {
+  AssayDataSheetColumnData,
   useAssayDataSheetColumnColumns,
   useAssayDataSheetColumnFields,
 } from "../../../../../../../queries/assay_data_sheet_columns";
@@ -266,7 +271,10 @@ import { useMemo, useState } from "react";
 import { Outlet, useMatch } from "react-router-dom";
 import { Tabs } from "@grit42/client-library/components";
 import { useEntityData } from "@grit42/core";
-import { useAssayDataSheetDefinitionFields } from "../../../../../../../queries/assay_data_sheet_definitions";
+import {
+  AssayDataSheetDefinitionData,
+  useAssayDataSheetDefinitionFields,
+} from "../../../../../../../queries/assay_data_sheet_definitions";
 import styles from "./dataSheetStructureLoader.module.scss";
 import {
   AssayModelData,
@@ -613,6 +621,8 @@ const DataSetDefinitionEditor = ({
 }: {
   dataSetDefinition: DataSetDefinitionFull;
 }) => {
+  const navigate = useNavigate();
+
   const {
     data: dataTypes,
     isLoading: isDataTypesLoading,
@@ -659,9 +669,47 @@ const DataSetDefinitionEditor = ({
       ),
   });
 
+  const createSheetDefinitionMutation =
+    useCreateEntityMutation<AssayDataSheetDefinitionData>(
+      "grit/assays/assay_data_sheet_definitions",
+    );
+
+  const createSheetColumnMutation =
+    useCreateEntityMutation<AssayDataSheetColumnData>(
+      "grit/assays/assay_data_sheet_columns",
+    );
+
   const form = useForm({
     defaultValues: dataSetDefinition,
-    onSubmit: console.log,
+    onSubmit: async ({ value }) => {
+      let firstSheetId;
+      for (const sheet of value.sheets) {
+        const assayDataSheetDefinition =
+          await createSheetDefinitionMutation.mutateAsync({
+            assay_model_id: dataSetDefinition.id,
+            name: sheet.name,
+            description: sheet.description,
+            result: sheet.result,
+            sort: sheet.sort,
+          });
+
+        firstSheetId = firstSheetId || assayDataSheetDefinition.id;
+
+        for (const col of sheet.columns) {
+          await createSheetColumnMutation.mutateAsync({
+            assay_data_sheet_definition_id: assayDataSheetDefinition.id,
+            name: col.name,
+            safe_name: col.safe_name,
+            data_type_id: col.data_type_id,
+            required: false,
+            sort: col.sort,
+            description: col.description,
+          });
+        }
+      }
+
+      navigate(`../../data-sheets/${firstSheetId}`)
+    },
   });
 
   if (
