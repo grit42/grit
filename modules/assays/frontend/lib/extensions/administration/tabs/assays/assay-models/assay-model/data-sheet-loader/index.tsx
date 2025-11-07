@@ -1,7 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import FileLoader from "./FileLoader";
 import { useState } from "react";
-import { useEntityData } from "@grit42/core";
 import SheetMapper, { SheetWithColumns } from "./SheetMapper";
 import { AssayModelData } from "../../../../../../../queries/assay_models";
 import DataSetDefinitionEditor from "./DataSetDefinitionEditor";
@@ -11,8 +10,6 @@ const DataSheetLoader = ({ assayModel }: { assayModel: AssayModelData }) => {
   const [sheetsWithColumns, setSheetsWithColumns] = useState<
     SheetWithColumns[]
   >([]);
-
-  useEntityData("grit/core/data_types");
 
   return (
     <Routes>

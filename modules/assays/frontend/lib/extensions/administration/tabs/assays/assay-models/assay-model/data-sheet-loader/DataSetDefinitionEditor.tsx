@@ -15,23 +15,6 @@
  * You should have received a copy of the GNU General Public License along with
  * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
  */
-/**
- * Copyright 2025 grit42 A/S. <https://grit42.com/>
- *
- * This file is part of @grit42/assays.
- *
- * @grit42/assays is free software: you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the Free
- * Software Foundation, either version 3 of the License, or  any later version.
- *
- * @grit42/assays is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along with
- * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
- */
 
 import { useCallback, useEffect } from "react";
 import {
@@ -50,7 +33,6 @@ import {
 } from "@grit42/client-library/components";
 import { EntityData, EntityPropertyDef } from "@grit42/core";
 import {
-  AddFormControl,
   Form,
   FormField,
   FormFieldDef,
@@ -125,13 +107,13 @@ const DataSheetColumnForm = ({
         {subFields.map((f) => (
           <FormField form={form} fieldDef={f} key={f.name} />
         ))}
-        <div style={{gridColumnStart: 1, gridColumnEnd: -1}}>
-        <ButtonGroup>
-          <Button onClick={() => navigate("..")}>Done</Button>
-          <Button color="danger" onClick={onDelete}>
-            Delete
-          </Button>
-        </ButtonGroup>
+        <div style={{ gridColumnStart: 1, gridColumnEnd: -1 }}>
+          <ButtonGroup>
+            <Button onClick={() => navigate("..")}>Done</Button>
+            <Button color="danger" onClick={onDelete}>
+              Delete
+            </Button>
+          </ButtonGroup>
         </div>
       </div>
     </Surface>
@@ -152,8 +134,10 @@ const DataSheetColumn = ({
     column_id: string;
   };
 
-
-  const dataSheetDefinition = useStore(form.baseStore, ({values}) => values.sheets[dataSheetDefinitionIndex]) as DataSheetDefinitionFull
+  const dataSheetDefinition = useStore(
+    form.baseStore,
+    ({ values }) => values.sheets[dataSheetDefinitionIndex],
+  ) as DataSheetDefinitionFull;
 
   const dataSheetColumnDefinitionIndex = useMemo(
     () =>
@@ -300,28 +284,28 @@ export const DataSheetDefinitionTabs = ({ dataSetDefinition, form }: Props) => {
   const navigate = useNavigate();
 
   const match = useMatch(
-    "/core/administration/assays/assay-models/:assay_model_id/data-sheet-loader/edit/:sheet_definition_id?/*",
+    "/core/administration/assays/assay-models/:assay_model_id/data-sheet-loader/edit/:data_sheet_definition_id?/*",
   );
 
-  const sheet_definition_id = match?.params.sheet_definition_id ?? 0;
+  const data_sheet_definition_id = match?.params.data_sheet_definition_id ?? 0;
 
   const [selectedTab, setSelectedTab] = useState(
     dataSetDefinition.sheets.findIndex(
-      ({ id }) => sheet_definition_id === id.toString(),
+      ({ id }) => data_sheet_definition_id === id.toString(),
     ) ?? 0,
   );
 
   useEffect(() => {
-    if (sheet_definition_id === "new") {
+    if (data_sheet_definition_id === "new") {
       setSelectedTab(dataSetDefinition.sheets.length);
     } else {
       setSelectedTab(
         dataSetDefinition.sheets.findIndex(
-          ({ id }) => sheet_definition_id === id.toString(),
+          ({ id }) => data_sheet_definition_id === id.toString(),
         ),
       );
     }
-  }, [sheet_definition_id, dataSetDefinition.sheets]);
+  }, [data_sheet_definition_id, dataSetDefinition.sheets]);
 
   const handleTabChange = (index: number) => {
     if (index === dataSetDefinition.sheets.length) {
@@ -351,19 +335,35 @@ export const DataSheetDefinitionTabs = ({ dataSetDefinition, form }: Props) => {
           icon: <Circle1NewIcon />,
           label: "New sheet",
           onClick: navigateToNew,
-          disabled: sheet_definition_id === "new",
+          disabled: data_sheet_definition_id === "new",
         },
       ],
     });
-  }, [registerToolbarActions, navigateToNew, sheet_definition_id]);
+  }, [registerToolbarActions, navigateToNew, data_sheet_definition_id]);
 
   return (
     <Form form={form} className={styles.dataSheets}>
       <div style={{ display: "flex", justifyContent: "space-between" }}>
         <h3>Correct data sheet definitions</h3>
         <ButtonGroup>
-          <Button onClick={() => navigate("../map")}>Back</Button>
-          <AddFormControl form={form} />
+          <Button onClick={() => navigate("../map")}>Back to mapping</Button>
+          <form.Subscribe
+            selector={(state) => [state.canSubmit, state.isSubmitting]}
+            children={([canSubmit, isSubmitting]) => (
+              <div className={styles.controls}>
+                <ButtonGroup>
+                  <Button
+                    color="secondary"
+                    disabled={!canSubmit}
+                    type="submit"
+                    loading={isSubmitting}
+                  >
+                    Save sheets
+                  </Button>
+                </ButtonGroup>
+              </div>
+            )}
+          />
         </ButtonGroup>
       </div>
       <Tabs
@@ -439,12 +439,11 @@ const DataSheetDefinitionForm = ({
         {subFields.map((f) => (
           <FormField form={form} fieldDef={f} key={f.name} />
         ))}
-        <div style={{gridColumnStart: 1, gridColumnEnd: -1}}>
-
-        <Button color="danger" onClick={onDelete}>
-          Delete
-        </Button>
-      </div>
+        <div style={{ gridColumnStart: 1, gridColumnEnd: -1 }}>
+          <Button color="danger" onClick={onDelete}>
+            Delete
+          </Button>
+        </div>
       </div>
     </Surface>
   );
@@ -463,18 +462,18 @@ const DataSheetDefinitionEditor = ({
   dataSheetColumnDefinitionFields: FormFieldDef[];
   dataSheetColumnDefinitionColumns: EntityPropertyDef[];
 }) => {
-  const { sheet_definition_id } = useParams() as {
-    sheet_definition_id: string | undefined;
+  const { data_sheet_definition_id } = useParams() as {
+    data_sheet_definition_id: string | undefined;
   };
 
   const dataSheetDefinitionIndex = useMemo(() => {
     return Math.max(
       dataSetDefinition.sheets.findIndex(
-        ({ id }) => id.toString() === sheet_definition_id,
+        ({ id }) => id.toString() === data_sheet_definition_id,
       ),
       0,
     );
-  }, [dataSetDefinition.sheets, sheet_definition_id]);
+  }, [dataSetDefinition.sheets, data_sheet_definition_id]);
 
   const dataSheetDefinition =
     dataSetDefinition.sheets[dataSheetDefinitionIndex];
@@ -482,10 +481,10 @@ const DataSheetDefinitionEditor = ({
   const deleteRedirectId = useMemo(() => {
     return (
       dataSetDefinition.sheets
-        .find(({ id }) => id.toString() !== sheet_definition_id)
+        .find(({ id }) => id.toString() !== data_sheet_definition_id)
         ?.id.toString() ?? null
     );
-  }, [dataSetDefinition.sheets, sheet_definition_id]);
+  }, [dataSetDefinition.sheets, data_sheet_definition_id]);
 
   if (!dataSheetDefinition) {
     return (
@@ -499,7 +498,7 @@ const DataSheetDefinitionEditor = ({
   return (
     <div className={styles.dataSheet}>
       <DataSheetDefinitionForm
-        key={sheet_definition_id}
+        key={data_sheet_definition_id}
         dataSheetDefinition={dataSheetDefinition}
         onDeleteRedirectId={deleteRedirectId}
         form={form}
@@ -575,7 +574,8 @@ const Wrapper = ({
       description: assayModel.description,
       sheets: sheetsWithColumns.map(
         (s): DataSheetDefinitionFull => ({
-          ...s,
+          id: s.id,
+          name: s.name,
           result: false,
           assay_model_id: assayModel.id,
           assay_model_id__name: assayModel.name,
@@ -633,8 +633,8 @@ const DataSetDefinitionEditor = ({
     isError: isDataSheetDefinitionFieldsError,
     error: dataSheetDefinitionFieldsError,
   } = useAssayDataSheetDefinitionFields(undefined, {
-    select: (data) => data.filter((d) => !["assay_model_id"].includes(d.name))
-  })
+    select: (data) => data.filter((d) => !["assay_model_id"].includes(d.name)),
+  });
 
   const {
     data: dataSheetColumnDefinitionFields,
@@ -642,7 +642,8 @@ const DataSetDefinitionEditor = ({
     isError: isDataSheetColumnDefinitionFieldsError,
     error: dataSheetColumnDefinitionFieldsError,
   } = useAssayDataSheetColumnFields(undefined, {
-    select: (data) => data.filter((d) => !["assay_data_sheet_definition_id"].includes(d.name))
+    select: (data) =>
+      data.filter((d) => !["assay_data_sheet_definition_id"].includes(d.name)),
   });
 
   const {
@@ -651,7 +652,11 @@ const DataSetDefinitionEditor = ({
     isError: isDataSheetColumnDefinitionColumnsError,
     error: dataSheetColumnDefinitionColumnsError,
   } = useAssayDataSheetColumnColumns(undefined, {
-    select: (data) => data.filter((d) => !["assay_data_sheet_definition_id__name"].includes(d.name as string))
+    select: (data) =>
+      data.filter(
+        (d) =>
+          !["assay_data_sheet_definition_id__name"].includes(d.name as string),
+      ),
   });
 
   const form = useForm({
@@ -702,7 +707,7 @@ const DataSetDefinitionEditor = ({
         }
       >
         <Route
-          path=":sheet_definition_id/*"
+          path=":data_sheet_definition_id/*"
           element={
             <DataSheetDefinitionEditor
               form={form}
