@@ -9,7 +9,6 @@ import { Button, Surface } from "@grit42/client-library/components";
 import { useNavigate } from "react-router-dom";
 
 const FileLoader = ({
-  assayModelName,
   files,
   setFiles,
 }: {
@@ -34,9 +33,9 @@ const FileLoader = ({
         gridTemplateRows: "min-content 1fr",
       }}
     >
-      <h2 style={{ alignSelf: "baseline", marginBottom: "1em" }}>
-        Import data sheet definitions for: {assayModelName}
-      </h2>
+      <h3 style={{ alignSelf: "baseline", marginBottom: "1em" }}>
+        Data sheet definitions import: select files to analyse
+      </h3>
       <Surface>
         <p>
           Select one or more spreadsheets (<em>.xlsx, .ods</em>) or

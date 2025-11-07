@@ -210,8 +210,8 @@ const SheetMapper = ({
         })) ?? [],
     );
 
-    onSubmit(sheetsWithColumns)
-    navigate(`../edit/${sheetsWithColumns[0].id}`)
+    onSubmit(sheetsWithColumns);
+    navigate(`../edit/${sheetsWithColumns[0].id}`);
   }, [structures, onSubmit, navigate, sheetOptions]);
 
   if (!files?.length) {
@@ -244,7 +244,11 @@ const SheetMapper = ({
           alignItems: "baseline",
         }}
       >
-        <h2 style={{ alignSelf: "baseline", marginBottom: "1em" }}></h2>
+        <h3 style={{ alignSelf: "baseline", marginBottom: "1em" }}>
+          Data sheet definitions import: choose sheets to import and provide
+          information about their structure
+        </h3>
+
         <ButtonGroup>
           <Button onClick={() => navigate("..")}>Cancel</Button>
           <Button color="primary" onClick={handleSubmit}>
@@ -271,6 +275,7 @@ const SheetMapper = ({
                   gridTemplateColumns: "1fr max-content",
                   gridTemplateRows: "1fr",
                   gap: "var(--spacing)",
+                  height: "100%"
                 }}
               >
                 <SheetPreview sheet={s} />

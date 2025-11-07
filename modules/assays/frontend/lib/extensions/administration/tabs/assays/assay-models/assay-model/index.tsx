@@ -78,10 +78,6 @@ const AssayModelTabs = ({ name }: { name: string }) => {
     navigate(TABS[index].url);
   };
 
-  if (tab === "data-sheet-loader") {
-    return <Outlet />;
-  }
-
   return (
     <div
       style={{

@@ -352,8 +352,9 @@ export const DataSheetDefinitionTabs = ({ dataSetDefinition, form }: Props) => {
   return (
     <Form form={form} className={styles.dataSheets}>
       <div style={{ display: "flex", justifyContent: "space-between" }}>
-        <h3>Correct data sheet definitions</h3>
-        <ButtonGroup>
+        <h3 style={{ alignSelf: "baseline", marginBottom: "1em" }}>
+          Data sheet definitions import: verify column definitions
+        </h3>        <ButtonGroup>
           <Button onClick={() => navigate("../map")}>Back to mapping</Button>
           <form.Subscribe
             selector={(state) => [state.canSubmit, state.isSubmitting]}
