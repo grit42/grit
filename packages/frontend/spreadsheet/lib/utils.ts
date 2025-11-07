@@ -34,3 +34,5 @@ export const generateUniqueID = (prefix = "") => {
 
   return `${prefix}${timePart}${randomPart}`;
 };
+
+export const generateUniqueIntegerID = () => Math.abs(Date.now() | Date.now() * Math.random());

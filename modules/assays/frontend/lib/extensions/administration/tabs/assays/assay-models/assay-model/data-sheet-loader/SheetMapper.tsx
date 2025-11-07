@@ -17,20 +17,19 @@ import {
   ColumnDefinitionsFromSheetOptions,
   defaultColumnDefinitionsFromSheetOptions,
   columnDefinitionsFromSheet,
+  Column,
 } from "@grit42/spreadsheet";
 import { GritColumnDef, Table } from "@grit42/table";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import styles from "./dataSheetStructureLoader.module.scss";
 import { Form, FormField, FormFieldDef, useForm, useStore } from "@grit42/form";
-import { AssayDataSheetDefinitionData } from "../../../../../../../queries/assay_data_sheet_definitions";
-import { AssayDataSheetColumnData } from "../../../../../../../queries/assay_data_sheet_columns";
 
 const SHEET_OPTIONS_FORM_FIELDS: FormFieldDef[] = [
   {
     name: "ignore",
     display_name: "Skip this sheet",
     type: "boolean",
-    default: true,
+    default: false,
   },
   {
     name: "nameRowIndex",
@@ -162,12 +161,16 @@ const SheetPreview = ({ sheet }: { sheet: Sheet }) => {
   );
 };
 
-const DataSheetStructureEditor = ({
-  assayModelId,
+export interface SheetWithColumns extends Sheet {
+  columns: Column[];
+}
+
+const SheetMapper = ({
   files,
+  onSubmit,
 }: {
-  assayModelId: string;
   files: File[];
+  onSubmit: (sheets: SheetWithColumns[]) => void;
 }) => {
   const [selectedTab, setSelectedTab] = useState(0);
   const [sheetOptions, setSheetOptions] = useState<
@@ -194,17 +197,7 @@ const DataSheetStructureEditor = ({
     enabled: !!dataTypes,
   });
 
-  const createSheetDefinitionMutation =
-    useCreateEntityMutation<AssayDataSheetDefinitionData>(
-      "grit/assays/assay_data_sheet_definitions",
-    );
-
-  const createSheetColumnMutation =
-    useCreateEntityMutation<AssayDataSheetColumnData>(
-      "grit/assays/assay_data_sheet_columns",
-    );
-
-  const onContinue = useCallback(async () => {
+  const handleSubmit = useCallback(async () => {
     const sheetsWithColumns = await Promise.all(
       structures
         ?.filter((s) => sheetOptions[s.id]?.ignore === false)
@@ -217,36 +210,9 @@ const DataSheetStructureEditor = ({
         })) ?? [],
     );
 
-    for (const sheet of sheetsWithColumns) {
-      const assayDataSheetDefinition =
-        await createSheetDefinitionMutation.mutateAsync({
-          assay_model_id: assayModelId,
-          name: sheet.name,
-        });
-
-      for (const col of sheet.columns) {
-        await createSheetColumnMutation.mutateAsync({
-          assay_data_sheet_definition_id: assayDataSheetDefinition.id,
-          name: col.name,
-          description: col.description,
-          safe_name: col.identifier,
-          data_type_id: dataTypes?.find(
-            (d) => d.name === col.detailed_data_type,
-          )?.id,
-          required: false,
-        });
-      }
-    }
-    navigate("../../data-sheets");
-  }, [
-    structures,
-    navigate,
-    sheetOptions,
-    createSheetDefinitionMutation,
-    assayModelId,
-    createSheetColumnMutation,
-    dataTypes,
-  ]);
+    onSubmit(sheetsWithColumns)
+    navigate(`../edit/${sheetsWithColumns[0].id}`)
+  }, [structures, onSubmit, navigate, sheetOptions]);
 
   if (!files?.length) {
     return <Navigate to="../files" />;
@@ -281,7 +247,7 @@ const DataSheetStructureEditor = ({
         <h2 style={{ alignSelf: "baseline", marginBottom: "1em" }}></h2>
         <ButtonGroup>
           <Button onClick={() => navigate("..")}>Cancel</Button>
-          <Button color="primary" onClick={onContinue}>
+          <Button color="primary" onClick={handleSubmit}>
             Continue
           </Button>
         </ButtonGroup>
@@ -322,4 +288,4 @@ const DataSheetStructureEditor = ({
   );
 };
 
-export default DataSheetStructureEditor;
+export default SheetMapper;

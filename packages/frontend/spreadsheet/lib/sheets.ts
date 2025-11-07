@@ -5,7 +5,7 @@ import type {
   Sheet as XLSXSheet,
 } from "xlsx";
 import { read, utils } from "./xlsx-wrapper";
-import { generateUniqueID, maybeBoolean, toSafeIdentifier } from "./utils";
+import { generateUniqueIntegerID, maybeBoolean, toSafeIdentifier } from "./utils";
 
 export type { CellObject, ExcelDataType, Range, XLSXSheet };
 
@@ -19,6 +19,7 @@ export type DetailedDataType =
   | "datetime";
 
 export interface Column {
+  id: number;
   name: string;
   identifier?: string;
   description?: string;
@@ -27,7 +28,7 @@ export interface Column {
 }
 
 export interface Sheet {
-  id: string;
+  id: number;
   sheet: XLSXSheet;
   name: string;
   range: Range;
@@ -57,7 +58,7 @@ export const sheetDefinitionsFromFile = async (
     const range = utils.decode_range(sheet?.["!ref"] ?? "A1:A1");
 
     sheets.push({
-      id: generateUniqueID(),
+      id: generateUniqueIntegerID(),
       sheet,
       name,
       range,
@@ -99,7 +100,7 @@ export const defaultColumnDefinitionsFromSheetOptions: ColumnDefinitionsFromShee
     nameRowIndex: 1,
     columnOffset: "A",
     dataRowOffset: 1,
-    ignore: true,
+    ignore: false,
   };
 
 const guessColumnDataType = (
@@ -206,6 +207,7 @@ export const columnDefinitionsFromSheet = async (
     );
 
     columns.push({
+      id: generateUniqueIntegerID(),
       name:
         nameRow[columnIndex]?.w?.toString() ??
         nameRow[columnIndex]?.v?.toString() ??

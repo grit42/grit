@@ -22,7 +22,7 @@ const FileLoader = ({
     defaultValues: { files },
     onSubmit: ({ value }) => {
       setFiles(value.files);
-      navigate("../edit");
+      navigate("../map");
     },
   });
 
