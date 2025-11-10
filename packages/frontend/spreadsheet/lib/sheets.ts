@@ -5,7 +5,11 @@ import type {
   Sheet as XLSXSheet,
 } from "xlsx";
 import { read, utils } from "./xlsx-wrapper";
-import { generateUniqueIntegerID, maybeBoolean, toSafeIdentifier } from "./utils";
+import {
+  generateUniqueIntegerID,
+  maybeBoolean,
+  toSafeIdentifier,
+} from "./utils";
 
 export type { CellObject, ExcelDataType, Range, XLSXSheet };
 
@@ -88,11 +92,10 @@ export interface ColumnDefinitionsFromSheetOptions {
   nameRowIndex: number;
   columnOffset: string;
   dataRowOffset: number;
-  identifierRowIndex?: number;
-  descriptionRowIndex?: number;
-  dataTypeRowIndex?: number;
-  requiredRowIndex?: number;
-  ignore?: boolean;
+  identifierRowIndex: number | null;
+  descriptionRowIndex: number | null;
+  dataTypeRowIndex: number | null;
+  requiredRowIndex: number | null;
 }
 
 export const defaultColumnDefinitionsFromSheetOptions: ColumnDefinitionsFromSheetOptions =
@@ -100,7 +103,10 @@ export const defaultColumnDefinitionsFromSheetOptions: ColumnDefinitionsFromShee
     nameRowIndex: 1,
     columnOffset: "A",
     dataRowOffset: 1,
-    ignore: false,
+    identifierRowIndex: null,
+    descriptionRowIndex: null,
+    dataTypeRowIndex: null,
+    requiredRowIndex: null,
   };
 
 const guessColumnDataType = (
@@ -181,12 +187,12 @@ export const columnDefinitionsFromSheet = async (
   const nameRow = sheet.sheet["!data"]?.[options.nameRowIndex - 1] ?? [];
 
   const identifierRow =
-    options.identifierRowIndex !== undefined
+    options.identifierRowIndex !== null
       ? sheet.sheet["!data"]?.[options.identifierRowIndex - 1]
       : undefined;
 
   const descriptionRow =
-    options.descriptionRowIndex !== undefined
+    options.descriptionRowIndex !== null
       ? sheet.sheet["!data"]?.[options.descriptionRowIndex - 1]
       : undefined;
 

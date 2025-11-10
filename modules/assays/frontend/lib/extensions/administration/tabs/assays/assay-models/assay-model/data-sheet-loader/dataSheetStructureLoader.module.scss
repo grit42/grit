@@ -1,5 +1,7 @@
+@use "@grit42/client-library/theme.scss";
+
 .tab {
-    overflow: auto;
+  overflow: auto;
 }
 
 .container {
@@ -49,9 +51,31 @@
   overflow: auto;
 }
 
-
 .modelForm {
   width: 100%;
   max-width: 960px;
   margin-inline: auto;
+}
+
+.sheetMapperContainer {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: min-content 1fr;
+  height: 100%;
+  width: 100%;
+  overflow: auto;
+  max-width: unset;
+}
+
+.tooltip {
+  pointer-events: all;
+
+  div > div {
+    cursor: pointer;
+
+    &:hover {
+      background-color: blue;
+      border-radius: theme.$border-radius;
+    }
+  }
 }
