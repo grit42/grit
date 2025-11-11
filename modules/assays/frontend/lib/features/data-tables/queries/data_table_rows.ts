@@ -76,9 +76,7 @@ export const useInfiniteDataTableRows = (
   return useInfiniteEntityData<DataTableRowData>(
     `grit/assays/data_tables/${dataTableId}/data_table_rows`,
     sort,
-    [
-      ...(filter ?? []),
-    ],
+    filter,
     params,
     queryOptions,
   );
