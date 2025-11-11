@@ -114,7 +114,10 @@ const DataTableEntitySelector = ({
         headerActions={[
           <Button
             key="add"
-            onClick={() => onAdd(Object.keys(tableState.rowSelection))}
+            onClick={() => {
+              onAdd(Object.keys(tableState.rowSelection));
+              tableState.setRowSelection({})
+            }}
             disabled={Object.keys(tableState.rowSelection).length == 0}
             color="secondary"
           >
