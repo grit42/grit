@@ -94,7 +94,7 @@ export const DataTableData = ({ dataTableId }: Props) => {
 
   const {
     data: rows,
-    isLoading: isFetching,
+    isLoading: isRowsLoading,
     isFetchingNextPage,
     isError,
     error,
@@ -166,7 +166,7 @@ export const DataTableData = ({ dataTableId }: Props) => {
   ]);
 
   if (
-    !isFetching &&
+    !isRowsLoading &&
     flatData?.length == 0 &&
     tableState.filters.every((f) => !getIsFilterActive(f))
   ) {
@@ -196,7 +196,7 @@ export const DataTableData = ({ dataTableId }: Props) => {
       {dataTableId !== "new" && (
         <Table
           tableState={tableState}
-          loading={isFetching && !isFetchingNextPage}
+          loading={isRowsLoading && !isFetchingNextPage}
           data={flatData ?? []}
           onCellClick={[
             assay_data_sheet_columns,
