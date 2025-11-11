@@ -125,15 +125,13 @@ export const useDestroyEntityMutation = <
   return useMutation({
     mutationKey: ["destroyEntity", entityPath],
     mutationFn: async (entityIds: TId) => {
-      const url = `${entityPath}/${(Array.isArray(entityIds)
-        ? entityIds
-        : [entityIds]
-      ).join(",")}`;
+      const url = `${entityPath}/destroy`;
       const response = await request<
         EndpointSuccess<EntityData<TData>>,
         EndpointError
       >(url, {
         method: "DELETE",
+        data: { ids: (Array.isArray(entityIds) ? entityIds : [entityIds]).join(",") }
       });
 
       if (!response.success) {
