@@ -21,50 +21,33 @@ module Grit::Core
     include GritEntityController
 
     def guess_data_type_for_columns
-      start = Time.now
       columns = params[:columns]
 
-      loaded_time = Time.now
-      logger.info "Loaded payload in #{loaded_time - start}"
-
+      common_table_expressions = []
       data_type_names_queries = []
       Grit::Core::DataType.where(is_entity: true).where("meta->'vocabulary_id' IS NOT NULL").order(:id)
       .first(1002)
       .each do |data_type|
-        # data_type_model_unscoped = data_type.model_scope.unscope(:select, :joins, :left_outer_joins)
         data_type.model.display_properties.each do |display_property|
           data_type_names_queries.push("SELECT #{display_property[:name]} as value_name, #{data_type.id} as data_type_id, '#{data_type.name}' as data_type_name FROM grit_core_vocabulary_items WHERE vocabulary_id = #{data_type[:meta]["vocabulary_id"]}")
-          # data_type_names_queries.push(
-          #   data_type_model_unscoped.select(
-          #       "lower(#{display_property[:name]}) as value_name",
-          #       "#{data_type.id} as data_type_id",
-          #       "'#{data_type.name}' as data_type_name"
-          #     ).to_sql
-          # )
         end
       end
 
-      data_type_names_query = data_type_names_queries.join("\n UNION ALL \n")
-
-      dtnq_time = Time.now
-      logger.info "Loaded data_type_names_queries in #{dtnq_time - loaded_time}"
-
-
+      common_table_expressions.push("data_type_values AS (#{data_type_names_queries.join("\n UNION ALL \n")})") if data_type_names_queries.length.positive?
+      common_table_expressions.push("data_type_values AS (SELECT null as data_type_name, null as data_type_id, null as value_name)") unless data_type_names_queries.length.positive?
 
       column_query_values = []
       columns.each do |key, values|
         values.each do |value|
-          column_query_values.push("('#{key}','#{value.downcase}')")
+          column_query_values.push(ActiveRecord::Base.sanitize_sql_array([ "(?,?)", key, value ]))
         end
       end
 
-      column_query = "SELECT column_name, column_value FROM (values #{column_query_values.join(', ')}) column_values(column_name,column_value)"
-
-      cq_time = Time.now
-      logger.info "Loaded column_query in #{cq_time - dtnq_time}"
+      common_table_expressions.push("column_values AS (SELECT column_name, column_value FROM (values #{column_query_values.join(', ')}) column_values(column_name,column_value))") if column_query_values.length.positive?
+      common_table_expressions.push("column_values AS (SELECT null as column_name, null as column_value)") unless column_query_values.length.positive?
 
       query = <<-SQL
-        WITH column_values AS (#{column_query}), data_type_values AS (#{data_type_names_query})
+        #{"WITH #{common_table_expressions.join(', ')}" if common_table_expressions.length.positive?}
         SELECT
           column_values.column_name,
           data_type_values.data_type_name,
@@ -81,32 +64,8 @@ module Grit::Core
       SQL
 
       res = ActiveRecord::Base.connection.execute(query)
-      # res = DataType.unscoped
-      #   .with(column_values: Arel.sql(column_query))
-      #   .with(data_type_values: Arel.sql(data_type_names_query))
-      #   .from("column_values")
-      #   .select(
-      #     "column_values.column_name",
-      #     "data_type_values.data_type_name",
-      #     "data_type_values.data_type_id",
-      #     "count(data_type_values.data_type_id)",
-      #   )
-      #   .joins("LEFT OUTER JOIN data_type_values ON data_type_values.value_name = column_values.column_value")
-      #   .group(
-      #     "column_values.column_name",
-      #     "data_type_values.data_type_name",
-      #     "data_type_values.data_type_id",
-      #   )
-      #   .having("count(data_type_values.data_type_id) > 0")
-      #   .all
-
-      exec_query_time = Time.now
-      logger.info "executed query in #{exec_query_time - cq_time}"
 
       render json: { success: true, data: res }
-
-      rendered_time = Time.now
-      logger.info "rendered in #{rendered_time - exec_query_time}"
     end
   end
 end

@@ -54,11 +54,12 @@
     "@grit42/form": "workspace:*",
     "@grit42/notifications": "workspace:*",
     "@grit42/plots": "workspace:*",
-    "@grit42/table": "workspace:*",
     "@grit42/spreadsheet": "workspace:*",
+    "@grit42/table": "workspace:*",
     "openchemlib": "8.18.1",
     "react-ocl": "7.0.2",
-    "usehooks-ts": "3"
+    "usehooks-ts": "3",
+    "zod": "^4.1.12"
   },
   "peerDependencies": {
     "react": "catalog:",

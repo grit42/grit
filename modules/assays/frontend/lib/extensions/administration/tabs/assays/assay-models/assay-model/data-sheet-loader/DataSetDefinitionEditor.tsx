@@ -53,6 +53,7 @@ import {
 } from "../../../../../../../queries/assay_data_sheet_columns";
 import { Table, useSetupTableState } from "@grit42/table";
 import { toSafeIdentifier, useTableColumns } from "@grit42/core/utils";
+import * as z from "zod";
 
 const DataSheetColumnForm = ({
   fields,
@@ -349,12 +350,15 @@ export const DataSheetDefinitionTabs = ({ dataSetDefinition, form }: Props) => {
     });
   }, [registerToolbarActions, navigateToNew, data_sheet_definition_id]);
 
+  const fmb = useStore(form.baseStore, ({fieldMetaBase}) => fieldMetaBase)
+
   return (
     <Form form={form} className={styles.dataSheets}>
       <div style={{ display: "flex", justifyContent: "space-between" }}>
         <h3 style={{ alignSelf: "baseline", marginBottom: "1em" }}>
           Data sheet definitions import: verify column definitions
-        </h3>        <ButtonGroup>
+        </h3>
+        <ButtonGroup>
           <Button onClick={() => navigate("../map")}>Back to mapping</Button>
           <form.Subscribe
             selector={(state) => [state.canSubmit, state.isSubmitting]}
@@ -375,18 +379,41 @@ export const DataSheetDefinitionTabs = ({ dataSetDefinition, form }: Props) => {
           />
         </ButtonGroup>
       </div>
-      <Tabs
-        selectedTab={selectedTab}
-        onTabChange={handleTabChange}
-        tabs={[
-          ...(dataSetDefinition.sheets.map((sheetDefinition) => ({
-            key: sheetDefinition.id.toString(),
-            name: sheetDefinition.name,
-            panel: <></>,
-          })) ?? []),
-        ]}
-      />
-      <Outlet />
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "minmax(max-content, 20%) 1fr",
+          gridTemplateRows: "min-content 1fr",
+          overflow: "auto",
+          width: "100%",
+          height: "100%",
+          columnGap: "var(--spacing)"
+        }}
+      >
+        <div
+                style={{
+          overflow: "auto",
+          width: "100%",
+          height: "100%", gridRowStart: 1, gridRowEnd: -1
+        }}
+>
+        <pre style={{ overflow: "auto"  }}>
+          {JSON.stringify(fmb, undefined, 4)}
+        </pre>
+        </div>
+        <Tabs
+          selectedTab={selectedTab}
+          onTabChange={handleTabChange}
+          tabs={[
+            ...(dataSetDefinition.sheets.map((sheetDefinition) => ({
+              key: sheetDefinition.id.toString(),
+              name: sheetDefinition.name,
+              panel: <></>,
+            })) ?? []),
+          ]}
+        />
+        <Outlet />
+      </div>
     </Form>
   );
 };
@@ -531,22 +558,75 @@ interface DataSheetColumnDefinition {
   assay_data_sheet_definition_id__name: string;
   name: string;
   safe_name: string;
-  required: boolean;
+  required?: boolean | null;
   data_type_id: number;
   data_type_id__name: string;
   description?: string | null;
   sort?: number | null;
 }
 
+const DataSheetColumnDefinitionSchema = z.object({
+  id: z.int(),
+  name: z.string().trim().nonempty(),
+  description: z.nullish(z.string().trim()),
+  assay_data_sheet_definition_id: z.int(),
+  assay_data_sheet_definition_id__name: z.string().trim().nonempty(),
+  safe_name: z.string().trim().nonempty(),
+  required: z.nullish(z.boolean()),
+  data_type_id: z.int(),
+  data_type_id__name: z.string().trim().nonempty(),
+  sort: z.nullish(z.coerce.number<number>().int()),
+});
+
 interface DataSheetDefinition {
   id: number;
   assay_model_id: number;
   assay_model_id__name: string;
   name: string;
-  result: boolean;
+  result?: boolean | null;
   description?: string | null;
   sort?: number | null;
 }
+
+const DataSheetDefinitionSchema = z.object({
+  id: z.int(),
+  name: z.string().trim().nonempty(),
+  description: z.nullish(z.string().trim()),
+  assay_model_id: z.int(),
+  assay_model_id__name: z.string().trim().nonempty(),
+  result: z.nullish(z.boolean()),
+  sort: z.nullish(z.coerce.number<number>().int()),
+  columns: z
+    .array(DataSheetColumnDefinitionSchema)
+    .superRefine((items, ctx) => {
+      const uniqueValues = new Map<string, number>();
+      console.log(ctx);
+      items.forEach((item, idx) => {
+        const firstAppearanceIndex = uniqueValues.get(item.safe_name);
+        if (firstAppearanceIndex !== undefined) {
+          ctx.addIssue({
+            code: "custom",
+            message: `Safe name must be unique`,
+            path: [idx, "safe_name"],
+          });
+          ctx.addIssue({
+            code: "custom",
+            message: `Safe name must be unique`,
+            path: [firstAppearanceIndex, "safe_name"],
+          });
+          return;
+        }
+        uniqueValues.set(item.safe_name, idx);
+      });
+    }),
+});
+
+const DataSetDefinitionSchema = z.object({
+  id: z.int(),
+  name: z.string(),
+  description: z.nullish(z.string().trim()),
+  sheets: z.array(DataSheetDefinitionSchema),
+});
 
 interface DataSetDefinition {
   id: number;
@@ -606,8 +686,6 @@ const Wrapper = ({
       ),
     };
   }, [assayModel, sheetsWithColumns, dataTypes]);
-
-  console.log(dataSetDefinition)
 
   if (isDataTypesLoading) {
     return <Spinner />;
@@ -684,7 +762,20 @@ const DataSetDefinitionEditor = ({
 
   const form = useForm({
     defaultValues: dataSetDefinition,
+    validators: {
+      onChange: DataSetDefinitionSchema,
+      onMount: DataSetDefinitionSchema,
+      onBlur: DataSetDefinitionSchema,
+    },
     onSubmit: async ({ value }) => {
+      try {
+        DataSetDefinitionSchema.parse(value);
+      } catch (error) {
+        console.log(error);
+      }
+      console.log(value);
+      return;
+
       let firstSheetId;
       for (const sheet of value.sheets) {
         const assayDataSheetDefinition =
@@ -711,9 +802,40 @@ const DataSetDefinitionEditor = ({
         }
       }
 
-      navigate(`../../data-sheets/${firstSheetId}`)
+      navigate(`../../data-sheets/${firstSheetId}`);
     },
   });
+
+  const e = useStore(form.baseStore, (...v) => console.log(v));
+
+  useEffect(() => {
+    if (dataSheetDefinitionFields && dataSheetColumnDefinitionFields) {
+      dataSetDefinition.sheets.forEach((sheet, i) => {
+        dataSheetDefinitionFields.forEach(({ name }) => {
+          form.setFieldValue(
+            `sheets[${i}].${name}` as any,
+            sheet[name as keyof DataSheetDefinitionFull],
+            // { dontUpdateMeta: true },
+          );
+        });
+        sheet.columns.forEach((column, j) => {
+          dataSheetColumnDefinitionFields.forEach(({ name }) =>
+            form.setFieldValue(
+              `sheets[${i}].columns[${j}].${name}` as any,
+              column[name as keyof DataSheetColumnDefinition],
+              // { dontUpdateMeta: true },
+            ),
+          );
+        });
+      });
+      form.validateSync("mount");
+    }
+  }, [
+    form,
+    dataSheetDefinitionFields,
+    dataSheetColumnDefinitionFields,
+    dataSetDefinition,
+  ]);
 
   if (
     isDataSetDefinitionFieldsLoading ||
