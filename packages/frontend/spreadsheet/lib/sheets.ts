@@ -24,6 +24,7 @@ export type DetailedDataType =
 
 export interface Column {
   id: number;
+  excel_column: string;
   name: string;
   identifier?: string;
   description?: string;
@@ -214,6 +215,7 @@ export const columnDefinitionsFromSheet = async (
 
     columns.push({
       id: generateUniqueIntegerID(),
+      excel_column: utils.encode_col(columnIndex),
       name:
         nameRow[columnIndex]?.w?.toString() ??
         nameRow[columnIndex]?.v?.toString() ??

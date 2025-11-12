@@ -607,6 +607,8 @@ const Wrapper = ({
     };
   }, [assayModel, sheetsWithColumns, dataTypes]);
 
+  console.log(dataSetDefinition)
+
   if (isDataTypesLoading) {
     return <Spinner />;
   }

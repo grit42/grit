@@ -10,7 +10,14 @@ import {
   TooltipRender,
 } from "@grit42/client-library/components";
 import { Navigate, useNavigate } from "react-router-dom";
-import { useQuery } from "@grit42/api";
+import {
+  EndpointError,
+  EndpointErrorErrors,
+  EndpointSuccess,
+  request,
+  useMutation,
+  useQuery,
+} from "@grit42/api";
 import {
   sampleSheetData,
   sheetDefinitionsFromFiles,
@@ -188,6 +195,27 @@ const SheetPreview = ({
   );
 };
 
+const useDataTypeGuessMutation = () => {
+  return useMutation({
+    mutationKey: ["data_type_guess"],
+    mutationFn: async (columns: any) => {
+      const response = await request<
+        EndpointSuccess<any>,
+        EndpointError<EndpointErrorErrors<any>>
+      >("/grit/core/data_types/guess_data_type_for_columns", {
+        method: "POST",
+        data: { columns },
+      });
+
+      if (!response.success) {
+        throw response.errors;
+      }
+
+      return response.data;
+    },
+  });
+};
+
 export interface SheetWithColumns extends Sheet {
   columns: Column[];
 }
@@ -270,6 +298,8 @@ const SheetMapper = ({
     };
   }, [focusedCellInfo]);
 
+  const dataTypeGuessMutation = useDataTypeGuessMutation();
+
   const form = useForm({
     defaultValues: {
       sheets: sheets.map((s) => ({
@@ -285,12 +315,37 @@ const SheetMapper = ({
           .filter((s) => s.ignore === false)
           .map(async (s) => ({
             ...s,
+            sample_data: sampleSheetData(s),
             columns: await columnDefinitionsFromSheet(
               s,
               s.columnDefinitionsFromSheetOptions,
             ),
           })) ?? [],
       );
+
+      const string_columns_samples: any = {};
+      sheetsWithColumns.forEach((s) =>
+        s.columns
+          .filter(({ detailed_data_type }) => detailed_data_type == "string")
+          .forEach(({ identifier, excel_column }) => {
+            string_columns_samples[identifier as string] = s.sample_data
+              .slice(1)
+              .map((s) => s[excel_column as string]);
+          }),
+      );
+
+      const res = (
+        await dataTypeGuessMutation.mutateAsync(string_columns_samples)
+      ).reduce((acc, d) => ({ ...acc, [d.column_name]: d }), {});
+
+
+      sheetsWithColumns.forEach((s) => {
+        s.columns.forEach((c) => {
+          if (res[c.identifier as string]) {
+            c.detailed_data_type = res[c.identifier as string].data_type_name
+          }
+        });
+      });
 
       onSubmit(sheetsWithColumns);
       navigate(`../edit/${sheetsWithColumns[0].id}`);
@@ -472,11 +527,7 @@ const SheetMapper = ({
                   }}
                 >
                   <SheetPreview sheet={s} onCellClick={handleCellClick} />
-                  <SheetOptions
-                    form={form}
-                    sheetIndex={index}
-                    sheet={s}
-                  />
+                  <SheetOptions form={form} sheetIndex={index} sheet={s} />
                 </div>
               ),
             })) ?? []
