@@ -20,6 +20,8 @@ module Grit::Assays
   class DataTableEntity < ApplicationRecord
     include Grit::Core::GritEntityRecord
 
+    validates :entity_id, uniqueness: { scope: :data_table_id, message: "has already been included in the data table" }
+
     entity_crud_with read: [],
       create: ["Administrator", "AssayAdministrator", "AssayUser"],
       update: ["Administrator", "AssayAdministrator", "AssayUser"],
