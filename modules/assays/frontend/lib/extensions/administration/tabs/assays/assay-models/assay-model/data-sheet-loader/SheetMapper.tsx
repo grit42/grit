@@ -218,6 +218,7 @@ const useDataTypeGuessMutation = () => {
 
 export interface SheetWithColumns extends Sheet {
   columns: Column[];
+  sort?: number;
 }
 
 const Wrapper = ({
@@ -313,13 +314,16 @@ const SheetMapper = ({
       const sheetsWithColumns = await Promise.all(
         value.sheets
           .filter((s) => s.include)
-          .map(async (s) => ({
+          .map(async (s, sIndex) => ({
             ...s,
+            sort: sIndex,
             sample_data: sampleSheetData(s),
-            columns: await columnDefinitionsFromSheet(
+            columns: (await columnDefinitionsFromSheet(
               s,
               s.columnDefinitionsFromSheetOptions,
-            ),
+            )).map((c, cIndex) => ({
+              ...c, sort: cIndex
+            })),
           })) ?? [],
       );
 
@@ -336,7 +340,7 @@ const SheetMapper = ({
 
       const res = (
         await dataTypeGuessMutation.mutateAsync(string_columns_samples)
-      ).reduce((acc, d) => ({ ...acc, [d.column_name]: d }), {});
+      ).reduce((acc: any, d: any) => ({ ...acc, [d.column_name]: d }), {});
 
 
       sheetsWithColumns.forEach((s) => {

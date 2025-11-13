@@ -307,10 +307,6 @@ const DataSetDefinitionFormIssues = ({
   dataSheetDefinitionFields,
   dataSheetColumnDefinitionFields,
 }: Props) => {
-
-  const url = useLocation();
-  console.log(url.pathname)
-
   const issues = useStore(form.baseStore, ({ values, fieldMetaBase }) => {
     const sheetsWithIssues: DataSheetDefinitionWithIssues[] = [];
 
@@ -706,11 +702,11 @@ interface DataSheetColumnDefinition {
 
 const DataSheetColumnDefinitionSchema = z.object({
   id: z.int(),
-  name: z.string().trim().nonempty(),
+  name: z.coerce.string<string>().trim().nonempty(),
   description: z.nullish(z.string().trim()),
   assay_data_sheet_definition_id: z.int(),
   assay_data_sheet_definition_id__name: z.string().trim().nonempty(),
-  safe_name: z.string().trim().nonempty(),
+  safe_name: z.coerce.string<string>().trim().nonempty(),
   required: z.nullish(z.boolean()),
   data_type_id: z.int(),
   data_type_id__name: z.string().trim().nonempty(),
@@ -729,7 +725,7 @@ interface DataSheetDefinition {
 
 const DataSheetDefinitionSchema = z.object({
   id: z.int(),
-  name: z.string().trim().nonempty(),
+  name: z.coerce.string<string>().trim().nonempty(),
   description: z.nullish(z.string().trim()),
   assay_model_id: z.int(),
   assay_model_id__name: z.string().trim().nonempty(),
@@ -761,8 +757,8 @@ const DataSheetDefinitionSchema = z.object({
 
 const DataSetDefinitionSchema = z.object({
   id: z.int(),
-  name: z.string(),
-  description: z.nullish(z.string().trim()),
+  name: z.coerce.string<string>(),
+  description: z.nullish(z.coerce.string<string>().trim()),
   sheets: z.array(DataSheetDefinitionSchema),
 });
 
@@ -802,6 +798,7 @@ const Wrapper = ({
       sheets: sheetsWithColumns.map(
         (s): DataSheetDefinitionFull => ({
           id: s.id,
+          sort: s.sort,
           name: s.name,
           result: false,
           assay_model_id: assayModel.id,
@@ -897,7 +894,6 @@ const DataSetDefinitionEditor = ({
     useCreateEntityMutation<AssayDataSheetColumnData>(
       "grit/assays/assay_data_sheet_columns",
     );
-
   const form = useForm({
     defaultValues: dataSetDefinition,
     validators: {
@@ -942,8 +938,6 @@ const DataSetDefinitionEditor = ({
       navigate(`../../data-sheets/${firstSheetId}`);
     },
   });
-
-  // const e = useStore(form.baseStore, (...v) => console.log(v));
 
   useEffect(() => {
     if (dataSheetDefinitionFields && dataSheetColumnDefinitionFields) {
