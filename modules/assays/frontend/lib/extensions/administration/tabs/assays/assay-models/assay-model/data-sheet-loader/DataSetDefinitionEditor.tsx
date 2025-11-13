@@ -18,9 +18,11 @@
 
 import { useCallback, useEffect } from "react";
 import {
+  Link,
   Navigate,
   Route,
   Routes,
+  useLocation,
   useNavigate,
   useParams,
 } from "react-router-dom";
@@ -285,10 +287,144 @@ import { SheetWithColumns } from "./SheetMapper";
 
 interface Props {
   dataSetDefinition: DataSetDefinitionFull;
+  dataSheetDefinitionFields: FormFieldDef[];
+  dataSheetColumnDefinitionFields: FormFieldDef[];
   form: ReactFormExtendedApi<DataSetDefinitionFull>;
 }
 
-export const DataSheetDefinitionTabs = ({ dataSetDefinition, form }: Props) => {
+interface DataSheetColumnDefinitionWithIssues
+  extends DataSheetColumnDefinition {
+  issues: [FormFieldDef, string][];
+}
+
+interface DataSheetDefinitionWithIssues extends DataSheetDefinition {
+  issues: [FormFieldDef, string][];
+  columns: DataSheetColumnDefinitionWithIssues[];
+}
+
+const DataSetDefinitionFormIssues = ({
+  form,
+  dataSheetDefinitionFields,
+  dataSheetColumnDefinitionFields,
+}: Props) => {
+
+  const url = useLocation();
+  console.log(url.pathname)
+
+  const issues = useStore(form.baseStore, ({ values, fieldMetaBase }) => {
+    const sheetsWithIssues: DataSheetDefinitionWithIssues[] = [];
+
+    values.sheets.forEach((sheet, sheetIndex) => {
+      const dataSheetIssues: [FormFieldDef, string][] = [];
+      const columnsWithIssues: DataSheetColumnDefinitionWithIssues[] = [];
+      dataSheetDefinitionFields.forEach((field) => {
+        const fieldErrorMap =
+          fieldMetaBase[`sheets[${sheetIndex}].${field.name}` as any]?.errorMap;
+        const issue =
+          fieldErrorMap?.onBlur ??
+          fieldErrorMap?.onChange ??
+          fieldErrorMap?.onMount ??
+          fieldErrorMap?.onSubmit;
+        if (issue) {
+          dataSheetIssues.push([field, issue]);
+        }
+      });
+      sheet.columns.forEach((column, columnIndex) => {
+        const dataSheetColumnIssues: [FormFieldDef, string][] = [];
+        dataSheetColumnDefinitionFields.forEach((field) => {
+          const fieldErrorMap =
+            fieldMetaBase[
+              `sheets[${sheetIndex}].columns[${columnIndex}].${field.name}` as any
+            ]?.errorMap;
+
+          const issue =
+            fieldErrorMap?.onBlur ??
+            fieldErrorMap?.onChange ??
+            fieldErrorMap?.onMount ??
+            fieldErrorMap?.onSubmit;
+          if (issue) {
+            dataSheetColumnIssues.push([field, issue]);
+          }
+        });
+        if (dataSheetColumnIssues.length) {
+          columnsWithIssues.push({ ...column, issues: dataSheetColumnIssues });
+        }
+      });
+      if (dataSheetIssues.length || columnsWithIssues.length) {
+        sheetsWithIssues.push({
+          ...sheet,
+          columns: columnsWithIssues,
+          issues: dataSheetIssues,
+        });
+      }
+    });
+
+    return sheetsWithIssues;
+  });
+
+  if (issues.length == 0) {
+    return null;
+  }
+
+  return (
+    <div style={{ height: "100%", width: "100%", overflow: "auto" }}>
+      <Surface
+        style={{
+          height: "100%",
+          width: "100%",
+          maxWidth: "200px",
+          overflow: "auto",
+          display: "grid",
+          gridTemplateColumns: "1fr",
+          gap: "var(--spacing)",
+          gridAutoRows: "max-content",
+        }}
+      >
+        <h2>Issues</h2>
+        {issues.map((sheet) => (
+          <div key={sheet.id}>
+            <Link to={`${sheet.id}`}><h3>Sheet "{sheet.name}"</h3></Link>
+            <ul style={{ paddingInlineStart: "var(--spacing)", listStylePosition: "inside", listStyle: "none", marginBlock: "var(--spacing)" }}>
+              {sheet.issues.map(([field, issue]) => (
+                <li key={`${sheet.id}-${field.name}`}>
+                  <>
+                    {field.display_name}: {issue}
+                  </>
+                </li>
+              ))}
+              {sheet.columns.map((column) => (
+                <li key={`${sheet.id}-${column.id}`}>
+                  <Link to={`${sheet.id}/${column.id}`}><h4>Column "{column.name}"</h4></Link>
+                  <ul
+                    style={{
+                      paddingInlineStart: "var(--spacing)",
+                      paddingBottom: "var(--spacing)",
+                      listStylePosition: "inside"
+                      , listStyle: "none"
+                    }}
+                  >
+                    {column.issues.map(([field, issue]) => (
+                      <li key={`${sheet.id}-${column.id}-${field.name}`}>
+                        {field.display_name}: {issue}
+                      </li>
+                    ))}
+                  </ul>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </Surface>
+    </div>
+  );
+};
+
+export const DataSheetDefinitionTabs = ({
+  dataSetDefinition,
+  form,
+  dataSheetDefinitionFields,
+  dataSheetColumnDefinitionFields,
+}: Props) => {
   const registerToolbarActions = useToolbar();
   const navigate = useNavigate();
 
@@ -350,8 +486,6 @@ export const DataSheetDefinitionTabs = ({ dataSetDefinition, form }: Props) => {
     });
   }, [registerToolbarActions, navigateToNew, data_sheet_definition_id]);
 
-  const fmb = useStore(form.baseStore, ({fieldMetaBase}) => fieldMetaBase)
-
   return (
     <Form form={form} className={styles.dataSheets}>
       <div style={{ display: "flex", justifyContent: "space-between" }}>
@@ -382,24 +516,29 @@ export const DataSheetDefinitionTabs = ({ dataSetDefinition, form }: Props) => {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "minmax(max-content, 20%) 1fr",
+          gridTemplateColumns: "max-content 1fr",
           gridTemplateRows: "min-content 1fr",
           overflow: "auto",
           width: "100%",
           height: "100%",
-          columnGap: "var(--spacing)"
+          columnGap: "var(--spacing)",
         }}
       >
         <div
-                style={{
-          overflow: "auto",
-          width: "100%",
-          height: "100%", gridRowStart: 1, gridRowEnd: -1
-        }}
->
-        <pre style={{ overflow: "auto"  }}>
-          {JSON.stringify(fmb, undefined, 4)}
-        </pre>
+          style={{
+            overflow: "auto",
+            width: "100%",
+            height: "100%",
+            gridRowStart: 1,
+            gridRowEnd: -1,
+          }}
+        >
+          <DataSetDefinitionFormIssues
+            dataSheetDefinitionFields={dataSheetDefinitionFields}
+            dataSheetColumnDefinitionFields={dataSheetColumnDefinitionFields}
+            form={form}
+            dataSetDefinition={dataSetDefinition}
+          />
         </div>
         <Tabs
           selectedTab={selectedTab}
@@ -600,18 +739,17 @@ const DataSheetDefinitionSchema = z.object({
     .array(DataSheetColumnDefinitionSchema)
     .superRefine((items, ctx) => {
       const uniqueValues = new Map<string, number>();
-      console.log(ctx);
       items.forEach((item, idx) => {
         const firstAppearanceIndex = uniqueValues.get(item.safe_name);
         if (firstAppearanceIndex !== undefined) {
           ctx.addIssue({
             code: "custom",
-            message: `Safe name must be unique`,
+            message: `must be unique`,
             path: [idx, "safe_name"],
           });
           ctx.addIssue({
             code: "custom",
-            message: `Safe name must be unique`,
+            message: `must be unique`,
             path: [firstAppearanceIndex, "safe_name"],
           });
           return;
@@ -772,9 +910,8 @@ const DataSetDefinitionEditor = ({
         DataSetDefinitionSchema.parse(value);
       } catch (error) {
         console.log(error);
+        return;
       }
-      console.log(value);
-      return;
 
       let firstSheetId;
       for (const sheet of value.sheets) {
@@ -806,7 +943,7 @@ const DataSetDefinitionEditor = ({
     },
   });
 
-  const e = useStore(form.baseStore, (...v) => console.log(v));
+  // const e = useStore(form.baseStore, (...v) => console.log(v));
 
   useEffect(() => {
     if (dataSheetDefinitionFields && dataSheetColumnDefinitionFields) {
@@ -875,6 +1012,8 @@ const DataSetDefinitionEditor = ({
         element={
           <DataSheetDefinitionTabs
             dataSetDefinition={dataSetDefinition}
+            dataSheetDefinitionFields={dataSheetDefinitionFields}
+            dataSheetColumnDefinitionFields={dataSheetColumnDefinitionFields}
             form={form}
           />
         }

@@ -40,8 +40,8 @@ import {
 
 const SHEET_OPTIONS_FORM_FIELDS: FormFieldDef[] = [
   {
-    name: "ignore",
-    display_name: "Skip this sheet",
+    name: "include",
+    display_name: "Include this sheet",
     type: "boolean",
   },
   {
@@ -306,13 +306,13 @@ const SheetMapper = ({
         ...s,
         columnDefinitionsFromSheetOptions:
           defaultColumnDefinitionsFromSheetOptions,
-        ignore: true,
+        include: true,
       })),
     },
     onSubmit: async ({ value }) => {
       const sheetsWithColumns = await Promise.all(
         value.sheets
-          .filter((s) => s.ignore === false)
+          .filter((s) => s.include)
           .map(async (s) => ({
             ...s,
             sample_data: sampleSheetData(s),
@@ -483,7 +483,7 @@ const SheetMapper = ({
 
           <ButtonGroup>
             <Button onClick={() => navigate("../files")}>
-              Back to mapping
+              Back to loader
             </Button>
             <form.Subscribe
               selector={(state) => [state.canSubmit, state.isSubmitting]}
