@@ -114,11 +114,9 @@ const DataTableEntitySelector = ({
         headerActions={[
           <Button
             key="add"
-            onClick={() => {
-              onAdd(Object.keys(tableState.rowSelection));
-              tableState.setRowSelection({})
-            }}
-            disabled={Object.keys(tableState.rowSelection).length == 0}
+            onClick={() => {onAdd(Object.keys(tableState.rowSelection))}}
+            disabled={createEntityMutation.isPending}
+            loading={createEntityMutation.isPending}
             color="secondary"
           >
             Add selected
