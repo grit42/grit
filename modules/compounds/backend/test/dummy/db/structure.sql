@@ -1,3 +1,8 @@
+\restrict fIFdOQabyH5SqNqE58V1hCpANc46fWxeDpeaotSaEN3uRti2HsNjmqCKf7pcCfa
+
+-- Dumped from database version 16.3 (Debian 16.3-1.pgdg120+1)
+-- Dumped by pg_dump version 16.10 (Ubuntu 16.10-0ubuntu0.24.04.1)
+
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
@@ -391,7 +396,7 @@ CREATE TABLE public.grit_compounds_compound_properties (
     updated_by character varying(30),
     updated_at timestamp(6) without time zone,
     name character varying NOT NULL,
-    safe_name character varying NOT NULL,
+    safe_name character varying(30) NOT NULL,
     description text,
     sort integer,
     required boolean DEFAULT false NOT NULL,
@@ -2066,9 +2071,12 @@ ALTER TABLE ONLY public.grit_compounds_compound_property_values
 -- PostgreSQL database dump complete
 --
 
+\unrestrict fIFdOQabyH5SqNqE58V1hCpANc46fWxeDpeaotSaEN3uRti2HsNjmqCKf7pcCfa
+
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20251113130217'),
 ('20250625074209'),
 ('20250624081122'),
 ('20250624080646'),

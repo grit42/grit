@@ -34,7 +34,7 @@ module Grit::Assays
       update: [ "Administrator", "AssayAdministrator" ],
       destroy: [ "Administrator", "AssayAdministrator" ]
 
-    validates :safe_name, uniqueness: { scope: :id, message: "has already been taken in this data sheet" }, length: { minimum: 3 }
+    validates :safe_name, uniqueness: { scope: :id, message: "has already been taken in this data sheet" }, length: { minimum: 3, maximum: 30 }
     validates :safe_name, format: { with: /\A[a-z_]{2}/, message: "should start with two lowercase letters or underscores" }
     validates :safe_name, format: { with: /\A[a-z0-9_]*\z/, message: "should contain only lowercase letters, numbers and underscores" }
     validate :safe_name_not_conflict
