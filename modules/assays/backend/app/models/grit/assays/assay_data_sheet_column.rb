@@ -34,27 +34,32 @@ module Grit::Assays
       update: [ "Administrator", "AssayAdministrator" ],
       destroy: [ "Administrator", "AssayAdministrator" ]
 
+    validates :name, uniqueness: { scope: :assay_data_sheet_definition_id, message: "has already been taken in this data sheet" }, length: { minimum: 3 }
     validates :safe_name, uniqueness: { scope: :assay_data_sheet_definition_id, message: "has already been taken in this data sheet" }, length: { minimum: 3 }
+    validates :name, uniqueness: { scope: [:assay_data_sheet_definition_id, :safe_name], message: "has already been taken as a safe name in this data sheet" }
     validates :safe_name, format: { with: /\A[a-z_]{2}/, message: "should start with two lowercase letters or underscores" }
     validates :safe_name, format: { with: /\A[a-z0-9_]*\z/, message: "should contain only lowercase letters, numbers and underscores" }
     validate :safe_name_not_conflict
+    validate :name_not_safe_name
 
-    def self.sheet_definition_columns(sheet_definition_id)
-      where(assay_data_sheet_definition_id: sheet_definition_id)
+    def name_not_safe_name
+      # Check for records within the same scope where field_b is the same as this record's field_a
+      if Grit::Assays::AssayDataSheetColumn.where(assay_data_sheet_definition_id: self.assay_data_sheet_definition_id)
+        .where(safe_name: name)
+        .where.not(id: id) # Exclude the current record itself from the check (important for updates)
+        .exists?
+          errors.add(:name, "has allready been taken as a safe name in this data sheet")
+      end
     end
 
     def safe_name_not_conflict
       return unless self.safe_name_changed?
-      if Grit::Assays::AssayDataSheetColumn.sheet_definition_columns(self.assay_data_sheet_definition_id).find { |p| p[:name] == self.safe_name }
-        errors.add("safe_name", "is already_taken")
-      else
-        begin
-          # This is needed because of how active_support handles serialization as_json
-          Grit::Assays::AssayDataSheetColumn.send(self.safe_name)
-        rescue NoMethodError
-        rescue StandardError
-          errors.add("safe_name", "cannot be used as a safe name")
-        end
+      begin
+        # This is needed because of how active_support handles serialization as_json
+        Grit::Assays::AssayDataSheetColumn.send(self.safe_name)
+      rescue NoMethodError
+      rescue StandardError
+        errors.add("safe_name", "cannot be used as a safe name")
       end
     end
 
