@@ -17,7 +17,7 @@
  */
 
 export const maybeBoolean = (v: any) =>
-  ["true", "false", "yes", "no", "on", "off", "1", "0"].includes(v.toString());
+  ["true", "false", "yes", "no", "on", "off"].includes(v.toString());
 
 export function toSafeIdentifier(input: string, replacement = "_"): string {
   const normalized = input
