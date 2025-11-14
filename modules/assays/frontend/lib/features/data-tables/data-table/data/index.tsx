@@ -30,7 +30,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useTableColumns } from "@grit42/core/utils";
 import {
   useDataTableRowColumns,
-  useDataTableRows,
+  useInfiniteDataTableRows,
 } from "../../queries/data_table_rows";
 import {
   getFilterParams,
@@ -92,12 +92,24 @@ export const DataTableData = ({ dataTableId }: Props) => {
     tableColumns,
   );
 
-  const { data: rows, isLoading: isRowsLoading } = useDataTableRows(
+  const {
+    data: rows,
+    isLoading: isRowsLoading,
+    isFetchingNextPage,
+    isError,
+    error,
+    fetchNextPage,
+  } = useInfiniteDataTableRows(
     dataTableId,
     tableState.sorting,
     tableState.filters,
     undefined,
     { enabled: dataTableId !== "new" },
+  );
+
+  const flatData = useMemo(
+    () => rows?.pages.flatMap(({ data }) => data) ?? [],
+    [rows],
   );
 
   const navigateToNew = useCallback(() => navigate("new"), [navigate]);
@@ -155,7 +167,7 @@ export const DataTableData = ({ dataTableId }: Props) => {
 
   if (
     !isRowsLoading &&
-    rows?.length == 0 &&
+    flatData?.length == 0 &&
     tableState.filters.every((f) => !getIsFilterActive(f))
   ) {
     return (
@@ -184,13 +196,18 @@ export const DataTableData = ({ dataTableId }: Props) => {
       {dataTableId !== "new" && (
         <Table
           tableState={tableState}
-          loading={isRowsLoading}
-          data={rows ?? []}
+          loading={isRowsLoading && !isFetchingNextPage}
+          data={flatData ?? []}
           onCellClick={[
             assay_data_sheet_columns,
             ({ original }, column) =>
               setClickedCell({ id: original.id, column: column.toString() }),
           ]}
+          pagination={{
+            fetchNextPage,
+            isFetchingNextPage,
+            totalRows: rows?.pages[0]?.total,
+          }}
         />
       )}
     </div>

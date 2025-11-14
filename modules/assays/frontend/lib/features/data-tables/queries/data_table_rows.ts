@@ -21,8 +21,14 @@ import {
   EntityPropertyDef,
   EntityData,
   useEntityData,
+  useInfiniteEntityData
 } from "@grit42/core";
-import { UseQueryOptions, URLParams } from "@grit42/api";
+import {
+  UseQueryOptions,
+  URLParams,
+  UndefinedInitialDataInfiniteOptions,
+  PaginatedEndpointSuccess,
+} from "@grit42/api";
 
 import { Filter, SortingState } from "@grit42/table";
 
@@ -54,3 +60,25 @@ export const useDataTableRows = (
     queryOptions,
   );
 };
+
+export const useInfiniteDataTableRows = (
+  dataTableId:string,
+  sort?: SortingState,
+  filter?: Filter[],
+  params: URLParams = {},
+  queryOptions: Partial<
+    UndefinedInitialDataInfiniteOptions<
+      PaginatedEndpointSuccess<DataTableRowData[]>,
+      string
+    >
+  > = {},
+) => {
+  return useInfiniteEntityData<DataTableRowData>(
+    `grit/assays/data_tables/${dataTableId}/data_table_rows`,
+    sort,
+    filter,
+    params,
+    queryOptions,
+  );
+};
+

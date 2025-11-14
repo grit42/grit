@@ -20,6 +20,7 @@ import { ErrorPage, Spinner } from "@grit42/client-library/components";
 import {
   useDataTableRowColumns,
   useDataTableRows,
+  useInfiniteDataTableRows,
 } from "../queries/data_table_rows";
 import { Navigate, Route, Routes, useParams } from "react-router-dom";
 import { useDataTable, useDataTableFields } from "../queries/data_tables";
@@ -48,7 +49,7 @@ const DataTablePage = () => {
     isLoading: isRowsLoading,
     isError: isRowsError,
     error: rowsError,
-  } = useDataTableRows(data_table_id, undefined, undefined, undefined, {
+  } = useInfiniteDataTableRows(data_table_id, undefined, undefined, undefined, {
     enabled: data_table_id !== "new",
   });
   const {
