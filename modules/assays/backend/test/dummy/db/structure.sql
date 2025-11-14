@@ -1,4 +1,4 @@
-\restrict jUQciDm28FZ0yHZWXsbdr98OQNp1Rlpgquinl0uH1kkBg7oKeq4XRftupDmFo1w
+\restrict aY3G2rCATlqu11b7jPTs9CGRcPSQJxA5VqZSfLFiWxjAIp2kTXdmALibKJLC0aX
 
 -- Dumped from database version 16.3 (Debian 16.3-1.pgdg120+1)
 -- Dumped by pg_dump version 16.10 (Ubuntu 16.10-0ubuntu0.24.04.1)
@@ -394,7 +394,7 @@ CREATE TABLE public.grit_assays_data_table_columns (
     updated_by character varying(30),
     updated_at timestamp(6) without time zone,
     name character varying NOT NULL,
-    safe_name character varying NOT NULL,
+    safe_name character varying(30) NOT NULL,
     data_table_id bigint NOT NULL,
     assay_data_sheet_column_id bigint,
     sort integer,
@@ -2224,11 +2224,13 @@ ALTER TABLE ONLY public.grit_assays_assays
 -- PostgreSQL database dump complete
 --
 
-\unrestrict jUQciDm28FZ0yHZWXsbdr98OQNp1Rlpgquinl0uH1kkBg7oKeq4XRftupDmFo1w
+\unrestrict aY3G2rCATlqu11b7jPTs9CGRcPSQJxA5VqZSfLFiWxjAIp2kTXdmALibKJLC0aX
 
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20251113133402'),
+('20251113130627'),
 ('20250818115347'),
 ('20250818113922'),
 ('20250818111536'),
