@@ -1051,6 +1051,13 @@ const Wrapper = ({
     error: dataTypesError,
   } = useEntityData("grit/core/data_types");
 
+  const {
+    data: assayModelDataSheets,
+    isLoading: isAssayModelDataSheetsLoading,
+    isError: isAssayModelDataSheetsError,
+    error: assayModelDataSheetsError,
+  } = useAssayDataSheetDefinitions(assayModel.id);
+
   const dataSetDefinition: DataSetDefinitionFull = useMemo(() => {
     return {
       id: assayModel.id,
@@ -1083,14 +1090,25 @@ const Wrapper = ({
     };
   }, [assayModel, sheetsWithColumns, dataTypes]);
 
-  if (isDataTypesLoading) {
+  if (isDataTypesLoading || isAssayModelDataSheetsLoading) {
     return <Spinner />;
   }
-  if (isDataTypesError || !dataTypes) {
-    return <ErrorPage error={dataTypesError} />;
+  if (
+    isDataTypesError ||
+    !dataTypes ||
+    isAssayModelDataSheetsError ||
+    !assayModelDataSheets
+  ) {
+    return <ErrorPage error={dataTypesError ?? assayModelDataSheetsError} />;
   }
 
-  return <DSDE dataSetDefinition={dataSetDefinition} assayModel={assayModel} />;
+  return (
+    <DSDE
+      dataSetDefinition={dataSetDefinition}
+      assayModel={assayModel}
+      assayModelDataSheets={assayModelDataSheets}
+    />
+  );
 };
 
 const DataSetDefinitionEditor = ({

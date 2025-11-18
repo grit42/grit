@@ -624,21 +624,7 @@ const ColumnForm = ({
                 }}
                 disabled={false}
                 error={Array.from(new Set(field.state.meta.errors)).join("\n")}
-                handleBlur={() => {
-                  //   columnNameFieldNames.forEach((n) =>
-                  //   form.setFieldMeta(n as any, (prev) => ({
-                  //     ...prev,
-                  //     errorMap: {},
-                  //   })),
-                  // );
-                  // columnSafeNameFieldNames.forEach((n) =>
-                  //   form.setFieldMeta(n as any, (prev) => ({
-                  //     ...prev,
-                  //     errorMap: {},
-                  //   })),
-                  // );
-                  field.handleBlur();
-                }}
+                handleBlur={field.handleBlur}
                 value={field.state.value}
               />
             )}
@@ -755,13 +741,28 @@ const SheetForm = ({
                 field={fieldDef}
                 handleChange={(v) => {
                   field.handleChange(v);
-                  sheetNameFieldNames.forEach((n) =>
-                    form.setFieldMeta(n as any, (prev) => ({
-                      ...prev,
-                      errorMap: {},
-                    })),
-                  );
-                  // form.validateField("sheets", "change");
+                  if (fieldDef.name === "name") {
+                    form.baseStore.setState((prev) => {
+                      const nameFieldsMeta: Partial<
+                        Record<DeepKeys<DataSetDefinitionFull>, FieldMetaBase>
+                      > = {};
+                      for (const key of sheetNameFieldNames) {
+                        const field = key as DeepKeys<DataSetDefinitionFull>;
+                        nameFieldsMeta[field] = {
+                          ...prev.fieldMetaBase[field],
+                          errorMap: {},
+                        };
+                      }
+
+                      return {
+                        ...prev,
+                        fieldMetaBase: {
+                          ...prev.fieldMetaBase,
+                          ...nameFieldsMeta,
+                        },
+                      } as BaseFormState<DataSetDefinitionFull>;
+                    });
+                  }
                 }}
                 disabled={false}
                 error={field.state.meta.errors.join("\n")}
@@ -881,8 +882,10 @@ const UnfocusedSheetFields = ({
 
 const DSDE = ({
   dataSetDefinition,
+  assayModelDataSheets,
 }: {
   assayModel: AssayModelData;
+  assayModelDataSheets: AssayDataSheetDefinitionData[];
   dataSetDefinition: DataSetDefinitionFull;
 }) => {
   const navigate = useNavigate();
@@ -899,7 +902,10 @@ const DSDE = ({
       "grit/assays/assay_data_sheet_columns",
     );
 
-  const schema = useMemo(() => DataSetDefinitionSchema([]), []);
+  const schema = useMemo(
+    () => DataSetDefinitionSchema(assayModelDataSheets),
+    [assayModelDataSheets],
+  );
 
   const form = useForm({
     defaultValues: dataSetDefinition,
