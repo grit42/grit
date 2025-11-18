@@ -29,14 +29,24 @@
   grid-template-columns: 1fr;
 }
 
-.dataSheets {
+.dataSheetsForm {
   display: grid;
   grid-template-rows: min-content 1fr;
+  grid-template-columns: max-content 1fr;
   height: 100%;
   max-height: 100%;
   width: 100%;
   max-width: 100%;
   overflow: auto;
+
+  gap: theme.$spacing;
+
+  .dataSheetsFormHeader {
+    grid-column-start: 1;
+    grid-column-end: -1;
+    display: flex;
+    justify-content: space-between;
+  }
 }
 
 .dataSheet {

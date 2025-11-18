@@ -352,7 +352,7 @@ const SheetMapper = ({
       });
 
       onSubmit(sheetsWithColumns);
-      navigate(`../edit/${sheetsWithColumns[0].id}`);
+      navigate(`../edit`);
     },
   });
 

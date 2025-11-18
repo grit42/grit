@@ -39,7 +39,7 @@ module Grit::Core
       column_query_values = []
       columns.each do |key, values|
         values.each do |value|
-          column_query_values.push(ActiveRecord::Base.sanitize_sql_array([ "(?,?)", key, value ]))
+          column_query_values.push(ActiveRecord::Base.sanitize_sql_array([ "(?,?)", key.to_s, value.to_s ]))
         end
       end
 

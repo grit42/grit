@@ -16,7 +16,7 @@
  * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { useCallback, useEffect } from "react";
+import { Fragment, useCallback, useEffect } from "react";
 import {
   Link,
   Navigate,
@@ -38,11 +38,14 @@ import {
   useCreateEntityMutation,
 } from "@grit42/core";
 import {
+  DeepKeys,
+  FieldValidators,
   Form,
   FormField,
   FormFieldDef,
   ReactFormExtendedApi,
   useForm,
+  useFormInputs,
   useStore,
 } from "@grit42/form";
 import { useToolbar } from "@grit42/core/Toolbar";
@@ -56,8 +59,89 @@ import { Table, useSetupTableState } from "@grit42/table";
 import { toSafeIdentifier, useTableColumns } from "@grit42/core/utils";
 import * as z from "zod";
 
+const HideAllTheShit = ({
+  form,
+  dataSetDefinition,
+  dataSheetColumnFields,
+  dataSheetFields,
+}: {
+  form: ReactFormExtendedApi<DataSetDefinitionFull>;
+  dataSheetFields: FormFieldDef[];
+  dataSheetColumnFields: FormFieldDef[];
+  dataSetDefinition: DataSetDefinitionFull;
+}) => {
+  const match = useMatch(
+    "/core/administration/assays/assay-models/:assay_model_id/data-sheet-loader/edit/:data_sheet_definition_id/:data_sheet_column_id",
+  );
+
+  const { focusedSheetIdx, focusedColumnIdx } = useStore(
+    form.baseStore,
+    ({ values }) => {
+      const focusedSheetIdx = values.sheets.findIndex(
+        ({ id }) => id.toString() === match?.params.data_sheet_definition_id,
+      );
+      const focusedColumnIdx = values.sheets[focusedSheetIdx].columns.findIndex(
+        ({ id }) => id.toString() === match?.params.data_sheet_column_id,
+      );
+      return { focusedSheetIdx, focusedColumnIdx };
+    },
+  );
+
+  // return <form.Subscribe selector={(state)} ></form.Subscribe>
+
+  const fields = dataSetDefinition.sheets
+    .map((s, sIndex) => [
+      s.id.toString() === match?.params.data_sheet_definition_id
+        ? []
+        : dataSheetFields.map(({ name }) => `sheets[${sIndex}].${name}`),
+      s.columns.map((c, cIndex) => [
+        c.id.toString() === match?.params.data_sheet_column_id
+          ? []
+          : dataSheetColumnFields.map(
+              ({ name }) => `sheets[${sIndex}].columns[${cIndex}].${name}`,
+            ),
+      ]),
+    ])
+    .flat(4)
+    .map((name, _, arr) => {
+      if (!name.includes("columns")) return { name, onChangeListenTo: [] };
+      if (name.endsWith("safe_name")) {
+        return {
+          name,
+          onChangeListenTo: arr.filter((v) => v.includes("safe_name")),
+        };
+      }
+      return {
+        name,
+        onChangeListenTo: arr.filter((v) => v.includes("name")),
+      };
+    });
+
+  // console.log(Object.keys(form.state.fieldMetaBase))
+
+  // console.log(fields)
+  // const validationListeners = fieldNames.filter((f) => )
+
+  return (
+    <>
+      {fields.map(({ name, onChangeListenTo }) => (
+        <form.Field
+          key={name}
+          name={name as any}
+          validators={{
+            onChangeListenTo: onChangeListenTo as any,
+            onChange: () => undefined,
+          }}
+          children={() => <div style={{ display: "none" }}></div>}
+        />
+      ))}
+    </>
+  );
+};
+
 const DataSheetColumnForm = ({
   fields,
+  dataSheetDefinition,
   dataSheetDefinitionIndex,
   dataSheetColumnDefinition,
   dataSheetColumnDefinitionIndex,
@@ -66,11 +150,14 @@ const DataSheetColumnForm = ({
   form: ReactFormExtendedApi<DataSetDefinitionFull>;
   fields: FormFieldDef[];
   dataSheetColumnDefinition: DataSheetColumnDefinition;
+  dataSheetDefinition: DataSheetDefinitionFull;
   dataSheetDefinitionIndex: number;
   dataSheetColumnDefinitionIndex: number;
 }) => {
   const navigate = useNavigate();
-
+  const match = useMatch(
+    "/core/administration/assays/assay-models/:assay_model_id/data-sheet-loader/edit/:data_sheet_definition_id/:data_sheet_column_id",
+  );
   const onDelete = async () => {
     if (
       !dataSheetColumnDefinition.id ||
@@ -88,14 +175,7 @@ const DataSheetColumnForm = ({
     navigate("..");
   };
 
-  const subFields = useMemo(
-    () =>
-      fields.map((f) => ({
-        ...f,
-        name: `sheets[${dataSheetDefinitionIndex}].columns[${dataSheetColumnDefinitionIndex}].${f.name}`,
-      })),
-    [fields, dataSheetDefinitionIndex, dataSheetColumnDefinitionIndex],
-  );
+  const inputs = useFormInputs();
 
   return (
     <Surface className={styles.modelForm}>
@@ -111,9 +191,96 @@ const DataSheetColumnForm = ({
           paddingBottom: "calc(var(--spacing) * 2)",
         }}
       >
-        {subFields.map((f) => (
-          <FormField form={form} fieldDef={f} key={f.name} />
-        ))}
+        <form.Field
+          name={`sheets[${dataSheetDefinitionIndex}].columns`}
+          mode="array"
+          validators={{
+            onChange: z
+              .array(DataSheetColumnDefinitionSchema)
+              .superRefine((items, ctx) => {
+                console.log("yoyo");
+                const uniqueValues = new Map<string, number>();
+                items.forEach((item, idx) => {
+                  console.log(JSON.stringify(ctx.issues));
+                  const firstAppearanceIndex = uniqueValues.get(item.safe_name);
+                  if (firstAppearanceIndex !== undefined) {
+                    ctx.addIssue({
+                      code: "custom",
+                      message: `must be unique ${ctx.issues.length}`,
+                      path: [idx, "safe_name"],
+                    });
+                    ctx.addIssue({
+                      code: "custom",
+                      message: `must be unique ${ctx.issues.length}`,
+                      path: [firstAppearanceIndex, "safe_name"],
+                    });
+                    return;
+                  }
+                  uniqueValues.set(item.safe_name, idx);
+                });
+              })
+              .superRefine((items, ctx) => {
+                console.log("yo");
+                const uniqueValues = new Map<string, number>();
+                items.forEach((item, idx) => {
+                  const firstAppearanceIndex = uniqueValues.get(item.name);
+                  if (firstAppearanceIndex !== undefined) {
+                    ctx.addIssue({
+                      code: "custom",
+                      message: `must be unique`,
+                      path: [idx, "name"],
+                    });
+                    ctx.addIssue({
+                      code: "custom",
+                      message: `must be unique`,
+                      path: [firstAppearanceIndex, "name"],
+                    });
+                    return;
+                  }
+                  uniqueValues.set(item.name, idx);
+                });
+              }),
+          }}
+        >
+          {(field) =>
+            field.state.value.map((c, cIndex) =>
+              fields
+                .map((f) => ({
+                  ...f,
+                  name: `sheets[${dataSheetDefinitionIndex}].columns[${cIndex}].${f.name}`,
+                }))
+                .map((f) => (
+                  <form.Field
+                    key={f.name}
+                    name={f.name as any}
+                    children={(subfield) => {
+                      console.log(f.name);
+                      if (
+                        c.id.toString() !== match?.params.data_sheet_column_id
+                      )
+                        return null;
+                      const Input = inputs[f.type] ?? inputs["default"];
+                      return (
+                        <Input
+                          field={f}
+                          disabled={false}
+                          handleChange={(v) => {
+                            subfield.handleChange(v);
+                            field.validateSync("change", {});
+                          }}
+                          handleBlur={subfield.handleBlur}
+                          value={subfield.state.value}
+                          error={Array.from(
+                            new Set(subfield.state.meta.errors),
+                          ).join("\n")}
+                        />
+                      );
+                    }}
+                  />
+                )),
+            )
+          }
+        </form.Field>
         <div style={{ gridColumnStart: 1, gridColumnEnd: -1 }}>
           <ButtonGroup>
             <Button onClick={() => navigate("..")}>Done</Button>
@@ -143,7 +310,7 @@ const DataSheetColumn = ({
 
   const dataSheetDefinition = useStore(
     form.baseStore,
-    ({ values }) => values.sheets[dataSheetDefinitionIndex],
+    ({ values }: any) => values.sheets[dataSheetDefinitionIndex],
   ) as DataSheetDefinitionFull;
 
   const dataSheetColumnDefinitionIndex = useMemo(
@@ -161,6 +328,7 @@ const DataSheetColumn = ({
     <DataSheetColumnForm
       form={form}
       fields={fields}
+      dataSheetDefinition={dataSheetDefinition}
       dataSheetDefinitionIndex={dataSheetDefinitionIndex}
       dataSheetColumnDefinitionIndex={dataSheetColumnDefinitionIndex}
       dataSheetColumnDefinition={dataSheetColumnDefinition}
@@ -209,7 +377,7 @@ const DataSheetColumnsTable = ({
 
   const data = useStore(
     form.baseStore,
-    ({ values }) => values.sheets[dataSheetDefinitionIndex].columns,
+    ({ values }: any) => values.sheets[dataSheetDefinitionIndex].columns,
   );
 
   return (
@@ -233,13 +401,12 @@ const DataSheetColumnDefinitionsEditor = ({
   form,
   fields,
 }: {
-  // addColumn: () => DataSheetColumnDefinition;
-  // deleteColumn: (id: number) => void;
   dataSheetDefinition: DataSheetDefinitionFull;
   dataSheetDefinitionIndex: number;
   form: ReactFormExtendedApi<DataSetDefinitionFull>;
   fields: FormFieldDef[];
   columns: EntityPropertyDef[];
+  visible?: boolean;
 }) => {
   return (
     <Routes>
@@ -276,6 +443,7 @@ import { useEntityData } from "@grit42/core";
 import {
   AssayDataSheetDefinitionData,
   useAssayDataSheetDefinitionFields,
+  useAssayDataSheetDefinitions,
 } from "../../../../../../../queries/assay_data_sheet_definitions";
 import styles from "./dataSheetStructureLoader.module.scss";
 import {
@@ -283,6 +451,7 @@ import {
   useAssayModelFields,
 } from "../../../../../../../queries/assay_models";
 import { SheetWithColumns } from "./SheetMapper";
+import DSDE from "./DSDE";
 
 interface Props {
   dataSetDefinition: DataSetDefinitionFull;
@@ -306,10 +475,11 @@ const DataSetDefinitionFormIssues = ({
   dataSheetDefinitionFields,
   dataSheetColumnDefinitionFields,
 }: Props) => {
-  const issues = useStore(form.baseStore, ({ values, fieldMetaBase }) => {
+  const issues = useStore(form.baseStore, ({ values, fieldMetaBase }: any) => {
+    console.log(fieldMetaBase);
     const sheetsWithIssues: DataSheetDefinitionWithIssues[] = [];
 
-    values.sheets.forEach((sheet, sheetIndex) => {
+    values.sheets.forEach((sheet: any, sheetIndex: any) => {
       const dataSheetIssues: [FormFieldDef, string][] = [];
       const columnsWithIssues: DataSheetColumnDefinitionWithIssues[] = [];
       dataSheetDefinitionFields.forEach((field) => {
@@ -367,7 +537,8 @@ const DataSetDefinitionFormIssues = ({
         style={{
           height: "100%",
           width: "100%",
-          maxWidth: "200px",
+          minWidth: "25vw",
+          maxWidth: "33vw",
           overflow: "auto",
           display: "grid",
           gridTemplateColumns: "1fr",
@@ -378,29 +549,40 @@ const DataSetDefinitionFormIssues = ({
         <h2>Issues</h2>
         {issues.map((sheet) => (
           <div key={sheet.id}>
-            <Link to={`${sheet.id}`}><h3>Sheet "{sheet.name}"</h3></Link>
-            <ul style={{ paddingInlineStart: "var(--spacing)", listStylePosition: "inside", listStyle: "none", marginBlock: "var(--spacing)" }}>
+            <Link to={`${sheet.id}`}>
+              <h3>Sheet "{sheet.name}"</h3>
+            </Link>
+            <ul
+              style={{
+                paddingInlineStart: "var(--spacing)",
+                listStylePosition: "inside",
+                listStyle: "none",
+                marginBlock: "var(--spacing)",
+              }}
+            >
               {sheet.issues.map(([field, issue]) => (
                 <li key={`${sheet.id}-${field.name}`}>
                   <>
-                    {field.display_name}: {issue}
+                    {field.display_name} {issue}
                   </>
                 </li>
               ))}
               {sheet.columns.map((column) => (
                 <li key={`${sheet.id}-${column.id}`}>
-                  <Link to={`${sheet.id}/${column.id}`}><h4>Column "{column.name}"</h4></Link>
+                  <Link to={`${sheet.id}/${column.id}`}>
+                    <h4>Column "{column.name}"</h4>
+                  </Link>
                   <ul
                     style={{
                       paddingInlineStart: "var(--spacing)",
                       paddingBottom: "var(--spacing)",
-                      listStylePosition: "inside"
-                      , listStyle: "none"
+                      listStylePosition: "inside",
+                      listStyle: "none",
                     }}
                   >
                     {column.issues.map(([field, issue]) => (
                       <li key={`${sheet.id}-${column.id}-${field.name}`}>
-                        {field.display_name}: {issue}
+                        {field.display_name} {issue}
                       </li>
                     ))}
                   </ul>
@@ -482,73 +664,81 @@ export const DataSheetDefinitionTabs = ({
   }, [registerToolbarActions, navigateToNew, data_sheet_definition_id]);
 
   return (
-    <Form form={form} className={styles.dataSheets}>
-      <div style={{ display: "flex", justifyContent: "space-between" }}>
-        <h3 style={{ alignSelf: "baseline", marginBottom: "1em" }}>
-          Data sheet definitions import: verify column definitions
-        </h3>
-        <ButtonGroup>
-          <Button onClick={() => navigate("../map")}>Back to mapping</Button>
-          <form.Subscribe
-            selector={(state) => [state.canSubmit, state.isSubmitting]}
-            children={([canSubmit, isSubmitting]) => (
-              <div className={styles.controls}>
-                <ButtonGroup>
-                  <Button
-                    color="secondary"
-                    disabled={!canSubmit}
-                    type="submit"
-                    loading={isSubmitting}
-                  >
-                    Save sheets
-                  </Button>
-                </ButtonGroup>
-              </div>
-            )}
-          />
-        </ButtonGroup>
-      </div>
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "max-content 1fr",
-          gridTemplateRows: "min-content 1fr",
-          overflow: "auto",
-          width: "100%",
-          height: "100%",
-          columnGap: "var(--spacing)",
-        }}
-      >
+    <>
+      <Form form={form} className={styles.dataSheets}>
+        {/* <HideAllTheShit
+          dataSetDefinition={dataSetDefinition}
+          form={form}
+          dataSheetColumnFields={dataSheetColumnDefinitionFields}
+          dataSheetFields={dataSheetDefinitionFields}
+        /> */}
+        <div style={{ display: "flex", justifyContent: "space-between" }}>
+          <h3 style={{ alignSelf: "baseline", marginBottom: "1em" }}>
+            Data sheet definitions import: verify column definitions
+          </h3>
+          <ButtonGroup>
+            <Button onClick={() => navigate("../map")}>Back to mapping</Button>
+            <form.Subscribe
+              selector={(state: any) => [state.canSubmit, state.isSubmitting]}
+              children={([canSubmit, isSubmitting]: any) => (
+                <div className={styles.controls}>
+                  <ButtonGroup>
+                    <Button
+                      color="secondary"
+                      disabled={!canSubmit}
+                      type="submit"
+                      loading={isSubmitting}
+                    >
+                      Save sheets
+                    </Button>
+                  </ButtonGroup>
+                </div>
+              )}
+            />
+          </ButtonGroup>
+        </div>
         <div
           style={{
+            display: "grid",
+            gridTemplateColumns: "max-content 1fr",
+            gridTemplateRows: "min-content 1fr",
             overflow: "auto",
             width: "100%",
             height: "100%",
-            gridRowStart: 1,
-            gridRowEnd: -1,
+            columnGap: "var(--spacing)",
           }}
         >
-          <DataSetDefinitionFormIssues
-            dataSheetDefinitionFields={dataSheetDefinitionFields}
-            dataSheetColumnDefinitionFields={dataSheetColumnDefinitionFields}
-            form={form}
-            dataSetDefinition={dataSetDefinition}
+          <div
+            style={{
+              overflow: "auto",
+              width: "100%",
+              height: "100%",
+              gridRowStart: 1,
+              gridRowEnd: -1,
+            }}
+          >
+            <DataSetDefinitionFormIssues
+              dataSheetDefinitionFields={dataSheetDefinitionFields}
+              dataSheetColumnDefinitionFields={dataSheetColumnDefinitionFields}
+              form={form}
+              dataSetDefinition={dataSetDefinition}
+            />
+          </div>
+          <Tabs
+            selectedTab={selectedTab}
+            onTabChange={handleTabChange}
+            tabs={[
+              ...(dataSetDefinition.sheets.map((sheetDefinition) => ({
+                key: sheetDefinition.id.toString(),
+                name: sheetDefinition.name,
+                panel: <></>,
+              })) ?? []),
+            ]}
           />
+          <Outlet />
         </div>
-        <Tabs
-          selectedTab={selectedTab}
-          onTabChange={handleTabChange}
-          tabs={[
-            ...(dataSetDefinition.sheets.map((sheetDefinition) => ({
-              key: sheetDefinition.id.toString(),
-              name: sheetDefinition.name,
-              panel: <></>,
-            })) ?? []),
-          ]}
-        />
-        <Outlet />
-      </div>
-    </Form>
+      </Form>
+    </>
   );
 };
 
@@ -558,12 +748,14 @@ const DataSheetDefinitionForm = ({
   dataSheetDefinition,
   dataSheetDefinitionIndex,
   onDeleteRedirectId,
+  visible = false,
 }: {
   fields: FormFieldDef[];
   form: ReactFormExtendedApi<DataSetDefinitionFull>;
   dataSheetDefinition: DataSheetDefinition;
   dataSheetDefinitionIndex: number;
   onDeleteRedirectId: string | null;
+  visible?: boolean;
 }) => {
   const navigate = useNavigate();
 
@@ -632,29 +824,25 @@ const DataSheetDefinitionEditor = ({
   dataSheetColumnDefinitionFields: FormFieldDef[];
   dataSheetColumnDefinitionColumns: EntityPropertyDef[];
 }) => {
-  const { data_sheet_definition_id } = useParams() as {
+  const { data_sheet_definition_id, data_sheet_column_id } = useParams() as {
     data_sheet_definition_id: string | undefined;
+    data_sheet_column_id: string | undefined;
   };
 
-  const dataSheetDefinitionIndex = useMemo(() => {
-    return Math.max(
-      dataSetDefinition.sheets.findIndex(
+  const { focusedSheetIdx, focusedColumnIdx } = useStore(
+    form.baseStore,
+    ({ values }) => {
+      const focusedSheetIdx = values.sheets.findIndex(
         ({ id }) => id.toString() === data_sheet_definition_id,
-      ),
-      0,
-    );
-  }, [dataSetDefinition.sheets, data_sheet_definition_id]);
+      );
+      const focusedColumnIdx = values.sheets[focusedSheetIdx].columns.findIndex(
+        ({ id }) => id.toString() === data_sheet_column_id,
+      );
+      return { focusedSheetIdx, focusedColumnIdx };
+    },
+  );
 
-  const dataSheetDefinition =
-    dataSetDefinition.sheets[dataSheetDefinitionIndex];
-
-  const deleteRedirectId = useMemo(() => {
-    return (
-      dataSetDefinition.sheets
-        .find(({ id }) => id.toString() !== data_sheet_definition_id)
-        ?.id.toString() ?? null
-    );
-  }, [dataSetDefinition.sheets, data_sheet_definition_id]);
+  const dataSheetDefinition = dataSetDefinition.sheets[focusedSheetIdx];
 
   if (!dataSheetDefinition) {
     return (
@@ -667,7 +855,31 @@ const DataSheetDefinitionEditor = ({
 
   return (
     <div className={styles.dataSheet}>
-      <DataSheetDefinitionForm
+      <form.Field name="sheets" mode="array">
+        {(field) =>
+          field.state.value.map((sheet, index) => (
+            <Fragment key={sheet.id}>
+              <DataSheetDefinitionForm
+                dataSheetDefinition={sheet}
+                onDeleteRedirectId={"0"}
+                form={form}
+                fields={dataSheetDefinitionFields}
+                dataSheetDefinitionIndex={index}
+                visible={sheet.id.toString() === data_sheet_definition_id}
+              />
+              <DataSheetColumnDefinitionsEditor
+                dataSheetDefinition={sheet}
+                fields={dataSheetColumnDefinitionFields}
+                columns={dataSheetColumnDefinitionColumns}
+                form={form}
+                dataSheetDefinitionIndex={index}
+                visible={sheet.id.toString() === data_sheet_definition_id}
+              />
+            </Fragment>
+          ))
+        }
+      </form.Field>
+      {/* <DataSheetDefinitionForm
         key={data_sheet_definition_id}
         dataSheetDefinition={dataSheetDefinition}
         onDeleteRedirectId={deleteRedirectId}
@@ -681,7 +893,7 @@ const DataSheetDefinitionEditor = ({
         columns={dataSheetColumnDefinitionColumns}
         form={form}
         dataSheetDefinitionIndex={dataSheetDefinitionIndex}
-      />
+      /> */}
     </div>
   );
 };
@@ -699,6 +911,16 @@ interface DataSheetColumnDefinition {
   sort?: number | null;
 }
 
+interface DataSheetDefinition {
+  id: number;
+  assay_model_id: number;
+  assay_model_id__name: string;
+  name: string;
+  result?: boolean | null;
+  description?: string | null;
+  sort?: number | null;
+}
+
 const DataSheetColumnDefinitionSchema = z.object({
   id: z.int(),
   name: z.coerce.string<string>().trim().nonempty(),
@@ -711,16 +933,6 @@ const DataSheetColumnDefinitionSchema = z.object({
   data_type_id__name: z.string().trim().nonempty(),
   sort: z.nullish(z.coerce.number<number>().int()),
 });
-
-interface DataSheetDefinition {
-  id: number;
-  assay_model_id: number;
-  assay_model_id__name: string;
-  name: string;
-  result?: boolean | null;
-  description?: string | null;
-  sort?: number | null;
-}
 
 const DataSheetDefinitionSchema = z.object({
   id: z.int(),
@@ -735,31 +947,81 @@ const DataSheetDefinitionSchema = z.object({
     .superRefine((items, ctx) => {
       const uniqueValues = new Map<string, number>();
       items.forEach((item, idx) => {
+        console.log(JSON.stringify(ctx.issues));
         const firstAppearanceIndex = uniqueValues.get(item.safe_name);
         if (firstAppearanceIndex !== undefined) {
           ctx.addIssue({
             code: "custom",
-            message: `must be unique`,
+            message: `must be unique ${ctx.issues.length}`,
             path: [idx, "safe_name"],
           });
           ctx.addIssue({
             code: "custom",
-            message: `must be unique`,
+            message: `must be unique ${ctx.issues.length}`,
             path: [firstAppearanceIndex, "safe_name"],
           });
           return;
         }
         uniqueValues.set(item.safe_name, idx);
       });
+    })
+    .superRefine((items, ctx) => {
+      const uniqueValues = new Map<string, number>();
+      items.forEach((item, idx) => {
+        const firstAppearanceIndex = uniqueValues.get(item.name);
+        if (firstAppearanceIndex !== undefined) {
+          ctx.addIssue({
+            code: "custom",
+            message: `must be unique`,
+            path: [idx, "name"],
+          });
+          ctx.addIssue({
+            code: "custom",
+            message: `must be unique`,
+            path: [firstAppearanceIndex, "name"],
+          });
+          return;
+        }
+        uniqueValues.set(item.name, idx);
+      });
     }),
 });
 
-const DataSetDefinitionSchema = z.object({
-  id: z.int(),
-  name: z.coerce.string<string>(),
-  description: z.nullish(z.coerce.string<string>().trim()),
-  sheets: z.array(DataSheetDefinitionSchema),
-});
+const DataSetDefinitionSchema = (modelSheets: AssayDataSheetDefinitionData[]) =>
+  z.object({
+    id: z.int(),
+    name: z.coerce.string<string>(),
+    description: z.nullish(z.coerce.string<string>().trim()),
+    sheets: z.array(DataSheetDefinitionSchema).superRefine((items, ctx) => {
+      const uniqueValues = new Map<string, number>();
+      items.forEach((item, idx) => {
+        const firstAppearanceIndex = uniqueValues.get(item.name);
+        if (modelSheets.find(({ name }) => name === item.name)) {
+          ctx.addIssue({
+            code: "custom",
+            message: "is already taken by an existing data sheet",
+            path: [idx, "name"],
+          });
+        }
+        if (firstAppearanceIndex !== undefined) {
+          ctx.addIssue({
+            code: "custom",
+            message: `must be unique`,
+            path: [idx, "name"],
+            params: { clearOnRevalidate: true },
+          });
+          ctx.addIssue({
+            code: "custom",
+            message: `must be unique`,
+            path: [firstAppearanceIndex, "name"],
+            params: { clearOnRevalidate: true },
+          });
+          return;
+        }
+        uniqueValues.set(item.name, idx);
+      });
+    }),
+  });
 
 interface DataSetDefinition {
   id: number;
@@ -828,12 +1090,14 @@ const Wrapper = ({
     return <ErrorPage error={dataTypesError} />;
   }
 
-  return <DataSetDefinitionEditor dataSetDefinition={dataSetDefinition} />;
+  return <DSDE dataSetDefinition={dataSetDefinition} assayModel={assayModel} />;
 };
 
 const DataSetDefinitionEditor = ({
+  assayModel,
   dataSetDefinition,
 }: {
+  assayModel: AssayModelData;
   dataSetDefinition: DataSetDefinitionFull;
 }) => {
   const navigate = useNavigate();
@@ -884,6 +1148,13 @@ const DataSetDefinitionEditor = ({
       ),
   });
 
+  const {
+    data: assayModelDataSheets,
+    isLoading: isAssayModelDataSheetsLoading,
+    isError: isAssayModelDataSheetsError,
+    error: assayModelDataSheetsError,
+  } = useAssayDataSheetDefinitions(assayModel.id);
+
   const createSheetDefinitionMutation =
     useCreateEntityMutation<AssayDataSheetDefinitionData>(
       "grit/assays/assay_data_sheet_definitions",
@@ -893,16 +1164,22 @@ const DataSetDefinitionEditor = ({
     useCreateEntityMutation<AssayDataSheetColumnData>(
       "grit/assays/assay_data_sheet_columns",
     );
+
+  const validationSchema = useMemo(
+    () => DataSetDefinitionSchema(assayModelDataSheets ?? []),
+    [assayModelDataSheets],
+  );
+
   const form = useForm({
     defaultValues: dataSetDefinition,
     validators: {
-      onChange: DataSetDefinitionSchema,
-      onMount: DataSetDefinitionSchema,
-      onBlur: DataSetDefinitionSchema,
+      onChangeAsync: validationSchema,
+      onMount: validationSchema,
     },
+
     onSubmit: async ({ value }) => {
       try {
-        DataSetDefinitionSchema.parse(value);
+        validationSchema.parse(value);
       } catch (error) {
         console.log(error);
         return;
@@ -944,7 +1221,7 @@ const DataSetDefinitionEditor = ({
         dataSheetDefinitionFields.forEach(({ name }) => {
           form.setFieldValue(
             `sheets[${i}].${name}` as any,
-            sheet[name as keyof DataSheetDefinitionFull],
+            sheet[name as keyof DataSheetDefinitionFull] as any,
             // { dontUpdateMeta: true },
           );
         });
@@ -952,13 +1229,13 @@ const DataSetDefinitionEditor = ({
           dataSheetColumnDefinitionFields.forEach(({ name }) =>
             form.setFieldValue(
               `sheets[${i}].columns[${j}].${name}` as any,
-              column[name as keyof DataSheetColumnDefinition],
+              column[name as keyof DataSheetColumnDefinition] as any,
               // { dontUpdateMeta: true },
             ),
           );
         });
       });
-      form.validateSync("mount");
+      form.validateSync("change");
     }
   }, [
     form,
@@ -972,6 +1249,7 @@ const DataSetDefinitionEditor = ({
     isDataSheetDefinitionFieldsLoading ||
     isDataSheetColumnDefinitionFieldsLoading ||
     isDataSheetColumnDefinitionColumnsLoading ||
+    isAssayModelDataSheetsLoading ||
     isDataTypesLoading
   )
     return <Spinner />;
@@ -985,7 +1263,9 @@ const DataSetDefinitionEditor = ({
     isDataSheetColumnDefinitionColumnsError ||
     !dataSheetColumnDefinitionColumns ||
     isDataTypesError ||
-    !dataTypes
+    !dataTypes ||
+    isAssayModelDataSheetsError ||
+    !assayModelDataSheets
   )
     return (
       <ErrorPage
@@ -994,7 +1274,8 @@ const DataSetDefinitionEditor = ({
           dataSheetDefinitionFieldsError ??
           dataSheetColumnDefinitionFieldsError ??
           dataSheetColumnDefinitionColumnsError ??
-          dataTypesError
+          dataTypesError ??
+          assayModelDataSheetsError
         }
       />
     );
