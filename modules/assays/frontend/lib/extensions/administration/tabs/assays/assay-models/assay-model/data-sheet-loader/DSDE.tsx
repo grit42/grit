@@ -8,6 +8,7 @@ import {
   useForm,
   useFormInputs,
   useStore,
+  genericErrorHandler,
 } from "@grit42/form";
 import { AssayModelData } from "../../../../../../../queries/assay_models";
 import z from "zod";
@@ -30,6 +31,15 @@ import {
 import { useTableColumns } from "@grit42/core/utils";
 import { Table, useSetupTableState } from "@grit42/table";
 import { AssayDataSheetColumnData } from "../../../../../../../queries/assay_data_sheet_columns";
+import {
+  EndpointError,
+  EndpointSuccess,
+  notifyOnError,
+  request,
+  useMutation,
+  UseMutationOptions,
+  useQueryClient,
+} from "@grit42/api";
 
 interface DataSetDefinition {
   id: number;
@@ -880,6 +890,67 @@ const UnfocusedSheetFields = ({
   ].flat();
 };
 
+export const useCreateBulkDataSheetDefinitionMutation = (
+  mutationOptions: UseMutationOptions<
+    DataSetDefinitionFull,
+    any,
+    DataSetDefinitionFull
+  > = {},
+) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: [
+      "createBulkDataSheetDefinition",
+      "grit/assays/assay_data_sheet_definitions/create_bulk",
+    ],
+    mutationFn: async (dataSheetDefinitions: DataSetDefinitionFull) => {
+      const response = await request<
+        EndpointSuccess<never>,
+        EndpointError<any>
+      >("grit/assays/assay_data_sheet_definitions/create_bulk", {
+        method: "POST",
+        data: dataSheetDefinitions,
+      });
+
+      if (!response.success) {
+        throw response.errors;
+      }
+
+      return response.data;
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        await queryClient.invalidateQueries({
+          queryKey: [
+            "entities",
+            "datum",
+            "grit/assays/assay_data_sheet_definitions",
+          ],
+          refetchType: "all",
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [
+            "entities",
+            "data",
+            "grit/assays/assay_data_sheet_definitions",
+          ],
+          refetchType: "all",
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [
+            "entities",
+            "infiniteData",
+            "grit/assays/assay_data_sheet_definitions",
+          ],
+          refetchType: "all",
+        }),
+      ]);
+    },
+    onError: notifyOnError,
+    ...mutationOptions,
+  });
+};
+
 const DSDE = ({
   dataSetDefinition,
   assayModelDataSheets,
@@ -893,14 +964,7 @@ const DSDE = ({
   const [focusedColumn, setFocusedColumn] = useState<number | null>(null);
 
   const createSheetDefinitionMutation =
-    useCreateEntityMutation<AssayDataSheetDefinitionData>(
-      "grit/assays/assay_data_sheet_definitions",
-    );
-
-  const createSheetColumnMutation =
-    useCreateEntityMutation<AssayDataSheetColumnData>(
-      "grit/assays/assay_data_sheet_columns",
-    );
+    useCreateBulkDataSheetDefinitionMutation();
 
   const schema = useMemo(
     () => DataSetDefinitionSchema(assayModelDataSheets),
@@ -913,7 +977,7 @@ const DSDE = ({
       onChangeAsync: schema,
       onMount: schema,
     },
-    onSubmit: async ({ value }) => {
+    onSubmit: genericErrorHandler(async ({ value }) => {
       try {
         DataSetDefinitionSchema([]).parse(value);
       } catch (error) {
@@ -921,34 +985,10 @@ const DSDE = ({
         return;
       }
 
-      let firstSheetId;
-      for (const sheet of value.sheets) {
-        const assayDataSheetDefinition =
-          await createSheetDefinitionMutation.mutateAsync({
-            assay_model_id: dataSetDefinition.id,
-            name: sheet.name,
-            description: sheet.description,
-            result: sheet.result,
-            sort: sheet.sort,
-          });
-
-        firstSheetId = firstSheetId || assayDataSheetDefinition.id;
-
-        for (const col of sheet.columns) {
-          await createSheetColumnMutation.mutateAsync({
-            assay_data_sheet_definition_id: assayDataSheetDefinition.id,
-            name: col.name,
-            safe_name: col.safe_name,
-            data_type_id: col.data_type_id,
-            required: false,
-            sort: col.sort,
-            description: col.description,
-          });
-        }
-      }
-
-      navigate(`../../data-sheets/${firstSheetId}`);
-    },
+      // const assayDataSheetDefinition =
+      await createSheetDefinitionMutation.mutateAsync(value);
+      navigate(`../../data-sheets`);
+    }),
   });
 
   return (

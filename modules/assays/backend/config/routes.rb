@@ -24,7 +24,11 @@ Grit::Assays::Engine.routes.draw do
   end
 
   resources :assay_data_sheet_columns
-  resources :assay_data_sheet_definitions
+  resources :assay_data_sheet_definitions do
+    collection do
+      post :create_bulk
+    end
+  end
   resources :assay_metadata_definitions
   resources :assay_metadata
   resources :assays
