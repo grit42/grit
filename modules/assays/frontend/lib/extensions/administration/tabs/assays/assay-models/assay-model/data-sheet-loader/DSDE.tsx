@@ -23,14 +23,9 @@ import {
 import { useNavigate } from "react-router-dom";
 import { AssayDataSheetDefinitionData } from "../../../../../../../queries/assay_data_sheet_definitions";
 import styles from "./dataSheetStructureLoader.module.scss";
-import {
-  EntityData,
-  EntityFormFieldDef,
-  useCreateEntityMutation,
-} from "@grit42/core";
+import { EntityData, EntityFormFieldDef } from "@grit42/core";
 import { useTableColumns } from "@grit42/core/utils";
 import { Table, useSetupTableState } from "@grit42/table";
-import { AssayDataSheetColumnData } from "../../../../../../../queries/assay_data_sheet_columns";
 import {
   EndpointError,
   EndpointSuccess,
@@ -321,13 +316,13 @@ const DataSheetDefinitionSchema = z.object({
         if (firstSafeNameAppearanceIndex !== undefined) {
           ctx.addIssue({
             code: "custom",
-            message: `must be unique`,
+            message: `must be unique within a data sheet`,
             path: [idx, "safe_name"],
           });
           if (!duplicateSafeNames) {
             ctx.addIssue({
               code: "custom",
-              message: `must be unique`,
+              message: `must be unique within a data sheet`,
               path: [firstSafeNameAppearanceIndex, "safe_name"],
             });
             duplicateSafeNames = true;
@@ -339,13 +334,13 @@ const DataSheetDefinitionSchema = z.object({
         if (firstNameAppearanceIndex !== undefined) {
           ctx.addIssue({
             code: "custom",
-            message: `must be unique`,
+            message: `must be unique within a data sheet`,
             path: [idx, "name"],
           });
           if (!duplicateNames) {
             ctx.addIssue({
               code: "custom",
-              message: `must be unique`,
+              message: `must be unique within a data sheet`,
               path: [firstNameAppearanceIndex, "name"],
             });
             duplicateNames = true;
@@ -377,13 +372,13 @@ const DataSetDefinitionSchema = (modelSheets: AssayDataSheetDefinitionData[]) =>
         if (firstAppearanceIndex !== undefined) {
           ctx.addIssue({
             code: "custom",
-            message: `must be unique`,
+            message: `must be unique within an assay model`,
             path: [idx, "name"],
           });
           if (!duplicateSheetName) {
             ctx.addIssue({
               code: "custom",
-              message: `must be unique`,
+              message: `must be unique within an assay model`,
               path: [firstAppearanceIndex, "name"],
             });
             duplicateSheetName = true;
@@ -414,6 +409,10 @@ const DataSetDefinitionFormIssues = ({
   setFocusedSheetIndex: React.Dispatch<React.SetStateAction<number>>;
   setFocusedColumn: React.Dispatch<React.SetStateAction<number | null>>;
 }) => {
+  const isValidating = useStore(
+    form.baseStore,
+    ({ isValidating }) => isValidating,
+  );
   const issues = useStore(form.baseStore, ({ values, fieldMetaBase }) => {
     const sheetsWithIssues: DataSheetDefinitionWithIssues[] = [];
 
@@ -466,9 +465,9 @@ const DataSetDefinitionFormIssues = ({
     return sheetsWithIssues;
   });
 
-  if (issues.length == 0) {
-    return <div />;
-  }
+  // if (issues.length == 0) {
+  //   return <div />;
+  // }
 
   return (
     <div style={{ height: "100%", width: "100%", overflow: "auto" }}>
@@ -485,7 +484,9 @@ const DataSetDefinitionFormIssues = ({
           gridAutoRows: "max-content",
         }}
       >
-        <h2>Issues</h2>
+        {isValidating && <Spinner />}
+        {!isValidating && issues.length == 0 && <h2>No issues!</h2>}
+        {!isValidating && issues.length > 0 && <h2>Issues</h2>}
         {issues.map((sheet) => (
           <div key={sheet.id}>
             <a
@@ -705,6 +706,24 @@ const SheetColumns = ({
                 columnIndex={columnIndex}
                 form={form}
                 onDelete={async () => {
+                  form.baseStore.setState((prev) => {
+                    return {
+                      ...prev,
+                      fieldMetaBase: Object.fromEntries(
+                        Object.entries(prev.fieldMetaBase).map(
+                          ([key, meta]) => [
+                            key,
+                            key.startsWith(`sheets[${sheetIndex}].columns[`)
+                              ? {
+                                  ...meta,
+                                  errorMap: {},
+                                }
+                              : meta,
+                          ],
+                        ),
+                      ),
+                    } as BaseFormState<DataSetDefinitionFull>;
+                  });
                   await field.removeValue(columnIndex);
                   setFocusedColumn(null);
                 }}
@@ -801,8 +820,7 @@ const Header = ({
   return (
     <div className={styles.dataSheetsFormHeader}>
       <h3 style={{ alignSelf: "baseline", marginBottom: "1em" }}>
-        Data sheet definitions import: verify column definitions{" "}
-        {form.state.isValidating && <Spinner />}
+        Data sheet definitions import: verify column definitions
       </h3>
       <ButtonGroup>
         <Button onClick={() => navigate("../map")}>Back to mapping</Button>

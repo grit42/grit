@@ -452,6 +452,7 @@ import {
 } from "../../../../../../../queries/assay_models";
 import { SheetWithColumns } from "./SheetMapper";
 import DSDE from "./DSDE";
+import DataSheetDefinitionEditor from "./data-sheet-definition-editor";
 
 interface Props {
   dataSetDefinition: DataSetDefinitionFull;
@@ -811,7 +812,7 @@ const DataSheetDefinitionForm = ({
   );
 };
 
-const DataSheetDefinitionEditor = ({
+const DataSheetDefinitionEditordd = ({
   dataSetDefinition,
   form,
   dataSheetDefinitionFields,
@@ -1103,15 +1104,15 @@ const Wrapper = ({
   }
 
   return (
-    <DSDE
+    <DataSheetDefinitionEditor
       dataSetDefinition={dataSetDefinition}
-      assayModel={assayModel}
-      assayModelDataSheets={assayModelDataSheets}
+      // assayModel={assayModel}
+      // assayModelDataSheets={assayModelDataSheets}
     />
   );
 };
 
-const DataSetDefinitionEditor = ({
+const DataSetDefinitionEditordddd = ({
   assayModel,
   dataSetDefinition,
 }: {
