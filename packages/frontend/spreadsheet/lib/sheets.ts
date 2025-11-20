@@ -2,6 +2,7 @@ import type {
   CellObject,
   ExcelDataType,
   Range,
+  WorkSheet,
   Sheet as XLSXSheet,
 } from "xlsx";
 import { read, utils } from "./xlsx-wrapper";
@@ -39,13 +40,32 @@ export interface Sheet {
   range: Range;
 }
 
+const mergeRanges = (sheet: WorkSheet) => {
+  if (sheet["!merges"]) {
+    sheet["!merges"].forEach((merge) => {
+      const value = ((sheet["!data"] || [])[merge.s.r] || [])[merge.s.c];
+      for (let col = merge.s.c; col <= merge.e.c; col++) {
+        for (let row = merge.s.r; row <= merge.e.r; row++) {
+          ((sheet["!data"] || [])[row] || [])[col] = value;
+        }
+      }
+    });
+
+    delete sheet["!merges"];
+  }
+};
+
 export const sheetDefinitionsFromFile = async (
   file: File,
 ): Promise<Sheet[]> => {
   const fileExt = file.name.slice(file.name.lastIndexOf("."));
   const isDSV = ![".xlsx", ".ods", ".xls"].includes(fileExt);
   const ab = await file.arrayBuffer();
-  const workbook = read(ab, { dense: true, cellDates: true });
+  const workbook = read(ab, {
+    dense: true,
+    cellDates: true,
+    raw: true,
+  });
 
   const sheets: Sheet[] = [];
 
@@ -59,7 +79,10 @@ export const sheetDefinitionsFromFile = async (
           file.name.lastIndexOf("."),
         )
       : workbook.SheetNames[sheetIdx];
+
     const sheet = workbook.Sheets?.[workbook.SheetNames[sheetIdx]];
+    mergeRanges(sheet);
+
     const range = utils.decode_range(sheet?.["!ref"] ?? "A1:A1");
 
     sheets.push({
