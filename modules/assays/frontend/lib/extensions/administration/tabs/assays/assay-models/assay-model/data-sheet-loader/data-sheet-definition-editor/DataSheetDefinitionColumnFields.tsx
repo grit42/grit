@@ -1,7 +1,16 @@
-import { Button, ButtonGroup, Surface } from "@grit42/client-library/components";
-import { DATA_SHEET_COLUMN_FIELDS, DataSetDefinitionFull, defaultFormValues, withForm } from "./dataSheetDefinitionEditorForm";
+import {
+  Button,
+  ButtonGroup,
+  Surface,
+} from "@grit42/client-library/components";
+import {
+  DATA_SHEET_COLUMN_FIELDS,
+  DataSetDefinitionFull,
+  defaultFormValues,
+  withForm,
+} from "./dataSheetDefinitionEditorForm";
 import dataSetDefinitionSchema from "./schema";
-import { DeepKeys } from "@tanstack/react-form";
+import { AnyFieldMeta, DeepKeys } from "@tanstack/react-form";
 
 export const FieldGroupColumnFields = withForm({
   defaultValues: defaultFormValues,
@@ -24,8 +33,37 @@ export const FieldGroupColumnFields = withForm({
               `sheets[${sheetIndex}].columns[${columnIndex}].${fieldDef.name}` as DeepKeys<DataSetDefinitionFull>
             }
             key={fieldDef.name}
+            listeners={{
+              onChange: () => {
+                if (fieldDef.name !== "name" && fieldDef.name !== "safe_name")
+                  return;
+                const newMeta: Partial<
+                  Record<DeepKeys<DataSetDefinitionFull>, AnyFieldMeta>
+                > = {};
+                for (const key in form.getAllErrors().fields) {
+                  if (
+                    key.startsWith(`sheets[${sheetIndex}].columns[`) &&
+                    key.endsWith(`].${fieldDef.name}`)
+                  ) {
+                    const fieldKey = key as DeepKeys<DataSetDefinitionFull>;
+                    if (!form.state.fieldMetaBase[fieldKey]) continue;
+                    newMeta[fieldKey] = {
+                      ...form.state.fieldMetaBase[fieldKey],
+                      errorMap: {},
+                      errorSourceMap: {},
+                    } as AnyFieldMeta;
+                  }
+                }
+                form.baseStore.setState((prev) => ({
+                  ...prev,
+                  fieldMetaBase: { ...prev.fieldMetaBase, ...newMeta },
+                }));
+              },
+            }}
           >
-            {(field) => <field.DataSheetDefinitionEditorField fieldDef={fieldDef} />}
+            {(field) => (
+              <field.DataSheetDefinitionEditorField fieldDef={fieldDef} />
+            )}
           </form.AppField>
         ))}
         <ButtonGroup>

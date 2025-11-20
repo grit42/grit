@@ -1106,8 +1106,7 @@ const Wrapper = ({
   return (
     <DataSheetDefinitionEditor
       dataSetDefinition={dataSetDefinition}
-      // assayModel={assayModel}
-      // assayModelDataSheets={assayModelDataSheets}
+      assayModelDataSheets={assayModelDataSheets}
     />
   );
 };

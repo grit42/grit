@@ -1,11 +1,24 @@
-import { DATA_SHEET_FIELDS, DataSetDefinitionFull, DataSheetColumnDefinition, defaultFormValues, withForm } from "./dataSheetDefinitionEditorForm";
+import {
+  DATA_SHEET_FIELDS,
+  DataSetDefinitionFull,
+  DataSheetColumnDefinition,
+  defaultFormValues,
+  withForm,
+} from "./dataSheetDefinitionEditorForm";
 import dataSetDefinitionSchema from "./schema";
-import { Button, ButtonGroup, Surface } from "@grit42/client-library/components";
-import { DeepKeys } from "@tanstack/react-form";
+import {
+  Button,
+  ButtonGroup,
+  Surface,
+} from "@grit42/client-library/components";
+import { AnyFieldMeta, DeepKeys } from "@tanstack/react-form";
 import { useTableColumns } from "@grit42/core/utils";
 import { Table, useSetupTableState } from "@grit42/table";
 import styles from "../dataSheetStructureLoader.module.scss";
-import { FieldGroupColumnFields, FieldGroupHiddenColumnFields } from "./DataSheetDefinitionColumnFields";
+import {
+  FieldGroupColumnFields,
+  FieldGroupHiddenColumnFields,
+} from "./DataSheetDefinitionColumnFields";
 import { EntityData } from "@grit42/core";
 
 const DATA_SHEET_COLUMN_COLUMNS = [
@@ -155,8 +168,33 @@ export const FieldGroupSheetFields = withForm({
                 `sheets[${sheetIndex}].${fieldDef.name}` as DeepKeys<DataSetDefinitionFull>
               }
               key={fieldDef.name}
+              listeners={{
+                onChange: () => {
+                  if (fieldDef.name !== "name") return;
+                  const newMeta: Partial<
+                    Record<DeepKeys<DataSetDefinitionFull>, AnyFieldMeta>
+                  > = {};
+                  for (const key in form.getAllErrors().fields) {
+                    if (key.startsWith("sheets[") && key.endsWith("].name")) {
+                      const fieldKey = key as DeepKeys<DataSetDefinitionFull>;
+                      if (!form.state.fieldMetaBase[fieldKey]) continue;
+                      newMeta[fieldKey] = {
+                        ...form.state.fieldMetaBase[fieldKey],
+                        errorMap: {},
+                        errorSourceMap: {},
+                      } as AnyFieldMeta;
+                    }
+                  }
+                  form.baseStore.setState((prev) => ({
+                    ...prev,
+                    fieldMetaBase: { ...prev.fieldMetaBase, ...newMeta },
+                  }));
+                },
+              }}
             >
-              {(field) => <field.DataSheetDefinitionEditorField fieldDef={fieldDef} />}
+              {(field) => (
+                <field.DataSheetDefinitionEditorField fieldDef={fieldDef} />
+              )}
             </form.AppField>
           ))}
           <ButtonGroup>

@@ -49,13 +49,24 @@ const DataSheetDefinitionEditorIssues = withForm({
             fieldMetaBase[
               `sheets[${sheetIndex}].${field.name}` as DeepKeys<DataSetDefinitionFull>
             ]?.errorMap;
-          const issue =
-            fieldErrorMap?.onBlur ??
-            fieldErrorMap?.onChange ??
-            fieldErrorMap?.onMount ??
-            fieldErrorMap?.onSubmit;
-          if (issue) {
-            dataSheetIssues.push([field, issue]);
+          const issues = Array.from(
+            new Set([
+              ...(fieldErrorMap?.onBlur ?? []).map(
+                ({ message }: { message: string }) => message,
+              ),
+              ...(fieldErrorMap?.onChange ?? []).map(
+                ({ message }: { message: string }) => message,
+              ),
+              ...(fieldErrorMap?.onMount ?? []).map(
+                ({ message }: { message: string }) => message,
+              ),
+              ...(fieldErrorMap?.onSubmit ?? []).map(
+                ({ message }: { message: string }) => message,
+              ),
+            ]),
+          );
+          if (issues) {
+            issues.forEach((issue) => dataSheetIssues.push([field, issue]));
           }
         });
         sheet.columns.forEach((column, columnIndex) => {
@@ -65,14 +76,26 @@ const DataSheetDefinitionEditorIssues = withForm({
               fieldMetaBase[
                 `sheets[${sheetIndex}].columns[${columnIndex}].${field.name}` as DeepKeys<DataSetDefinitionFull>
               ]?.errorMap;
-
-            const issue =
-              fieldErrorMap?.onBlur ??
-              fieldErrorMap?.onChange ??
-              fieldErrorMap?.onMount ??
-              fieldErrorMap?.onSubmit;
-            if (issue) {
-              dataSheetColumnIssues.push([field, issue]);
+            const issues = Array.from(
+              new Set([
+                ...(fieldErrorMap?.onBlur ?? []).map(
+                  ({ message }: { message: string }) => message,
+                ),
+                ...(fieldErrorMap?.onChange ?? []).map(
+                  ({ message }: { message: string }) => message,
+                ),
+                ...(fieldErrorMap?.onMount ?? []).map(
+                  ({ message }: { message: string }) => message,
+                ),
+                ...(fieldErrorMap?.onSubmit ?? []).map(
+                  ({ message }: { message: string }) => message,
+                ),
+              ]),
+            );
+            if (issues) {
+              issues.forEach((issue) =>
+                dataSheetColumnIssues.push([field, issue]),
+              );
             }
           });
           if (dataSheetColumnIssues.length) {
@@ -94,10 +117,6 @@ const DataSheetDefinitionEditorIssues = withForm({
 
       return sheetsWithIssues;
     });
-
-    // if (issues.length == 0) {
-    //   return <div />;
-    // }
 
     return (
       <div style={{ height: "100%", width: "100%", overflow: "auto" }}>
@@ -131,7 +150,7 @@ const DataSheetDefinitionEditorIssues = withForm({
                   paddingInlineStart: "var(--spacing)",
                   listStylePosition: "inside",
                   listStyle: "none",
-                  marginBlock: "var(--spacing)",
+                  marginBlock: "0",
                 }}
               >
                 {sheet.issues.map(([field, issue]) => (
@@ -140,7 +159,12 @@ const DataSheetDefinitionEditorIssues = withForm({
                   </li>
                 ))}
                 {sheet.columns.map((column) => (
-                  <li key={`${sheet.id}-${column.id}`}>
+                  <li
+                    key={`${sheet.id}-${column.id}`}
+                    style={{
+                      marginBlock: "var(--spacing)",
+                    }}
+                  >
                     <a
                       onClick={() => {
                         setFocusedColumn(null);
@@ -156,11 +180,12 @@ const DataSheetDefinitionEditorIssues = withForm({
                         paddingBottom: "var(--spacing)",
                         listStylePosition: "inside",
                         listStyle: "none",
+                        marginBlock: "0",
                       }}
                     >
                       {column.issues.map(([field, issue]) => (
                         <li key={`${sheet.id}-${column.id}-${field.name}`}>
-                          {field.display_name} {(issue as any).message}
+                          {field.display_name} {issue}
                         </li>
                       ))}
                     </ul>

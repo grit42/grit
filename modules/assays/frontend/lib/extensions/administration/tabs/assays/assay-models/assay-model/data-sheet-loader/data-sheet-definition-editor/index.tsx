@@ -23,7 +23,7 @@ function DataSheetDefinitionEditor({
   const [focusedSheetIndex, setFocusedSheetIndex] = useState<number>(0);
   const [focusedColumn, setFocusedColumn] = useState<number | null>(null);
   const refinedSchema = useMemo(
-    () => refinedDataSetDefinitionSchema(assayModelDataSheets),
+    () => refinedDataSetDefinitionSchema(assayModelDataSheets ?? []),
     [assayModelDataSheets],
   );
 
