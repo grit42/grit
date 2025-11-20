@@ -39,24 +39,24 @@ module Grit::Core
       column_query_values = []
       columns.each do |key, values|
         values.each do |value|
-          column_query_values.push(ActiveRecord::Base.sanitize_sql_array([ "(?,?)", key.to_s, value.to_s ]))
+          column_query_values.push(ActiveRecord::Base.sanitize_sql_array([ "(?,?)", key.to_s, value.to_s.strip ]))
         end
       end
 
-      common_table_expressions.push("column_values AS (SELECT column_name, column_value FROM (values #{column_query_values.join(', ')}) column_values(column_name,column_value))") if column_query_values.length.positive?
-      common_table_expressions.push("column_values AS (SELECT null as column_name, null as column_value)") unless column_query_values.length.positive?
+      common_table_expressions.push("column_values AS (SELECT column_id, column_value FROM (values #{column_query_values.join(', ')}) column_values(column_id,column_value))") if column_query_values.length.positive?
+      common_table_expressions.push("column_values AS (SELECT null as column_id, null as column_value)") unless column_query_values.length.positive?
 
       query = <<-SQL
         #{"WITH #{common_table_expressions.join(', ')}" if common_table_expressions.length.positive?}
         SELECT
-          column_values.column_name,
+          column_values.column_id,
           data_type_values.data_type_name,
           data_type_values.data_type_id,
           count(data_type_values.data_type_id)
         FROM column_values
         LEFT OUTER JOIN data_type_values ON data_type_values.value_name = column_values.column_value
         GROUP BY
-          column_values.column_name,
+          column_values.column_id,
           data_type_values.data_type_name,
           data_type_values.data_type_id
         HAVING

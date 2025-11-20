@@ -331,8 +331,8 @@ const SheetMapper = ({
       sheetsWithColumns.forEach((s) =>
         s.columns
           .filter(({ detailed_data_type }) => detailed_data_type == "string")
-          .forEach(({ identifier, excel_column }) => {
-            string_columns_samples[identifier as string] = s.sample_data
+          .forEach(({ excel_column, id }) => {
+            string_columns_samples[id] = s.sample_data
               .slice(1)
               .map((s) => s[excel_column as string]);
           }),
@@ -340,13 +340,13 @@ const SheetMapper = ({
 
       const res = (
         await dataTypeGuessMutation.mutateAsync(string_columns_samples)
-      ).reduce((acc: any, d: any) => ({ ...acc, [d.column_name]: d }), {});
+      ).reduce((acc: any, d: any) => ({ ...acc, [d.column_id]: d }), {});
 
 
       sheetsWithColumns.forEach((s) => {
         s.columns.forEach((c) => {
-          if (res[c.identifier as string]) {
-            c.detailed_data_type = res[c.identifier as string].data_type_name
+          if (res[c.id.toString()]) {
+            c.detailed_data_type = res[c.id.toString()].data_type_name
           }
         });
       });
