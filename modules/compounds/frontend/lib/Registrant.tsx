@@ -26,7 +26,6 @@ const Registrant = () => {
   useRegisterCompoundForms();
   useRegisterCompoundInputs();
   useRegisterCompoundColumnTypeDefs();
-  useRegisterCompoundAdministration();
   useRegisterCompoundImporter();
   return null;
 };
