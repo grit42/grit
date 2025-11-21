@@ -1,8 +1,6 @@
 import styles from "../dataSheetStructureLoader.module.scss";
 import { useMemo, useState } from "react";
-import {
-  refinedDataSetDefinitionSchema,
-} from "./schema";
+import { refinedDataSetDefinitionSchema } from "./schema";
 import { AssayDataSheetDefinitionData } from "../../../../../../../../queries/assay_data_sheet_definitions";
 import {
   DataSetDefinitionFull,
@@ -28,8 +26,8 @@ import { AnyFieldMeta, DeepKeys } from "@tanstack/react-form";
 
 export const useCreateBulkDataSheetDefinitionMutation = (
   mutationOptions: UseMutationOptions<
-    DataSetDefinitionFull,
-    any,
+    AssayDataSheetDefinitionData[],
+    string | Record<string, string[]>,
     DataSetDefinitionFull
   > = {},
 ) => {
@@ -41,8 +39,8 @@ export const useCreateBulkDataSheetDefinitionMutation = (
     ],
     mutationFn: async (dataSheetDefinitions: DataSetDefinitionFull) => {
       const response = await request<
-        EndpointSuccess<never>,
-        EndpointError<any>
+        EndpointSuccess<AssayDataSheetDefinitionData[]>,
+        EndpointError<string | Record<string, string[]>>
       >("grit/assays/assay_data_sheet_definitions/create_bulk", {
         method: "POST",
         data: dataSheetDefinitions,
@@ -108,10 +106,32 @@ function DataSheetDefinitionEditor({
 
   const form = useAppForm({
     defaultValues: dataSetDefinition,
-    onSubmit: async ({ value }) => {
-      const parsedValue = refinedSchema.parse(value);
-      await createSheetDefinitionMutation.mutateAsync(parsedValue);
-      navigate(`../../data-sheets`);
+    onSubmit: async ({ value, formApi }) => {
+      try {
+        const parsedValue = refinedSchema.parse(value);
+        const sheets = await createSheetDefinitionMutation.mutateAsync(parsedValue);
+        navigate(`../../data-sheets/${sheets[0].id}`);
+      } catch (e) {
+        if (typeof e === "string") {
+          formApi.setErrorMap({ onChange: { form: [{ message: e }], fields: {} } });
+        } else if (typeof e === "object") {
+          for (const key in e) {
+            if (formApi.getFieldMeta(key as DeepKeys<DataSetDefinitionFull>)) {
+              formApi.setFieldMeta(
+                key as DeepKeys<DataSetDefinitionFull>,
+                (m) => ({
+                  ...m,
+                  errorMap: {
+                    onSubmit: (e as Record<string, string[]>)[key].map(
+                      (message) => ({ message }),
+                    ),
+                  },
+                }),
+              );
+            }
+          }
+        }
+      }
     },
     validators: {
       onChange: refinedSchema,

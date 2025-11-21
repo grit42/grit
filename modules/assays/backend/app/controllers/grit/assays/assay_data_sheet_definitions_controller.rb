@@ -23,20 +23,20 @@ module Grit::Assays
     def create_bulk
       permitted = params.permit(sheets: [ *self.permitted_params, columns: [ :name, :safe_name, :description, :sort, :required, :data_type_id, :unit_id ] ])
       errors = {}
+      sheets = []
       AssayDataSheetDefinition.transaction do
         permitted[:sheets].each_with_index do |sheet, sheetIndex|
           begin
             columns = sheet[:columns]
-              logger.info columns
             sheet.delete(:columns)
             assay_data_sheet_definition = AssayDataSheetDefinition.create(sheet)
+            sheets.push(assay_data_sheet_definition)
             unless assay_data_sheet_definition.errors.blank?
               assay_data_sheet_definition.errors.each do |e|
                 errors["sheets[#{sheetIndex}].#{e.attribute}"] ||= []
                 errors["sheets[#{sheetIndex}].#{e.attribute}"].push(e.message)
               end
             else
-              logger.info columns
               columns.each_with_index do |column, columnIndex|
                 assay_data_sheet_column = assay_data_sheet_definition.assay_data_sheet_columns.create(column)
                 if assay_data_sheet_column.errors
@@ -54,12 +54,11 @@ module Grit::Assays
             errors["form"].push e.to_s
           end
         end
-        logger.info errors
         unless errors.blank?
           render json: { success: false, errors: errors }, status: :unprocessable_entity
           raise ActiveRecord::Rollback
         end
-        render json: { success: true }
+        render json: { success: true, data: sheets }
       end
     rescue StandardError => e
       logger.warn e.to_s;
