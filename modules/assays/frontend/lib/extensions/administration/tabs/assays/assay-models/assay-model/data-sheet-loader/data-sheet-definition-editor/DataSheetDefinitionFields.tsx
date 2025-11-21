@@ -124,6 +124,11 @@ function SheetColumnsTable({
   const tableColumns = useTableColumns(DATA_SHEET_COLUMN_COLUMNS ?? []);
 
   const tableState = useSetupTableState("sheet-columns", tableColumns, {
+    settings: {
+      disableVisibilitySettings: true,
+      disableColumnSorting: true,
+      disableFilters: true,
+    },
     saveState: {
       columnSizing: true,
     },
