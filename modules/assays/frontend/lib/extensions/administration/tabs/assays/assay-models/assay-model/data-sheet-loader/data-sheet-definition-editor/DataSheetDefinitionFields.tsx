@@ -168,29 +168,29 @@ export const FieldGroupSheetFields = withForm({
                 `sheets[${sheetIndex}].${fieldDef.name}` as DeepKeys<DataSetDefinitionFull>
               }
               key={fieldDef.name}
-              listeners={{
-                onChange: () => {
-                  if (fieldDef.name !== "name") return;
-                  const newMeta: Partial<
-                    Record<DeepKeys<DataSetDefinitionFull>, AnyFieldMeta>
-                  > = {};
-                  for (const key in form.getAllErrors().fields) {
-                    if (key.startsWith("sheets[") && key.endsWith("].name")) {
-                      const fieldKey = key as DeepKeys<DataSetDefinitionFull>;
-                      if (!form.state.fieldMetaBase[fieldKey]) continue;
-                      newMeta[fieldKey] = {
-                        ...form.state.fieldMetaBase[fieldKey],
-                        errorMap: {},
-                        errorSourceMap: {},
-                      } as AnyFieldMeta;
-                    }
-                  }
-                  form.baseStore.setState((prev) => ({
-                    ...prev,
-                    fieldMetaBase: { ...prev.fieldMetaBase, ...newMeta },
-                  }));
-                },
-              }}
+              // listeners={{
+              //   onChange: () => {
+              //     if (fieldDef.name !== "name") return;
+              //     const newMeta: Partial<
+              //       Record<DeepKeys<DataSetDefinitionFull>, AnyFieldMeta>
+              //     > = {};
+              //     for (const key in form.getAllErrors().fields) {
+              //       if (key.startsWith("sheets[") && key.endsWith("].name")) {
+              //         const fieldKey = key as DeepKeys<DataSetDefinitionFull>;
+              //         if (!form.state.fieldMetaBase[fieldKey]) continue;
+              //         newMeta[fieldKey] = {
+              //           ...form.state.fieldMetaBase[fieldKey],
+              //           errorMap: {},
+              //           errorSourceMap: {},
+              //         } as AnyFieldMeta;
+              //       }
+              //     }
+              //     form.baseStore.setState((prev) => ({
+              //       ...prev,
+              //       fieldMetaBase: { ...prev.fieldMetaBase, ...newMeta },
+              //     }));
+              //   },
+              // }}
             >
               {(field) => (
                 <field.DataSheetDefinitionEditorField fieldDef={fieldDef} />
@@ -203,7 +203,36 @@ export const FieldGroupSheetFields = withForm({
             </Button>
           </ButtonGroup>
         </Surface>
-        <form.AppField name={`sheets[${sheetIndex}].columns`} mode="array">
+        <form.AppField
+          name={`sheets[${sheetIndex}].columns`}
+          mode="array"
+          // listeners={{
+          //   onChange: () => {
+          //     // const newMeta: Partial<
+          //     //   Record<DeepKeys<DataSetDefinitionFull>, AnyFieldMeta>
+          //     // > = {};
+          //     for (const key in form.getAllErrors().fields) {
+          //       if (
+          //         key.startsWith(`sheets[${sheetIndex}].columns[`) &&
+          //         (key.endsWith(`].name`) || key.endsWith(`].safe_name`))
+          //       ) {
+          //         const fieldKey = key as DeepKeys<DataSetDefinitionFull>;
+          //         form.setFieldMeta(fieldKey, (prev) => ({...prev, errorMap: {}}))
+          //         // if (!form.state.fieldMetaBase[fieldKey]) continue;
+          //         // newMeta[fieldKey] = {
+          //         //   ...form.state.fieldMetaBase[fieldKey],
+          //         //   errorMap: {},
+          //         //   errorSourceMap: {},
+          //         // } as AnyFieldMeta;
+          //       }
+          //     }
+          //     // form.baseStore.setState((prev) => ({
+          //     //   ...prev,
+          //     //   fieldMetaBase: { ...prev.fieldMetaBase, ...newMeta },
+          //     // }));
+          //   },
+          // }}
+        >
           {(field) => {
             return (
               <>

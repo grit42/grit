@@ -1,6 +1,8 @@
 import styles from "../dataSheetStructureLoader.module.scss";
 import { useMemo, useState } from "react";
-import { refinedDataSetDefinitionSchema } from "./schema";
+import {
+  refinedDataSetDefinitionSchema,
+} from "./schema";
 import { AssayDataSheetDefinitionData } from "../../../../../../../../queries/assay_data_sheet_definitions";
 import {
   DataSetDefinitionFull,
@@ -22,6 +24,7 @@ import {
   useQueryClient,
 } from "@grit42/api";
 import { useNavigate } from "react-router-dom";
+import { AnyFieldMeta, DeepKeys } from "@tanstack/react-form";
 
 export const useCreateBulkDataSheetDefinitionMutation = (
   mutationOptions: UseMutationOptions<
@@ -98,6 +101,7 @@ function DataSheetDefinitionEditor({
     () => refinedDataSetDefinitionSchema(assayModelDataSheets ?? []),
     [assayModelDataSheets],
   );
+  // const y = useRef<boolean | null>(false);
 
   const createSheetDefinitionMutation =
     useCreateBulkDataSheetDefinitionMutation();
@@ -115,6 +119,13 @@ function DataSheetDefinitionEditor({
     },
   });
 
+  // useEffect(() => {
+  //   if (!y.current) {
+  //     y.current = true;
+  //     form.validateSync("change");
+  //   }
+  // }, [dataSetDefinition, form, refinedSchema]);
+
   return (
     <form.AppForm>
       <form
@@ -130,7 +141,32 @@ function DataSheetDefinitionEditor({
           setFocusedSheetIndex={setFocusedSheetIndex}
           setFocusedColumn={setFocusedColumn}
         />
-        <form.Field name="sheets" mode="array">
+        <form.Field
+          name="sheets"
+          mode="array"
+          // listeners={{
+          //   onChange: () => {
+          //     const newMeta: Partial<
+          //       Record<DeepKeys<DataSetDefinitionFull>, AnyFieldMeta>
+          //     > = {};
+          //     for (const key in form.getAllErrors().fields) {
+          //       if (key.startsWith("sheets[") && key.endsWith("].name")) {
+          //         const fieldKey = key as DeepKeys<DataSetDefinitionFull>;
+          //         if (!form.state.fieldMetaBase[fieldKey]) continue;
+          //         newMeta[fieldKey] = {
+          //           ...form.state.fieldMetaBase[fieldKey],
+          //           errorMap: {},
+          //           errorSourceMap: {},
+          //         } as AnyFieldMeta;
+          //       }
+          //     }
+          //     form.baseStore.setState((prev) => ({
+          //       ...prev,
+          //       fieldMetaBase: { ...prev.fieldMetaBase, ...newMeta },
+          //     }));
+          //   },
+          // }}
+        >
           {(field) => (
             <div className={styles.dataSheetsForm}>
               <DataSheetDefinitionEditorTabs

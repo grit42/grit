@@ -33,33 +33,38 @@ export const FieldGroupColumnFields = withForm({
               `sheets[${sheetIndex}].columns[${columnIndex}].${fieldDef.name}` as DeepKeys<DataSetDefinitionFull>
             }
             key={fieldDef.name}
-            listeners={{
-              onChange: () => {
-                if (fieldDef.name !== "name" && fieldDef.name !== "safe_name")
-                  return;
-                const newMeta: Partial<
-                  Record<DeepKeys<DataSetDefinitionFull>, AnyFieldMeta>
-                > = {};
-                for (const key in form.getAllErrors().fields) {
-                  if (
-                    key.startsWith(`sheets[${sheetIndex}].columns[`) &&
-                    key.endsWith(`].${fieldDef.name}`)
-                  ) {
-                    const fieldKey = key as DeepKeys<DataSetDefinitionFull>;
-                    if (!form.state.fieldMetaBase[fieldKey]) continue;
-                    newMeta[fieldKey] = {
-                      ...form.state.fieldMetaBase[fieldKey],
-                      errorMap: {},
-                      errorSourceMap: {},
-                    } as AnyFieldMeta;
-                  }
-                }
-                form.baseStore.setState((prev) => ({
-                  ...prev,
-                  fieldMetaBase: { ...prev.fieldMetaBase, ...newMeta },
-                }));
-              },
-            }}
+            // listeners={{
+            //   onChange: () => {
+            //     if (fieldDef.name !== "name" && fieldDef.name !== "safe_name")
+            //       return;
+            //     // const newMeta: Partial<
+            //     //   Record<DeepKeys<DataSetDefinitionFull>, AnyFieldMeta>
+            //     // > = {};
+            //     console.time()
+            //     for (const key in form.getAllErrors().fields) {
+            //       if (
+            //         key.startsWith(`sheets[${sheetIndex}].columns[`) &&
+            //         key.endsWith(`].${fieldDef.name}`)
+            //       ) {
+            //         const fieldKey = key as DeepKeys<DataSetDefinitionFull>;
+            //         console.log("hey")
+            //         form.setFieldMeta(fieldKey, (prev) => ({ ...prev, errorMap: {} }));
+            //         // if (!form.state.fieldMetaBase[fieldKey]) continue;
+            //         // newMeta[fieldKey] = {
+            //         //   ...form.state.fieldMetaBase[fieldKey],
+            //         //   errorMap: {},
+            //         //   errorSourceMap: {},
+            //         // } as AnyFieldMeta;
+            //       }
+            //     }
+            //     console.timeEnd()
+
+            //     // form.baseStore.setState((prev) => ({
+            //     //   ...prev,
+            //     //   fieldMetaBase: { ...prev.fieldMetaBase, ...newMeta },
+            //     // }));
+            //   },
+            // }}
           >
             {(field) => (
               <field.DataSheetDefinitionEditorField fieldDef={fieldDef} />
