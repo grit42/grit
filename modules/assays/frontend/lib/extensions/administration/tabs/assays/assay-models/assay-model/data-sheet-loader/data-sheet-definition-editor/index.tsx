@@ -1,223 +1,175 @@
 import styles from "../dataSheetStructureLoader.module.scss";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { refinedDataSetDefinitionSchema } from "./schema";
 import { AssayDataSheetDefinitionData } from "../../../../../../../../queries/assay_data_sheet_definitions";
 import {
   DataSetDefinitionFull,
-  useAppForm,
 } from "./dataSheetDefinitionEditorForm";
 import DataSheetDefinitionEditorIssues from "./DataSheetDefinitionEditorIssues";
-import {
-  FieldGroupHiddenSheetFields,
-  FieldGroupSheetFields,
-} from "./DataSheetDefinitionFields";
 import DataSheetDefinitionEditorTabs from "./DataSheetDefinitionEditorTabs";
-import {
-  EndpointError,
-  EndpointSuccess,
-  notifyOnError,
-  request,
-  useMutation,
-  UseMutationOptions,
-  useQueryClient,
-} from "@grit42/api";
 import { useNavigate } from "react-router-dom";
-import { AnyFieldMeta, DeepKeys } from "@tanstack/react-form";
+import {
+  Button,
+  ErrorPage,
+} from "@grit42/client-library/components";
+import DataSheetDefinitionEditorHeader from "./DataSheetDefinitionEditorHeader";
+import z from "zod";
+import useFormReducer from "./reducer";
+import DataSheetColumnsTable from "./DataSheetEditorColumnsTable";
+import DataSheetForm from "./DataSheetForm";
+import DataSheetColumnForm from "./DataSheetEditorColumnForm";
+import { useCreateBulkDataSheetDefinitionMutation } from "./mutations";
 
-export const useCreateBulkDataSheetDefinitionMutation = (
-  mutationOptions: UseMutationOptions<
-    AssayDataSheetDefinitionData[],
-    string | Record<string, string[]>,
-    DataSetDefinitionFull
-  > = {},
-) => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationKey: [
-      "createBulkDataSheetDefinition",
-      "grit/assays/assay_data_sheet_definitions/create_bulk",
-    ],
-    mutationFn: async (dataSheetDefinitions: DataSetDefinitionFull) => {
-      const response = await request<
-        EndpointSuccess<AssayDataSheetDefinitionData[]>,
-        EndpointError<string | Record<string, string[]>>
-      >("grit/assays/assay_data_sheet_definitions/create_bulk", {
-        method: "POST",
-        data: dataSheetDefinitions,
-      });
-
-      if (!response.success) {
-        throw response.errors;
-      }
-
-      return response.data;
-    },
-    onSuccess: async () => {
-      await Promise.all([
-        await queryClient.invalidateQueries({
-          queryKey: [
-            "entities",
-            "datum",
-            "grit/assays/assay_data_sheet_definitions",
-          ],
-          refetchType: "all",
-        }),
-        queryClient.invalidateQueries({
-          queryKey: [
-            "entities",
-            "data",
-            "grit/assays/assay_data_sheet_definitions",
-          ],
-          refetchType: "all",
-        }),
-        queryClient.invalidateQueries({
-          queryKey: [
-            "entities",
-            "infiniteData",
-            "grit/assays/assay_data_sheet_definitions",
-          ],
-          refetchType: "all",
-        }),
-      ]);
-    },
-    onError: notifyOnError,
-    ...mutationOptions,
-  });
-};
-
-function DataSheetDefinitionEditor({
+const DataSheetDefinitionEditor = ({
   dataSetDefinition,
   assayModelDataSheets,
 }: {
   dataSetDefinition: DataSetDefinitionFull;
   assayModelDataSheets: AssayDataSheetDefinitionData[];
-}) {
+}) => {
   const navigate = useNavigate();
-  const [focusedSheetIndex, setFocusedSheetIndex] = useState<number>(0);
-  const [focusedColumn, setFocusedColumn] = useState<number | null>(null);
   const refinedSchema = useMemo(
     () => refinedDataSetDefinitionSchema(assayModelDataSheets ?? []),
     [assayModelDataSheets],
   );
-  // const y = useRef<boolean | null>(false);
+
+  const [state, dispatch] = useFormReducer(dataSetDefinition);
+
+  const { errorTree, valid, value } = useMemo(() => {
+    const result = refinedSchema.safeParse(state.dataSetDefinition);
+    if (result.success) {
+      return { errorTree: null, valid: true, value: result.data };
+    }
+    return {
+      errorTree: z.treeifyError(result.error),
+      valid: false,
+      value: null,
+    };
+  }, [refinedSchema, state.dataSetDefinition]);
 
   const createSheetDefinitionMutation =
     useCreateBulkDataSheetDefinitionMutation();
 
-  const form = useAppForm({
-    defaultValues: dataSetDefinition,
-    onSubmit: async ({ value, formApi }) => {
-      try {
-        const parsedValue = refinedSchema.parse(value);
-        const sheets = await createSheetDefinitionMutation.mutateAsync(parsedValue);
-        navigate(`../../data-sheets/${sheets[0].id}`);
-      } catch (e) {
-        if (typeof e === "string") {
-          formApi.setErrorMap({ onChange: { form: [{ message: e }], fields: {} } });
-        } else if (typeof e === "object") {
-          for (const key in e) {
-            if (formApi.getFieldMeta(key as DeepKeys<DataSetDefinitionFull>)) {
-              formApi.setFieldMeta(
-                key as DeepKeys<DataSetDefinitionFull>,
-                (m) => ({
-                  ...m,
-                  errorMap: {
-                    onSubmit: (e as Record<string, string[]>)[key].map(
-                      (message) => ({ message }),
-                    ),
-                  },
-                }),
-              );
-            }
-          }
-        }
-      }
-    },
-    validators: {
-      onChange: refinedSchema,
-      onMount: refinedSchema,
-    },
-  });
+  const handleSubmit = async () => {
+    if (!value) return;
+    const res = await createSheetDefinitionMutation.mutateAsync(value);
+    navigate(`../../data-sheets/${res[0].id}`);
+  };
 
-  // useEffect(() => {
-  //   if (!y.current) {
-  //     y.current = true;
-  //     form.validateSync("change");
-  //   }
-  // }, [dataSetDefinition, form, refinedSchema]);
+  if (!state.dataSetDefinition.sheets.length) {
+    return (
+      <ErrorPage error={"No sheet Sherlock"}>
+        <Button onClick={() => navigate("../map")}>Back</Button>
+      </ErrorPage>
+    );
+  }
 
   return (
-    <form.AppForm>
-      <form
-        className={styles.dataSheetsForm}
-        onSubmit={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-        }}
-      >
-        <form.DataSheetDefinitionEditorHeader />
-        <DataSheetDefinitionEditorIssues
-          form={form}
-          setFocusedSheetIndex={setFocusedSheetIndex}
-          setFocusedColumn={setFocusedColumn}
+    <form
+      className={styles.dataSheetsForm}
+      onSubmit={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        handleSubmit();
+      }}
+    >
+      <DataSheetDefinitionEditorHeader
+        canSubmit={valid}
+        isSubmitting={createSheetDefinitionMutation.isPending}
+      />
+      <DataSheetDefinitionEditorIssues
+        dataSetDefinition={state.dataSetDefinition}
+        errorTree={errorTree}
+        setFocusedSheetIndex={(sheetIndex) =>
+          dispatch({ type: "change-sheet-focus", sheetIndex })
+        }
+        setFocusedColumnIndex={(sheetIndex, columnIndex) =>
+          dispatch({ type: "change-column-focus", sheetIndex, columnIndex })
+        }
+      />
+      <div className={styles.dataSheetsForm}>
+        <DataSheetDefinitionEditorTabs
+          focusedSheetIndex={state.focusedSheetIndex}
+          setFocusedSheetIndex={(sheetIndex) =>
+            dispatch({ type: "change-sheet-focus", sheetIndex })
+          }
+          dataSetDefinition={state.dataSetDefinition}
         />
-        <form.Field
-          name="sheets"
-          mode="array"
-          // listeners={{
-          //   onChange: () => {
-          //     const newMeta: Partial<
-          //       Record<DeepKeys<DataSetDefinitionFull>, AnyFieldMeta>
-          //     > = {};
-          //     for (const key in form.getAllErrors().fields) {
-          //       if (key.startsWith("sheets[") && key.endsWith("].name")) {
-          //         const fieldKey = key as DeepKeys<DataSetDefinitionFull>;
-          //         if (!form.state.fieldMetaBase[fieldKey]) continue;
-          //         newMeta[fieldKey] = {
-          //           ...form.state.fieldMetaBase[fieldKey],
-          //           errorMap: {},
-          //           errorSourceMap: {},
-          //         } as AnyFieldMeta;
-          //       }
-          //     }
-          //     form.baseStore.setState((prev) => ({
-          //       ...prev,
-          //       fieldMetaBase: { ...prev.fieldMetaBase, ...newMeta },
-          //     }));
-          //   },
-          // }}
-        >
-          {(field) => (
-            <div className={styles.dataSheetsForm}>
-              <DataSheetDefinitionEditorTabs
-                form={form}
-                focusedSheetIndex={focusedSheetIndex}
-                setFocusedSheetIndex={setFocusedSheetIndex}
-              />
-              {field.state.value.map((sheet, i) =>
-                focusedSheetIndex === i ? (
-                  <FieldGroupSheetFields
-                    key={`visible-${sheet.id}`}
-                    form={form}
-                    sheetIndex={i}
-                    focusedColumnId={focusedColumn}
-                    setFocusedColumnId={setFocusedColumn}
-                    onDelete={() => field.removeValue(i)}
-                  />
-                ) : (
-                  <FieldGroupHiddenSheetFields
-                    key={`invisible-${sheet.id}`}
-                    form={form}
-                    sheetIndex={i}
-                  />
-                ),
-              )}
-            </div>
-          )}
-        </form.Field>
-      </form>
-    </form.AppForm>
+        <DataSheetForm
+          errorTree={
+            errorTree?.properties?.sheets?.items?.[state.focusedSheetIndex]
+              ?.properties
+          }
+          value={state.dataSetDefinition.sheets[state.focusedSheetIndex]}
+          onChange={(fieldName, value) =>
+            dispatch({
+              type: "update-sheet-value",
+              sheetIndex: state.focusedSheetIndex,
+              fieldName,
+              value,
+            })
+          }
+          onDelete={() =>
+            dispatch({
+              type: "remove-sheet",
+              sheetIndex: state.focusedSheetIndex,
+            })
+          }
+        />
+        {state.focusedColumnIndex === null && (
+          <DataSheetColumnsTable
+            columns={
+              state.dataSetDefinition.sheets[state.focusedSheetIndex].columns
+            }
+            setFocusedColumnIndex={(columnIndex) =>
+              dispatch({
+                type: "change-column-focus",
+                sheetIndex: state.focusedSheetIndex,
+                columnIndex: columnIndex,
+              })
+            }
+          />
+        )}
+        {state.focusedColumnIndex !== null && (
+          <DataSheetColumnForm
+            errorTree={
+              errorTree?.properties?.sheets?.items?.[state.focusedSheetIndex]
+                ?.properties?.columns?.items?.[state.focusedColumnIndex]
+                ?.properties
+            }
+            value={
+              state.dataSetDefinition.sheets[state.focusedSheetIndex].columns[
+                state.focusedColumnIndex!
+              ]
+            }
+            onChange={(fieldName, value) =>
+              dispatch({
+                type: "update-column-value",
+                sheetIndex: state.focusedSheetIndex,
+                columnIndex: state.focusedColumnIndex!,
+                fieldName,
+                value,
+              })
+            }
+            onDelete={() =>
+              dispatch({
+                type: "remove-column",
+                sheetIndex: state.focusedSheetIndex,
+                columnIndex: state.focusedColumnIndex!,
+              })
+            }
+            onDone={() =>
+              dispatch({
+                type: "change-column-focus",
+                sheetIndex: state.focusedSheetIndex,
+                columnIndex: null,
+              })
+            }
+          />
+        )}
+      </div>
+    </form>
   );
-}
+};
 
 export default DataSheetDefinitionEditor;

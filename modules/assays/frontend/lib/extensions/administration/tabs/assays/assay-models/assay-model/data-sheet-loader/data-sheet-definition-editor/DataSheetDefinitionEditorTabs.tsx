@@ -1,46 +1,41 @@
 import { Tabs } from "@grit42/client-library/components";
 import {
-  defaultFormValues,
-  withForm,
+  DataSetDefinitionFull,
 } from "./dataSheetDefinitionEditorForm";
-import dataSetDefinitionSchema from "./schema";
-import { useStore } from "@tanstack/react-form";
 import styles from "../dataSheetStructureLoader.module.scss";
+import { useMemo } from "react";
 
-const DataSheetDefinitionEditorTabs = withForm({
-  defaultValues: defaultFormValues,
-  validators: {
-    onChange: dataSetDefinitionSchema,
-    onMount: dataSetDefinitionSchema,
-  },
-  props: {
-    setFocusedSheetIndex: (() => {}) as (index: number) => void,
-    focusedSheetIndex: 0,
-  },
-  render: function Render({ form, focusedSheetIndex, setFocusedSheetIndex }) {
-    const tabs = useStore(
-      form.baseStore,
-      ({ values }) =>
-        values.sheets.map((sheetDefinition) => ({
-          key: sheetDefinition.id.toString(),
-          name: sheetDefinition.name,
-          panel: <></>,
-        })) ?? [],
-    );
+const DataSheetDefinitionEditorTabs = ({
+  focusedSheetIndex,
+  setFocusedSheetIndex,
+  dataSetDefinition,
+}: {
+  focusedSheetIndex: number;
+  setFocusedSheetIndex: (sheetIndex: number) => void;
+  dataSetDefinition: DataSetDefinitionFull;
+}) => {
+  const tabs = useMemo(
+    () =>
+      dataSetDefinition.sheets.map((sheetDefinition) => ({
+        key: sheetDefinition.id.toString(),
+        name: sheetDefinition.name,
+        panel: <></>,
+      })) ?? [],
+    [dataSetDefinition.sheets],
+  );
 
-    const handleTabChange = (index: number) => {
-      setFocusedSheetIndex(index);
-    };
+  const handleTabChange = (index: number) => {
+    setFocusedSheetIndex(index);
+  };
 
-    return (
-      <Tabs
-        className={styles.dataSheetsFormHeader}
-        selectedTab={focusedSheetIndex}
-        onTabChange={handleTabChange}
-        tabs={tabs}
-      />
-    );
-  },
-});
+  return (
+    <Tabs
+      className={styles.dataSheetsFormHeader}
+      selectedTab={focusedSheetIndex}
+      onTabChange={handleTabChange}
+      tabs={tabs}
+    />
+  );
+};
 
 export default DataSheetDefinitionEditorTabs;

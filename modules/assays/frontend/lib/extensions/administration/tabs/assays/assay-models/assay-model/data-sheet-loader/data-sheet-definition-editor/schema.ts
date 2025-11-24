@@ -1,7 +1,7 @@
 import z from "zod";
 import { AssayDataSheetDefinitionData } from "../../../../../../../../queries/assay_data_sheet_definitions";
 
-const dataSheetColumnDefinitionSchema = z.object({
+export const dataSheetColumnDefinitionSchema = z.object({
   id: z.int(),
   name: z.coerce.string<string>().trim().nonempty(),
   description: z.nullish(z.string().trim()),
@@ -11,10 +11,12 @@ const dataSheetColumnDefinitionSchema = z.object({
   required: z.nullish(z.boolean()),
   data_type_id: z.int(),
   data_type_id__name: z.string().trim().nonempty(),
+  unit_id: z.nullish(z.int()),
+  unit_id__name: z.nullish(z.string().trim()),
   sort: z.nullish(z.coerce.number<number>().int()),
 });
 
-const dataSheetDefinitionSchema = z.object({
+export const dataSheetDefinitionSchema = z.object({
   id: z.int(),
   name: z.coerce.string<string>().trim().nonempty(),
   description: z.nullish(z.string().trim()),
@@ -81,13 +83,6 @@ const dataSetDefinitionSchema = z.object({
     let duplicateSheetName = false;
     items.forEach((item, idx) => {
       const firstAppearanceIndex = uniqueValues.get(item.name);
-      // if (modelSheets.find(({ name }) => name === item.name)) {
-      //   ctx.addIssue({
-      //     code: "custom",
-      //     message: "is already taken by an existing data sheet",
-      //     path: [idx, "name"],
-      //   });
-      // }
       if (firstAppearanceIndex !== undefined) {
         ctx.addIssue({
           code: "custom",
