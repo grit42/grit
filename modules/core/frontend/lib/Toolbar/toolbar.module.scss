@@ -46,6 +46,9 @@
       svg {
         height: 20px;
         fill: theme.$palette-background-contrast-text;
+        circle {
+          stroke: theme.$palette-background-contrast-text;
+        }
       }
 
       &:hover {
