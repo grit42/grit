@@ -10,6 +10,7 @@ import {
 } from "@grit42/client-library/components";
 import { useFormInputs } from "@grit42/form";
 import z from "zod";
+import { useEntityData } from "@grit42/core";
 
 const DataSheetColumnForm = ({
   errorTree,
@@ -18,16 +19,23 @@ const DataSheetColumnForm = ({
   onDelete,
   value,
 }: {
-  errorTree?: ReturnType<typeof z.treeifyError<z.infer<typeof dataSheetColumnDefinitionSchema>>>["properties"] | null;
+  errorTree?:
+    | ReturnType<
+        typeof z.treeifyError<z.infer<typeof dataSheetColumnDefinitionSchema>>
+      >["properties"]
+    | null;
   onChange: (fieldName: string, value: unknown) => void;
   onDone: () => void;
   onDelete: () => void;
   value: DataSheetColumnDefinition;
 }) => {
+  const { data: units } = useEntityData("grit/core/units");
+  const { data: dataTypes } = useEntityData("grit/core/data_types");
+
   const inputs = useFormInputs();
 
   return (
-    <Surface>
+    <Surface style={{ width: "100%", maxWidth: 960, marginInline: "auto" }}>
       {DATA_SHEET_COLUMN_FIELDS.map((fieldDef) => {
         const Input = inputs[fieldDef.type] ?? inputs["default"];
         return (
@@ -47,8 +55,20 @@ const DataSheetColumnForm = ({
                   ).join("\n")
                 : ""
             }
-            handleBlur={() => {}}
-            handleChange={(value) => onChange(fieldDef.name, value)}
+            handleBlur={() => void 0}
+            handleChange={(value) => {
+              if (fieldDef.name === "unit_id") {
+                const unit = units?.find(({ id }) => id === value);
+                onChange(fieldDef.name, value);
+                onChange(`${fieldDef.name}__abbreviation`, unit?.abbreviation);
+              } else if (fieldDef.name === "data_type_id") {
+                const dataType = dataTypes?.find(({ id }) => id === value);
+                onChange(fieldDef.name, value);
+                onChange(`${fieldDef.name}__name`, dataType?.name);
+              } else {
+                onChange(fieldDef.name, value);
+              }
+            }}
           />
         );
       })}
