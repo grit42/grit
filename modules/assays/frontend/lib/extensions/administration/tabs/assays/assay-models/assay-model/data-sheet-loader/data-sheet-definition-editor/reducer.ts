@@ -1,10 +1,13 @@
 import { useReducer } from "react";
 import { DataSetDefinitionFull } from "./dataSheetDefinitionEditorForm";
+import z, { ZodError } from "zod";
+import dataSetDefinitionSchema from "./schema";
 
 interface FormReducerState {
   dataSetDefinition: DataSetDefinitionFull;
   focusedSheetIndex: number;
   focusedColumnIndex: number | null;
+  submitErrors?: ZodError<z.infer<typeof dataSetDefinitionSchema>>;
 }
 
 interface UpdateColumnValue {
@@ -44,13 +47,19 @@ interface ChangeSheetFocus {
   sheetIndex: number;
 }
 
+interface SetSubmitErrors {
+  type: "set-submit-errors";
+  errors: ZodError<z.infer<typeof dataSetDefinitionSchema>>;
+}
+
 type FormAction =
   | UpdateColumnValue
   | UpdateSheetValue
   | RemoveColumn
   | RemoveSheet
   | ChangeColumnFocus
-  | ChangeSheetFocus;
+  | ChangeSheetFocus
+  | SetSubmitErrors;
 
 const formReducer = (
   state: FormReducerState,
@@ -86,6 +95,24 @@ const formReducer = (
             },
           ),
         },
+        submitErrors: state.submitErrors
+          ? {
+              ...state.submitErrors,
+              issues: state.submitErrors.issues.filter(
+                ({ path }) =>
+                  !path
+                    .join("-")
+                    .startsWith(
+                      [
+                        "sheets",
+                        state.focusedSheetIndex,
+                        "columns",
+                        state.focusedColumnIndex,
+                      ].join("-"),
+                    ),
+              ),
+            }
+          : state.submitErrors,
       };
     case "remove-sheet":
       return {
@@ -105,6 +132,17 @@ const formReducer = (
             1,
           ),
         },
+        submitErrors: state.submitErrors
+          ? {
+              ...state.submitErrors,
+              issues: state.submitErrors.issues.filter(
+                ({ path }) =>
+                  !path
+                    .join("-")
+                    .startsWith(["sheets", state.focusedSheetIndex].join("-")),
+              ),
+            }
+          : state.submitErrors,
       };
     case "update-column-value":
       return {
@@ -127,6 +165,25 @@ const formReducer = (
             },
           ),
         },
+        submitErrors: state.submitErrors
+          ? {
+              ...state.submitErrors,
+              issues: state.submitErrors.issues.filter(
+                ({ path }) =>
+                  !path
+                    .join("-")
+                    .startsWith(
+                      [
+                        "sheets",
+                        state.focusedSheetIndex,
+                        "columns",
+                        state.focusedColumnIndex,
+                        action.fieldName,
+                      ].join("-"),
+                    ),
+              ),
+            }
+          : state.submitErrors,
       };
     case "update-sheet-value":
       return {
@@ -142,6 +199,28 @@ const formReducer = (
             },
           ),
         },
+        submitErrors: state.submitErrors
+          ? {
+              ...state.submitErrors,
+              issues: state.submitErrors.issues.filter(
+                ({ path }) =>
+                  !path
+                    .join("-")
+                    .startsWith(
+                      [
+                        "sheets",
+                        state.focusedSheetIndex,
+                        action.fieldName,
+                      ].join("-"),
+                    ),
+              ),
+            }
+          : state.submitErrors,
+      };
+    case "set-submit-errors":
+      return {
+        ...state,
+        submitErrors: action.errors,
       };
   }
   return state;

@@ -36,7 +36,9 @@ const DataSheetDefinitionEditorIssues = ({
     columnIndex: number | null,
   ) => void;
   dataSetDefinition: DataSetDefinitionFull;
-  errorTree: ReturnType<typeof z.treeifyError<z.infer<typeof dataSetDefinitionSchema>>> | null;
+  errorTree: ReturnType<
+    typeof z.treeifyError<z.infer<typeof dataSetDefinitionSchema>>
+  > | null;
 }) => {
   const issues = useMemo(() => {
     const sheetsWithIssues: DataSheetDefinitionWithIssues[] = [];
@@ -113,9 +115,12 @@ const DataSheetDefinitionEditorIssues = ({
         {issues.length > 0 && <h2>Issues</h2>}
         {issues.map((sheet) => (
           <div key={sheet.id}>
-            <a onClick={() => setFocusedSheetIndex(sheet.sheetIndex)}>
-              <h3>Sheet "{sheet.name}"</h3>
-            </a>
+            <h3
+              style={{ cursor: "pointer" }}
+              onClick={() => setFocusedSheetIndex(sheet.sheetIndex)}
+            >
+              Sheet "{sheet.name}"
+            </h3>
             <ul
               style={{
                 paddingInlineStart: "var(--spacing)",
@@ -125,7 +130,11 @@ const DataSheetDefinitionEditorIssues = ({
               }}
             >
               {sheet.issues.map(([field, issue]) => (
-                <li key={`${sheet.id}-${field.name}`}>
+                <li
+                  key={`${sheet.id}-${field.name}`}
+                  style={{ cursor: "pointer" }}
+                  onClick={() => setFocusedSheetIndex(sheet.sheetIndex)}
+                >
                   {field.display_name} {issue}
                 </li>
               ))}
@@ -136,7 +145,8 @@ const DataSheetDefinitionEditorIssues = ({
                     marginBlock: "var(--spacing)",
                   }}
                 >
-                  <a
+                  <h4
+                    style={{ cursor: "pointer" }}
                     onClick={() =>
                       setFocusedColumnIndex(
                         sheet.sheetIndex,
@@ -144,8 +154,8 @@ const DataSheetDefinitionEditorIssues = ({
                       )
                     }
                   >
-                    <h4>Column "{column.name}"</h4>
-                  </a>
+                    Column "{column.name}"
+                  </h4>
                   <ul
                     style={{
                       paddingInlineStart: "var(--spacing)",
@@ -156,7 +166,16 @@ const DataSheetDefinitionEditorIssues = ({
                     }}
                   >
                     {column.issues.map(([field, issue]) => (
-                      <li key={`${sheet.id}-${column.id}-${field.name}`}>
+                      <li
+                        style={{ cursor: "pointer" }}
+                        key={`${sheet.id}-${column.id}-${field.name}`}
+                        onClick={() =>
+                          setFocusedColumnIndex(
+                            sheet.sheetIndex,
+                            column.columnIndex,
+                          )
+                        }
+                      >
                         {field.display_name} {issue}
                       </li>
                     ))}

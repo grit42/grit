@@ -7,6 +7,7 @@ import {
 } from "@grit42/form";
 import { Button, Surface } from "@grit42/client-library/components";
 import { useNavigate } from "react-router-dom";
+import z from "zod";
 
 const FileLoader = ({
   files,
@@ -19,6 +20,10 @@ const FileLoader = ({
   const navigate = useNavigate();
   const form = useForm<{ files: File[] }>({
     defaultValues: { files },
+    validators: {
+      onMount: z.object({ files: z.array(z.file()).min(1) }),
+      onChange: z.object({ files: z.array(z.file()).min(1) }),
+    },
     onSubmit: ({ value }) => {
       setFiles(value.files);
       navigate("../map");

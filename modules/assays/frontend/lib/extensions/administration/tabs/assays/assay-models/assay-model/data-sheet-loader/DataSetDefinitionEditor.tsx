@@ -32,6 +32,7 @@ import {
 import { SheetWithColumns } from "./SheetMapper";
 import DataSheetDefinitionEditor from "./data-sheet-definition-editor";
 import { DataSetDefinitionFull, DataSheetColumnDefinition, DataSheetDefinitionFull } from "./data-sheet-definition-editor/dataSheetDefinitionEditorForm";
+import { Navigate } from "react-router-dom";
 
 const Wrapper = ({
   assayModel,
@@ -85,6 +86,10 @@ const Wrapper = ({
       ),
     };
   }, [assayModel, sheetsWithColumns, dataTypes]);
+
+  if (sheetsWithColumns.length < 1) {
+    return <Navigate to="../map" />;
+  }
 
   if (isDataTypesLoading || isAssayModelDataSheetsLoading) {
     return <Spinner />;

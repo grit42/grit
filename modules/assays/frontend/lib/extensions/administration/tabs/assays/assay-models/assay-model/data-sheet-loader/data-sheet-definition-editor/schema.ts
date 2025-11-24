@@ -7,7 +7,18 @@ export const dataSheetColumnDefinitionSchema = z.object({
   description: z.nullish(z.string().trim()),
   assay_data_sheet_definition_id: z.int(),
   assay_data_sheet_definition_id__name: z.string().trim().nonempty(),
-  safe_name: z.coerce.string<string>().trim().nonempty(),
+  safe_name: z.coerce
+    .string<string>()
+    .trim()
+    .nonempty()
+    .regex(
+      /^[a-z_]{2}/,
+      "should start with two lowercase letters or underscores",
+    )
+    .regex(
+      /^[a-z0-9_]*$/,
+      "should contain only lowercase letters, numbers and underscores",
+    ),
   required: z.nullish(z.boolean()),
   data_type_id: z.int(),
   data_type_id__name: z.string().trim().nonempty(),

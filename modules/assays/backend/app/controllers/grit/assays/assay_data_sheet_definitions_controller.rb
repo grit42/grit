@@ -22,7 +22,7 @@ module Grit::Assays
 
     def create_bulk
       permitted = params.permit(sheets: [ *self.permitted_params, columns: [ :name, :safe_name, :description, :sort, :required, :data_type_id, :unit_id ] ])
-      errors = {}
+      errors = []
       sheets = []
       AssayDataSheetDefinition.transaction do
         permitted[:sheets].each_with_index do |sheet, sheetIndex|
@@ -33,16 +33,14 @@ module Grit::Assays
             sheets.push(assay_data_sheet_definition)
             unless assay_data_sheet_definition.errors.blank?
               assay_data_sheet_definition.errors.each do |e|
-                errors["sheets[#{sheetIndex}].#{e.attribute}"] ||= []
-                errors["sheets[#{sheetIndex}].#{e.attribute}"].push(e.message)
+                errors.push({message: e.message, path: ["sheets", sheetIndex, e.attribute]})
               end
             else
               columns.each_with_index do |column, columnIndex|
                 assay_data_sheet_column = assay_data_sheet_definition.assay_data_sheet_columns.create(column)
                 if assay_data_sheet_column.errors
                   assay_data_sheet_column.errors.each do |e|
-                    errors["sheets[#{sheetIndex}].columns[#{columnIndex}].#{e.attribute}"] ||= []
-                    errors["sheets[#{sheetIndex}].columns[#{columnIndex}].#{e.attribute}"].push(e.message)
+                    errors.push({message: e.message, path: ["sheets", sheetIndex, "columns", columnIndex, e.attribute]})
                   end
                 end
               end

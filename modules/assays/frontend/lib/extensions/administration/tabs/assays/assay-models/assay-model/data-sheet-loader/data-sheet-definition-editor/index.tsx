@@ -1,24 +1,22 @@
 import styles from "../dataSheetStructureLoader.module.scss";
 import { useMemo } from "react";
-import { refinedDataSetDefinitionSchema } from "./schema";
+import dataSetDefinitionSchema, {
+  refinedDataSetDefinitionSchema,
+} from "./schema";
 import { AssayDataSheetDefinitionData } from "../../../../../../../../queries/assay_data_sheet_definitions";
-import {
-  DataSetDefinitionFull,
-} from "./dataSheetDefinitionEditorForm";
+import { DataSetDefinitionFull } from "./dataSheetDefinitionEditorForm";
 import DataSheetDefinitionEditorIssues from "./DataSheetDefinitionEditorIssues";
 import DataSheetDefinitionEditorTabs from "./DataSheetDefinitionEditorTabs";
 import { useNavigate } from "react-router-dom";
-import {
-  Button,
-  ErrorPage,
-} from "@grit42/client-library/components";
+import { Button, ErrorPage } from "@grit42/client-library/components";
 import DataSheetDefinitionEditorHeader from "./DataSheetDefinitionEditorHeader";
-import z from "zod";
+import z, { ZodError } from "zod";
 import useFormReducer from "./reducer";
 import DataSheetColumnsTable from "./DataSheetEditorColumnsTable";
 import DataSheetForm from "./DataSheetForm";
 import DataSheetColumnForm from "./DataSheetEditorColumnForm";
 import { useCreateBulkDataSheetDefinitionMutation } from "./mutations";
+import { upsert } from "@grit42/notifications";
 
 const DataSheetDefinitionEditor = ({
   dataSetDefinition,
@@ -37,23 +35,46 @@ const DataSheetDefinitionEditor = ({
 
   const { errorTree, valid, value } = useMemo(() => {
     const result = refinedSchema.safeParse(state.dataSetDefinition);
-    if (result.success) {
+    if (result.success && !state.submitErrors?.issues.length) {
       return { errorTree: null, valid: true, value: result.data };
     }
+    const errors = new ZodError([
+      ...(result.error?.issues ?? []),
+      ...(state.submitErrors?.issues ?? []),
+    ]);
     return {
-      errorTree: z.treeifyError(result.error),
+      errorTree: z.treeifyError(errors),
       valid: false,
       value: null,
     };
-  }, [refinedSchema, state.dataSetDefinition]);
+  }, [refinedSchema, state.dataSetDefinition, state.submitErrors]);
 
   const createSheetDefinitionMutation =
     useCreateBulkDataSheetDefinitionMutation();
 
   const handleSubmit = async () => {
     if (!value) return;
-    const res = await createSheetDefinitionMutation.mutateAsync(value);
-    navigate(`../../data-sheets/${res[0].id}`);
+    try {
+      const res = await createSheetDefinitionMutation.mutateAsync(value);
+      navigate(`../../data-sheets/${res[0].id}`);
+    } catch (errors: any) {
+      if (typeof errors === "string") {
+        upsert(errors, { type: "error" });
+      } else if (typeof errors === "object") {
+        dispatch({
+          type: "set-submit-errors",
+          errors: new ZodError(
+            errors.map((error: any) => ({
+              code: "custom",
+              message: error.message,
+              path: error.path,
+            })),
+          ) as ZodError<z.infer<typeof dataSetDefinitionSchema>>,
+        });
+      } else {
+        throw errors;
+      }
+    }
   };
 
   if (!state.dataSetDefinition.sheets.length) {
