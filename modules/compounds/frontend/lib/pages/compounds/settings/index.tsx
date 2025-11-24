@@ -32,7 +32,6 @@ const TABS = [
     label: "Load sets",
   },
 ];
-console.log("! wuhu", TABS);
 const CompoundAdministration = () => {
   const navigate = useNavigate();
 

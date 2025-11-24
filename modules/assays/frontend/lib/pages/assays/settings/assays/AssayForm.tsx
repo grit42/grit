@@ -30,7 +30,7 @@ import {
   AssayFormFieldDef,
   useAssay,
   useAssayFields,
-} from "../../../../../queries/assays";
+} from "../../../../queries/assays";
 import { useQueryClient } from "@grit42/api";
 import {
   useCreateEntityMutation,
@@ -47,7 +47,7 @@ import {
   useForm,
   useStore,
 } from "@grit42/form";
-import { useAssayModelMetadata } from "../../../../../queries/assay_model_metadata";
+import { useAssayModelMetadata } from "../../../../queries/assay_model_metadata";
 
 const AssayForm = ({
   fields,

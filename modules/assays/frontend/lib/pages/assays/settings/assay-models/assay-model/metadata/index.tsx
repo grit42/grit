@@ -11,7 +11,7 @@ import {
   useAssayMetadataDefinitionColumns,
   useAssayMetadataDefinitions,
   useAssayMetadataDefinitionsByAssayModel,
-} from "../../../../../../../queries/assay_metadata_definitions";
+} from "../../../../../../queries/assay_metadata_definitions";
 import { Row, Table, useSetupTableState } from "@grit42/table";
 import { useTableColumns } from "@grit42/core/utils";
 import { Link, Route, Routes, useParams } from "react-router-dom";

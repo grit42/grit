@@ -27,7 +27,7 @@ import styles from "./assayModels.module.scss";
 import {
   useAssayModelColumns,
   useAssayModels,
-} from "../../../../../queries/assay_models";
+} from "../../../../queries/assay_models";
 
 const DEFAULT_COLUMN_SIZES = {
   name: 200,

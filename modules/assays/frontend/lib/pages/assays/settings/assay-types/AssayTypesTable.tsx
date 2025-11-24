@@ -27,7 +27,7 @@ import styles from "./assayTypes.module.scss";
 import {
   useAssayTypeColumns,
   useAssayTypes,
-} from "../../../../../queries/assay_types";
+} from "../../../../queries/assay_types";
 
 const DEFAULT_COLUMN_SIZES = {
   name: 200,

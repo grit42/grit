@@ -24,7 +24,7 @@ import {
   AssayTypeData,
   useAssayType,
   useAssayTypeFields,
-} from "../../../../../queries/assay_types";
+} from "../../../../queries/assay_types";
 import { useQueryClient } from "@grit42/api";
 import {
   useCreateEntityMutation,

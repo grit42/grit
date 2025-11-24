@@ -27,7 +27,7 @@ import styles from "./assayMetadataDefinitions.module.scss";
 import {
   useAssayMetadataDefinitionColumns,
   useAssayMetadataDefinitions,
-} from "../../../../../queries/assay_metadata_definitions";
+} from "../../../../queries/assay_metadata_definitions";
 
 const DEFAULT_COLUMN_SIZES = {
   name: 200,

@@ -24,7 +24,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Button, ErrorPage, Spinner } from "@grit42/client-library/components";
 import { useTableColumns } from "@grit42/core/utils";
 import styles from "./assays.module.scss";
-import { useAssayColumns, useAssays } from "../../../../../queries/assays";
+import { useAssayColumns, useAssays } from "../../../../queries/assays";
 
 const DEFAULT_COLUMN_SIZES = {
   name: 200,

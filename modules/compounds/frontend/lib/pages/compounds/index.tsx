@@ -191,6 +191,7 @@ const CompoundsTable = () => {
     tableState.sorting,
     tableState.columnOrder,
     tableState.columnVisibility,
+    selectedCompoundTypes,
   ]);
 
   useEffect(() => {

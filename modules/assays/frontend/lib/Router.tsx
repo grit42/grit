@@ -22,6 +22,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 const LazyAssaysPage = lazy(() => import("./pages/assays"));
 const LazyExperimentsPage = lazy(() => import("./pages/experiments"));
 const LazyDataTablesPage = lazy(() => import("./features/data-tables/pages"));
+const LazyAssaySettingsPage = lazy(() => import("./pages/assays/settings"));
 
 const Router = () => {
   return (
@@ -51,6 +52,14 @@ const Router = () => {
         }
       />
       <Route path="*" element={<Navigate to="assays" replace />} />
+      <Route
+        path="settings/*"
+        element={
+          <AuthGuard>
+            <LazyAssaySettingsPage />
+          </AuthGuard>
+        }
+      />
     </Routes>
   );
 };

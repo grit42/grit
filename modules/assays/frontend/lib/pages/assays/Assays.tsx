@@ -13,6 +13,8 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { EntityData } from "@grit42/core";
 import { useNavigate } from "react-router-dom";
+import CogIcon from "@grit42/client-library/icons/Cog";
+import { useToolbar } from "@grit42/core/Toolbar";
 
 interface AssayTypesTableProps {
   state: [number[], React.Dispatch<React.SetStateAction<number[]>>];
@@ -306,6 +308,26 @@ const AssaysTable = ({ selectedTypes, selectedModels }: AssaysTableProps) => {
 const AssaysPage = () => {
   const selectedTypesState = useState<number[]>([]);
   const selectedModelsState = useState<number[]>([]);
+  const registerToolbarAction = useToolbar();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    return registerToolbarAction({
+      actions: [
+        {
+          id: "ASSAY_SETTINGS",
+          icon: <CogIcon />,
+          label: "Assay settings",
+          requiredRoles: [
+            "Administrator",
+            "AssayAdministrator",
+          ],
+          onClick: () =>
+            navigate("/assays/settings")
+        },
+      ],
+    });
+  }, [ navigate, registerToolbarAction ]);
 
   return (
     <div

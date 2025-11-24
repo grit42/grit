@@ -9,8 +9,13 @@ import {
   AssayModelData,
   useAssayModel,
   useAssayModelFields,
+<<<<<<< HEAD:modules/assays/frontend/lib/extensions/administration/tabs/assays/assay-models/assay-model/details/index.tsx
 } from "../../../../../../../queries/assay_models";
 import { Link, useNavigate, useParams } from "react-router-dom";
+=======
+} from "../../../../../../queries/assay_models";
+import { useNavigate, useParams } from "react-router-dom";
+>>>>>>> a0be624 (Move assay administration to Assay header):modules/assays/frontend/lib/pages/assays/settings/assay-models/assay-model/details/index.tsx
 import {
   Form,
   FormField,

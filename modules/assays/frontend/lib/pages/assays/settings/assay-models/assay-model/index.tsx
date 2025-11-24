@@ -27,6 +27,7 @@ import {
   useNavigate,
   useParams,
 } from "react-router-dom";
+<<<<<<< HEAD:modules/assays/frontend/lib/extensions/administration/tabs/assays/assay-models/assay-model/index.tsx
 import {
   Button,
   ErrorPage,
@@ -34,6 +35,10 @@ import {
   Tabs,
 } from "@grit42/client-library/components";
 import { useAssayModel } from "../../../../../../queries/assay_models";
+=======
+import { Button, ErrorPage, Spinner, Tabs } from "@grit42/client-library/components";
+import { useAssayModel } from "../../../../../queries/assay_models";
+>>>>>>> a0be624 (Move assay administration to Assay header):modules/assays/frontend/lib/pages/assays/settings/assay-models/assay-model/index.tsx
 import Details from "./details";
 import Metadata from "./metadata";
 import DataSheets from "./data-sheets";

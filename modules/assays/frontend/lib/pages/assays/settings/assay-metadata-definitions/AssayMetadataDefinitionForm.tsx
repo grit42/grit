@@ -24,7 +24,7 @@ import {
   AssayMetadataDefinitionData,
   useAssayMetadataDefinition,
   useAssayMetadataDefinitionFields,
-} from "../../../../../queries/assay_metadata_definitions";
+} from "../../../../queries/assay_metadata_definitions";
 import { useQueryClient } from "@grit42/api";
 import {
   useCreateEntityMutation,
