@@ -4,6 +4,7 @@ import {
   ErrorPage,
   Spinner,
   Tabs,
+  Tooltip,
 } from "@grit42/client-library/components";
 import { Navigate, useNavigate } from "react-router-dom";
 import {
@@ -144,6 +145,12 @@ const SheetMapper = ({
         include: true,
       })),
     },
+    validators: {
+      onChange: ({ value }) =>
+        !value.sheets.some(({ include }) => include)
+          ? "Include at least one sheet"
+          : undefined,
+    },
     onSubmit: async ({ value }) => {
       const sheetsWithColumns = await Promise.all(
         value.sheets
@@ -240,18 +247,27 @@ const SheetMapper = ({
           <ButtonGroup>
             <Button onClick={() => navigate("../files")}>Back to loader</Button>
             <form.Subscribe
-              selector={(state) => [state.canSubmit, state.isSubmitting]}
-              children={([canSubmit, isSubmitting]) => (
+              selector={(state) => ({
+                canSubmit: state.canSubmit,
+                isSubmitting: state.isSubmitting,
+                errors: state.errors,
+              })}
+              children={({ canSubmit, isSubmitting, errors }) => (
                 <div className={styles.controls}>
                   <ButtonGroup>
-                    <Button
-                      color="secondary"
-                      disabled={!canSubmit}
-                      type="submit"
-                      loading={isSubmitting}
+                    <Tooltip
+                      disabled={!errors.length}
+                      content={errors.join("\n")}
                     >
-                      Continue
-                    </Button>
+                      <Button
+                        color="secondary"
+                        disabled={!canSubmit}
+                        type="submit"
+                        loading={isSubmitting}
+                      >
+                        Continue
+                      </Button>
+                    </Tooltip>
                   </ButtonGroup>
                 </div>
               )}
