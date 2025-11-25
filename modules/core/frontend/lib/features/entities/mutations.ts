@@ -102,6 +102,12 @@ export const useEditEntityMutation = <T extends EntityProperties>(
   return useMutation({
     mutationKey: ["editEntity", entityPath, entityId.toString()],
     mutationFn: async (entityData: Partial<T>) => {
+      upsert("Updating records...", {
+        autoClose: false,
+        closeButton: false,
+        isLoading: true,
+        toastId: "entitiesMutationsToastId"
+      });
       const response = await request<
         EndpointSuccess<EntityData<T>>,
         EndpointError<EndpointErrorErrors<T>>
