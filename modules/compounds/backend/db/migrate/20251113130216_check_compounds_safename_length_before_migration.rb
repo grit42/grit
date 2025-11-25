@@ -1,9 +1,9 @@
-class CheckSafenameLengthBeforeMigration < ActiveRecord::Migration[7.2]
+class CheckCompoundsSafenameLengthBeforeMigration < ActiveRecord::Migration[7.2]
   def up
     limit = 30
-    
+
     compound_properties_exceeding_limit = Grit::Compounds::CompoundProperty.where("LENGTH(safe_name) > ?", limit)
-    batch_properties_exceeding_limit = Grit::Compounds::BatchProperty.where("LENGTH(safe_name) > ?", limit)    
+    batch_properties_exceeding_limit = Grit::Compounds::BatchProperty.where("LENGTH(safe_name) > ?", limit)
 
     if compound_properties_exceeding_limit.any?
       puts "WARNING: The following CompoundProperty records have 'safe_name' exceeding #{limit} characters:"
@@ -18,7 +18,7 @@ class CheckSafenameLengthBeforeMigration < ActiveRecord::Migration[7.2]
       end
     end
     if compound_properties_exceeding_limit.any? or batch_properties_exceeding_limit.any?
-      raise "Migration aborted: Records found exceeding the new column limit." 
+      raise "Migration aborted: Records found exceeding the new column limit."
     end
   end
 
