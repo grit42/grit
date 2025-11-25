@@ -25,7 +25,13 @@ const DataSheetForm = ({
   const inputs = useFormInputs();
 
   return (
-    <Surface>
+    <Surface       style={{
+        display: "grid",
+        gridTemplateColumns: "1fr",
+        gridAutoRows: "min-content",
+        gap: "var(--spacing)",
+      }}
+>
       {DATA_SHEET_FIELDS.map((fieldDef) => {
         const Input = inputs[fieldDef.type] ?? inputs["default"];
         return (

@@ -35,7 +35,17 @@ const DataSheetColumnForm = ({
   const inputs = useFormInputs();
 
   return (
-    <Surface style={{ width: "100%", maxWidth: 960, marginInline: "auto" }}>
+    <Surface
+      style={{
+        width: "100%",
+        maxWidth: 960,
+        marginInline: "auto",
+        display: "grid",
+        gridTemplateColumns: "1fr",
+        gap: "var(--spacing)",
+        gridAutoRows: "min-content",
+      }}
+    >
       {DATA_SHEET_COLUMN_FIELDS.map((fieldDef) => {
         const Input = inputs[fieldDef.type] ?? inputs["default"];
         return (
