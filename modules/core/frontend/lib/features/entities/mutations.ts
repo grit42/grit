@@ -28,6 +28,7 @@ import {
   notifyOnError,
 } from "@grit42/api";
 import { EntityData, EntityProperties } from "./types";
+import { upsert } from "@grit42/notifications";
 
 const handleMutationSuccess = (
   queryClient: QueryClient,
@@ -46,6 +47,12 @@ const handleMutationSuccess = (
     queryKey: ["entities", "infiniteData", entityPath],
     refetchType: "all",
   });
+  upsert("Done", {
+    closeButton: true,
+    autoClose: 3000,
+    isLoading: false,
+    toastId: "entitiesMutationsToastId"
+  });
 };
 
 export const useCreateEntityMutation = <T extends EntityProperties>(
@@ -56,6 +63,12 @@ export const useCreateEntityMutation = <T extends EntityProperties>(
   return useMutation({
     mutationKey: ["createEntity", entityPath],
     mutationFn: async (entityData: Partial<T>) => {
+      upsert("Creating records...", {
+        autoClose: false,
+        closeButton: false,
+        isLoading: true,
+        toastId: "entitiesMutationsToastId"
+      });
       const response = await request<
         EndpointSuccess<EntityData<T>>,
         EndpointError<EndpointErrorErrors<T>>
@@ -126,6 +139,12 @@ export const useDestroyEntityMutation = <
     mutationKey: ["destroyEntity", entityPath],
     mutationFn: async (entityIds: TId) => {
       const url = `${entityPath}/destroy`;
+      upsert("Deleting records...", {
+        autoClose: false,
+        closeButton: false,
+        isLoading: true,
+        toastId: "entitiesMutationsToastId"
+      });
       const response = await request<
         EndpointSuccess<EntityData<TData>>,
         EndpointError
