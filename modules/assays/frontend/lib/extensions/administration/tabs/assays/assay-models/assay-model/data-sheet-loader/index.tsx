@@ -1,7 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import FileLoader from "./FileLoader";
 import { useState } from "react";
-import SheetMapper, { SheetWithColumns } from "./SheetMapper";
+import SheetMapper, { SheetWithColumns } from "./sheet-mapper";
 import { AssayModelData } from "../../../../../../../queries/assay_models";
 import DataSetDefinitionEditor from "./DataSetDefinitionEditor";
 

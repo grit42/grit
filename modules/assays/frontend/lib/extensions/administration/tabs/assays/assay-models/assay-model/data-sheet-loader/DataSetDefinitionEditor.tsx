@@ -29,7 +29,7 @@ import {
 import {
   AssayModelData,
 } from "../../../../../../../queries/assay_models";
-import { SheetWithColumns } from "./SheetMapper";
+import { SheetWithColumns } from "./sheet-mapper";
 import DataSheetDefinitionEditor from "./data-sheet-definition-editor";
 import { DataSetDefinitionFull, DataSheetColumnDefinition, DataSheetDefinitionFull } from "./data-sheet-definition-editor/dataSheetDefinitionEditorForm";
 import { Navigate } from "react-router-dom";
