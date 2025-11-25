@@ -41,7 +41,7 @@ const DataSheetDefinitionEditor = ({
     const errors = new ZodError([
       ...(result.error?.issues ?? []),
       ...(state.submitErrors?.issues ?? []),
-    ]);
+    ]) as z.ZodError<z.infer<typeof dataSetDefinitionSchema>>;
     return {
       errorTree: z.treeifyError(errors),
       valid: false,

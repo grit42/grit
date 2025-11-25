@@ -37,7 +37,6 @@ import { useAssayModel } from "../../../../../../queries/assay_models";
 import Details from "./details";
 import Metadata from "./metadata";
 import DataSheets from "./data-sheets";
-import { useToolbar } from "@grit42/core/Toolbar";
 import DataSheetLoader from "./data-sheet-loader";
 
 const TABS = [
@@ -106,21 +105,6 @@ const AssayModel = () => {
   const { assay_model_id } = useParams() as { assay_model_id: string };
 
   const { data, isLoading, isError, error } = useAssayModel(assay_model_id);
-
-  const navigate = useNavigate();
-  const registerToolbarActions = useToolbar();
-  useEffect(() => {
-    return registerToolbarActions({
-      importItems: [
-        {
-          id: "IMPORT_SHEETS",
-          text: "Import data sheets",
-          onClick: () => navigate("data-sheet-loader/files"),
-          disabled: assay_model_id === "new",
-        },
-      ],
-    });
-  }, [assay_model_id, navigate, registerToolbarActions]);
 
   if (isLoading) return <Spinner />;
   if (isError || !data)

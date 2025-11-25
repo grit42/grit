@@ -115,8 +115,15 @@ export const DataSheetTabs = ({ sheetDefinitions }: Props) => {
           disabled: sheet_id === "new",
         },
       ],
+      importItems: [
+        {
+          id: "IMPORT_SHEETS",
+          text: "Import data sheets",
+          onClick: () => navigate("../data-sheet-loader/files"),
+        },
+      ],
     });
-  }, [registerToolbarActions, navigateToNew]);
+  }, [registerToolbarActions, navigateToNew, sheet_id, navigate]);
 
   return (
     <div className={styles.dataSheets}>
@@ -281,7 +288,9 @@ const DataSheet = ({ assayModelId }: { assayModelId: string }) => {
 
   const deleteRedirectId = useMemo(() => {
     if (sheet_id === "new") return "..";
-    return data?.find(({ id }) => id.toString() !== sheet_id)?.id.toString() ?? "new";
+    return (
+      data?.find(({ id }) => id.toString() !== sheet_id)?.id.toString() ?? "new"
+    );
   }, [data, sheet_id]);
 
   const {
