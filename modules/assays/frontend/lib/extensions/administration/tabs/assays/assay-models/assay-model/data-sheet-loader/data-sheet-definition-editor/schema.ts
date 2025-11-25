@@ -10,15 +10,13 @@ export const dataSheetColumnDefinitionSchema = z.object({
   safe_name: z.coerce
     .string<string>()
     .trim()
-    .nonempty()
-    .regex(
-      /^[a-z_]{2}/,
-      "should start with two lowercase letters or underscores",
-    )
+    .regex(/^[a-z_]{2}/, "must start with two lowercase letters or underscores")
     .regex(
       /^[a-z0-9_]*$/,
-      "should contain only lowercase letters, numbers and underscores",
-    ),
+      "must contain only lowercase letters, numbers and underscores",
+    )
+    .min(3, "must be at least 3 characters")
+    .max(30, "must be 30 characters or less"),
   required: z.nullish(z.boolean()),
   data_type_id: z.int(),
   data_type_id__name: z.string().trim().nonempty(),
