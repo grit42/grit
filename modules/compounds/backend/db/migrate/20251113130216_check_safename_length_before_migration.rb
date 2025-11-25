@@ -6,13 +6,13 @@ class CheckSafenameLengthBeforeMigration < ActiveRecord::Migration[7.2]
     batch_properties_exceeding_limit = Grit::Compounds::BatchProperty.where("LENGTH(safe_name) > ?", limit)    
 
     if compound_properties_exceeding_limit.any?
-      puts "WARNING: The following records in 'your_table_name' have 'safe_name' exceeding #{limit} characters:"
+      puts "WARNING: The following records in 'grit_compounds_compound_properties' have 'safe_name' exceeding #{limit} characters:"
       compound_properties_exceeding_limit.each do |record|
         puts "  Record ID: #{record.id}, Current Length: #{record.safe_name.length}"
       end
     end
     if batch_properties_exceeding_limit.any?
-      puts "WARNING: The following records in 'your_table_name' have 'safe_name' exceeding #{limit} characters:"
+      puts "WARNING: The following records in 'grit_compounds_batch_properties' have 'safe_name' exceeding #{limit} characters:"
       batch_properties_exceeding_limit.each do |record|
         puts "  Record ID: #{record.id}, Current Length: #{record.safe_name.length}"
       end
