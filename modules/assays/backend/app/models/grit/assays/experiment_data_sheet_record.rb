@@ -139,19 +139,19 @@ module Grit::Assays
 
         Grit::Assays::AssayDataSheetColumn.where(assay_data_sheet_definition_id: assay_data_sheet_definition_id).all.each do |column|
           query = query
-            .joins("LEFT OUTER JOIN grit_assays_experiment_data_sheet_values grit_assays_experiment_data_sheet_values__#{column.safe_name} on grit_assays_experiment_data_sheet_values__#{column.safe_name}.assay_data_sheet_column_id = #{column.id} and grit_assays_experiment_data_sheet_values__#{column.safe_name}.experiment_data_sheet_record_id = grit_assays_experiment_data_sheet_records.id")
+            .joins("LEFT OUTER JOIN grit_assays_experiment_data_sheet_values ev__#{column.safe_name} on ev__#{column.safe_name}.assay_data_sheet_column_id = #{column.id} and ev__#{column.safe_name}.experiment_data_sheet_record_id = grit_assays_experiment_data_sheet_records.id")
 
           if column.data_type.is_entity
             entity_klass = column.data_type.model
             query = query
-              .joins("LEFT OUTER JOIN #{column.data_type.table_name} #{column.data_type.table_name}__#{column.safe_name} on #{column.data_type.table_name}__#{column.safe_name}.id = grit_assays_experiment_data_sheet_values__#{column.safe_name}.entity_id_value")
-              .select("grit_assays_experiment_data_sheet_values__#{column.safe_name}.entity_id_value as #{column.safe_name}")
+              .joins("LEFT OUTER JOIN #{column.data_type.table_name} dt__#{column.data_type.id}__#{column.safe_name} on dt__#{column.data_type.id}__#{column.safe_name}.id = ev__#{column.safe_name}.entity_id_value")
+              .select("ev__#{column.safe_name}.entity_id_value as #{column.safe_name}")
             for display_property in entity_klass.display_properties do
               query = query
-                .select("#{column.data_type.table_name}__#{column.safe_name}.#{display_property[:name]} as #{column.safe_name}__#{display_property[:name]}") unless entity_klass.display_properties.nil?
+                .select("dt__#{column.data_type.id}__#{column.safe_name}.#{display_property[:name]} as #{column.safe_name}__#{display_property[:name]}") unless entity_klass.display_properties.nil?
             end
           else
-            query = query.select("grit_assays_experiment_data_sheet_values__#{column.safe_name}.#{column.data_type.name}_value as #{column.safe_name}")
+            query = query.select("ev__#{column.safe_name}.#{column.data_type.name}_value as #{column.safe_name}")
           end
         end
         query
