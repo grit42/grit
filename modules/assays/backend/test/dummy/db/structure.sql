@@ -1,4 +1,4 @@
-\restrict 2vUQx4jEa4N7IfYbprBWSu1G8c3f0uUP2V3ka2ToCsm2S8EKm4jyVwbJaZLotpo
+\restrict 8O8DADmpOqVNmL42PhaHuVh6vCq2CUngF5EmYlhXMnxCNvaWhnHDBsmaUaGLXKv
 
 -- Dumped from database version 16.3 (Debian 16.3-1.pgdg120+1)
 -- Dumped by pg_dump version 16.10 (Ubuntu 16.10-0ubuntu0.24.04.1)
@@ -2224,13 +2224,14 @@ ALTER TABLE ONLY public.grit_assays_assays
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 2vUQx4jEa4N7IfYbprBWSu1G8c3f0uUP2V3ka2ToCsm2S8EKm4jyVwbJaZLotpo
+\unrestrict 8O8DADmpOqVNmL42PhaHuVh6vCq2CUngF5EmYlhXMnxCNvaWhnHDBsmaUaGLXKv
 
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
 ('20251113133402'),
 ('20251113130627'),
+('20251113130626'),
 ('20250818115347'),
 ('20250818113922'),
 ('20250818111536'),
