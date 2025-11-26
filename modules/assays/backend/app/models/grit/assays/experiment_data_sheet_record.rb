@@ -144,11 +144,11 @@ module Grit::Assays
           if column.data_type.is_entity
             entity_klass = column.data_type.model
             query = query
-              .joins("LEFT OUTER JOIN #{column.data_type.table_name} dt__#{column.data_type.id}__#{column.safe_name} on dt__#{column.data_type.id}__#{column.safe_name}.id = ev__#{column.safe_name}.entity_id_value")
+              .joins("LEFT OUTER JOIN #{column.data_type.table_name} dt__#{column.safe_name} on dt__#{column.safe_name}.id = ev__#{column.safe_name}.entity_id_value")
               .select("ev__#{column.safe_name}.entity_id_value as #{column.safe_name}")
             for display_property in entity_klass.display_properties do
               query = query
-                .select("dt__#{column.data_type.id}__#{column.safe_name}.#{display_property[:name]} as #{column.safe_name}__#{display_property[:name]}") unless entity_klass.display_properties.nil?
+                .select("dt__#{column.safe_name}.#{display_property[:name]} as #{column.safe_name}__#{display_property[:name]}") unless entity_klass.display_properties.nil?
             end
           else
             query = query.select("ev__#{column.safe_name}.#{column.data_type.name}_value as #{column.safe_name}")
