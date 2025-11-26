@@ -44,7 +44,7 @@ const CompoundBatchLoadSets = () => {
   const navigate = useNavigate();
 
   const match = useMatch(
-    "/core/administration/compounds/load-sets/:childPath/*",
+    "/compounds/settings/load-sets/:childPath/*",
   );
   const childPath = match?.params.childPath ?? "metadata";
 

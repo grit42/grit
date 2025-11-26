@@ -35,9 +35,8 @@ const TABS = [
 const CompoundAdministration = () => {
   const navigate = useNavigate();
 
-  const match = useMatch("/core/administration/compounds/:childPath/*");
+  const match = useMatch("/compounds/settings/:childPath/*");
   const childPath = match?.params.childPath ?? "metadata";
-
   const [selectedTab, setSelectedTab] = useState(
     TABS.findIndex(({ url }) => childPath === url),
   );

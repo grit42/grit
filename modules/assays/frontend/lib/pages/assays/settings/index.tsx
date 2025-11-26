@@ -53,7 +53,7 @@ const TABS = [
 const AssaysAdministration = () => {
   const navigate = useNavigate();
 
-  const match = useMatch("/core/administration/assays/:childPath/*");
+  const match = useMatch("/assays/settings/:childPath/*");
   const childPath = match?.params.childPath ?? "origins";
 
   const [selectedTab, setSelectedTab] = useState(
