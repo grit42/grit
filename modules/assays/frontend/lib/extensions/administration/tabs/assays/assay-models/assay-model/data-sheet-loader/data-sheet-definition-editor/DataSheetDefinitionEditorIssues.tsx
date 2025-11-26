@@ -101,8 +101,7 @@ const DataSheetDefinitionEditorIssues = ({
       <Surface
         style={{
           height: "100%",
-          width: "100%",
-          minWidth: "25vw",
+          width: issues.length == 0 ? "max-content" : "100%",
           maxWidth: "33vw",
           overflow: "auto",
           display: "grid",

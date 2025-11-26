@@ -1,25 +1,20 @@
 import {
   Button,
   ButtonGroup,
-  ErrorPage,
-  Spinner,
   Tabs,
   Tooltip,
 } from "@grit42/client-library/components";
-import { Navigate, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   EndpointError,
   EndpointErrorErrors,
   EndpointSuccess,
   request,
   useMutation,
-  useQuery,
 } from "@grit42/api";
 import {
   sampleSheetData,
-  sheetDefinitionsFromFiles,
   Sheet,
-  defaultColumnDefinitionsFromSheetOptions,
   Column,
   columnDefinitionsFromSheet,
 } from "@grit42/spreadsheet";
@@ -29,6 +24,7 @@ import { Form, useForm } from "@grit42/form";
 import SheetPreview from "./SheetPreview";
 import SheetOptions from "./SheetOptions";
 import SheetOptionDropdown from "./SheetOptionDropdown";
+import { SheetWithOptions } from "../FileLoader";
 
 const useDataTypeGuessMutation = () => {
   return useMutation({
@@ -56,42 +52,16 @@ export interface SheetWithColumns extends Sheet {
   sort?: number;
 }
 
-const Wrapper = ({
-  files,
-  onSubmit,
-}: {
-  files: File[];
-  onSubmit: (sheets: SheetWithColumns[]) => void;
-}) => {
-  const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["sheets", files],
-    queryFn: async () => {
-      return await sheetDefinitionsFromFiles(files);
-    },
-    enabled: files.length > 0,
-  });
-
-  if (!files?.length) {
-    return <Navigate to="../files" />;
-  }
-
-  if (isLoading) {
-    return <Spinner />;
-  }
-
-  if (isError || !data) {
-    return <ErrorPage error={error?.message} />;
-  }
-
-  return <SheetMapper sheets={data} onSubmit={onSubmit} />;
-};
-
 const SheetMapper = ({
   sheets,
-  onSubmit,
+  sheetsWithColumns: sheetsWithColumnsFromProps,
+  setSheetsWithOptions,
+  setSheetsWithColumns,
 }: {
-  sheets: Sheet[];
-  onSubmit: (sheets: SheetWithColumns[]) => void;
+  sheets: SheetWithOptions[];
+  sheetsWithColumns: SheetWithColumns[];
+  setSheetsWithOptions: (sheets: SheetWithOptions[]) => void;
+  setSheetsWithColumns: (sheets: SheetWithColumns[]) => void;
 }) => {
   const [focusedCellInfo, setFocusedCellInfo] = useState<{
     row: number;
@@ -138,12 +108,7 @@ const SheetMapper = ({
 
   const form = useForm({
     defaultValues: {
-      sheets: sheets.map((s) => ({
-        ...s,
-        columnDefinitionsFromSheetOptions:
-          defaultColumnDefinitionsFromSheetOptions,
-        include: true,
-      })),
+      sheets,
     },
     validators: {
       onChange: ({ value }) =>
@@ -151,7 +116,13 @@ const SheetMapper = ({
           ? "Include at least one sheet"
           : undefined,
     },
-    onSubmit: async ({ value }) => {
+    onSubmit: async ({ value, formApi }) => {
+
+      if (formApi.state.isPristine && sheetsWithColumnsFromProps.length) {
+        navigate(`../edit`);
+        return;
+      }
+
       const sheetsWithColumns = await Promise.all(
         value.sheets
           .filter((s) => s.include)
@@ -194,7 +165,8 @@ const SheetMapper = ({
         });
       });
 
-      onSubmit(sheetsWithColumns);
+      setSheetsWithOptions(value.sheets);
+      setSheetsWithColumns(sheetsWithColumns);
       navigate(`../edit`);
     },
   });
@@ -290,14 +262,14 @@ const SheetMapper = ({
                   style={{
                     overflow: "auto",
                     display: "grid",
-                    gridTemplateColumns: "1fr max-content",
+                    gridTemplateColumns: "max-content 1fr",
                     gridTemplateRows: "1fr",
                     gap: "var(--spacing)",
                     height: "100%",
                   }}
                 >
-                  <SheetPreview sheet={s} onCellClick={handleCellClick} />
                   <SheetOptions form={form} sheetIndex={index} sheet={s} />
+                  <SheetPreview sheet={s} onCellClick={handleCellClick} />
                 </div>
               ),
             })) ?? []
@@ -308,4 +280,4 @@ const SheetMapper = ({
   );
 };
 
-export default Wrapper;
+export default SheetMapper;

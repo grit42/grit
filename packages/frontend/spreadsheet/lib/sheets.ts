@@ -40,6 +40,34 @@ export interface Sheet {
   range: Range;
 }
 
+export interface Sheet {
+  id: number;
+  sheet: XLSXSheet;
+  name: string;
+  range: Range;
+}
+
+export interface ColumnDefinitionsFromSheetOptions {
+  nameRowIndex: number;
+  columnOffset: string;
+  dataRowOffset: number;
+  identifierRowIndex: number | null;
+  descriptionRowIndex: number | null;
+  dataTypeRowIndex: number | null;
+  requiredRowIndex: number | null;
+}
+
+export const defaultColumnDefinitionsFromSheetOptions: ColumnDefinitionsFromSheetOptions =
+  {
+    nameRowIndex: 1,
+    columnOffset: "A",
+    dataRowOffset: 1,
+    identifierRowIndex: null,
+    descriptionRowIndex: null,
+    dataTypeRowIndex: null,
+    requiredRowIndex: null,
+  };
+
 const mergeRanges = (sheet: WorkSheet) => {
   if (sheet["!merges"]) {
     sheet["!merges"].forEach((merge) => {
@@ -96,7 +124,7 @@ export const sheetDefinitionsFromFile = async (
   return sheets;
 };
 
-export const sampleSheetData = ({ sheet, range }: Sheet, rows = 50) =>
+export const sampleSheetData = ({ sheet, range }: Sheet, rows = 100) =>
   utils.sheet_to_json<Record<string, any>>(sheet, {
     blankrows: true,
     header: "A",
@@ -111,27 +139,6 @@ export const sheetDefinitionsFromFiles = async (files: File[]) => {
     await Promise.all(files.map((file) => sheetDefinitionsFromFile(file)))
   ).flatMap((v) => v);
 };
-
-export interface ColumnDefinitionsFromSheetOptions {
-  nameRowIndex: number;
-  columnOffset: string;
-  dataRowOffset: number;
-  identifierRowIndex: number | null;
-  descriptionRowIndex: number | null;
-  dataTypeRowIndex: number | null;
-  requiredRowIndex: number | null;
-}
-
-export const defaultColumnDefinitionsFromSheetOptions: ColumnDefinitionsFromSheetOptions =
-  {
-    nameRowIndex: 1,
-    columnOffset: "A",
-    dataRowOffset: 1,
-    identifierRowIndex: null,
-    descriptionRowIndex: null,
-    dataTypeRowIndex: null,
-    requiredRowIndex: null,
-  };
 
 const guessColumnDataType = (
   columnIndex: number,
@@ -223,7 +230,7 @@ export const columnDefinitionsFromSheet = async (
   const sampleDataRows =
     sheet.sheet["!data"]?.slice(
       options.dataRowOffset - 1,
-      options.dataRowOffset + 9,
+      options.dataRowOffset + 99,
     ) ?? [];
 
   for (

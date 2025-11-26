@@ -17,7 +17,11 @@ const DataSheetForm = ({
   onDelete,
   value,
 }: {
-  errorTree?: ReturnType<typeof z.treeifyError<z.infer<typeof dataSheetDefinitionSchema>>>["properties"] | null;
+  errorTree?:
+    | ReturnType<
+        typeof z.treeifyError<z.infer<typeof dataSheetDefinitionSchema>>
+      >["properties"]
+    | null;
   onChange: (fieldName: string, value: unknown) => void;
   onDelete: () => void;
   value: DataSheetDefinition;
@@ -25,13 +29,15 @@ const DataSheetForm = ({
   const inputs = useFormInputs();
 
   return (
-    <Surface       style={{
+    <Surface
+      style={{
         display: "grid",
         gridTemplateColumns: "1fr",
         gridAutoRows: "min-content",
+        maxWidth: "40ch",
         gap: "var(--spacing)",
       }}
->
+    >
       {DATA_SHEET_FIELDS.map((fieldDef) => {
         const Input = inputs[fieldDef.type] ?? inputs["default"];
         return (

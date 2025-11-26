@@ -3,7 +3,7 @@ import { AssayDataSheetDefinitionData } from "../../../../../../../../queries/as
 
 export const dataSheetColumnDefinitionSchema = z.object({
   id: z.int(),
-  name: z.coerce.string<string>().trim().nonempty(),
+  name: z.coerce.string<string>().trim().nonempty("cannot be blank"),
   description: z.nullish(z.string().trim()),
   assay_data_sheet_definition_id: z.int(),
   assay_data_sheet_definition_id__name: z.string().trim().nonempty(),
@@ -18,7 +18,7 @@ export const dataSheetColumnDefinitionSchema = z.object({
     .min(3, "must be at least 3 characters")
     .max(30, "must be 30 characters or less"),
   required: z.nullish(z.boolean()),
-  data_type_id: z.int(),
+  data_type_id: z.coerce.number().gt(0, "cannot be blank"),
   data_type_id__name: z.string().trim().nonempty(),
   unit_id: z.nullish(z.int()),
   unit_id__name: z.nullish(z.string().trim()),
@@ -27,7 +27,7 @@ export const dataSheetColumnDefinitionSchema = z.object({
 
 export const dataSheetDefinitionSchema = z.object({
   id: z.int(),
-  name: z.coerce.string<string>().trim().nonempty(),
+  name: z.coerce.string<string>().trim().nonempty("cannot be blank"),
   description: z.nullish(z.string().trim()),
   assay_model_id: z.int(),
   assay_model_id__name: z.string().trim().nonempty(),
@@ -85,7 +85,7 @@ export const dataSheetDefinitionSchema = z.object({
 
 const dataSetDefinitionSchema = z.object({
   id: z.int(),
-  name: z.coerce.string<string>(),
+  name: z.coerce.string<string>("cannot be blank"),
   description: z.nullish(z.coerce.string<string>().trim()),
   sheets: z.array(dataSheetDefinitionSchema).superRefine((items, ctx) => {
     const uniqueValues = new Map<string, number>();

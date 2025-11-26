@@ -8,14 +8,27 @@ import {
 import { Button, Surface } from "@grit42/client-library/components";
 import { useNavigate } from "react-router-dom";
 import z from "zod";
+import {
+  ColumnDefinitionsFromSheetOptions,
+  defaultColumnDefinitionsFromSheetOptions,
+  Sheet,
+  sheetDefinitionsFromFiles,
+} from "@grit42/spreadsheet";
+
+export interface SheetWithOptions extends Sheet {
+  columnDefinitionsFromSheetOptions: ColumnDefinitionsFromSheetOptions;
+  include: boolean;
+}
 
 const FileLoader = ({
   files,
   setFiles,
+  setSheets,
 }: {
   assayModelName: string;
   files: File[];
   setFiles: (files: File[]) => void;
+  setSheets: (sheets: SheetWithOptions[]) => void;
 }) => {
   const navigate = useNavigate();
   const form = useForm<{ files: File[] }>({
@@ -24,7 +37,15 @@ const FileLoader = ({
       onMount: z.object({ files: z.array(z.file()).min(1) }),
       onChange: z.object({ files: z.array(z.file()).min(1) }),
     },
-    onSubmit: ({ value }) => {
+    onSubmit: async ({ value }) => {
+      setSheets(
+        (await sheetDefinitionsFromFiles(value.files)).map((s) => ({
+          ...s,
+          columnDefinitionsFromSheetOptions:
+            defaultColumnDefinitionsFromSheetOptions,
+          include: true,
+        })),
+      );
       setFiles(value.files);
       navigate("../map");
     },

@@ -5,8 +5,10 @@ import { useNavigate } from "react-router-dom";
 const DataSheetDefinitionEditorHeader = ({
   isSubmitting,
   canSubmit,
+  isDirty,
 }: {
   isSubmitting: boolean;
+  isDirty: boolean;
   canSubmit: boolean;
 }) => {
   const navigate = useNavigate();
@@ -16,7 +18,18 @@ const DataSheetDefinitionEditorHeader = ({
         Data sheet definitions import: verify column definitions
       </h3>
       <ButtonGroup>
-        <Button onClick={() => navigate("../map")}>Back to mapping</Button>
+        <Button
+          onClick={() => {
+            if (
+              !isDirty ||
+              window.confirm("You have unsaved changes. Continue?")
+            ) {
+              navigate("../map");
+            }
+          }}
+        >
+          Back to mapping
+        </Button>
         <Button
           color="secondary"
           disabled={!canSubmit}

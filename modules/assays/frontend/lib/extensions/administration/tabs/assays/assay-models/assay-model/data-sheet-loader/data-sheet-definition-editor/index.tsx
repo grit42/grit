@@ -48,7 +48,6 @@ const DataSheetDefinitionEditor = ({
       value: null,
     };
   }, [refinedSchema, state.dataSetDefinition, state.submitErrors]);
-
   const createSheetDefinitionMutation =
     useCreateBulkDataSheetDefinitionMutation();
 
@@ -96,6 +95,7 @@ const DataSheetDefinitionEditor = ({
     >
       <DataSheetDefinitionEditorHeader
         canSubmit={valid}
+        isDirty={state.dataSetDefinition !== dataSetDefinition}
         isSubmitting={createSheetDefinitionMutation.isPending}
       />
       <DataSheetDefinitionEditorIssues
