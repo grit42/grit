@@ -1,9 +1,9 @@
 import {
   AddFormControl,
   Form,
-  FormField,
   FormFieldDef,
   useForm,
+  useFormInput,
 } from "@grit42/form";
 import { Button, Surface } from "@grit42/client-library/components";
 import { useNavigate } from "react-router-dom";
@@ -14,6 +14,7 @@ import {
   Sheet,
   sheetDefinitionsFromFiles,
 } from "@grit42/spreadsheet";
+import styles from "./dataSheetStructureLoader.module.scss"
 
 export interface SheetWithOptions extends Sheet {
   columnDefinitionsFromSheetOptions: ColumnDefinitionsFromSheetOptions;
@@ -51,6 +52,8 @@ const FileLoader = ({
     },
   });
 
+  const BinaryInput = useFormInput("binary");
+
   return (
     <div
       style={{
@@ -62,16 +65,16 @@ const FileLoader = ({
       <h3 style={{ alignSelf: "baseline", marginBottom: "1em" }}>
         Data sheet definitions import: select files to analyse
       </h3>
-      <Surface>
+      <Surface style={{width: "100%"}}>
         <p>
           Select one or more spreadsheets (<em>.xlsx, .ods</em>) or
           delimiter-separated value files (<em>.csv, .tsv</em>)
         </p>
-        <Form<{ files: File[] }> form={form}>
+        <Form<{ files: File[] }> form={form} className={styles.filesForm}>
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "1fr 1fr",
+              gridTemplateColumns: "1fr",
               gridAutoRows: "max-content",
               gap: "calc(var(--spacing) * 2)",
               paddingBottom: "calc(var(--spacing) * 2)",
@@ -88,18 +91,30 @@ const FileLoader = ({
                 {form.state.errorMap.onSubmit?.toString()}
               </div>
             )}
-            <FormField
-              form={form}
-              fieldDef={
-                {
-                  display_name: "Files",
-                  name: "files",
-                  type: "binary",
-                  required: true,
-                  multiple: true,
-                } as FormFieldDef
-              }
-            />
+            <form.Field
+              name="files"
+            >
+              {(field) => (
+                <BinaryInput
+                  disabled={false}
+                  error=""
+                  field={
+                    {
+                      display_name: "Files",
+                      name: "files",
+                      type: "binary",
+                      required: true,
+                      multiple: true,
+                      className: styles.fileInput
+                    } as FormFieldDef
+                  }
+                  handleBlur={field.handleBlur}
+                  handleChange={field.handleChange}
+                  value={field.state.value}
+
+                />
+              )}
+            </form.Field>
           </div>
           <AddFormControl form={form} label="Start import">
             <Button onClick={() => navigate("../..")}>Cancel</Button>
