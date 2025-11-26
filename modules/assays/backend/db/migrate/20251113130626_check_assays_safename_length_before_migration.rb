@@ -1,9 +1,9 @@
-class CheckSafenameLengthBeforeMigration < ActiveRecord::Migration[7.2]
+class CheckAssaysSafenameLengthBeforeMigration < ActiveRecord::Migration[7.2]
   def up
     limit = 30
-    
+
     data_sheet_column_exceeding_limit = Grit::Assays::AssayDataSheetColumn.where("LENGTH(safe_name) > ?", limit)
-    data_table_column_exceeding_limit = Grit::Assays::DataTableColumn.where("LENGTH(safe_name) > ?", limit)    
+    data_table_column_exceeding_limit = Grit::Assays::DataTableColumn.where("LENGTH(safe_name) > ?", limit)
 
     if data_sheet_column_exceeding_limit.any?
       puts "WARNING: The following DataSheetColumn records have 'safe_name' exceeding #{limit} characters:"
@@ -21,7 +21,7 @@ class CheckSafenameLengthBeforeMigration < ActiveRecord::Migration[7.2]
       end
     end
     if data_sheet_column_exceeding_limit.any? or data_table_column_exceeding_limit.any?
-      raise "Migration aborted: Records found exceeding the new column limit." 
+      raise "Migration aborted: Records found exceeding the new column limit."
     end
   end
 
