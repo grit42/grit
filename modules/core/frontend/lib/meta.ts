@@ -37,7 +37,7 @@ const Meta: ModuleMeta = {
     {
       name: "Administration",
       path: "/core/administration",
-      roles: ["Administrator","CompoundAdministrator"],
+      roles: ["Administrator"],
     },
   ],
 };

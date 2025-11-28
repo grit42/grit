@@ -131,7 +131,7 @@ const Router = () => {
       <Route
         path="/administration/*"
         element={
-          <AuthGuard roles={["Administrator","CompoundAdministrator"]}>
+          <AuthGuard roles={["Administrator"]}>
             <LazyAdministrationPage />
           </AuthGuard>
         }
