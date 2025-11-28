@@ -293,7 +293,7 @@ JOIN (
         subquery = subquery.select(*[
           "data_sources.entity_id_value as value",
           assay_data_sheet_column.data_type.model.display_properties.map do |display_property|
-            "dt__#{assay_data_sheet_column.data_type.id}__#{assay_data_sheet_column.safe_name}.#{display_property[:name]} AS value__#{display_property[:name]}"
+            "dt__#{assay_data_sheet_column.safe_name}.#{display_property[:name]} AS value__#{display_property[:name]}"
           end
         ])
       else
