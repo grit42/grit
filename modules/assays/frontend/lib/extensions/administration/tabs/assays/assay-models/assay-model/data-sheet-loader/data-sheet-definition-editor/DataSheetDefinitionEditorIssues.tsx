@@ -102,7 +102,7 @@ const DataSheetDefinitionEditorIssues = ({
         style={{
           height: "100%",
           width: issues.length == 0 ? "max-content" : "100%",
-          maxWidth: "33vw",
+          maxWidth: "20vw",
           overflow: "auto",
           display: "grid",
           gridTemplateColumns: "1fr",
