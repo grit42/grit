@@ -1,13 +1,18 @@
-import { ErrorPage, Spinner, Surface } from "@grit42/client-library/components";
+import {
+  Button,
+  ButtonGroup,
+  ErrorPage,
+  Spinner,
+  Surface,
+} from "@grit42/client-library/components";
 import {
   AssayModelData,
   useAssayModel,
   useAssayModelFields,
 } from "../../../../../../../queries/assay_models";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   Form,
-  FormControls,
   FormField,
   FormFieldDef,
   genericErrorHandler,
@@ -127,13 +132,56 @@ const AssayModelForm = ({
               <FormField form={form} fieldDef={f} key={f.name} />
             ))}
           </div>
-          <FormControls
-            form={form}
-            onDelete={onDelete}
-            showDelete={!!assayModel.id}
-            showCancel
-            cancelLabel={assayModel.id ? "Back" : "Cancel"}
-            onCancel={() => navigate(assayModel.id ? "../.." : "..")}
+          <form.Subscribe
+            selector={(state) => [
+              state.canSubmit,
+              state.isSubmitting,
+              state.isDirty,
+            ]}
+            children={([canSubmit, isSubmitting, isDirty]) => {
+              return (
+                <ButtonGroup>
+                  {isDirty && (
+                    <Button
+                      color="secondary"
+                      disabled={!canSubmit}
+                      type="submit"
+                      loading={isSubmitting}
+                    >
+                      Save
+                    </Button>
+                  )}
+                  {isDirty && (
+                    <Button onClick={() => form.reset()}>Revert changes</Button>
+                  )}
+                  {!isDirty && (
+                    <Button
+                      onClick={() => navigate(assayModel.id ? "../.." : "..")}
+                    >
+                      {assayModel.id ? "Back" : "Cancel"}
+                    </Button>
+                  )}
+                  {!isDirty && !!assayModel.id && (
+                    <Link
+                      to={{
+                        pathname: "../clone",
+                      }}
+                    >
+                      <Button>Clone</Button>
+                    </Link>
+                  )}
+                  {!!assayModel.id && (
+                    <Button
+                      color="danger"
+                      onClick={onDelete}
+                      loading={destroyEntityMutation.isPending}
+                    >
+                      Delete
+                    </Button>
+                  )}
+                </ButtonGroup>
+              );
+            }}
           />
         </Form>
       </Surface>
