@@ -61,7 +61,7 @@ export const defaultColumnDefinitionsFromSheetOptions: ColumnDefinitionsFromShee
   {
     nameRowIndex: 1,
     columnOffset: "A",
-    dataRowOffset: 1,
+    dataRowOffset: 2,
     identifierRowIndex: null,
     descriptionRowIndex: null,
     dataTypeRowIndex: null,
