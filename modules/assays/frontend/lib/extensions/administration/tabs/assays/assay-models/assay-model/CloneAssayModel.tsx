@@ -10,7 +10,12 @@ import {
   useForm,
 } from "@grit42/form";
 import { useQueryClient } from "@grit42/api";
-import { useCreateEntityMutation, useEntityData } from "@grit42/core";
+import {
+  PublicationStatus,
+  useCreateEntityMutation,
+  useEntityData,
+  usePublicationStatuses,
+} from "@grit42/core";
 import { useState } from "react";
 import styles from "../assayModels.module.scss";
 import {
@@ -25,9 +30,9 @@ import {
   useAssayModelFields,
 } from "../../../../../../queries/assay_models";
 import {
-  AssayMetadataDefinitionData,
-} from "../../../../../../queries/assay_metadata_definitions";
-import { useAssayModelMetadata } from "../../../../../../queries/assay_model_metadata";
+  AssayModelMetadatumData,
+  useAssayModelMetadata,
+} from "../../../../../../queries/assay_model_metadata";
 
 const AssayModelForm = ({
   fields,
@@ -35,12 +40,14 @@ const AssayModelForm = ({
   metadata,
   sheets,
   columns,
+  publicationStatuses,
 }: {
   fields: FormFieldDef[];
   assayModel: Partial<AssayModelData>;
   sheets: AssayDataSheetDefinitionData[];
   columns: AssayDataSheetColumnData[];
-  metadata: AssayMetadataDefinitionData[];
+  metadata: AssayModelMetadatumData[];
+  publicationStatuses: PublicationStatus[];
 }) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -51,7 +58,12 @@ const AssayModelForm = ({
   );
 
   const form = useForm<Partial<AssayModelData>>({
-    defaultValues: formData,
+    defaultValues: {
+      ...formData,
+      publication_status_id: publicationStatuses.find(
+        ({ name }) => name === "Draft",
+      )?.id,
+    },
     onSubmit: genericErrorHandler(async ({ value: formValue, formApi }) => {
       const value = getVisibleFieldData<Partial<AssayModelData>>(
         formValue,
@@ -168,6 +180,12 @@ const CloneAssayModel = () => {
     ],
   );
   const {
+    data: publicationStatuses,
+    isLoading: isPublicationStatusesLoading,
+    isError: isPublicationStatusesError,
+    error: publicationStatusesError,
+  } = usePublicationStatuses();
+  const {
     data: modelMetadata,
     isLoading: isModelMetadataLoading,
     isError: isModelMetadataError,
@@ -179,7 +197,8 @@ const CloneAssayModel = () => {
     isLoading ||
     isSheetsLoading ||
     isColumnsLoading ||
-    isModelMetadataLoading
+    isModelMetadataLoading ||
+    isPublicationStatusesLoading
   )
     return <Spinner />;
   if (
@@ -188,11 +207,13 @@ const CloneAssayModel = () => {
     isSheetsError ||
     isColumnsError ||
     isModelMetadataError ||
+    isPublicationStatusesError ||
     !fields ||
     !data ||
     !sheets ||
     !columns ||
-    !modelMetadata
+    !modelMetadata ||
+    !publicationStatuses
   )
     return (
       <ErrorPage
@@ -201,6 +222,7 @@ const CloneAssayModel = () => {
           sheetsError ??
           columnsError ??
           modelMetadataError ??
+          publicationStatusesError ??
           error
         }
       />
@@ -212,6 +234,7 @@ const CloneAssayModel = () => {
       columns={columns}
       sheets={sheets}
       metadata={modelMetadata}
+      publicationStatuses={publicationStatuses}
     />
   );
 };
