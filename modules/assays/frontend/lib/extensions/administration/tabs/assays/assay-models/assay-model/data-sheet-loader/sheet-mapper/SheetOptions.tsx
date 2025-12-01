@@ -29,6 +29,7 @@ const SheetOptions = ({
           gap: "calc(var(--spacing) * 2)",
           paddingBottom: "calc(var(--spacing) * 2)",
           maxWidth: 400,
+          overflowY: "auto"
         }}
       >
         <p>
