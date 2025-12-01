@@ -129,8 +129,8 @@ export const sampleSheetData = ({ sheet, range }: Sheet, rows = 100) =>
     blankrows: true,
     header: "A",
     range: utils.encode_range({
-      ...range,
-      e: { ...range.e, r: Math.min(range.e.r, rows) },
+      s: { c: 0, r: 0 },
+      e: { c: range.e.c, r: Math.min(range.e.r, rows) },
     }),
   });
 
