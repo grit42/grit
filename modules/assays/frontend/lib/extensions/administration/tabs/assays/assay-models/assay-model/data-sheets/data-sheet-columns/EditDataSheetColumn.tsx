@@ -42,6 +42,7 @@ import {
   genericErrorHandler,
   getVisibleFieldData,
   useForm,
+  useStore,
 } from "@grit42/form";
 import styles from "../../../assayModels.module.scss";
 import {
@@ -50,6 +51,7 @@ import {
   useAssayDataSheetColumns,
 } from "../../../../../../../../queries/assay_data_sheet_columns";
 import z from "zod";
+import { toSafeIdentifier } from "@grit42/core/utils";
 
 const initializedFormData = <T extends Partial<EntityData>>(
   data: T,
@@ -132,6 +134,20 @@ const AssayDataSheetColumnForm = ({
     }),
   });
 
+  const { safe_name, proposed_safe_name } = useStore(
+    form.baseStore,
+    ({ values }) => {
+      const { name, safe_name } = values;
+      const proposed_safe_name = form.getFieldMeta("name")?.isDirty
+        ? toSafeIdentifier(name as string)
+        : safe_name;
+      return { safe_name, proposed_safe_name } as {
+        safe_name: string;
+        proposed_safe_name: string;
+      };
+    },
+  );
+
   const onDelete = async () => {
     if (
       !assayDataSheetColumn.id ||
@@ -171,15 +187,31 @@ const AssayDataSheetColumnForm = ({
             </div>
           )}
           {fields.map((f) => (
-            <FormField
-              form={form}
-              fieldDef={f}
-              key={f.name}
-              validators={{
-                onChange: validators[f.name as "name" | "safe_name"],
-                onMount: validators[f.name as "name" | "safe_name"],
-              }}
-            />
+            <div style={{ width: "100%" }} key={f.name}>
+              <FormField
+                form={form}
+                fieldDef={f}
+                validators={{
+                  onChange: validators[f.name as "name" | "safe_name"],
+                  onMount: validators[f.name as "name" | "safe_name"],
+                }}
+              />
+              {f.name === "safe_name" &&
+                safe_name !== proposed_safe_name &&
+                proposed_safe_name.length &&
+                form.state.isDirty && (
+                  <div className={styles.columnFormFieldSuggestion}>
+                    <em
+                      role="button"
+                      onClick={() =>
+                        form.setFieldValue("safe_name", proposed_safe_name)
+                      }
+                    >
+                      Use "{proposed_safe_name}"
+                    </em>
+                  </div>
+                )}
+            </div>
           ))}
         </div>
         <form.Subscribe
