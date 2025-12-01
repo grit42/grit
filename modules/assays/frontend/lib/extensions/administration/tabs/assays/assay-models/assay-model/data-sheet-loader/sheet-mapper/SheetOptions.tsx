@@ -20,7 +20,7 @@ const SheetOptions = ({
   );
 
   return (
-    <Surface>
+    <Surface style={{ overflowY: "auto" }}>
       <div
         style={{
           display: "grid",
@@ -29,7 +29,6 @@ const SheetOptions = ({
           gap: "calc(var(--spacing) * 2)",
           paddingBottom: "calc(var(--spacing) * 2)",
           maxWidth: 400,
-          overflowY: "auto"
         }}
       >
         <p>

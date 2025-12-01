@@ -44,6 +44,7 @@ const DataSheetColumnForm = ({
         gridTemplateColumns: "1fr",
         gap: "var(--spacing)",
         gridAutoRows: "min-content",
+        overflowY: "auto",
       }}
     >
       {DATA_SHEET_COLUMN_FIELDS.map((fieldDef) => {
