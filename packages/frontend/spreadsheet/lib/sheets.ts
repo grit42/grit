@@ -92,7 +92,6 @@ export const sheetDefinitionsFromFile = async (
   const workbook = read(ab, {
     dense: true,
     cellDates: true,
-    raw: true,
   });
 
   const sheets: Sheet[] = [];
