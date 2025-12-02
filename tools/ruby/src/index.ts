@@ -61,7 +61,7 @@ async function createNodesInternal(
   // Inferred tasks
 
   const devTarget: TargetConfiguration = {
-    command: `bin/rails server`,
+    command: `bundle exec server`,
     continuous: true,
     options: { cwd: projectRoot },
   };

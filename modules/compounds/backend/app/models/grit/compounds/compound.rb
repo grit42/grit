@@ -190,6 +190,71 @@ module Grit::Compounds
           disabled: true,
           compound_type_id: nil,
           compound_type_id__name: nil
+        },
+        {
+          name: "smiles",
+          display_name: "Canonical SMILES",
+          type: "string",
+          limit: nil,
+          required: false,
+          unique: false,
+          default: nil,
+          entity: nil,
+          disabled: true,
+          compound_type_id: nil,
+          compound_type_id__name: nil
+        },
+        {
+          name: "inchi",
+          display_name: "InChI",
+          type: "string",
+          limit: nil,
+          required: false,
+          unique: false,
+          default: nil,
+          entity: nil,
+          disabled: true,
+          compound_type_id: nil,
+          compound_type_id__name: nil
+        },
+        {
+          name: "inchikey",
+          display_name: "InChI Key",
+          type: "string",
+          limit: nil,
+          required: false,
+          unique: false,
+          default: nil,
+          entity: nil,
+          disabled: true,
+          compound_type_id: nil,
+          compound_type_id__name: nil
+        },
+        {
+          name: "hba",
+          display_name: "Hydrogen Bond Acceptor Count",
+          type: "decimal",
+          limit: nil,
+          required: false,
+          unique: false,
+          default: nil,
+          entity: nil,
+          disabled: true,
+          compound_type_id: nil,
+          compound_type_id__name: nil
+        },
+        {
+          name: "hbd",
+          display_name: "Hydrogen Bond Donor Count",
+          type: "decimal",
+          limit: nil,
+          required: false,
+          unique: false,
+          default: nil,
+          entity: nil,
+          disabled: true,
+          compound_type_id: nil,
+          compound_type_id__name: nil
         } ]
       end
 
@@ -250,6 +315,10 @@ module Grit::Compounds
         .select("grit_compounds_molecules__.molweight as molweight")
         .select("grit_compounds_molecules__.logp as logp")
         .select("grit_compounds_molecules__.molformula as molformula")
+        .select("grit_compounds_molecules__.inchi as inchi")
+        .select("grit_compounds_molecules__.inchikey as inchikey")
+        .select("grit_compounds_molecules__.hba as hba")
+        .select("grit_compounds_molecules__.hbd as hbd")
         .joins("LEFT OUTER JOIN grit_compounds_compound_types grit_compounds_compound_types__ ON grit_compounds_compounds.compound_type_id = grit_compounds_compound_types__.id")
         .joins("LEFT OUTER JOIN grit_core_origins grit_core_origins__ ON grit_compounds_compounds.origin_id = grit_core_origins__.id")
         .joins("LEFT OUTER JOIN grit_compounds_molecules_compounds grit_compounds_molecules_compounds__ ON grit_compounds_compounds.id = grit_compounds_molecules_compounds__.compound_id")
@@ -313,6 +382,10 @@ module Grit::Compounds
       .select("grit_compounds_molecules__.molweight as molweight")
       .select("grit_compounds_molecules__.logp as logp")
       .select("grit_compounds_molecules__.molformula as molformula")
+      .select("grit_compounds_molecules__.inchi as inchi")
+      .select("grit_compounds_molecules__.inchikey as inchikey")
+      .select("grit_compounds_molecules__.hba as hba")
+      .select("grit_compounds_molecules__.hbd as hbd")
       .joins("LEFT OUTER JOIN grit_compounds_compound_types grit_compounds_compound_types__ ON grit_compounds_compounds.compound_type_id = grit_compounds_compound_types__.id")
       .joins("LEFT OUTER JOIN grit_core_origins grit_core_origins__ ON grit_compounds_compounds.origin_id = grit_core_origins__.id")
       .joins("LEFT OUTER JOIN grit_compounds_molecules_compounds grit_compounds_molecules_compounds__ ON grit_compounds_compounds.id = grit_compounds_molecules_compounds__.compound_id")

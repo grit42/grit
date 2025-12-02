@@ -32,6 +32,9 @@ const LazyCompoundBatchesPage = lazy(
 const LazyCompoundSynonymsPage = lazy(
   () => import("./pages/compounds/[id]/synonyms"),
 );
+const LazyCompoundCVPage = lazy(
+  () => import("./pages/compounds/[id]/compound-cv"),
+)
 
 const Router = () => {
   return (
@@ -56,6 +59,7 @@ const Router = () => {
         <Route path="details" element={<LazyCompoundDetailsPage />} />
         <Route path="batches" element={<LazyCompoundBatchesPage />} />
         <Route path="synonyms" element={<LazyCompoundSynonymsPage />} />
+        <Route path="compound-cv" element={<LazyCompoundCVPage />} />
         <Route index path="*" element={<Navigate to="details" replace />} />
       </Route>
     </Routes>
