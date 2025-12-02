@@ -120,7 +120,7 @@ export const refinedDataSetDefinitionSchema = (
       if (assayModelDataSheets.find(({ name }) => name === item.name)) {
         ctx.addIssue({
           code: "custom",
-          message: "is already taken by an existing data sheet",
+          message: "must be unique within an assay model",
           path: ["sheets", idx, "name"],
         });
       }
