@@ -28,7 +28,7 @@ import {
   notifyOnError,
 } from "@grit42/api";
 import { EntityData, EntityProperties } from "./types";
-import { upsert } from "@grit42/notifications";
+import { toast } from "@grit42/notifications";
 
 const handleMutationSuccess = (
   queryClient: QueryClient,
@@ -47,14 +47,6 @@ const handleMutationSuccess = (
     queryKey: ["entities", "infiniteData", entityPath],
     refetchType: "all",
   });
-  console.log("! handleMutationSuccess", entityPath);
-  upsert("Done", {
-    closeButton: true,
-    autoClose: 3000,
-    isLoading: false,
-    toastId: entityPath,
-    type: "success"
-  });
 };
 
 export const useCreateEntityMutation = <T extends EntityProperties>(
@@ -65,12 +57,12 @@ export const useCreateEntityMutation = <T extends EntityProperties>(
   return useMutation({
     mutationKey: ["createEntity", entityPath],
     mutationFn: async (entityData: Partial<T>) => {
-      console.log("! useCreateEntityMutation", entityPath);
-      upsert("Creating records...", {
+      const toastId = Math.random().toString(36).slice(2, 15);
+      toast("Creating records...", {
         autoClose: false,
         closeButton: false,
         isLoading: true,
-        toastId: entityPath,
+        toastId: toastId,
       });
       const response = await request<
         EndpointSuccess<EntityData<T>>,
@@ -79,9 +71,9 @@ export const useCreateEntityMutation = <T extends EntityProperties>(
         method: "POST",
         data: entityData,
       });
-
+      toast.dismiss(toastId);
       if (!response.success) {
-        throw response.errors;
+         throw response.errors;
       }
 
       return response.data;
@@ -105,11 +97,12 @@ export const useEditEntityMutation = <T extends EntityProperties>(
   return useMutation({
     mutationKey: ["editEntity", entityPath, entityId.toString()],
     mutationFn: async (entityData: Partial<T>) => {
-      upsert("Updating records...", {
+      const toastId = Math.random().toString(36).slice(2, 15);
+      toast("Updating records...", {
         autoClose: false,
         closeButton: false,
         isLoading: true,
-        toastId: entityPath,
+        toastId: toastId,
       });
       const response = await request<
         EndpointSuccess<EntityData<T>>,
@@ -118,11 +111,10 @@ export const useEditEntityMutation = <T extends EntityProperties>(
         method: "PATCH",
         data: entityData,
       });
-
+      toast.dismiss(toastId);
       if (!response.success) {
         throw response.errors;
       }
-
       return response.data;
     },
     onSuccess: () =>
@@ -148,11 +140,12 @@ export const useDestroyEntityMutation = <
     mutationKey: ["destroyEntity", entityPath],
     mutationFn: async (entityIds: TId) => {
       const url = `${entityPath}/destroy`;
-      upsert("Deleting records...", {
+      const toastId = Math.random().toString(36).slice(2, 15);
+      toast("Deleting records...", {
         autoClose: false,
         closeButton: false,
         isLoading: true,
-        toastId: entityPath,
+        toastId: toastId,
       });
       const response = await request<
         EndpointSuccess<EntityData<TData>>,
@@ -161,11 +154,10 @@ export const useDestroyEntityMutation = <
         method: "DELETE",
         data: { ids: (Array.isArray(entityIds) ? entityIds : [entityIds]).join(",") }
       });
-
+      toast.dismiss(toastId);
       if (!response.success) {
         throw response.errors;
       }
-
       return response.data;
     },
     onSuccess: () => handleMutationSuccess(queryClient, entityPath),
