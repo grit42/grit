@@ -30,7 +30,7 @@
   "description": "",
   "dependencies": {
     "@grit42/client-library": "workspace:*",
-    "plotly.js": "^3.0.1",
+    "plotly.js-dist": "^3.0.1",
     "react-plotly.js": "^2.6.0"
   },
   "peerDependencies": {
@@ -39,7 +39,7 @@
   "devDependencies": {
     "@eslint/js": "catalog:",
     "@types/node": "catalog:",
-    "@types/plotly.js": "^2.35.4",
+    "@types/plotly.js-dist": "npm:@types/plotly.js@^3.0.7",
     "@types/react": "catalog:",
     "@types/react-plotly.js": "^2.6.3",
     "@vitejs/plugin-react": "catalog:",
