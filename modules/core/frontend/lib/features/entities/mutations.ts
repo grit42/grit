@@ -47,11 +47,13 @@ const handleMutationSuccess = (
     queryKey: ["entities", "infiniteData", entityPath],
     refetchType: "all",
   });
+  console.log("! handleMutationSuccess", entityPath);
   upsert("Done", {
     closeButton: true,
     autoClose: 3000,
     isLoading: false,
-    toastId: "entitiesMutationsToastId"
+    toastId: entityPath,
+    type: "success"
   });
 };
 
@@ -63,11 +65,12 @@ export const useCreateEntityMutation = <T extends EntityProperties>(
   return useMutation({
     mutationKey: ["createEntity", entityPath],
     mutationFn: async (entityData: Partial<T>) => {
+      console.log("! useCreateEntityMutation", entityPath);
       upsert("Creating records...", {
         autoClose: false,
         closeButton: false,
         isLoading: true,
-        toastId: "entitiesMutationsToastId"
+        toastId: entityPath,
       });
       const response = await request<
         EndpointSuccess<EntityData<T>>,
@@ -106,7 +109,7 @@ export const useEditEntityMutation = <T extends EntityProperties>(
         autoClose: false,
         closeButton: false,
         isLoading: true,
-        toastId: "entitiesMutationsToastId"
+        toastId: entityPath,
       });
       const response = await request<
         EndpointSuccess<EntityData<T>>,
@@ -149,7 +152,7 @@ export const useDestroyEntityMutation = <
         autoClose: false,
         closeButton: false,
         isLoading: true,
-        toastId: "entitiesMutationsToastId"
+        toastId: entityPath,
       });
       const response = await request<
         EndpointSuccess<EntityData<TData>>,
