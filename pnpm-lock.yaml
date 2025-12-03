@@ -812,9 +812,9 @@ importers:
       '@grit42/client-library':
         specifier: workspace:*
         version: link:../client-library
-      plotly.js-dist:
+      plotly.js:
         specifier: ^3.0.1
-        version: 3.3.0
+        version: 3.0.1(mapbox-gl@1.13.3)(webpack@5.98.0(@swc/core@1.5.29(@swc/helpers@0.5.17)))
       react-plotly.js:
         specifier: ^2.6.0
         version: 2.6.0(plotly.js@3.0.1(mapbox-gl@1.13.3)(webpack@5.98.0(@swc/core@1.5.29(@swc/helpers@0.5.17))))(react@18.3.1)
@@ -825,9 +825,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 22.13.9
-      '@types/plotly.js-dist':
-        specifier: npm:@types/plotly.js@^3.0.7
-        version: '@types/plotly.js@3.0.8'
+      '@types/plotly.js':
+        specifier: ^2.35.4
+        version: 2.35.4
       '@types/react':
         specifier: 'catalog:'
         version: 18.3.18
@@ -3218,9 +3218,6 @@ packages:
 
   '@types/plotly.js@2.35.4':
     resolution: {integrity: sha512-A8d3r8I2vIsaMRJ+0ZLvzW98l4vDu5AuLAWwtWSF61ekqUj3q6Hu0w6RQk+S1fumu7A3Fji+aodta4F9+8BMuA==}
-
-  '@types/plotly.js@3.0.8':
-    resolution: {integrity: sha512-FjmSFaLmHVgBIBL6H0yX5k/AB3a7FQzjKBlRUF8YT6HiXMArE+hbXYIZXZ/42SBrdL05LWEog0zPqEaIDNsAiw==}
 
   '@types/prop-types@15.7.14':
     resolution: {integrity: sha512-gNMvNH49DJ7OJYv+KAKn0Xp45p8PLl6zo2YnvDIbTd4J6MER2BmWN49TG7n9LvkyihINxeKW8+3bfS2yDC9dzQ==}
@@ -5733,9 +5730,6 @@ packages:
     resolution: {integrity: sha512-442pTfGM0xxfCYxuBa/Pu6B2OqxqqaYq39JS8QDMGThUvIOCd6s0ANDog3uwA0cHavVlnTQzGCN7Id2YekDSXA==}
     engines: {node: '>=18'}
     hasBin: true
-
-  plotly.js-dist@3.3.0:
-    resolution: {integrity: sha512-yZtjAeqHWOaP6hQ63bHu4EqcnnAyCpUkqyRzJ3r0Q6IjLEl2q3/RMu0S4O0ld3LgNUnfjka+uVPAvrsMATXxAA==}
 
   plotly.js@3.0.1:
     resolution: {integrity: sha512-eWEUkqdv4sblmUQJ7xGlEA+LghzEVPJOlPBZMJuagG0CsQxlmBb+7rd0UFVig5jhRnN8PQqRQaLv6qXIjnvzgg==}
@@ -9480,8 +9474,6 @@ snapshots:
 
   '@types/plotly.js@2.35.4': {}
 
-  '@types/plotly.js@3.0.8': {}
-
   '@types/prop-types@15.7.14': {}
 
   '@types/react-dom@18.3.5(@types/react@18.3.18)':
@@ -12395,8 +12387,6 @@ snapshots:
       playwright-core: 1.51.0
     optionalDependencies:
       fsevents: 2.3.2
-
-  plotly.js-dist@3.3.0: {}
 
   plotly.js@3.0.1(mapbox-gl@1.13.3)(webpack@5.98.0(@swc/core@1.5.29(@swc/helpers@0.5.17))):
     dependencies:
