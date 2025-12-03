@@ -57,12 +57,10 @@ export const useCreateEntityMutation = <T extends EntityProperties>(
   return useMutation({
     mutationKey: ["createEntity", entityPath],
     mutationFn: async (entityData: Partial<T>) => {
-      const toastId = Math.random().toString(36).slice(2, 15);
-      toast("Creating records...", {
+      const toastId = toast("Creating records...", {
         autoClose: false,
         closeButton: false,
         isLoading: true,
-        toastId: toastId,
       });
       const response = await request<
         EndpointSuccess<EntityData<T>>,
@@ -97,12 +95,10 @@ export const useEditEntityMutation = <T extends EntityProperties>(
   return useMutation({
     mutationKey: ["editEntity", entityPath, entityId.toString()],
     mutationFn: async (entityData: Partial<T>) => {
-      const toastId = Math.random().toString(36).slice(2, 15);
-      toast("Updating records...", {
+      const toastId = toast("Updating records...", {
         autoClose: false,
         closeButton: false,
         isLoading: true,
-        toastId: toastId,
       });
       const response = await request<
         EndpointSuccess<EntityData<T>>,
@@ -140,12 +136,10 @@ export const useDestroyEntityMutation = <
     mutationKey: ["destroyEntity", entityPath],
     mutationFn: async (entityIds: TId) => {
       const url = `${entityPath}/destroy`;
-      const toastId = Math.random().toString(36).slice(2, 15);
-      toast("Deleting records...", {
+      const toastId = toast("Deleting records...", {
         autoClose: false,
         closeButton: false,
         isLoading: true,
-        toastId: toastId,
       });
       const response = await request<
         EndpointSuccess<EntityData<TData>>,
