@@ -54,6 +54,7 @@
           "@grit42/form",
           "@grit42/api",
           "@grit42/table",
+          "@grit42/spreadsheet",
           "@grit42/plots"
         ]
       },

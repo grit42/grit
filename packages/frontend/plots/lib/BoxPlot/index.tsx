@@ -28,18 +28,15 @@ const getBoxPlotData = (
   def: BoxPlotDefinition,
 ): GritBoxData[] => {
   return Object.values(
-    data.reduce(
-      (acc, d) => {
-        if (nullish(d[def.y.key])) return acc;
-        const key = def.groupBy?.map((k) => d[k]).join("-") ?? "all";
-        if (!acc[key]) {
-          acc[key] = { ...DEFAULT_BOX, y: [], name: key };
-        }
-        acc[key].y.push(d[def.y.key]);
-        return acc;
-      },
-      {} as Record<string, GritBoxData>,
-    ),
+    data.reduce((acc, d) => {
+      if (nullish(d[def.y.key])) return acc;
+      const key = def.groupBy?.map((k) => d[k]).join("-") ?? "all";
+      if (!acc[key]) {
+        acc[key] = { ...DEFAULT_BOX, y: [], name: key };
+      }
+      acc[key].y.push(d[def.y.key]);
+      return acc;
+    }, {} as Record<string, GritBoxData>),
   );
 };
 
@@ -71,6 +68,9 @@ const BoxPlot = ({ def, data }: BoxPlotProps) => {
     },
     dragmode: "pan",
     autosize: true,
+    modebar: {
+      remove: ["lasso2d", "select2d"],
+    },
   };
 
   const plotData = useMemo(() => getBoxPlotData(data, def), [data, def]);
@@ -82,7 +82,7 @@ const BoxPlot = ({ def, data }: BoxPlotProps) => {
       config={{
         responsive: true,
         scrollZoom: true,
-        displayModeBar: false,
+        displaylogo: false,
       }}
       layout={{
         ...layout,

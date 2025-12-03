@@ -326,11 +326,11 @@ module Grit::Compounds
         if property.data_type.is_entity
           entity_klass = property.data_type.model
           query = query
-            .joins("LEFT OUTER JOIN #{property.data_type.table_name} cpv__#{property.safe_name} on cpv__#{property.safe_name}.id = cpv__#{property.safe_name}.entity_id_value")
+            .joins("LEFT OUTER JOIN #{property.data_type.table_name} cpv__#{property.safe_name}__entities on cpv__#{property.safe_name}__entities.id = cpv__#{property.safe_name}.entity_id_value")
             .select("cpv__#{property.safe_name}.entity_id_value as #{property.safe_name}")
             entity_klass.display_properties&.each do |display_property|
               query = query
-              .select("cpv__#{property.safe_name}.#{display_property[:name]} as #{property.safe_name}__#{display_property[:name]}")
+              .select("cpv__#{property.safe_name}__entities.#{display_property[:name]} as #{property.safe_name}__#{display_property[:name]}")
             end
         else
           query = query.select("cpv__#{property.safe_name}.#{property.data_type.name}_value as #{property.safe_name}")

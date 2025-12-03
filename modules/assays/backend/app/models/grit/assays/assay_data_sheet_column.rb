@@ -42,11 +42,7 @@ module Grit::Assays
 
     def safe_name_not_conflict
       return unless self.safe_name_changed?
-      begin
-        # This is needed because of how active_support handles serialization as_json
-        Grit::Assays::AssayDataSheetColumn.send(self.safe_name)
-      rescue NoMethodError
-      rescue StandardError
+      if Grit::Assays::AssayDataSheetColumn.respond_to?(self.safe_name)
         errors.add("safe_name", "cannot be used as a safe name")
       end
     end

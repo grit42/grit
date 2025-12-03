@@ -100,7 +100,7 @@ AND GRIT_ASSAYS_ASSAY_DATA_SHEET_COLUMNS.DATA_TYPE_ID <> #{data_table.entity_dat
           return subquery.select(*[
             "data_sources.entity_id_value as value",
             assay_data_sheet_column.data_type.model.display_properties.map do |display_property|
-              "cpv__#{assay_data_sheet_column.safe_name}.#{display_property[:name]} AS value__#{display_property[:name]}"
+              "dtv__#{self.safe_name}__entities.#{display_property[:name]} AS value__#{display_property[:name]}"
             end
           ])
         end
@@ -139,14 +139,14 @@ AND GRIT_ASSAYS_ASSAY_DATA_SHEET_COLUMNS.DATA_TYPE_ID <> #{data_table.entity_dat
           return subquery.select(*[
             "count(data_sources.entity_id_value) AS value",
             assay_data_sheet_column.data_type.model.display_properties.map do |display_property|
-              "count(cpv__#{assay_data_sheet_column.safe_name}.#{display_property[:name]}) AS value__#{display_property[:name]}"
+              "count(dtv__#{self.safe_name}__entities.#{display_property[:name]}) AS value__#{display_property[:name]}"
             end
           ])
         when "csv"
           return subquery.select(*[
             "ARRAY_AGG(data_sources.entity_id_value) AS value",
             assay_data_sheet_column.data_type.model.display_properties.map do |display_property|
-              "STRING_AGG(cpv__#{assay_data_sheet_column.safe_name}.#{display_property[:name]}, ', ') AS value__#{display_property[:name]}"
+              "STRING_AGG(dtv__#{self.safe_name}__entities.#{display_property[:name]}, ', ') AS value__#{display_property[:name]}"
             end
           ])
         end
@@ -209,8 +209,8 @@ JOIN GRIT_ASSAYS_EXPERIMENTS ON GRIT_ASSAYS_EXPERIMENTS.ID = GRIT_ASSAYS_EXPERIM
     def join_entity_table subquery
       if assay_data_sheet_column.data_type.is_entity
         entity_join = <<-SQL
-LEFT OUTER JOIN #{assay_data_sheet_column.data_type.table_name} cpv__#{assay_data_sheet_column.safe_name} ON
-cpv__#{assay_data_sheet_column.safe_name}.id = data_sources.entity_id_value
+LEFT OUTER JOIN #{assay_data_sheet_column.data_type.table_name} dtv__#{self.safe_name}__entities ON
+dtv__#{self.safe_name}__entities.id = data_sources.entity_id_value
         SQL
         subquery = subquery.joins(entity_join)
       end
@@ -293,7 +293,7 @@ JOIN (
         subquery = subquery.select(*[
           "data_sources.entity_id_value as value",
           assay_data_sheet_column.data_type.model.display_properties.map do |display_property|
-            "cpv__#{assay_data_sheet_column.safe_name}.#{display_property[:name]} AS value__#{display_property[:name]}"
+            "dtv__#{self.safe_name}__entities.#{display_property[:name]} AS value__#{display_property[:name]}"
           end
         ])
       else

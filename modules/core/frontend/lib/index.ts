@@ -58,6 +58,9 @@ export type {
 export * from "./features/importer";
 export type * from "./features/importer";
 
+export * from "./features/publication-status";
+export type * from "./features/publication-status";
+
 export * from "./components";
 export type * from "./components";
 

@@ -16,46 +16,58 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Table } from "@grit42/table";
+import { Table, useSetupTableState } from "@grit42/table";
 import { useCallback, useEffect } from "react";
 import { useToolbar } from "../../../Toolbar";
 import Circle1NewIcon from "@grit42/client-library/icons/Circle1New";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@grit42/client-library/components";
 import { useTableColumns } from "../../../utils";
-import {
-  useVocabularies,
-  useVocabularyColumns,
-} from "../queries/vocabularies";
+import { useVocabularies, useVocabularyColumns } from "../queries/vocabularies";
 import styles from "./vocabularies.module.scss";
 import { useHasRoles } from "../../session";
-
-const DEFAULT_COLUMN_SIZES = {
-  name: 200,
-  description: 750,
-} as const;
 
 const VocabulariesTable = () => {
   const registerToolbarActions = useToolbar();
   const navigate = useNavigate();
-  const canEditVocabularies = useHasRoles(["Administrator", "VocabularyAdministrator"])
+  const canEditVocabularies = useHasRoles([
+    "Administrator",
+    "VocabularyAdministrator",
+  ]);
   const { pathname } = useLocation();
-  const { data: vocabularies } = useVocabularies();
-  const { data: vocabularyColumns } = useVocabularyColumns(undefined, {
-    select: (data) =>
-      data.map((d) => ({
-        ...d,
-        defaultColumnSize:
-          DEFAULT_COLUMN_SIZES[d.name as keyof typeof DEFAULT_COLUMN_SIZES],
-      })),
-  });
+  const { data: vocabularyColumns } = useVocabularyColumns();
 
   const vocabulariesTableColumns = useTableColumns(vocabularyColumns);
 
-  const navigateToNew = useCallback(
-    () => navigate("new"),
-    [navigate],
+  const tableState = useSetupTableState(
+    "vocabularies-tables",
+    vocabulariesTableColumns,
+    {
+      settings: {
+        disableColumnReorder: true,
+        disableVisibilitySettings: true,
+      },
+      initial: {
+        sorting: [
+          {
+            id: "name",
+            desc: false,
+          },
+        ],
+        sizing: {
+          name: 500,
+          description: 750,
+        },
+      },
+    },
   );
+
+  const { data: vocabularies } = useVocabularies(
+    tableState.sorting,
+    tableState.filters,
+  );
+
+  const navigateToNew = useCallback(() => navigate("new"), [navigate]);
 
   useEffect(() => {
     return registerToolbarActions({
@@ -65,7 +77,7 @@ const VocabulariesTable = () => {
           icon: <Circle1NewIcon />,
           label: "New vocabulary",
           onClick: navigateToNew,
-          disabled: canEditVocabularies
+          disabled: canEditVocabularies,
         },
       ],
     });
@@ -74,15 +86,15 @@ const VocabulariesTable = () => {
   return (
     <div className={styles.vocabularies}>
       <Table
+        tableState={tableState}
         header="Vocabularies"
-        settings={{
-          disableColumnReorder: true,
-          disableVisibilitySettings: true,
-        }}
-        headerActions={canEditVocabularies ? <Button onClick={navigateToNew}>New</Button> : undefined}
+        headerActions={
+          canEditVocabularies ? (
+            <Button onClick={navigateToNew}>New</Button>
+          ) : undefined
+        }
         className={styles.typesTable}
         data={vocabularies}
-        columns={vocabulariesTableColumns}
         onRowClick={(row) => navigate(`${row.original.id}`)}
       />
     </div>

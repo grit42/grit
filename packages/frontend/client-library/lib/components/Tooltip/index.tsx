@@ -29,6 +29,7 @@ import {
   autoUpdate,
   shift,
   FloatingArrow,
+  AutoPlacementOptions,
 } from "@floating-ui/react";
 
 interface Props {
@@ -44,6 +45,7 @@ interface TooltipRenderProps extends Props {
   childRef: HTMLSpanElement | null;
   onTransitionEnd: () => void;
   isHovering: boolean;
+  autoPlacementOptions?: AutoPlacementOptions;
 }
 
 interface TooltipProps extends Props {
@@ -58,6 +60,7 @@ export const TooltipRender = ({
   onTransitionEnd,
   isHovering,
   className,
+  autoPlacementOptions,
 }: TooltipRenderProps) => {
   const [showing, setShowing] = useState(false);
   const [tooltipRef, setTooltipRef] = useState<HTMLDivElement | null>(null);
@@ -69,7 +72,7 @@ export const TooltipRender = ({
 
   const middleware = useMemo(
     () => [
-      ...(placementFromProps ? [] : [autoPlacement()]),
+      ...(placementFromProps ? [] : [autoPlacement(autoPlacementOptions)]),
       shift(),
       offset(14),
       arrow({
