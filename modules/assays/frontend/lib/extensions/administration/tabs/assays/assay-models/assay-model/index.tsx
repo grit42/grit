@@ -27,11 +27,17 @@ import {
   useNavigate,
   useParams,
 } from "react-router-dom";
-import { Button, ErrorPage, Spinner, Tabs } from "@grit42/client-library/components";
+import {
+  Button,
+  ErrorPage,
+  Spinner,
+  Tabs,
+} from "@grit42/client-library/components";
 import { useAssayModel } from "../../../../../../queries/assay_models";
 import Details from "./details";
 import Metadata from "./metadata";
 import DataSheets from "./data-sheets";
+import DataSheetLoader from "./data-sheet-loader";
 
 const TABS = [
   {
@@ -75,13 +81,13 @@ const AssayModelTabs = ({ name }: { name: string }) => {
     <div
       style={{
         display: "grid",
-        gridTemplateRows: "min-content min-content 1fr",
+        gridTemplateRows: tab === "data-sheet-loader" ? "min-content 1fr" : "min-content min-content 1fr",
         height: "100%",
-        alignSelf: "stretch"
+        alignSelf: "stretch",
       }}
     >
       <h2 style={{ alignSelf: "baseline", marginBottom: ".5em" }}>{name}</h2>
-      <Tabs
+      {tab !== "data-sheet-loader" && <Tabs
         onTabChange={handleTabChange}
         selectedTab={selectedTab}
         tabs={TABS.map((t) => ({
@@ -89,7 +95,7 @@ const AssayModelTabs = ({ name }: { name: string }) => {
           name: t.label,
           panel: <></>,
         }))}
-      />
+      />}
       <Outlet />
     </div>
   );
@@ -120,6 +126,10 @@ const AssayModel = () => {
         {TABS.map(({ url, Tab }) => (
           <Route key={url} path={`${url}/*`} element={<Tab />} />
         ))}
+        <Route
+          path="data-sheet-loader/*"
+          element={<DataSheetLoader assayModel={data} />}
+        />
         <Route path="*" element={<Navigate to={TABS[0].url} replace />} />
       </Route>
     </Routes>

@@ -19,7 +19,6 @@
 import { ErrorPage, Spinner } from "@grit42/client-library/components";
 import {
   useDataTableRowColumns,
-  useDataTableRows,
   useInfiniteDataTableRows,
 } from "../queries/data_table_rows";
 import { Navigate, Route, Routes, useParams } from "react-router-dom";

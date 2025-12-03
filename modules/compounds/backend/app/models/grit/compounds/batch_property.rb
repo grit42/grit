@@ -40,16 +40,8 @@ module Grit::Compounds
 
     def safe_name_not_conflict
       return unless self.safe_name_changed?
-      if Grit::Compounds::Batch.entity_properties.find { |p| p[:name] == self.safe_name }
+      if Grit::Compounds::Batch.respond_to?(self.safe_name)
         errors.add("safe_name", "cannot be used as a safe name")
-      else
-        begin
-          # This is needed because of how active_support handles serialization as_json
-          Grit::Compounds::Batch.send(self.safe_name)
-        rescue NoMethodError => e
-        rescue StandardError => e
-          errors.add("safe_name", "cannot be used as a safe name")
-        end
       end
     end
 

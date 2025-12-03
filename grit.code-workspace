@@ -61,6 +61,10 @@
       "name": "frontend/plots",
     },
     {
+      "path": "packages/frontend/spreadsheet",
+      "name": "frontend/spreadsheet",
+    },
+    {
       "path": "packages/frontend/app",
       "name": "frontend/app",
     },
@@ -85,6 +89,7 @@
       "packages/frontend/table": true,
       "packages/frontend/notifications": true,
       "packages/frontend/plots": true,
+      "packages/frontend/spreadsheet": true,
       "packages/frontend/app": true,
       "grit-docs": true,
     },

@@ -5,7 +5,11 @@ Grit::Core::Engine.routes.draw do
   end
   resources :publication_statuses
   resources_with_export :units
-  resources_with_export :data_types
+  resources_with_export :data_types do
+    collection do
+      post :guess_data_type_for_columns
+    end
+  end
   resources :load_set_loaded_records
   resources :load_sets do
     collection do

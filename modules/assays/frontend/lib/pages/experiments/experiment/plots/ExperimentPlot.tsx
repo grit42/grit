@@ -209,6 +209,7 @@ const ExperimentPlot = ({ experiment }: Props) => {
           display: "grid",
           gap: "calc(var(--spacing) * 2)",
           gridAutoRows: "min-content",
+          overflowY: "auto",
         }}
       >
         <ButtonGroup>
