@@ -33,7 +33,7 @@ const DataSheetTabs = ({ sheetDefinitions }: Props) => {
   const navigate = useNavigate();
 
   const match = useMatch(
-    "/core/administration/assays/assay-models/:assay_model_id/data-sheets/:sheet_id/*",
+    "/assays/settings/assay-models/:assay_model_id/data-sheets/:sheet_id/*",
   );
 
   const sheet_id = match?.params.sheet_id ?? 0;
