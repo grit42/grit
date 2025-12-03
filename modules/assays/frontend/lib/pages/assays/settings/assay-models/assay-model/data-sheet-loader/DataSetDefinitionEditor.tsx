@@ -25,10 +25,10 @@ import { useMemo } from "react";
 import { useEntityData } from "@grit42/core";
 import {
   useAssayDataSheetDefinitions,
-} from "../../../../../../../queries/assay_data_sheet_definitions";
+} from "../../../../../../queries/assay_data_sheet_definitions";
 import {
   AssayModelData,
-} from "../../../../../../../queries/assay_models";
+} from "../../../../../../queries/assay_models";
 import { SheetWithColumns } from "./sheet-mapper";
 import DataSheetDefinitionEditor from "./data-sheet-definition-editor";
 import { DataSetDefinitionFull, DataSheetColumnDefinition, DataSheetDefinitionFull } from "./data-sheet-definition-editor/dataSheetDefinitionEditorForm";

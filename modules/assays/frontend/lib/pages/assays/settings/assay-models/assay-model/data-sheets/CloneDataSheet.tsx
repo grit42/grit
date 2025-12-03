@@ -38,11 +38,11 @@ import {
   AssayDataSheetDefinitionData,
   useAssayDataSheetDefinitionFields,
   useAssayDataSheetDefinitions,
-} from "../../../../../../../queries/assay_data_sheet_definitions";
+} from "../../../../../../queries/assay_data_sheet_definitions";
 import styles from "../../assayModels.module.scss";
 import z from "zod";
 import { useCreateBulkDataSheetDefinitionMutation } from "../data-sheet-loader/data-sheet-definition-editor/mutations";
-import { useAssayDataSheetColumns } from "../../../../../../../queries/assay_data_sheet_columns";
+import { useAssayDataSheetColumns } from "../../../../../../queries/assay_data_sheet_columns";
 import DataSheetColumnsTable from "./data-sheet-columns/DataSheetColumnsTable";
 
 const AssayDataSheetDefinitionForm = ({

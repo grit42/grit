@@ -26,7 +26,7 @@ import styles from "../../../assayModels.module.scss";
 import {
   useAssayDataSheetColumnColumns,
   useAssayDataSheetColumns,
-} from "../../../../../../../../queries/assay_data_sheet_columns";
+} from "../../../../../../../queries/assay_data_sheet_columns";
 import { Table, useSetupTableState } from "@grit42/table";
 import { useTableColumns } from "@grit42/core/utils";
 

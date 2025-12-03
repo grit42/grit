@@ -2,7 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import FileLoader, { SheetWithOptions } from "./FileLoader";
 import { useState } from "react";
 import SheetMapper, { SheetWithColumns } from "./sheet-mapper";
-import { AssayModelData } from "../../../../../../../queries/assay_models";
+import { AssayModelData } from "../../../../../../queries/assay_models";
 import DataSetDefinitionEditor from "./DataSetDefinitionEditor";
 
 const DataSheetLoader = ({ assayModel }: { assayModel: AssayModelData }) => {

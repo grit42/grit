@@ -21,7 +21,7 @@ import { Outlet, useMatch, useNavigate } from "react-router-dom";
 import { Tabs } from "@grit42/client-library/components";
 import { useToolbar } from "@grit42/core/Toolbar";
 import Circle1NewIcon from "@grit42/client-library/icons/Circle1New";
-import { AssayDataSheetDefinitionData } from "../../../../../../../queries/assay_data_sheet_definitions";
+import { AssayDataSheetDefinitionData } from "../../../../../../queries/assay_data_sheet_definitions";
 import styles from "../../assayModels.module.scss";
 
 interface Props {

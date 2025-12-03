@@ -38,7 +38,7 @@ import {
   AssayDataSheetDefinitionData,
   useAssayDataSheetDefinitionFields,
   useAssayDataSheetDefinitions,
-} from "../../../../../../../queries/assay_data_sheet_definitions";
+} from "../../../../../../queries/assay_data_sheet_definitions";
 import styles from "../../assayModels.module.scss";
 import DataSheetColumns from "./data-sheet-columns";
 import z from "zod";

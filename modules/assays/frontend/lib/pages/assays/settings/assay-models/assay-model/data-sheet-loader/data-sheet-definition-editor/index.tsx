@@ -3,7 +3,7 @@ import { useMemo } from "react";
 import dataSetDefinitionSchema, {
   refinedDataSetDefinitionSchema,
 } from "./schema";
-import { AssayDataSheetDefinitionData } from "../../../../../../../../queries/assay_data_sheet_definitions";
+import { AssayDataSheetDefinitionData } from "../../../../../../../queries/assay_data_sheet_definitions";
 import { DataSetDefinitionFull } from "./dataSheetDefinitionEditorForm";
 import DataSheetDefinitionEditorIssues from "./DataSheetDefinitionEditorIssues";
 import DataSheetDefinitionEditorTabs from "./DataSheetDefinitionEditorTabs";

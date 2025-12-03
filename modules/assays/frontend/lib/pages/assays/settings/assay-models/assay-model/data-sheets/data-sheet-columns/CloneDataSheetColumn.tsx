@@ -41,7 +41,7 @@ import {
   AssayDataSheetColumnData,
   useAssayDataSheetColumnFields,
   useAssayDataSheetColumns,
-} from "../../../../../../../../queries/assay_data_sheet_columns";
+} from "../../../../../../../queries/assay_data_sheet_columns";
 import z from "zod";
 import { toSafeIdentifier } from "@grit42/core/utils";
 

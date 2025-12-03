@@ -17,7 +17,7 @@
  */
 
 import { Navigate, Route, Routes, useParams } from "react-router-dom";
-import { useAssayDataSheetColumnColumns } from "../../../../../../../../queries/assay_data_sheet_columns";
+import { useAssayDataSheetColumnColumns } from "../../../../../../../queries/assay_data_sheet_columns";
 import { ErrorPage, Spinner } from "@grit42/client-library/components";
 import DataSheetColumnsTable from "./DataSheetColumnsTable";
 import NewDataSheetColumn from "./NewDataSheetColumn";

@@ -21,18 +21,18 @@ import styles from "../assayModels.module.scss";
 import {
   AssayDataSheetDefinitionData,
   useAssayDataSheetDefinitions,
-} from "../../../../../../queries/assay_data_sheet_definitions";
-import { AssayDataSheetColumnData } from "../../../../../../queries/assay_data_sheet_columns";
+} from "../../../../../queries/assay_data_sheet_definitions";
+import { AssayDataSheetColumnData } from "../../../../../queries/assay_data_sheet_columns";
 import { Filter } from "@grit42/table";
 import {
   AssayModelData,
   useAssayModel,
   useAssayModelFields,
-} from "../../../../../../queries/assay_models";
+} from "../../../../../queries/assay_models";
 import {
   AssayModelMetadatumData,
   useAssayModelMetadata,
-} from "../../../../../../queries/assay_model_metadata";
+} from "../../../../../queries/assay_model_metadata";
 
 const AssayModelForm = ({
   fields,

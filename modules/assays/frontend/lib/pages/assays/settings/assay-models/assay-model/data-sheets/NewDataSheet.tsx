@@ -44,7 +44,7 @@ import {
   AssayDataSheetDefinitionData,
   useAssayDataSheetDefinitionFields,
   useAssayDataSheetDefinitions,
-} from "../../../../../../../queries/assay_data_sheet_definitions";
+} from "../../../../../../queries/assay_data_sheet_definitions";
 import styles from "../../assayModels.module.scss";
 import z from "zod";
 
