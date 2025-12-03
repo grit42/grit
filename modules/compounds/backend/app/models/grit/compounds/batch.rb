@@ -135,19 +135,19 @@ module Grit::Compounds
 
       BatchProperty.all.each do |property|
         query = query
-          .joins("LEFT OUTER JOIN grit_compounds_batch_property_values grit_compounds_batch_property_values__#{property.safe_name} on grit_compounds_batch_property_values__#{property.safe_name}.batch_property_id = #{property.id} and grit_compounds_batch_property_values__#{property.safe_name}.batch_id = grit_compounds_batches.id")
+          .joins("LEFT OUTER JOIN grit_compounds_batch_property_values bpv__#{property.safe_name} on bpv__#{property.safe_name}.batch_property_id = #{property.id} and bpv__#{property.safe_name}.batch_id = grit_compounds_batches.id")
 
         if property.data_type.is_entity
           entity_klass = property.data_type.model
           query = query
-            .joins("LEFT OUTER JOIN #{property.data_type.table_name} #{property.data_type.table_name}__#{property.safe_name} on #{property.data_type.table_name}__#{property.safe_name}.id = grit_compounds_batch_property_values__#{property.safe_name}.entity_id_value")
-            .select("grit_compounds_batch_property_values__#{property.safe_name}.entity_id_value as #{property.safe_name}")
+            .joins("LEFT OUTER JOIN #{property.data_type.table_name} bpv__#{property.safe_name}__entities on bpv__#{property.safe_name}__entities.id = bpv__#{property.safe_name}.entity_id_value")
+            .select("bpv__#{property.safe_name}.entity_id_value as #{property.safe_name}")
           entity_klass.display_properties&.each do |display_property|
             query = query
-            .select("#{property.data_type.table_name}__#{property.safe_name}.#{display_property[:name]} as #{property.safe_name}__#{display_property[:name]}")
+            .select("bpv__#{property.safe_name}__entities.#{display_property[:name]} as #{property.safe_name}__#{display_property[:name]}")
           end
         else
-          query = query.select("grit_compounds_batch_property_values__#{property.safe_name}.#{property.data_type.name}_value as #{property.safe_name}")
+          query = query.select("bpv__#{property.safe_name}.#{property.data_type.name}_value as #{property.safe_name}")
         end
       end
       query
