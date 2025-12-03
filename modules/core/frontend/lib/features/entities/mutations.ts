@@ -57,8 +57,7 @@ export const useCreateEntityMutation = <T extends EntityProperties>(
   return useMutation({
     mutationKey: ["createEntity", entityPath],
     mutationFn: async (entityData: Partial<T>) => {
-      const toastId = Math.random().toString(36).slice(2, 15);
-      toast("Creating records...", {
+      const toastId = toast("Creating records...", {
         autoClose: false,
         closeButton: false,
         isLoading: true,
