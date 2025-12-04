@@ -16,7 +16,12 @@
  * @grit42/compounds. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { ErrorPage, Spinner, Surface } from "@grit42/client-library/components";
+import {
+  ErrorPage,
+  Spinner,
+  Surface,
+  Tabs,
+} from "@grit42/client-library/components";
 import { useParams } from "react-router-dom";
 import {
   CompoundData,
@@ -24,7 +29,8 @@ import {
   useCompoundFields,
 } from "../../../../queries/compounds";
 import { AsyncMoleculeViewer } from "../../../../components/MoleculeViewer";
-import styles from "./details.module.scss";
+import styles from "./compoundCv.module.scss";
+import { useState } from "react";
 
 // const CompoundDetails = () => {
 //   const canCrud = useHasRoles([
@@ -162,6 +168,45 @@ const MoleculeViewer = ({ compound }: { compound: CompoundData }) => {
   );
 };
 
+const GeneralInfo = ({ compound }: { compound: CompoundData }) => {
+  return (
+    <ul>
+      <li>Name: {compound.name}</li>
+      <li>Compound number: {compound.number}</li>
+      <li>Compound type: {compound.compound_type_id__name}</li>
+    </ul>
+  );
+};
+
+const CompoundCVTabs = ({ compound }: { compound: CompoundData }) => {
+  // Tabs can be added here in the future
+  const [state, setState] = useState(0);
+
+  return (
+    <Tabs
+      selectedTab={state}
+      onTabChange={setState}
+      tabs={[
+        {
+          key: "general_information",
+          name: "General Information",
+          panel: <GeneralInfo compound={compound} />,
+        },
+        {
+          key: "calculated_properties",
+          name: "Calculated Properties",
+          panel: <div>Calculated Properties Content</div>,
+        },
+        {
+          key: "characterization",
+          name: "Characterization",
+          panel: <div>Characterization Content</div>,
+        },
+      ]}
+    />
+  );
+};
+
 const CompoundCV = () => {
   const { id } = useParams() as { id: string };
   const { data: compound } = useCompound(id);
@@ -170,6 +215,7 @@ const CompoundCV = () => {
     <div className={styles.container}>
       <Surface style={{ width: "100%" }}>
         {compound && <MoleculeViewer compound={compound} />}
+        {compound && <CompoundCVTabs compound={compound} />}
       </Surface>
     </div>
   );
