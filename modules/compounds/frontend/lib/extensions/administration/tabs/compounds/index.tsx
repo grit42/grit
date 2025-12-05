@@ -28,7 +28,6 @@ import CompoundTypeManager from "./compound-type-manager";
 import CompoundBatchLoadSets from "./load-sets/CompoundBatchLoadSets";
 import { useEffect, useState } from "react";
 import { Tabs } from "@grit42/client-library/components";
-import UpgradeActions from "./UpgradeActions";
 
 const TABS = [
   {
@@ -38,11 +37,6 @@ const TABS = [
   {
     url: "load-sets",
     label: "Load sets",
-  },
-  // TODO: remove in bugfix/compound-long-safe-name
-  {
-    url: "upgrade-actions",
-    label: "Upgrade actions",
   },
 ];
 
@@ -106,12 +100,6 @@ const CompoundAdministrationTab = () => {
       <Route element={<CompoundAdministration />}>
         <Route path="/metadata" element={<CompoundTypeManager />} />
         <Route path="/load-sets/*" element={<CompoundBatchLoadSets />} />
-        {/* // TODO: remove in bugfix/compound-long-safe-name */}
-        <Route
-          path="/upgrade-actions/*"
-          element={<UpgradeActions />}
-        />
-        {/* END REMOVE */}
         <Route path="*" element={<Navigate to="metadata" />} />
       </Route>
     </Routes>
