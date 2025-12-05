@@ -20,6 +20,16 @@ module Grit::Assays
   class AssayDataSheetColumnsController < ApplicationController
     include Grit::Core::GritEntityController
 
+    # TODO: remove in bugfix/compound-long-safe-name
+    def columns_with_too_long_safe_name
+      columns = AssayDataSheetColumn.detailed.where("length(safe_name) > 30")
+      render json: { success: true, data: columns }
+    rescue StandardError => e
+      logger.info e.to_s
+      logger.info e.backtrace.join("\n")
+      render json: { success: false, errors: e.to_s }
+    end
+
     private
 
     def permitted_params

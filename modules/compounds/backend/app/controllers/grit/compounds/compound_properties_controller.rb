@@ -20,6 +20,16 @@ module Grit::Compounds
   class CompoundPropertiesController < ApplicationController
     include Grit::Core::GritEntityController
 
+    # TODO: remove in bugfix/compound-long-safe-name
+    def properties_with_too_long_safe_name
+      properties = CompoundProperty.detailed.where("length(safe_name) > 30")
+      render json: { success: true, data: properties }
+    rescue StandardError => e
+      logger.info e.to_s
+      logger.info e.backtrace.join("\n")
+      render json: { success: false, errors: e.to_s }
+    end
+
     private
 
     def permitted_params
