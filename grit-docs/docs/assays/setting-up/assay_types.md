@@ -10,18 +10,17 @@ Assay types is basically a grouping of similar assays (in vitro and in vivo etc)
 
 Selecting the "Plate based in vitro" assay type results in no assay models and assays.
 
-![Assay types filtering](./assets/assay_types_filtering.png)
+![Assay types filtering](./assets/assay_type_filtering.png)
 
 Whereas selecting the "in vitro" assay type at the top show the available assay model.
 
-![Assay types filtering2](./assets/assay_types_filtering2.png)
+![Assay types filtering2](./assets/assay_type_filtering2.png)
 
 
 Adding new assay types is very easy (NOTE: But does require admin rights):
 
-1) Go to the Administration menu
-2) Select Assays tab
-3) Select Types
-4) Click the New button and add Name and potentially a Description in the appearing form
+1) Go to the Assay menu
+2) Select Types
+3) Click the New button and add Name and potentially a Description in the appearing form
 
 ![Assay types](./assets/assay_types.png)
