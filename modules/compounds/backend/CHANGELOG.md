@@ -1,3 +1,13 @@
+## 0.8.0
+
+### 🚀 Features
+
+- Limit safe_name length to 30 characters
+
+### 🧱 Updated Dependencies
+
+- Updated grit-core to 0.8.0
+
 ## 0.6.2
 
 ### 🩹 Fixes

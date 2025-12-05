@@ -1,3 +1,9 @@
+## 0.8.0
+
+### 🚀 Features
+
+- This is just a version bump
+
 ## 0.7.2
 
 ### 🩹 Fixes
