@@ -1,3 +1,11 @@
+## 0.7.2
+
+### 🩹 Fixes
+
+- tooltip autoplacement options
+- checkbox group label wrapping
+- enable wrap for FileInput file list
+
 ## 0.7.1
 
 ### 🩹 Fixes
