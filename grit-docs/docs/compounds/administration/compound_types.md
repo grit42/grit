@@ -31,9 +31,9 @@ The quick filters above the Compounds grid 1) can also be used to filter the com
 
 To add a new compound type to the platform do the following:
 
-1. Click ADMINISTRATION (you need the admin role to be able to do so)
-2. Select Compounds
-3. Click the New button and fill in the appearing form
+1. Go to Compounds
+2. Click the gears icon in the toolbar (you need the admin role to be able to do so)
+4. Click the New button and fill in the appearing form
 
 ![Creating new compound types](./assets/compound_types_create.png)
 
@@ -48,8 +48,8 @@ See below how to add new compound properties to the individual compound types.
 
 To add a new compound property linked to a specific compound type to the platform do the following:
 
-1. Click ADMINISTRATION (you need the admin role to be able to do so)
-2. Select Compounds
+1. Click COMPOUNDS (you need the admin role to be able to do so)
+2. Select Metadata
 3. Click the New button
 
 ![Creating new compound property](./assets/compound_types_prop_create.png)
