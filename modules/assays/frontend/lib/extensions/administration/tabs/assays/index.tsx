@@ -30,7 +30,6 @@ import AssayTypesAdministrationPage from "./assay-types";
 import AssayModelsAdministrationPage from "./assay-models";
 import AssaysAdministrationPage from "./assays";
 import AssayMetadataDefinitionsAdministrationPage from "./assay-metadata-definitions";
-import UpgradeActions from "./UpgradeActions";
 
 const TABS = [
   {
@@ -48,11 +47,6 @@ const TABS = [
   {
     url: "assay-types",
     label: "Types",
-  },
-  // TODO: remove in bugfix/compound-long-safe-name
-  {
-    url: "upgrade-actions",
-    label: "Upgrade actions",
   },
 ];
 
@@ -127,9 +121,6 @@ const AssaysAdministrationTab = () => {
           element={<AssayModelsAdministrationPage />}
         />
         <Route path="/assays/*" element={<AssaysAdministrationPage />} />
-        {/* // TODO: remove in bugfix/compound-long-safe-name */}
-        <Route path="/upgrade-actions/*" element={<UpgradeActions />} />
-        {/* END REMOVE */}
         <Route path="*" element={<Navigate to={TABS[0].url} replace />} />
       </Route>
     </Routes>

@@ -1,10 +1,5 @@
 Grit::Assays::Engine.routes.draw do
-  resources :data_table_columns do
-    # TODO: remove in bugfix/compound-long-safe-name
-    collection do
-      get :columns_with_too_long_safe_name
-    end
-  end
+  resources :data_table_columns
   resources :data_table_entities do
     collection do
       post :create_bulk
@@ -28,12 +23,7 @@ Grit::Assays::Engine.routes.draw do
     get :export
   end
 
-  resources :assay_data_sheet_columns do
-    # TODO: remove in bugfix/compound-long-safe-name
-    collection do
-      get :columns_with_too_long_safe_name
-    end
-  end
+  resources :assay_data_sheet_columns
   resources :assay_data_sheet_definitions do
     collection do
       post :create_bulk
