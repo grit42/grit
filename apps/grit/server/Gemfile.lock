@@ -1,22 +1,22 @@
 PATH
   remote: ../../../modules/assays/backend
   specs:
-    grit-assays (0.7.0)
-      grit-core (~> 0.7.1)
+    grit-assays (0.7.1)
+      grit-core (~> 0.7.2)
       rails (~> 7.2, >= 7.2.2)
       rubyzip (~> 2.3, >= 2.3.2)
 
 PATH
   remote: ../../../modules/compounds/backend
   specs:
-    grit-compounds (0.6.1)
-      grit-core (~> 0.7.1)
+    grit-compounds (0.6.2)
+      grit-core (~> 0.7.2)
       rails (~> 7.2, >= 7.2.2)
 
 PATH
   remote: ../../../modules/core/backend
   specs:
-    grit-core (0.7.1)
+    grit-core (0.7.2)
       authlogic (~> 6.5, >= 6.5.0)
       rails (~> 7.2, >= 7.2.2)
       scrypt (~> 3.0, >= 3.0.8)

@@ -30,6 +30,7 @@ import AssayTypesAdministrationPage from "./assay-types";
 import AssayModelsAdministrationPage from "./assay-models";
 import AssaysAdministrationPage from "./assays";
 import AssayMetadataDefinitionsAdministrationPage from "./assay-metadata-definitions";
+import UpgradeActions from "./UpgradeActions";
 
 const TABS = [
   {
@@ -47,6 +48,11 @@ const TABS = [
   {
     url: "assay-types",
     label: "Types",
+  },
+  // TODO: remove in bugfix/compound-long-safe-name
+  {
+    url: "upgrade-actions",
+    label: "Upgrade actions",
   },
 ];
 
@@ -86,16 +92,18 @@ const AssaysAdministration = () => {
           panel: <></>,
         }))}
       />
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        width: '100%',
-        height: '100%',
-        maxWidth: '100%',
-        maxHeight: '100%',
-        overflowY: 'auto'
-      }}>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          width: "100%",
+          height: "100%",
+          maxWidth: "100%",
+          maxHeight: "100%",
+          overflowY: "auto",
+        }}
+      >
         <Outlet />
       </div>
     </div>
@@ -119,6 +127,9 @@ const AssaysAdministrationTab = () => {
           element={<AssayModelsAdministrationPage />}
         />
         <Route path="/assays/*" element={<AssaysAdministrationPage />} />
+        {/* // TODO: remove in bugfix/compound-long-safe-name */}
+        <Route path="/upgrade-actions/*" element={<UpgradeActions />} />
+        {/* END REMOVE */}
         <Route path="*" element={<Navigate to={TABS[0].url} replace />} />
       </Route>
     </Routes>

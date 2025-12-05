@@ -1,3 +1,13 @@
+## 0.6.2
+
+### 🩹 Fixes
+
+- disable all filter inputs when filter item is disabled
+
+### 🧱 Updated Dependencies
+
+- Updated @grit42/client-library to 0.7.2
+
 ## 0.6.1
 
 ### 🩹 Fixes

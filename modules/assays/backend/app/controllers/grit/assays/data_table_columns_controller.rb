@@ -20,6 +20,16 @@ module Grit::Assays
   class DataTableColumnsController < ApplicationController
     include Grit::Core::GritEntityController
 
+    # TODO: remove in bugfix/compound-long-safe-name
+    def columns_with_too_long_safe_name
+      columns = DataTableColumn.detailed.where("length(grit_assays_data_table_columns.safe_name) > 30")
+      render json: { success: true, data: columns }
+    rescue StandardError => e
+      logger.info e.to_s
+      logger.info e.backtrace.join("\n")
+      render json: { success: false, errors: e.to_s }
+    end
+
     private
 
     def permitted_params

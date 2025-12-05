@@ -1,3 +1,17 @@
+## 0.7.2
+
+### 🩹 Fixes
+
+- entities bulk delete
+- enable sorting and filtering on vocabularies list
+- expose publication statuses
+
+### 🧱 Updated Dependencies
+
+- Updated @grit42/client-library to 0.7.2
+- Updated @grit42/form to 0.6.2
+- Updated @grit42/table to 0.6.2
+
 ## 0.7.1
 
 ### 🩹 Fixes
