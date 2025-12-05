@@ -168,12 +168,64 @@ const MoleculeViewer = ({ compound }: { compound: CompoundData }) => {
   );
 };
 
+const FilterCompoundFields = ({
+  compound,
+  FieldNames,
+}: {
+  compound: CompoundData;
+  FieldNames: string[];
+}) => {
+  // string[] is an array of strings
+  // Is there a better way to get CompoundFields?
+  const { data: fields } = useCompoundFields(compound?.compound_type_id);
+  const filteredFields = fields?.filter((field) =>
+    FieldNames.includes(field.display_name),
+  );
+  return filteredFields;
+};
+
 const GeneralInfo = ({ compound }: { compound: CompoundData }) => {
+  const FieldNamesExtension = [
+    "Molecular formula",
+    "Canonical SMILES",
+    "InChI",
+    "InChI Key",
+  ];
+  const GenFieldsExt = FilterCompoundFields({
+    compound,
+    FieldNames: FieldNamesExtension,
+  });
+
   return (
-    <ul>
+    <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+      <li>Number: {compound.number}</li>
       <li>Name: {compound.name}</li>
-      <li>Compound number: {compound.number}</li>
       <li>Compound type: {compound.compound_type_id__name}</li>
+      {GenFieldsExt?.map((field) => (
+        <li>
+          {field.display_name}: {compound[field.name]}
+        </li>
+      ))}
+    </ul>
+  );
+};
+
+const CalcProps = ({ compound }: { compound: CompoundData }) => {
+  const FieldNames = [
+    "MW",
+    "LogP",
+    "Hydrogen Bond Donor Count",
+    "Hydrogen Bond Acceptor Count",
+  ];
+  const CalcPropFields = FilterCompoundFields({ compound, FieldNames });
+  // const {data: CalcPropFields} = useCompoundFields(compound?.compound_type_id)
+  return (
+    <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+      {CalcPropFields?.map((field) => (
+        <li>
+          {field.display_name}: {compound[field.name]}
+        </li>
+      ))}
     </ul>
   );
 };
@@ -195,12 +247,22 @@ const CompoundCVTabs = ({ compound }: { compound: CompoundData }) => {
         {
           key: "calculated_properties",
           name: "Calculated Properties",
-          panel: <div>Calculated Properties Content</div>,
+          panel: <CalcProps compound={compound} />,
         },
         {
           key: "characterization",
           name: "Characterization",
           panel: <div>Characterization Content</div>,
+        },
+        {
+          key: "molfile",
+          name: "Molfile",
+          panel: <div>{compound.molecule}</div>,
+        },
+        {
+          key: "view3D",
+          name: "View in 3D",
+          panel: <div>placeholder</div>,
         },
       ]}
     />
