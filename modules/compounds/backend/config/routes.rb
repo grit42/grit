@@ -7,10 +7,20 @@ Grit::Compounds::Engine.routes.draw do
   end
 
   resources_with_export :batches
-  resources :batch_properties
+  resources :batch_properties do
+    # TODO: remove in bugfix/compound-long-safe-name
+    collection do
+      get :properties_with_too_long_safe_name
+    end
+  end
   resources_with_export :synonyms
   resources_with_export :compounds
-  resources :compound_properties
+  resources :compound_properties do
+    # TODO: remove in bugfix/compound-long-safe-name
+    collection do
+      get :properties_with_too_long_safe_name
+    end
+  end
   resources_with_export :compound_types
   resources :molecules, only: [] do
     collection do
