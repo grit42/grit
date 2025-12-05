@@ -59,7 +59,7 @@
     "openchemlib": "8.18.1",
     "react-ocl": "7.0.2",
     "usehooks-ts": "3",
-    "zod": "^4.1.12"
+    "zod": "catalog:"
   },
   "peerDependencies": {
     "react": "catalog:",

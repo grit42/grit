@@ -52,7 +52,8 @@
     "@grit42/table": "workspace:*",
     "openchemlib": "8.18.1",
     "react-ocl": "7.0.2",
-    "usehooks-ts": "3"
+    "usehooks-ts": "3",
+    "zod": "catalog:"
   },
   "peerDependencies": {
     "react": "catalog:",
