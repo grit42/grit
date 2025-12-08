@@ -30,7 +30,14 @@ import {
 } from "../../../../queries/compounds";
 import { AsyncMoleculeViewer } from "../../../../components/MoleculeViewer";
 import styles from "./compoundCv.module.scss";
-import { useState } from "react";
+import { useState, useCallback, useMemo} from "react";
+import { Table, useSetupTableState } from "@grit42/table";
+import { useTableColumns } from "@grit42/core/utils";
+import {
+  BatchData,
+  useCompoundTypeBatchesColumns,
+  useInfiniteBatchesOfCompound,
+} from "../../../../queries/batches";
 
 // const CompoundDetails = () => {
 //   const canCrud = useHasRoles([
@@ -269,15 +276,104 @@ const CompoundCVTabs = ({ compound }: { compound: CompoundData }) => {
   );
 };
 
+const CompoundCVTableTabs = ({ compound, id }: { compound: CompoundData, id: string }) => {
+  // Tabs can be added here in the future
+  const [state, setState] = useState(0);
+
+  return (
+    <Tabs
+      selectedTab={state}
+      onTabChange={setState}
+      tabs={[
+        {
+          key: "batches",
+          name: "Batches",
+          panel: <CompoundCVTable compound={compound} id={id} />,
+        },
+        {
+          key: "experiments",
+          name: "Experiments",
+          panel: <CompoundCVTable compound={compound} id={id} />,
+        },
+        {
+          key: "placeholder",
+          name: "Placeholder",
+          panel: <div></div>,
+        },
+      ]}
+    />
+  );
+};
+
+const CompoundCVTable = ({ compound, id }: { compound: CompoundData, id: string }) => {
+
+  const { data: columns } = useCompoundTypeBatchesColumns(
+    compound?.compound_type_id,
+    {
+      enabled: !!compound,
+    },
+  );
+
+  const tableColumns = useTableColumns(columns);
+
+  const tableState = useSetupTableState<any>("batches-list", tableColumns, {
+    saveState: true,
+    settings: {
+      enableColumnDescription: true,
+      enableColumnOrderReset: true,
+    },
+  });
+
+  const {
+    data,
+    isFetching,
+    isFetchingNextPage,
+    isError,
+    error,
+    fetchNextPage,
+  } = useInfiniteBatchesOfCompound(id, tableState.sorting, tableState.filters);
+
+  const getRowId = useCallback((row: BatchData) => row.id.toString(), []);
+
+  const flatData = useMemo(
+    () => data?.pages.flatMap(({ data }) => data) ?? [],
+    [data],
+  );
+
+  if (isError) {
+    return <ErrorPage error={error} />;
+  }
+
+  return (
+    <Table<BatchData>
+      loading={isFetching && !isFetchingNextPage}
+      header='Batches'
+      data={flatData}
+      tableState={tableState}
+      getRowId={getRowId}
+      rowActions={undefined}
+      onRowClick={undefined}
+      pagination={{
+        fetchNextPage,
+        isFetchingNextPage,
+        totalRows: data?.pages[0]?.total,
+      }}
+    />
+  );
+};
+
 const CompoundCV = () => {
   const { id } = useParams() as { id: string };
   const { data: compound } = useCompound(id);
+
 
   return (
     <div className={styles.container}>
       <Surface style={{ width: "100%" }}>
         {compound && <MoleculeViewer compound={compound} />}
         {compound && <CompoundCVTabs compound={compound} />}
+        {/* {compound && <CompoundCVTable compound={compound} id={id} />} */}
+        {compound && <CompoundCVTableTabs compound={compound} id={id} />}
       </Surface>
     </div>
   );
