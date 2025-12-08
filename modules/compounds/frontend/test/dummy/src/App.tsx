@@ -32,10 +32,11 @@ import { Spinner, ThemeProvider } from "@grit42/client-library/components";
 import { Toolbar } from "@grit42/core/Toolbar";
 import CoreMeta from "@grit42/core/meta";
 import CompoundsMeta from "@grit42/compounds/meta";
+import AssaysMeta from "@grit42/assays/meta";
 import Router from "./Router.tsx";
 import { useSession } from "@grit42/core";
 
-const NAV_ITEMS = [...CompoundsMeta.navItems, ...CoreMeta.navItems];
+const NAV_ITEMS = [...CompoundsMeta.navItems, ...AssaysMeta.navItems, ...CoreMeta.navItems];
 
 const App = () => {
   const { data: session, isLoading } = useSession();
