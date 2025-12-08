@@ -17,6 +17,7 @@
  */
 
 import AssayModel from "./assay-model";
+import CloneAssayModel from "./assay-model/CloneAssayModel";
 import AssayModelsTable from "./AssayModelsTable";
 import { Route, Routes } from "react-router-dom";
 
@@ -24,6 +25,7 @@ const AssayModelsAdministrationPage = () => {
   return (
     <Routes>
       <Route index element={<AssayModelsTable />} />
+      <Route path="/:assay_model_id/clone" element={<CloneAssayModel />} />
       <Route path="/:assay_model_id/*" element={<AssayModel />} />
     </Routes>
   );

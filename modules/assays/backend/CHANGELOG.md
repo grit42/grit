@@ -1,3 +1,28 @@
+## 0.8.0
+
+### 🚀 Features
+
+- Limit safe_name length to 30 characters
+
+### 🧱 Updated Dependencies
+
+- Updated grit-core to 0.8.0
+
+## 0.7.1
+
+### 🩹 Fixes
+
+- safe_name length upgrade actions
+- safe_name conflict check
+- enforce data sheet column safe name uniqueness within datasheet
+
+  enforce data sheet column name uniqueness within datasheet
+- allow import of empty entity values if the field is not required
+
+### 🧱 Updated Dependencies
+
+- Updated grit-core to 0.7.2
+
 ## 0.7.0
 
 ### 🚀 Features

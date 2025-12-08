@@ -1,3 +1,13 @@
+## 0.6.1
+
+### 🩹 Fixes
+
+- enable plot download
+
+### 🧱 Updated Dependencies
+
+- Updated @grit42/client-library to 0.7.2
+
 ## 0.6.0
 
 ### 🚀 Features

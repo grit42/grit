@@ -16,7 +16,14 @@
  * @grit42/compounds. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Navigate, Outlet, Route, Routes, useMatch, useNavigate } from "react-router-dom";
+import {
+  Navigate,
+  Outlet,
+  Route,
+  Routes,
+  useMatch,
+  useNavigate,
+} from "react-router-dom";
 import CompoundTypeManager from "./compound-type-manager";
 import CompoundBatchLoadSets from "./load-sets/CompoundBatchLoadSets";
 import { useEffect, useState } from "react";
@@ -69,16 +76,18 @@ const CompoundAdministration = () => {
           panel: <></>,
         }))}
       />
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        // alignItems: 'center',
-        width: '100%',
-        height: '100%',
-        maxWidth: '100%',
-        maxHeight: '100%',
-        overflowY: 'auto'
-      }}>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          // alignItems: 'center',
+          width: "100%",
+          height: "100%",
+          maxWidth: "100%",
+          maxHeight: "100%",
+          overflowY: "auto",
+        }}
+      >
         <Outlet />
       </div>
     </div>

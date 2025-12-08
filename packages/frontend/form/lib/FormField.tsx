@@ -20,15 +20,16 @@ import { useMemo } from "react";
 import { isFieldVisible } from "./utils";
 import { requiredValidator } from "./validators";
 import { FormFieldDef } from "./types";
-import { ReactFormExtendedApi, useStore } from "@tanstack/react-form";
+import { DeepKeys, FieldValidators, ReactFormExtendedApi, useStore } from "@tanstack/react-form";
 import { useFormInput } from "./FormInputProviderContext";
 
 interface Props<T> {
   form: ReactFormExtendedApi<T>;
   fieldDef: FormFieldDef;
+  validators?: FieldValidators<T, DeepKeys<T>>;
 }
 
-const FormField = <T,>({ form, fieldDef }: Props<T>) => {
+const FormField = <T,>({ form, fieldDef, validators }: Props<T>) => {
   const [referenceValue] = useStore(form.store, (state) =>
     fieldDef.reference ? [(state.values as any)[fieldDef.reference]] : [],
   );
@@ -57,7 +58,7 @@ const FormField = <T,>({ form, fieldDef }: Props<T>) => {
   return (
     <form.Field
       name={fieldDef.name as any}
-      validators={{
+      validators={validators ?? {
         onChange: ({ value }) => requiredValidator(fieldDef, value),
       }}
       children={(field) => {

@@ -86,16 +86,18 @@ const AssaysAdministration = () => {
           panel: <></>,
         }))}
       />
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        width: '100%',
-        height: '100%',
-        maxWidth: '100%',
-        maxHeight: '100%',
-        overflowY: 'auto'
-      }}>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          width: "100%",
+          height: "100%",
+          maxWidth: "100%",
+          maxHeight: "100%",
+          overflowY: "auto",
+        }}
+      >
         <Outlet />
       </div>
     </div>

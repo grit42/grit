@@ -1,3 +1,5 @@
+@use "@grit42/client-library/theme.scss";
+
 .container {
   display: flex;
   flex-direction: column;
@@ -50,4 +52,12 @@
   width: 100%;
   max-width: 960px;
   margin-inline: auto;
+}
+
+.columnFormFieldSuggestion {
+  cursor: pointer;
+  width: max-content;
+  color: theme.$palette-background-contrast-text;
+  opacity: 0.75;
+  padding-top: theme.$spacing;
 }

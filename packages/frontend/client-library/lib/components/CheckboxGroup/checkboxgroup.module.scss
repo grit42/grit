@@ -22,7 +22,7 @@
 .checkboxGroup {
   .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, 16em);
+    grid-template-columns: repeat(auto-fit, minmax(16em, 1fr));
     column-gap: 0.5rem;
   }
 }

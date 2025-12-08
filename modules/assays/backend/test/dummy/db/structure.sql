@@ -1,4 +1,4 @@
-\restrict VjslgDtIEAVy0bMdV8i3hSAnJkc2JQuasqkWsLhfK7fWC2pwHuC242cRfgrGmpb
+\restrict 8O8DADmpOqVNmL42PhaHuVh6vCq2CUngF5EmYlhXMnxCNvaWhnHDBsmaUaGLXKv
 
 -- Dumped from database version 16.3 (Debian 16.3-1.pgdg120+1)
 -- Dumped by pg_dump version 16.10 (Ubuntu 16.10-0ubuntu0.24.04.1)
@@ -251,7 +251,7 @@ CREATE TABLE public.grit_assays_assay_data_sheet_columns (
     updated_by character varying(30),
     updated_at timestamp(6) without time zone,
     name character varying NOT NULL,
-    safe_name character varying NOT NULL,
+    safe_name character varying(30) NOT NULL,
     description text,
     sort integer,
     required boolean DEFAULT false NOT NULL,
@@ -394,7 +394,7 @@ CREATE TABLE public.grit_assays_data_table_columns (
     updated_by character varying(30),
     updated_at timestamp(6) without time zone,
     name character varying NOT NULL,
-    safe_name character varying(32) NOT NULL,
+    safe_name character varying(30) NOT NULL,
     data_table_id bigint NOT NULL,
     assay_data_sheet_column_id bigint,
     sort integer,
@@ -2224,11 +2224,14 @@ ALTER TABLE ONLY public.grit_assays_assays
 -- PostgreSQL database dump complete
 --
 
-\unrestrict VjslgDtIEAVy0bMdV8i3hSAnJkc2JQuasqkWsLhfK7fWC2pwHuC242cRfgrGmpb
+\unrestrict 8O8DADmpOqVNmL42PhaHuVh6vCq2CUngF5EmYlhXMnxCNvaWhnHDBsmaUaGLXKv
 
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20251113133402'),
+('20251113130627'),
+('20251113130626'),
 ('20250818115347'),
 ('20250818113922'),
 ('20250818111536'),

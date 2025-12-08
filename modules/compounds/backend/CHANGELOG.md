@@ -1,3 +1,26 @@
+## 0.8.0
+
+### 🚀 Features
+
+- Limit safe_name length to 30 characters
+
+### 🧱 Updated Dependencies
+
+- Updated grit-core to 0.8.0
+
+## 0.6.2
+
+### 🩹 Fixes
+
+- safe_name length upgrade actions
+- safe_name conflict check
+- show all display properties of compound and batch entity properties in grids
+- allow import of empty entity values if the field is not required
+
+### 🧱 Updated Dependencies
+
+- Updated grit-core to 0.7.2
+
 ## 0.6.1
 
 ### 🩹 Fixes

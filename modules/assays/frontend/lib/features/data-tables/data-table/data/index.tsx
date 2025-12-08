@@ -96,11 +96,9 @@ export const DataTableData = ({ dataTableId }: Props) => {
     data: rows,
     isLoading: isRowsLoading,
     isFetchingNextPage,
-    isError,
-    error,
     fetchNextPage,
   } = useInfiniteDataTableRows(
-    dataTableId,
+    dataTableId.toString(),
     tableState.sorting,
     tableState.filters,
     undefined,

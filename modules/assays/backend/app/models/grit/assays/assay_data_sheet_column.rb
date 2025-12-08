@@ -35,18 +35,14 @@ module Grit::Assays
       destroy: [ "Administrator", "AssayAdministrator" ]
 
     validates :name, uniqueness: { scope: :assay_data_sheet_definition_id, message: "has already been taken in this data sheet" }, length: { minimum: 3 }
-    validates :safe_name, uniqueness: { scope: :assay_data_sheet_definition_id, message: "has already been taken in this data sheet" }, length: { minimum: 3 }
+    validates :safe_name, uniqueness: { scope: :assay_data_sheet_definition_id, message: "has already been taken in this data sheet" }, length: { minimum: 3, maximum: 30 }
     validates :safe_name, format: { with: /\A[a-z_]{2}/, message: "should start with two lowercase letters or underscores" }
     validates :safe_name, format: { with: /\A[a-z0-9_]*\z/, message: "should contain only lowercase letters, numbers and underscores" }
     validate :safe_name_not_conflict
 
     def safe_name_not_conflict
       return unless self.safe_name_changed?
-      begin
-        # This is needed because of how active_support handles serialization as_json
-        Grit::Assays::AssayDataSheetColumn.send(self.safe_name)
-      rescue NoMethodError
-      rescue StandardError
+      if Grit::Assays::AssayDataSheetColumn.respond_to?(self.safe_name)
         errors.add("safe_name", "cannot be used as a safe name")
       end
     end

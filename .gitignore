@@ -89,3 +89,6 @@ yarn-error.log*
 .nx/workspace-data
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
+
+# Onlyoffice lock files
+.~lock.*

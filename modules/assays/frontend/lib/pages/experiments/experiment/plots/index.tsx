@@ -59,6 +59,7 @@ const ExperimentPlotTabs = ({ experiment }: Props) => {
         display: "grid",
         gridTemplateRows: "min-content 1fr",
         height: "100%",
+        overflow: "auto",
       }}
     >
       <Tabs

@@ -27,6 +27,8 @@ module Grit::Assays
       update: ["Administrator", "AssayAdministrator", "AssayUser"],
       destroy: ["Administrator", "AssayAdministrator", "AssayUser"]
 
+    validates :name, uniqueness: { scope: :data_table_id, message: "has already been taken in this data table" }, length: { minimum: 3 }
+    validates :safe_name, uniqueness: { scope: :data_table_id, message: "has already been taken in this data table" }, length: { minimum: 3, maximum: 30 }
     validates :safe_name, format: { with: /\A[a-z_]{2}/, message: "should start with two lowercase letters or underscores" }
     validates :safe_name, format: { with: /\A[a-z0-9_]*\z/, message: "should contain only lowercase letters, numbers and underscores" }
     validate :safe_name_not_conflict
@@ -34,6 +36,7 @@ module Grit::Assays
     def safe_name_not_conflict
       return unless self.safe_name_changed?
       if Grit::Assays::DataTableColumn.respond_to?(self.safe_name)
+
         errors.add("safe_name", "cannot be used as a safe name")
       end
     end
@@ -99,7 +102,7 @@ AND GRIT_ASSAYS_ASSAY_DATA_SHEET_COLUMNS.DATA_TYPE_ID <> #{data_table.entity_dat
           return subquery.select(*[
             "data_sources.entity_id_value as value",
             assay_data_sheet_column.data_type.model.display_properties.map do |display_property|
-              "#{assay_data_sheet_column.data_type.table_name}__#{assay_data_sheet_column.safe_name}.#{display_property[:name]} AS value__#{display_property[:name]}"
+              "dtv__#{self.safe_name}__entities.#{display_property[:name]} AS value__#{display_property[:name]}"
             end
           ])
         end
@@ -138,14 +141,14 @@ AND GRIT_ASSAYS_ASSAY_DATA_SHEET_COLUMNS.DATA_TYPE_ID <> #{data_table.entity_dat
           return subquery.select(*[
             "count(data_sources.entity_id_value) AS value",
             assay_data_sheet_column.data_type.model.display_properties.map do |display_property|
-              "count(#{assay_data_sheet_column.data_type.table_name}__#{assay_data_sheet_column.safe_name}.#{display_property[:name]}) AS value__#{display_property[:name]}"
+              "count(dtv__#{self.safe_name}__entities.#{display_property[:name]}) AS value__#{display_property[:name]}"
             end
           ])
         when "csv"
           return subquery.select(*[
             "ARRAY_AGG(data_sources.entity_id_value) AS value",
             assay_data_sheet_column.data_type.model.display_properties.map do |display_property|
-              "STRING_AGG(#{assay_data_sheet_column.data_type.table_name}__#{assay_data_sheet_column.safe_name}.#{display_property[:name]}, ', ') AS value__#{display_property[:name]}"
+              "STRING_AGG(dtv__#{self.safe_name}__entities.#{display_property[:name]}, ', ') AS value__#{display_property[:name]}"
             end
           ])
         end
@@ -208,8 +211,8 @@ JOIN GRIT_ASSAYS_EXPERIMENTS ON GRIT_ASSAYS_EXPERIMENTS.ID = GRIT_ASSAYS_EXPERIM
     def join_entity_table subquery
       if assay_data_sheet_column.data_type.is_entity
         entity_join = <<-SQL
-LEFT OUTER JOIN #{assay_data_sheet_column.data_type.table_name} #{assay_data_sheet_column.data_type.table_name}__#{assay_data_sheet_column.safe_name} ON
-#{assay_data_sheet_column.data_type.table_name}__#{assay_data_sheet_column.safe_name}.id = data_sources.entity_id_value
+LEFT OUTER JOIN #{assay_data_sheet_column.data_type.table_name} dtv__#{self.safe_name}__entities ON
+dtv__#{self.safe_name}__entities.id = data_sources.entity_id_value
         SQL
         subquery = subquery.joins(entity_join)
       end
@@ -292,7 +295,7 @@ JOIN (
         subquery = subquery.select(*[
           "data_sources.entity_id_value as value",
           assay_data_sheet_column.data_type.model.display_properties.map do |display_property|
-            "#{assay_data_sheet_column.data_type.table_name}__#{assay_data_sheet_column.safe_name}.#{display_property[:name]} AS value__#{display_property[:name]}"
+            "dtv__#{self.safe_name}__entities.#{display_property[:name]} AS value__#{display_property[:name]}"
           end
         ])
       else
