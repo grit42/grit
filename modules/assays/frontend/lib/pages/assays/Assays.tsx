@@ -1,8 +1,5 @@
 import { ErrorPage, Spinner } from "@grit42/client-library/components";
-import {
-  useAssayColumns,
-  usePublishedAssays,
-} from "../../queries/assays";
+import { useAssayColumns, usePublishedAssays } from "../../queries/assays";
 import { Table, useSetupTableState } from "@grit42/table";
 import { useTableColumns } from "@grit42/core/utils";
 import { useAssayTypeColumns, useAssayTypes } from "../../queries/assay_types";
@@ -167,8 +164,8 @@ const AssayModelsTable = ({ state, selectedTypes }: AssayModelsTableProps) => {
         isError
           ? error
           : selectedTypes.length
-            ? "No models for the selected types"
-            : "No published assay models"
+          ? "No models for the selected types"
+          : "No published assay models"
       }
     />
   );
@@ -221,8 +218,8 @@ const AssaysTable = ({ selectedTypes, selectedModels }: AssaysTableProps) => {
         isError
           ? error
           : selectedTypes.length || selectedModels.length
-            ? "No assays for the selected types and models"
-            : "No published assays"
+          ? "No assays for the selected types and models"
+          : "No published assays"
       }
     />
   );
@@ -318,16 +315,12 @@ const AssaysPage = () => {
           id: "ASSAY_SETTINGS",
           icon: <CogIcon />,
           label: "Assay settings",
-          requiredRoles: [
-            "Administrator",
-            "AssayAdministrator",
-          ],
-          onClick: () =>
-            navigate("/assays/settings")
+          requiredRoles: ["Administrator", "AssayAdministrator"],
+          onClick: () => navigate("/assays/assays/settings"),
         },
       ],
     });
-  }, [ navigate, registerToolbarAction ]);
+  }, [navigate, registerToolbarAction]);
 
   return (
     <div

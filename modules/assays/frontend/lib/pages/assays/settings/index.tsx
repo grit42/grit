@@ -53,7 +53,7 @@ const TABS = [
 const AssaysAdministration = () => {
   const navigate = useNavigate();
 
-  const match = useMatch("/assays/settings/:childPath/*");
+  const match = useMatch("/assays/assays/settings/:childPath/*");
   const childPath = match?.params.childPath ?? "origins";
 
   const [selectedTab, setSelectedTab] = useState(
@@ -72,11 +72,19 @@ const AssaysAdministration = () => {
     <div
       style={{
         display: "grid",
-        gridTemplateRows: "min-content 1fr",
+        gridTemplateRows: "min-content min-content 1fr",
         height: "100%",
         overflow: "auto",
       }}
     >
+      <h2
+        style={{
+          paddingBottom: "var(--spacing)",
+          color: "var(--palette-secondary-main)",
+        }}
+      >
+        Assays administration
+      </h2>
       <Tabs
         onTabChange={handleTabChange}
         selectedTab={selectedTab}
@@ -86,16 +94,18 @@ const AssaysAdministration = () => {
           panel: <></>,
         }))}
       />
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        width: '100%',
-        height: '100%',
-        maxWidth: '100%',
-        maxHeight: '100%',
-        overflowY: 'auto'
-      }}>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          width: "100%",
+          height: "100%",
+          maxWidth: "100%",
+          maxHeight: "100%",
+          overflowY: "auto",
+        }}
+      >
         <Outlet />
       </div>
     </div>

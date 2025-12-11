@@ -16,7 +16,14 @@
  * @grit42/compounds. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Navigate, Outlet, Route, Routes, useMatch, useNavigate } from "react-router-dom";
+import {
+  Navigate,
+  Outlet,
+  Route,
+  Routes,
+  useMatch,
+  useNavigate,
+} from "react-router-dom";
 import CompoundTypeManager from "./compound-type-manager";
 import CompoundBatchLoadSets from "./load-sets/CompoundBatchLoadSets";
 import { useEffect, useState } from "react";
@@ -53,11 +60,19 @@ const CompoundAdministration = () => {
     <div
       style={{
         display: "grid",
-        gridTemplateRows: "min-content 1fr",
+        gridTemplateRows: "min-content min-content 1fr",
         height: "100%",
         overflow: "auto",
       }}
     >
+      <h2
+        style={{
+          paddingBottom: "var(--spacing)",
+          color: "var(--palette-secondary-main)",
+        }}
+      >
+        Compound administration
+      </h2>
       <Tabs
         onTabChange={handleTabChange}
         selectedTab={selectedTab}
@@ -67,16 +82,17 @@ const CompoundAdministration = () => {
           panel: <></>,
         }))}
       />
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        // alignItems: 'center',
-        width: '100%',
-        height: '100%',
-        maxWidth: '100%',
-        maxHeight: '100%',
-        overflowY: 'auto'
-      }}>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          width: "100%",
+          height: "100%",
+          maxWidth: "100%",
+          maxHeight: "100%",
+          overflowY: "auto",
+        }}
+      >
         <Outlet />
       </div>
     </div>

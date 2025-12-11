@@ -27,14 +27,24 @@ const LazyAssaySettingsPage = lazy(() => import("./pages/assays/settings"));
 const Router = () => {
   return (
     <Routes>
-      <Route
-        path="assays/*"
-        element={
-          <AuthGuard>
-            <LazyAssaysPage />
-          </AuthGuard>
-        }
-      />
+      <Route path="assays/*">
+        <Route
+          path="settings/*"
+          element={
+            <AuthGuard>
+              <LazyAssaySettingsPage />
+            </AuthGuard>
+          }
+        />
+        <Route
+          path="*"
+          element={
+            <AuthGuard>
+              <LazyAssaysPage />
+            </AuthGuard>
+          }
+        ></Route>
+      </Route>
       <Route
         path="experiments/*"
         element={
@@ -52,14 +62,6 @@ const Router = () => {
         }
       />
       <Route path="*" element={<Navigate to="assays" replace />} />
-      <Route
-        path="settings/*"
-        element={
-          <AuthGuard>
-            <LazyAssaySettingsPage />
-          </AuthGuard>
-        }
-      />
     </Routes>
   );
 };
