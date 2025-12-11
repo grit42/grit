@@ -1,26 +1,64 @@
 @use "@grit42/client-library/theme.scss";
 
+// .container {
+//   overflow-y: auto;
+//   position: relative;
+//   width: auto;
+//   display: grid;
+//   grid-template-columns: 1fr;
+//   grid-template-rows: max-content auto;
+//   grid-template-areas:
+//     "a"
+//     "b";
+//   gap: calc(theme.$spacing * 2);
+
+//   @media screen and (min-width: 960px) {
+//     grid-template-columns: auto auto;
+//     grid-template-areas: "b a";
+//     grid-template-rows: 1fr;
+//   }
+
+//   .moleculeContainer {
+//     top: 0;
+//     position: sticky;
+//     grid-area: a;
+//   }
+// }
+
+
 .container {
   overflow-y: auto;
   position: relative;
-  width: auto;
   display: grid;
   grid-template-columns: 1fr;
   grid-template-rows: max-content auto;
   grid-template-areas:
     "a"
-    "b";
-  gap: calc(theme.$spacing * 2);
+    "b"
+    "c";
+  gap: calc(theme.$spacing * 1);
 
   @media screen and (min-width: 960px) {
-    grid-template-columns: auto auto;
-    grid-template-areas: "b a";
-    grid-template-rows: 1fr;
+    grid-template-columns: 1fr 5fr; // fractions
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+      "a b"   /* molecule left, tabs right */
+      "c c";  /* table spans full width below */
+    align-items: stretch;
   }
 
   .moleculeContainer {
-    top: 0;
-    position: sticky;
     grid-area: a;
+    position: sticky;
+    top: 0;
+    align-self: start;
+  }
+
+  .tabsContainer {
+    grid-area: b;
+  }
+
+  .tableContainer {
+    grid-area: c;
   }
 }
