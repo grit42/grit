@@ -429,6 +429,7 @@ module Grit::Compounds
       .select("target_data_sheet_columns.name as assay_data_sheet_column_id__name")
       .select("data_sheet_definitions.id as assay_data_sheet_definition_id")
       .select("data_sheet_definitions.name as assay_data_sheet_definition_id__name")
+      .select("data_sheets.id as experiment_data_sheet_id")
       .select("experiments.id as experiment_id")
       .select("experiments.name as experiment_id__name")
       .select("assays.id as assay_id")
