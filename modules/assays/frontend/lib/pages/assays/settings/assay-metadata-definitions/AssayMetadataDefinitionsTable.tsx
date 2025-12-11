@@ -20,6 +20,7 @@ import { Table, useSetupTableState } from "@grit42/table";
 import { useCallback, useEffect } from "react";
 import { useToolbar } from "@grit42/core/Toolbar";
 import Circle1NewIcon from "@grit42/client-library/icons/Circle1New";
+import CogIcon from "@grit42/client-library/icons/Cog";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button, ErrorPage, Spinner } from "@grit42/client-library/components";
 import { useTableColumns } from "@grit42/core/utils";
@@ -63,6 +64,17 @@ const AssayMetadataDefinitionsTable = () => {
           icon: <Circle1NewIcon />,
           label: "New assay metadata",
           onClick: navigateToNew,
+        },
+        {
+          id: "ASSAY_SETTINGS",
+          icon: <CogIcon />,
+          label: "Assay settings",
+          requiredRoles: [
+            "Administrator",
+            "AssayAdministrator",
+          ],
+          onClick: () =>
+            navigate("/assays/settings")
         },
       ],
     });

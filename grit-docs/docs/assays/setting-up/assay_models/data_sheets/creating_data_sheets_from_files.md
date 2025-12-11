@@ -51,15 +51,15 @@ Once satisfied with your selection, click the _Start import_ button to import th
 
 This step provides a preview of the sheets that were found in the imported files, each represented by a tab (1). Each tab displays a grid showing all the columns and the first 100 rows of the sheet (2), and the form for configuring the analysis of the sheet (3).
 
-![Data sheets preview](./assets/data_sheet_loader_mapping.png)
+![Data sheets preview](./assets/data_sheet_loader_file_mapping.png)
 
 If a sheet is not of interest and the corresponding Data Sheet should not be created, it can be ignored by toggling _Include this sheet_ (1) off.
 
-![Excluded data sheets preview](./assets/data_sheet_loader_mapping_exclude_sheet.png)
+![Excluded data sheets preview](./assets/data_sheet_loader_file_mapping_exclude_sheet.png)
 
 If a sheet is of interest, some information must be provided by filling the form (1), or by clicking a cell in the table and choosing the appropriate option in the dropdown (2).
 
-![Configuring a data sheet](./assets/data_sheet_loader_mapping_tooltip.png)
+![Configuring a data sheet](./assets/data_sheet_lHavde oader_file_mapping_tooltip.png)
 
 The following information is required:
 - The index of the row containing the name of the columns, required to name the column
