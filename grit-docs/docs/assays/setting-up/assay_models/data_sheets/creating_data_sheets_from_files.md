@@ -59,7 +59,7 @@ If a sheet is not of interest and the corresponding Data Sheet should not be cre
 
 If a sheet is of interest, some information must be provided by filling the form (1), or by clicking a cell in the table and choosing the appropriate option in the dropdown (2).
 
-![Configuring a data sheet](./assets/data_sheet_lHavde oader_file_mapping_tooltip.png)
+![Configuring a data sheet](./assets/data_sheet_loader_file_mapping_tooltip.png)
 
 The following information is required:
 - The index of the row containing the name of the columns, required to name the column
@@ -83,7 +83,7 @@ Once the relevant sheets have been configured and others have been excluded, cli
 
 This step provides an overview of the Data Sheets that were generated from the previous step, each represented by a tab (1). Each tab displays the details of the Data Sheet (2), and its columns (3). On the left side is a summary of issues (4) that need to be resolved before the Data Sheets can be saved. If the columns don't look right, go back to the previous step by clicking _Back to mapping_ (5) and check the configurations.
 
-![Verifying data sheets with issues](./assets/data_sheet_loader_check_with_issues.png)
+![Verifying data sheets with issues](./assets/data_sheet_loader_file_check_with_issues.png)
 
 Columns can be modified by clicking a row in the Columns table (3).
 
@@ -108,7 +108,7 @@ Here, the generated Data Sheets and their Columns should be reviewed. Pay attent
 
 Once the issues have been resolved and the Data Sheets have been reviewed, click the _Save sheets_ button (1) to save and go back to the Assay Model.
 
-![All issues resolved](./assets/data_sheet_loader_check_column_no_issues.png)
+![All issues resolved](./assets/data_sheet_loader_check_column_details_no_issues.png)
 
 ### A note on data types
 

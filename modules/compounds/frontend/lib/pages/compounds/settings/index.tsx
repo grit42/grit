@@ -71,7 +71,7 @@ const CompoundAdministration = () => {
           color: "var(--palette-secondary-main)",
         }}
       >
-        Compound administration
+        Compounds administration
       </h2>
       <Tabs
         onTabChange={handleTabChange}
