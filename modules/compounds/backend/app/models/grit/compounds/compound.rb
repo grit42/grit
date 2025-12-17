@@ -416,6 +416,24 @@ module Grit::Compounds
       self.number = ActiveRecord::Base.connection.execute("SELECT concat('GRIT', LPAD((nextval('public.grit_compounds_compound_seq'::regclass))::text, 7, '0')) as number").first["number"]
     end
 
+    def self.molecular_descriptors(params = nil)
+      raise "compound_id parameter is required" if params.nil? || params[:compound_id].nil?
+      compound_id = params[:compound_id]
+      query = self.unscoped
+      .select("grit_compounds_molecules__.molweight as molweight")
+      .select("grit_compounds_molecules__.logp as logp")
+      .select("grit_compounds_molecules__.molformula as molformula")
+      .select("grit_compounds_molecules__.inchi as inchi")
+      .select("grit_compounds_molecules__.inchikey as inchikey")
+      .select("grit_compounds_molecules__.hba as hba")
+      .select("grit_compounds_molecules__.hbd as hbd")
+      .joins("LEFT OUTER JOIN grit_compounds_compound_types grit_compounds_compound_types__ ON grit_compounds_compounds.compound_type_id = grit_compounds_compound_types__.id")
+      .joins("LEFT OUTER JOIN grit_core_origins grit_core_origins__ ON grit_compounds_compounds.origin_id = grit_core_origins__.id")
+      .joins("LEFT OUTER JOIN grit_compounds_molecules_compounds grit_compounds_molecules_compounds__ ON grit_compounds_compounds.id = grit_compounds_molecules_compounds__.compound_id")
+      .joins("LEFT OUTER JOIN grit_compounds_molecules grit_compounds_molecules__ ON grit_compounds_molecules_compounds__.molecule_id = grit_compounds_molecules__.id")
+      .where("grit_compounds_compounds.id = ?", compound_id)
+    end
+
   def self.cv(params = nil)
     raise "compound_id parameter is required" if params.nil? || params[:compound_id].nil?
     compound_id = params[:compound_id]
@@ -423,7 +441,7 @@ module Grit::Compounds
       .select("grit_assays_experiment_data_sheet_values.id")
       .select("grit_assays_experiment_data_sheet_values.entity_id_value")
       .select("target_values.id")
-      .select("target_values.decimal_value")
+      .select("coalesce(target_values.decimal_value, target_values.integer_value, target_values.float_value) as value")
       .select("target_values.assay_data_sheet_column_id")
       .select("target_values.experiment_data_sheet_record_id")
       .select("target_data_sheet_columns.name as assay_data_sheet_column_id__name")
@@ -434,9 +452,11 @@ module Grit::Compounds
       .select("experiments.name as experiment_id__name")
       .select("assays.id as assay_id")
       .select("assays.name as assay_id__name")
+      .select("units.name as assay_data_sheet_column_id__unit_name")
       .joins("join grit_assays_experiment_data_sheet_values target_values on target_values.experiment_data_sheet_record_id = grit_assays_experiment_data_sheet_values.experiment_data_sheet_record_id")
       .joins("join grit_assays_assay_data_sheet_columns target_data_sheet_columns on target_values.assay_data_sheet_column_id = target_data_sheet_columns.id")
       .joins("join grit_core_data_types data_types on data_types.id = target_data_sheet_columns.data_type_id")
+      .joins("left join grit_core_units as units on units.id = target_data_sheet_columns.unit_id")
       .joins("join grit_assays_assay_data_sheet_definitions data_sheet_definitions on target_data_sheet_columns.assay_data_sheet_definition_id = data_sheet_definitions.id")
       .joins("join grit_assays_experiment_data_sheet_records as data_sheet_records on grit_assays_experiment_data_sheet_values.experiment_data_sheet_record_id = data_sheet_records.id")
       .joins("join grit_assays_experiment_data_sheets as data_sheets on data_sheets.id = data_sheet_records.experiment_data_sheet_id")
@@ -444,7 +464,7 @@ module Grit::Compounds
       .joins("join grit_assays_assays as assays on assays.id = experiments.assay_id")
       .joins("join grit_core_publication_statuses as publication_statuses on publication_statuses.id = experiments.publication_status_id")
       .where("grit_assays_experiment_data_sheet_values.entity_id_value = ?", compound_id)
-      .where("data_types.name in ('decimal', 'integer')")
+      .where("data_types.name in ('decimal', 'integer', 'float')")
       .where("data_sheet_definitions.result = true")
       .where("publication_statuses.name = 'Published'")
     end
