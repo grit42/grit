@@ -17,7 +17,6 @@
  */
 
 import { RowData } from "@grit42/table";
-import useRegisterAssaysAdministration from "./extensions/administration";
 import useRegisterExperimentDataSheetRecordImporter from "./extensions/importer";
 
 declare module "@grit42/table" {
@@ -30,7 +29,6 @@ declare module "@grit42/table" {
 }
 
 const Registrant = () => {
-  useRegisterAssaysAdministration();
   useRegisterExperimentDataSheetRecordImporter();
   return null;
 };

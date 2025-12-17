@@ -45,6 +45,7 @@ import {
 } from "@grit42/api";
 import { useToolbar } from "@grit42/core/Toolbar";
 import MoleculePlusIcon from "@grit42/client-library/icons/MoleculePlus";
+import CogIcon from "@grit42/client-library/icons/Cog";
 import { getTableColumns } from "@grit42/core/utils";
 import { ErrorPage, Spinner } from "@grit42/client-library/components";
 
@@ -190,6 +191,7 @@ const CompoundsTable = () => {
     tableState.sorting,
     tableState.columnOrder,
     tableState.columnVisibility,
+    selectedCompoundTypes,
   ]);
 
   useEffect(() => {
@@ -251,6 +253,17 @@ const CompoundsTable = () => {
                   },
                 }),
             })) ?? [],
+        },
+        {
+          id: "COMPOUND_SETTINGS",
+          icon: <CogIcon />,
+          label: "Compound settings",
+          requiredRoles: [
+            "Administrator",
+            "CompoundAdministrator",
+          ],
+          onClick: () =>
+                navigate("/compounds/settings")
         },
       ],
     });

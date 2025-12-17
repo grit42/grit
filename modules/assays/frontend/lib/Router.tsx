@@ -22,18 +22,29 @@ import { Navigate, Route, Routes } from "react-router-dom";
 const LazyAssaysPage = lazy(() => import("./pages/assays"));
 const LazyExperimentsPage = lazy(() => import("./pages/experiments"));
 const LazyDataTablesPage = lazy(() => import("./features/data-tables/pages"));
+const LazyAssaySettingsPage = lazy(() => import("./pages/assays/settings"));
 
 const Router = () => {
   return (
     <Routes>
-      <Route
-        path="assays/*"
-        element={
-          <AuthGuard>
-            <LazyAssaysPage />
-          </AuthGuard>
-        }
-      />
+      <Route path="assays/*">
+        <Route
+          path="settings/*"
+          element={
+            <AuthGuard>
+              <LazyAssaySettingsPage />
+            </AuthGuard>
+          }
+        />
+        <Route
+          path="*"
+          element={
+            <AuthGuard>
+              <LazyAssaysPage />
+            </AuthGuard>
+          }
+        ></Route>
+      </Route>
       <Route
         path="experiments/*"
         element={

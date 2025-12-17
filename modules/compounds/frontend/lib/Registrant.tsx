@@ -19,14 +19,12 @@
 import useRegisterCompoundForms from "./extensions/entity-form";
 import useRegisterCompoundInputs from "./extensions/form";
 import useRegisterCompoundColumnTypeDefs from "./extensions/table";
-import useRegisterCompoundAdministration from "./extensions/administration";
 import useRegisterCompoundImporter from "./extensions/importer";
 
 const Registrant = () => {
   useRegisterCompoundForms();
   useRegisterCompoundInputs();
   useRegisterCompoundColumnTypeDefs();
-  useRegisterCompoundAdministration();
   useRegisterCompoundImporter();
   return null;
 };

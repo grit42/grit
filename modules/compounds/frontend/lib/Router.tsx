@@ -32,6 +32,7 @@ const LazyCompoundBatchesPage = lazy(
 const LazyCompoundSynonymsPage = lazy(
   () => import("./pages/compounds/[id]/synonyms"),
 );
+const LazyCompoundSettingsPage = lazy(() => import("./pages/compounds/settings"));
 
 const Router = () => {
   return (
@@ -58,6 +59,15 @@ const Router = () => {
         <Route path="synonyms" element={<LazyCompoundSynonymsPage />} />
         <Route index path="*" element={<Navigate to="details" replace />} />
       </Route>
+
+      <Route
+        path="settings/*"
+        element={
+          <AuthGuard>
+            <LazyCompoundSettingsPage />
+          </AuthGuard>
+        }
+      />
     </Routes>
   );
 };

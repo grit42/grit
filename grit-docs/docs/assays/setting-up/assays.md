@@ -14,7 +14,7 @@ To define a new assay go to Administration -> Assays -> Assays where all the cur
 
 ![Assays list](./assets/assays.png)
 
-To create a new assay click the "New" button 4) and click one of the existing assays to edit. The new/edit form appears:
+To create a new assay click the "New" button 3) and click one of the existing assays to edit. The new/edit form appears:
 
 It's mandatory to give the assay a unique name and then select the following:
 
