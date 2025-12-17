@@ -87,6 +87,9 @@ catalogs:
     vitest:
       specifier: '3'
       version: 3.2.4
+    zod:
+      specifier: '4'
+      version: 4.1.12
 
 importers:
 
@@ -245,7 +248,7 @@ importers:
         specifier: '3'
         version: 3.1.1(react@18.3.1)
       zod:
-        specifier: ^4.1.12
+        specifier: 'catalog:'
         version: 4.1.12
     devDependencies:
       '@eslint/js':
@@ -347,6 +350,9 @@ importers:
       usehooks-ts:
         specifier: '3'
         version: 3.1.1(react@18.3.1)
+      zod:
+        specifier: 'catalog:'
+        version: 4.1.12
     devDependencies:
       '@eslint/js':
         specifier: 'catalog:'

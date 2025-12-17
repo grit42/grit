@@ -1,3 +1,13 @@
+## 0.6.2
+
+### 🩹 Fixes
+
+- allow passing validators to fields
+
+### 🧱 Updated Dependencies
+
+- Updated @grit42/client-library to 0.7.2
+
 ## 0.6.1
 
 ### 🩹 Fixes

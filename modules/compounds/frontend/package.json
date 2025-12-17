@@ -2,7 +2,7 @@
   "name": "@grit42/compounds",
   "author": "Jonathan Rebourt, grit42 <jonny@grit42.com>",
   "license": "GPL-3.0-or-later",
-  "version": "0.6.0",
+  "version": "0.8.0",
   "type": "module",
   "exports": {
     "./meta": {
@@ -52,7 +52,8 @@
     "@grit42/table": "workspace:*",
     "openchemlib": "8.18.1",
     "react-ocl": "7.0.2",
-    "usehooks-ts": "3"
+    "usehooks-ts": "3",
+    "zod": "catalog:"
   },
   "peerDependencies": {
     "react": "catalog:",

@@ -1,3 +1,16 @@
+## 0.8.0
+
+### 🚀 Features
+
+- This is just a version bump
+
+## 0.7.2
+
+### 🩹 Fixes
+
+- entities bulk delete
+- allow import of empty entity values if the field is not required
+
 ## 0.7.1
 
 ### 🩹 Fixes
