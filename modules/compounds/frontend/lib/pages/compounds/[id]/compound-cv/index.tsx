@@ -185,8 +185,13 @@ const CompoundCVTableTabs = ({ compound }: { compound: CompoundData }) => {
           panel: <CompoundCVExperimentTable compound={compound} />,
         },
         {
-          key: "placeholder",
-          name: "Placeholder",
+          key: "Molecular Descriptors",
+          name: "Molecular Descriptors",
+          panel: <CompoundCVMolecularDescriptorsTable compound={compound} />,
+        },
+        {
+          key: "Atomic Descriptors",
+          name: "Atomic Descriptors",
           panel: <div></div>,
         },
       ]}
@@ -263,24 +268,38 @@ const CompoundCVExperimentTable = ({
 }: {
   compound: CompoundData;
 }) => {
-  // const getRowId = useCallback((row: any) => row.experiment_id.toString(), []);
-  // const getRowId = useCallback((row: any) => row.experiment_data_sheet_id.toString(), []);
-  const getRowId = useCallback((row: any) => [row.experiment_id.toString(), row.experiment_data_sheet_id.toString()], []);
 
   const navigate = useNavigate();
+
   // const { pathname } = useLocation();
   const tableColumns = useTableColumns([
     {
-      name: "decimal_value",
-      display_name: "Decimal Value",
+      name: "value",
+      display_name: "Value",
       default_hidden: false,
       required: false,
-      type: "decimal",
+      type: "numeric",
+      unique: false,
+    },
+    {
+      name: "assay_data_sheet_column_id__unit_name",
+      display_name: "Unit",
+      default_hidden: false,
+      required: false,
+      type: "string",
+      unique: false,
+    },
+    {
+      name: "assay_data_sheet_column_id__name",
+      display_name: "Column",
+      default_hidden: false,
+      required: false,
+      type: "string",
       unique: false,
     },
     {
       name: "assay_data_sheet_definition_id__name",
-      display_name: "Experiment Data Sheet",
+      display_name: "Data Sheet",
       default_hidden: false,
       required: false,
       type: "string",
@@ -339,11 +358,102 @@ const CompoundCVExperimentTable = ({
     <Table
       loading={isLoading && !isFetchingNextPage}
       header="Experiment Overview"
-      getRowId={getRowId} // error but it works with a list of strings
+      // getRowId={getRowId} // error but it works with a list of strings
       data={flatData}
       tableState={tableState}
       rowActions={undefined}
-      onRowClick={( row ) => navigate(`/assays/experiments/${row.original.experiment_id}/sheets/${row.original.experiment_data_sheet_id}`)}
+      // onRowClick={( row ) => navigate(`/assays/experiments/${row.original.experiment_id}/sheets/${row.original.experiment_data_sheet_id}`)}
+      onRowClick={( row ) => navigate(`/assays/experiments/${row.original.experiment_id.toString()}/sheets/${row.original.experiment_data_sheet_id.toString()}`)}
+      pagination={{
+        fetchNextPage,
+        isFetchingNextPage,
+        totalRows: data?.pages[0]?.total,
+      }}
+    />
+  );
+};
+
+const CompoundCVMolecularDescriptorsTable = ({
+  compound,
+}: {
+  compound: CompoundData;
+}) => {
+
+  const tableColumns = useTableColumns([
+    {
+      name: "molweight",
+      display_name: "MW",
+      default_hidden: false,
+      required: false,
+      type: "decimal",
+      unique: false,
+    },
+    {
+      name: "logp",
+      display_name: "LogP",
+      default_hidden: false,
+      required: false,
+      type: "decimal",
+      unique: false,
+    },
+    {
+      name: "hba",
+      display_name: "Hydrogen Bond Acceptor Count",
+      default_hidden: false,
+      required: false,
+      type: "decimal",
+      unique: false,
+    },
+    {
+      name: "hbd",
+      display_name: "Hydrogen Bond Donor Count",
+      default_hidden: false,
+      required: false,
+      type: "decimal",
+      unique: false,
+    },
+  ]);
+
+  const tableState = useSetupTableState(
+    "molecular-descriptors-list",
+    tableColumns,
+    {
+      saveState: true,
+      settings: {
+        enableColumnDescription: true,
+        enableColumnOrderReset: true,
+      },
+    },
+  );
+
+
+  const { data, isLoading, isError, error, fetchNextPage, isFetchingNextPage } =
+    useInfiniteEntityData(
+      "grit/compounds/compounds",
+      tableState.sorting,
+      tableState.filters,
+      {
+        compound_id: compound.id,
+        scope: "molecular_descriptors",
+      },
+    );
+
+  const flatData = useMemo(
+    () => data?.pages.flatMap(({ data }) => data) ?? [],
+    [data],
+  );
+
+  if (isError) {
+    return <ErrorPage error={error} />;
+  }
+
+  return (
+    <Table
+      loading={isLoading && !isFetchingNextPage}
+      header="Experiment Overview"
+      data={flatData}
+      tableState={tableState}
+      rowActions={undefined}
       pagination={{
         fetchNextPage,
         isFetchingNextPage,
