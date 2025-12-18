@@ -28,67 +28,58 @@ module Grit::Assays
       update: [ "Administrator", "AssayAdministrator", "AssayUser" ],
       destroy: [ "Administrator", "AssayAdministrator", "AssayUser" ]
 
-      def self.create(params)
-        params = params.as_json
-        ActiveRecord::Base.transaction do
-          record = Grit::Assays::ExperimentDataSheetRecord.new({
-            experiment_data_sheet_id: params["experiment_data_sheet_id"]
-          })
+    def self.sheet_record_klass(data_sheet_definition_id)
+      sheet = Grit::Assays::AssayDataSheetDefinition.includes(assay_data_sheet_columns: [ :data_type ]).find(data_sheet_definition_id)
+      klass = Class.new(ActiveRecord::Base) do
+        self.table_name = sheet.table_name
+        @sheet = sheet
 
-          record.save!
+        def self.detailed(params = nil)
+          query = self.unscoped
+            .select("#{self.table_name}.id")
+            .select("#{self.table_name}.created_by")
+            .select("#{self.table_name}.updated_by")
+            .select("#{self.table_name}.created_at")
+            .select("#{self.table_name}.updated_at")
+            .select("#{self.table_name}.experiment_id")
 
-          Grit::Assays::ExperimentDataSheet.includes(assay_data_sheet_definition: [ :assay_data_sheet_columns ])
-            .find(params["experiment_data_sheet_id"]).assay_data_sheet_definition.assay_data_sheet_columns.each do |column|
-            if !params[column.safe_name].nil? && !params[column.safe_name].blank?
-              value = Grit::Assays::ExperimentDataSheetValue.new(
-                experiment_data_sheet_record_id: record.id,
-                assay_data_sheet_column_id: column.id,
-              )
-              if column.data_type.is_entity
-                value.entity_id_value = params[column.safe_name]
-              else
-                value["#{column.data_type.name}_value"] = params[column.safe_name]
+
+          @sheet.assay_data_sheet_columns.each do |column|
+            query = query.select("#{self.table_name}.#{column.safe_name}")
+            if column.data_type.is_entity
+              entity_klass = column.data_type.model
+              query = query
+                .joins("LEFT OUTER JOIN #{column.data_type.table_name} #{column.safe_name}__entities on #{column.safe_name}__entities.id = #{@sheet.table_name}.#{column.safe_name}")
+              for display_property in entity_klass.display_properties do
+                query = query
+                  .select("#{column.safe_name}__entities.#{display_property[:name]} as #{column.safe_name}__#{display_property[:name]}") unless entity_klass.display_properties.nil?
               end
-              value.save!
             end
           end
-          return record
+          query
         end
+      end
+      klass
+    end
+
+      def self.create(params)
+        params = params.as_json
+        experiment_data_sheet = ExperimentDataSheet.includes(assay_data_sheet_definition: [ :assay_data_sheet_columns ]).find(params["experiment_data_sheet_id"])
+        values = experiment_data_sheet.assay_data_sheet_definition.assay_data_sheet_columns.each_with_object({ experiment_id: experiment_data_sheet.experiment_id }) do |column, hash|
+          hash[column.safe_name] = params[column.safe_name]
+        end
+        sheet_record_klass(experiment_data_sheet.assay_data_sheet_definition_id).create!(values)
       end
 
       def self.update(params)
-        ActiveRecord::Base.transaction do
-          record = Grit::Assays::ExperimentDataSheetRecord.find(params["id"])
-
-          Grit::Assays::ExperimentDataSheet.includes(assay_data_sheet_definition: [ :assay_data_sheet_columns ]).find(record.experiment_data_sheet_id).assay_data_sheet_definition.assay_data_sheet_columns.each do |column|
-            value = Grit::Assays::ExperimentDataSheetValue.find_by(
-              experiment_data_sheet_record_id: record.id,
-              assay_data_sheet_column_id: column.id,
-            )
-            if value && (!params[column.safe_name].nil? && !params[column.safe_name].blank?)
-              if column.data_type.is_entity
-                value.entity_id_value = params[column.safe_name]
-              else
-                value["#{column.data_type.name}_value"] = params[column.safe_name]
-              end
-              value.save!
-            elsif !value && (!params[column.safe_name].nil? && !params[column.safe_name].blank?)
-              value = Grit::Assays::ExperimentDataSheetValue.new(
-                experiment_data_sheet_record_id: record.id,
-                assay_data_sheet_column_id: column.id,
-              )
-              if column.data_type.is_entity
-                value.entity_id_value = params[column.safe_name]
-              else
-                value["#{column.data_type.name}_value"] = params[column.safe_name]
-              end
-              value.save!
-            elsif value && (params[column.safe_name].nil? || params[column.safe_name].blank?)
-              value.destroy
-            end
-          end
-          return record
+        params = params.as_json
+        experiment_data_sheet = ExperimentDataSheet.includes(assay_data_sheet_definition: [ :assay_data_sheet_columns ]).find(params["experiment_data_sheet_id"])
+        record = sheet_record_klass(experiment_data_sheet.assay_data_sheet_definition_id).find(params["id"])
+        values = experiment_data_sheet.assay_data_sheet_definition.assay_data_sheet_columns.each_with_object({}) do |column, hash|
+          hash[column.safe_name] = params[column.safe_name]
         end
+        record.update!(values)
+        record
       end
 
       def self.definition_properties(**args)
@@ -127,68 +118,27 @@ module Grit::Assays
         self.entity_columns_from_properties(self.entity_properties(**args))
       end
 
-      def self.for_sheets(assay_data_sheet_definition_id, sheet_ids)
-        query = self.unscoped
-          .select("grit_assays_experiment_data_sheet_records.id")
-          .select("grit_assays_experiment_data_sheet_records.created_by")
-          .select("grit_assays_experiment_data_sheet_records.updated_by")
-          .select("grit_assays_experiment_data_sheet_records.created_at")
-          .select("grit_assays_experiment_data_sheet_records.updated_at")
-          .select("grit_assays_experiment_data_sheet_records.experiment_data_sheet_id")
-          .where("grit_assays_experiment_data_sheet_records.experiment_data_sheet_id" => sheet_ids)
-
-        Grit::Assays::AssayDataSheetColumn.where(assay_data_sheet_definition_id: assay_data_sheet_definition_id).all.each do |column|
-          query = query
-            .joins("LEFT OUTER JOIN grit_assays_experiment_data_sheet_values dsv__#{column.safe_name} on dsv__#{column.safe_name}.assay_data_sheet_column_id = #{column.id} and dsv__#{column.safe_name}.experiment_data_sheet_record_id = grit_assays_experiment_data_sheet_records.id")
-
-          if column.data_type.is_entity
-            entity_klass = column.data_type.model
-            query = query
-              .joins("LEFT OUTER JOIN #{column.data_type.table_name} dsv__#{column.safe_name}__entities on dsv__#{column.safe_name}__entities.id = dsv__#{column.safe_name}.entity_id_value")
-              .select("dsv__#{column.safe_name}.entity_id_value as #{column.safe_name}")
-            for display_property in entity_klass.display_properties do
-              query = query
-                .select("dsv__#{column.safe_name}__entities.#{display_property[:name]} as #{column.safe_name}__#{display_property[:name]}") unless entity_klass.display_properties.nil?
-            end
-          else
-            query = query.select("dsv__#{column.safe_name}.#{column.data_type.name}_value as #{column.safe_name}")
-          end
-        end
-        query
-      end
-
       def self.by_experiment_data_sheet(params)
         raise "No experiment_data_sheet_id specified" if params["experiment_data_sheet_id"].nil?
 
-        sheet = Grit::Assays::ExperimentDataSheet.find(params["experiment_data_sheet_id"])
-        self.for_sheets(sheet.assay_data_sheet_definition_id, sheet.id)
+        experiment_data_sheet = Grit::Assays::ExperimentDataSheet.find(params["experiment_data_sheet_id"])
+        sheet_record_klass(experiment_data_sheet.assay_data_sheet_definition_id).detailed(params).where(experiment_id: experiment_data_sheet.experiment_id)
       end
 
       def self.by_assay_data_sheet_definition(params)
         raise "No assay_data_sheet_definition_id specified" if params["assay_data_sheet_definition_id"].nil?
-
-        assay_data_sheet_definition = Grit::Assays::AssayDataSheetDefinition.find(params["assay_data_sheet_definition_id"])
-        experiment_data_sheets = Grit::Assays::ExperimentDataSheet.unscoped.select("id").where(assay_data_sheet_definition_id: params["assay_data_sheet_definition_id"])
-        self.for_sheets(assay_data_sheet_definition.id, experiment_data_sheets)
-        .joins("LEFT OUTER JOIN grit_assays_experiment_data_sheets grit_assays_experiment_data_sheets__ on grit_assays_experiment_data_sheets__.id = grit_assays_experiment_data_sheet_records.experiment_data_sheet_id")
-        .joins("LEFT OUTER JOIN grit_assays_experiments grit_assays_experiments__ on grit_assays_experiments__.id = grit_assays_experiment_data_sheets__.experiment_id")
-        .select("grit_assays_experiments__.id as experiment_id")
-        .select("grit_assays_experiments__.name as experiment_id__name")
-        .where("grit_assays_experiments__.publication_status_id" => Grit::Core::PublicationStatus.find_by(name: "Published").id)
+        klass = sheet_record_klass(params["assay_data_sheet_definition_id"])
+        klass.detailed(params)
+          .joins("JOIN grit_assays_experiments grit_assays_experiments__ on grit_assays_experiments__.id = #{klass.table_name}.experiment_id")
+          .where("grit_assays_experiments__.publication_status_id" => Grit::Core::PublicationStatus.find_by(name: "Published").id)
       end
 
       def self.detailed(params = nil)
         params = params.as_json
-        sheet = Grit::Assays::ExperimentDataSheet.find(params["experiment_data_sheet_id"]) if !params["experiment_data_sheet_id"].nil?
-        return self.for_sheets(sheet.assay_data_sheet_definition_id, sheet.id) unless sheet.nil?
-
-        self.unscoped
-          .select("grit_assays_experiment_data_sheet_records.id")
-          .select("grit_assays_experiment_data_sheet_records.created_by")
-          .select("grit_assays_experiment_data_sheet_records.updated_by")
-          .select("grit_assays_experiment_data_sheet_records.created_at")
-          .select("grit_assays_experiment_data_sheet_records.updated_at")
-          .select("grit_assays_experiment_data_sheet_records.experiment_data_sheet_id")
+        experiment_data_sheet = Grit::Assays::ExperimentDataSheet.find(params["experiment_data_sheet_id"])
+        data_sheet_definition_id = params["data_sheet_definition_id"] || experiment_data_sheet.assay_data_sheet_definition_id
+        raise "Could not find data sheet id" if data_sheet_definition_id.nil?
+        sheet_record_klass(data_sheet_definition_id).detailed(params)
       end
 
       def self.by_load_set(params)

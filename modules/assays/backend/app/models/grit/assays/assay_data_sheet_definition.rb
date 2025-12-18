@@ -42,5 +42,9 @@ module Grit::Assays
     def destroy_from_existing_experiments
       Grit::Assays::ExperimentDataSheet.where(assay_data_sheet_definition_id: self.id).destroy_all
     end
+
+    def table_name
+      "ds_#{id}"
+    end
   end
 end

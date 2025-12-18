@@ -24,8 +24,10 @@ module Grit::Assays
       @record = Grit::Assays::ExperimentDataSheetRecord.create(params)
       scope = get_scope(params[:scope] || "detailed", params)
       @record = scope.find(@record.id)
-      render json: { success: true, data: @record }, status: :created, location: @record
+      render json: { success: true, data: @record }, status: :created
     rescue StandardError => e
+      logger.info e.to_s
+      logger.info e.backtrace.join("\n")
       render json: { success: false, errors: e.to_s }, status: :internal_server_error
     end
 
@@ -35,6 +37,8 @@ module Grit::Assays
       @record = scope.find(@record.id)
       render json: { success: true, data: @record }
     rescue StandardError => e
+      logger.info e.to_s
+      logger.info e.backtrace.join("\n")
       render json: { success: false, errors: e.to_s }, status: :internal_server_error
     end
 

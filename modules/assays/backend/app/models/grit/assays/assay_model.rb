@@ -21,6 +21,7 @@ module Grit::Assays
     include Grit::Core::GritEntityRecord
 
     belongs_to :assay_type
+    belongs_to :publication_status, class_name: "Grit::Core::PublicationStatus"
     has_many :assays, dependent: :destroy
     has_many :assay_model_metadata, dependent: :destroy
     has_many :assay_data_sheet_definitions, dependent: :destroy
@@ -31,6 +32,45 @@ module Grit::Assays
       create: [ "Administrator", "AssayAdministrator" ],
       update: [ "Administrator", "AssayAdministrator" ],
       destroy: [ "Administrator", "AssayAdministrator" ]
+
+    def create_tables
+      drop_tables
+      foreign_keys = []
+      migration = ActiveRecord::Migration.new
+      assay_data_sheet_definitions.each do |sheet|
+        migration.create_table sheet.table_name, id: false, if_not_exists: true do |t|
+          t.bigint :id, primary_key: true, default: -> { 'nextval(\'grit_seq\'::regclass)' }
+          t.string :created_by, limit: 30, null: false, default: "SYSTEM"
+          t.datetime :created_at, null: false, default: -> { 'CURRENT_TIMESTAMP' }
+          t.string :updated_by, limit: 30
+          t.datetime :updated_at
+          t.references :experiment, null: false, foreign_key: { name: "#{sheet.table_name}_experiments", to_table: "grit_assays_experiments" }
+
+          sheet.assay_data_sheet_columns.each do |column|
+            if column.data_type.is_entity
+              t.column column.safe_name, :bigint, null: !column.required
+              foreign_keys.push [sheet, column]
+            else
+              t.column column.safe_name, column.data_type.name, null: !column.required
+            end
+          end
+        end
+      end
+
+      foreign_keys.each do |fk|
+        sheet = fk[0]
+        column = fk[1]
+        migration.add_foreign_key sheet.table_name, column.data_type.table_name, column: column.safe_name, name: "#{sheet.table_name}_#{column.safe_name}"
+      end
+      true
+    end
+
+    def drop_tables
+      migration = ActiveRecord::Migration.new
+      assay_data_sheet_definitions.each do |sheet|
+        migration.drop_table sheet.table_name, if_exists: true
+      end
+    end
 
     def self.published(params)
       self.detailed(params).where("grit_core_publication_statuses__.name = 'Published'")
