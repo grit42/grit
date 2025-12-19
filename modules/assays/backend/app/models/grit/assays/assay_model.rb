@@ -27,14 +27,34 @@ module Grit::Assays
     has_many :assay_data_sheet_definitions, dependent: :destroy
 
     display_column "name"
-    
+
     entity_crud_with read: [],
       create: [ "Administrator", "AssayAdministrator" ],
       update: [ "Administrator", "AssayAdministrator" ],
       destroy: [ "Administrator", "AssayAdministrator" ]
 
-    def create_tables
+    before_update :maintain_data_sheet_tables
+
+    def self.published(params)
+      self.detailed(params).where("grit_core_publication_statuses__.name = 'Published'")
+    end
+
+    def maintain_data_sheet_tables # TODO: remove
+      if publication_status.name == "Draft"
+        drop_tables
+      else
+        create_tables
+      end
+    end
+
+    private
+
+    def recreate_tables
       drop_tables
+      create_tables
+    end
+
+    def create_tables
       foreign_keys = []
       migration = ActiveRecord::Migration.new
       assay_data_sheet_definitions.each do |sheet|
@@ -60,9 +80,8 @@ module Grit::Assays
       foreign_keys.each do |fk|
         sheet = fk[0]
         column = fk[1]
-        migration.add_foreign_key sheet.table_name, column.data_type.table_name, column: column.safe_name, name: "#{sheet.table_name}_#{column.safe_name}"
+        migration.add_foreign_key sheet.table_name, column.data_type.table_name, column: column.safe_name, name: "#{sheet.table_name}_#{column.safe_name}", if_not_exists: true
       end
-      true
     end
 
     def drop_tables
@@ -70,10 +89,6 @@ module Grit::Assays
       assay_data_sheet_definitions.each do |sheet|
         migration.drop_table sheet.table_name, if_exists: true
       end
-    end
-
-    def self.published(params)
-      self.detailed(params).where("grit_core_publication_statuses__.name = 'Published'")
     end
   end
 end
