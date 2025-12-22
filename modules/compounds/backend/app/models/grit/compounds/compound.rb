@@ -465,7 +465,33 @@ module Grit::Compounds
       .joins("join grit_core_publication_statuses as publication_statuses on publication_statuses.id = experiments.publication_status_id")
       .where("grit_assays_experiment_data_sheet_values.entity_id_value = ?", compound_id)
       .where("data_types.name in ('decimal', 'integer', 'float')")
-      .where("data_sheet_definitions.result = true")
+      .where("publication_statuses.name = 'Published'")
+    end
+
+  def self.cvplots(params = nil)
+    raise "compound_id parameter is required" if params.blank? || params[:compound_id].blank?
+    compound_id = params[:compound_id]
+
+    Grit::Assays::ExperimentDataSheetValue.unscoped
+      .distinct
+      # .select("data_sheet_definitions.id as assay_data_sheet_definition_id")
+      # .select("data_sheet_definitions.name as assay_data_sheet_definition_id__name")
+      .select("data_sheets.id as experiment_data_sheet_id")
+      .select("assays.id as assay_id")
+      .select("assays.name as assay_id__name")
+      .select("experiments.id as experiment_id")
+      .select("experiments.name as experiment_id__name")
+      .select("(experiments.plots)::jsonb as experiment_plots")
+      .joins("join grit_assays_experiment_data_sheet_values target_values on target_values.experiment_data_sheet_record_id = grit_assays_experiment_data_sheet_values.experiment_data_sheet_record_id")
+      .joins("join grit_assays_assay_data_sheet_columns target_data_sheet_columns on target_values.assay_data_sheet_column_id = target_data_sheet_columns.id")
+      .joins("join grit_core_data_types data_types on data_types.id = target_data_sheet_columns.data_type_id")
+      .joins("join grit_assays_experiment_data_sheet_records as data_sheet_records on grit_assays_experiment_data_sheet_values.experiment_data_sheet_record_id = data_sheet_records.id")
+      .joins("join grit_assays_experiment_data_sheets as data_sheets on data_sheets.id = data_sheet_records.experiment_data_sheet_id")
+      .joins("join grit_assays_experiments as experiments on experiments.id = data_sheets.experiment_id")
+      .joins("join grit_assays_assays as assays on assays.id = experiments.assay_id")
+      .joins("join grit_core_publication_statuses as publication_statuses on publication_statuses.id = experiments.publication_status_id")
+      .where("grit_assays_experiment_data_sheet_values.entity_id_value = ?", compound_id)
+      .where("data_types.name in ('decimal', 'integer', 'float')")
       .where("publication_statuses.name = 'Published'")
     end
   end
