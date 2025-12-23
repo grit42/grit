@@ -334,6 +334,8 @@ const CompoundCVExperimentTable = ({
       unique: false,
     },
   ]);
+
+  // Filtering does not work. Could it be due to we don't refer to an entity directly?
   const tableState = useSetupTableState(
     "experiment-data-sheet-records-list",
     tableColumns,
@@ -668,7 +670,7 @@ const CompoundCV = () => {
   return (
     <div className={styles.topContainer}>
       <div className={styles.moleculeContainer}>
-        <Surface style={{ width: "100%" }}>
+        <Surface style={{ width: "100%", height: "100%" }}>
           {compound && <MoleculeViewer compound={compound} />}
           {compound && <MolFileButtons compound={compound} />}
         </Surface>
@@ -682,7 +684,7 @@ const CompoundCV = () => {
 
       <div className={styles.bottomContainer}>
         <div className={styles.tableContainer}>
-          <Surface style={{ width: "100%" }}>
+          <Surface style={{ width: "100%", height: "100%" }}>
             {compound && <CompoundCVTableTabs compound={compound} />}
           </Surface>
         </div>

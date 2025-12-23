@@ -2,28 +2,49 @@
 
 
 .topContainer {
-  overflow-y: auto;
+  overflow-y: visible;
   position: relative;
+  z-index: 2;
   display: grid;
   gap: calc(theme.$spacing * 1);
 
-  grid-template-columns: 1fr;
+
+  grid-template-columns: 1fr 3fr;
+  grid-template-rows: auto auto auto;
   grid-template-areas:
-    "top"
+    "a"
+    "b"
     "bottom";
 
   @media screen and (min-width: 960px) {
-    grid-template-columns: 1fr 5fr;
+    grid-template-columns: 1fr 3fr;
     grid-template-areas:
       "a b"
       "bottom bottom";
     grid-template-rows: auto 1fr;
+    align-items: stretch;
   }
 
-  .moleculeContainer { grid-area: a; top: 0; align-self: start; }
-  .tabsContainer     { grid-area: b; }
+  .moleculeContainer {
+    grid-area: a;
+    top: 0;
+    align-self: stretch;
+    min-height: 0;
+  }
+
+  .tabsContainer     {
+    display: flex;
+    flex-direction: row;
+    grid-area: b;
+    top: 0;
+    align-self: stretch;
+    overflow: auto;
+    min-height: 0;
+  }
 
   .bottomContainer {
+    position: relative;
+    z-index: 1;
     grid-area: bottom;
     display: grid;
     gap: calc(theme.$spacing * 1);
@@ -36,7 +57,7 @@
     @media screen and (min-width: 960px) {
       grid-template-columns: 3fr 2fr;
       grid-template-areas: "c d";
-      align-items: start;
+      align-items: stretch; // start
     }
   }
 
