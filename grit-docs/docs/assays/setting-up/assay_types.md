@@ -20,7 +20,8 @@ Whereas selecting the "in vitro" assay type at the top show the available assay 
 Adding new assay types is very easy (NOTE: But does require admin rights):
 
 1) Go to the Assay menu
-2) Select Types
+2) Click the gears icon top right in the menu
+2) Select the Types tab
 3) Click the New button and add Name and potentially a Description in the appearing form
 
 ![Assay types](./assets/assay_types.png)
