@@ -44,7 +44,7 @@ import {
   useCompoundTypeBatchesColumns,
   useInfiniteBatchesOfCompound,
 } from "../../../../queries/batches";
-import { useInfiniteEntityData } from "@grit42/core";
+import { EntityData, useInfiniteEntityData } from "@grit42/core";
 import {
   nullish,
   Plot,
@@ -276,6 +276,24 @@ const CompoundCVBatchTable = ({ compound }: { compound: CompoundData }) => {
   );
 };
 
+interface CompoundCVData extends EntityData {
+  id: number;
+  entity_id_value: number;
+  value: number;
+  assay_data_sheet_column_id: number;
+  experiment_data_sheet_record_id: number;
+  assay_data_sheet_column_id__name: string;
+  assay_data_sheet_definition_id: number;
+  assay_data_sheet_definition_id__name: string;
+  experiment_data_sheet_id: number;
+  experiment_id: number;
+  experiment_id__name: string;
+  assay_id: number;
+  assay_id__name: string;
+  unit_id: number;
+  unit_id__name: string | null;
+}
+
 const CompoundCVExperimentTable = ({
   compound,
 }: {
@@ -283,14 +301,13 @@ const CompoundCVExperimentTable = ({
 }) => {
   const navigate = useNavigate();
 
-  // const { pathname } = useLocation();
-  const tableColumns = useTableColumns([
+  const tableColumns = useTableColumns<CompoundCVData>([
     {
       name: "value",
       display_name: "Value",
       default_hidden: false,
       required: false,
-      type: "numeric",
+      type: "decimal",
       unique: false,
     },
     {
@@ -335,8 +352,7 @@ const CompoundCVExperimentTable = ({
     },
   ]);
 
-  // Filtering does not work. Could it be due to we don't refer to an entity directly?
-  const tableState = useSetupTableState(
+  const tableState = useSetupTableState<CompoundCVData>(
     "experiment-data-sheet-records-list",
     tableColumns,
     {
@@ -349,7 +365,7 @@ const CompoundCVExperimentTable = ({
   );
 
   const { data, isLoading, isError, error, fetchNextPage, isFetchingNextPage } =
-    useInfiniteEntityData(
+    useInfiniteEntityData<CompoundCVData>(
       "grit/compounds/compounds",
       tableState.sorting,
       tableState.filters,
@@ -371,12 +387,10 @@ const CompoundCVExperimentTable = ({
   return (
     <Table
       loading={isLoading && !isFetchingNextPage}
-      header="Experiment Overview"
-      // getRowId={getRowId} // error but it works with a list of strings
+      header="" // "Experiment Overview"
       data={flatData}
       tableState={tableState}
       rowActions={undefined}
-      // onRowClick={( row ) => navigate(`/assays/experiments/${row.original.experiment_id}/sheets/${row.original.experiment_data_sheet_id}`)}
       onRowClick={(row) =>
         navigate(
           `/assays/experiments/${row.original.experiment_id.toString()}/sheets/${row.original.experiment_data_sheet_id.toString()}`,
