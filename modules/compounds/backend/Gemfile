@@ -11,3 +11,4 @@ gem "pg"
 gem "rubocop-rails-omakase", require: false
 
 gem "grit-core", path: "../../core/backend"
+gem "grit-assays", path: "../../assays/backend"

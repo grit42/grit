@@ -17,12 +17,14 @@
  */
 
 import CoreRegistrant from "@grit42/core/registrant";
+import AssaysRegistrant from "@grit42/assays/registrant";
 import CompoundsRegistrant from "@grit42/compounds/registrant";
 
 const Registrant = () => (
   <>
     <CoreRegistrant />
     <CompoundsRegistrant />
+    <AssaysRegistrant />
   </>
 );
 

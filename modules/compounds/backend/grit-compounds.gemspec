@@ -1,5 +1,6 @@
 require_relative "lib/grit/compounds/version"
 require_relative "../../core/backend/lib/grit/core/version"
+require_relative "../../assays/backend/lib/grit/assays/version"
 
 Gem::Specification.new do |spec|
   spec.name        = "grit-compounds"
@@ -20,4 +21,5 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "rails", '~> 7.2', '>= 7.2.2'
   spec.add_dependency "grit-core", "~> #{Grit::Core::VERSION}"
+  spec.add_dependency "grit-assays", "~> #{Grit::Assays::VERSION}"
 end
