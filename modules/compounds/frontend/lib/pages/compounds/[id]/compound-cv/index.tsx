@@ -21,12 +21,9 @@ import {
   Spinner,
   Surface,
   Tabs,
-  Button,
-  ButtonGroup,
 } from "@grit42/client-library/components";
 import {
   useParams,
-  Navigate,
   useNavigate,
 } from "react-router-dom";
 import {
@@ -36,26 +33,10 @@ import {
 } from "../../../../queries/compounds";
 import { AsyncMoleculeViewer } from "../../../../components/MoleculeViewer";
 import styles from "./compoundCv.module.scss";
-import { useState, useCallback, useMemo, useEffect } from "react";
-import { Table, useSetupTableState, Filter } from "@grit42/table";
+import { useState, useMemo } from "react";
+import { Table, useSetupTableState } from "@grit42/table";
 import { useTableColumns } from "@grit42/core/utils";
-import {
-  BatchData,
-  useCompoundTypeBatchesColumns,
-  useInfiniteBatchesOfCompound,
-} from "../../../../queries/batches";
 import { EntityData, useInfiniteEntityData } from "@grit42/core";
-import {
-  nullish,
-  Plot,
-  PlotSettings,
-  SourceData,
-  SourceDataProperties,
-  SourceDatum,
-} from "/home/borup/Work/grit/packages/frontend/plots/dist/index.d"; //"@grit42/plots";
-
-import { ExperimentData, ExperimentPlotDefinition } from "../../../../../../../assays/frontend/lib/queries/experiments";
-import { useExperimentDataSheetRecordColumns, useExperimentDataSheetRecords } from "../../../../../../../assays/frontend/lib/queries/experiment_data_sheet_records";
 
 const MoleculeViewer = ({ compound }: { compound: CompoundData }) => {
   return (
@@ -86,6 +67,7 @@ const FilterCompoundFields = ({
 };
 
 const GeneralInfo = ({ compound }: { compound: CompoundData }) => {
+
   const FieldNamesExtension = [
     "Molecular formula",
     "Canonical SMILES",
@@ -97,15 +79,25 @@ const GeneralInfo = ({ compound }: { compound: CompoundData }) => {
     FieldNames: FieldNamesExtension,
   });
 
+  // when using map in <ul>, each <li> needs a unique key prop
+  const generalInfoItems = [
+    { key: "id", label: "ID", value: compound.id },
+    { key: "number", label: "Number", value: compound.number },
+    { key: "name", label: "Name", value: compound.name },
+    { key: "compound_type", label: "Compound type", value: compound.compound_type_id__name },
+    // Extend with additional fields
+    ...(GenFieldsExt ?? []).map((field) => ({
+      key: field.name,
+      label: field.display_name,
+      value: compound[field.name],
+    })),
+  ];
+
   return (
     <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-      <li>Number: {compound.number}</li>
-      <li>ID: {compound.id}</li>
-      <li>Name: {compound.name}</li>
-      <li>Compound type: {compound.compound_type_id__name}</li>
-      {GenFieldsExt?.map((field) => (
-        <li>
-          {field.display_name}: {compound[field.name]}
+      {generalInfoItems.map((item) => (
+        <li key={item.key}>
+          {item.label}: {item.value}
         </li>
       ))}
     </ul>
@@ -120,11 +112,11 @@ const CalcProps = ({ compound }: { compound: CompoundData }) => {
     "Hydrogen Bond Acceptor Count",
   ];
   const CalcPropFields = FilterCompoundFields({ compound, FieldNames });
-  // const {data: CalcPropFields} = useCompoundFields(compound?.compound_type_id)
+
   return (
     <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
       {CalcPropFields?.map((field) => (
-        <li>
+        <li key={field.name}>
           {field.display_name}: {compound[field.name]}
         </li>
       ))}
@@ -151,31 +143,8 @@ const CompoundCVTabs = ({ compound }: { compound: CompoundData }) => {
           name: "Calculated Properties",
           panel: <CalcProps compound={compound} />,
         },
-        {
-          key: "characterization",
-          name: "Characterization",
-          panel: <div>Characterization Content</div>,
-        },
       ]}
     />
-  );
-};
-
-const MolFileButtons = ({ compound }: { compound: CompoundData }) => {
-  // const [state, setState] = useState(0);
-  return (
-    <ButtonGroup>
-      <Button
-        size="tiny"
-        color="secondary"
-        onClick={() => alert(compound.molecule)}
-      >
-        Show Molfile
-      </Button>
-      <Button size="tiny" onClick={() => alert("3D View not implemented yet")}>
-        View in 3D
-      </Button>
-    </ButtonGroup>
   );
 };
 
@@ -189,92 +158,15 @@ const CompoundCVTableTabs = ({ compound }: { compound: CompoundData }) => {
       onTabChange={setState}
       tabs={[
         {
-          key: "batches",
-          name: "Batches",
-          panel: <CompoundCVBatchTable compound={compound} />,
-        },
-        {
           key: "experiments",
           name: "Experiments",
           panel: <CompoundCVExperimentTable compound={compound} />,
-        },
-        {
-          key: "Molecular Descriptors",
-          name: "Molecular Descriptors",
-          panel: <CompoundCVMolecularDescriptorsTable compound={compound} />,
-        },
-        {
-          key: "Atomic Descriptors",
-          name: "Atomic Descriptors",
-          panel: <div></div>,
         },
       ]}
     />
   );
 };
 
-const CompoundCVBatchTable = ({ compound }: { compound: CompoundData }) => {
-  const { data: columns } = useCompoundTypeBatchesColumns(
-    compound?.compound_type_id,
-    {
-      enabled: !!compound,
-    },
-  );
-  const tableColumns = useTableColumns<BatchData>(columns);
-
-  const tableState = useSetupTableState<BatchData>(
-    "batches-list",
-    tableColumns,
-    {
-      saveState: true,
-      settings: {
-        enableColumnDescription: true,
-        enableColumnOrderReset: true,
-      },
-    },
-  );
-
-  const {
-    data,
-    isFetching,
-    isFetchingNextPage,
-    isError,
-    error,
-    fetchNextPage,
-  } = useInfiniteBatchesOfCompound(
-    compound.id,
-    tableState.sorting,
-    tableState.filters,
-  );
-
-  const getRowId = useCallback((row: BatchData) => row.id.toString(), []);
-
-  const flatData = useMemo(
-    () => data?.pages.flatMap(({ data }) => data) ?? [],
-    [data],
-  );
-
-  if (isError) {
-    return <ErrorPage error={error} />;
-  }
-
-  return (
-    <Table<BatchData>
-      loading={isFetching && !isFetchingNextPage}
-      header="Batches"
-      data={flatData}
-      tableState={tableState}
-      getRowId={getRowId}
-      rowActions={undefined}
-      onRowClick={undefined}
-      pagination={{
-        fetchNextPage,
-        isFetchingNextPage,
-        totalRows: data?.pages[0]?.total,
-      }}
-    />
-  );
-};
 
 interface CompoundCVData extends EntityData {
   id: number;
@@ -405,278 +297,6 @@ const CompoundCVExperimentTable = ({
   );
 };
 
-const CompoundCVMolecularDescriptorsTable = ({
-  compound,
-}: {
-  compound: CompoundData;
-}) => {
-  const tableColumns = useTableColumns([
-    {
-      name: "molweight",
-      display_name: "MW",
-      default_hidden: false,
-      required: false,
-      type: "decimal",
-      unique: false,
-    },
-    {
-      name: "logp",
-      display_name: "LogP",
-      default_hidden: false,
-      required: false,
-      type: "decimal",
-      unique: false,
-    },
-    {
-      name: "hba",
-      display_name: "Hydrogen Bond Acceptor Count",
-      default_hidden: false,
-      required: false,
-      type: "decimal",
-      unique: false,
-    },
-    {
-      name: "hbd",
-      display_name: "Hydrogen Bond Donor Count",
-      default_hidden: false,
-      required: false,
-      type: "decimal",
-      unique: false,
-    },
-  ]);
-
-  const tableState = useSetupTableState(
-    "molecular-descriptors-list",
-    tableColumns,
-    {
-      saveState: true,
-      settings: {
-        enableColumnDescription: true,
-        enableColumnOrderReset: true,
-      },
-    },
-  );
-
-  const { data, isLoading, isError, error, fetchNextPage, isFetchingNextPage } =
-    useInfiniteEntityData(
-      "grit/compounds/compounds",
-      tableState.sorting,
-      tableState.filters,
-      {
-        compound_id: compound.id,
-        scope: "molecular_descriptors",
-      },
-    );
-
-  const flatData = useMemo(
-    () => data?.pages.flatMap(({ data }) => data) ?? [],
-    [data],
-  );
-
-  if (isError) {
-    return <ErrorPage error={error} />;
-  }
-
-  return (
-    <Table
-      loading={isLoading && !isFetchingNextPage}
-      header="Experiment Overview"
-      data={flatData}
-      tableState={tableState}
-      rowActions={undefined}
-      pagination={{
-        fetchNextPage,
-        isFetchingNextPage,
-        totalRows: data?.pages[0]?.total,
-      }}
-    />
-  );
-};
-
-
- // Working code to plot Experiments
- // I tried to use ExperimentData, ExperimentDataSheetData, EntityData etc.
- // However, it was too complicated
- // So I made a custom type CvPlotsRow instead
-type CvPlotsRow = {
-  experiment_data_sheet_id: number;
-  assay_id: number;
-  assay_id__name: string;
-  experiment_id: number;
-  experiment_id__name: string;
-  experiment_plots: Record<string, any> | null;
-};
-
-
-const getPlotData = (data: any[], properties: any[]) => {
-  const propsToConvert = properties.filter(
-    ({ type }: any) => !["integer", "string", "text", "entity"].includes(type),
-  );
-  if (!propsToConvert.length) return data as SourceData;
-
-  return data.map((d) => {
-    const datum = { ...d };
-    for (const prop of propsToConvert) {
-      if (!nullish(datum[prop.name])) {
-        datum[prop.name] =
-          prop.type === "decimal" ? datum[prop.name] : String(datum[prop.name]);
-      } else if (prop.type === "boolean") {
-        datum[prop.name] = String(!!datum[prop.name]);
-      }
-    }
-    return datum as SourceDatum;
-  });
-};
-
-const ExperimentPlotReadOnly = ({
-  dataSheetId,
-  plotDef,
-  //compoundId,
-}: {
-  dataSheetId: number;
-  plotDef: ExperimentPlotDefinition["def"];
-  // compoundId: number;
-}) => {
-  const {
-    data: columns,
-    isLoading: isColumnsLoading,
-    isError: isColumnsError,
-    error: columnsError,
-  } = useExperimentDataSheetRecordColumns(dataSheetId);
-
-  const {
-    data: records,
-    isLoading: isDataLoading,
-    isError: isDataError,
-    error: dataError,
-  } = useExperimentDataSheetRecords(dataSheetId);
-
-  const isLoading = isColumnsLoading || isDataLoading;
-  const isError = isColumnsError || isDataError;
-
-  const plotData = useMemo(
-    () => getPlotData(records ?? [], columns ?? []),
-    [records, columns],
-  );
-
-  if (isLoading) return <Spinner />;
-  if (isError) return <ErrorPage error={columnsError ?? dataError} />;
-  if (!plotData.length) return <div>No data points for this plot.</div>;
-
-  return (
-    <div style={{ height: 600 }}>
-      <Plot
-        data={plotData}
-        dataProperties={(columns as any) ?? ([] as SourceDataProperties)}
-        def={plotDef}
-      />
-    </div>
-  );
-};
-
-
-const ExperimentPlotTabsReadOnly = ({
-  experiment,
-  // compoundId,
-}: {
-  experiment: { id: number; name: string; plots: Record<string, any>; sheetIds: number[] };
-  // compoundId: number;
-}) => {
-
-  const [state, setState] = useState(0);
-  const plotEntries = Object.entries(experiment.plots ?? {});
-
-  if (plotEntries.length === 0) {
-    return <div>No plots configured for this experiment.</div>;
-  }
-
-  return (
-    <Tabs
-      selectedTab={state}
-      onTabChange={setState}
-      tabs={plotEntries.map(([plotId, plot]) => {
-        const title = plot?.def?.title ?? plot?.name ?? `Plot ${plotId}`;
-        const dataSheetId = plot?.data_sheet_id;
-
-        return {
-          key: plotId,
-          name: title,
-          panel: dataSheetId ? (
-            <ExperimentPlotReadOnly
-              dataSheetId={dataSheetId}
-              plotDef={plot.def}
-              // compoundId={compoundId}
-            />
-          ) : (
-            <div>Plot has no data_sheet_id.</div>
-          ),
-        };
-      })}
-    />
-  );
-};
-
-const CompoundCVPlots = ({ compound }: { compound: CompoundData }) => {
-  const { data, isLoading, isError, error } = useInfiniteEntityData(
-    "grit/compounds/compounds",
-    [],
-    [],
-    { compound_id: compound.id, scope: "cvplots" },
-  );
-
-  const [state, setState] = useState(0);
-
-  const rows: CvPlotsRow[] = useMemo(
-    () => data?.pages.flatMap(({ data }) => data) ?? [],
-    [data],
-  ); // isusue with EntityData
-
-  // group rows by experiment as cvplots  returns multiple rows per experiment
-  const experiments = useMemo(() => {
-    const map = new Map<number, { id: number; name: string; plots: Record<string, any>; sheetIds: number[] }>();
-
-    for (const row of rows) {
-      const cur = map.get(row.experiment_id);
-      if (!cur) { // first entry for this experiment
-        map.set(row.experiment_id, {
-          id: row.experiment_id,
-          name: row.experiment_id__name ?? `Experiment ${row.experiment_id}`,
-          plots: row.experiment_plots ?? {},
-          sheetIds: [row.experiment_data_sheet_id],
-        });
-      } else {
-        // merge plots and sheet ids as there might be multiple data sheets per experiment
-        cur.sheetIds.push(row.experiment_data_sheet_id);
-        if (row.experiment_plots) cur.plots = { ...cur.plots, ...row.experiment_plots }; // keep existing plots, add new plots
-      }
-    }
-
-    return Array.from(map.values());
-  }, [rows]);
-
-  if (isLoading) return <Spinner />;
-  if (isError) return <ErrorPage error={error} />;
-  if (experiments.length === 0) return <div>No plots available for this compound.</div>;
-
-  return (
-    <Tabs
-      selectedTab={state}
-      onTabChange={setState}
-      tabs={experiments.map((exp) => ({
-        key: `exp_${exp.id}`,
-        name: exp.name,
-        panel: (
-          <ExperimentPlotTabsReadOnly
-            experiment={exp}
-            // compoundId={compound.id}
-          />
-        ),
-      }))}
-    />
-  );
-};
-
-
 const CompoundCV = () => {
   const { id } = useParams() as { id: string };
   const { data: compound } = useCompound(id);
@@ -686,7 +306,6 @@ const CompoundCV = () => {
       <div className={styles.moleculeContainer}>
         <Surface style={{ width: "100%", height: "100%" }}>
           {compound && <MoleculeViewer compound={compound} />}
-          {compound && <MolFileButtons compound={compound} />}
         </Surface>
       </div>
 
@@ -700,11 +319,6 @@ const CompoundCV = () => {
         <div className={styles.tableContainer}>
           <Surface style={{ width: "100%", height: "100%" }}>
             {compound && <CompoundCVTableTabs compound={compound} />}
-          </Surface>
-        </div>
-        <div className={styles.plotContainer}>
-          <Surface style={{ width: "100%" }}>
-            {compound && <CompoundCVPlots compound={compound} />}
           </Surface>
         </div>
       </div>
