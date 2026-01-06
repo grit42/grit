@@ -207,8 +207,6 @@ module Grit::Assays
 
     def self.confirm(load_set)
       record_load_set = Grit::Assays::ExperimentDataSheetRecordLoadSet.find_by(load_set_id: load_set.id)
-      load_set_entity_properties = Grit::Assays::ExperimentDataSheetRecord.entity_fields(experiment_data_sheet_id: record_load_set.experiment_data_sheet_id).filter { |f| f[:name] != "experiment_data_sheet_id" }
-
       experiment_sheet = Grit::Assays::ExperimentDataSheet.find(record_load_set.experiment_data_sheet_id);
       sheet = Grit::Assays::AssayDataSheetDefinition.includes(assay_data_sheet_columns: [ :data_type ]).find(experiment_sheet.assay_data_sheet_definition_id)
 
@@ -225,6 +223,16 @@ module Grit::Assays
       ActiveRecord::Base.transaction do
         ActiveRecord::Base.connection.execute(insert)
       end
+    end
+
+    def self.rollback(load_set)
+      record_load_set = Grit::Assays::ExperimentDataSheetRecordLoadSet.find_by(load_set_id: load_set.id)
+      experiment_sheet = Grit::Assays::ExperimentDataSheet.find(record_load_set.experiment_data_sheet_id);
+
+      load_set_entity = ExperimentDataSheetRecord.sheet_record_klass(experiment_sheet.assay_data_sheet_definition_id)
+      load_set_entity.destroy_by("id IN (SELECT record_id FROM grit_core_load_set_loaded_records WHERE grit_core_load_set_loaded_records.load_set_id = #{load_set.id})")
+      Grit::Core::LoadSetLoadedRecord.destroy_by(load_set_id: load_set.id)
+      Grit::Core::LoadSetLoadingRecord.destroy_by(load_set_id: load_set.id)
     end
 
     def self.mapping_fields(load_set)

@@ -217,9 +217,7 @@ module Grit::Core
 
           load_set_entity = load_set.entity.constantize
 
-          load_set_entity.destroy_by("id IN (SELECT record_id FROM grit_core_load_set_loaded_records WHERE grit_core_load_set_loaded_records.load_set_id = #{load_set.id})")
-          Grit::Core::LoadSetLoadedRecord.destroy_by(load_set_id: load_set.id)
-          Grit::Core::LoadSetLoadingRecord.destroy_by(load_set_id: load_set.id)
+          Grit::Core::EntityLoader.rollback_load_set(load_set)
 
           load_set.status_id = Grit::Core::LoadSetStatus.find_by_name("Mapping").id
           load_set.record_warnings = nil
