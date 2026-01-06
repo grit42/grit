@@ -144,7 +144,8 @@ module Grit::Assays
       def self.by_load_set(params)
         raise "Load set id must be specified" if !params or !params[:load_set_id]
         record_load_set = Grit::Assays::ExperimentDataSheetRecordLoadSet.find_by(load_set_id: params[:load_set_id])
-        self.detailed(record_load_set.as_json).where("#{self.table_name}.id IN (SELECT record_id FROM grit_core_load_set_loaded_records WHERE grit_core_load_set_loaded_records.load_set_id = ?)", params[:load_set_id].to_i).order(:created_at)
+        data_sheet = Grit::Assays::ExperimentDataSheet.includes(:assay_data_sheet_definition).find(record_load_set.experiment_data_sheet_id)
+        self.detailed(record_load_set.as_json).where("#{data_sheet.assay_data_sheet_definition.table_name}.id IN (SELECT record_id FROM grit_core_load_set_loaded_records WHERE grit_core_load_set_loaded_records.load_set_id = ?)", params[:load_set_id].to_i).order(:created_at)
       end
   end
 end

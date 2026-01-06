@@ -93,6 +93,14 @@ module Grit::Assays
           end
           query
         end
+
+        def self.less_detailed(experiment_id)
+          query = self.unscoped.select("#{experiment_id} as experiment_id")
+          @sheet.assay_data_sheet_columns.each do |column|
+            query = query.select("#{self.table_name}.#{column.safe_name}")
+          end
+          query
+        end
       end
       klass
     end
@@ -201,42 +209,21 @@ module Grit::Assays
       record_load_set = Grit::Assays::ExperimentDataSheetRecordLoadSet.find_by(load_set_id: load_set.id)
       load_set_entity_properties = Grit::Assays::ExperimentDataSheetRecord.entity_fields(experiment_data_sheet_id: record_load_set.experiment_data_sheet_id).filter { |f| f[:name] != "experiment_data_sheet_id" }
 
+      experiment_sheet = Grit::Assays::ExperimentDataSheet.find(record_load_set.experiment_data_sheet_id);
+      sheet = Grit::Assays::AssayDataSheetDefinition.includes(assay_data_sheet_columns: [ :data_type ]).find(experiment_sheet.assay_data_sheet_definition_id)
+
+      insert = "WITH inserted_records as (INSERT INTO #{sheet.table_name}(experiment_id"
+      sheet.assay_data_sheet_columns.each do |column|
+        insert += ",#{column.safe_name}"
+      end
+      insert += ") "
+
+      load_set_record_klass = ExperimentDataSheetRecordLoader.load_set_record_klass(record_load_set)
+      insert += load_set_record_klass.less_detailed(experiment_sheet.experiment_id).where(errors: nil).to_sql
+      insert += " RETURNING id) INSERT INTO grit_core_load_set_loaded_records(\"record_id\",\"load_set_id\",\"table\") SELECT inserted_records.id,#{load_set.id}, '#{sheet.table_name}' from inserted_records"
+
       ActiveRecord::Base.transaction do
-        load_set_loaded_records = []
-
-        Grit::Core::LoadSetLoadingRecord.includes(:load_set_loading_record_property_values).where(load_set_id: load_set.id).each do |loading_record|
-          record_props = {}
-          record_props["experiment_data_sheet_id"] = record_load_set.experiment_data_sheet_id
-          loading_record.load_set_loading_record_property_values.each do |loading_record_property_value|
-            entity_property = load_set_entity_properties.find { |p| p[:name] == loading_record_property_value.name }
-            if entity_property[:type] == "entity"
-              record_props[loading_record_property_value.name] = loading_record_property_value.entity_id_value
-            else
-              record_props[loading_record_property_value.name] = loading_record_property_value["#{entity_property[:type]}_value"]
-            end
-          end
-
-          record = Grit::Assays::ExperimentDataSheetRecord.create(record_props)
-
-          load_set_loaded_records.push({
-            load_set_id: load_set.id,
-            table: "grit_assays_experiment_data_sheet_records",
-            record_id: record.id
-          })
-
-          record.experiment_data_sheet_values.each do |experiment_data_sheet_value|
-            load_set_loaded_records.push({
-              load_set_id: load_set.id,
-              table: "grit_assays_experiment_data_sheet_values",
-              record_id: experiment_data_sheet_value.id
-            })
-          end
-        end
-
-        Grit::Core::LoadSetLoadedRecord.insert_all(load_set_loaded_records)
-
-        Grit::Core::LoadSetLoadingRecordPropertyValue.delete_by(load_set_id: load_set.id)
-        Grit::Core::LoadSetLoadingRecord.delete_by(load_set_id: load_set.id)
+        ActiveRecord::Base.connection.execute(insert)
       end
     end
 
