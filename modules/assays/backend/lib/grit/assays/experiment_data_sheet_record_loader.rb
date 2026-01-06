@@ -67,6 +67,55 @@ module Grit::Assays
       super
     end
 
+
+    def self.load_set_record_klass(record_load_set)
+      sheet = Grit::Assays::AssayDataSheetDefinition.includes(assay_data_sheet_columns: [ :data_type ]).find(Grit::Assays::ExperimentDataSheet.find(record_load_set.experiment_data_sheet_id).assay_data_sheet_definition_id)
+      klass = Class.new(ActiveRecord::Base) do
+        self.table_name = "ls_#{record_load_set.load_set_id}"
+        @sheet = sheet
+
+        def self.detailed(params = nil)
+          query = self.unscoped
+            .select("#{self.table_name}.id")
+            .select("#{self.table_name}.errors")
+
+          @sheet.assay_data_sheet_columns.each do |column|
+            query = query.select("#{self.table_name}.#{column.safe_name}")
+            if column.data_type.is_entity
+              entity_klass = column.data_type.model
+              query = query
+                .joins("LEFT OUTER JOIN #{column.data_type.table_name} #{column.safe_name}__entities on #{column.safe_name}__entities.id = #{@sheet.table_name}.#{column.safe_name}")
+              for display_property in entity_klass.display_properties do
+                query = query
+                  .select("#{column.safe_name}__entities.#{display_property[:name]} as #{column.safe_name}__#{display_property[:name]}") unless entity_klass.display_properties.nil?
+              end
+            end
+          end
+          query
+        end
+      end
+      klass
+    end
+
+    def self.create_temporary_table(record_load_set)
+      columns = AssayDataSheetColumn.where(assay_data_sheet_definition_id: Grit::Assays::ExperimentDataSheet.find(record_load_set.experiment_data_sheet_id).assay_data_sheet_definition_id).order("sort ASC NULLS LAST")
+      migration = ActiveRecord::Migration.new
+      migration.drop_table "ls_#{record_load_set.load_set_id}", if_exists: true
+      migration.create_table "ls_#{record_load_set.load_set_id}", id: :bigint, if_not_exists: true do |t|
+        columns.each do |column|
+          if column.data_type.is_entity
+            t.column column.safe_name, :bigint
+          else
+            t.column column.safe_name, column.data_type.name
+          end
+        end
+        t.column :number, :bigint
+        t.column :errors, :jsonb
+      end
+    end
+
+
+
     def self.validate(load_set)
       record_load_set = Grit::Assays::ExperimentDataSheetRecordLoadSet.find_by(load_set_id: load_set.id)
       load_set_entity_properties = Grit::Assays::ExperimentDataSheetRecord.entity_fields(experiment_data_sheet_id: record_load_set.experiment_data_sheet_id).filter { |f| f[:name] != "experiment_data_sheet_id" }
@@ -74,134 +123,77 @@ module Grit::Assays
       data = load_set.parsed_data[1..]
       errors = []
 
+      records = []
+
       Grit::Core::LoadSetLoadingRecordPropertyValue.delete_by(load_set_id: load_set.id)
       Grit::Core::LoadSetLoadingRecord.delete_by(load_set_id: load_set.id)
 
+      ExperimentDataSheetRecordLoader.create_temporary_table(record_load_set)
+      load_set_record_klass = ExperimentDataSheetRecordLoader.load_set_record_klass(record_load_set)
 
       data.each_with_index do |datum, index|
-        record_props = {}
-        record_props["experiment_data_sheet_id"] = record_load_set.experiment_data_sheet_id
-        has_errors = false
+        record = {
+          number: index,
+          errors: nil,
+        }
 
-        load_set_loading_record_property_values = []
-
-        ActiveRecord::Base.transaction(requires_new: true) do
-          record_errors = {}
-          loading_record = Grit::Core::LoadSetLoadingRecord.new({
-            load_set_id: load_set.id,
-            number: index
-          })
-          loading_record.save!
-          load_set_entity_properties.each do |entity_property|
-            entity_property_name = entity_property[:name].to_s
-            mapping = load_set.mappings[entity_property_name]
-            next if mapping.nil?
-            find_by = mapping["find_by"]
-            header_index = mapping["header"].to_i unless mapping["header"].nil? or mapping["header"].blank?
-            value = nil
-            if mapping["constant"]
-              value = mapping["value"]
-            elsif !find_by.blank? and !datum[header_index].blank?
-              begin
-                field_entity = entity_property[:entity][:full_name].constantize
-                value = field_entity.loader_find_by!(find_by, datum[header_index], options: entity_property[:entity][:options]).id
-              rescue NameError
-                record_errors[entity_property_name] = [ "#{entity_property[:entity][:name]}: No such model" ]
-                value = 0
-              rescue ActiveRecord::RecordNotFound
-                record_errors[entity_property_name] = [ "could not find #{entity_property[:entity][:name]} with '#{find_by}' = #{datum[header_index]}" ]
-                value = 0
-              end
-            elsif !header_index.nil?
-              value = datum[header_index]
+        load_set_entity_properties.each do |entity_property|
+          entity_property_name = entity_property[:name].to_s
+          mapping = load_set.mappings[entity_property_name]
+          next if mapping.nil?
+          find_by = mapping["find_by"]
+          header_index = mapping["header"].to_i unless mapping["header"].nil? or mapping["header"].blank?
+          value = nil
+          if mapping["constant"]
+            value = mapping["value"]
+          elsif !find_by.blank? and !datum[header_index].blank?
+            begin
+              field_entity = entity_property[:entity][:full_name].constantize
+              value = field_entity.loader_find_by!(find_by, datum[header_index], options: entity_property[:entity][:options]).id
+            rescue NameError
+              record[:errors] ||= {}
+              record[:errors][entity_property_name] = [ "#{entity_property[:entity][:name]}: No such model" ]
+              value = 0
+            rescue ActiveRecord::RecordNotFound
+              record[:errors] ||= {}
+              record[:errors][entity_property_name] = [ "could not find #{entity_property[:entity][:name]} with '#{find_by}' = #{datum[header_index]}" ]
+              value = 0
             end
-
-            loading_record_property_value_props = {
-              load_set_id: load_set.id,
-              load_set_loading_record_id: loading_record.id,
-              name: entity_property[:name],
-              numeric_sign: nil,
-              string_value: nil,
-              integer_value: nil,
-              decimal_value: nil,
-              float_value: nil,
-              text_value: nil,
-              datetime_value: nil,
-              date_value: nil,
-              boolean_value: nil,
-              entity_id_value: nil
-            }
-            if entity_property[:type] == "entity"
-              loading_record_property_value_props["entity_id_value"] = value
-            else
-              loading_record_property_value_props["#{entity_property[:type]}_value"] = value
-            end
-
-            load_set_loading_record_property_values.push(loading_record_property_value_props)
-
-            record_props[entity_property_name] = value
-            if entity_property[:required] && value.nil?
-              record_errors[entity_property_name] = [ "can't be blank" ]
-            elsif (entity_property[:type].to_s == "integer" or entity_property[:type].to_s == "float" or entity_property[:type].to_s == "decimal") and !value.nil? and !value.blank? and !/^[+\-]?(\d+\.\d*|\d*\.\d+|\d+)([eE][+\-]?\d+)?$/.match?(value.to_s)
-              record_errors[entity_property_name] = [ "is not a number" ]
-            elsif entity_property[:type].to_s == "datetime" and !value.nil? and !value.blank?
-              begin
-                record_props[entity_property_name] = DateTime.parse(value)
-              rescue
-                record_errors[entity_property_name] = [ "Unable to parse datetime, please use YYYY/MM/DD HH:mm:ss or ISO 8601" ]
-              end
-            elsif entity_property[:type].to_s == "date" and !value.nil? and !value.blank?
-              begin
-                record_props[entity_property_name] = Date.parse(value)
-              rescue
-                record_errors[entity_property_name] = [ "Unable to parse date, please use YYYY/MM/DD or ISO 8601" ]
-              end
-            end
+          elsif !header_index.nil?
+            value = datum[header_index]
           end
 
-          if record_errors.empty?
-            experiment_data_sheet_record = Grit::Assays::ExperimentDataSheetRecord.new({
-              experiment_data_sheet_id: record_props["experiment_data_sheet_id"]
-            })
+          record[entity_property_name] = value
 
-            unless experiment_data_sheet_record.valid?
-              errors.push({ index: index, datum: datum, errors: experiment_data_sheet_record.errors })
-              has_errors = true
+          if entity_property[:required] && value.nil?
+            record[:errors] ||= {}
+            record[:errors][entity_property_name] = [ "can't be blank" ]
+          elsif (entity_property[:type].to_s == "integer" or entity_property[:type].to_s == "float" or entity_property[:type].to_s == "decimal") and !value.nil? and !value.blank? and !/^[+\-]?(\d+\.\d*|\d*\.\d+|\d+)([eE][+\-]?\d+)?$/.match?(value.to_s)
+            record[:errors] ||= {}
+            record[:errors][entity_property_name] = [ "is not a number" ]
+          elsif entity_property[:type].to_s == "datetime" and !value.nil? and !value.blank?
+            begin
+              record[entity_property_name] = DateTime.parse(value)
+            rescue
+              record[:errors] ||= {}
+              record[:errors][entity_property_name] = [ "Unable to parse datetime, please use YYYY/MM/DD HH:mm:ss or ISO 8601" ]
             end
-          else
-            errors.push({ index: index, datum: datum, errors: record_errors })
-            has_errors = true
-          end
-
-          columns_errors = {}
-
-          Grit::Assays::ExperimentDataSheet.includes(assay_data_sheet_definition: [ :assay_data_sheet_columns ])
-            .find(record_props["experiment_data_sheet_id"]).assay_data_sheet_definition.assay_data_sheet_columns.each do |column|
-            if !record_props[column.safe_name].nil? && (column.data_type.name == "boolean" || record_props[column.safe_name].blank?)
-              column_value = Grit::Assays::ExperimentDataSheetValue.new(
-                assay_data_sheet_column_id: column.id,
-              )
-              value_prop_name = column.data_type.is_entity ? "entity_id_value" : "#{column.data_type.name}_value"
-              column_value[value_prop_name] = record_props[column.safe_name]
-              column_value[value_prop_name] = record_props[column.safe_name] || false if column.data_type.name == "boolean"
-              column_value.data_sheet_value
-              unless column_value.errors.blank?
-                columns_errors[column.safe_name] = column_value.errors[value_prop_name]
-                has_errors = true
-              end
+          elsif entity_property[:type].to_s == "date" and !value.nil? and !value.blank?
+            begin
+              record[entity_property_name] = Date.parse(value)
+            rescue
+              record[:errors] ||= {}
+              record[:errors][entity_property_name] = [ "Unable to parse date, please use YYYY/MM/DD or ISO 8601" ]
             end
-          end
-          unless columns_errors.empty?
-            errors.push({ index: index, datum: datum, errors: columns_errors })
-            has_errors = true
-          end
-          if has_errors
-            raise ActiveRecord::Rollback
-          else
-            Grit::Core::LoadSetLoadingRecordPropertyValue.insert_all(load_set_loading_record_property_values)
           end
         end
+
+        unless record[:errors].nil?
+          errors.push({ index: index, datum: datum, errors: record[:errors] })
+        end
+        records.push record
       end
+      load_set_record_klass.insert_all(records)
       { errors: errors }
     end
 

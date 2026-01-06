@@ -64,7 +64,7 @@ module Grit::Core
     end
 
     def destroy
-      id = params[:id]
+      id = params[:ids]
 
       load_set = Grit::Core::LoadSet.find(id)
 
@@ -124,7 +124,7 @@ module Grit::Core
       load_set = Grit::Core::LoadSet.find(params[:load_set_id])
 
       headers = load_set.parsed_data[0]
-      data = load_set.parsed_data[1..]
+      data = load_set.parsed_data[1..100] # TODO FIX
 
       render json: { success: true, data: { headers: headers, data: data } }
     rescue StandardError => e
