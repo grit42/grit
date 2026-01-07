@@ -5,7 +5,7 @@ some details, potentially controlled metadata fields and one or several data she
 
 The assay models are stored under Administration -> Assays -> Models.
 
-The Assay models overview also show what assay type the model is linked to 3) and what the current status is 4).
+The Assay models overview also show what assay type the model is linked to 2) and what the current status is 3).
 
 
 ![Assay models](../assets/assay_models.png)

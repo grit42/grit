@@ -46,11 +46,17 @@
       svg {
         height: 20px;
         fill: theme.$palette-background-contrast-text;
+        circle {
+          stroke: theme.$palette-background-contrast-text;
+        }
       }
 
       &:hover {
         svg {
           fill: theme.$palette-secondary-main;
+          circle {
+            stroke: theme.$palette-secondary-main;
+          }
         }
       }
 
@@ -63,9 +69,15 @@
 
         svg {
           fill: rgb(from theme.$palette-background-contrast-text r g b / 50%);
+          circle {
+            stroke: rgb(from theme.$palette-background-contrast-text r g b / 50%);
+          }
 
           &:hover {
             fill: rgb(from theme.$palette-background-contrast-text r g b / 50%);
+            circle {
+              stroke: rgb(from theme.$palette-background-contrast-text r g b / 50%);
+            }
           }
         }
       }

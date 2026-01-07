@@ -12,11 +12,13 @@ assays then you can skip this step and move on to adding assay models without me
 
 To add new metadata fields:
 
-1) Go to the Administration menu
-2) Select Assays tab
-3) Select Metadata
-4) Click the New button
+1) Go to the Assays menu
+2) Select Assay settings
 
+![Assay settings](./assets/assay_settings.png)
+
+1) Select Metadata
+2) Click the New button
 
 ![Assay metadata list](./assets/assay_metadata.png)
 
