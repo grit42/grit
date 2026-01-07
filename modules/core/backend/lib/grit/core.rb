@@ -27,7 +27,7 @@ require "authlogic"
 module Grit
   module Core
     eq = lambda { |property, value| ActiveRecord::Base.send(:sanitize_sql_array, [ "#{property} = ?", value ]) }
-    ne = lambda { |property, value| ActiveRecord::Base.send(:sanitize_sql_array, [ "#{property} <> ?", value ]) }
+    ne = lambda { |property, value| ActiveRecord::Base.send(:sanitize_sql_array, [ "#{property} IS DISTINCT FROM ?", value ]) }
     gt = lambda { |property, value| ActiveRecord::Base.send(:sanitize_sql_array, [ "#{property} > ?", value ]) }
     gte = lambda { |property, value| ActiveRecord::Base.send(:sanitize_sql_array, [ "#{property} >= ?", value ]) }
     lt = lambda { |property, value| ActiveRecord::Base.send(:sanitize_sql_array, [ "#{property} < ?", value ]) }
