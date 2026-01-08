@@ -47,43 +47,44 @@ module Grit::Assays
       end
     end
 
-    private
+    def migrate
+      ActiveRecord::Base.transaction do
+        create_tables
+        assay_data_sheet_definitions.each do |assay_data_sheet_definition|
+          insert_statement = "INSERT INTO #{assay_data_sheet_definition.table_name}(id,created_by,updated_by,created_at,updated_at,experiment_id"
+          results_query = Grit::Assays::ExperimentDataSheetRecord.unscoped
+            .select("grit_assays_experiment_data_sheet_records.id")
+            .select("grit_assays_experiment_data_sheet_records.created_by")
+            .select("grit_assays_experiment_data_sheet_records.updated_by")
+            .select("grit_assays_experiment_data_sheet_records.created_at")
+            .select("grit_assays_experiment_data_sheet_records.updated_at")
+            .select("grit_assays_experiment_data_sheets.experiment_id")
+            .joins("JOIN grit_assays_experiment_data_sheets on grit_assays_experiment_data_sheets.id = grit_assays_experiment_data_sheet_records.experiment_data_sheet_id")
 
-    def create_tables
-      foreign_keys = []
-      connection = ActiveRecord::Base.connection
-      assay_data_sheet_definitions.each do |sheet|
-        connection.create_table sheet.table_name, id: false, if_not_exists: true do |t|
-          t.bigint :id, primary_key: true, default: -> { 'nextval(\'grit_seq\'::regclass)' }
-          t.string :created_by, limit: 30, null: false, default: "SYSTEM"
-          t.datetime :created_at, null: false, default: -> { 'CURRENT_TIMESTAMP' }
-          t.string :updated_by, limit: 30
-          t.datetime :updated_at
-          t.references :experiment, null: false, foreign_key: { name: "#{sheet.table_name}_experiments", to_table: "grit_assays_experiments" }
+          assay_data_sheet_definition.assay_data_sheet_columns.each do |column|
+            insert_statement += "," + column.safe_name
+            results_query = results_query
+              .joins("LEFT OUTER JOIN grit_assays_experiment_data_sheet_values dsv__#{column.safe_name} on dsv__#{column.safe_name}.assay_data_sheet_column_id = #{column.id} and dsv__#{column.safe_name}.experiment_data_sheet_record_id = grit_assays_experiment_data_sheet_records.id")
 
-          sheet.assay_data_sheet_columns.each do |column|
             if column.data_type.is_entity
-              t.column column.safe_name, :bigint, null: !column.required
-              foreign_keys.push [sheet, column]
+              results_query = results_query.select("dsv__#{column.safe_name}.entity_id_value as #{column.safe_name}")
             else
-              t.column column.safe_name, column.data_type.name, null: !column.required
+              results_query = results_query.select("dsv__#{column.safe_name}.#{column.data_type.name}_value as #{column.safe_name}")
             end
           end
-        end
-      end
 
-      foreign_keys.each do |fk|
-        sheet = fk[0]
-        column = fk[1]
-        connection.add_foreign_key sheet.table_name, column.data_type.table_name, column: column.safe_name, name: "#{sheet.table_name}_#{column.safe_name}", if_not_exists: true
+          insert_statement += ") #{results_query.to_sql}"
+          ActiveRecord::Base.connection.execute(insert_statement)
+        end
       end
     end
 
+    def create_tables
+      assay_data_sheet_definitions.each(&:create_table)
+    end
+
     def drop_tables
-      connection = ActiveRecord::Base.connection
-      assay_data_sheet_definitions.each do |sheet|
-        connection.drop_table sheet.table_name, if_exists: true
-      end
+      assay_data_sheet_definitions.each(&:drop_table)
     end
   end
 end

@@ -20,6 +20,48 @@ module Grit::Assays
   class AssayModelsController < ApplicationController
     include Grit::Core::GritEntityController
 
+    def migrate
+      ActiveRecord::Base.transaction do
+        AssayModel
+          .includes(assay_data_sheet_definitions: [ assay_data_sheet_columns: [ :data_type ] ])
+          .where(publication_status_id: Grit::Core::PublicationStatus.unscoped.select(:id).where(name: ["Published","Withdrawn"]))
+          .each do |assay_model|
+            assay_model.create_tables
+            assay_model.assay_data_sheet_definitions.each do |assay_data_sheet_definition|
+              insert_statement = "INSERT INTO #{assay_data_sheet_definition.table}(id,created_by,updated_by,created_at,updated_at,experiment_id"
+              results_query = Grit::Assays::ExperimentDataSheetRecord.unscoped
+                .select("grit_assays_experiment_data_sheet_records.id")
+                .select("grit_assays_experiment_data_sheet_records.created_by")
+                .select("grit_assays_experiment_data_sheet_records.updated_by")
+                .select("grit_assays_experiment_data_sheet_records.created_at")
+                .select("grit_assays_experiment_data_sheet_records.updated_at")
+                .select("grit_assays_experiment_data_sheets.experiment_id")
+                .joins("grit_assays_experiment_data_sheets on grit_assays_experiment_data_sheets.id = grit_assays_experiment_data_sheet_records.experiment_data_sheet_id")
+
+              assay_data_sheet_definition.assay_data_sheet_columns.each do |column|
+                insert_statement += "," + column.safe_name
+                query = query
+                  .joins("LEFT OUTER JOIN grit_assays_experiment_data_sheet_values dsv__#{column.safe_name} on dsv__#{column.safe_name}.assay_data_sheet_column_id = #{column.id} and dsv__#{column.safe_name}.experiment_data_sheet_record_id = grit_assays_experiment_data_sheet_records.id")
+
+                if column.data_type.is_entity
+                  query = query.select("dsv__#{column.safe_name}.entity_id_value as #{column.safe_name}")
+                else
+                  query = query.select("dsv__#{column.safe_name}.#{column.data_type.name}_value as #{column.safe_name}")
+                end
+              end
+
+              insert_statement += ") #{results_query.to_sql}"
+              ActiveRecord::Base.connection.execute(insert_statement)
+            end
+        end
+      end
+      render json: { success: true }
+    rescue StandardError => e
+      logger.info e.to_s
+      logger.info e.backtrace.join("\n")
+      render json: { success: false, errors: e.to_s }
+    end
+
     def create
       AssayModel.transaction do
         permitted_params = params.permit(self.permitted_params)
