@@ -107,9 +107,9 @@ module Grit::Assays
 
     def self.create_temporary_table(record_load_set)
       columns = AssayDataSheetColumn.where(assay_data_sheet_definition_id: Grit::Assays::ExperimentDataSheet.find(record_load_set.experiment_data_sheet_id).assay_data_sheet_definition_id).order("sort ASC NULLS LAST")
-      migration = ActiveRecord::Migration.new
-      migration.drop_table "ls_#{record_load_set.load_set_id}", if_exists: true
-      migration.create_table "ls_#{record_load_set.load_set_id}", id: :bigint, if_not_exists: true do |t|
+      connection = ActiveRecord::Base.connection
+      connection.drop_table "ls_#{record_load_set.load_set_id}", if_exists: true
+      connection.create_table "ls_#{record_load_set.load_set_id}", id: :bigint, if_not_exists: true do |t|
         columns.each do |column|
           if column.data_type.is_entity
             t.column column.safe_name, :bigint

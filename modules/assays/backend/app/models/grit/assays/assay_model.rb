@@ -49,16 +49,11 @@ module Grit::Assays
 
     private
 
-    def recreate_tables
-      drop_tables
-      create_tables
-    end
-
     def create_tables
       foreign_keys = []
-      migration = ActiveRecord::Migration.new
+      connection = ActiveRecord::Base.connection
       assay_data_sheet_definitions.each do |sheet|
-        migration.create_table sheet.table_name, id: false, if_not_exists: true do |t|
+        connection.create_table sheet.table_name, id: false, if_not_exists: true do |t|
           t.bigint :id, primary_key: true, default: -> { 'nextval(\'grit_seq\'::regclass)' }
           t.string :created_by, limit: 30, null: false, default: "SYSTEM"
           t.datetime :created_at, null: false, default: -> { 'CURRENT_TIMESTAMP' }
@@ -80,14 +75,14 @@ module Grit::Assays
       foreign_keys.each do |fk|
         sheet = fk[0]
         column = fk[1]
-        migration.add_foreign_key sheet.table_name, column.data_type.table_name, column: column.safe_name, name: "#{sheet.table_name}_#{column.safe_name}", if_not_exists: true
+        connection.add_foreign_key sheet.table_name, column.data_type.table_name, column: column.safe_name, name: "#{sheet.table_name}_#{column.safe_name}", if_not_exists: true
       end
     end
 
     def drop_tables
-      migration = ActiveRecord::Migration.new
+      connection = ActiveRecord::Base.connection
       assay_data_sheet_definitions.each do |sheet|
-        migration.drop_table sheet.table_name, if_exists: true
+        connection.drop_table sheet.table_name, if_exists: true
       end
     end
   end
