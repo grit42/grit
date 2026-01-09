@@ -1,4 +1,6 @@
 Grit::Assays::Engine.routes.draw do
+  resources :experiment_data_model_migration_checks
+  resources :experiment_data_model_migration_errors
   resources :data_table_columns
   resources :data_table_entities do
     collection do
@@ -37,4 +39,6 @@ Grit::Assays::Engine.routes.draw do
     post :update_metadata
   end
   resources :assay_types
+
+  post :check_migration, to: "experiment_data_model_migration#check_migration"
 end

@@ -30,6 +30,7 @@ import AssayTypesAdministrationPage from "./assay-types";
 import AssayModelsAdministrationPage from "./assay-models";
 import AssaysAdministrationPage from "./assays";
 import AssayMetadataDefinitionsAdministrationPage from "./assay-metadata-definitions";
+import ExperimentDataModelMigrationErrorsAdministrationPage from "./migration";
 
 const TABS = [
   {
@@ -47,6 +48,9 @@ const TABS = [
   {
     url: "assay-types",
     label: "Types",
+  },  {
+    url: "migration",
+    label: "Migration",
   },
 ];
 
@@ -111,6 +115,10 @@ const AssaysAdministrationTab = () => {
         <Route
           path="/assay-metadata-definitions/*"
           element={<AssayMetadataDefinitionsAdministrationPage />}
+        />
+        <Route
+          path="/migration/*"
+          element={<ExperimentDataModelMigrationErrorsAdministrationPage />}
         />
         <Route
           path="/assay-types/*"

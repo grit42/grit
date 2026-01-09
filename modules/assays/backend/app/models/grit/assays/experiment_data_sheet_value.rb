@@ -23,6 +23,8 @@ module Grit::Assays
     belongs_to :experiment_data_sheet_record
     belongs_to :assay_data_sheet_column
 
+    has_one :experiment_data_model_migration_error, required: false, dependent: :destroy
+
     entity_crud_with create: [ "Administrator", "AssayAdministrator", "AssayUser" ],
       read: [],
       update: [ "Administrator", "AssayAdministrator", "AssayUser" ],
@@ -43,6 +45,8 @@ module Grit::Assays
       elsif data_type.name == "float" && !value.nil? && !value.blank?
         errors.add(value_prop, "is out of range") if value.to_f.infinite?
         errors.add(value_prop, "is not a number") if value.to_f.nan?
+      elsif !value.nil? && data_type.is_entity && data_type.model.find_by(id: value).nil?
+        errors.add(value_prop, "cannot be blank, the entity may have been removed")
       end
     end
   end
