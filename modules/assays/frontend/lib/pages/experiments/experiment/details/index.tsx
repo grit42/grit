@@ -18,6 +18,7 @@ import {
   genericErrorHandler,
   getVisibleFieldData,
   useForm,
+  useStore,
 } from "@grit42/form";
 import { useQueryClient } from "@grit42/api";
 import {
@@ -34,104 +35,129 @@ import {
   useExperiment,
   useExperimentFields,
 } from "../../../../queries/experiments";
-import { useAssay, useAssayFields } from "../../../../queries/assays";
 import { classnames } from "@grit42/client-library/utils";
+import { useAssayModelMetadata } from "../../../../queries/assay_model_metadata";
+import { useAssayMetadataDefinitions } from "../../../../queries/assay_metadata_definitions";
+import { toSafeIdentifier } from "@grit42/core/utils";
 
-type OrganizedFields = ["assay_id", "name", "description"][number];
+const ExperimentMetadataForm = ({
+  form,
+}: {
+  form: any;
+}) => {
+  const assay_model_id = useStore<any>(form.baseStore, ({values}) => values.assay_model_id)
+
+  const {
+    data: modelMetadata,
+    isLoading: isModelMetadataLoading,
+    isError: isModelMetadataError,
+    error: modelMetadataError,
+  } = useAssayModelMetadata(
+    assay_model_id ?? -1,
+    undefined,
+    undefined,
+    undefined,
+    { enabled: !!assay_model_id },
+  );
+
+  const {
+    data: metadataDefinitions,
+    isLoading: isMetadataDefinitionsLoading,
+    isError: isMetadataDefinitionsError,
+    error: metadataDefinitionsError,
+  } = useAssayMetadataDefinitions(undefined, undefined, undefined);
+
+  const fields = useMemo(() => {
+    return metadataDefinitions?.map(
+      (md): EntityFormFieldDef => ({
+        name: toSafeIdentifier(md.name),
+        display_name: md.name,
+        type: "entity",
+        required: modelMetadata?.some(
+          (mm) => mm.assay_metadata_definition_id == md.id,
+        ),
+        default: null,
+        entity: {
+          name: md.name,
+          full_name: "Grit::Core::VocabularyItem",
+          path: `grit/core/vocabularies/${md.vocabulary_id}/vocabulary_items`,
+          primary_key: "id",
+          primary_key_type: "integer",
+          column: md.name,
+          display_column: "name",
+          display_column_type: "string",
+        },
+        disabled: false,
+      }),
+    ).sort((a,b) => {
+      if (a.required && !b.required) return -1;
+      if (!a.required && b.required) return 1;
+      return a.name.localeCompare(b.name);
+    });
+  }, [modelMetadata, metadataDefinitions]);
+
+  if (isMetadataDefinitionsLoading) {
+    return <Spinner />;
+  }
+
+  if (isMetadataDefinitionsError || !metadataDefinitions) {
+    return <ErrorPage error={metadataDefinitionsError} />;
+  }
+
+  if (fields?.length == 0) {
+    return null;
+  }
+
+  return (
+    <>
+      <h2
+        style={{
+          gridColumnStart: 1,
+          gridColumnEnd: -1,
+        }}
+      >
+        Metadata
+      </h2>
+      {isModelMetadataError && (
+        <div
+          style={{
+            gridColumnStart: 1,
+            gridColumnEnd: -1,
+            color: "var(--palette-error-main)",
+          }}
+        >
+          {modelMetadataError ??
+            "An error occured retrieving the required metadata for the selected assay model"}
+        </div>
+      )}
+      {isModelMetadataLoading && (
+        <div
+          style={{
+            gridColumnStart: 1,
+            gridColumnEnd: -1,
+          }}
+        >
+          <Spinner size={14}/><span>Loading required metadata for the selected assay model...</span>
+        </div>
+      )}
+      {fields?.map((f) => (
+        <FormField key={f.name} form={form} fieldDef={f} />
+      ))}
+    </>
+  );
+};
+
+type OrganizedFields = [
+  "assay_model_id",
+  "name",
+  "description",
+  "publication_status_id",
+][number];
 
 type ExperimentFormFields = {
   [key in OrganizedFields]?: FormFieldDef;
 } & {
   rest: FormFieldDef[];
-};
-
-const AssayMetadata = ({ assayId }: { assayId: number }) => {
-  const {
-    data: assay,
-    isLoading: isAssayLoading,
-    isError: isAssayError,
-    error: assayError,
-  } = useAssay(assayId);
-  const {
-    data: assayFields,
-    isLoading: isAssayFieldsLoading,
-    isError: isAssayFieldsError,
-    error: assayFieldsError,
-  } = useAssayFields(
-    { assay_id: assayId.toString() },
-    {
-      select: (data) =>
-        data.filter(({ metadata_definition_id }) => !!metadata_definition_id),
-    },
-  );
-
-  const metadata = useMemo(
-    () =>
-      assay &&
-      assayFields?.map((f) => ({
-        key: f.name,
-        label: f.display_name,
-        value:
-          assay[
-            (f as any).entity
-              ? `${f.name}__${(f as any).entity.display_column}`
-              : f.name
-          ] as string,
-      })),
-    [assay, assayFields],
-  );
-
-  if (isAssayLoading || isAssayFieldsLoading) {
-    return <Spinner />;
-  }
-
-  if (isAssayError || isAssayFieldsError || !assay || !assayFields) {
-    return <ErrorPage error={assayError ?? assayFieldsError} />;
-  }
-
-  return (
-    <Surface
-      style={{
-        width: "20vw",
-        maxWidth: "20vw",
-        display: "flex",
-        flexDirection: "column",
-        gap: "var(--spacing)",
-        overflow: "auto",
-      }}
-    >
-      <em>Assay</em>
-      <Link to={`/assays/assays/${assay.id}`}>
-        <h3>{assay.name}</h3>
-      </Link>
-      <em>Assay model</em>
-      <h3>{assay.assay_model_id__name}</h3>
-      <em>Assay type</em>
-      <h3>{assay.assay_type_id__name}</h3>
-      <em>Metadata</em>
-      {metadata?.length && (
-        <div
-          style={{ display: "flex", gap: "var(--spacing)", flexWrap: "wrap" }}
-        >
-          {metadata.map((m) => (
-            <span
-              key={m.key}
-              style={{
-                backgroundColor: "rgb(from var(--palette-info-main) r g b / 0.5)",
-                padding: "calc(var(--spacing) / 2)",
-                borderRadius: "var(--border-radius)",
-                textWrap: "nowrap",
-              }}
-            >
-              <strong>
-                {m.label}: {m.value}
-              </strong>
-            </span>
-          ))}
-        </div>
-      )}
-    </Surface>
-  );
 };
 
 const ExperimentForm = ({
@@ -141,7 +167,11 @@ const ExperimentForm = ({
   fields: FormFieldDef[];
   experiment: Partial<ExperimentData>;
 }) => {
-  const canCrudExperiment = useHasRoles(["Administrator", "AssayAdministrator", "AssayUser"])
+  const canCrudExperiment = useHasRoles([
+    "Administrator",
+    "AssayAdministrator",
+    "AssayUser",
+  ]);
 
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -216,29 +246,29 @@ const ExperimentForm = ({
   };
 
   const {
-    assay_id: assay_id_field,
+    assay_model_id: assay_model_id_field,
     name: name_field,
     description: description_field,
-    rest,
+    publication_status_id: publication_status_id_field,
   } = useMemo(() => {
     return fields.reduce(
       (acc, f) => {
         const entityField = f as EntityFormFieldDef;
         switch (f.name) {
-          case "assay_id":
-            acc.assay_id = {
+          case "assay_model_id":
+            acc.assay_model_id = {
               ...entityField,
-              hidden: !!experiment.id,
-              disabled: !canCrudExperiment,
+              disabled: !!experiment.id || !canCrudExperiment,
               entity: { ...entityField.entity, params: { scope: "published" } },
             } as EntityFormFieldDef;
             break;
           case "name":
           case "description":
-            acc[f.name] = {...f, disabled: !canCrudExperiment};
+          case "publication_status_id":
+            acc[f.name] = { ...f, disabled: !canCrudExperiment };
             break;
           default:
-            acc.rest.push({...f, disabled: !canCrudExperiment});
+            acc.rest.push({ ...f, disabled: !canCrudExperiment });
         }
         return acc;
       },
@@ -246,7 +276,12 @@ const ExperimentForm = ({
     );
   }, [fields, experiment.id, canCrudExperiment]);
 
-  if (!assay_id_field || !name_field || !description_field) {
+  if (
+    !assay_model_id_field ||
+    !name_field ||
+    !description_field ||
+    !publication_status_id_field
+  ) {
     return (
       <ErrorPage>
         <Link to="..">
@@ -262,7 +297,6 @@ const ExperimentForm = ({
         [styles.withAssayInfo]: !!experiment.assay_id,
       })}
     >
-      {experiment.assay_id && <AssayMetadata assayId={experiment.assay_id} />}
       <Surface className={styles.modelForm}>
         {!experiment.id && (
           <h2 style={{ alignSelf: "baseline", marginBottom: ".5em" }}>
@@ -273,7 +307,7 @@ const ExperimentForm = ({
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: experiment.id ? "1fr" : "1fr 1fr",
+              gridTemplateColumns: "1fr 1fr",
               gridAutoRows: "max-content",
               gap: "calc(var(--spacing) * 2)",
               paddingBottom: "calc(var(--spacing) * 2)",
@@ -290,8 +324,16 @@ const ExperimentForm = ({
                 {form.state.errorMap.onSubmit?.toString()}
               </div>
             )}
+            <div
+              style={{
+                gridColumnStart: 1,
+                gridColumnEnd: -1,
+              }}
+            >
+              <FormField form={form} fieldDef={assay_model_id_field} />
+            </div>
             <FormField form={form} fieldDef={name_field} />
-            <FormField form={form} fieldDef={assay_id_field} />
+            <FormField form={form} fieldDef={publication_status_id_field} />
             <div
               style={{
                 gridColumnStart: 1,
@@ -300,9 +342,7 @@ const ExperimentForm = ({
             >
               <FormField form={form} fieldDef={description_field} />
             </div>
-            {rest.map((f) => (
-              <FormField form={form} fieldDef={f} key={f.name} />
-            ))}
+            <ExperimentMetadataForm form={form} />
           </div>
           <FormControls
             form={form}

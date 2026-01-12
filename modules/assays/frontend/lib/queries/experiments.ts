@@ -42,12 +42,13 @@ export const useExperimentColumns = (
 };
 
 export const useExperimentFields = (
+  experiment_id?: number | string,
   params: Record<string, any> = {},
   queryOptions: Partial<UseQueryOptions<FormFieldDef[], string>> = {},
 ) => {
   return useEntityFields<FormFieldDef>(
     "Grit::Assays::Experiment",
-    params,
+    {...params, experiment_id },
     queryOptions,
   );
 };
@@ -60,8 +61,8 @@ export interface ExperimentPlotDefinition {
 
 export interface ExperimentData extends EntityData {
   name: string;
-  assay_id: number;
-  assay_id__name: string;
+  assay_model_id: number;
+  assay_model_id__name: string;
   description: string | null;
   data_sheets: EntityData<ExperimentDataSheetData>[];
   plots: Record<string, ExperimentPlotDefinition>;

@@ -1,7 +1,7 @@
-\restrict 8O8DADmpOqVNmL42PhaHuVh6vCq2CUngF5EmYlhXMnxCNvaWhnHDBsmaUaGLXKv
+\restrict sgh9raVQQhTOCe5WBLWJ6EIqf5FDPub4CxjLOlOfRjziRytAvfXWRDs9WIIoQNK
 
 -- Dumped from database version 16.3 (Debian 16.3-1.pgdg120+1)
--- Dumped by pg_dump version 16.10 (Ubuntu 16.10-0ubuntu0.24.04.1)
+-- Dumped by pg_dump version 16.11
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -313,7 +313,7 @@ CREATE TABLE public.grit_assays_assay_metadata_definitions (
     created_at timestamp(6) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_by character varying(30),
     updated_at timestamp(6) without time zone,
-    name character varying NOT NULL,
+    name character varying(30) NOT NULL,
     description text,
     vocabulary_id bigint NOT NULL
 );
@@ -509,6 +509,23 @@ CREATE TABLE public.grit_assays_experiment_data_sheets (
 
 
 --
+-- Name: grit_assays_experiment_metadata; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.grit_assays_experiment_metadata (
+    id bigint DEFAULT nextval('public.grit_seq'::regclass) NOT NULL,
+    created_by character varying(30) DEFAULT 'SYSTEM'::character varying NOT NULL,
+    created_at timestamp(6) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_by character varying(30),
+    updated_at timestamp(6) without time zone,
+    experiment_id bigint NOT NULL,
+    assay_metadata_definition_id bigint NOT NULL,
+    vocabulary_id bigint NOT NULL,
+    vocabulary_item_id bigint NOT NULL
+);
+
+
+--
 -- Name: grit_assays_experiments; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -521,7 +538,7 @@ CREATE TABLE public.grit_assays_experiments (
     name character varying NOT NULL,
     description text,
     plots json DEFAULT '{}'::json,
-    assay_id bigint NOT NULL,
+    assay_model_id bigint NOT NULL,
     publication_status_id bigint DEFAULT 10000 NOT NULL
 );
 
@@ -981,6 +998,14 @@ ALTER TABLE ONLY public.grit_assays_experiment_data_sheets
 
 
 --
+-- Name: grit_assays_experiment_metadata grit_assays_experiment_metadata_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.grit_assays_experiment_metadata
+    ADD CONSTRAINT grit_assays_experiment_metadata_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: grit_assays_experiments grit_assays_experiments_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1194,6 +1219,13 @@ CREATE INDEX idx_on_assay_data_sheet_definition_id_7fcda1e0ab ON public.grit_ass
 --
 
 CREATE INDEX idx_on_assay_metadata_definition_id_347c4a565e ON public.grit_assays_assay_model_metadata USING btree (assay_metadata_definition_id);
+
+
+--
+-- Name: idx_on_assay_metadata_definition_id_b0d816b3b9; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_on_assay_metadata_definition_id_b0d816b3b9 ON public.grit_assays_experiment_metadata USING btree (assay_metadata_definition_id);
 
 
 --
@@ -1435,17 +1467,38 @@ CREATE INDEX index_grit_assays_experiment_data_sheets_on_experiment_id ON public
 
 
 --
--- Name: index_grit_assays_experiments_on_assay_id; Type: INDEX; Schema: public; Owner: -
+-- Name: index_grit_assays_experiment_metadata_on_experiment_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX index_grit_assays_experiments_on_assay_id ON public.grit_assays_experiments USING btree (assay_id);
+CREATE INDEX index_grit_assays_experiment_metadata_on_experiment_id ON public.grit_assays_experiment_metadata USING btree (experiment_id);
+
+
+--
+-- Name: index_grit_assays_experiment_metadata_on_vocabulary_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_grit_assays_experiment_metadata_on_vocabulary_id ON public.grit_assays_experiment_metadata USING btree (vocabulary_id);
+
+
+--
+-- Name: index_grit_assays_experiment_metadata_on_vocabulary_item_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_grit_assays_experiment_metadata_on_vocabulary_item_id ON public.grit_assays_experiment_metadata USING btree (vocabulary_item_id);
+
+
+--
+-- Name: index_grit_assays_experiments_on_assay_model_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_grit_assays_experiments_on_assay_model_id ON public.grit_assays_experiments USING btree (assay_model_id);
 
 
 --
 -- Name: index_grit_assays_experiments_on_name; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX index_grit_assays_experiments_on_name ON public.grit_assays_experiments USING btree (name);
+CREATE UNIQUE INDEX index_grit_assays_experiments_on_name ON public.grit_assays_experiments USING btree (name);
 
 
 --
@@ -1624,13 +1677,6 @@ CREATE UNIQUE INDEX uniq_data_sheet_definition_per_experiment ON public.grit_ass
 
 
 --
--- Name: uniq_experiment_name_per_assay; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE UNIQUE INDEX uniq_experiment_name_per_assay ON public.grit_assays_experiments USING btree (name, assay_id);
-
-
---
 -- Name: uniq_vocabulary_item_name_per_vocabulary; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1740,6 +1786,13 @@ CREATE TRIGGER manage_stamps_grit_assays_experiment_data_sheet_values BEFORE INS
 --
 
 CREATE TRIGGER manage_stamps_grit_assays_experiment_data_sheets BEFORE INSERT OR UPDATE ON public.grit_assays_experiment_data_sheets FOR EACH ROW EXECUTE FUNCTION public.manage_stamps();
+
+
+--
+-- Name: grit_assays_experiment_metadata manage_stamps_grit_assays_experiment_metadata; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER manage_stamps_grit_assays_experiment_metadata BEFORE INSERT OR UPDATE ON public.grit_assays_experiment_metadata FOR EACH ROW EXECUTE FUNCTION public.manage_stamps();
 
 
 --
@@ -1981,18 +2034,18 @@ ALTER TABLE ONLY public.grit_assays_data_table_columns
 
 
 --
--- Name: grit_assays_data_table_entities assays_data_table_entities_assays_data_table_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.grit_assays_data_table_entities
-    ADD CONSTRAINT assays_data_table_entities_assays_data_table_id_fkey FOREIGN KEY (data_table_id) REFERENCES public.grit_assays_data_tables(id);
-
-
---
 -- Name: grit_assays_data_table_columns assays_data_table_entities_assays_data_table_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.grit_assays_data_table_columns
+    ADD CONSTRAINT assays_data_table_entities_assays_data_table_id_fkey FOREIGN KEY (data_table_id) REFERENCES public.grit_assays_data_tables(id);
+
+
+--
+-- Name: grit_assays_data_table_entities assays_data_table_entities_assays_data_table_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.grit_assays_data_table_entities
     ADD CONSTRAINT assays_data_table_entities_assays_data_table_id_fkey FOREIGN KEY (data_table_id) REFERENCES public.grit_assays_data_tables(id);
 
 
@@ -2053,11 +2106,43 @@ ALTER TABLE ONLY public.grit_assays_experiment_data_sheets
 
 
 --
--- Name: grit_assays_experiments assays_experiments_assays_assay_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: grit_assays_experiment_metadata assays_experiment_metadata_assays_assay_metadata_definition_id_; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.grit_assays_experiment_metadata
+    ADD CONSTRAINT assays_experiment_metadata_assays_assay_metadata_definition_id_ FOREIGN KEY (assay_metadata_definition_id) REFERENCES public.grit_assays_assay_metadata_definitions(id);
+
+
+--
+-- Name: grit_assays_experiment_metadata assays_experiment_metadata_assays_core_item_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.grit_assays_experiment_metadata
+    ADD CONSTRAINT assays_experiment_metadata_assays_core_item_id_fkey FOREIGN KEY (vocabulary_item_id) REFERENCES public.grit_core_vocabulary_items(id);
+
+
+--
+-- Name: grit_assays_experiment_metadata assays_experiment_metadata_assays_experiment_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.grit_assays_experiment_metadata
+    ADD CONSTRAINT assays_experiment_metadata_assays_experiment_id_fkey FOREIGN KEY (experiment_id) REFERENCES public.grit_assays_experiments(id);
+
+
+--
+-- Name: grit_assays_experiment_metadata assays_experiment_metadata_core_vocabulary_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.grit_assays_experiment_metadata
+    ADD CONSTRAINT assays_experiment_metadata_core_vocabulary_id_fkey FOREIGN KEY (vocabulary_id) REFERENCES public.grit_core_vocabularies(id);
+
+
+--
+-- Name: grit_assays_experiments assays_experiments_assays_assay_model_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.grit_assays_experiments
-    ADD CONSTRAINT assays_experiments_assays_assay_id_fkey FOREIGN KEY (assay_id) REFERENCES public.grit_assays_assays(id);
+    ADD CONSTRAINT assays_experiments_assays_assay_model_id_fkey FOREIGN KEY (assay_model_id) REFERENCES public.grit_assays_assay_models(id);
 
 
 --
@@ -2077,19 +2162,19 @@ ALTER TABLE ONLY public.grit_core_load_set_loading_record_property_values
 
 
 --
--- Name: grit_core_load_set_loading_records core_load_set_loading_records_core_load_set_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.grit_core_load_set_loading_records
-    ADD CONSTRAINT core_load_set_loading_records_core_load_set_id_fkey FOREIGN KEY (load_set_id) REFERENCES public.grit_core_load_sets(id);
-
-
---
 -- Name: grit_core_load_set_loading_record_property_values core_load_set_loading_records_core_load_set_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.grit_core_load_set_loading_record_property_values
     ADD CONSTRAINT core_load_set_loading_records_core_load_set_id_fkey FOREIGN KEY (load_set_loading_record_id) REFERENCES public.grit_core_load_set_loading_records(id);
+
+
+--
+-- Name: grit_core_load_set_loading_records core_load_set_loading_records_core_load_set_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.grit_core_load_set_loading_records
+    ADD CONSTRAINT core_load_set_loading_records_core_load_set_id_fkey FOREIGN KEY (load_set_id) REFERENCES public.grit_core_load_sets(id);
 
 
 --
@@ -2224,11 +2309,12 @@ ALTER TABLE ONLY public.grit_assays_assays
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 8O8DADmpOqVNmL42PhaHuVh6vCq2CUngF5EmYlhXMnxCNvaWhnHDBsmaUaGLXKv
+\unrestrict sgh9raVQQhTOCe5WBLWJ6EIqf5FDPub4CxjLOlOfRjziRytAvfXWRDs9WIIoQNK
 
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20260112122804'),
 ('20251113133402'),
 ('20251113130627'),
 ('20251113130626'),

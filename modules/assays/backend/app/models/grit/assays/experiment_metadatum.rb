@@ -17,30 +17,15 @@
 #++
 
 module Grit::Assays
-  class AssayDataSheetDefinition < ApplicationRecord
+  class ExperimentMetadatum < ApplicationRecord
     include Grit::Core::GritEntityRecord
 
-    belongs_to :assay_model
-    has_many :assay_data_sheet_columns, dependent: :destroy
-
-    display_column "name"
+    belongs_to :assay_metadata_definition
+    belongs_to :experiment
 
     entity_crud_with read: [],
       create: [ "Administrator", "AssayAdministrator" ],
       update: [ "Administrator", "AssayAdministrator" ],
       destroy: [ "Administrator", "AssayAdministrator" ]
-
-    after_create :add_to_existing_experiments
-    before_destroy :destroy_from_existing_experiments
-
-    def add_to_existing_experiments
-      Grit::Assays::Experiment.detailed.each do |experiment|
-        Grit::Assays::ExperimentDataSheet.create!({ experiment_id: experiment.id, assay_data_sheet_definition_id: self.id })
-      end
-    end
-
-    def destroy_from_existing_experiments
-      Grit::Assays::ExperimentDataSheet.where(assay_data_sheet_definition_id: self.id).destroy_all
-    end
   end
 end
