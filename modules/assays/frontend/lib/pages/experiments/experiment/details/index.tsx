@@ -65,7 +65,7 @@ const ExperimentMetadataForm = ({
     isLoading: isMetadataDefinitionsLoading,
     isError: isMetadataDefinitionsError,
     error: metadataDefinitionsError,
-  } = useAssayMetadataDefinitions(undefined, undefined, undefined);
+  } = useAssayMetadataDefinitions();
 
   const fields = useMemo(() => {
     return metadataDefinitions?.map(
