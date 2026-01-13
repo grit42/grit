@@ -25,7 +25,7 @@ import {
   useEditEntityMutation,
   useDestroyEntityMutation,
 } from "@grit42/core";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useEffect } from "react";
 import styles from "../../assayModels.module.scss";
 import { useToolbar } from "@grit42/core/Toolbar";
 import CogIcon from "@grit42/client-library/icons/Cog";

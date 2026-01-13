@@ -34,7 +34,9 @@ interface Props {
   dataTableId: string | number;
 }
 
-export const EntityAttributeDataTableColumnsTable = ({ dataTableId }: Props) => {
+export const EntityAttributeDataTableColumnsTable = ({
+  dataTableId,
+}: Props) => {
   const navigate = useNavigate();
   const canEditDataTable = useHasRoles([
     "Administrator",
@@ -51,9 +53,14 @@ export const EntityAttributeDataTableColumnsTable = ({ dataTableId }: Props) => 
     select: (data) =>
       data.filter(
         ({ name }) =>
-          !["source_type", "pivots", "assay_data_sheet_column_id__name", "data_table_id__name", "sort"].includes(
-            name as string,
-          ),
+          ![
+            "source_type",
+            "experiment_ids",
+            "metadata_filters",
+            "assay_data_sheet_column_id__name",
+            "data_table_id__name",
+            "sort",
+          ].includes(name as string),
       ),
   });
 

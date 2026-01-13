@@ -1,4 +1,4 @@
-\restrict sgh9raVQQhTOCe5WBLWJ6EIqf5FDPub4CxjLOlOfRjziRytAvfXWRDs9WIIoQNK
+\restrict fGM72pcQ6hOcOa6b3OhC0LAbObPKCFQKcOCUnhimC8sm8FuMruV6FsvVVLDfczm
 
 -- Dumped from database version 16.3 (Debian 16.3-1.pgdg120+1)
 -- Dumped by pg_dump version 16.11
@@ -313,7 +313,8 @@ CREATE TABLE public.grit_assays_assay_metadata_definitions (
     created_at timestamp(6) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_by character varying(30),
     updated_at timestamp(6) without time zone,
-    name character varying(30) NOT NULL,
+    name character varying NOT NULL,
+    safe_name character varying(30) NOT NULL,
     description text,
     vocabulary_id bigint NOT NULL
 );
@@ -401,7 +402,8 @@ CREATE TABLE public.grit_assays_data_table_columns (
     aggregation_method character varying,
     source_type character varying DEFAULT 'assay_data_sheet_column'::character varying NOT NULL,
     entity_attribute_name character varying,
-    pivots jsonb DEFAULT '[]'::jsonb
+    metadata_filters jsonb DEFAULT '{}'::jsonb,
+    experiment_ids bigint[] DEFAULT ARRAY[]::bigint[]
 );
 
 
@@ -1338,6 +1340,13 @@ CREATE INDEX index_grit_assays_assay_data_sheet_definitions_on_name ON public.gr
 --
 
 CREATE UNIQUE INDEX index_grit_assays_assay_metadata_definitions_on_name ON public.grit_assays_assay_metadata_definitions USING btree (name);
+
+
+--
+-- Name: index_grit_assays_assay_metadata_definitions_on_safe_name; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_grit_assays_assay_metadata_definitions_on_safe_name ON public.grit_assays_assay_metadata_definitions USING btree (safe_name);
 
 
 --
@@ -2309,7 +2318,7 @@ ALTER TABLE ONLY public.grit_assays_assays
 -- PostgreSQL database dump complete
 --
 
-\unrestrict sgh9raVQQhTOCe5WBLWJ6EIqf5FDPub4CxjLOlOfRjziRytAvfXWRDs9WIIoQNK
+\unrestrict fGM72pcQ6hOcOa6b3OhC0LAbObPKCFQKcOCUnhimC8sm8FuMruV6FsvVVLDfczm
 
 SET search_path TO "$user", public;
 

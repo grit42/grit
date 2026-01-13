@@ -4,7 +4,6 @@ import {
   Spinner,
   Surface,
 } from "@grit42/client-library/components";
-import { toSafeIdentifier } from "@grit42/core/utils";
 import { EntitySelector } from "@grit42/core";
 import { useMemo } from "react";
 import { useAssayModelMetadata } from "../../../../queries/assay_model_metadata";
@@ -13,15 +12,19 @@ import { useAssayMetadataDefinitions } from "../../../../queries/assay_metadata_
 interface Props {
   assayModelId?: string | number;
   metadataFilters: Record<string, number[]>;
-  setMetadataFilters: React.Dispatch<
-    React.SetStateAction<Record<string, number[]>>
-  >;
+  identifier?: "safe_name" | "metadata_definition_id";
+  setMetadataFilters: (
+    v:
+      | Record<string, number[]>
+      | ((prev: Record<string, number[]> | undefined) => Record<string, number[]>),
+  ) => void;
 }
 
 const ExperimentMetadataFilters = ({
   assayModelId,
   metadataFilters,
   setMetadataFilters,
+  identifier = "safe_name",
 }: Props) => {
   const {
     data: modelMetadata,
@@ -46,7 +49,7 @@ const ExperimentMetadataFilters = ({
   const fields = useMemo(() => {
     return metadataDefinitions
       ?.map((md) => ({
-        name: toSafeIdentifier(md.name),
+        name: md.safe_name,
         display_name: md.name,
         description: md.description,
         type: "entity",
@@ -63,6 +66,8 @@ const ExperimentMetadataFilters = ({
           display_column_type: "string",
           multiple: true,
         },
+        metadata_definition_id: md.id,
+        safe_name: md.safe_name,
         belongsToAssayModel:
           modelMetadata?.some(
             (mm) => mm.assay_metadata_definition_id == md.id,
@@ -126,14 +131,14 @@ const ExperimentMetadataFilters = ({
           <EntitySelector
             entity={f.entity}
             onChange={(v) =>
-              setMetadataFilters((prev) => {
+              setMetadataFilters((prev = {}) => {
                 if (Array.isArray(v) && v.length > 0) {
-                  return { ...prev, [f.name]: v };
+                  return { ...prev, [f[identifier]]: v };
                 } else if (!Array.isArray(v) && v) {
-                  return { ...prev, [f.name]: [v] };
+                  return { ...prev, [f[identifier]]: [v] };
                 } else {
                   const newState = { ...prev };
-                  delete newState[f.name];
+                  delete newState[f[identifier]];
                   return newState;
                 }
               })
@@ -142,7 +147,7 @@ const ExperimentMetadataFilters = ({
             label={f.display_name}
             description={f.description ?? undefined}
             placeholder={f.display_name}
-            value={metadataFilters[f.name]}
+            value={metadataFilters[f[identifier]]}
             error=""
             multiple
           />

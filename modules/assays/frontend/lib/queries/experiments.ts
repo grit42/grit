@@ -95,3 +95,32 @@ export const useExperiment = (
     queryOptions,
   );
 };
+
+
+export const usePublishedExperimentsOfModel = (
+  assayModelId: string | number,
+  sort?: SortingState,
+  filter?: Filter[],
+  params: URLParams = {},
+  queryOptions: Partial<UseQueryOptions<ExperimentData[], string>> = {},
+) => {
+  return useEntityData<ExperimentData>(
+    "grit/assays/experiments",
+    sort,
+    [
+      {
+        active: true,
+        column: "assay_model_id",
+        id: "assay_model_id",
+        operator: "eq",
+        type: "integer",
+        value: assayModelId,
+        property: "assay_model_id",
+        property_type: "integer",
+      },
+      ...(filter ?? []),
+    ],
+    { ...params, scope: "published" },
+    queryOptions,
+  );
+};

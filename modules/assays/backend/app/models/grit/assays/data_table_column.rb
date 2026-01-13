@@ -180,31 +180,32 @@ LEFT OUTER JOIN (
       query.joins(column_join)
     end
 
+    def experiments_join
+      join = ["JOIN EXPERIMENTS_WITH_METADATA ON EXPERIMENTS_WITH_METADATA.ID = GRIT_ASSAYS_EXPERIMENT_DATA_SHEETS.EXPERIMENT_ID"]
+      join.push "EXPERIMENTS_WITH_METADATA.ID IN (#{self.experiment_ids.join(',')})" if self.experiment_ids.length.positive?
+      metadata_definitions = AssayMetadataDefinition.all
+      self.metadata_filters.each do |key,value|
+        metadata_definition = metadata_definitions.find { |d| d.id.to_s == key.to_s }
+        unless metadata_definition.nil? || value.nil? || value.blank?
+          join.push "EXPERIMENTS_WITH_METADATA.#{metadata_definition.safe_name} IN (#{value.join(",")})"
+        end
+      end
+      join.join(" AND ")
+    end
+
     def join_data_sources subquery
       join = <<-SQL
 JOIN grit_assays_experiment_data_sheet_values data_sources ON data_sources.experiment_data_sheet_record_id = targets.experiment_data_sheet_record_id
 AND data_sources.assay_data_sheet_column_id = #{assay_data_sheet_column_id}
 JOIN GRIT_ASSAYS_EXPERIMENT_DATA_SHEET_RECORDS ON GRIT_ASSAYS_EXPERIMENT_DATA_SHEET_RECORDS.ID = TARGETS.EXPERIMENT_DATA_SHEET_RECORD_ID
 JOIN GRIT_ASSAYS_EXPERIMENT_DATA_SHEETS ON GRIT_ASSAYS_EXPERIMENT_DATA_SHEETS.ID = GRIT_ASSAYS_EXPERIMENT_DATA_SHEET_RECORDS.EXPERIMENT_DATA_SHEET_ID
-JOIN GRIT_ASSAYS_EXPERIMENTS ON GRIT_ASSAYS_EXPERIMENTS.ID = GRIT_ASSAYS_EXPERIMENT_DATA_SHEETS.EXPERIMENT_ID#{" AND GRIT_ASSAYS_EXPERIMENTS.ASSAY_ID IN (#{self.pivots.join(',')})" if self.pivots.length.positive?}
-JOIN GRIT_CORE_PUBLICATION_STATUSES GRIT_CORE_PUBLICATION_STATUSES__experiments ON GRIT_CORE_PUBLICATION_STATUSES__experiments.id = GRIT_ASSAYS_EXPERIMENTS.publication_status_id AND GRIT_CORE_PUBLICATION_STATUSES__experiments.name = 'Published'
-JOIN GRIT_ASSAYS_ASSAYS ON GRIT_ASSAYS_ASSAYS.id = GRIT_ASSAYS_EXPERIMENTS.assay_id
-JOIN GRIT_CORE_PUBLICATION_STATUSES GRIT_CORE_PUBLICATION_STATUSES__assays ON GRIT_CORE_PUBLICATION_STATUSES__assays.id = GRIT_ASSAYS_ASSAYS.publication_status_id AND GRIT_CORE_PUBLICATION_STATUSES__assays.name = 'Published'
-JOIN GRIT_ASSAYS_ASSAY_MODELS ON GRIT_ASSAYS_ASSAY_MODELS.id = GRIT_ASSAYS_ASSAYS.assay_model_id
-JOIN GRIT_CORE_PUBLICATION_STATUSES GRIT_CORE_PUBLICATION_STATUSES__assay_models ON GRIT_CORE_PUBLICATION_STATUSES__assay_models.id = GRIT_ASSAYS_ASSAYS.publication_status_id AND GRIT_CORE_PUBLICATION_STATUSES__assay_models.name = 'Published'
+#{experiments_join}
+JOIN GRIT_CORE_PUBLICATION_STATUSES GRIT_CORE_PUBLICATION_STATUSES__experiments ON GRIT_CORE_PUBLICATION_STATUSES__experiments.id = EXPERIMENTS_WITH_METADATA.publication_status_id AND GRIT_CORE_PUBLICATION_STATUSES__experiments.name = 'Published'
+JOIN GRIT_ASSAYS_ASSAY_DATA_SHEET_DEFINITIONS ON GRIT_ASSAYS_ASSAY_DATA_SHEET_DEFINITIONS.ID = GRIT_ASSAYS_EXPERIMENT_DATA_SHEETS.ASSAY_DATA_SHEET_DEFINITION_ID
+JOIN GRIT_ASSAYS_ASSAY_MODELS ON GRIT_ASSAYS_ASSAY_MODELS.id = GRIT_ASSAYS_ASSAY_DATA_SHEET_DEFINITIONS.assay_model_id
+JOIN GRIT_CORE_PUBLICATION_STATUSES GRIT_CORE_PUBLICATION_STATUSES__assay_models ON GRIT_CORE_PUBLICATION_STATUSES__assay_models.id = GRIT_ASSAYS_ASSAY_MODELS.publication_status_id AND GRIT_CORE_PUBLICATION_STATUSES__assay_models.name = 'Published'
       SQL
 
-      subquery.joins(join)
-    end
-
-    def metadata_filters subquery
-      join = <<-SQL
-JOIN GRIT_ASSAYS_EXPERIMENT_DATA_SHEET_RECORDS ON GRIT_ASSAYS_EXPERIMENT_DATA_SHEET_RECORDS.ID = TARGETS.EXPERIMENT_DATA_SHEET_RECORD_ID
-JOIN GRIT_ASSAYS_EXPERIMENT_DATA_SHEETS ON GRIT_ASSAYS_EXPERIMENT_DATA_SHEETS.ID = GRIT_ASSAYS_EXPERIMENT_DATA_SHEET_RECORDS.EXPERIMENT_DATA_SHEET_ID
-JOIN GRIT_ASSAYS_EXPERIMENTS ON GRIT_ASSAYS_EXPERIMENTS.ID = GRIT_ASSAYS_EXPERIMENT_DATA_SHEETS.EXPERIMENT_ID
-      SQL
-
-      join += " AND GRIT_ASSAYS_EXPERIMENTS.ASSAY_ID IN (#{self.pivots.join(',')})" if self.pivots.length.positive?
       subquery.joins(join)
     end
 
@@ -278,7 +279,7 @@ JOIN (
         "#{self.safe_name}_join.experiment_data_sheet_id as experiment_data_sheet_id",
         "#{self.safe_name}_join.experiment_id as experiment_id",
         "#{self.safe_name}_join.experiment_id__name as experiment_id__name",
-      )
+      ).with(experiments_with_metadata: Experiment.detailed)
 
       subquery = ExperimentDataSheetValue.unscoped
         .from("grit_assays_experiment_data_sheet_values targets")
@@ -288,7 +289,7 @@ JOIN (
           "targets.experiment_data_sheet_record_id",
           "grit_assays_experiment_data_sheet_records.experiment_data_sheet_id",
           "grit_assays_experiment_data_sheets.experiment_id",
-          "grit_assays_experiments.name as experiment_id__name"
+          "experiments_with_metadata.name as experiment_id__name"
         )
 
       if assay_data_sheet_column.data_type.is_entity

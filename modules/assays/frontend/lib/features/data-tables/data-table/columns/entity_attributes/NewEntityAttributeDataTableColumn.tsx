@@ -18,7 +18,10 @@
 
 import { Button, ErrorPage, Spinner } from "@grit42/client-library/components";
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import { DataTableColumnData, useDataTableColumnFields } from "../../../queries/data_table_columns";
+import {
+  DataTableColumnData,
+  useDataTableColumnFields,
+} from "../../../queries/data_table_columns";
 import EntityAttributeDataTableColumnForm from "./EntityAttributeDataTableColumnForm";
 import { useMemo } from "react";
 
@@ -43,7 +46,8 @@ const NewEntityAttributeDataTableColumn = () => {
               "data_table_id",
               "assay_data_sheet_column_id",
               "source_type",
-              "pivots",
+              "experiment_ids",
+              "metadata_filters",
               "aggregation_method",
             ].includes(f.name),
         )
@@ -53,12 +57,13 @@ const NewEntityAttributeDataTableColumn = () => {
   });
 
   const dataTableColumn = useMemo(
-    () => ({
-      name: searchParams.get("entity_attribute_name"),
-      safe_name: searchParams.get("entity_attribute_safe_name"),
-      entity_attribute_name: searchParams.get("entity_attribute_safe_name"),
-      source_type: "entity_attribute",
-    } as Partial<DataTableColumnData>),
+    () =>
+      ({
+        name: searchParams.get("entity_attribute_name"),
+        safe_name: searchParams.get("entity_attribute_safe_name"),
+        entity_attribute_name: searchParams.get("entity_attribute_safe_name"),
+        source_type: "entity_attribute",
+      } as Partial<DataTableColumnData>),
     [searchParams],
   );
   if (!searchParams.has("entity_attribute_safe_name")) {

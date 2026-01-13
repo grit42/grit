@@ -18,9 +18,7 @@
 
 import { Button, ErrorPage, Spinner } from "@grit42/client-library/components";
 import { Link, useParams } from "react-router-dom";
-import {
-  useDataTableColumnFields,
-} from "../../../queries/data_table_columns";
+import { useDataTableColumnFields } from "../../../queries/data_table_columns";
 import { useEntityDatum } from "@grit42/core";
 import AssayDataSheetDataTableColumnForm from "./AssayDataSheetDataTableColumnForm";
 
@@ -101,7 +99,8 @@ const EditAssayDataSheetDataTableColumn = () => {
             "assay_data_sheet_column_id",
             "entity_attribute_name",
             "source_type",
-            "pivots",
+            "experiment_ids",
+            "metadata_filters",
             "aggregation_method",
           ].includes(f.name),
       ),
@@ -120,8 +119,7 @@ const EditAssayDataSheetDataTableColumn = () => {
     ],
   });
 
-  if (isLoading || isDataTableColumnFieldsLoading)
-    return <Spinner />;
+  if (isLoading || isDataTableColumnFieldsLoading) return <Spinner />;
   if (
     isError ||
     !data ||
@@ -129,9 +127,7 @@ const EditAssayDataSheetDataTableColumn = () => {
     !dataTableColumnFields
   ) {
     return (
-      <ErrorPage
-        error={error ?? dataTableColumnFieldsError}
-      >
+      <ErrorPage error={error ?? dataTableColumnFieldsError}>
         <Link to="..">
           <Button>Back</Button>
         </Link>

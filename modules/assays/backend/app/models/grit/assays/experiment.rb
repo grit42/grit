@@ -88,6 +88,10 @@ module Grit::Assays
       query
     end
 
+    def self.published(params = nil)
+      self.detailed.where("grit_core_publication_statuses__.name = ?", "Published")
+    end
+
     entity_crud_with read: [],
       create: [ "Administrator", "AssayAdministrator", "AssayUser" ],
       update: [ "Administrator", "AssayAdministrator", "AssayUser" ],
