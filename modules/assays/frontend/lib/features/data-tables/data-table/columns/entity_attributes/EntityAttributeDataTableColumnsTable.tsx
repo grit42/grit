@@ -59,6 +59,7 @@ export const EntityAttributeDataTableColumnsTable = ({
             "metadata_filters",
             "assay_data_sheet_column_id__name",
             "data_table_id__name",
+            "aggregation_method",
             "sort",
           ].includes(name as string),
       ),
@@ -114,11 +115,18 @@ export const EntityAttributeDataTableColumnsTable = ({
               queryClient.invalidateQueries({
                 queryKey: ["entities", "columns", "Grit::Assays::DataTableRow"],
               }),
-              await queryClient.invalidateQueries({
+              queryClient.invalidateQueries({
                 queryKey: [
                   "entities",
                   "data",
                   `grit/assays/data_tables/${dataTableId}/data_table_columns`,
+                ],
+              }),
+              queryClient.invalidateQueries({
+                queryKey: [
+                  "entities",
+                  "infiniteData",
+                  `grit/assays/data_tables/${dataTableId}/data_table_rows`,
                 ],
               }),
             ]);
