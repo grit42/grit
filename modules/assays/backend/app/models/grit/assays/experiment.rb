@@ -78,6 +78,9 @@ module Grit::Assays
 
     def self.detailed(params = nil)
       query = detailed_scope(params)
+        .joins("JOIN grit_assays_assay_types grit_assays_assay_types__ on grit_assays_assay_types__.id = grit_assays_assay_models__.assay_type_id")
+        .select("grit_assays_assay_types__.id as assay_type_id")
+        .select("grit_assays_assay_types__.name as assay_type_id__name")
       AssayMetadataDefinition.all.each do |md|
         query = query
           .joins("LEFT OUTER JOIN #{ExperimentMetadatum.table_name} #{md.safe_name} ON #{md.safe_name}.assay_metadata_definition_id = #{md.id} AND #{md.safe_name}.experiment_id = #{self.table_name}.id")

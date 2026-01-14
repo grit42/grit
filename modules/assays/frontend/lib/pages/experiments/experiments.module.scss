@@ -50,5 +50,11 @@
 .modelForm {
   width: 100%;
   max-width: 960px;
-  // margin-inline: auto;
+}
+
+.experimentsTable {
+  grid-column-start: 2;
+  grid-column-end: -1;
+    grid-row-start: 1;
+  grid-row-end: -1;
 }
