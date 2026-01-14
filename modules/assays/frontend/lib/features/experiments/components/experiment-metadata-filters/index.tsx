@@ -110,7 +110,7 @@ const ExperimentMetadataFilters = ({
         }}
       >
         <h2>Metadata filters</h2>
-        {Object.keys(metadataFilters).length > 0 && (
+        {metadataFilters && Object.keys(metadataFilters).length > 0 && (
           <Button color="primary" onClick={() => setMetadataFilters({})}>
             Clear
           </Button>
