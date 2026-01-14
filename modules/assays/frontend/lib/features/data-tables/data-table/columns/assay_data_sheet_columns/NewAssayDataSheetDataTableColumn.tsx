@@ -146,6 +146,8 @@ const NewAssayDataSheetDataTableColumn = () => {
             aggregation_method: AGGREGATE_METHODS_FOR_DATA_TYPE(
               data?.data_type_id__name as string | undefined,
             )[0]?.value,
+            experiment_ids: [],
+            metadata_filters: {}
           } as Partial<DataTableColumnData>)
         : null,
     [data],
