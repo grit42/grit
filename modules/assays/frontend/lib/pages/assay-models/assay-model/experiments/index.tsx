@@ -83,7 +83,6 @@ const ExperimentsTable = () => {
     <div className={styles.container}>
       <Table
         className={styles.experimentsTable}
-        header="Experiments"
         getRowId={getRowId}
         headerActions={
           canCreateExperiment ? (

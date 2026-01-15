@@ -25,12 +25,12 @@ const ITEMS = [
     label: "Experiments",
   },
   {
-    identifier: "metadata",
-    label: "Metadata",
-  },
-  {
     identifier: "data-sheets",
     label: "Data sheets",
+  },
+  {
+    identifier: "metadata",
+    label: "Metadata",
   },
 ];
 

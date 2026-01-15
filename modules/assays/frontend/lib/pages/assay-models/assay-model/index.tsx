@@ -21,9 +21,9 @@ import { Button, ErrorPage, Spinner } from "@grit42/client-library/components";
 import { useAssayModel } from "../../../queries/assay_models";
 import AssayModel from "./AssayModel";
 import AssayModelExperiments from "./experiments";
+import AssayModelDataSheets from "./data-sheets";
+import AssayModelMetadata from "./metadata";
 
-const Metadata = () => <h1>Metadata</h1>;
-const DataSheets = () => <h1>DataSheets</h1>;
 
 const AssayModelPage = () => {
   const { assay_model_id } = useParams() as { assay_model_id: string };
@@ -44,8 +44,8 @@ const AssayModelPage = () => {
     <Routes>
       <Route element={<AssayModel />}>
         <Route path={"experiments/*"} element={<AssayModelExperiments />} />
-        <Route path={"metadata/*"} element={<Metadata />} />
-        <Route path={"data-sheets/*"} element={<DataSheets />} />
+        <Route path={"metadata/*"} element={<AssayModelMetadata />} />
+        <Route path={"data-sheets/*"} element={<AssayModelDataSheets />} />
         <Route path="*" element={<Navigate to="experiments" replace />} />
       </Route>
     </Routes>
