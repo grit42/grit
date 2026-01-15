@@ -22,7 +22,7 @@ interface CompoundCVData extends EntityData {
   assay_id: number;
   assay_id__name: string;
   unit_id: number;
-  unit_id__name: string | null;
+  unit_id__abbreviation: string | null;
 }
 
 const CompoundCVResultsTable = ({ compound }: { compound: CompoundData }) => {
@@ -70,7 +70,7 @@ const CompoundCVResultsTable = ({ compound }: { compound: CompoundData }) => {
       unique: false,
     },
     {
-      name: "assay_data_sheet_column_id__unit_name",
+      name: "unit_id__abbreviation",
       display_name: "Unit",
       default_hidden: false,
       required: false,
@@ -83,7 +83,7 @@ const CompoundCVResultsTable = ({ compound }: { compound: CompoundData }) => {
         column: "unit_id",
         primary_key: "id",
         primary_key_type: "integer",
-        display_column: "name",
+        display_column: "abbreviation",
         display_column_type: "string",
       }
     },
