@@ -55,11 +55,11 @@ const CompoundCV = () => {
       </Surface>
       <Surface style={{ width: "100%", height: "100%" }}>
         <div className={styles.resultsTableContainer}>
-        {compound && <CompoundCVResultsTable compound={compound} />}
+          {compound && <CompoundCVResultsTable compound={compound} />}
         </div>
       </Surface>
     </div>
-  )
+  );
 };
 
 const CompoundCVPage = () => {
