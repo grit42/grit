@@ -1,66 +1,93 @@
 @use "@grit42/client-library/theme.scss";
 
-
 .topContainer {
-  overflow-y: visible;
-  position: relative;
-  z-index: 2;
+  height: 100vh;
   display: grid;
   gap: calc(theme.$spacing * 1);
+  overflow: hidden;
+  grid-template-columns: 500px 1fr;
+  grid-template-rows: auto auto 1fr;
 
-
-  grid-template-columns: 1fr 3fr;
-  grid-template-rows: auto auto auto;
   grid-template-areas:
-    "a"
-    "b"
-    "bottom";
+    "molViewer       ResultsTable"
+    "generalInfo   ResultsTable"
+    "calculatedProps     ResultsTable";
 
-  @media screen and (min-width: 960px) {
-    grid-template-columns: 1fr 3fr;
-    grid-template-areas:
-      "a b"
-      "bottom bottom";
-    grid-template-rows: auto 1fr;
-    align-items: stretch;
-  }
-
-  .moleculeContainer {
-    grid-area: a;
-    top: 0;
-    align-self: stretch;
-    min-height: 0;
-  }
-
-  .tabsContainer     {
-    display: flex;
-    flex-direction: row;
-    grid-area: b;
-    top: 0;
-    align-self: stretch;
-    overflow: auto;
-    min-height: 0;
-  }
-
-  .bottomContainer {
-    position: relative;
-    z-index: 1;
-    grid-area: bottom;
-    display: grid;
-    gap: calc(theme.$spacing * 1);
-
+  @media screen and (max-width: 960px) {
     grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto auto;
     grid-template-areas:
-      "c"
-      "d";
-
-    @media screen and (min-width: 960px) {
-      grid-template-columns: 3fr 2fr;
-      grid-template-areas: "c d";
-      align-items: stretch; // start
-    }
+      "molViewer"
+      "generalInfo"
+      "calculatedProps"
+      "ResultsTable";
   }
+  grid-template-areas:
+    "leftSide       ResultsTable"
+    "leftSide   ResultsTable"
+    "leftSide     ResultsTable";
 
-  .tableContainer { grid-area: c; }
-  .plotContainer  { grid-area: d; }
+  @media screen and (max-width: 960px) {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto auto;
+    grid-template-areas:
+      "leftSide"
+      "leftSide"
+      "leftSide"
+      "ResultsTable";
+  }
+}
+
+.leftSideContainer {
+  grid-area: leftSide;
+  min-height: 0;
+  padding-bottom: calc(theme.$spacing * 1);
+}
+
+.resultsTableContainer {
+  grid-area: ResultsTable;
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.section {
+  margin-bottom: calc(theme.$spacing * 1);
+}
+
+.sectionHeader {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  text-align: left;
+  padding: calc(theme.$spacing * 0.5) 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.sectionList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sectionListItem {
+  padding: calc(theme.$spacing * 0.25) 0;
+  text-align: left;
+}
+
+.sectionLabel {
+  font-weight: 500;
+}
+
+.sectionValue {
+  display: inline-block;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
