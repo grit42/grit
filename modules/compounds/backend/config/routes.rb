@@ -17,7 +17,4 @@ Grit::Compounds::Engine.routes.draw do
       post :molecule_exists
     end
   end
-  resources :compounds, only: [] do
-    get :assays, on: :member
-  end
 end
