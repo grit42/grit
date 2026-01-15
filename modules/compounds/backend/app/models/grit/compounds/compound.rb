@@ -233,7 +233,7 @@ module Grit::Compounds
         {
           name: "hba",
           display_name: "Hydrogen Bond Acceptor Count",
-          type: "decimal",
+          type: "integer",
           limit: nil,
           required: false,
           unique: false,
@@ -246,7 +246,7 @@ module Grit::Compounds
         {
           name: "hbd",
           display_name: "Hydrogen Bond Donor Count",
-          type: "decimal",
+          type: "integer",
           limit: nil,
           required: false,
           unique: false,
@@ -317,8 +317,8 @@ module Grit::Compounds
         .select("grit_compounds_molecules__.molformula as molformula")
         .select("grit_compounds_molecules__.inchi as inchi")
         .select("grit_compounds_molecules__.inchikey as inchikey")
-        .select("grit_compounds_molecules__.hba as hba")
-        .select("grit_compounds_molecules__.hbd as hbd")
+        .select("CAST(grit_compounds_molecules__.hba as integer) as hba")
+        .select("CAST(grit_compounds_molecules__.hbd as integer) as hbd")
         .joins("LEFT OUTER JOIN grit_compounds_compound_types grit_compounds_compound_types__ ON grit_compounds_compounds.compound_type_id = grit_compounds_compound_types__.id")
         .joins("LEFT OUTER JOIN grit_core_origins grit_core_origins__ ON grit_compounds_compounds.origin_id = grit_core_origins__.id")
         .joins("LEFT OUTER JOIN grit_compounds_molecules_compounds grit_compounds_molecules_compounds__ ON grit_compounds_compounds.id = grit_compounds_molecules_compounds__.compound_id")
@@ -384,8 +384,8 @@ module Grit::Compounds
       .select("grit_compounds_molecules__.molformula as molformula")
       .select("grit_compounds_molecules__.inchi as inchi")
       .select("grit_compounds_molecules__.inchikey as inchikey")
-      .select("grit_compounds_molecules__.hba as hba")
-      .select("grit_compounds_molecules__.hbd as hbd")
+      .select("CAST(grit_compounds_molecules__.hba as integer) as hba")
+      .select("CAST(grit_compounds_molecules__.hbd as integer) as hbd")
       .joins("LEFT OUTER JOIN grit_compounds_compound_types grit_compounds_compound_types__ ON grit_compounds_compounds.compound_type_id = grit_compounds_compound_types__.id")
       .joins("LEFT OUTER JOIN grit_core_origins grit_core_origins__ ON grit_compounds_compounds.origin_id = grit_core_origins__.id")
       .joins("LEFT OUTER JOIN grit_compounds_molecules_compounds grit_compounds_molecules_compounds__ ON grit_compounds_compounds.id = grit_compounds_molecules_compounds__.compound_id")
@@ -434,7 +434,8 @@ module Grit::Compounds
       .select("experiments.name as experiment_id__name")
       .select("assays.id as assay_id")
       .select("assays.name as assay_id__name")
-      .select("units.name as assay_data_sheet_column_id__unit_name")
+      .select("units.id as unit_id")
+      .select("units.abbreviation as unit_id__abbreviation")
       .joins("join grit_assays_experiment_data_sheet_values target_values on target_values.experiment_data_sheet_record_id = grit_assays_experiment_data_sheet_values.experiment_data_sheet_record_id")
       .joins("join grit_assays_assay_data_sheet_columns target_data_sheet_columns on target_values.assay_data_sheet_column_id = target_data_sheet_columns.id")
       .joins("join grit_core_data_types data_types on data_types.id = target_data_sheet_columns.data_type_id")
