@@ -16,17 +16,37 @@
  * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import AssayForm from "./AssayForm";
-import AssaysTable from "./AssaysTable";
-import { Route, Routes } from "react-router-dom";
+import styles from "./sideBar.module.scss";
+import { classnames } from "@grit42/client-library/utils";
 
-const AssaysAdministrationPage = () => {
+const SidebarItem = ({
+  label,
+  identifier,
+  active,
+  onClick,
+}: {
+  label: string;
+  identifier: string;
+  active: boolean;
+  onClick: (id: string) => void;
+}) => {
   return (
-    <Routes>
-      <Route index element={<AssaysTable />} />
-      <Route path="/:assay_id" element={<AssayForm />} />
-    </Routes>
+    <div className={styles.sidebarItem} onClick={() => onClick(identifier)}>
+      <div
+        className={classnames(styles.sidebarItemText, {
+          [styles.active]: active,
+        })}
+      >
+        {label}
+      </div>
+    </div>
   );
 };
 
-export default AssaysAdministrationPage;
+const Sidebar = ({ children }: React.PropsWithChildren) => {
+  return <div className={styles.sidebar}>{children}</div>;
+};
+
+Sidebar.Item = SidebarItem;
+
+export default Sidebar;

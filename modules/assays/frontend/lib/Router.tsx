@@ -19,7 +19,7 @@
 import { AuthGuard } from "@grit42/core";
 import { lazy } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
-const LazyAssaysPage = lazy(() => import("./pages/assays"));
+const LazyAssayModelsPage = lazy(() => import("./pages/assay-models"));
 const LazyExperimentsPage = lazy(() => import("./pages/experiments"));
 const LazyDataTablesPage = lazy(() => import("./features/data-tables/pages"));
 const LazyAssaySettingsPage = lazy(() => import("./pages/assays/settings"));
@@ -27,7 +27,7 @@ const LazyAssaySettingsPage = lazy(() => import("./pages/assays/settings"));
 const Router = () => {
   return (
     <Routes>
-      <Route path="assays/*">
+      <Route path="assay-models/*">
         <Route
           path="settings/*"
           element={
@@ -40,7 +40,7 @@ const Router = () => {
           path="*"
           element={
             <AuthGuard>
-              <LazyAssaysPage />
+              <LazyAssayModelsPage />
             </AuthGuard>
           }
         ></Route>
@@ -61,7 +61,7 @@ const Router = () => {
           </AuthGuard>
         }
       />
-      <Route path="*" element={<Navigate to="assays" replace />} />
+      <Route path="*" element={<Navigate to="assay-models" replace />} />
     </Routes>
   );
 };

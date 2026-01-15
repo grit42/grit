@@ -72,7 +72,7 @@ const ExperimentTabs = ({ experiment }: { experiment: ExperimentData }) => {
     setSelectedTab(
       tabs.findIndex(({ url }) => tab === url || `sheets/${tab}` === url),
     );
-  }, [tab]);
+  }, [tab, tabs]);
 
   const handleTabChange = (index: number) => {
     navigate(tabs[index].url);

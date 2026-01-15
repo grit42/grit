@@ -23,7 +23,7 @@ const Meta: ModuleMeta = {
   navItems: [
     {
       name: "Assays",
-      path: "/assays/assays",
+      path: "/assays/assay-models",
     },
     {
       name: "Experiments",

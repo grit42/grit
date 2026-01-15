@@ -176,11 +176,11 @@ const ExperimentForm = ({
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const assay_id = searchParams.has("assay_id")
-    ? Number(searchParams.get("assay_id"))
+  const assay_model_id = searchParams.has("assay_model_id")
+    ? Number(searchParams.get("assay_model_id"))
     : undefined;
   const [formData, setFormData] = useState<Partial<ExperimentData>>({
-    assay_id,
+    assay_model_id,
     ...experiment,
   });
 

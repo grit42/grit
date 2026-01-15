@@ -310,6 +310,7 @@ const Experiments = () => {
     isError: isExperimentColumnError,
     error: assayTypeColumnError,
   } = useExperimentColumns();
+  
   if (isExperimentColumnLoading) return <Spinner />;
   if (isExperimentColumnError)
     return <ErrorPage error={assayTypeColumnError} />;
