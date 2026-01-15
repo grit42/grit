@@ -206,7 +206,9 @@ module Grit::Core::GritEntityController
 
     def destroy
       klass = controller_path.classify.constantize
-      klass.where(id: params[:ids].split(",")).destroy_all
+      ids = params[:id] if params[:id] != "destroy"
+      ids = params[:ids].split(",") if params[:id] == "destroy"
+      klass.where(id: ids).destroy_all
       render json: { success: true }
     rescue StandardError => e
       render json: { success: false, errors: e.to_s }, status: :internal_server_error

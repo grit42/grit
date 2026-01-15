@@ -35,6 +35,7 @@ const LazyCompoundSynonymsPage = lazy(
 const LazyCompoundCVPage = lazy(
   () => import("./pages/compounds/[id]/compound-cv"),
 )
+const LazyCompoundSettingsPage = lazy(() => import("./pages/compounds/settings"));
 
 const Router = () => {
   return (
@@ -62,6 +63,15 @@ const Router = () => {
         <Route path="compound-cv" element={<LazyCompoundCVPage />} />
         <Route index path="*" element={<Navigate to="details" replace />} />
       </Route>
+
+      <Route
+        path="settings/*"
+        element={
+          <AuthGuard>
+            <LazyCompoundSettingsPage />
+          </AuthGuard>
+        }
+      />
     </Routes>
   );
 };
