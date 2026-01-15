@@ -93,7 +93,7 @@ const AssayModelsTable = ({ selectedTypes }: AssayModelsTableProps) => {
       headerActions={
         canCrud && (
           <Link to="/assays/assay-models/settings/assay-models">
-            <Button color="secondary">Manage</Button>
+            <Button>Manage assay models</Button>
           </Link>
         )
       }

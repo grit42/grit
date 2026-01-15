@@ -23,7 +23,7 @@ import {
   useAssayDataSheetDefinitionFields,
   useAssayDataSheetDefinitions,
 } from "../../../../queries/assay_data_sheet_definitions";
-import EditDataSheet from "./EditDataSheet";
+import DataSheet from "./DataSheet";
 import DataSheetTabs from "./DataSheetTabs";
 
 const AssayModelDataSheets = () => {
@@ -55,7 +55,7 @@ const AssayModelDataSheets = () => {
       <Route element={<DataSheetTabs sheetDefinitions={data} />}>
         <Route
           path=":sheet_id/*"
-          element={<EditDataSheet assayModelId={assay_model_id} />}
+          element={<DataSheet assayModelId={assay_model_id} />}
         />
         <Route
           path="*"

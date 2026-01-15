@@ -38,7 +38,7 @@ const AssayModel = () => {
         width: "100%",
         height: "100%",
         overflow: "auto",
-        gap: "calc(var(--spacing) * 2) calc(var(--spacing) * 4)",
+        gap: "calc(var(--spacing) * 4)",
         marginInline: "auto",
       }}
     >

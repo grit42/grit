@@ -22,13 +22,24 @@ import {
 } from "../../../../queries/assay_data_sheet_columns";
 import { Table, useSetupTableState } from "@grit42/table";
 import { useTableColumns } from "@grit42/core/utils";
-import styles from "../assayModel.module.scss";
+import styles from "./dataSheets.module.scss";
 
 const DataSheetColumnsTable = ({ sheetId }: { sheetId: string }) => {
-  const { data: columns } = useAssayDataSheetColumnColumns();
+  const { data: columns } = useAssayDataSheetColumnColumns(undefined, {
+    select: (data) =>
+      data.filter(
+        ({ name }) =>
+          !["assay_data_sheet_definition_id__name", "sort"].includes(
+            name as string,
+          ),
+      ),
+  });
   const tableColumns = useTableColumns(columns ?? []);
 
   const tableState = useSetupTableState("sheet-columns", tableColumns, {
+    settings: {
+      disableVisibilitySettings: true,
+    },
     saveState: {
       columnSizing: true,
     },
@@ -46,7 +57,7 @@ const DataSheetColumnsTable = ({ sheetId }: { sheetId: string }) => {
       header="Columns"
       tableState={tableState}
       loading={isLoading}
-      className={styles.typesTable}
+      className={styles.dataSheetColumnsTable}
       data={data ?? []}
     />
   );

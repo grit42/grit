@@ -1,15 +1,10 @@
+@use "@grit42/client-library/theme.scss";
+
 .container {
   display: grid;
   grid-template-columns:  1fr min-content;
   grid-template-rows: 1fr;
   overflow: auto;
   height: 100%;
-  gap: var(--spacing);
-}
-
-.experimentsTable {
-  grid-column-start: 1;
-  grid-column-end: 2;
-  grid-row-start: 1;
-  grid-row-end: -1;
+  gap: calc(theme.$spacing * 2);
 }

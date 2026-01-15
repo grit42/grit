@@ -1,14 +1,12 @@
-import { Button, ErrorPage, Spinner } from "@grit42/client-library/components";
+import { ErrorPage, Spinner } from "@grit42/client-library/components";
 import { Filter, Table, useSetupTableState } from "@grit42/table";
 import { useTableColumns } from "@grit42/core/utils";
-import { EntityData, useHasRoles } from "@grit42/core";
+import { EntityData } from "@grit42/core";
 import {
   useExperimentColumns,
   useInfiniteExperiments,
 } from "../../../../queries/experiments";
 import {
-  createSearchParams,
-  Link,
   useNavigate,
   useParams,
 } from "react-router-dom";
@@ -21,11 +19,6 @@ const getRowId = (data: EntityData) => data.id.toString();
 
 const ExperimentsTable = () => {
   const { assay_model_id } = useParams() as { assay_model_id: string };
-  const canCreateExperiment = useHasRoles([
-    "Administrator",
-    "AssayAdministrator",
-    "AssayUser",
-  ]);
 
   const [metadataFilters, setMetadataFilters] = useLocalStorage(
     `assay-model_${assay_model_id}_experiment-metadata-filters`,
@@ -82,22 +75,7 @@ const ExperimentsTable = () => {
   return (
     <div className={styles.container}>
       <Table
-        className={styles.experimentsTable}
         getRowId={getRowId}
-        headerActions={
-          canCreateExperiment ? (
-            <Link
-              to={{
-                pathname: "/assays/experiments/new",
-                search: createSearchParams({
-                  assay_model_id: assay_model_id,
-                }).toString(),
-              }}
-            >
-              <Button color="secondary">New</Button>
-            </Link>
-          ) : undefined
-        }
         onRowClick={({ id }) => navigate(`/assays/experiments/${id}/details`)}
         tableState={tableState}
         data={flatData}

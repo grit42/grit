@@ -20,7 +20,7 @@ import { useEffect, useState } from "react";
 import { Outlet, useMatch, useNavigate } from "react-router-dom";
 import { ErrorPage, Tabs } from "@grit42/client-library/components";
 import { AssayDataSheetDefinitionData } from "../../../../queries/assay_data_sheet_definitions";
-import styles from "../assayModel.module.scss";
+import styles from "./dataSheets.module.scss";
 
 interface Props {
   sheetDefinitions: AssayDataSheetDefinitionData[];
