@@ -1,7 +1,6 @@
 services:
   db:
     image: "grit42com/pgrdkit:16.3-2024.03.1"
-    # user: "999:999"
     network_mode: "host"
     environment:
       - POSTGRES_USER=${POSTGRES_USER:-grit}
