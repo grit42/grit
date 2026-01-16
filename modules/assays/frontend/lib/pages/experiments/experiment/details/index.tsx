@@ -38,7 +38,6 @@ import {
 import { classnames } from "@grit42/client-library/utils";
 import { useAssayModelMetadata } from "../../../../queries/assay_model_metadata";
 import { useAssayMetadataDefinitions } from "../../../../queries/assay_metadata_definitions";
-import { toSafeIdentifier } from "@grit42/core/utils";
 
 const ExperimentMetadataForm = ({
   form,
@@ -70,7 +69,7 @@ const ExperimentMetadataForm = ({
   const fields = useMemo(() => {
     return metadataDefinitions?.map(
       (md): EntityFormFieldDef => ({
-        name: toSafeIdentifier(md.name),
+        name: md.safe_name,
         display_name: md.name,
         type: "entity",
         required: modelMetadata?.some(
