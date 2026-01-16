@@ -26,6 +26,7 @@ const AssayModelMetadataTable = ({
     settings: {
       disableColumnReorder: true,
       disableVisibilitySettings: true,
+      disableFilters: true,
     },
   });
 

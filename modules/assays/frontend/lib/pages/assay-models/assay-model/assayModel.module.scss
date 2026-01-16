@@ -12,28 +12,19 @@
 }
 
 .assayModelHeader {
-  margin-inline: auto;
-  grid-column-start: 1;
-  grid-column-end: -1;
   display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: calc(theme.$spacing * 2);
-  width: 100%;
+  flex-direction: column;
+  gap: theme.$spacing;
 
-  .name {
-    color: theme.$palette-secondary-main;
-  }
-
-  .manageButton {
-    margin-inline-start: auto;
-  }
-
-  .description {
+  .nameAndStatus {
+    display: flex;
+    gap: theme.$spacing;
+    align-items: baseline;
     flex-basis: 100%;
-    color: theme.$palette-background-contrast-text;
-    grid-column-start: 1;
-    grid-column-end: -1;
+
+    h2 {
+      color: theme.$palette-secondary-main;
+    }
   }
 }
 

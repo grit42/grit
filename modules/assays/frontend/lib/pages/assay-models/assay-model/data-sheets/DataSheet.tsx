@@ -59,8 +59,11 @@ const DataSheet = ({ assayModelId }: { assayModelId: string }) => {
 
   return (
     <div className={styles.dataSheet}>
-      {sheetDefinition.result && <em>Results</em>}
-      <p>{sheetDefinition.description}</p>
+      <p>
+        {sheetDefinition.description?.length
+          ? sheetDefinition.description
+          : "No description provided"}
+      </p>
       <DataSheetColumnsTable sheetId={sheet_id ?? ""} />
     </div>
   );

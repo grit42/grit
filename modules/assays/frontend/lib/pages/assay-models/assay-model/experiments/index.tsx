@@ -33,6 +33,12 @@ const ExperimentsTable = () => {
   const tableState = useSetupTableState(
     `assay-model_${assay_model_id}_experiments-list`,
     tableColumns,
+    {
+      settings: {
+        disableVisibilitySettings: true,
+        disableFilters: true
+      }
+    }
   );
 
   const filters = useMemo(

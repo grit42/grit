@@ -16,14 +16,66 @@
  * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Outlet, useParams } from "react-router-dom";
+import {
+  createSearchParams,
+  Outlet,
+  useMatch,
+  useNavigate,
+  useParams,
+} from "react-router-dom";
 import { useAssayModel } from "../../../queries/assay_models";
-import AssayModelSidebar from "./AssayModelSidebar";
+import AssayModelTabs from "./AssayModelTabs";
 import AssayModelHeader from "./AssayModelHeader";
+import { useEffect, useMemo } from "react";
+import { useToolbar } from "@grit42/core/Toolbar";
+import CogIcon from "@grit42/client-library/icons/Cog";
+import Circle1NewIcon from "@grit42/client-library/icons/Circle1New";
 
 const AssayModel = () => {
+  const navigate = useNavigate();
   const { assay_model_id } = useParams() as { assay_model_id: string };
+  const experimentsMatch = useMatch(
+    "/assays/assay-models/:assay_model_id/experiments",
+  );
+  const match = useMatch("/assays/assay-models/:assay_model_id/*");
+
   const { data: assay_model } = useAssayModel(assay_model_id);
+
+  const registerToolbarActions = useToolbar();
+
+  const manageLink = useMemo(() => {
+    if (!experimentsMatch && match?.params["*"]) {
+      return `/assays/assay-models/settings/assay-models/${assay_model_id}/${match.params["*"]}`;
+    }
+    return `/assays/assay-models/settings/assay-models/${assay_model_id}/details`;
+  }, [assay_model_id, experimentsMatch, match]);
+
+  useEffect(() => {
+    return registerToolbarActions({
+      actions: [
+        {
+          id: "NEW",
+          icon: <Circle1NewIcon />,
+          label: "New experiment",
+          requiredRoles: ["Administrator", "AssayAdministrator", "AssayUser"],
+          onClick: () =>
+            navigate({
+              pathname: "/assays/experiments/new",
+              search: createSearchParams({
+                assay_model_id: assay_model_id,
+              }).toString(),
+            }),
+        },
+        {
+          id: "ASSAY_MODEL_SETTINGS",
+          icon: <CogIcon />,
+          label: "Manage assay model",
+          requiredRoles: ["Administrator", "AssayAdministrator"],
+          onClick: () => navigate(manageLink),
+        },
+      ],
+    });
+  }, [assay_model_id, manageLink, navigate, registerToolbarActions]);
 
   if (!assay_model) {
     return null;
@@ -34,17 +86,27 @@ const AssayModel = () => {
       style={{
         display: "grid",
         gridTemplateRows: "min-content 1fr",
-        gridTemplateColumns: "auto 1fr",
+        gridTemplateColumns: "1fr",
         width: "100%",
         height: "100%",
         overflow: "auto",
         gap: "calc(var(--spacing) * 4)",
-        marginInline: "auto",
       }}
     >
       <AssayModelHeader />
-      <AssayModelSidebar />
-      <Outlet />
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr",
+          gridTemplateRows: "min-content 1fr",
+          width: "100%",
+          height: "100%",
+          overflow: "auto",
+        }}
+      >
+        <AssayModelTabs />
+        <Outlet />
+      </div>
     </div>
   );
 };

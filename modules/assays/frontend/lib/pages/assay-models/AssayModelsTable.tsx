@@ -22,10 +22,11 @@ import {
   useAssayModelColumns,
   useInfinitePublishedAssayModels,
 } from "../../queries/assay_models";
-import { useMemo } from "react";
-import { EntityData, useHasRoles } from "@grit42/core";
-import { Link, useNavigate } from "react-router-dom";
-import { Button } from "@grit42/client-library/components";
+import { useEffect, useMemo } from "react";
+import { EntityData } from "@grit42/core";
+import { useNavigate } from "react-router-dom";
+import { useToolbar } from "@grit42/core/Toolbar";
+import CogIcon from "@grit42/client-library/icons/Cog";
 
 const getRowId = (data: EntityData) => data.id.toString();
 
@@ -39,7 +40,6 @@ const DEFAULT_COLUMN_SIZES = {
 } as const;
 
 const AssayModelsTable = ({ selectedTypes }: AssayModelsTableProps) => {
-  const canCrud = useHasRoles(["Administrator", "AssayAdministrator"]);
   const navigate = useNavigate();
 
   const { data: columns } = useAssayModelColumns(undefined, {
@@ -85,18 +85,27 @@ const AssayModelsTable = ({ selectedTypes }: AssayModelsTableProps) => {
     [data],
   );
 
+  const registerToolbarActions = useToolbar();
+
+  useEffect(() => {
+    return registerToolbarActions({
+      actions: [
+        {
+          id: "ASSAY_MODEL_SETTINGS",
+          icon: <CogIcon />,
+          label: "Manage assay models",
+          requiredRoles: ["Administrator", "AssayAdministrator"],
+          onClick: () => navigate("/assays/assay-models/settings/assay-models"),
+        },
+      ],
+    });
+  }, [navigate, registerToolbarActions]);
+
   return (
     <Table
       disableFooter
       header="Assay models"
       getRowId={getRowId}
-      headerActions={
-        canCrud && (
-          <Link to="/assays/assay-models/settings/assay-models">
-            <Button>Manage assay models</Button>
-          </Link>
-        )
-      }
       onRowClick={(row) => navigate(row.id)}
       tableState={tableState}
       data={flatData}
