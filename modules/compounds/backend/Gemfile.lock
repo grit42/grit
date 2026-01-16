@@ -1,4 +1,12 @@
 PATH
+  remote: ../../assays/backend
+  specs:
+    grit-assays (0.8.0)
+      grit-core (~> 0.8.0)
+      rails (~> 7.2, >= 7.2.2)
+      rubyzip (~> 2.3, >= 2.3.2)
+
+PATH
   remote: ../../core/backend
   specs:
     grit-core (0.8.0)
@@ -10,6 +18,7 @@ PATH
   remote: .
   specs:
     grit-compounds (0.8.0)
+      grit-assays (~> 0.8.0)
       grit-core (~> 0.8.0)
       rails (~> 7.2, >= 7.2.2)
 
@@ -241,6 +250,7 @@ GEM
       rubocop-performance
       rubocop-rails
     ruby-progressbar (1.13.0)
+    rubyzip (2.4.1)
     scrypt (3.1.0)
       ffi-compiler (>= 1.0, < 2.0)
       rake (~> 13)
@@ -265,6 +275,7 @@ PLATFORMS
   x86_64-linux
 
 DEPENDENCIES
+  grit-assays!
   grit-compounds!
   grit-core!
   pg

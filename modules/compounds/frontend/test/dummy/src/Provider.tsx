@@ -21,13 +21,16 @@ import { FormInputProvider } from "@grit42/form";
 import { ColumnTypeDefProvider } from "@grit42/table";
 import CoreProvider from "@grit42/core/provider";
 import CompoundsProvider from "@grit42/compounds/provider";
+import AssaysProvider from "@grit42/assays/provider";
 
 const Provider = ({ children }: React.PropsWithChildren) => {
   return (
     <FormInputProvider>
       <ColumnTypeDefProvider>
         <CoreProvider>
-          <CompoundsProvider>{children}</CompoundsProvider>
+          <AssaysProvider>
+            <CompoundsProvider>{children}</CompoundsProvider>
+          </AssaysProvider>
         </CoreProvider>
       </ColumnTypeDefProvider>
     </FormInputProvider>
