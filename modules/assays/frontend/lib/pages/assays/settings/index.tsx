@@ -28,14 +28,9 @@ import { Tabs } from "@grit42/client-library/components";
 import { useEffect, useState } from "react";
 import AssayTypesAdministrationPage from "./assay-types";
 import AssayModelsAdministrationPage from "./assay-models";
-import AssaysAdministrationPage from "./assays";
 import AssayMetadataDefinitionsAdministrationPage from "./assay-metadata-definitions";
 
 const TABS = [
-  {
-    url: "assays",
-    label: "Assays",
-  },
   {
     url: "assay-models",
     label: "Models",
@@ -53,7 +48,7 @@ const TABS = [
 const AssaysAdministration = () => {
   const navigate = useNavigate();
 
-  const match = useMatch("/assays/assays/settings/:childPath/*");
+  const match = useMatch("/assays/assay-models/settings/:childPath/*");
   const childPath = match?.params.childPath ?? "origins";
 
   const [selectedTab, setSelectedTab] = useState(
@@ -128,7 +123,6 @@ const AssaysAdministrationTab = () => {
           path="/assay-models/*"
           element={<AssayModelsAdministrationPage />}
         />
-        <Route path="/assays/*" element={<AssaysAdministrationPage />} />
         <Route path="*" element={<Navigate to={TABS[0].url} replace />} />
       </Route>
     </Routes>

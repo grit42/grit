@@ -23,8 +23,9 @@ import {
   useEntityData,
   useEntityDatum,
   useEntityFields,
+  useInfiniteEntityData,
 } from "@grit42/core";
-import { UseQueryOptions, URLParams } from "@grit42/api";
+import { UseQueryOptions, URLParams, UndefinedInitialDataInfiniteOptions, PaginatedEndpointSuccess } from "@grit42/api";
 import { Filter, SortingState } from "@grit42/table";
 import { FormFieldDef } from "@grit42/form";
 
@@ -55,6 +56,8 @@ export interface AssayModelData extends EntityData {
   description: string | null;
   assay_type_id: number;
   assay_type_id__name: string;
+  publication_status_id: number;
+  publication_status_id__name: string;
 }
 
 export const useAssayModels = (
@@ -80,6 +83,22 @@ export const usePublishedAssayModels = (
   queryOptions: Partial<UseQueryOptions<AssayModelData[], string>> = {},
 ) => {
   return useEntityData<AssayModelData>(
+    "grit/assays/assay_models",
+    sort,
+    filter,
+    {...params, scope: "published" },
+    queryOptions,
+  );
+};
+
+
+export const useInfinitePublishedAssayModels = (
+  sort?: SortingState,
+  filter?: Filter[],
+  params: URLParams = {},
+  queryOptions: Partial<UndefinedInitialDataInfiniteOptions<PaginatedEndpointSuccess<AssayModelData[]>, string>> = {},
+) => {
+  return useInfiniteEntityData<AssayModelData>(
     "grit/assays/assay_models",
     sort,
     filter,

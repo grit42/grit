@@ -25,8 +25,15 @@ module Grit::Assays
 
     display_column "name"
 
-    def safe_name
-      self.name.downcase.underscore.gsub(/[^a-z0-9]/, "_").gsub(/^(\d)/, '__\1')
+    validates :safe_name, format: { with: /\A[a-z_]{2}/, message: "should start with two lowercase letters or underscores" }
+    validates :safe_name, format: { with: /\A[a-z0-9_]*\z/, message: "should contain only lowercase letters, numbers and underscores" }
+    validate :safe_name_not_conflict
+
+    def safe_name_not_conflict
+      return unless self.safe_name_changed?
+      if Grit::Assays::AssayMetadataDefinition.respond_to?(self.safe_name)
+        errors.add("safe_name", "cannot be used as a safe name")
+      end
     end
 
     def self.by_assay_model(params)

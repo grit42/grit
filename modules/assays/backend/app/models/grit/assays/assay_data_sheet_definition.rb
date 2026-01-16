@@ -34,7 +34,7 @@ module Grit::Assays
     before_destroy :destroy_from_existing_experiments
 
     def add_to_existing_experiments
-      Grit::Assays::Experiment.detailed.joins("JOIN grit_assays_assay_models grit_assays_assay_models__ on grit_assays_assay_models__.id = grit_assays_assays__.assay_model_id and grit_assays_assay_models__.id = #{self.assay_model_id}").each do |experiment|
+      Grit::Assays::Experiment.where(assay_model_id: assay_model_id).each do |experiment|
         Grit::Assays::ExperimentDataSheet.create!({ experiment_id: experiment.id, assay_data_sheet_definition_id: self.id })
       end
     end

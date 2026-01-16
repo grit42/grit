@@ -1,0 +1,9 @@
+@use "@grit42/client-library/theme.scss";
+
+.assayModelsPage {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  height: 100%;
+  width: 100%;
+  gap: calc(theme.$spacing * 2);
+}

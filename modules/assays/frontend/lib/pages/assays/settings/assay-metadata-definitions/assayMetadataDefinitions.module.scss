@@ -1,3 +1,5 @@
+@use "@grit42/client-library/theme.scss";
+
 .container {
   display: flex;
   flex-direction: column;
@@ -17,4 +19,29 @@
   flex: 1;
   width: 100%;
   max-width: 960px;
+}
+
+.formError {
+  grid-column-start: 1;
+  grid-column-end: -1;
+  color: theme.$palette-error-main;
+}
+
+.formFields {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: calc(theme.$spacing * 2);
+}
+
+.formField {
+  display: block;
+  width: 100%;
+}
+
+.formFieldSuggestion {
+  cursor: pointer;
+  width: max-content;
+  color: theme.$palette-background-contrast-text;
+  opacity: 0.75;
+  padding-top: theme.$spacing;
 }

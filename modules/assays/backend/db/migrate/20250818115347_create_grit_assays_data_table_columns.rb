@@ -14,7 +14,8 @@ class CreateGritAssaysDataTableColumns < ActiveRecord::Migration[7.2]
       t.string :aggregation_method
       t.string :source_type, null: false, default: "assay_data_sheet_column"
       t.string :entity_attribute_name
-      t.jsonb :pivots, default: []
+      t.jsonb :metadata_filters, default: {}
+      t.bigint :experiment_ids, array: true, default: []
 
       t.unique_constraint([:safe_name,:data_table_id], name: "unique_safe_name_data_table_id", deferrable: :deferred)
     end

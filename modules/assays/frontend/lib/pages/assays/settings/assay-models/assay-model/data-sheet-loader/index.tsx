@@ -45,7 +45,7 @@ const DataSheetLoader = ({ assayModel }: { assayModel: AssayModelData }) => {
           />
         }
       />
-      <Route index element={<Navigate to="files" />} />
+      <Route index element={<Navigate to="files" replace />} />
     </Routes>
   );
 };

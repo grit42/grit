@@ -69,7 +69,7 @@ const DataSheets = () => {
         />
         <Route
           path="*"
-          element={<Navigate to={data[0]?.id.toString() ?? "new"} />}
+          element={<Navigate to={data[0]?.id.toString() ?? "new"} replace />}
         />
       </Route>
     </Routes>

@@ -7,6 +7,7 @@ class CreateGritAssaysAssayMetadataDefinitions < ActiveRecord::Migration[7.2]
       t.string :updated_by, limit: 30
       t.datetime :updated_at
       t.string :name, null: false, index: { unique: true }
+      t.string :safe_name, null: false, index: { unique: true }, limit: 30
       t.text :description
 
       t.references :vocabulary, null: false, foreign_key: { name: "assays_assay_metadata_definitions_assays_vocabulary_id_fkey", to_table: "grit_assays_vocabularies" }

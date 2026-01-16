@@ -97,7 +97,8 @@ export const AssayDataSheetDataTableColumnsTable = ({ dataTableId }: Props) => {
             "data_table_id__name",
             "entity_attribute_name",
             "source_type",
-            "pivots",
+            "experiment_ids",
+            "metadata_filters",
             "sort",
           ].includes(f.name as string),
       ),
@@ -154,11 +155,18 @@ export const AssayDataSheetDataTableColumnsTable = ({ dataTableId }: Props) => {
               queryClient.invalidateQueries({
                 queryKey: ["entities", "columns", "Grit::Assays::DataTableRow"],
               }),
-              await queryClient.invalidateQueries({
+              queryClient.invalidateQueries({
                 queryKey: [
                   "entities",
                   "data",
                   `grit/assays/data_tables/${dataTableId}/data_table_columns`,
+                ],
+              }),
+              queryClient.invalidateQueries({
+                queryKey: [
+                  "entities",
+                  "infiniteData",
+                  `grit/assays/data_tables/${dataTableId}/data_table_rows`,
                 ],
               }),
             ]);

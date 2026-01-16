@@ -6,12 +6,11 @@ class CreateGritAssaysExperiments < ActiveRecord::Migration[7.2]
       t.datetime :created_at, null: false, default: -> { 'CURRENT_TIMESTAMP' }
       t.string :updated_by, limit: 30
       t.datetime :updated_at
-      t.string :name, null: false, index: true
+      t.string :name, null: false, index: { unique: true }
       t.text :description
       t.json :plots, default: {}
 
-      t.references :assay, null: false, foreign_key: { name: "assays_experiments_assays_assay_id_fkey", to_table: "grit_assays_assays" }
-      t.index [ :name, :assay_id ], unique: true, name: "uniq_experiment_name_per_assay"
+      t.references :assay_model, null: false, foreign_key: { name: "assays_experiments_assays_assay_model_id_fkey", to_table: "grit_assays_assay_models" }
     end
 
     execute "CREATE TRIGGER manage_stamps_grit_assays_experiments BEFORE INSERT OR UPDATE ON public.grit_assays_experiments FOR EACH ROW EXECUTE FUNCTION public.manage_stamps();"
