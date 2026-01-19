@@ -25,6 +25,10 @@
   &.withAssayInfo {
     grid-template-columns: max-content 1fr 1fr;
   }
+
+  &.withMetadataTemplates {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 .dataSheets {

@@ -38,13 +38,45 @@ import {
 import { classnames } from "@grit42/client-library/utils";
 import { useAssayModelMetadata } from "../../../../queries/assay_model_metadata";
 import { useAssayMetadataDefinitions } from "../../../../queries/assay_metadata_definitions";
+import ExperimentMetadataTemplatesTableWrapper from "./ExperimentMetadataTemplatesTable";
+import { ExperimentMetadataTemplateData } from "../../../../queries/experiment_metadata_templates";
 
-const ExperimentMetadataForm = ({
-  form,
-}: {
-  form: any;
-}) => {
-  const assay_model_id = useStore<any>(form.baseStore, ({values}) => values.assay_model_id)
+const ExperimentMetadataTemplates = ({ form }: { form: any }) => {
+  const {
+    data: metadataDefinitions,
+    isLoading: isMetadataDefinitionsLoading,
+    isError: isMetadataDefinitionsError,
+    error: metadataDefinitionsError,
+  } = useAssayMetadataDefinitions();
+
+  if (isMetadataDefinitionsLoading) {
+    return <Spinner />;
+  }
+
+  if (isMetadataDefinitionsError || !metadataDefinitions) {
+    return <ErrorPage error={metadataDefinitionsError} />;
+  }
+
+  const setValues = (template: ExperimentMetadataTemplateData) => {
+    metadataDefinitions.forEach(({ safe_name }) => {
+      if (template[safe_name]) {
+        form.setFieldValue(safe_name, template[safe_name]);
+      }
+    });
+  };
+
+  return (
+    <ExperimentMetadataTemplatesTableWrapper
+      onRowClick={({ original }) => setValues(original)}
+    />
+  );
+};
+
+const ExperimentMetadataForm = ({ form }: { form: any }) => {
+  const assay_model_id = useStore<any>(
+    form.baseStore,
+    ({ values }) => values.assay_model_id,
+  );
 
   const {
     data: modelMetadata,
@@ -67,32 +99,34 @@ const ExperimentMetadataForm = ({
   } = useAssayMetadataDefinitions();
 
   const fields = useMemo(() => {
-    return metadataDefinitions?.map(
-      (md): EntityFormFieldDef => ({
-        name: md.safe_name,
-        display_name: md.name,
-        type: "entity",
-        required: modelMetadata?.some(
-          (mm) => mm.assay_metadata_definition_id == md.id,
-        ),
-        default: null,
-        entity: {
-          name: md.name,
-          full_name: "Grit::Core::VocabularyItem",
-          path: `grit/core/vocabularies/${md.vocabulary_id}/vocabulary_items`,
-          primary_key: "id",
-          primary_key_type: "integer",
-          column: md.name,
-          display_column: "name",
-          display_column_type: "string",
-        },
-        disabled: false,
-      }),
-    ).sort((a,b) => {
-      if (a.required && !b.required) return -1;
-      if (!a.required && b.required) return 1;
-      return a.name.localeCompare(b.name);
-    });
+    return metadataDefinitions
+      ?.map(
+        (md): EntityFormFieldDef => ({
+          name: md.safe_name,
+          display_name: md.name,
+          type: "entity",
+          required: modelMetadata?.some(
+            (mm) => mm.assay_metadata_definition_id == md.id,
+          ),
+          default: null,
+          entity: {
+            name: md.name,
+            full_name: "Grit::Core::VocabularyItem",
+            path: `grit/core/vocabularies/${md.vocabulary_id}/vocabulary_items`,
+            primary_key: "id",
+            primary_key_type: "integer",
+            column: md.name,
+            display_column: "name",
+            display_column_type: "string",
+          },
+          disabled: false,
+        }),
+      )
+      .sort((a, b) => {
+        if (a.required && !b.required) return -1;
+        if (!a.required && b.required) return 1;
+        return a.name.localeCompare(b.name);
+      });
   }, [modelMetadata, metadataDefinitions]);
 
   if (isMetadataDefinitionsLoading) {
@@ -136,7 +170,8 @@ const ExperimentMetadataForm = ({
             gridColumnEnd: -1,
           }}
         >
-          <Spinner size={14}/><span>Loading required metadata for the selected assay model...</span>
+          <Spinner size={14} />
+          <span>Loading required metadata for the selected assay model...</span>
         </div>
       )}
       {fields?.map((f) => (
@@ -294,6 +329,7 @@ const ExperimentForm = ({
     <div
       className={classnames(styles.experiment, {
         [styles.withAssayInfo]: !!experiment.assay_id,
+        [styles.withMetadataTemplates]: !experiment.assay_id,
       })}
     >
       <Surface className={styles.modelForm}>
@@ -306,7 +342,7 @@ const ExperimentForm = ({
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "1fr 1fr",
+              gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
               gridAutoRows: "max-content",
               gap: "calc(var(--spacing) * 2)",
               paddingBottom: "calc(var(--spacing) * 2)",
@@ -331,8 +367,22 @@ const ExperimentForm = ({
             >
               <FormField form={form} fieldDef={assay_model_id_field} />
             </div>
-            <FormField form={form} fieldDef={name_field} />
-            <FormField form={form} fieldDef={publication_status_id_field} />
+            <div
+              style={{
+                gridColumnStart: 1,
+                gridColumnEnd: -1,
+              }}
+            >
+              <FormField form={form} fieldDef={name_field} />
+            </div>
+            <div
+              style={{
+                gridColumnStart: 1,
+                gridColumnEnd: -1,
+              }}
+            >
+              <FormField form={form} fieldDef={publication_status_id_field} />
+            </div>
             <div
               style={{
                 gridColumnStart: 1,
@@ -354,6 +404,7 @@ const ExperimentForm = ({
           />
         </Form>
       </Surface>
+      {!experiment.id && <ExperimentMetadataTemplates form={form} />}
     </div>
   );
 };

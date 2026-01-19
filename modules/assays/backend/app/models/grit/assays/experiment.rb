@@ -26,6 +26,11 @@ module Grit::Assays
 
     display_column "name"
 
+    entity_crud_with read: [],
+      create: [ "Administrator", "AssayAdministrator", "AssayUser" ],
+      update: [ "Administrator", "AssayAdministrator", "AssayUser" ],
+      destroy: [ "Administrator", "AssayAdministrator", "AssayUser" ]
+
     def set_metadata_values(params)
       success = true
       experiment_metadata = self.experiment_metadata
@@ -94,11 +99,6 @@ module Grit::Assays
     def self.published(params = nil)
       self.detailed.where("grit_core_publication_statuses__.name = ?", "Published")
     end
-
-    entity_crud_with read: [],
-      create: [ "Administrator", "AssayAdministrator", "AssayUser" ],
-      update: [ "Administrator", "AssayAdministrator", "AssayUser" ],
-      destroy: [ "Administrator", "AssayAdministrator", "AssayUser" ]
 
     def self.entity_properties(**args)
       @entity_properties ||= self.db_properties.filter { |p| p[:name] != "plots" }

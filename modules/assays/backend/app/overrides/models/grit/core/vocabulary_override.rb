@@ -18,6 +18,7 @@
 
 Grit::Core::Vocabulary.class_eval do
   before_destroy :check_data_sheet_column
+  has_many :experiment_metadata_template_metadata, dependent: :destroy, class_name: "Grit::Assays::ExperimentMetadataTemplateMetadatum"
 
   def check_data_sheet_column
     if Grit::Assays::AssayDataSheetColumn.unscoped.where(data_type_id: self.data_type.id).count.positive?

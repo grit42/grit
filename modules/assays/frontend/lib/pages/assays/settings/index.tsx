@@ -29,6 +29,7 @@ import { useEffect, useState } from "react";
 import AssayTypesAdministrationPage from "./assay-types";
 import AssayModelsAdministrationPage from "./assay-models";
 import AssayMetadataDefinitionsAdministrationPage from "./assay-metadata-definitions";
+import ExperimentMetadataTemplatesAdministrationPage from "./experiment-metadata-templates";
 
 const TABS = [
   {
@@ -38,6 +39,10 @@ const TABS = [
   {
     url: "assay-metadata-definitions",
     label: "Metadata",
+  },
+  {
+    url: "experiment-metadata-templates",
+    label: "Metadata templates",
   },
   {
     url: "assay-types",
@@ -114,6 +119,10 @@ const AssaysAdministrationTab = () => {
         <Route
           path="/assay-metadata-definitions/*"
           element={<AssayMetadataDefinitionsAdministrationPage />}
+        />
+        <Route
+          path="/experiment-metadata-templates/*"
+          element={<ExperimentMetadataTemplatesAdministrationPage />}
         />
         <Route
           path="/assay-types/*"

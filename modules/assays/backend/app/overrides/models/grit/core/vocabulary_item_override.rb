@@ -18,6 +18,7 @@
 
 Grit::Core::VocabularyItem.class_eval do
   before_destroy :check_experiment_data_sheet_record_values
+  has_many :experiment_metadata_template_metadata, dependent: :destroy, class_name: "Grit::Assays::ExperimentMetadataTemplateMetadatum"
 
   def check_experiment_data_sheet_record_values
     used_as_value = Grit::Assays::AssayDataSheetColumn.unscoped

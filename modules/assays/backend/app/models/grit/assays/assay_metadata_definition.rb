@@ -22,6 +22,7 @@ module Grit::Assays
 
     belongs_to :vocabulary, class_name: "Grit::Core::Vocabulary"
     has_many :assay_model_metadata, dependent: :destroy
+    has_many :experiment_metadata_template_metadata, dependent: :destroy
 
     display_column "name"
 
