@@ -25,6 +25,7 @@ import {
 } from "../../../../queries/assay_data_sheet_definitions";
 import DataSheet from "./DataSheet";
 import DataSheetTabs from "./DataSheetTabs";
+import { useAssayDataSheetColumnColumns } from "../../../../queries/assay_data_sheet_columns";
 
 const AssayModelDataSheets = () => {
   const { assay_model_id } = useParams() as { assay_model_id: string };
@@ -45,8 +46,9 @@ const AssayModelDataSheets = () => {
     isError: isAssayDataSheetDefinitionFieldsError,
     error: assayDataSheetDefinitionFieldsError,
   } = useAssayDataSheetDefinitionFields();
+  const { isLoading: isDataSheetColumnColumnsLoading } = useAssayDataSheetColumnColumns();
 
-  if (isAssayDataSheetDefinitionFieldsLoading || isLoading) return <Spinner />;
+  if (isAssayDataSheetDefinitionFieldsLoading || isLoading || isDataSheetColumnColumnsLoading) return <Spinner />;
   if (isAssayDataSheetDefinitionFieldsError || isError || !fields || !data)
     return <ErrorPage error={assayDataSheetDefinitionFieldsError ?? error} />;
 
