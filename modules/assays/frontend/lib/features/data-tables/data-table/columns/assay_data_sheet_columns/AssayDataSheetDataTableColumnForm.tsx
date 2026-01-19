@@ -49,18 +49,32 @@ const ExperimentsFilter = ({
   assayModelId: string | number;
   form: ReactFormExtendedApi<Partial<DataTableColumnData>, undefined>;
 }) => {
-  const metadata_filters = useStore(form.baseStore, ({values}) => values.metadata_filters)
+  const metadata_filters = useStore(
+    form.baseStore,
+    ({ values }) => values.metadata_filters,
+  );
   return (
     <>
       <form.Field
         name="metadata_filters"
         children={(field) => (
-          <ExperimentMetadataFilters
-            assayModelId={assayModelId}
-            metadataFilters={field.state.value as Record<string, number[]>}
-            setMetadataFilters={field.handleChange}
-            identifier="metadata_definition_id"
-          />
+          <div
+            style={{
+              height: "100%",
+              width: "100%",
+              marginTop: "var(--spacing)",
+              display: "grid",
+              gridTemplateColumns: "1fr",
+              gridTemplateRows: "1fr",
+            }}
+          >
+            <ExperimentMetadataFilters
+              assayModelId={assayModelId}
+              metadataFilters={field.state.value as Record<string, number[]>}
+              setMetadataFilters={field.handleChange}
+              identifier="metadata_definition_id"
+            />
+          </div>
         )}
       />
       <form.Field
@@ -258,7 +272,8 @@ const AssayDataSheetDataTableColumnForm = ({
             <p>
               Aggregate results from selected experiments.
               <br />
-              No selection includes all experiments matching the metadata filters.
+              No selection includes all experiments matching the metadata
+              filters.
             </p>
           </div>
           <ExperimentsFilter

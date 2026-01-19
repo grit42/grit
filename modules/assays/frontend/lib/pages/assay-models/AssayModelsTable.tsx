@@ -16,7 +16,13 @@
  * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Filter, Table, useSetupTableState } from "@grit42/table";
+import {
+  Filter,
+  Filters,
+  GritColumnDef,
+  Table,
+  useSetupTableState,
+} from "@grit42/table";
 import { useTableColumns } from "@grit42/core/utils";
 import {
   useAssayModelColumns,
@@ -67,7 +73,7 @@ const AssayModelPropFilters = ({
         ) => AssayModelPropertiesFiltersValue),
   ) => void;
 }) => {
-    const [assayModelName, setAssayModelName] = useState(filters.name ?? "");
+  const [assayModelName, setAssayModelName] = useState(filters.name ?? "");
 
   const setAssayTypeFilter = (v: number | number[] | null) =>
     setFilters((prev = {}) => {
@@ -103,7 +109,6 @@ const AssayModelPropFilters = ({
     }
   }, [assayModelName, filters.name, setNameFilter]);
 
-
   return (
     <Surface
       style={{
@@ -112,6 +117,7 @@ const AssayModelPropFilters = ({
         gap: "calc(var(--spacing) * 2)",
         gridAutoRows: "max-content",
         overflow: "auto",
+        marginTop: "var(--spacing)"
       }}
     >
       <div
@@ -182,6 +188,7 @@ const AssayModelsTable = () => {
     settings: {
       disableVisibilitySettings: true,
       disableColumnReorder: true,
+      disableFilters: true,
     },
   });
 
@@ -241,19 +248,38 @@ const AssayModelsTable = () => {
       style={{
         display: "grid",
         gridTemplateColumns: "min-content 1fr",
-        gridTemplateRows: "1fr",
+        gridTemplateRows: "min-content 1fr",
         overflow: "auto",
         height: "100%",
         gap: "var(--spacing)",
       }}
     >
+      <h2>Assay models</h2>
+      <div style={{ marginInlineStart: "auto" }}>
+        <Filters
+          columns={
+            tableColumns
+              .filter(({ id }) => tableState.columnVisibility[id] ?? true)
+              .sort((a, b) => {
+                const indexA = tableState.columnOrder.indexOf(a.id as string);
+                const indexB = tableState.columnOrder.indexOf(b.id as string);
+
+                if (indexA < indexB) return -1;
+                if (indexA > indexB) return 1;
+
+                return 0;
+              }) as GritColumnDef[]
+          }
+          filters={tableState.filters}
+          setFilters={tableState.setFilters}
+        />
+      </div>
       <AssayModelPropFilters
         filters={propFilters}
         setFilters={setPropFilters}
       />
       <Table
         disableFooter
-        header="Assay models"
         getRowId={getRowId}
         onRowClick={(row) => navigate(row.id)}
         tableState={tableState}
@@ -267,7 +293,7 @@ const AssayModelsTable = () => {
         noDataMessage={
           isError
             ? error
-            : filters.some(({active}) => active)
+            : filters.some(({ active }) => active)
             ? "All models are filtered"
             : "No published assay models"
         }

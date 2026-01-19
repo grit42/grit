@@ -1,11 +1,19 @@
 import {
   Button,
+  ButtonGroup,
   ErrorPage,
   Input,
   Spinner,
   Surface,
 } from "@grit42/client-library/components";
-import { Filter, Table, useSetupTableState } from "@grit42/table";
+import {
+  Filter,
+  Filters,
+  GritColumnDef,
+  GritColumnVisibility,
+  Table,
+  useSetupTableState,
+} from "@grit42/table";
 import { useTableColumns } from "@grit42/core/utils";
 import {
   EntityData,
@@ -141,6 +149,7 @@ const ExperimentPropFilters = ({
         gap: "calc(var(--spacing) * 2)",
         gridAutoRows: "max-content",
         overflow: "auto",
+        marginTop: "var(--spacing)",
       }}
     >
       <div
@@ -226,7 +235,12 @@ const ExperimentsTable = () => {
 
   const tableColumns = useTableColumns(columns);
 
-  const tableState = useSetupTableState("experiments-list", tableColumns);
+  const tableState = useSetupTableState("experiments-list", tableColumns, {
+    settings: {
+      disableFilters: true,
+      disableVisibilitySettings: true,
+    },
+  });
 
   const filters = useMemo(
     (): Filter[] => [
@@ -282,17 +296,53 @@ const ExperimentsTable = () => {
     filters,
   );
 
+  const filterableColumns = useMemo(
+    () =>
+      tableColumns
+        .filter(({ id }) => tableState.columnVisibility[id] ?? true)
+        .sort((a, b) => {
+          const indexA = tableState.columnOrder.indexOf(a.id as string);
+          const indexB = tableState.columnOrder.indexOf(b.id as string);
+
+          if (indexA < indexB) return -1;
+          if (indexA > indexB) return 1;
+
+          return 0;
+        }) as GritColumnDef[],
+    [tableColumns, tableState.columnOrder, tableState.columnVisibility],
+  );
+
   return (
     <div
       style={{
         display: "grid",
         gridTemplateColumns: "min-content 1fr",
-        gridTemplateRows: "min-content 1fr",
+        gridTemplateRows: "min-content min-content 1fr",
         overflow: "auto",
         height: "100%",
         gap: "var(--spacing)",
       }}
     >
+      <h2>Experiments</h2>
+      <ButtonGroup style={{ marginInlineStart: "auto" }}>
+        {canCreateExperiment && (
+          <Link to="new">
+            <Button color="secondary">New</Button>
+          </Link>
+        )}
+
+        <Filters
+          columns={filterableColumns}
+          filters={tableState.filters}
+          setFilters={tableState.setFilters}
+        />
+        <GritColumnVisibility
+          columnOrder={tableState.columnOrder}
+          columns={tableColumns as GritColumnDef[]}
+          columnVisibility={tableState.columnVisibility}
+          setColumnVisibility={tableState.setColumnVisibility}
+        />
+      </ButtonGroup>
       <ExperimentPropFilters
         filters={propFilters}
         setFilters={setPropFilters}
@@ -303,15 +353,7 @@ const ExperimentsTable = () => {
       />
       <Table
         className={styles.experimentsTable}
-        header="Experiments"
         getRowId={getRowId}
-        headerActions={
-          canCreateExperiment ? (
-            <Link to="new">
-              <Button color="secondary">New</Button>
-            </Link>
-          ) : undefined
-        }
         onRowClick={({ id }) => navigate(`${id}/details`)}
         tableState={tableState}
         data={data}
