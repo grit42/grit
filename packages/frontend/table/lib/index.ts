@@ -25,3 +25,8 @@ export { default as useSetupTableState } from "./features/table-state/useSetupTa
 export * from "./types";
 export * from "./features/column-types";
 export * from "./features/filters";
+export {
+  ColumnVisibility as GritColumnVisibility,
+  getDefaultColumnVisibility,
+  useColumnVisiblity,
+} from "./features/column-visibility";

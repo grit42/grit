@@ -17,19 +17,25 @@
  */
 
 import styles from "./columnVisibility.module.scss";
-import { ColumnOrderState } from "../../index";
-import { useCallback, useMemo, useState } from "react";
+import { ColumnOrderState, VisibilityState } from "../../index";
+import { SetStateAction, useCallback, useMemo, useState } from "react";
 import { classnames } from "@grit42/client-library/utils";
-import useInternalTableState from "../table-state/useInternalTableState";
 import PreviewIcon from "@grit42/client-library/icons/Preview";
 import NoPreviewIcon from "@grit42/client-library/icons/NoPreview";
 import { Button, Input, Popover } from "@grit42/client-library/components";
 import { GritColumnDef, GritGroupColumnDef } from "../../types";
 import { getLeafColumnsWithGroupLabels } from "../../utils";
 
-const updateColumnOrderOnToggle = false;
+interface ColumnVisibilityProps {
+  columns: GritColumnDef<unknown, unknown>[];
+  columnOrder: ColumnOrderState;
+  columnVisibility: VisibilityState;
+  setColumnVisibility: React.Dispatch<SetStateAction<VisibilityState>>;
+}
 
 interface ControlProps<T> {
+  columnVisibility: VisibilityState;
+  setColumnVisibility: React.Dispatch<SetStateAction<VisibilityState>>;
   column: GritColumnDef<T, any>;
   searchValue: string;
 }
@@ -44,23 +50,14 @@ const columnSearch = (column: GritColumnDef<any, any>, searchValue: string) => {
 const ColumnVisibilityControl = <T,>({
   column,
   searchValue,
+  columnVisibility,
+  setColumnVisibility
 }: ControlProps<T>) => {
-  const { columnVisibility, setColumnVisibility, setColumnOrder } =
-    useInternalTableState<T>();
 
   const shown = columnVisibility[column.id!] ?? true;
 
   const toggleColumn = useCallback(() => {
     const columnId = column.id as keyof T;
-
-    if (updateColumnOrderOnToggle) {
-      setColumnOrder((order) => {
-        return [
-          ...order.filter((x) => x != columnId),
-          columnId,
-        ] as ColumnOrderState;
-      });
-    }
 
     setColumnVisibility((columns: typeof columnVisibility) => {
       return {
@@ -68,7 +65,7 @@ const ColumnVisibilityControl = <T,>({
         [columnId]: !shown,
       } as typeof columnVisibility;
     });
-  }, [column, shown, setColumnVisibility, setColumnOrder]);
+  }, [column, shown, setColumnVisibility]);
 
   if (
     column.enableGrouping &&
@@ -95,7 +92,9 @@ const ColumnVisibilityControl = <T,>({
             }
 
             return (
-              <ColumnVisibilityControl
+              <ColumnVisibilityControl<T>
+                columnVisibility={columnVisibility}
+                setColumnVisibility={setColumnVisibility}
                 key={subColumn.id}
                 column={subColumn}
                 searchValue={searchValue}
@@ -128,9 +127,7 @@ const ColumnVisibilityControl = <T,>({
   );
 };
 
-const ColumnVisibility = () => {
-  const { columns, columnOrder, columnVisibility, setColumnVisibility } =
-    useInternalTableState();
+const ColumnVisibility = ({columnVisibility, setColumnVisibility, columns, columnOrder}: ColumnVisibilityProps) => {
   const [columnSearchValue, setColumnSearchValue] = useState("");
 
   const hiddenColumns = useMemo(
@@ -138,7 +135,10 @@ const ColumnVisibility = () => {
     [columnVisibility],
   );
 
-  const flatColumns = useMemo(() => getLeafColumnsWithGroupLabels(columns), [columns])
+  const flatColumns = useMemo(
+    () => getLeafColumnsWithGroupLabels(columns),
+    [columns],
+  );
 
   const popoverContent = (
     <div className={classnames(styles.columnPopover)}>
@@ -167,6 +167,8 @@ const ColumnVisibility = () => {
             return (
               <ColumnVisibilityControl
                 key={column.id}
+                columnVisibility={columnVisibility}
+                setColumnVisibility={setColumnVisibility}
                 column={column}
                 searchValue={columnSearchValue}
               />

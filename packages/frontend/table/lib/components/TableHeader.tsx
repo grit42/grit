@@ -58,6 +58,7 @@ const TableHeader = <T,>({
     setColumnOrder,
     columns,
     columnVisibility,
+    setColumnVisibility,
   } = useInternalTableState<GritTableState<T>>();
 
   const tableMenuItems = useMemo(() => {
@@ -123,7 +124,14 @@ const TableHeader = <T,>({
                   />
                 </div>
               )}
-              {!settings?.disableVisibilitySettings && <ColumnVisibility />}
+              {!settings?.disableVisibilitySettings && (
+                <ColumnVisibility
+                  columns={columns as GritColumnDef[]}
+                  columnOrder={columnOrder}
+                  columnVisibility={columnVisibility}
+                  setColumnVisibility={setColumnVisibility}
+                />
+              )}
             </>
           )}
         </ButtonGroup>
