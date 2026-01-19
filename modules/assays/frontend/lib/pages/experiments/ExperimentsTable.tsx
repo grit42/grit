@@ -19,10 +19,11 @@ import {
 } from "../../queries/experiments";
 import { Link, useNavigate } from "react-router-dom";
 import { useLocalStorage } from "@grit42/client-library/hooks";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ExperimentMetadataFilters } from "../../features/experiments";
 import styles from "./experiments.module.scss";
 import { useAssayModels } from "../../queries/assay_models";
+import { useDebounceCallback } from "usehooks-ts";
 
 const getRowId = (data: EntityData) => data.id.toString();
 
@@ -68,6 +69,7 @@ const ExperimentPropFilters = ({
         ) => ExperimentPropertiesFiltersValue),
   ) => void;
 }) => {
+  const [experimentName, setExperimentName] = useState(filters.name ?? "");
   const { data: assayModels } = useAssayModels();
 
   const setAssayTypeFilter = (v: number | number[] | null) =>
@@ -110,16 +112,26 @@ const ExperimentPropFilters = ({
       }
     });
 
-  const setNameFilter = (v: string) =>
-    setFilters((prev = {}) => {
-      if (v?.length > 0) {
-        return { ...prev, name: v };
-      } else {
-        const newState = { ...prev };
-        delete newState.name;
-        return newState;
-      }
-    });
+  const setNameFilter = useDebounceCallback(
+    (v: string) =>
+      setFilters((prev = {}) => {
+        if (v?.length > 0) {
+          return { ...prev, name: v };
+        } else {
+          const newState = { ...prev };
+          delete newState.name;
+          return newState;
+        }
+      }),
+    250,
+  );
+
+  useEffect(() => {
+    if (experimentName !== filters.name) {
+      setNameFilter(experimentName);
+      return setNameFilter.cancel;
+    }
+  }, [experimentName, filters.name, setNameFilter]);
 
   return (
     <Surface
@@ -140,7 +152,13 @@ const ExperimentPropFilters = ({
       >
         <h2>Properties filters</h2>
         {Object.keys(filters).length > 0 && (
-          <Button color="primary" onClick={() => setFilters({})}>
+          <Button
+            color="primary"
+            onClick={() => {
+              setExperimentName("");
+              setFilters({});
+            }}
+          >
             Clear
           </Button>
         )}
@@ -181,8 +199,8 @@ const ExperimentPropFilters = ({
         label="Experiment name"
         placeholder="Experiment name"
         type="string"
-        onChange={(e) => setNameFilter(e.target.value)}
-        value={filters.name ?? ""}
+        onChange={(e) => setExperimentName(e.target.value)}
+        value={experimentName}
       />
     </Surface>
   );
@@ -214,7 +232,7 @@ const ExperimentsTable = () => {
     (): Filter[] => [
       ...tableState.filters,
       {
-        active: true,
+        active: !!propFilters.assay_type_id?.length,
         column: "assay_type_id",
         id: "assay_type_id",
         operator: "in_list",
@@ -224,7 +242,7 @@ const ExperimentsTable = () => {
         value: propFilters.assay_type_id,
       },
       {
-        active: true,
+        active: !!propFilters.assay_model_id?.length,
         column: "assay_model_id",
         id: "assay_model_id",
         operator: "in_list",
@@ -234,7 +252,7 @@ const ExperimentsTable = () => {
         value: propFilters.assay_model_id,
       },
       {
-        active: true,
+        active: !!propFilters.name?.length,
         column: "name",
         id: "name",
         operator: "contains",
@@ -298,7 +316,13 @@ const ExperimentsTable = () => {
         tableState={tableState}
         data={data}
         loading={isLoading}
-        noDataMessage={isError ? error : undefined}
+        noDataMessage={
+          isError
+            ? error
+            : filters.some(({ active }) => active)
+            ? "All experiments are filtered"
+            : "No experiments"
+        }
       />
     </div>
   );
@@ -310,7 +334,7 @@ const Experiments = () => {
     isError: isExperimentColumnError,
     error: assayTypeColumnError,
   } = useExperimentColumns();
-  
+
   if (isExperimentColumnLoading) return <Spinner />;
   if (isExperimentColumnError)
     return <ErrorPage error={assayTypeColumnError} />;

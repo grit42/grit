@@ -1,5 +1,5 @@
 import { Route, Routes } from "react-router-dom";
-import AssayModelsPage from "./AssayModelsPage";
+import AssayModelsPage from "./AssayModelsTable";
 import AssayModelPage from "./assay-model";
 
 const AssayModelsSection = () => {

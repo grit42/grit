@@ -22,16 +22,16 @@ const Meta: ModuleMeta = {
   rootRoute: "/assays",
   navItems: [
     {
-      name: "Assays",
-      path: "/assays/assay-models",
-    },
-    {
       name: "Experiments",
       path: "/assays/experiments",
     },
     {
       name: "Data Tables",
       path: "/assays/data_tables",
+    },
+    {
+      name: "Assay Models",
+      path: "/assays/assay-models",
     },
   ],
 };
