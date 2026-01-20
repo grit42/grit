@@ -61,6 +61,10 @@ const ExperimentMetadataTemplates = ({ form }: { form: any }) => {
     metadataDefinitions.forEach(({ safe_name }) => {
       if (template[safe_name]) {
         form.setFieldValue(safe_name, template[safe_name]);
+        form.setFieldMeta("safe_name", (prev: any) => ({
+          ...prev,
+          errorMap: {},
+        }));
       }
     });
   };

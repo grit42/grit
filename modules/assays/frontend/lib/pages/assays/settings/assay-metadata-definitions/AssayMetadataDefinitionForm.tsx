@@ -157,9 +157,13 @@ const AssayMetadataDefinitionForm = ({
                     <div className={styles.formFieldSuggestion}>
                       <em
                         role="button"
-                        onClick={() =>
-                          form.setFieldValue("safe_name", proposed_safe_name)
-                        }
+                        onClick={() => {
+                          form.setFieldValue("safe_name", proposed_safe_name);
+                          form.setFieldMeta("safe_name", (prev) => ({
+                            ...prev,
+                            errorMap: {},
+                          }));
+                        }}
                       >
                         Use "{proposed_safe_name}"
                       </em>
