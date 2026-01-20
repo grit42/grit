@@ -71,12 +71,6 @@ const AssayTypesTable = () => {
   const tableState = useSetupTableState(
     "admin-assay_types-list",
     tableColumns,
-    {
-      settings: {
-        disableColumnReorder: true,
-        disableVisibilitySettings: true,
-      },
-    },
   );
 
   return (

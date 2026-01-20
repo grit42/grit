@@ -46,7 +46,11 @@ const ExperimentDataSheetRecords = ({
 }: {
   dataSheet: ExperimentDataSheetData;
 }) => {
-  const canCrudRecord = useHasRoles(["Administrator", "AssayAdministrator", "AssayUser"])
+  const canCrudRecord = useHasRoles([
+    "Administrator",
+    "AssayAdministrator",
+    "AssayUser",
+  ]);
   const registerToolbarAction = useToolbar();
   const navigate = useNavigate();
   const { data: columns } = useExperimentDataSheetRecordColumns(dataSheet.id);
@@ -83,10 +87,10 @@ const ExperimentDataSheetRecords = ({
           },
         ],
         import: {
-          requiredRoles: ["Administrator", "AssayAdministrator", "AssayUser"]
-        }
+          requiredRoles: ["Administrator", "AssayAdministrator", "AssayUser"],
+        },
       }),
-    [dataSheet],
+    [dataSheet, navigate, registerToolbarAction],
   );
 
   return (
@@ -106,11 +110,15 @@ const ExperimentDataSheetRecords = ({
       <Table
         className={styles.table}
         headerActions={
-          canCrudRecord ? <Button onClick={() => navigate("records/new")}>New</Button> : undefined
+          canCrudRecord ? (
+            <Button onClick={() => navigate("records/new")}>New</Button>
+          ) : undefined
         }
         getRowId={getRowId}
         tableState={tableState}
-        onRowClick={canCrudRecord ? ({ id }) => navigate(`records/${id}`) : undefined}
+        onRowClick={
+          canCrudRecord ? ({ id }) => navigate(`records/${id}`) : undefined
+        }
         data={flatData}
         loading={isLoading}
         noDataMessage={isError ? error : undefined}

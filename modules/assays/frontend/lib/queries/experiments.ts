@@ -25,7 +25,12 @@ import {
   useEntityFields,
   useInfiniteEntityData,
 } from "@grit42/core";
-import { UseQueryOptions, URLParams, UndefinedInitialDataInfiniteOptions, PaginatedEndpointSuccess } from "@grit42/api";
+import {
+  UseQueryOptions,
+  URLParams,
+  UndefinedInitialDataInfiniteOptions,
+  PaginatedEndpointSuccess,
+} from "@grit42/api";
 import { Filter, SortingState } from "@grit42/table";
 import { FormFieldDef } from "@grit42/form";
 import { ExperimentDataSheetData } from "./experiment_data_sheet";
@@ -49,7 +54,7 @@ export const useExperimentFields = (
 ) => {
   return useEntityFields<FormFieldDef>(
     "Grit::Assays::Experiment",
-    {...params, experiment_id },
+    { ...params, experiment_id },
     queryOptions,
   );
 };
@@ -86,17 +91,33 @@ export const useExperiments = (
   );
 };
 
-
 export const useInfiniteExperiments = (
   sort?: SortingState,
   filter?: Filter[],
   params: URLParams = {},
-  queryOptions: Partial<UndefinedInitialDataInfiniteOptions<PaginatedEndpointSuccess<ExperimentData[]>, string>> = {},
+  queryOptions: Partial<
+    UndefinedInitialDataInfiniteOptions<
+      PaginatedEndpointSuccess<ExperimentData[]>,
+      string
+    >
+  > = {},
 ) => {
   return useInfiniteEntityData<ExperimentData>(
     "grit/assays/experiments",
     sort,
-    filter,
+    [
+      {
+        active: !!params.assay_model_id,
+        column: "assay_model_id",
+        id: "assay_model_id",
+        operator: "eq",
+        type: "integer",
+        value: params.assay_model_id,
+        property: "assay_model_id",
+        property_type: "integer",
+      },
+      ...(filter ?? []),
+    ],
     params,
     queryOptions,
   );
@@ -114,7 +135,6 @@ export const useExperiment = (
     queryOptions,
   );
 };
-
 
 export const usePublishedExperimentsOfModel = (
   assayModelId: string | number,

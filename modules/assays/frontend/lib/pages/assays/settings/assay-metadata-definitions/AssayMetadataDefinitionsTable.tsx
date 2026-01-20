@@ -67,13 +67,7 @@ const AssayMetadataDefinitionsTable = () => {
 
   const tableState = useSetupTableState(
     "admin-assay_metadata_definitions-list",
-    tableColumns,
-    {
-      settings: {
-        disableColumnReorder: true,
-        disableVisibilitySettings: true,
-      },
-    },
+    tableColumns
   );
 
   return (

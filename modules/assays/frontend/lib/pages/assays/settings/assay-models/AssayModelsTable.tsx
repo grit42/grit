@@ -67,19 +67,13 @@ const AssayModelsTable = () => {
   const tableState = useSetupTableState(
     "admin-assay_models-list",
     tableColumns,
-    {
-      settings: {
-        disableColumnReorder: true,
-        disableVisibilitySettings: true,
-      },
-    },
   );
 
   return (
     <Table
       header="Assay models"
       tableState={tableState}
-      headerActions={<Button onClick={navigateToNew}>New</Button>}
+      headerActions={<Button color="secondary" onClick={navigateToNew}>New</Button>}
       className={styles.modelsTable}
       data={assayModels}
       onRowClick={(row) => navigate(`${row.original.id}`)}

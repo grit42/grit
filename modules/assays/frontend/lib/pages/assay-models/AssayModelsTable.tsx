@@ -16,151 +16,15 @@
  * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import {
-  Filter,
-  Filters,
-  GritColumnDef,
-  Table,
-  useSetupTableState,
-} from "@grit42/table";
+import { Table, useSetupTableState } from "@grit42/table";
 import { useTableColumns } from "@grit42/core/utils";
 import {
   useAssayModelColumns,
   useInfinitePublishedAssayModels,
 } from "../../queries/assay_models";
-import { useEffect, useMemo, useState } from "react";
-import {
-  EntityData,
-  EntityFormFieldEntity,
-  EntitySelector,
-} from "@grit42/core";
+import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { useToolbar } from "@grit42/core/Toolbar";
-import CogIcon from "@grit42/client-library/icons/Cog";
-import { Button, Input, Surface } from "@grit42/client-library/components";
-import { useLocalStorage } from "@grit42/client-library/hooks";
-import { useDebounceCallback } from "usehooks-ts";
-
-const getRowId = (data: EntityData) => data.id.toString();
-
-const ASSAY_TYPE_ENTITY: EntityFormFieldEntity = {
-  name: "Assay type",
-  full_name: "Grit::Assays::AssayType",
-  path: `grit/assays/assay_types`,
-  primary_key: "id",
-  primary_key_type: "integer",
-  column: "assay_type_id__name",
-  display_column: "name",
-  display_column_type: "string",
-  multiple: true,
-};
-
-interface AssayModelPropertiesFiltersValue {
-  assay_type_id?: number[];
-  name?: string;
-}
-
-const AssayModelPropFilters = ({
-  filters,
-  setFilters,
-}: {
-  filters: AssayModelPropertiesFiltersValue;
-  setFilters: (
-    v:
-      | AssayModelPropertiesFiltersValue
-      | ((
-          prev: AssayModelPropertiesFiltersValue | undefined,
-        ) => AssayModelPropertiesFiltersValue),
-  ) => void;
-}) => {
-  const [assayModelName, setAssayModelName] = useState(filters.name ?? "");
-
-  const setAssayTypeFilter = (v: number | number[] | null) =>
-    setFilters((prev = {}) => {
-      const newState = { ...prev };
-      if (Array.isArray(v) && v.length > 0) {
-        newState.assay_type_id = v;
-      } else if (!Array.isArray(v) && v) {
-        newState.assay_type_id = [v];
-      } else {
-        delete newState.assay_type_id;
-      }
-      return newState;
-    });
-
-  const setNameFilter = useDebounceCallback(
-    (v: string) =>
-      setFilters((prev = {}) => {
-        if (v?.length > 0) {
-          return { ...prev, name: v };
-        } else {
-          const newState = { ...prev };
-          delete newState.name;
-          return newState;
-        }
-      }),
-    250,
-  );
-
-  useEffect(() => {
-    if (assayModelName !== filters.name) {
-      setNameFilter(assayModelName);
-      return setNameFilter.cancel;
-    }
-  }, [assayModelName, filters.name, setNameFilter]);
-
-  const activeFilters = Object.values(filters).some((v) => !!v?.length)
-
-  return (
-    <Surface
-      style={{
-        display: "grid",
-        gridTemplateColumns: "20vw",
-        gap: "calc(var(--spacing) * 2)",
-        gridAutoRows: "max-content",
-        overflow: "auto",
-        marginTop: "var(--spacing)",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <h2>Properties filters</h2>
-        {activeFilters && (
-          <Button
-            color="primary"
-            onClick={() => {
-              setAssayModelName("");
-              setFilters({ name: "", assay_type_id: [] });
-            }}
-          >
-            Clear
-          </Button>
-        )}
-      </div>
-      <EntitySelector
-        entity={ASSAY_TYPE_ENTITY}
-        onChange={setAssayTypeFilter}
-        onBlur={() => void 0}
-        label="Assay type"
-        value={filters.assay_type_id}
-        error=""
-        multiple
-      />
-      <Input
-        label="Assay model name"
-        placeholder="Assay model name"
-        type="string"
-        onChange={(e) => setAssayModelName(e.target.value)}
-        value={assayModelName}
-      />
-    </Surface>
-  );
-};
+import styles from "./assayModels.module.scss";
 
 const DEFAULT_COLUMN_SIZES = {
   name: 200,
@@ -181,126 +45,32 @@ const AssayModelsTable = () => {
 
   const tableColumns = useTableColumns(columns);
 
-  const [propFilters, setPropFilters] = useLocalStorage(
-    "assay-model-prop-filters",
-    {} as AssayModelPropertiesFiltersValue,
-  );
-
-  const tableState = useSetupTableState("assay-models-list", tableColumns, {
-    settings: {
-      disableVisibilitySettings: true,
-      disableColumnReorder: true,
-      disableFilters: true,
-    },
-  });
-
-  const filters = useMemo(
-    (): Filter[] => [
-      ...tableState.filters,
-      {
-        active: !!propFilters.assay_type_id?.length,
-        column: "assay_type_id",
-        id: "assay_type_id",
-        operator: "in_list",
-        property: "assay_type_id",
-        property_type: "integer",
-        type: "integer",
-        value: propFilters.assay_type_id,
-      },
-      {
-        active: !!propFilters.name?.length,
-        column: "name",
-        id: "name",
-        operator: "contains",
-        property: "name",
-        property_type: "string",
-        type: "name",
-        value: propFilters.name,
-      },
-    ],
-    [tableState.filters, propFilters.assay_type_id, propFilters.name],
-  );
+  const tableState = useSetupTableState("assay-models-list", tableColumns);
 
   const { data, isLoading, isError, error, fetchNextPage, isFetchingNextPage } =
-    useInfinitePublishedAssayModels(tableState.sorting, filters);
+    useInfinitePublishedAssayModels(tableState.sorting, tableState.filters);
 
   const flatData = useMemo(
     () => data?.pages.flatMap(({ data }) => data) ?? [],
     [data],
   );
 
-  const registerToolbarActions = useToolbar();
-
-  useEffect(() => {
-    return registerToolbarActions({
-      actions: [
-        {
-          id: "ASSAY_MODEL_SETTINGS",
-          icon: <CogIcon />,
-          label: "Manage assay models",
-          requiredRoles: ["Administrator", "AssayAdministrator"],
-          onClick: () => navigate("/assays/assay-models/settings/assay-models"),
-        },
-      ],
-    });
-  }, [navigate, registerToolbarActions]);
-
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "min-content 1fr",
-        gridTemplateRows: "min-content 1fr",
-        overflow: "auto",
-        height: "100%",
-        gap: "var(--spacing)",
+    <Table
+      disableFooter
+      className={styles.assayModelTable}
+      onRowClick={(row) => navigate(row.original.id.toString())}
+      tableState={tableState}
+      header="Assay models"
+      data={flatData}
+      loading={isLoading}
+      pagination={{
+        fetchNextPage,
+        isFetchingNextPage,
+        totalRows: data?.pages[0].total,
       }}
-    >
-      <h2>Assay models</h2>
-      <div style={{ marginInlineStart: "auto" }}>
-        <Filters
-          columns={
-            tableColumns
-              .filter(({ id }) => tableState.columnVisibility[id] ?? true)
-              .sort((a, b) => {
-                const indexA = tableState.columnOrder.indexOf(a.id as string);
-                const indexB = tableState.columnOrder.indexOf(b.id as string);
-
-                if (indexA < indexB) return -1;
-                if (indexA > indexB) return 1;
-
-                return 0;
-              }) as GritColumnDef[]
-          }
-          filters={tableState.filters}
-          setFilters={tableState.setFilters}
-        />
-      </div>
-      <AssayModelPropFilters
-        filters={propFilters}
-        setFilters={setPropFilters}
-      />
-      <Table
-        disableFooter
-        getRowId={getRowId}
-        onRowClick={(row) => navigate(row.id)}
-        tableState={tableState}
-        data={flatData}
-        loading={isLoading}
-        pagination={{
-          fetchNextPage,
-          isFetchingNextPage,
-          totalRows: data?.pages[0].total,
-        }}
-        noDataMessage={
-          isError
-            ? error
-            : filters.some(({ active }) => active)
-            ? "All models are filtered"
-            : "No published assay models"
-        }
-      />
-    </div>
+      noDataMessage={isError ? error : "No published assay models"}
+    />
   );
 };
 

@@ -77,12 +77,6 @@ const ExperimentMetadataTemplatesTable = ({
   const tableState = useSetupTableState<ExperimentMetadataTemplateData>(
     "admin-experiment_metadata_templates-list",
     tableColumns,
-    {
-      settings: {
-        disableColumnReorder: true,
-        disableVisibilitySettings: true,
-      },
-    },
   );
 
   return (

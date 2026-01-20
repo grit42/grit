@@ -7,3 +7,8 @@
   width: 100%;
   gap: calc(theme.$spacing * 2);
 }
+
+.assayModelTable {
+  width: fit-content;
+  margin-inline: auto;
+}
