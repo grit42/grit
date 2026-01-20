@@ -2,7 +2,7 @@
 
 .container {
   display: grid;
-  grid-template-columns:  1fr min-content;
+  grid-template-columns:  min-content 1fr;
   grid-template-rows: 1fr;
   overflow: auto;
   height: 100%;

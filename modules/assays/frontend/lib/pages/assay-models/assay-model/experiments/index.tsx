@@ -6,14 +6,13 @@ import {
   useExperimentColumns,
   useInfiniteExperiments,
 } from "../../../../queries/experiments";
-import {
-  useNavigate,
-  useParams,
-} from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useLocalStorage } from "@grit42/client-library/hooks";
 import { useMemo } from "react";
-import { ExperimentMetadataFilters } from "../../../../features/experiments";
 import styles from "./assayModelExperiments.module.scss";
+import ExperimentFiltersSidebar, {
+  ExperimentFilterValues,
+} from "../../../../features/experiments/components/experiment-filters";
 
 const getRowId = (data: EntityData) => data.id.toString();
 
@@ -21,8 +20,8 @@ const ExperimentsTable = () => {
   const { assay_model_id } = useParams() as { assay_model_id: string };
 
   const [metadataFilters, setMetadataFilters] = useLocalStorage(
-    `assay-model_${assay_model_id}_experiment-metadata-filters`,
-    {} as Record<string, number[]>,
+    `assay-model_${assay_model_id}_experiment-sidebar-filters`,
+    {} as ExperimentFilterValues,
   );
 
   const navigate = useNavigate();
@@ -36,9 +35,9 @@ const ExperimentsTable = () => {
     {
       settings: {
         disableVisibilitySettings: true,
-        disableFilters: true
-      }
-    }
+        disableFilters: true,
+      },
+    },
   );
 
   const filters = useMemo(
@@ -80,6 +79,12 @@ const ExperimentsTable = () => {
 
   return (
     <div className={styles.container}>
+      <ExperimentFiltersSidebar
+        assayModelId={assay_model_id}
+        filterValues={metadataFilters}
+        setFilterValues={setMetadataFilters}
+        showName
+      />
       <Table
         getRowId={getRowId}
         onRowClick={({ id }) => navigate(`/assays/experiments/${id}/details`)}
@@ -92,11 +97,6 @@ const ExperimentsTable = () => {
           isFetchingNextPage,
           totalRows: data?.pages[0].total,
         }}
-      />
-      <ExperimentMetadataFilters
-        assayModelId={assay_model_id}
-        metadataFilters={metadataFilters}
-        setMetadataFilters={setMetadataFilters}
       />
     </div>
   );

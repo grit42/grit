@@ -109,6 +109,8 @@ const AssayModelPropFilters = ({
     }
   }, [assayModelName, filters.name, setNameFilter]);
 
+  const activeFilters = Object.values(filters).some((v) => !!v?.length)
+
   return (
     <Surface
       style={{
@@ -117,7 +119,7 @@ const AssayModelPropFilters = ({
         gap: "calc(var(--spacing) * 2)",
         gridAutoRows: "max-content",
         overflow: "auto",
-        marginTop: "var(--spacing)"
+        marginTop: "var(--spacing)",
       }}
     >
       <div
@@ -128,12 +130,12 @@ const AssayModelPropFilters = ({
         }}
       >
         <h2>Properties filters</h2>
-        {Object.keys(filters).length > 0 && (
+        {activeFilters && (
           <Button
             color="primary"
             onClick={() => {
               setAssayModelName("");
-              setFilters({});
+              setFilters({ name: "", assay_type_id: [] });
             }}
           >
             Clear
