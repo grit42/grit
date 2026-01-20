@@ -61,7 +61,7 @@ const Router = () => {
           </AuthGuard>
         }
       />
-      <Route path="*" element={<Navigate to="assay-models" replace />} />
+      <Route path="*" element={<Navigate to="experiments" replace />} />
     </Routes>
   );
 };
