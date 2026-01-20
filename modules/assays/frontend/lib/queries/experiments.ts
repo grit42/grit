@@ -64,6 +64,8 @@ export interface ExperimentData extends EntityData {
   name: string;
   assay_model_id: number;
   assay_model_id__name: string;
+  publication_status_id: number;
+  publication_status_id__name: string;
   description: string | null;
   data_sheets: EntityData<ExperimentDataSheetData>[];
   plots: Record<string, ExperimentPlotDefinition>;
