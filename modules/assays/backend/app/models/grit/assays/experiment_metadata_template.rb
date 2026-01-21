@@ -38,8 +38,6 @@ module Grit::Assays
           begin
             experiment_metadata_template_metadatum.destroy!
           rescue StandardError => e
-            logger.info e.to_s
-            logger.info e.backtrace.join("\n")
             errors.add(md.safe_name, "could not remove metadata value")
             success = false
           end
@@ -47,8 +45,6 @@ module Grit::Assays
           begin
             experiment_metadata_template_metadatum.update!(vocabulary_item_id: params[md.safe_name])
           rescue StandardError => e
-            logger.info e.to_s
-            logger.info e.backtrace.join("\n")
             errors.add(md.safe_name, "could not update metadata value")
             success = false
           end
@@ -56,8 +52,6 @@ module Grit::Assays
           begin
             ExperimentMetadataTemplateMetadatum.create!({ experiment_metadata_template_id: id, assay_metadata_definition_id: md.id, vocabulary_id: md.vocabulary_id, vocabulary_item_id: params[md.safe_name] })
           rescue StandardError => e
-            logger.info e.to_s
-            logger.info e.backtrace.join("\n")
             errors.add(md.safe_name, "could not set metadata value")
             success = false
           end
