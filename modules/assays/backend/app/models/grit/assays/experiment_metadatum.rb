@@ -24,8 +24,8 @@ module Grit::Assays
     belongs_to :experiment
 
     entity_crud_with read: [],
-      create: [ "Administrator", "AssayAdministrator" ],
-      update: [ "Administrator", "AssayAdministrator" ],
-      destroy: [ "Administrator", "AssayAdministrator" ]
+      create: [ "Administrator", "AssayAdministrator", "AssayUser" ],
+      update: [ "Administrator", "AssayAdministrator", "AssayUser" ],
+      destroy: [ "Administrator", "AssayAdministrator", "AssayUser" ]
   end
 end
