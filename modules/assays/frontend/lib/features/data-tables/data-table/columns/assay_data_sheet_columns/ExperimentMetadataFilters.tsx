@@ -271,7 +271,7 @@ const ExperimentMetadataFilters = ({
         <Button
           onClick={() => setSelectorOpen(true)}
         >
-          More metadata
+          Add metadata
         </Button>
       )}
     </Surface>

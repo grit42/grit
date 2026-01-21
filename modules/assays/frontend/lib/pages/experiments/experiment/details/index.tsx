@@ -44,7 +44,11 @@ import { ExperimentMetadataTemplateData } from "../../../../queries/experiment_m
 import MetadataDefintionSelectorDialog from "../../../../features/data-tables/data-table/columns/assay_data_sheet_columns/MetadataDefinitionSelectorDialog";
 import Circle1CloseIcon from "@grit42/client-library/icons/Circle1Close";
 
-const ExperimentMetadataTemplates = ({ form }: { form: any }) => {
+const ExperimentMetadataTemplates = ({
+  onSelect,
+}: {
+  onSelect: (template: ExperimentMetadataTemplateData) => void;
+}) => {
   const {
     data: metadataDefinitions,
     isLoading: isMetadataDefinitionsLoading,
@@ -60,21 +64,9 @@ const ExperimentMetadataTemplates = ({ form }: { form: any }) => {
     return <ErrorPage error={metadataDefinitionsError} />;
   }
 
-  const setValues = (template: ExperimentMetadataTemplateData) => {
-    metadataDefinitions.forEach(({ safe_name }) => {
-      if (template[safe_name]) {
-        form.setFieldValue(safe_name, template[safe_name]);
-        form.setFieldMeta("safe_name", (prev: any) => ({
-          ...prev,
-          errorMap: {},
-        }));
-      }
-    });
-  };
-
   return (
     <ExperimentMetadataTemplatesTableWrapper
-      onRowClick={({ original }) => setValues(original)}
+      onRowClick={({ original }) => onSelect(original)}
     />
   );
 };
@@ -86,7 +78,7 @@ const ExperimentMetadataForm = ({
 }) => {
   const [selectorOpen, setSelectorOpen] = useState(false);
   const [selectedMetadataDefinitions, setSelectedMetadataDefinitions] =
-    useState<Set<number> | null>(null);
+    useState<number[] | null>(null);
   const { assay_model_id, values } = useStore<any>(
     form.baseStore,
     ({ values }) => ({ assay_model_id: values.assay_model_id, values }),
@@ -112,33 +104,51 @@ const ExperimentMetadataForm = ({
     error: metadataDefinitionsError,
   } = useAssayMetadataDefinitions();
 
+  const applyMetadataTemplate = (template: ExperimentMetadataTemplateData) => {
+    const newSelectedMetadataDefinitions: number[] = [];
+    metadataDefinitions?.forEach(({ id, safe_name }) => {
+      if (template[safe_name]) {
+        form.setFieldValue(safe_name, template[safe_name]);
+        form.setFieldMeta("safe_name", (prev: any) => ({
+          ...prev,
+          errorMap: {},
+        }));
+        newSelectedMetadataDefinitions.push(id);
+      }
+    });
+    if (newSelectedMetadataDefinitions.length) {
+      setSelectedMetadataDefinitions((prev) =>
+        prev
+          ? [...prev, ...newSelectedMetadataDefinitions]
+          : newSelectedMetadataDefinitions,
+      );
+    }
+  };
+
   useEffect(() => {
     if (
       selectedMetadataDefinitions === null &&
       metadataDefinitions &&
       modelMetadata
     ) {
-      console.log(values);
       setSelectedMetadataDefinitions(
-        new Set(
-          metadataDefinitions
-            .filter(
-              (md) =>
-                !!values[md.safe_name] ||
-                modelMetadata.find(
-                  ({ assay_metadata_definition_id }) =>
-                    assay_metadata_definition_id === md.id,
-                ),
-            )
-            .map(({ id }) => id),
-        ),
+        metadataDefinitions
+          .filter(
+            (md) =>
+              !!values[md.safe_name] ||
+              modelMetadata.find(
+                ({ assay_metadata_definition_id }) =>
+                  assay_metadata_definition_id === md.id,
+              ),
+          )
+          .map(({ id }) => id),
       );
     }
   }, [metadataDefinitions, modelMetadata, selectedMetadataDefinitions, values]);
 
   const fields = useMemo(() => {
     return metadataDefinitions
-      ?.filter(({ id }) => selectedMetadataDefinitions?.has(id))
+      ?.filter((md) => selectedMetadataDefinitions?.find((id) => id === md.id))
       .map(
         (
           md,
@@ -186,18 +196,18 @@ const ExperimentMetadataForm = ({
     return <ErrorPage error={metadataDefinitionsError} />;
   }
 
-  if (fields?.length == 0) {
-    return null;
-  }
+  // if (fields?.length == 0) {
+  //   return null;
+  // }
 
   const onClose = (id?: number) => {
     if (id) {
-      setSelectedMetadataDefinitions(
-        (prev) => new Set([...(prev?.values() ?? []), id]),
-      );
+      setSelectedMetadataDefinitions((prev) => (prev ? [...prev, id] : prev));
     }
     setSelectorOpen(false);
   };
+
+  console.log(selectedMetadataDefinitions);
 
   return (
     <>
@@ -255,11 +265,12 @@ const ExperimentMetadataForm = ({
                 alignSelf: "flex-end",
               }}
               onClick={() => {
-                setSelectedMetadataDefinitions((prev) => {
-                  const next = new Set(prev ?? []);
-                  next.delete(f.assay_metadata_definition_id);
-                  return next;
-                });
+                console.log(f.assay_metadata_definition_id);
+                setSelectedMetadataDefinitions((prev) =>
+                  prev
+                    ? prev.filter((id) => id !== f.assay_metadata_definition_id)
+                    : prev,
+                );
                 form.setFieldValue(f.name, null);
               }}
             >
@@ -276,13 +287,26 @@ const ExperimentMetadataForm = ({
           )}
         />
       )}
-      {selectedMetadataDefinitions?.size !== metadataDefinitions.length && (
+      {selectedMetadataDefinitions?.length !== metadataDefinitions.length && (
         <Button
           style={{ gridColumnStart: 1 }}
           onClick={() => setSelectorOpen(true)}
         >
-          More metadata
+          Add metadata
         </Button>
+      )}
+      {!values.id && (
+        <div
+          style={{
+            position: "absolute",
+            right: "calc(-40vw - 16px)",
+            top: 0,
+            bottom: 0,
+            width: "40vw",
+          }}
+        >
+          <ExperimentMetadataTemplates onSelect={applyMetadataTemplate} />
+        </div>
       )}
     </>
   );
@@ -511,7 +535,6 @@ const ExperimentForm = ({
           />
         </Form>
       </Surface>
-      {!experiment.id && <ExperimentMetadataTemplates form={form} />}
     </div>
   );
 };
