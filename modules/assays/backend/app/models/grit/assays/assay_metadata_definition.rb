@@ -32,7 +32,7 @@ module Grit::Assays
 
     def safe_name_not_conflict
       return unless self.safe_name_changed?
-      if Grit::Assays::AssayMetadataDefinition.respond_to?(self.safe_name)
+      if Grit::Assays::Experiment.dangerous_attribute_method?(self.safe_name)
         errors.add("safe_name", "cannot be used as a safe name")
       end
     end
