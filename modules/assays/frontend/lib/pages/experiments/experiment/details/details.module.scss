@@ -29,6 +29,8 @@
 .formTitle {
   align-self: baseline;
   margin-bottom: theme.$spacing;
+  grid-column-start: 1;
+  grid-column-end: -1;
 }
 
 .formError {
