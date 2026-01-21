@@ -76,7 +76,12 @@ const ExperimentsTable = ({
     },
   );
 
-  const { data: metadataDefinitions, isLoading: isMetadataDefinitionsLoading, isError: isMetadataDefinitionsError, error: metadataDefinitionsError } = useAssayMetadataDefinitions();
+  const {
+    data: metadataDefinitions,
+    isLoading: isMetadataDefinitionsLoading,
+    isError: isMetadataDefinitionsError,
+    error: metadataDefinitionsError,
+  } = useAssayMetadataDefinitions();
 
   const filters = useMemo(
     () =>
@@ -124,7 +129,7 @@ const ExperimentsTable = ({
   }, [data, selectedExperiments, setSelectedExperiments]);
 
   if (isMetadataDefinitionsError) {
-    return <ErrorPage error={metadataDefinitionsError} />
+    return <ErrorPage error={metadataDefinitionsError} />;
   }
 
   return (
@@ -142,7 +147,11 @@ const ExperimentsTable = ({
       }
       data={data}
       loading={isLoading || isMetadataDefinitionsLoading}
-      noDataMessage={isError ? error : "No published assays"}
+      noDataMessage={
+        isError
+          ? error
+          : "No published experiments matching selected metadata in this assay model"
+      }
       disableFooter
     />
   );

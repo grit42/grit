@@ -39,8 +39,8 @@ import { DataTableColumnData } from "../../../queries/data_table_columns";
 import { useQueryClient } from "@grit42/api";
 import { toSafeIdentifier } from "@grit42/core/utils";
 import styles from "../dataTableColumns.module.scss";
-import { ExperimentMetadataFilters } from "../../../../experiments";
 import ExperimentSelector from "./ExperimentSelector";
+import ExperimentMetadataFilters from "./ExperimentMetadataFilters";
 
 const ExperimentsFilter = ({
   assayModelId,

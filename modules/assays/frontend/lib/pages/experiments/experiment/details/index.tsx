@@ -17,6 +17,7 @@ import {
   FormFieldDef,
   genericErrorHandler,
   getVisibleFieldData,
+  ReactFormExtendedApi,
   useForm,
   useStore,
 } from "@grit42/form";
@@ -28,7 +29,7 @@ import {
   EntityFormFieldDef,
   useHasRoles,
 } from "@grit42/core";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import styles from "../../experiments.module.scss";
 import {
   ExperimentData,
@@ -40,6 +41,8 @@ import { useAssayModelMetadata } from "../../../../queries/assay_model_metadata"
 import { useAssayMetadataDefinitions } from "../../../../queries/assay_metadata_definitions";
 import ExperimentMetadataTemplatesTableWrapper from "./ExperimentMetadataTemplatesTable";
 import { ExperimentMetadataTemplateData } from "../../../../queries/experiment_metadata_templates";
+import MetadataDefintionSelectorDialog from "../../../../features/data-tables/data-table/columns/assay_data_sheet_columns/MetadataDefinitionSelectorDialog";
+import Circle1CloseIcon from "@grit42/client-library/icons/Circle1Close";
 
 const ExperimentMetadataTemplates = ({ form }: { form: any }) => {
   const {
@@ -76,10 +79,17 @@ const ExperimentMetadataTemplates = ({ form }: { form: any }) => {
   );
 };
 
-const ExperimentMetadataForm = ({ form }: { form: any }) => {
-  const assay_model_id = useStore<any>(
+const ExperimentMetadataForm = ({
+  form,
+}: {
+  form: ReactFormExtendedApi<Partial<ExperimentData>, undefined>;
+}) => {
+  const [selectorOpen, setSelectorOpen] = useState(false);
+  const [selectedMetadataDefinitions, setSelectedMetadataDefinitions] =
+    useState<Set<number> | null>(null);
+  const { assay_model_id, values } = useStore<any>(
     form.baseStore,
-    ({ values }) => values.assay_model_id,
+    ({ values }) => ({ assay_model_id: values.assay_model_id, values }),
   );
 
   const {
@@ -102,10 +112,40 @@ const ExperimentMetadataForm = ({ form }: { form: any }) => {
     error: metadataDefinitionsError,
   } = useAssayMetadataDefinitions();
 
+  useEffect(() => {
+    if (
+      selectedMetadataDefinitions === null &&
+      metadataDefinitions &&
+      modelMetadata
+    ) {
+      console.log(values);
+      setSelectedMetadataDefinitions(
+        new Set(
+          metadataDefinitions
+            .filter(
+              (md) =>
+                !!values[md.safe_name] ||
+                modelMetadata.find(
+                  ({ assay_metadata_definition_id }) =>
+                    assay_metadata_definition_id === md.id,
+                ),
+            )
+            .map(({ id }) => id),
+        ),
+      );
+    }
+  }, [metadataDefinitions, modelMetadata, selectedMetadataDefinitions, values]);
+
   const fields = useMemo(() => {
     return metadataDefinitions
-      ?.map(
-        (md): EntityFormFieldDef => ({
+      ?.filter(({ id }) => selectedMetadataDefinitions?.has(id))
+      .map(
+        (
+          md,
+        ): EntityFormFieldDef & {
+          belongsToAssayModel: boolean;
+          assay_metadata_definition_id: number;
+        } => ({
           name: md.safe_name,
           display_name: md.name,
           type: "entity",
@@ -124,6 +164,11 @@ const ExperimentMetadataForm = ({ form }: { form: any }) => {
             display_column_type: "string",
           },
           disabled: false,
+          assay_metadata_definition_id: md.id,
+          belongsToAssayModel:
+            modelMetadata?.some(
+              (mm) => mm.assay_metadata_definition_id == md.id,
+            ) ?? false,
         }),
       )
       .sort((a, b) => {
@@ -131,7 +176,7 @@ const ExperimentMetadataForm = ({ form }: { form: any }) => {
         if (!a.required && b.required) return 1;
         return a.name.localeCompare(b.name);
       });
-  }, [modelMetadata, metadataDefinitions]);
+  }, [metadataDefinitions, selectedMetadataDefinitions, modelMetadata]);
 
   if (isMetadataDefinitionsLoading) {
     return <Spinner />;
@@ -144,6 +189,15 @@ const ExperimentMetadataForm = ({ form }: { form: any }) => {
   if (fields?.length == 0) {
     return null;
   }
+
+  const onClose = (id?: number) => {
+    if (id) {
+      setSelectedMetadataDefinitions(
+        (prev) => new Set([...(prev?.values() ?? []), id]),
+      );
+    }
+    setSelectorOpen(false);
+  };
 
   return (
     <>
@@ -179,8 +233,57 @@ const ExperimentMetadataForm = ({ form }: { form: any }) => {
         </div>
       )}
       {fields?.map((f) => (
-        <FormField key={f.name} form={form} fieldDef={f} />
+        <div
+          key={f.name}
+          style={{
+            display: "grid",
+            gridTemplateColumns: f.belongsToAssayModel
+              ? "1fr"
+              : "1fr min-content",
+            gap: "var(--spacing)",
+          }}
+        >
+          <FormField key={f.name} form={form} fieldDef={f} />
+
+          {!f.belongsToAssayModel && (
+            <Button
+              style={{
+                margin: 0,
+                height: "min-content",
+                width: "min-content",
+                minWidth: "unset",
+                alignSelf: "flex-end",
+              }}
+              onClick={() => {
+                setSelectedMetadataDefinitions((prev) => {
+                  const next = new Set(prev ?? []);
+                  next.delete(f.assay_metadata_definition_id);
+                  return next;
+                });
+                form.setFieldValue(f.name, null);
+              }}
+            >
+              <Circle1CloseIcon height={16} />
+            </Button>
+          )}
+        </div>
       ))}
+      {selectorOpen && (
+        <MetadataDefintionSelectorDialog
+          onClose={onClose}
+          selectedMetadataDefinitions={Array.from(
+            selectedMetadataDefinitions?.values() ?? [],
+          )}
+        />
+      )}
+      {selectedMetadataDefinitions?.size !== metadataDefinitions.length && (
+        <Button
+          style={{ gridColumnStart: 1 }}
+          onClick={() => setSelectorOpen(true)}
+        >
+          More metadata
+        </Button>
+      )}
     </>
   );
 };
