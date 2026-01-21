@@ -66,6 +66,22 @@ const ExperimentMetadataForm = ({
   };
 
   useEffect(() => {
+    if (modelMetadata) {
+      setSelectedMetadataDefinitions((prev) => [
+        ...(prev ?? []),
+        ...modelMetadata
+          .filter(
+            ({ assay_metadata_definition_id }) =>
+              !prev || !prev.includes(assay_metadata_definition_id),
+          )
+          .map(
+            ({ assay_metadata_definition_id }) => assay_metadata_definition_id,
+          ),
+      ]);
+    }
+  }, [metadataDefinitions, modelMetadata]);
+
+  useEffect(() => {
     if (
       selectedMetadataDefinitions === null &&
       metadataDefinitions &&
