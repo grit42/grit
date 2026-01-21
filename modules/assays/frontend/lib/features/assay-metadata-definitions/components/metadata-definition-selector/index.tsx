@@ -17,11 +17,11 @@
  */
 
 import { Dialog } from "@grit42/client-library/components";
+import { Table, useSetupTableState } from "@grit42/table";
 import {
   AssayMetadataDefinitionData,
   useAssayMetadataDefinitions,
-} from "../../../../../queries/assay_metadata_definitions";
-import { Table, useSetupTableState } from "@grit42/table";
+} from "../../../../queries/assay_metadata_definitions";
 
 const COLUMNS = [
   { id: "name", accessorKey: "name", header: "Name", type: "string" },
@@ -33,7 +33,7 @@ const COLUMNS = [
   },
 ];
 
-const MetadataDefintionSelectorDialog = ({
+const MetadataDefintionSelector = ({
   onClose,
   selectedMetadataDefinitions,
 }: {
@@ -53,7 +53,7 @@ const MetadataDefintionSelectorDialog = ({
   } = useAssayMetadataDefinitions(tableState.sorting, [
     ...tableState.filters,
     {
-      active: true,
+      active: !!selectedMetadataDefinitions.length,
       column: "id",
       id: "id",
       operator: "not_in_list",
@@ -81,4 +81,4 @@ const MetadataDefintionSelectorDialog = ({
   );
 };
 
-export default MetadataDefintionSelectorDialog;
+export default MetadataDefintionSelector;

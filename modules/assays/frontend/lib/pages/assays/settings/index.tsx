@@ -37,12 +37,12 @@ const TABS = [
     label: "Models",
   },
   {
-    url: "assay-metadata-definitions",
-    label: "Metadata",
-  },
-  {
     url: "experiment-metadata-templates",
     label: "Metadata templates",
+  },
+  {
+    url: "assay-metadata-definitions",
+    label: "Metadata",
   },
   {
     url: "assay-types",

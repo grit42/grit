@@ -7,7 +7,6 @@ import {
   useExperiments,
 } from "../../queries/experiments";
 import { Link, useNavigate } from "react-router-dom";
-import styles from "./experiments.module.scss";
 import { useEffect } from "react";
 import { useToolbar } from "@grit42/core/Toolbar";
 import Circle1NewIcon from "@grit42/client-library/icons/Circle1New";
@@ -55,7 +54,6 @@ const ExperimentsTable = () => {
           </Link>
         ) : undefined
       }
-      className={styles.experimentsTable}
       onRowClick={({ original }) => navigate(`${original.id}/details`)}
       tableState={tableState}
       data={data}

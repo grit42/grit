@@ -128,39 +128,19 @@ const ExperimentMetadataTemplateForm = ({
 
   return (
     <div className={styles.container}>
-      <Surface className={styles.typeForm}>
-        <h2 style={{ alignSelf: "baseline", marginBottom: "1em" }}>{`${
+      <Surface className={styles.form}>
+        <h2 className={styles.formTitle}>{`${
           experimentMetadataTemplate.id ? "Edit" : "New"
         } template`}</h2>
         <Form<Partial<ExperimentMetadataTemplateData>> form={form}>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
-              gridAutoRows: "max-content",
-              gap: "calc(var(--spacing) * 2)",
-              paddingBottom: "calc(var(--spacing) * 2)",
-            }}
-          >
+          <div className={styles.formFields}>
             {form.state.errorMap.onSubmit && (
-              <div
-                style={{
-                  gridColumnStart: 1,
-                  gridColumnEnd: -1,
-                  color: "var(--palette-error-main)",
-                }}
-              >
+              <div className={styles.formError}>
                 {form.state.errorMap.onSubmit?.toString()}
               </div>
             )}
             {fields.map((f) => (
-              <div
-                key={f.name}
-                style={{
-                  gridColumnStart: 1,
-                  gridColumnEnd: -1,
-                }}
-              >
+              <div key={f.name} className={styles.formFullwidthField}>
                 <FormField form={form} fieldDef={f} />
               </div>
             ))}

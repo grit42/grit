@@ -138,7 +138,7 @@ const AssayMetadataDefinitionForm = ({
   return (
     <div className={styles.container}>
       <Surface className={styles.form}>
-        <h2 style={{ alignSelf: "baseline", marginBottom: "1em" }}>{`${
+        <h2 className={styles.formTitle}>{`${
           assayMetadataDefinition.id ? "Edit" : "New"
         } metadata`}</h2>
         <Form<Partial<AssayMetadataDefinitionData>> form={form}>

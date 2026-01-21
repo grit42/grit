@@ -24,23 +24,11 @@ import CogIcon from "@grit42/client-library/icons/Cog";
 import { ErrorPage, Spinner } from "@grit42/client-library/components";
 import AssayModelsTable from "./AssayModelsTable";
 
-const DEFAULT_COLUMN_SIZES = {
-  name: 200,
-  description: 750,
-} as const;
-
 const AssayModelsPage = () => {
   const navigate = useNavigate();
   const registerToolbarActions = useToolbar();
 
-  const { data, isLoading, isError, error } = useAssayModelColumns(undefined, {
-    select: (data) =>
-      data.map((d) => ({
-        ...d,
-        defaultColumnSize:
-          DEFAULT_COLUMN_SIZES[d.name as keyof typeof DEFAULT_COLUMN_SIZES],
-      })),
-  });
+  const { data, isLoading, isError, error } = useAssayModelColumns();
 
   useEffect(() => {
     return registerToolbarActions({
@@ -64,9 +52,7 @@ const AssayModelsPage = () => {
     return <ErrorPage error={error} />;
   }
 
-  return (
-      <AssayModelsTable />
-  );
+  return <AssayModelsTable />;
 };
 
 export default AssayModelsPage;

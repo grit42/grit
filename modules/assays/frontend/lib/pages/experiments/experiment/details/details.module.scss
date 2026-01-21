@@ -1,20 +1,73 @@
+@use "@grit42/client-library/theme.scss";
+
 .container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
   width: 100%;
-  height: 100%;
   max-width: 100%;
+  height: 100%;
   max-height: 100%;
-  overflow-y: auto;
+  display: grid;
+  gap: theme.$spacing;
+  grid-template-columns: 1fr;
+  overflow: auto;
+
+  &.withMetadataTemplates {
+    grid-template-columns: min-content max-content;
+  }
 }
 
-.typesTable {
+.metadataTemplatesTable {
   width: fit-content;
 }
 
-.typeForm {
-  flex: 1;
-  width: 100%;
+.form {
+  width: 40vw;
+  min-width: 480px;
   max-width: 960px;
+  position: relative;
+}
+
+.formTitle {
+  align-self: baseline;
+  margin-bottom: theme.$spacing;
+}
+
+.formError {
+  grid-column-start: 1;
+  grid-column-end: -1;
+  color: theme.$palette-error-main;
+}
+
+.formFields {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  grid-auto-rows: max-content;
+  gap: calc(theme.$spacing * 2);
+  padding-bottom: calc(theme.$spacing * 2);
+}
+
+.formExtraMetadataField {
+  display: grid;
+  grid-template-columns: 1fr min-content;
+  gap: theme.$spacing;
+
+  button {
+    margin: 0 !important;
+    height: min-content !important;
+    width: min-content !important;
+    min-width: unset !important;
+    align-self: flex-end;
+  }
+}
+
+.formFullwidthField {
+  grid-column-start: 1;
+  grid-column-end: -1;
+}
+
+.templatesContainer {
+  position: absolute;
+  right: calc(-40vw - (theme.$spacing * 2));
+  top: 0;
+  bottom: 0;
+  width: 40vw;
 }

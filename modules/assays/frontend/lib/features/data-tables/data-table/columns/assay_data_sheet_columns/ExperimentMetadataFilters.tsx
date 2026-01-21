@@ -27,7 +27,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useAssayModelMetadata } from "../../../../../queries/assay_model_metadata";
 import { useAssayMetadataDefinitions } from "../../../../../queries/assay_metadata_definitions";
 import Circle1CloseIcon from "@grit42/client-library/icons/Circle1Close";
-import MetadataDefintionSelectorDialog from "./MetadataDefinitionSelectorDialog";
+import { MetadataDefintionSelector } from "../../../../assay-metadata-definitions";
 
 interface Props {
   assayModelId?: string | number;
@@ -260,7 +260,7 @@ const ExperimentMetadataFilters = ({
         </div>
       ))}
       {selectorOpen && (
-        <MetadataDefintionSelectorDialog
+        <MetadataDefintionSelector
           onClose={onClose}
           selectedMetadataDefinitions={Array.from(
             selectedMetadataDefinitions?.values() ?? [],
@@ -268,11 +268,7 @@ const ExperimentMetadataFilters = ({
         />
       )}
       {selectedMetadataDefinitions?.size !== metadataDefinitions.length && (
-        <Button
-          onClick={() => setSelectorOpen(true)}
-        >
-          Add metadata
-        </Button>
+        <Button onClick={() => setSelectorOpen(true)}>Add metadata</Button>
       )}
     </Surface>
   );

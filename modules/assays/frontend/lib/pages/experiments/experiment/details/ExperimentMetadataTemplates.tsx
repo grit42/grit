@@ -67,17 +67,17 @@ const ExperimentMetadataTemplatesTable = ({
     <Table<ExperimentMetadataTemplateData>
       header="Pick Metadata Templates"
       tableState={tableState}
-      className={styles.typesTable}
+      className={styles.metadataTemplatesTable}
       data={experimentMetadataTemplates}
       onRowClick={onRowClick}
     />
   );
 };
 
-const ExperimentMetadataTemplatesTableWrapper = ({
-  onRowClick,
+const ExperimentMetadataTemplates = ({
+  onSelect,
 }: {
-  onRowClick?: (row: Row<ExperimentMetadataTemplateData>) => void;
+  onSelect: (template: ExperimentMetadataTemplateData) => void;
 }) => {
   const {
     isLoading: isExperimentMetadataTemplateColumnsLoading,
@@ -93,7 +93,7 @@ const ExperimentMetadataTemplatesTableWrapper = ({
     return (
       <ErrorPage error={ExperimentMetadataTemplateColumnsError ?? error} />
     );
-  return <ExperimentMetadataTemplatesTable onRowClick={onRowClick} />;
+  return <ExperimentMetadataTemplatesTable onRowClick={({original}) => onSelect(original)} />;
 };
 
-export default ExperimentMetadataTemplatesTableWrapper;
+export default ExperimentMetadataTemplates;

@@ -84,7 +84,7 @@ const ExperimentMetadataTemplatesTable = ({
       header="Experiment Metadata Templates"
       tableState={tableState}
       headerActions={<Button onClick={navigateToNew}>New</Button>}
-      className={styles.typesTable}
+      className={styles.table}
       data={experimentMetadataTemplates}
       onRowClick={onRowClick ?? ((row) => navigate(`${row.original.id}`))}
     />

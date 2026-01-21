@@ -34,7 +34,7 @@ const ITEMS = [
   },
 ];
 
-const AssayModelSidebar = () => {
+const AssayModelTabs = () => {
   const navigate = useNavigate();
   const match = useMatch("/assays/assay-models/:assay_model_id/:tab/*");
 
@@ -55,4 +55,4 @@ const AssayModelSidebar = () => {
   );
 };
 
-export default AssayModelSidebar;
+export default AssayModelTabs;

@@ -30,6 +30,7 @@ import { useEffect, useMemo } from "react";
 import { useToolbar } from "@grit42/core/Toolbar";
 import CogIcon from "@grit42/client-library/icons/Cog";
 import Circle1NewIcon from "@grit42/client-library/icons/Circle1New";
+import styles from "./assayModel.module.scss";
 
 const AssayModel = () => {
   const navigate = useNavigate();
@@ -82,28 +83,9 @@ const AssayModel = () => {
   }
 
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateRows: "min-content 1fr",
-        gridTemplateColumns: "1fr",
-        width: "100%",
-        height: "100%",
-        overflow: "auto",
-        gap: "calc(var(--spacing) * 4)",
-      }}
-    >
+    <div className={styles.assayModelPage}>
       <AssayModelHeader />
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr",
-          gridTemplateRows: "min-content 1fr",
-          width: "100%",
-          height: "100%",
-          overflow: "auto",
-        }}
-      >
+      <div className={styles.assayModelBody}>
         <AssayModelTabs />
         <Outlet />
       </div>

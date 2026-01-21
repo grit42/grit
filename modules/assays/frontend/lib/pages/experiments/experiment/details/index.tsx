@@ -17,9 +17,7 @@ import {
   FormFieldDef,
   genericErrorHandler,
   getVisibleFieldData,
-  ReactFormExtendedApi,
   useForm,
-  useStore,
 } from "@grit42/form";
 import { useQueryClient } from "@grit42/api";
 import {
@@ -29,288 +27,15 @@ import {
   EntityFormFieldDef,
   useHasRoles,
 } from "@grit42/core";
-import { useEffect, useMemo, useState } from "react";
-import styles from "../../experiments.module.scss";
+import { useMemo, useState } from "react";
+import styles from "./details.module.scss";
 import {
   ExperimentData,
   useExperiment,
   useExperimentFields,
 } from "../../../../queries/experiments";
 import { classnames } from "@grit42/client-library/utils";
-import { useAssayModelMetadata } from "../../../../queries/assay_model_metadata";
-import { useAssayMetadataDefinitions } from "../../../../queries/assay_metadata_definitions";
-import ExperimentMetadataTemplatesTableWrapper from "./ExperimentMetadataTemplatesTable";
-import { ExperimentMetadataTemplateData } from "../../../../queries/experiment_metadata_templates";
-import MetadataDefintionSelectorDialog from "../../../../features/data-tables/data-table/columns/assay_data_sheet_columns/MetadataDefinitionSelectorDialog";
-import Circle1CloseIcon from "@grit42/client-library/icons/Circle1Close";
-
-const ExperimentMetadataTemplates = ({
-  onSelect,
-}: {
-  onSelect: (template: ExperimentMetadataTemplateData) => void;
-}) => {
-  const {
-    data: metadataDefinitions,
-    isLoading: isMetadataDefinitionsLoading,
-    isError: isMetadataDefinitionsError,
-    error: metadataDefinitionsError,
-  } = useAssayMetadataDefinitions();
-
-  if (isMetadataDefinitionsLoading) {
-    return <Spinner />;
-  }
-
-  if (isMetadataDefinitionsError || !metadataDefinitions) {
-    return <ErrorPage error={metadataDefinitionsError} />;
-  }
-
-  return (
-    <ExperimentMetadataTemplatesTableWrapper
-      onRowClick={({ original }) => onSelect(original)}
-    />
-  );
-};
-
-const ExperimentMetadataForm = ({
-  form,
-}: {
-  form: ReactFormExtendedApi<Partial<ExperimentData>, undefined>;
-}) => {
-  const [selectorOpen, setSelectorOpen] = useState(false);
-  const [selectedMetadataDefinitions, setSelectedMetadataDefinitions] =
-    useState<number[] | null>(null);
-  const { assay_model_id, values } = useStore<any>(
-    form.baseStore,
-    ({ values }) => ({ assay_model_id: values.assay_model_id, values }),
-  );
-
-  const {
-    data: modelMetadata,
-    isLoading: isModelMetadataLoading,
-    isError: isModelMetadataError,
-    error: modelMetadataError,
-  } = useAssayModelMetadata(
-    assay_model_id ?? -1,
-    undefined,
-    undefined,
-    undefined,
-    { enabled: !!assay_model_id },
-  );
-
-  const {
-    data: metadataDefinitions,
-    isLoading: isMetadataDefinitionsLoading,
-    isError: isMetadataDefinitionsError,
-    error: metadataDefinitionsError,
-  } = useAssayMetadataDefinitions();
-
-  const applyMetadataTemplate = (template: ExperimentMetadataTemplateData) => {
-    const newSelectedMetadataDefinitions: number[] = [];
-    metadataDefinitions?.forEach(({ id, safe_name }) => {
-      if (template[safe_name]) {
-        form.setFieldValue(safe_name, template[safe_name]);
-        form.setFieldMeta("safe_name", (prev: any) => ({
-          ...prev,
-          errorMap: {},
-        }));
-        newSelectedMetadataDefinitions.push(id);
-      }
-    });
-    if (newSelectedMetadataDefinitions.length) {
-      setSelectedMetadataDefinitions((prev) =>
-        prev
-          ? [...prev, ...newSelectedMetadataDefinitions]
-          : newSelectedMetadataDefinitions,
-      );
-    }
-  };
-
-  useEffect(() => {
-    if (
-      selectedMetadataDefinitions === null &&
-      metadataDefinitions &&
-      modelMetadata
-    ) {
-      setSelectedMetadataDefinitions(
-        metadataDefinitions
-          .filter(
-            (md) =>
-              !!values[md.safe_name] ||
-              modelMetadata.find(
-                ({ assay_metadata_definition_id }) =>
-                  assay_metadata_definition_id === md.id,
-              ),
-          )
-          .map(({ id }) => id),
-      );
-    }
-  }, [metadataDefinitions, modelMetadata, selectedMetadataDefinitions, values]);
-
-  const fields = useMemo(() => {
-    return metadataDefinitions
-      ?.filter((md) => selectedMetadataDefinitions?.find((id) => id === md.id))
-      .map(
-        (
-          md,
-        ): EntityFormFieldDef & {
-          belongsToAssayModel: boolean;
-          assay_metadata_definition_id: number;
-        } => ({
-          name: md.safe_name,
-          display_name: md.name,
-          type: "entity",
-          required: modelMetadata?.some(
-            (mm) => mm.assay_metadata_definition_id == md.id,
-          ),
-          default: null,
-          entity: {
-            name: md.name,
-            full_name: "Grit::Core::VocabularyItem",
-            path: `grit/core/vocabularies/${md.vocabulary_id}/vocabulary_items`,
-            primary_key: "id",
-            primary_key_type: "integer",
-            column: md.name,
-            display_column: "name",
-            display_column_type: "string",
-          },
-          disabled: false,
-          assay_metadata_definition_id: md.id,
-          belongsToAssayModel:
-            modelMetadata?.some(
-              (mm) => mm.assay_metadata_definition_id == md.id,
-            ) ?? false,
-        }),
-      )
-      .sort((a, b) => {
-        if (a.required && !b.required) return -1;
-        if (!a.required && b.required) return 1;
-        return a.name.localeCompare(b.name);
-      });
-  }, [metadataDefinitions, selectedMetadataDefinitions, modelMetadata]);
-
-  if (isMetadataDefinitionsLoading) {
-    return <Spinner />;
-  }
-
-  if (isMetadataDefinitionsError || !metadataDefinitions) {
-    return <ErrorPage error={metadataDefinitionsError} />;
-  }
-
-  // if (fields?.length == 0) {
-  //   return null;
-  // }
-
-  const onClose = (id?: number) => {
-    if (id) {
-      setSelectedMetadataDefinitions((prev) => (prev ? [...prev, id] : prev));
-    }
-    setSelectorOpen(false);
-  };
-
-  console.log(selectedMetadataDefinitions);
-
-  return (
-    <>
-      <h2
-        style={{
-          gridColumnStart: 1,
-          gridColumnEnd: -1,
-        }}
-      >
-        Metadata
-      </h2>
-      {isModelMetadataError && (
-        <div
-          style={{
-            gridColumnStart: 1,
-            gridColumnEnd: -1,
-            color: "var(--palette-error-main)",
-          }}
-        >
-          {modelMetadataError ??
-            "An error occured retrieving the required metadata for the selected assay model"}
-        </div>
-      )}
-      {isModelMetadataLoading && (
-        <div
-          style={{
-            gridColumnStart: 1,
-            gridColumnEnd: -1,
-          }}
-        >
-          <Spinner size={14} />
-          <span>Loading required metadata for the selected assay model...</span>
-        </div>
-      )}
-      {fields?.map((f) => (
-        <div
-          key={f.name}
-          style={{
-            display: "grid",
-            gridTemplateColumns: f.belongsToAssayModel
-              ? "1fr"
-              : "1fr min-content",
-            gap: "var(--spacing)",
-          }}
-        >
-          <FormField key={f.name} form={form} fieldDef={f} />
-
-          {!f.belongsToAssayModel && (
-            <Button
-              style={{
-                margin: 0,
-                height: "min-content",
-                width: "min-content",
-                minWidth: "unset",
-                alignSelf: "flex-end",
-              }}
-              onClick={() => {
-                console.log(f.assay_metadata_definition_id);
-                setSelectedMetadataDefinitions((prev) =>
-                  prev
-                    ? prev.filter((id) => id !== f.assay_metadata_definition_id)
-                    : prev,
-                );
-                form.setFieldValue(f.name, null);
-              }}
-            >
-              <Circle1CloseIcon height={16} />
-            </Button>
-          )}
-        </div>
-      ))}
-      {selectorOpen && (
-        <MetadataDefintionSelectorDialog
-          onClose={onClose}
-          selectedMetadataDefinitions={Array.from(
-            selectedMetadataDefinitions?.values() ?? [],
-          )}
-        />
-      )}
-      {selectedMetadataDefinitions?.length !== metadataDefinitions.length && (
-        <Button
-          style={{ gridColumnStart: 1 }}
-          onClick={() => setSelectorOpen(true)}
-        >
-          Add metadata
-        </Button>
-      )}
-      {!values.id && (
-        <div
-          style={{
-            position: "absolute",
-            right: "calc(-40vw - 16px)",
-            top: 0,
-            bottom: 0,
-            width: "40vw",
-          }}
-        >
-          <ExperimentMetadataTemplates onSelect={applyMetadataTemplate} />
-        </div>
-      )}
-    </>
-  );
-};
+import ExperimentMetadataForm from "./ExperimentMetadataForm";
 
 type OrganizedFields = [
   "assay_model_id",
@@ -458,68 +183,29 @@ const ExperimentForm = ({
 
   return (
     <div
-      className={classnames(styles.experiment, {
-        [styles.withAssayInfo]: !!experiment.assay_id,
+      className={classnames(styles.container, {
         [styles.withMetadataTemplates]: !experiment.assay_id,
       })}
     >
-      <Surface className={styles.modelForm}>
-        {!experiment.id && (
-          <h2 style={{ alignSelf: "baseline", marginBottom: ".5em" }}>
-            New experiment
-          </h2>
-        )}
+      <Surface className={styles.form}>
+        {!experiment.id && <h2 className={styles.formTitle}>New experiment</h2>}
         <Form<Partial<ExperimentData>> form={form}>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
-              gridAutoRows: "max-content",
-              gap: "calc(var(--spacing) * 2)",
-              paddingBottom: "calc(var(--spacing) * 2)",
-            }}
-          >
+          <div className={styles.formFields}>
             {form.state.errorMap.onSubmit && (
-              <div
-                style={{
-                  gridColumnStart: 1,
-                  gridColumnEnd: -1,
-                  color: "var(--palette-error-main)",
-                }}
-              >
+              <div className={styles.formError}>
                 {form.state.errorMap.onSubmit?.toString()}
               </div>
             )}
-            <div
-              style={{
-                gridColumnStart: 1,
-                gridColumnEnd: -1,
-              }}
-            >
+            <div className={styles.formFullwidthField}>
               <FormField form={form} fieldDef={assay_model_id_field} />
             </div>
-            <div
-              style={{
-                gridColumnStart: 1,
-                gridColumnEnd: -1,
-              }}
-            >
+            <div className={styles.formFullwidthField}>
               <FormField form={form} fieldDef={name_field} />
             </div>
-            <div
-              style={{
-                gridColumnStart: 1,
-                gridColumnEnd: -1,
-              }}
-            >
+            <div className={styles.formFullwidthField}>
               <FormField form={form} fieldDef={publication_status_id_field} />
             </div>
-            <div
-              style={{
-                gridColumnStart: 1,
-                gridColumnEnd: -1,
-              }}
-            >
+            <div className={styles.formFullwidthField}>
               <FormField form={form} fieldDef={description_field} />
             </div>
             <ExperimentMetadataForm form={form} />

@@ -21,6 +21,11 @@
   max-width: 960px;
 }
 
+.formTitle {
+  align-self: baseline;
+  margin-bottom: theme.$spacing;
+}
+
 .formError {
   grid-column-start: 1;
   grid-column-end: -1;
