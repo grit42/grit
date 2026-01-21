@@ -22,12 +22,8 @@
   grid-template-columns: 1fr;
   overflow: auto;
 
-  &.withAssayInfo {
-    grid-template-columns: max-content 1fr 1fr;
-  }
-
   &.withMetadataTemplates {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: min-content max-content;
   }
 }
 
@@ -52,7 +48,8 @@
 }
 
 .modelForm {
-  width: 100%;
+  width: 40vw;
+  min-width: 480px;
   max-width: 960px;
 }
 
