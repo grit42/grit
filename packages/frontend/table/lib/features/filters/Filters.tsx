@@ -146,7 +146,6 @@ const Filters = ({
   );
 
   const setFiltersAndOnChange = (e: SetStateAction<Filter[]>) => {
-    console.log("prout")
     setFilters((prev) => {
       const next = (typeof e === "function" ? e(prev) : e) as Filter[];
       if (onChange) onChange(next);
