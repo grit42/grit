@@ -22,7 +22,6 @@ import {
 } from "../../../../queries/assay_data_sheet_columns";
 import { Table, useSetupTableState } from "@grit42/table";
 import { useTableColumns } from "@grit42/core/utils";
-import styles from "./dataSheets.module.scss";
 
 const DataSheetColumnsTable = ({ sheetId }: { sheetId: string }) => {
   const { data: columns } = useAssayDataSheetColumnColumns(undefined, {
@@ -57,7 +56,6 @@ const DataSheetColumnsTable = ({ sheetId }: { sheetId: string }) => {
       header="Columns"
       tableState={tableState}
       loading={isLoading}
-      className={styles.dataSheetColumnsTable}
       data={data ?? []}
     />
   );
