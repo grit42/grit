@@ -53,8 +53,12 @@ const DataSheet = ({ assayModelId }: { assayModelId: string }) => {
     return <ErrorPage error={fieldsError ?? error} />;
   }
 
+  if (!sheetDefinition && data.length > 0) {
+    return <Navigate to={`../${data[0].id.toString()}`} replace />;
+  }
+
   if (!sheetDefinition) {
-    return <Navigate to={`../${data.at(0)?.id.toString() ?? "new"}`} replace />;
+    return null;
   }
 
   return (
