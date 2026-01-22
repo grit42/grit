@@ -83,7 +83,7 @@ const AssaysAdministration = () => {
           color: "var(--palette-secondary-main)",
         }}
       >
-        Assays administration
+        Assay Models administration
       </h2>
       <Tabs
         onTabChange={handleTabChange}

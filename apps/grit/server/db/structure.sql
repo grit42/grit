@@ -1,4 +1,4 @@
-\restrict CKZDI5bRuafSckBlF0REbzpKYfufMxqEjZYghvuQwSijL2geTq6jXt7bOWMJA8k
+\restrict EessCL5nd2trT5KY0xGYfwWfpDSRSIRIFgf6xegw9zy5KyxLw42KrjO854SGxKM
 
 -- Dumped from database version 16.3 (Debian 16.3-1.pgdg120+1)
 -- Dumped by pg_dump version 16.11
@@ -320,7 +320,7 @@ CREATE TABLE public.grit_assays_assay_data_sheet_definitions (
 -- Name: COLUMN grit_assays_assay_data_sheet_definitions.result; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.grit_assays_assay_data_sheet_definitions.result IS 'Make this data visible in the detailed view of this model''s assays';
+COMMENT ON COLUMN public.grit_assays_assay_data_sheet_definitions.result IS 'Make this data available in Data Tables';
 
 
 --
@@ -3186,7 +3186,7 @@ ALTER TABLE ONLY public.grit_compounds_compound_property_values
 -- PostgreSQL database dump complete
 --
 
-\unrestrict CKZDI5bRuafSckBlF0REbzpKYfufMxqEjZYghvuQwSijL2geTq6jXt7bOWMJA8k
+\unrestrict EessCL5nd2trT5KY0xGYfwWfpDSRSIRIFgf6xegw9zy5KyxLw42KrjO854SGxKM
 
 SET search_path TO "$user", public;
 

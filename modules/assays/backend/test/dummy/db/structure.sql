@@ -1,4 +1,4 @@
-\restrict crjbdbquSvfkfvGi0mRTCcAYrIZl92tIpktyrwQQGjKWqLojUn7t56jpVU6VZMK
+\restrict QOY6I62lGRLQ4aCQOV3EyiXHNbaFpP9xltHUjtpN9nsJQYBy9F322rPLvNQJk76
 
 -- Dumped from database version 16.3 (Debian 16.3-1.pgdg120+1)
 -- Dumped by pg_dump version 16.11
@@ -283,7 +283,7 @@ CREATE TABLE public.grit_assays_assay_data_sheet_definitions (
 -- Name: COLUMN grit_assays_assay_data_sheet_definitions.result; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.grit_assays_assay_data_sheet_definitions.result IS 'Make this data visible in the detailed view of this model''s assays';
+COMMENT ON COLUMN public.grit_assays_assay_data_sheet_definitions.result IS 'Make this data available in Data Tables';
 
 
 --
@@ -369,7 +369,7 @@ CREATE TABLE public.grit_assays_data_table_columns (
     source_type character varying DEFAULT 'assay_data_sheet_column'::character varying NOT NULL,
     entity_attribute_name character varying,
     metadata_filters jsonb DEFAULT '{}'::jsonb,
-    experiment_ids bigint[] DEFAULT ARRAY[]::bigint[]
+    experiment_ids bigint[] DEFAULT '{}'::bigint[]
 );
 
 
@@ -1670,6 +1670,13 @@ CREATE UNIQUE INDEX uniq_data_sheet_definition_per_experiment ON public.grit_ass
 
 
 --
+-- Name: uniq_metadata_definition_per_experiment; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX uniq_metadata_definition_per_experiment ON public.grit_assays_experiment_metadata USING btree (experiment_id, assay_metadata_definition_id);
+
+
+--
 -- Name: uniq_metadata_definition_per_metadata_template; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -2293,7 +2300,7 @@ ALTER TABLE ONLY public.grit_assays_assay_models
 -- PostgreSQL database dump complete
 --
 
-\unrestrict crjbdbquSvfkfvGi0mRTCcAYrIZl92tIpktyrwQQGjKWqLojUn7t56jpVU6VZMK
+\unrestrict QOY6I62lGRLQ4aCQOV3EyiXHNbaFpP9xltHUjtpN9nsJQYBy9F322rPLvNQJk76
 
 SET search_path TO "$user", public;
 
