@@ -36,18 +36,13 @@ import {
 } from "../../../../queries/experiments";
 import { classnames } from "@grit42/client-library/utils";
 import ExperimentMetadataForm from "./ExperimentMetadataForm";
-
-type OrganizedFields = [
-  "assay_model_id",
-  "name",
-  "description",
-  "publication_status_id",
-][number];
+import ExperimentMetadataTemplates from "./ExperimentMetadataTemplates";
 
 type ExperimentFormFields = {
-  [key in OrganizedFields]?: FormFieldDef;
-} & {
-  rest: FormFieldDef[];
+  assay_model_id_field?: FormFieldDef;
+  name_field?: FormFieldDef;
+  description_field?: FormFieldDef;
+  publication_status_id_field?: FormFieldDef;
 };
 
 const ExperimentForm = ({
@@ -136,34 +131,29 @@ const ExperimentForm = ({
   };
 
   const {
-    assay_model_id: assay_model_id_field,
-    name: name_field,
-    description: description_field,
-    publication_status_id: publication_status_id_field,
+    assay_model_id_field,
+    name_field,
+    description_field,
+    publication_status_id_field,
   } = useMemo(() => {
-    return fields.reduce(
-      (acc, f) => {
-        const entityField = f as EntityFormFieldDef;
-        switch (f.name) {
-          case "assay_model_id":
-            acc.assay_model_id = {
-              ...entityField,
-              disabled: !!experiment.id || !canCrudExperiment,
-              entity: { ...entityField.entity, params: { scope: "published" } },
-            } as EntityFormFieldDef;
-            break;
-          case "name":
-          case "description":
-          case "publication_status_id":
-            acc[f.name] = { ...f, disabled: !canCrudExperiment };
-            break;
-          default:
-            acc.rest.push({ ...f, disabled: !canCrudExperiment });
-        }
-        return acc;
-      },
-      { rest: [] } as ExperimentFormFields,
-    );
+    const assay_model_id_field = fields.find(
+      ({ name }) => name === "assay_model_id",
+    ) as EntityFormFieldDef | undefined;
+    if (assay_model_id_field) {
+      assay_model_id_field.disabled = !!experiment.id || !canCrudExperiment;
+      assay_model_id_field.entity = {
+        ...assay_model_id_field.entity,
+        params: { scope: "published" },
+      };
+    }
+    return {
+      assay_model_id_field,
+      name_field: fields.find(({ name }) => name === "name"),
+      description_field: fields.find(({ name }) => name === "description"),
+      publication_status_id_field: fields.find(
+        ({ name }) => name === "publication_status_id",
+      ),
+    } satisfies ExperimentFormFields;
   }, [fields, experiment.id, canCrudExperiment]);
 
   if (
@@ -182,46 +172,46 @@ const ExperimentForm = ({
   }
 
   return (
-    <div
+    <Form<Partial<ExperimentData>>
+      form={form}
       className={classnames(styles.container, {
         [styles.withMetadataTemplates]: !experiment.assay_id,
       })}
     >
       <Surface className={styles.form}>
         {!experiment.id && <h2 className={styles.formTitle}>New experiment</h2>}
-        <Form<Partial<ExperimentData>> form={form}>
-          <div className={styles.formFields}>
-            {form.state.errorMap.onSubmit && (
-              <div className={styles.formError}>
-                {form.state.errorMap.onSubmit?.toString()}
-              </div>
-            )}
-            <div className={styles.formFullwidthField}>
-              <FormField form={form} fieldDef={assay_model_id_field} />
+        <div className={styles.formFields}>
+          {form.state.errorMap.onSubmit && (
+            <div className={styles.formError}>
+              {form.state.errorMap.onSubmit?.toString()}
             </div>
-            <div className={styles.formFullwidthField}>
-              <FormField form={form} fieldDef={name_field} />
-            </div>
-            <div className={styles.formFullwidthField}>
-              <FormField form={form} fieldDef={publication_status_id_field} />
-            </div>
-            <div className={styles.formFullwidthField}>
-              <FormField form={form} fieldDef={description_field} />
-            </div>
-            <ExperimentMetadataForm form={form} />
+          )}
+          <div className={styles.formFullwidthField}>
+            <FormField form={form} fieldDef={assay_model_id_field} />
           </div>
-          <FormControls
-            form={form}
-            onDelete={onDelete}
-            showDelete={!!experiment.id && canCrudExperiment}
-            showCancel
-            cancelLabel={experiment.id ? "Back" : "Cancel"}
-            onCancel={() => navigate(experiment.id ? "../.." : "..")}
-            isDeleting={destroyEntityMutation.isPending}
-          />
-        </Form>
+          <div className={styles.formFullwidthField}>
+            <FormField form={form} fieldDef={name_field} />
+          </div>
+          <div className={styles.formFullwidthField}>
+            <FormField form={form} fieldDef={publication_status_id_field} />
+          </div>
+          <div className={styles.formFullwidthField}>
+            <FormField form={form} fieldDef={description_field} />
+          </div>
+          <ExperimentMetadataForm form={form} />
+        </div>
+        <FormControls
+          form={form}
+          onDelete={onDelete}
+          showDelete={!!experiment.id && canCrudExperiment}
+          showCancel
+          cancelLabel={experiment.id ? "Back" : "Cancel"}
+          onCancel={() => navigate(experiment.id ? "../.." : "..")}
+          isDeleting={destroyEntityMutation.isPending}
+        />
       </Surface>
-    </div>
+      {!experiment.id && <ExperimentMetadataTemplates form={form} />}
+    </Form>
   );
 };
 

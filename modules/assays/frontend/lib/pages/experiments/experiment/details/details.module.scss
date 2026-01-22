@@ -23,7 +23,6 @@
   width: 40vw;
   min-width: 480px;
   max-width: 960px;
-  position: relative;
 }
 
 .formTitle {
@@ -64,12 +63,4 @@
 .formFullwidthField {
   grid-column-start: 1;
   grid-column-end: -1;
-}
-
-.templatesContainer {
-  position: absolute;
-  right: calc(-40vw - (theme.$spacing * 2));
-  top: 0;
-  bottom: 0;
-  width: 40vw;
 }

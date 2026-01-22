@@ -16,7 +16,7 @@
  * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Row, Table, useSetupTableState } from "@grit42/table";
+import { Table, useSetupTableState } from "@grit42/table";
 import { ErrorPage, Spinner } from "@grit42/client-library/components";
 import { useTableColumns } from "@grit42/core/utils";
 import styles from "./details.module.scss";
@@ -25,6 +25,9 @@ import {
   useExperimentMetadataTemplateColumns,
   useExperimentMetadataTemplates,
 } from "../../../../queries/experiment_metadata_templates";
+import { ReactFormExtendedApi } from "@grit42/form";
+import { ExperimentData } from "../../../../queries/experiments";
+import { useAssayMetadataDefinitions } from "../../../../queries/assay_metadata_definitions";
 
 const DEFAULT_COLUMN_SIZES = {
   name: 200,
@@ -32,10 +35,12 @@ const DEFAULT_COLUMN_SIZES = {
 } as const;
 
 const ExperimentMetadataTemplatesTable = ({
-  onRowClick,
+  form,
 }: {
-  onRowClick?: (row: Row<ExperimentMetadataTemplateData>) => void;
+  form: ReactFormExtendedApi<Partial<ExperimentData>, undefined>;
 }) => {
+  const { data: metadataDefinitions } = useAssayMetadataDefinitions();
+
   const { data: experimentMetadataTemplates } =
     useExperimentMetadataTemplates();
   const { data: experimentMetadataTemplateColumns } =
@@ -63,37 +68,68 @@ const ExperimentMetadataTemplatesTable = ({
     },
   );
 
+  const applyMetadataTemplate = (template: ExperimentMetadataTemplateData) => {
+    metadataDefinitions?.forEach(({ safe_name }) => {
+      if (template[safe_name]) {
+        form.setFieldValue(safe_name, template[safe_name]);
+        form.setFieldMeta("safe_name", (prev) => ({
+          ...prev,
+          errorMap: {},
+        }));
+      }
+    });
+  };
+
   return (
     <Table<ExperimentMetadataTemplateData>
       header="Pick Metadata Templates"
       tableState={tableState}
       className={styles.metadataTemplatesTable}
       data={experimentMetadataTemplates}
-      onRowClick={onRowClick}
+      onRowClick={({ original }) => applyMetadataTemplate(original)}
     />
   );
 };
 
 const ExperimentMetadataTemplates = ({
-  onSelect,
+  form,
 }: {
-  onSelect: (template: ExperimentMetadataTemplateData) => void;
+  form: ReactFormExtendedApi<Partial<ExperimentData>, undefined>;
 }) => {
   const {
     isLoading: isExperimentMetadataTemplateColumnsLoading,
     isError: isExperimentMetadataTemplateColumnsError,
     error: ExperimentMetadataTemplateColumnsError,
   } = useExperimentMetadataTemplateColumns();
+  const {
+    isLoading: isMetadataDefinitionsLoading,
+    isError: isMetadataDefinitionsError,
+    error: metadataDefinitionsError,
+  } = useAssayMetadataDefinitions();
 
   const { isLoading, isError, error } = useExperimentMetadataTemplates();
 
-  if (isExperimentMetadataTemplateColumnsLoading || isLoading)
+  if (
+    isExperimentMetadataTemplateColumnsLoading ||
+    isLoading ||
+    isMetadataDefinitionsLoading
+  )
     return <Spinner />;
-  if (isExperimentMetadataTemplateColumnsError || isError)
+  if (
+    isExperimentMetadataTemplateColumnsError ||
+    isError ||
+    isMetadataDefinitionsError
+  )
     return (
-      <ErrorPage error={ExperimentMetadataTemplateColumnsError ?? error} />
+      <ErrorPage
+        error={
+          ExperimentMetadataTemplateColumnsError ??
+          error ??
+          metadataDefinitionsError
+        }
+      />
     );
-  return <ExperimentMetadataTemplatesTable onRowClick={({original}) => onSelect(original)} />;
+  return <ExperimentMetadataTemplatesTable form={form} />;
 };
 
 export default ExperimentMetadataTemplates;

@@ -1,12 +1,10 @@
 import { Button, ErrorPage, Spinner } from "@grit42/client-library/components";
 import { FormField, ReactFormExtendedApi, useStore } from "@grit42/form";
 import { EntityFormFieldDef } from "@grit42/core";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { ExperimentData } from "../../../../queries/experiments";
 import { useAssayModelMetadata } from "../../../../queries/assay_model_metadata";
 import { useAssayMetadataDefinitions } from "../../../../queries/assay_metadata_definitions";
-import ExperimentMetadataTemplates from "./ExperimentMetadataTemplates";
-import { ExperimentMetadataTemplateData } from "../../../../queries/experiment_metadata_templates";
 import Circle1CloseIcon from "@grit42/client-library/icons/Circle1Close";
 import styles from "./details.module.scss";
 import { MetadataDefintionSelector } from "../../../../features/assay-metadata-definitions";
@@ -18,7 +16,7 @@ const ExperimentMetadataForm = ({
 }) => {
   const [selectorOpen, setSelectorOpen] = useState(false);
   const [selectedMetadataDefinitions, setSelectedMetadataDefinitions] =
-    useState<number[] | null>(null);
+    useState<number[]>([]);
   const { assay_model_id, values } = useStore(form.baseStore, ({ values }) => ({
     assay_model_id: values.assay_model_id,
     values,
@@ -44,67 +42,32 @@ const ExperimentMetadataForm = ({
     error: metadataDefinitionsError,
   } = useAssayMetadataDefinitions();
 
-  const applyMetadataTemplate = (template: ExperimentMetadataTemplateData) => {
-    const newSelectedMetadataDefinitions: number[] = [];
-    metadataDefinitions?.forEach(({ id, safe_name }) => {
-      if (template[safe_name]) {
-        form.setFieldValue(safe_name, template[safe_name]);
-        form.setFieldMeta("safe_name", (prev) => ({
-          ...prev,
-          errorMap: {},
-        }));
-        newSelectedMetadataDefinitions.push(id);
-      }
-    });
-    if (newSelectedMetadataDefinitions.length) {
-      setSelectedMetadataDefinitions((prev) =>
-        prev
-          ? [...prev, ...newSelectedMetadataDefinitions]
-          : newSelectedMetadataDefinitions,
-      );
-    }
-  };
+  const metadataWithValues = useMemo(
+    () =>
+      metadataDefinitions
+        ?.filter(
+          ({ safe_name }) =>
+            Object.hasOwn(values, safe_name) && values[safe_name] !== null,
+        )
+        .map(({ id }) => id),
+    [metadataDefinitions, values],
+  );
 
-  useEffect(() => {
-    if (modelMetadata) {
-      setSelectedMetadataDefinitions((prev) => [
-        ...(prev ?? []),
-        ...modelMetadata
-          .filter(
-            ({ assay_metadata_definition_id }) =>
-              !prev || !prev.includes(assay_metadata_definition_id),
-          )
-          .map(
-            ({ assay_metadata_definition_id }) => assay_metadata_definition_id,
-          ),
-      ]);
-    }
-  }, [metadataDefinitions, modelMetadata]);
-
-  useEffect(() => {
-    if (
-      selectedMetadataDefinitions === null &&
-      metadataDefinitions &&
-      modelMetadata
-    ) {
-      setSelectedMetadataDefinitions(
-        metadataDefinitions
-          .filter(
-            (md) =>
-              !!values[md.safe_name] ||
-              modelMetadata.find(
-                ({ assay_metadata_definition_id }) =>
-                  assay_metadata_definition_id === md.id,
-              ),
-          )
-          .map(({ id }) => id),
-      );
-    }
-  }, [metadataDefinitions, modelMetadata, selectedMetadataDefinitions, values]);
+  const displayedMetadata = useMemo(
+    () =>
+      new Set([
+        ...(metadataWithValues ?? []),
+        ...(modelMetadata ?? []).map(
+          ({ assay_metadata_definition_id }) => assay_metadata_definition_id,
+        ),
+        ...(selectedMetadataDefinitions ?? []),
+      ]),
+    [metadataWithValues, modelMetadata, selectedMetadataDefinitions],
+  );
 
   const fields = useMemo(() => {
     return metadataDefinitions
-      ?.filter((md) => selectedMetadataDefinitions?.find((id) => id === md.id))
+      ?.filter((md) => displayedMetadata.has(md.id))
       .map(
         (
           md,
@@ -142,7 +105,7 @@ const ExperimentMetadataForm = ({
         if (!a.required && b.required) return 1;
         return a.name.localeCompare(b.name);
       });
-  }, [metadataDefinitions, selectedMetadataDefinitions, modelMetadata]);
+  }, [metadataDefinitions, displayedMetadata, modelMetadata]);
 
   if (isMetadataDefinitionsLoading) {
     return <Spinner />;
@@ -210,11 +173,6 @@ const ExperimentMetadataForm = ({
         >
           Add metadata
         </Button>
-      )}
-      {!values.id && (
-        <div className={styles.templatesContainer}>
-          <ExperimentMetadataTemplates onSelect={applyMetadataTemplate} />
-        </div>
       )}
     </>
   );
