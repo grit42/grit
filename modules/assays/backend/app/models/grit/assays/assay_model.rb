@@ -21,12 +21,11 @@ module Grit::Assays
     include Grit::Core::GritEntityRecord
 
     belongs_to :assay_type
-    has_many :assays, dependent: :destroy
     has_many :assay_model_metadata, dependent: :destroy
     has_many :assay_data_sheet_definitions, dependent: :destroy
 
     display_column "name"
-    
+
     entity_crud_with read: [],
       create: [ "Administrator", "AssayAdministrator" ],
       update: [ "Administrator", "AssayAdministrator" ],
