@@ -171,6 +171,8 @@ module Grit::Core::GritEntityController
         render json: { success: true, data: @record } unless @record.nil?
       end
     rescue StandardError => e
+      logger.info e.to_s
+      logger.info e.backtrace.join("\n")
       render json: { success: false, errors: e.to_s }, status: :internal_server_error
     end
 
@@ -185,6 +187,8 @@ module Grit::Core::GritEntityController
         render json: { success: false, errors: @record.errors }, status: :unprocessable_entity
       end
     rescue StandardError => e
+      logger.info e.to_s
+      logger.info e.backtrace.join("\n")
       render json: { success: false, errors: e.to_s }, status: :internal_server_error
     end
 
@@ -201,6 +205,8 @@ module Grit::Core::GritEntityController
         render json: { success: false, errors: @record.errors }, status: :unprocessable_entity
       end
     rescue StandardError => e
+      logger.info e.to_s
+      logger.info e.backtrace.join("\n")
       render json: { success: false, errors: e.to_s }, status: :internal_server_error
     end
 
@@ -211,6 +217,8 @@ module Grit::Core::GritEntityController
       klass.where(id: ids).destroy_all
       render json: { success: true }
     rescue StandardError => e
+      logger.info e.to_s
+      logger.info e.backtrace.join("\n")
       render json: { success: false, errors: e.to_s }, status: :internal_server_error
     end
 

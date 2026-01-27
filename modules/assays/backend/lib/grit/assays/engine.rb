@@ -32,6 +32,11 @@ module Grit
           end
         end
       end
+
+      initializer :ignore_tables do |app|
+        ActiveRecord::SchemaDumper.ignore_tables << /^ds_.*$/
+        ActiveRecord::SchemaDumper.ignore_tables << /^ls_.*$/
+      end
     end
   end
 end

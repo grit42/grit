@@ -22,11 +22,6 @@ module Grit::Assays
 
     belongs_to :assay_data_sheet_definition
     belongs_to :experiment
-    has_many :experiment_data_sheet_records
-    has_many :experiment_data_sheet_values
-    has_many :experiment_data_sheet_record_load_sets, dependent: :destroy
-
-    before_destroy :delete_dependents
 
     entity_crud_with create: [ "Administrator", "AssayAdministrator", "AssayUser" ],
       read: [],
@@ -41,12 +36,6 @@ module Grit::Assays
           grit_assays_experiment_data_sheet_record_load_sets__.experiment_data_sheet_id = grit_assays_experiment_data_sheets.id and
           grit_assays_experiment_data_sheet_record_load_sets__.load_set_id = #{params["load_set_id"]}
         ")
-    end
-
-    def delete_dependents
-      experiment_data_sheets_records = Grit::Assays::ExperimentDataSheetRecord.unscoped.where(experiment_data_sheet_id: self.id).select(:id)
-      Grit::Assays::ExperimentDataSheetValue.unscoped.where(experiment_data_sheet_record_id: experiment_data_sheets_records).delete_all
-      experiment_data_sheets_records.delete_all
     end
   end
 end

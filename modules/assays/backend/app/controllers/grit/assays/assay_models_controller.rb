@@ -97,10 +97,58 @@ module Grit::Assays
       render json: { success: false, errors: e.to_s }, status: :internal_server_error
     end
 
+    def publish
+      AssayModel.transaction do
+        record = AssayModel.find(params[:assay_model_id])
+        record.publication_status = Grit::Core::PublicationStatus.find_by(name: "Published")
+        unless record.save
+          render json: { success: false, errors: record.errors }, status: :unprocessable_entity
+          return
+        end
+        record.create_tables
+        render json: { success: true, data: record }
+      rescue ActiveRecord::RecordNotFound => e
+        logger.info e.to_s
+        logger.info e.backtrace.join("\n")
+        render json: { success: false, errors: e.to_s }, status: :not_found
+        raise ActiveRecord::Rollback
+      rescue StandardError => e
+        logger.info e.to_s
+        logger.info e.backtrace.join("\n")
+        render json: { success: false, errors: e.to_s }, status: :internal_server_error
+        raise ActiveRecord::Rollback
+      end
+    end
+
+    def draft
+      AssayModel.transaction do
+        record = AssayModel.find(params[:assay_model_id])
+        record.publication_status = Grit::Core::PublicationStatus.find_by(name: "Draft")
+        unless record.save
+          render json: { success: false, errors: record.errors }, status: :unprocessable_entity
+          return
+        end
+        record.drop_tables
+        record.experiments.destroy_all
+        record.assay_data_sheet_definitions.each { |dsd| dsd.assay_data_sheet_columns.each { |dsc| dsc.data_table_columns.destroy_all } }
+        render json: { success: true, data: record }
+      rescue ActiveRecord::RecordNotFound => e
+        logger.info e.to_s
+        logger.info e.backtrace.join("\n")
+        render json: { success: false, errors: e.to_s }, status: :not_found
+        raise ActiveRecord::Rollback
+      rescue StandardError => e
+        logger.info e.to_s
+        logger.info e.backtrace.join("\n")
+        render json: { success: false, errors: e.to_s }, status: :internal_server_error
+        raise ActiveRecord::Rollback
+      end
+    end
+
     private
 
-    def permitted_params
-      %i[ name description assay_type_id publication_status_id ]
-    end
+      def permitted_params
+        %i[ name description assay_type_id publication_status_id ]
+      end
   end
 end

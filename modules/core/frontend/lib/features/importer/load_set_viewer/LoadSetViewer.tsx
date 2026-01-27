@@ -26,7 +26,6 @@ import { useQueryClient } from "@grit42/api";
 import {
   EntityData,
   useEntity,
-  useEntityColumns,
   useInfiniteEntityData,
 } from "../../entities";
 import { Table, useSetupTableState } from "@grit42/table";
@@ -35,7 +34,7 @@ import { useRollbackLoadSetMutation } from "../mutations";
 import { LoadSetData } from "../types";
 import { useTableColumns } from "../../../utils";
 import styles from "./loadSetViewer.module.scss";
-import { useLoadSetLoadedDataColumns } from "../queries";
+import { useLoadSetEntity, useLoadSetLoadedDataColumns } from "../queries";
 import { useImporter } from "../ImportersContext";
 import { toast } from "@grit42/notifications";
 
@@ -52,7 +51,7 @@ const LoadSetViewer = ({ loadSet }: Props) => {
     data: info,
     isError: isInfoError,
     error: infoError,
-  } = useEntity(loadSet.entity);
+  } = useLoadSetEntity(loadSet.id);
 
   const {
     data: columns,
@@ -154,7 +153,7 @@ const LoadSetViewer = ({ loadSet }: Props) => {
 const LoadSetViewerWrapper = ({ loadSet }: Props) => {
   const { isLoading: isInfoLoading } = useEntity(loadSet.entity);
 
-  const { isLoading: isColumnsLoading } = useEntityColumns(loadSet.entity);
+  const { isLoading: isColumnsLoading } = useLoadSetLoadedDataColumns(loadSet.id);
 
   if (isColumnsLoading || isInfoLoading) {
     return <Spinner />;

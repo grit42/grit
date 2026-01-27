@@ -11,8 +11,10 @@ import { MetadataDefintionSelector } from "../../../../features/assay-metadata-d
 
 const ExperimentMetadataForm = ({
   form,
+  disabled,
 }: {
   form: ReactFormExtendedApi<Partial<ExperimentData>, undefined>;
+  disabled: boolean;
 }) => {
   const [selectorOpen, setSelectorOpen] = useState(false);
   const [selectedMetadataDefinitions, setSelectedMetadataDefinitions] =
@@ -92,7 +94,7 @@ const ExperimentMetadataForm = ({
             display_column: "name",
             display_column_type: "string",
           },
-          disabled: false,
+          disabled: disabled,
           assay_metadata_definition_id: md.id,
           belongsToAssayModel:
             modelMetadata?.some(
@@ -105,7 +107,7 @@ const ExperimentMetadataForm = ({
         if (!a.required && b.required) return 1;
         return a.name.localeCompare(b.name);
       });
-  }, [metadataDefinitions, displayedMetadata, modelMetadata]);
+  }, [metadataDefinitions, displayedMetadata, modelMetadata, disabled]);
 
   if (isMetadataDefinitionsLoading) {
     return <Spinner />;
@@ -138,7 +140,7 @@ const ExperimentMetadataForm = ({
         </div>
       )}
       {fields?.map((f) =>
-        f.belongsToAssayModel ? (
+        (f.belongsToAssayModel || disabled) ? (
           <FormField key={f.name} form={form} fieldDef={f} />
         ) : (
           <div key={f.name} className={styles.formExtraMetadataField}>
@@ -166,7 +168,7 @@ const ExperimentMetadataForm = ({
           )}
         />
       )}
-      {selectedMetadataDefinitions?.length !== metadataDefinitions.length && (
+      {selectedMetadataDefinitions?.length !== metadataDefinitions.length && !disabled && (
         <Button
           style={{ gridColumnStart: 1 }}
           onClick={() => setSelectorOpen(true)}

@@ -9,7 +9,7 @@ class CreateGritAssaysExperimentDataSheetRecordLoadSets < ActiveRecord::Migratio
 
       t.references :load_set, foreign_key: { name: "assays_experiment_data_sheet_record_load_sets_core_load_set_id_fkey", to_table: "grit_core_load_sets" }, null: false
       t.references :experiment, foreign_key: { name: "data_sheet_record_load_sets_id_fkey", to_table: "grit_assays_experiments" }, null: false
-      t.references :experiment_data_sheet, foreign_key: { name: "data_sheet_record_load_sets_data_sheet_id_fkey", to_table: "grit_assays_experiment_data_sheets" }, null: false
+      t.references :assay_data_sheet_definition, foreign_key: { name: "data_sheet_record_load_sets_data_sheet_id_fkey", to_table: "grit_assays_assay_data_sheet_definitions" }, null: false
     end
 
     execute "CREATE TRIGGER manage_stamps_grit_assays_experiment_data_sheet_record_load_sets BEFORE INSERT OR UPDATE ON public.grit_assays_experiment_data_sheet_record_load_sets FOR EACH ROW EXECUTE FUNCTION public.manage_stamps();"

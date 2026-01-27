@@ -20,9 +20,14 @@ module Grit::Assays
   class Experiment < ApplicationRecord
     include Grit::Core::GritEntityRecord
 
+    before_destroy :delete_records
+    before_save :check_publication_status
+
     belongs_to :assay_model
-    has_many :experiment_data_sheets, dependent: :destroy
+    belongs_to :publication_status, class_name: "Grit::Core::PublicationStatus"
     has_many :experiment_metadata, dependent: :destroy
+    has_many :experiment_data_sheets, dependent: :destroy
+    has_many :experiment_data_sheet_record_load_sets, dependent: :destroy
 
     display_column "name"
 
@@ -142,5 +147,18 @@ module Grit::Assays
     def self.entity_columns(**args)
       self.entity_columns_from_properties([*self.entity_properties(**args), *self.metadata_properties(**args)])
     end
+
+    def delete_records
+      assay_model.assay_data_sheet_definitions.each do |ds|
+        klass = ds.sheet_record_klass
+        klass.destroy_by(experiment_id: id) if klass.table_exists?
+      end
+    end
+
+    private
+      def check_publication_status
+        return if publication_status_changed?
+        raise "Cannot modify a published Experiment" if publication_status.name === "Published"
+      end
   end
 end

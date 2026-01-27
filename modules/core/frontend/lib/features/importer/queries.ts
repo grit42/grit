@@ -22,10 +22,11 @@ import {
   EndpointSuccess,
   useQuery,
   UseQueryResult,
+  UseQueryOptions,
 } from "@grit42/api";
 import { LoadSetPreviewData } from "./types";
 import { FormFieldDef } from "@grit42/form";
-import { EntityPropertyDef } from "../entities";
+import { EntityInfo, EntityPropertyDef } from "../entities";
 
 export const useLoadSetFields = (
   entity: string,
@@ -123,6 +124,30 @@ export const useLoadSetData = (
 
       return response as string;
     },
+  });
+};
+
+export const useLoadSetEntity = (
+  loadSetId: number,
+
+  queryOptions: Partial<UseQueryOptions<EntityInfo | null, string>> = {},
+): UseQueryResult<EntityInfo | null, string> => {
+  return useQuery({
+    queryKey: ["loadSetEntity", loadSetId],
+    queryFn: async (): Promise<EntityInfo | null> => {
+      const response = await request<
+        EndpointSuccess<EntityInfo>,
+        EndpointError
+      >(`/grit/core/load_sets/${loadSetId}/entity_info`);
+
+      if (!response.success) {
+        throw response.errors;
+      }
+
+      return response.data as EntityInfo;
+    },
+    staleTime: 0,
+    ...queryOptions,
   });
 };
 
