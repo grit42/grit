@@ -112,7 +112,7 @@ module Grit::Assays
       DataTableColumn.detailed.where(data_table_id: data_table.id).each do |table_colum|
         query = table_colum.data_table_statement(query)
       end
-      query
+      query.with(experiments_with_metadata: Experiment.detailed)
     end
 
 

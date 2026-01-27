@@ -1,4 +1,6 @@
 Grit::Assays::Engine.routes.draw do
+  resources :experiment_metadata_templates
+  resources :experiment_metadata
   resources :data_table_columns
   resources :data_table_entities do
     collection do
@@ -30,8 +32,6 @@ Grit::Assays::Engine.routes.draw do
     end
   end
   resources :assay_metadata_definitions
-  resources :assay_metadata
-  resources :assays
   resources :assay_model_metadata
   resources :assay_models do
     post :update_metadata

@@ -23,8 +23,14 @@ import {
   useEntityData,
   useEntityDatum,
   useEntityFields,
+  useInfiniteEntityData,
 } from "@grit42/core";
-import { UseQueryOptions, URLParams } from "@grit42/api";
+import {
+  UseQueryOptions,
+  URLParams,
+  UndefinedInitialDataInfiniteOptions,
+  PaginatedEndpointSuccess,
+} from "@grit42/api";
 import { Filter, SortingState } from "@grit42/table";
 import { FormFieldDef } from "@grit42/form";
 import { ExperimentDataSheetData } from "./experiment_data_sheet";
@@ -42,12 +48,13 @@ export const useExperimentColumns = (
 };
 
 export const useExperimentFields = (
+  experiment_id?: number | string,
   params: Record<string, any> = {},
   queryOptions: Partial<UseQueryOptions<FormFieldDef[], string>> = {},
 ) => {
   return useEntityFields<FormFieldDef>(
     "Grit::Assays::Experiment",
-    params,
+    { ...params, experiment_id },
     queryOptions,
   );
 };
@@ -60,8 +67,10 @@ export interface ExperimentPlotDefinition {
 
 export interface ExperimentData extends EntityData {
   name: string;
-  assay_id: number;
-  assay_id__name: string;
+  assay_model_id: number;
+  assay_model_id__name: string;
+  publication_status_id: number;
+  publication_status_id__name: string;
   description: string | null;
   data_sheets: EntityData<ExperimentDataSheetData>[];
   plots: Record<string, ExperimentPlotDefinition>;
@@ -82,6 +91,38 @@ export const useExperiments = (
   );
 };
 
+export const useInfiniteExperiments = (
+  sort?: SortingState,
+  filter?: Filter[],
+  params: URLParams = {},
+  queryOptions: Partial<
+    UndefinedInitialDataInfiniteOptions<
+      PaginatedEndpointSuccess<ExperimentData[]>,
+      string
+    >
+  > = {},
+) => {
+  return useInfiniteEntityData<ExperimentData>(
+    "grit/assays/experiments",
+    sort,
+    [
+      {
+        active: !!params.assay_model_id,
+        column: "assay_model_id",
+        id: "assay_model_id",
+        operator: "eq",
+        type: "integer",
+        value: params.assay_model_id,
+        property: "assay_model_id",
+        property_type: "integer",
+      },
+      ...(filter ?? []),
+    ],
+    params,
+    queryOptions,
+  );
+};
+
 export const useExperiment = (
   experimentId: string | number,
   params: URLParams = {},
@@ -91,6 +132,34 @@ export const useExperiment = (
     "grit/assays/experiments",
     experimentId,
     params,
+    queryOptions,
+  );
+};
+
+export const usePublishedExperimentsOfModel = (
+  assayModelId: string | number,
+  sort?: SortingState,
+  filter?: Filter[],
+  params: URLParams = {},
+  queryOptions: Partial<UseQueryOptions<ExperimentData[], string>> = {},
+) => {
+  return useEntityData<ExperimentData>(
+    "grit/assays/experiments",
+    sort,
+    [
+      {
+        active: true,
+        column: "assay_model_id",
+        id: "assay_model_id",
+        operator: "eq",
+        type: "integer",
+        value: assayModelId,
+        property: "assay_model_id",
+        property_type: "integer",
+      },
+      ...(filter ?? []),
+    ],
+    { ...params, scope: "published" },
     queryOptions,
   );
 };

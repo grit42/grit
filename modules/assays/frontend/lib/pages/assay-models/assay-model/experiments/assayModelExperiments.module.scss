@@ -1,0 +1,10 @@
+@use "@grit42/client-library/theme.scss";
+
+.container {
+  display: grid;
+  grid-template-columns:  min-content 1fr;
+  grid-template-rows: 1fr;
+  overflow: auto;
+  height: 100%;
+  gap: calc(theme.$spacing * 2);
+}

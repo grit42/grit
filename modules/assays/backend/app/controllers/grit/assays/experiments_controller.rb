@@ -24,15 +24,59 @@ module Grit::Assays
     include Grit::Core::GritEntityController
 
     def create
-      @record = Grit::Assays::Experiment.create(params.permit(self.permitted_params))
-      if @record.new_record?
-        render json: { success: false, errors: @record.errors }, status: :unprocessable_entity
-        return
+      ActiveRecord::Base.transaction do
+        record = Grit::Assays::Experiment.new(params.permit(self.permitted_params))
+        if !record.save
+          render json: { success: false, errors: record.errors }, status: :unprocessable_entity
+          raise ActiveRecord::Rollback
+          return
+        end
+
+        if !record.set_metadata_values(params)
+          render json: { success: false, errors: record.errors }, status: :unprocessable_entity
+          raise ActiveRecord::Rollback
+          return
+        end
+
+        if !record.create_data_sheets
+          render json: { success: false, errors: "Could not create data sheets" }, status: :internal_server_error
+          raise ActiveRecord::Rollback
+          return
+        end
+
+        scope = get_scope(params[:scope] || "detailed", params)
+        @record = scope.find(record.id)
+        render json: { success: true, data: record }, status: :created, location: record
       end
-      scope = get_scope(params[:scope] || "detailed", params)
-      @record = scope.find(@record.id)
-      render json: { success: true, data: @record }, status: :created, location: @record
     rescue StandardError => e
+      logger.info e.to_s
+      logger.info e.backtrace.join("\n")
+      render json: { success: false, errors: e.to_s }, status: :internal_server_error
+    end
+
+    def update
+      ActiveRecord::Base.transaction do
+        record = Grit::Assays::Experiment.find(params[:id])
+
+        if !record.update(params.permit(self.permitted_params))
+          render json: { success: false, errors: record.errors }, status: :unprocessable_entity
+          raise ActiveRecord::Rollback
+          return
+        end
+
+        if !record.set_metadata_values(params)
+          render json: { success: false, errors: record.errors }, status: :unprocessable_entity
+          raise ActiveRecord::Rollback
+          return
+        end
+
+        scope = get_scope(params[:scope] || "detailed", params)
+        record = scope.find(record.id)
+        render json: { success: true, data: record }
+      end
+    rescue StandardError => e
+      logger.info e.to_s
+      logger.info e.backtrace.join("\n")
       render json: { success: false, errors: e.to_s }, status: :internal_server_error
     end
 
@@ -62,7 +106,7 @@ module Grit::Assays
     private
 
     def permitted_params
-      [ :name, :description, :assay_id, :publication_status_id, plots: {} ]
+      [ :name, :description, :assay_model_id, :publication_status_id, plots: {} ]
     end
 
     def do_export(experiment, temp_file)

@@ -20,39 +20,127 @@ module Grit::Assays
   class Experiment < ApplicationRecord
     include Grit::Core::GritEntityRecord
 
-    belongs_to :assay
-    delegate :assay_model, to: :assay
+    belongs_to :assay_model
     has_many :experiment_data_sheets, dependent: :destroy
+    has_many :experiment_metadata, dependent: :destroy
 
     display_column "name"
 
+    entity_crud_with read: [],
+      create: [ "Administrator", "AssayAdministrator", "AssayUser" ],
+      update: [ "Administrator", "AssayAdministrator", "AssayUser" ],
+      destroy: [ "Administrator", "AssayAdministrator", "AssayUser" ]
+
+    def set_metadata_values(params)
+      success = true
+      experiment_metadata = self.experiment_metadata
+      AssayMetadataDefinition.all.each do |md|
+        experiment_metadatum = experiment_metadata.find { |em| em.assay_metadata_definition_id == md.id }
+        if (params[md.safe_name].nil? || params[md.safe_name].blank?) && !experiment_metadatum.nil?
+          begin
+            experiment_metadatum.destroy!
+          rescue
+            errors.add(md.safe_name, "could not remove metadata value")
+            success = false
+          end
+        elsif !(params[md.safe_name].nil? || params[md.safe_name].blank?) && !experiment_metadatum.nil?
+          begin
+            experiment_metadatum.update!(vocabulary_item_id: params[md.safe_name])
+          rescue
+            errors.add(md.safe_name, "could not update metadata value")
+            success = false
+          end
+        elsif !(params[md.safe_name].nil? || params[md.safe_name].blank?) && experiment_metadatum.nil?
+          begin
+            ExperimentMetadatum.create!({ experiment_id: id, assay_metadata_definition_id: md.id, vocabulary_id: md.vocabulary_id, vocabulary_item_id: params[md.safe_name] })
+          rescue
+            errors.add(md.safe_name, "could not set metadata value")
+            success = false
+          end
+        end
+      end
+      success
+    end
+
+    def create_data_sheets
+      Grit::Assays::ExperimentDataSheet.create!(assay_model.assay_data_sheet_definitions.map { |d| { experiment_id: id, assay_data_sheet_definition_id: d.id } })
+      true
+    rescue
+      false
+    end
+
     def self.create(params)
       ActiveRecord::Base.transaction do
-        @record = Grit::Assays::Experiment.new(params)
+        @record = Grit::Assays::Experiment.new({ name: params[:name], description: params[:description], assay_model_id: params[:assay_model_id] })
 
         if @record.save
+          @record.set_metadata_values(params)
           Grit::Assays::ExperimentDataSheet.create!(@record.assay_model.assay_data_sheet_definitions.map { |d| { experiment_id: @record.id, assay_data_sheet_definition_id: d.id } })
         end
         @record
       end
     end
 
-    entity_crud_with create: [ "Administrator", "AssayAdministrator", "AssayUser" ],
-      read: [],
-      update: [ "Administrator", "AssayAdministrator", "AssayUser" ],
-      destroy: [ "Administrator", "AssayAdministrator", "AssayUser" ]
+    def self.detailed(params = nil)
+      query = detailed_scope(params)
+        .joins("JOIN grit_assays_assay_types grit_assays_assay_types__ on grit_assays_assay_types__.id = grit_assays_assay_models__.assay_type_id")
+        .select("grit_assays_assay_types__.id as assay_type_id")
+        .select("grit_assays_assay_types__.name as assay_type_id__name")
+      AssayMetadataDefinition.all.each do |md|
+        query = query
+          .joins("LEFT OUTER JOIN #{ExperimentMetadatum.table_name} #{md.safe_name} ON #{md.safe_name}.assay_metadata_definition_id = #{md.id} AND #{md.safe_name}.experiment_id = #{self.table_name}.id")
+          .joins("LEFT OUTER JOIN #{Grit::Core::VocabularyItem.table_name} vi_#{md.safe_name} ON vi_#{md.safe_name}.id = #{md.safe_name}.vocabulary_item_id")
+          .select("vi_#{md.safe_name}.id as #{md.safe_name}")
+          .select("vi_#{md.safe_name}.name as #{md.safe_name}__name")
+      end
+      query
+    end
 
+    def self.published(params = nil)
+      self.detailed.where("grit_core_publication_statuses__.name = ?", "Published")
+    end
 
     def self.entity_properties(**args)
       @entity_properties ||= self.db_properties.filter { |p| p[:name] != "plots" }
     end
 
+    def self.metadata_properties(**args)
+      assay_model_metadata = []
+
+      if args[:experiment_id]
+        assay_model_metadata = AssayModelMetadatum.where(assay_model_id: Experiment.find_by(id: args[:experiment_id])&.assay_model_id).all
+      elsif args[:assay_model_id]
+        assay_model_metadata = AssayModelMetadatum.where(assay_model_id: args[:assay_model_id]).all
+      end
+
+      metadata_properties = AssayMetadataDefinition.all.map do |md|
+        {
+          name: md.safe_name,
+          display_name: md.name,
+          type: "entity",
+          limit: nil,
+          required: assay_model_metadata.any? { |amm| amm.assay_metadata_definition_id == md.id },
+          unique: false,
+          default: nil,
+          entity: {
+            name: md.name,
+            full_name: "Grit::Core::VocabularyItem",
+            path: "grit/core/vocabularies/#{md.vocabulary_id}/vocabulary_items",
+            primary_key: "id",
+            primary_key_type: "integer"
+          },
+          disabled: false,
+          metadata_definition_id: md.id
+        }
+      end
+    end
+
     def self.entity_fields(**args)
-      @entity_fields ||= self.entity_fields_from_properties(self.entity_properties)
+      self.entity_fields_from_properties([*self.entity_properties(**args), *self.metadata_properties(**args)])
     end
 
     def self.entity_columns(**args)
-      @entity_columns ||= self.entity_columns_from_properties(self.entity_properties)
+      self.entity_columns_from_properties([*self.entity_properties(**args), *self.metadata_properties(**args)])
     end
   end
 end

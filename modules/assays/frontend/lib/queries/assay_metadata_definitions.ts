@@ -52,6 +52,7 @@ export const useAssayMetadataDefinitionFields = (
 
 export interface AssayMetadataDefinitionData extends EntityData {
   name: string;
+  safe_name: string;
   description: string | null;
 }
 

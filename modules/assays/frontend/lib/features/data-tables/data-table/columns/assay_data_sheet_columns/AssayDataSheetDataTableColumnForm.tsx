@@ -39,26 +39,56 @@ import { DataTableColumnData } from "../../../queries/data_table_columns";
 import { useQueryClient } from "@grit42/api";
 import { toSafeIdentifier } from "@grit42/core/utils";
 import styles from "../dataTableColumns.module.scss";
-import AssaySelector from "./AssaySelector";
+import ExperimentSelector from "./ExperimentSelector";
+import ExperimentMetadataFilters from "./ExperimentMetadataFilters";
 
-const AssaysFilter = ({
+const ExperimentsFilter = ({
   assayModelId,
   form,
 }: {
   assayModelId: string | number;
   form: ReactFormExtendedApi<Partial<DataTableColumnData>, undefined>;
 }) => {
+  const metadata_filters = useStore(
+    form.baseStore,
+    ({ values }) => values.metadata_filters,
+  );
   return (
-    <form.Field
-      name="pivots"
-      children={(field) => (
-        <AssaySelector
-          assayModelId={assayModelId}
-          selectedAssays={field.state.value as number[]}
-          setSelectedAssays={field.handleChange}
-        />
-      )}
-    />
+    <>
+      <form.Field
+        name="metadata_filters"
+        children={(field) => (
+          <div
+            style={{
+              height: "100%",
+              width: "100%",
+              marginTop: "var(--spacing)",
+              display: "grid",
+              gridTemplateColumns: "1fr",
+              gridTemplateRows: "1fr",
+            }}
+          >
+            <ExperimentMetadataFilters
+              assayModelId={assayModelId}
+              metadataFilters={field.state.value as Record<string, number[]>}
+              setMetadataFilters={field.handleChange}
+              identifier="metadata_definition_id"
+            />
+          </div>
+        )}
+      />
+      <form.Field
+        name="experiment_ids"
+        children={(field) => (
+          <ExperimentSelector
+            assayModelId={assayModelId}
+            selectedExperiments={field.state.value as number[]}
+            setSelectedExperiments={field.handleChange}
+            metadataFilters={metadata_filters ?? {}}
+          />
+        )}
+      />
+    </>
   );
 };
 
@@ -96,7 +126,8 @@ const AssayDataSheetDataTableColumnForm = ({
       const value = {
         ...dataTableColumn,
         ...getVisibleFieldData<Partial<DataTableColumnData>>(formValue, fields),
-        pivots: formValue.pivots ?? []
+        experiment_ids: formValue.experiment_ids ?? [],
+        metadata_filters: formValue.metadata_filters ?? {},
       };
       const res = await (dataTableColumnId === "new"
         ? createEntityMutation.mutateAsync(value as DataTableColumnData)
@@ -115,7 +146,7 @@ const AssayDataSheetDataTableColumnForm = ({
         queryClient.invalidateQueries({
           queryKey: [
             "entities",
-            "data",
+            "infiniteData",
             `grit/assays/data_tables/${dataTableId}/data_table_rows`,
           ],
         }),
@@ -192,9 +223,13 @@ const AssayDataSheetDataTableColumnForm = ({
                       <div className={styles.columnFormFieldSuggestion}>
                         <em
                           role="button"
-                          onClick={() =>
-                            form.setFieldValue("safe_name", proposed_safe_name)
-                          }
+                          onClick={() => {
+                            form.setFieldValue("safe_name", proposed_safe_name);
+                            form.setFieldMeta("safe_name", (prev) => ({
+                              ...prev,
+                              errorMap: {},
+                            }));
+                          }}
                         >
                           Use "{proposed_safe_name}"
                         </em>
@@ -235,16 +270,17 @@ const AssayDataSheetDataTableColumnForm = ({
             </FormControls>
           )}
         </Surface>
-        <div className={styles.columnPivots}>
-          <div>
-            <h3>Assays filter</h3>
+        <div className={styles.experimentFilters}>
+          <div style={{ gridColumnStart: 1, gridColumnEnd: -1 }}>
+            <h3>Experiments filter</h3>
             <p>
-              Aggregate results from experiments of the selected assays.
+              Aggregate results from selected experiments.
               <br />
-              No selection includes all experiments of all assays.
+              No selection includes all experiments matching the metadata
+              filters.
             </p>
           </div>
-          <AssaysFilter
+          <ExperimentsFilter
             assayModelId={dataTableColumn.assay_model_id!}
             form={form}
           />

@@ -27,6 +27,7 @@ import {
   genericErrorHandler,
   getVisibleFieldData,
   useForm,
+  useStore,
 } from "@grit42/form";
 import {
   useCreateEntityMutation,
@@ -37,6 +38,7 @@ import { DataTableColumnData } from "../../../queries/data_table_columns";
 import { useQueryClient } from "@grit42/api";
 import styles from "../dataTableColumns.module.scss";
 import { classnames } from "@grit42/client-library/utils";
+import { toSafeIdentifier } from "@grit42/core/utils";
 
 const EntityAttributeDataTableColumnForm = ({
   fields,
@@ -90,7 +92,7 @@ const EntityAttributeDataTableColumnForm = ({
         queryClient.invalidateQueries({
           queryKey: [
             "entities",
-            "data",
+            "infiniteData",
             `grit/assays/data_tables/${dataTableId}/data_table_rows`,
           ],
         }),
@@ -131,6 +133,17 @@ const EntityAttributeDataTableColumnForm = ({
     navigate("..");
   };
 
+  const { safe_name, proposed_safe_name } = useStore(
+    form.baseStore,
+    ({ values }) => {
+      const { name, safe_name } = values;
+      const proposed_safe_name = form.getFieldMeta("name")?.isDirty
+        ? toSafeIdentifier(name as string)
+        : safe_name;
+      return { safe_name, proposed_safe_name };
+    },
+  );
+
   return (
     <div
       className={classnames(
@@ -154,7 +167,27 @@ const EntityAttributeDataTableColumnForm = ({
             )}
             <div className={styles.columnFormFields}>
               {fields.map((f) => (
-                <FormField form={form} fieldDef={f} key={f.name} />
+                <div className={styles.columnFormField} key={f.name}>
+                  <FormField form={form} fieldDef={f} />
+                  {f.name === "safe_name" &&
+                    safe_name !== proposed_safe_name &&
+                    form.state.isDirty && (
+                      <div className={styles.columnFormFieldSuggestion}>
+                        <em
+                          role="button"
+                          onClick={() => {
+                            form.setFieldValue("safe_name", proposed_safe_name);
+                            form.setFieldMeta("safe_name", (prev) => ({
+                              ...prev,
+                              errorMap: {},
+                            }));
+                          }}
+                        >
+                          Use "{proposed_safe_name}"
+                        </em>
+                      </div>
+                    )}
+                </div>
               ))}
             </div>
           </div>

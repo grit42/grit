@@ -60,7 +60,7 @@ const TABS = [
 const AssayModelTabs = ({ name }: { name: string }) => {
   const navigate = useNavigate();
   const match = useMatch(
-    "/assays/assays/settings/assay-models/:assay_model_id/:tab/*",
+    "/assays/assay-models/settings/assay-models/:assay_model_id/:tab/*",
   );
 
   const tab = match?.params.tab ?? "details";

@@ -28,17 +28,17 @@ import { Tabs } from "@grit42/client-library/components";
 import { useEffect, useState } from "react";
 import AssayTypesAdministrationPage from "./assay-types";
 import AssayModelsAdministrationPage from "./assay-models";
-import AssaysAdministrationPage from "./assays";
 import AssayMetadataDefinitionsAdministrationPage from "./assay-metadata-definitions";
+import ExperimentMetadataTemplatesAdministrationPage from "./experiment-metadata-templates";
 
 const TABS = [
   {
-    url: "assays",
-    label: "Assays",
-  },
-  {
     url: "assay-models",
     label: "Models",
+  },
+  {
+    url: "experiment-metadata-templates",
+    label: "Metadata templates",
   },
   {
     url: "assay-metadata-definitions",
@@ -53,7 +53,7 @@ const TABS = [
 const AssaysAdministration = () => {
   const navigate = useNavigate();
 
-  const match = useMatch("/assays/assays/settings/:childPath/*");
+  const match = useMatch("/assays/assay-models/settings/:childPath/*");
   const childPath = match?.params.childPath ?? "origins";
 
   const [selectedTab, setSelectedTab] = useState(
@@ -83,7 +83,7 @@ const AssaysAdministration = () => {
           color: "var(--palette-secondary-main)",
         }}
       >
-        Assays administration
+        Assay Models administration
       </h2>
       <Tabs
         onTabChange={handleTabChange}
@@ -121,6 +121,10 @@ const AssaysAdministrationTab = () => {
           element={<AssayMetadataDefinitionsAdministrationPage />}
         />
         <Route
+          path="/experiment-metadata-templates/*"
+          element={<ExperimentMetadataTemplatesAdministrationPage />}
+        />
+        <Route
           path="/assay-types/*"
           element={<AssayTypesAdministrationPage />}
         />
@@ -128,7 +132,6 @@ const AssaysAdministrationTab = () => {
           path="/assay-models/*"
           element={<AssayModelsAdministrationPage />}
         />
-        <Route path="/assays/*" element={<AssaysAdministrationPage />} />
         <Route path="*" element={<Navigate to={TABS[0].url} replace />} />
       </Route>
     </Routes>

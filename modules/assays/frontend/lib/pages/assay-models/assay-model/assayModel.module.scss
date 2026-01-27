@@ -1,0 +1,37 @@
+@use "@grit42/client-library/theme.scss";
+
+.assayModelPage {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  gap: calc(theme.$spacing * 4);
+  grid-template-rows: min-content 1fr;
+  grid-template-columns: 1fr;
+  overflow: auto;
+}
+
+.assayModelBody {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-rows: min-content 1fr;
+  grid-template-columns: 1fr;
+  overflow: auto;
+}
+
+.assayModelHeader {
+  display: flex;
+  flex-direction: column;
+  gap: theme.$spacing;
+
+  .nameAndStatus {
+    display: flex;
+    gap: theme.$spacing;
+    align-items: baseline;
+    flex-basis: 100%;
+
+    h2 {
+      color: theme.$palette-secondary-main;
+    }
+  }
+}

@@ -20,8 +20,7 @@ import { Table, useSetupTableState } from "@grit42/table";
 import { useCallback, useEffect } from "react";
 import { useToolbar } from "@grit42/core/Toolbar";
 import Circle1NewIcon from "@grit42/client-library/icons/Circle1New";
-import CogIcon from "@grit42/client-library/icons/Cog";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Button, ErrorPage, Spinner } from "@grit42/client-library/components";
 import { useTableColumns } from "@grit42/core/utils";
 import styles from "./assayModels.module.scss";
@@ -38,7 +37,6 @@ const DEFAULT_COLUMN_SIZES = {
 const AssayModelsTable = () => {
   const registerToolbarActions = useToolbar();
   const navigate = useNavigate();
-  const { pathname } = useLocation();
   const { data: assayModels } = useAssayModels();
   const { data: assayModelColumns } = useAssayModelColumns(undefined, {
     select: (data) =>
@@ -51,10 +49,7 @@ const AssayModelsTable = () => {
 
   const tableColumns = useTableColumns(assayModelColumns);
 
-  const navigateToNew = useCallback(
-    () => navigate("new"),
-    [navigate, pathname],
-  );
+  const navigateToNew = useCallback(() => navigate("new"), [navigate]);
 
   useEffect(() => {
     return registerToolbarActions({
@@ -65,37 +60,20 @@ const AssayModelsTable = () => {
           label: "New assay model",
           onClick: navigateToNew,
         },
-        {
-          id: "ASSAY_SETTINGS",
-          icon: <CogIcon />,
-          label: "Assay settings",
-          requiredRoles: [
-            "Administrator",
-            "AssayAdministrator",
-          ],
-          onClick: () =>
-            navigate("/assays/settings")
-        },
       ],
     });
-  }, [registerToolbarActions, navigateToNew, pathname]);
+  }, [registerToolbarActions, navigateToNew]);
 
   const tableState = useSetupTableState(
     "admin-assay_models-list",
     tableColumns,
-    {
-      settings: {
-        disableColumnReorder: true,
-        disableVisibilitySettings: true,
-      },
-    },
   );
 
   return (
     <Table
       header="Assay models"
       tableState={tableState}
-      headerActions={<Button onClick={navigateToNew}>New</Button>}
+      headerActions={<Button color="secondary" onClick={navigateToNew}>New</Button>}
       className={styles.modelsTable}
       data={assayModels}
       onRowClick={(row) => navigate(`${row.original.id}`)}

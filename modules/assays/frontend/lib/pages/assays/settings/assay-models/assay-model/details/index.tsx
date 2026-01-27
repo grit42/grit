@@ -25,10 +25,8 @@ import {
   useEditEntityMutation,
   useDestroyEntityMutation,
 } from "@grit42/core";
-import { useState, useCallback, useEffect } from "react";
+import { useState } from "react";
 import styles from "../../assayModels.module.scss";
-import { useToolbar } from "@grit42/core/Toolbar";
-import CogIcon from "@grit42/client-library/icons/Cog";
 
 const AssayModelForm = ({
   fields,
@@ -39,7 +37,6 @@ const AssayModelForm = ({
 }) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const registerToolbarActions = useToolbar();
   const [formData, setFormData] = useState<Partial<AssayModelData>>(assayModel);
 
   const createEntityMutation = useCreateEntityMutation<AssayModelData>(
@@ -54,24 +51,6 @@ const AssayModelForm = ({
   const destroyEntityMutation = useDestroyEntityMutation(
     "grit/assays/assay_models",
   );
-
-  useEffect(() => {
-    return registerToolbarActions({
-      actions: [
-        {
-          id: "ASSAY_SETTINGS",
-          icon: <CogIcon />,
-          label: "Assay settings",
-          requiredRoles: [
-            "Administrator",
-            "AssayAdministrator",
-          ],
-          onClick: () =>
-            navigate("/assays/settings")
-        },
-      ],
-    });
-  }, [registerToolbarActions, navigate]);
 
   const form = useForm<Partial<AssayModelData>>({
     defaultValues: formData,

@@ -78,10 +78,11 @@
   padding-top: theme.$spacing;
 }
 
-.columnPivots {
+.experimentFilters {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: max-content 1fr;
   grid-template-rows: min-content 1fr;
+  gap: theme.$spacing;
 }
 
 .selectorContainer {
