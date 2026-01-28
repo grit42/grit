@@ -32,10 +32,4 @@ Grit::Core::Vocabulary.class_eval do
       raise "Vocabulary '#{self.name}' is used as data type of at least one batch property"
     end
   end
-
-  def check_assay_metadata_definition
-    if Grit::Assays::AssayMetadataDefinition.unscoped.where(vocabulary_id: self.id).length.positive?
-      raise "'#{self.name}' is used as in at least one assay metadata definition"
-    end
-  end
 end

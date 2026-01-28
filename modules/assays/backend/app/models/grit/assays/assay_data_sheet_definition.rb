@@ -31,19 +31,7 @@ module Grit::Assays
       update: [ "Administrator", "AssayAdministrator" ],
       destroy: [ "Administrator", "AssayAdministrator" ]
 
-    after_create :add_to_existing_experiments
-    before_destroy :destroy_from_existing_experiments
     before_save :check_model_publication_status
-
-    def add_to_existing_experiments
-      Grit::Assays::Experiment.where(assay_model_id: assay_model_id).each do |experiment|
-        Grit::Assays::ExperimentDataSheet.create!({ experiment_id: experiment.id, assay_data_sheet_definition_id: self.id })
-      end
-    end
-
-    def destroy_from_existing_experiments
-      Grit::Assays::ExperimentDataSheet.where(assay_data_sheet_definition_id: self.id).destroy_all
-    end
 
     def table_name
       "ds_#{id}"

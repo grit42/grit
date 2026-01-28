@@ -446,7 +446,9 @@ const Details = () => {
     isLoading: isExperimentFieldsLoading,
     isError: isExperimentFieldsError,
     error: experimentFieldsError,
-  } = useExperimentFields();
+  } = useExperimentFields(undefined, undefined, {
+    select: (d) => d.filter(({ name }) => name !== "publication_status_id"),
+  });
 
   const { data, isLoading, isError, error } = useExperiment(experiment_id);
 

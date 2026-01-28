@@ -20,9 +20,6 @@ module Grit::Assays
   class ExperimentDataSheetRecord < ApplicationRecord
     include Grit::Core::GritEntityRecord
 
-    belongs_to :experiment_data_sheet
-    has_many :experiment_data_sheet_values, dependent: :destroy
-
     entity_crud_with create: [ "Administrator", "AssayAdministrator", "AssayUser" ],
       read: [],
       update: [ "Administrator", "AssayAdministrator", "AssayUser" ],

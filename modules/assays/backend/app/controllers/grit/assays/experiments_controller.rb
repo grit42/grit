@@ -38,12 +38,6 @@ module Grit::Assays
           return
         end
 
-        if !record.create_data_sheets
-          render json: { success: false, errors: "Could not create data sheets" }, status: :internal_server_error
-          raise ActiveRecord::Rollback
-          return
-        end
-
         scope = get_scope(params[:scope] || "detailed", params)
         @record = scope.find(record.id)
         render json: { success: true, data: record }, status: :created, location: record

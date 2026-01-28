@@ -1,4 +1,4 @@
-\restrict xluFm3JhqilMtfd59c6QHOomJOxlyuiKp9TZMgXoQDqGPpdgVNAfCkM1DeAO5kc
+\restrict n2QcuHw4kDJHfSnO5kNUa0eKfuP7rKPnXZYNKkXZ7QWQyxGuiDpXdEKKErhiqKW
 
 -- Dumped from database version 16.3 (Debian 16.3-1.pgdg120+1)
 -- Dumped by pg_dump version 16.11
@@ -417,21 +417,6 @@ CREATE TABLE public.grit_assays_experiment_data_sheet_record_load_sets (
     updated_by character varying(30),
     updated_at timestamp(6) without time zone,
     load_set_id bigint NOT NULL,
-    experiment_id bigint NOT NULL,
-    assay_data_sheet_definition_id bigint NOT NULL
-);
-
-
---
--- Name: grit_assays_experiment_data_sheets; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.grit_assays_experiment_data_sheets (
-    id bigint DEFAULT nextval('public.grit_seq'::regclass) NOT NULL,
-    created_by character varying(30) DEFAULT 'SYSTEM'::character varying NOT NULL,
-    created_at timestamp(6) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_by character varying(30),
-    updated_at timestamp(6) without time zone,
     experiment_id bigint NOT NULL,
     assay_data_sheet_definition_id bigint NOT NULL
 );
@@ -919,14 +904,6 @@ ALTER TABLE ONLY public.grit_assays_experiment_data_sheet_record_load_sets
 
 
 --
--- Name: grit_assays_experiment_data_sheets grit_assays_experiment_data_sheets_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.grit_assays_experiment_data_sheets
-    ADD CONSTRAINT grit_assays_experiment_data_sheets_pkey PRIMARY KEY (id);
-
-
---
 -- Name: grit_assays_experiment_metadata grit_assays_experiment_metadata_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1153,13 +1130,6 @@ CREATE INDEX idx_on_assay_data_sheet_definition_id_438432fccb ON public.grit_ass
 
 
 --
--- Name: idx_on_assay_data_sheet_definition_id_7fcda1e0ab; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_on_assay_data_sheet_definition_id_7fcda1e0ab ON public.grit_assays_experiment_data_sheets USING btree (assay_data_sheet_definition_id);
-
-
---
 -- Name: idx_on_assay_metadata_definition_id_347c4a565e; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1367,13 +1337,6 @@ CREATE INDEX index_grit_assays_data_tables_on_entity_data_type_id ON public.grit
 --
 
 CREATE UNIQUE INDEX index_grit_assays_data_tables_on_name ON public.grit_assays_data_tables USING btree (name);
-
-
---
--- Name: index_grit_assays_experiment_data_sheets_on_experiment_id; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX index_grit_assays_experiment_data_sheets_on_experiment_id ON public.grit_assays_experiment_data_sheets USING btree (experiment_id);
 
 
 --
@@ -1587,13 +1550,6 @@ CREATE UNIQUE INDEX uniq_assay_model_metadata_definition_per_assay_model ON publ
 
 
 --
--- Name: uniq_data_sheet_definition_per_experiment; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE UNIQUE INDEX uniq_data_sheet_definition_per_experiment ON public.grit_assays_experiment_data_sheets USING btree (assay_data_sheet_definition_id, experiment_id);
-
-
---
 -- Name: uniq_metadata_definition_per_experiment; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1682,13 +1638,6 @@ CREATE TRIGGER manage_stamps_grit_assays_data_tables BEFORE INSERT OR UPDATE ON 
 --
 
 CREATE TRIGGER manage_stamps_grit_assays_experiment_data_sheet_record_load_set BEFORE INSERT OR UPDATE ON public.grit_assays_experiment_data_sheet_record_load_sets FOR EACH ROW EXECUTE FUNCTION public.manage_stamps();
-
-
---
--- Name: grit_assays_experiment_data_sheets manage_stamps_grit_assays_experiment_data_sheets; Type: TRIGGER; Schema: public; Owner: -
---
-
-CREATE TRIGGER manage_stamps_grit_assays_experiment_data_sheets BEFORE INSERT OR UPDATE ON public.grit_assays_experiment_data_sheets FOR EACH ROW EXECUTE FUNCTION public.manage_stamps();
 
 
 --
@@ -1943,22 +1892,6 @@ ALTER TABLE ONLY public.grit_assays_experiment_data_sheet_record_load_sets
 
 
 --
--- Name: grit_assays_experiment_data_sheets assays_experiment_data_sheets_assays_assay_data_sheet_definitio; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.grit_assays_experiment_data_sheets
-    ADD CONSTRAINT assays_experiment_data_sheets_assays_assay_data_sheet_definitio FOREIGN KEY (assay_data_sheet_definition_id) REFERENCES public.grit_assays_assay_data_sheet_definitions(id);
-
-
---
--- Name: grit_assays_experiment_data_sheets assays_experiment_data_sheets_assays_experiment_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.grit_assays_experiment_data_sheets
-    ADD CONSTRAINT assays_experiment_data_sheets_assays_experiment_id_fkey FOREIGN KEY (experiment_id) REFERENCES public.grit_assays_experiments(id);
-
-
---
 -- Name: grit_assays_experiment_metadata assays_experiment_metadata_assays_assay_metadata_definition_id_; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2186,7 +2119,7 @@ ALTER TABLE ONLY public.grit_assays_assay_models
 -- PostgreSQL database dump complete
 --
 
-\unrestrict xluFm3JhqilMtfd59c6QHOomJOxlyuiKp9TZMgXoQDqGPpdgVNAfCkM1DeAO5kc
+\unrestrict n2QcuHw4kDJHfSnO5kNUa0eKfuP7rKPnXZYNKkXZ7QWQyxGuiDpXdEKKErhiqKW
 
 SET search_path TO "$user", public;
 
@@ -2220,7 +2153,6 @@ INSERT INTO "schema_migrations" (version) VALUES
 ('20250408051559'),
 ('20250408050849'),
 ('20250405081044'),
-('20250402095542'),
 ('20250402092852'),
 ('20250331113610'),
 ('20250331112438'),

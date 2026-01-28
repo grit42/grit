@@ -125,7 +125,7 @@ AND GRIT_ASSAYS_ASSAY_DATA_SHEET_COLUMNS.DATA_TYPE_ID <> #{data_table.entity_dat
       when "boolean"
         case aggregation_method
         when "and","or"
-          return subquery.select("boolean_#{aggregation_method}(data_sources.#{assay_data_sheet_column.safe_name}) AS value")
+          return subquery.select("bool_#{aggregation_method}(data_sources.#{assay_data_sheet_column.safe_name}) AS value")
         when "count"
           return subquery.select("count(data_sources.#{assay_data_sheet_column.safe_name}) AS value")
         end
@@ -179,19 +179,6 @@ LEFT OUTER JOIN (
 ) \"#{self.safe_name}_join\" ON \"#{self.safe_name}_join\".target_id = targets.id
         SQL
       query.joins(column_join)
-    end
-
-    def experiments_join
-      join = ["JOIN EXPERIMENTS_WITH_METADATA ON EXPERIMENTS_WITH_METADATA.ID = GRIT_ASSAYS_EXPERIMENT_DATA_SHEETS.EXPERIMENT_ID"]
-      join.push "EXPERIMENTS_WITH_METADATA.ID IN (#{self.experiment_ids.join(',')})" if self.experiment_ids.length.positive?
-      metadata_definitions = AssayMetadataDefinition.all
-      self.metadata_filters.each do |key,value|
-        metadata_definition = metadata_definitions.find { |d| d.id.to_s == key.to_s }
-        unless metadata_definition.nil? || value.nil? || value.blank?
-          join.push "EXPERIMENTS_WITH_METADATA.#{metadata_definition.safe_name} IN (#{value.join(",")})"
-        end
-      end
-      join.join(" AND ")
     end
 
     def experiments_join

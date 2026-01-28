@@ -44,10 +44,4 @@ Grit::Core::VocabularyItem.class_eval do
       end
     raise "'#{self.name}' of '#{self.vocabulary.name}' is used as value of at least one batch property" if used_as_value
   end
-
-  def check_assay_metadata
-    if Grit::Assays::AssayMetadatum.unscoped.where(vocabulary_item_id: self.id).length.positive?
-      raise "'#{self.name}' of '#{self.vocabulary.name}' is used as value of at least one assay metadatum"
-    end
-  end
 end

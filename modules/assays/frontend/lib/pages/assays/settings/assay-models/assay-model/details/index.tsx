@@ -420,7 +420,7 @@ const AssayModelForm = ({
             }}
           />
         </Form>
-        <AssayModelActions assayModel={assayModel} />
+        {assayModel.id && <AssayModelActions assayModel={assayModel} />}
       </Surface>
     </div>
   );

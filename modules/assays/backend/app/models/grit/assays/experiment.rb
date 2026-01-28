@@ -26,7 +26,6 @@ module Grit::Assays
     belongs_to :assay_model
     belongs_to :publication_status, class_name: "Grit::Core::PublicationStatus"
     has_many :experiment_metadata, dependent: :destroy
-    has_many :experiment_data_sheets, dependent: :destroy
     has_many :experiment_data_sheet_record_load_sets, dependent: :destroy
 
     display_column "name"
@@ -67,20 +66,12 @@ module Grit::Assays
       success
     end
 
-    def create_data_sheets
-      Grit::Assays::ExperimentDataSheet.create!(assay_model.assay_data_sheet_definitions.map { |d| { experiment_id: id, assay_data_sheet_definition_id: d.id } })
-      true
-    rescue
-      false
-    end
-
     def self.create(params)
       ActiveRecord::Base.transaction do
         @record = Grit::Assays::Experiment.new({ name: params[:name], description: params[:description], assay_model_id: params[:assay_model_id] })
 
         if @record.save
           @record.set_metadata_values(params)
-          Grit::Assays::ExperimentDataSheet.create!(@record.assay_model.assay_data_sheet_definitions.map { |d| { experiment_id: @record.id, assay_data_sheet_definition_id: d.id } })
         end
         @record
       end
