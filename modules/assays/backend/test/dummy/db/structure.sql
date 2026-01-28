@@ -1,4 +1,4 @@
-\restrict n2QcuHw4kDJHfSnO5kNUa0eKfuP7rKPnXZYNKkXZ7QWQyxGuiDpXdEKKErhiqKW
+\restrict ZmF7UacjxW3NX2fPLPnInaaf5y6k4DGw6SlCr7hDveHaahzV05l0eEbjOZQwTnT
 
 -- Dumped from database version 16.3 (Debian 16.3-1.pgdg120+1)
 -- Dumped by pg_dump version 16.11
@@ -331,7 +331,7 @@ CREATE TABLE public.grit_assays_assay_models (
     name character varying NOT NULL,
     description text,
     assay_type_id bigint NOT NULL,
-    publication_status_id bigint DEFAULT 10000 NOT NULL
+    publication_status_id bigint NOT NULL
 );
 
 
@@ -485,7 +485,7 @@ CREATE TABLE public.grit_assays_experiments (
     description text,
     plots json DEFAULT '{}'::json,
     assay_model_id bigint NOT NULL,
-    publication_status_id bigint DEFAULT 10000 NOT NULL
+    publication_status_id bigint NOT NULL
 );
 
 
@@ -2119,7 +2119,7 @@ ALTER TABLE ONLY public.grit_assays_assay_models
 -- PostgreSQL database dump complete
 --
 
-\unrestrict n2QcuHw4kDJHfSnO5kNUa0eKfuP7rKPnXZYNKkXZ7QWQyxGuiDpXdEKKErhiqKW
+\unrestrict ZmF7UacjxW3NX2fPLPnInaaf5y6k4DGw6SlCr7hDveHaahzV05l0eEbjOZQwTnT
 
 SET search_path TO "$user", public;
 

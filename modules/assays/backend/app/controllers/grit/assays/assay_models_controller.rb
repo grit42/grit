@@ -24,6 +24,7 @@ module Grit::Assays
       AssayModel.transaction do
         permitted_params = params.permit(self.permitted_params)
         @record = AssayModel.new(permitted_params)
+        @record.publication_status = Grit::Core::PublicationStatus.find_by(name: "Draft")
 
         if !@record.save
           render json: { success: false, errors: @record.errors }, status: :unprocessable_entity
@@ -148,7 +149,7 @@ module Grit::Assays
     private
 
       def permitted_params
-        %i[ name description assay_type_id publication_status_id ]
+        %i[ name description assay_type_id ]
       end
   end
 end

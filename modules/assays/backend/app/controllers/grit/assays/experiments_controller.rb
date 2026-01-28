@@ -26,6 +26,8 @@ module Grit::Assays
     def create
       ActiveRecord::Base.transaction do
         record = Grit::Assays::Experiment.new(params.permit(self.permitted_params))
+        record.publication_status = Grit::Core::PublicationStatus.find_by(name: "Draft")
+
         if !record.save
           render json: { success: false, errors: record.errors }, status: :unprocessable_entity
           raise ActiveRecord::Rollback
@@ -144,7 +146,7 @@ module Grit::Assays
     private
 
     def permitted_params
-      [ :name, :description, :assay_model_id, :publication_status_id, plots: {} ]
+      [ :name, :description, :assay_model_id, plots: {} ]
     end
 
     def do_export(experiment, temp_file)
