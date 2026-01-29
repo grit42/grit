@@ -52,6 +52,7 @@ import {
 } from "../../../../../../../queries/assay_data_sheet_columns";
 import z from "zod";
 import { toSafeIdentifier } from "@grit42/core/utils";
+import { useAssayModel } from "../../../../../../../queries/assay_models";
 
 const initializedFormData = <T extends Partial<EntityData>>(
   data: T,
@@ -75,7 +76,12 @@ const AssayDataSheetColumnForm = ({
   assayDataSheetColumn: Partial<AssayDataSheetColumnData>;
   assayDataSheetColumns: AssayDataSheetColumnData[];
 }) => {
-  const { sheet_id } = useParams() as { sheet_id: string };
+  const { sheet_id, assay_model_id } = useParams() as {
+    sheet_id: string;
+    assay_model_id: string;
+  };
+  const { data: assayModel } = useAssayModel(assay_model_id);
+
   const navigate = useNavigate();
 
   const editEntityMutation = useEditEntityMutation<AssayDataSheetColumnData>(
@@ -162,9 +168,9 @@ const AssayDataSheetColumnForm = ({
 
   return (
     <Surface className={styles.modelForm}>
-      <h2 style={{ alignSelf: "baseline", marginBottom: "1em" }}>
+      {assayModel?.publication_status_id__name !== "Published" && <h2 style={{ alignSelf: "baseline", marginBottom: "1em" }}>
         Edit column
-      </h2>
+      </h2>}
       <Form<Partial<AssayDataSheetColumnData>> form={form}>
         <div
           style={{
@@ -190,7 +196,11 @@ const AssayDataSheetColumnForm = ({
             <div style={{ width: "100%" }} key={f.name}>
               <FormField
                 form={form}
-                fieldDef={f}
+                fieldDef={{
+                  ...f,
+                  disabled:
+                    assayModel?.publication_status_id__name === "Published",
+                }}
                 validators={{
                   onChange: validators[f.name as "name" | "safe_name"],
                   onMount: validators[f.name as "name" | "safe_name"],
@@ -243,22 +253,25 @@ const AssayDataSheetColumnForm = ({
                 {!isDirty && (
                   <Button onClick={() => navigate("..")}>Back</Button>
                 )}
-                {!isDirty && (
-                  <Link
-                    to={{
-                      pathname: "clone",
-                    }}
+                {!isDirty &&
+                  assayModel?.publication_status_id__name !== "Published" && (
+                    <Link
+                      to={{
+                        pathname: "clone",
+                      }}
+                    >
+                      <Button>Clone</Button>
+                    </Link>
+                  )}
+                {assayModel?.publication_status_id__name !== "Published" && (
+                  <Button
+                    color="danger"
+                    onClick={onDelete}
+                    loading={destroyEntityMutation.isPending}
                   >
-                    <Button>Clone</Button>
-                  </Link>
+                    Delete
+                  </Button>
                 )}
-                <Button
-                  color="danger"
-                  onClick={onDelete}
-                  loading={destroyEntityMutation.isPending}
-                >
-                  Delete
-                </Button>
               </ButtonGroup>
             );
           }}

@@ -26,6 +26,7 @@ Grit::Core::Engine.routes.draw do
     post :validate
     post :confirm
     post :rollback
+    get :entity_info
   end
 
   resources :load_set_statuses

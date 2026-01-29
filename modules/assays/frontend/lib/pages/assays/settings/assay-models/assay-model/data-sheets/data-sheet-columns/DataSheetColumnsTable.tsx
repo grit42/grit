@@ -29,13 +29,16 @@ import {
 } from "../../../../../../../queries/assay_data_sheet_columns";
 import { Table, useSetupTableState } from "@grit42/table";
 import { useTableColumns } from "@grit42/core/utils";
+import { AssayModelData } from "../../../../../../../queries/assay_models";
 
 const DataSheetColumnsTable = ({
   sheetId,
   disableNavigation = false,
+  assayModel,
 }: {
   sheetId: string;
   disableNavigation?: boolean;
+  assayModel?: AssayModelData;
 }) => {
   const registerToolbarActions = useToolbar();
   const navigate = useNavigate();
@@ -68,11 +71,18 @@ const DataSheetColumnsTable = ({
           icon: <Circle1NewIcon />,
           label: "New column",
           onClick: navigateToNew,
-          disabled: sheetId === "new",
+          disabled:
+            sheetId === "new" ||
+            assayModel?.publication_status_id__name === "Published",
         },
       ],
     });
-  }, [registerToolbarActions, navigateToNew, sheetId]);
+  }, [
+    registerToolbarActions,
+    navigateToNew,
+    sheetId,
+    assayModel?.publication_status_id__name,
+  ]);
 
   return (
     <>
@@ -82,9 +92,12 @@ const DataSheetColumnsTable = ({
           tableState={tableState}
           loading={isLoading}
           headerActions={
-            <Button disabled={sheetId === "new"} onClick={navigateToNew}>
-              New
-            </Button>
+            assayModel?.publication_status_id__name ===
+            "Published" ? undefined : (
+              <Button disabled={sheetId === "new"} onClick={navigateToNew}>
+                New
+              </Button>
+            )
           }
           className={styles.typesTable}
           data={data ?? []}

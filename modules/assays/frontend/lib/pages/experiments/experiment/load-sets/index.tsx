@@ -174,7 +174,7 @@ const ExperimentLoadSets = ({ experiment }: { experiment: ExperimentData }) => {
       loading={isFetching && !isFetchingNextPage}
       data={flatData}
       tableState={tableState}
-      onRowClick={(row) => navigate(`/core/load_sets/${row.original.id}`)}
+      onRowClick={experiment.publication_status_id__name !== "Published" ? (row) => navigate(`/core/load_sets/${row.original.id}`) : undefined}
       pagination={{
         fetchNextPage,
         isFetchingNextPage,

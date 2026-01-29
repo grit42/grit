@@ -21,8 +21,10 @@ module Grit::Assays
     include Grit::Core::GritEntityRecord
 
     belongs_to :vocabulary, class_name: "Grit::Core::Vocabulary"
-    has_many :assay_model_metadata, dependent: :destroy
+    has_many :experiment_metadata, dependent: :destroy
     has_many :experiment_metadata_template_metadata, dependent: :destroy
+
+    before_destroy :check_experiment_metadata
 
     display_column "name"
 
@@ -49,5 +51,12 @@ module Grit::Assays
       create: [ "Administrator", "AssayAdministrator" ],
       update: [ "Administrator", "AssayAdministrator" ],
       destroy: [ "Administrator", "AssayAdministrator" ]
+
+    private
+
+      def check_experiment_metadata
+        used_as_metadata = Grit::Assays::AssayModelMetadatum.unscoped.where(assay_metadata_definition_id: id).count(:all).positive?
+        raise "'#{self.name}' is required in at least one assay model" if used_as_metadata
+      end
   end
 end

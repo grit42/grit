@@ -121,8 +121,8 @@ const DataTableEntitySelector = ({
           >
             Add selected
           </Button>,
-          <Link to="..">
-            <Button color="primary" key="cancel">
+          <Link to=".." key="cancel">
+            <Button color="primary">
               Cancel
             </Button>
           </Link>,

@@ -20,9 +20,14 @@ module Grit::Assays
   class AssayModel < ApplicationRecord
     include Grit::Core::GritEntityRecord
 
+    before_destroy :drop_tables
     belongs_to :assay_type
+    belongs_to :publication_status, class_name: "Grit::Core::PublicationStatus"
     has_many :assay_model_metadata, dependent: :destroy
     has_many :assay_data_sheet_definitions, dependent: :destroy
+    has_many :experiments, dependent: :destroy
+
+    before_save :check_publication_status
 
     display_column "name"
 
@@ -34,5 +39,27 @@ module Grit::Assays
     def self.published(params)
       self.detailed(params).where("grit_core_publication_statuses__.name = 'Published'")
     end
+
+    def maintain_data_sheet_tables # TODO: remove
+      if publication_status.name == "Draft"
+        drop_tables
+      else
+        create_tables
+      end
+    end
+
+    def create_tables
+      assay_data_sheet_definitions.each(&:create_table)
+    end
+
+    def drop_tables
+      assay_data_sheet_definitions.each(&:drop_table)
+    end
+
+    private
+      def check_publication_status
+        return if publication_status_changed?
+        raise "Cannot modify a published Assay Model" if publication_status.name === "Published"
+      end
   end
 end

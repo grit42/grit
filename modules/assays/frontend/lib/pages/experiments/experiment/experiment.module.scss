@@ -1,13 +1,19 @@
 @use "@grit42/client-library/theme.scss";
 
 .container {
-    display: grid;
-    grid-template-rows: min-content min-content 1fr;
-    height: 100%;
-    overflow: auto;
+  display: grid;
+  grid-template-rows: min-content min-content 1fr;
+  height: 100%;
+  overflow: auto;
 }
 
-.title {
-    align-self: baseline;
-    margin-bottom: theme.$spacing;
+.nameAndStatus {
+  display: flex;
+  gap: theme.$spacing;
+  align-items: baseline;
+  flex-basis: 100%;
+
+  h2 {
+    color: theme.$palette-secondary-main;
+  }
 }

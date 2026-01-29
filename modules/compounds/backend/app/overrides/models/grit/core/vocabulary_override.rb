@@ -19,7 +19,6 @@
 Grit::Core::Vocabulary.class_eval do
   before_destroy :check_compound_property
   before_destroy :check_batch_property
-  before_destroy :check_assay_metadata_definition
 
   def check_compound_property
     if Grit::Compounds::CompoundProperty.unscoped.where(data_type_id: self.data_type.id).count.positive?
@@ -30,12 +29,6 @@ Grit::Core::Vocabulary.class_eval do
   def check_batch_property
     if Grit::Compounds::BatchProperty.unscoped.where(data_type_id: self.data_type.id).count.positive?
       raise "Vocabulary '#{self.name}' is used as data type of at least one batch property"
-    end
-  end
-
-  def check_assay_metadata_definition
-    if Grit::Assays::AssayMetadataDefinition.unscoped.where(vocabulary_id: self.id).length.positive?
-      raise "'#{self.name}' is used as in at least one assay metadata definition"
     end
   end
 end

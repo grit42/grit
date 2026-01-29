@@ -23,12 +23,14 @@ import { useToolbar } from "@grit42/core/Toolbar";
 import Circle1NewIcon from "@grit42/client-library/icons/Circle1New";
 import { AssayDataSheetDefinitionData } from "../../../../../../queries/assay_data_sheet_definitions";
 import styles from "../../assayModels.module.scss";
+import { AssayModelData } from "../../../../../../queries/assay_models";
 
 interface Props {
   sheetDefinitions: AssayDataSheetDefinitionData[];
+  assayModel: AssayModelData;
 }
 
-const DataSheetTabs = ({ sheetDefinitions }: Props) => {
+const DataSheetTabs = ({ sheetDefinitions, assayModel }: Props) => {
   const registerToolbarActions = useToolbar();
   const navigate = useNavigate();
 
@@ -79,10 +81,12 @@ const DataSheetTabs = ({ sheetDefinitions }: Props) => {
           icon: <Circle1NewIcon />,
           label: "New sheet",
           onClick: navigateToNew,
-          disabled: sheet_id === "new",
+          disabled:
+            sheet_id === "new" ||
+            assayModel.publication_status_id__name === "Published",
         },
       ],
-      importItems: [
+      importItems: assayModel.publication_status_id__name === "Published" ? undefined : [
         {
           id: "IMPORT_SHEETS",
           text: "Import data sheets",
@@ -90,25 +94,36 @@ const DataSheetTabs = ({ sheetDefinitions }: Props) => {
         },
       ],
     });
-  }, [registerToolbarActions, navigateToNew, sheet_id, navigate]);
+  }, [
+    registerToolbarActions,
+    navigateToNew,
+    sheet_id,
+    navigate,
+    assayModel.publication_status_id__name,
+  ]);
+
+  const tabs = [
+    ...(sheetDefinitions?.map((sheetDefinition) => ({
+      key: sheetDefinition.id.toString(),
+      name: sheetDefinition.name,
+      panel: <></>,
+    })) ?? []),
+  ];
+
+  if (assayModel.publication_status_id__name !== "Published") {
+    tabs.push({
+      key: "new",
+      name: "+ New sheet",
+      panel: <></>,
+    });
+  }
 
   return (
     <div className={styles.dataSheets}>
       <Tabs
         selectedTab={selectedTab}
         onTabChange={handleTabChange}
-        tabs={[
-          ...(sheetDefinitions?.map((sheetDefinition) => ({
-            key: sheetDefinition.id.toString(),
-            name: sheetDefinition.name,
-            panel: <></>,
-          })) ?? []),
-          {
-            key: "new",
-            name: "+ New sheet",
-            panel: <></>,
-          },
-        ]}
+        tabs={tabs}
       />
       <Outlet />
     </div>

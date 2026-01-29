@@ -38,19 +38,23 @@ import ExperimentDataSheetRecordFormWrapper from "./RecordForm";
 import { useToolbar } from "@grit42/core/Toolbar";
 import styles from "./dataSheet.module.scss";
 import { useHasRoles } from "@grit42/core";
+import { ExperimentData, useExperiment } from "../../../../queries/experiments";
 
 const getRowId = (data: ExperimentDataSheetRecordData) => data.id.toString();
 
 const ExperimentDataSheetRecords = ({
   dataSheet,
+  experiment,
 }: {
   dataSheet: ExperimentDataSheetData;
+  experiment: ExperimentData;
 }) => {
+  const { experiment_id } = useParams() as { experiment_id: string };
   const canCrudRecord = useHasRoles([
     "Administrator",
     "AssayAdministrator",
     "AssayUser",
-  ]);
+  ]) && experiment.publication_status_id__name !== "Published";
   const registerToolbarAction = useToolbar();
   const navigate = useNavigate();
   const { data: columns } = useExperimentDataSheetRecordColumns(dataSheet.id);
@@ -63,6 +67,7 @@ const ExperimentDataSheetRecords = ({
   );
   const { data, isLoading, isError, error, fetchNextPage, isFetchingNextPage } =
     useInfiniteExperimentDataSheetRecords(
+      experiment_id,
       dataSheet.id,
       tableState.sorting,
       tableState.filters,
@@ -76,21 +81,21 @@ const ExperimentDataSheetRecords = ({
   useEffect(
     () =>
       registerToolbarAction({
-        importItems: [
+        importItems: canCrudRecord ? [
           {
             id: "IMPORT_DATA",
             text: "Import data",
             onClick: () =>
               navigate(
-                `/core/load_sets/new?entity=Grit::Assays::ExperimentDataSheetRecord&experiment_id=${dataSheet.experiment_id}&experiment_data_sheet_id=${dataSheet.id}`,
+                `/core/load_sets/new?entity=Grit::Assays::ExperimentDataSheetRecord&experiment_id=${experiment_id}&assay_data_sheet_definition_id=${dataSheet.id}`,
               ),
           },
-        ],
+        ] : undefined,
         import: {
           requiredRoles: ["Administrator", "AssayAdministrator", "AssayUser"],
         },
       }),
-    [dataSheet, navigate, registerToolbarAction],
+    [canCrudRecord, dataSheet, experiment_id, navigate, registerToolbarAction],
   );
 
   return (
@@ -137,7 +142,11 @@ const ExperimentDataSheet = ({
 }: {
   dataSheets: ExperimentDataSheetData[];
 }) => {
-  const { sheet_id } = useParams() as { sheet_id: string };
+  const { sheet_id, experiment_id } = useParams() as {
+    sheet_id: string;
+    experiment_id: string;
+  };
+  const { data: experiment } = useExperiment(experiment_id);
 
   const dataSheet = useMemo(
     () => dataSheets.find(({ id }) => sheet_id === id.toString()),
@@ -167,7 +176,7 @@ const ExperimentDataSheet = ({
     <Routes>
       <Route
         index
-        element={<ExperimentDataSheetRecords dataSheet={dataSheet} />}
+        element={<ExperimentDataSheetRecords dataSheet={dataSheet} experiment={experiment!} />}
       />
       <Route
         path="records/:record_id"

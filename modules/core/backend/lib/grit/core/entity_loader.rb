@@ -60,6 +60,10 @@ module Grit::Core
       loader(load_set.entity).mapping_fields(load_set)
     end
 
+    def self.load_set_entity_info(load_set)
+      loader(load_set.entity).entity_info(load_set)
+    end
+
     def self.load_set_loaded_data_columns(load_set)
       loader(load_set.entity).loaded_data_columns(load_set)
     end
@@ -70,6 +74,10 @@ module Grit::Core
 
     def self.validate_load_set(load_set)
       loader(load_set.entity).validate(load_set)
+    end
+
+    def self.rollback_load_set(load_set)
+      loader(load_set.entity).rollback(load_set)
     end
 
     def self.set_load_set_data(load_set, data, **args)
@@ -241,6 +249,14 @@ module Grit::Core
       end
     end
 
+    def self.rollback(load_set)
+      load_set_entity = load_set.entity.constantize
+
+      load_set_entity.destroy_by("id IN (SELECT record_id FROM grit_core_load_set_loaded_records WHERE grit_core_load_set_loaded_records.load_set_id = #{load_set.id})")
+      Grit::Core::LoadSetLoadedRecord.destroy_by(load_set_id: load_set.id)
+      Grit::Core::LoadSetLoadingRecord.destroy_by(load_set_id: load_set.id)
+    end
+
     def self.mapping_fields(load_set)
       load_set.entity.constantize.entity_fields
     end
@@ -260,6 +276,17 @@ module Grit::Core
         load_set.save!
       end
       load_set
+    end
+
+    def self.entity_info(load_set)
+      model = load_set.entity.constantize
+      {
+        full_name: model.name,
+        name: model.name.demodulize.underscore.humanize,
+        plural: model.name.demodulize.underscore.humanize.pluralize,
+        path: model.name.underscore.pluralize,
+        dictionary: true
+      }
     end
 
     def self.parse(data, separator)

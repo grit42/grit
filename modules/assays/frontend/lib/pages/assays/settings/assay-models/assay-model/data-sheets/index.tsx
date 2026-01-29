@@ -27,6 +27,7 @@ import NewDataSheet from "./NewDataSheet";
 import CloneDataSheet from "./CloneDataSheet";
 import EditDataSheet from "./EditDataSheet";
 import DataSheetTabs from "./DataSheetTabs";
+import { useAssayModel } from "../../../../../../queries/assay_models";
 
 const DataSheets = () => {
   const { assay_model_id } = useParams() as { assay_model_id: string };
@@ -42,30 +43,57 @@ const DataSheets = () => {
   );
 
   const {
+    data: assayModel,
+    isLoading: isAssayModelLoading,
+    isError: isAssayModelError,
+    error: assayModelError,
+  } = useAssayModel(assay_model_id);
+
+  const {
     data: fields,
     isLoading: isAssayDataSheetDefinitionFieldsLoading,
     isError: isAssayDataSheetDefinitionFieldsError,
     error: assayDataSheetDefinitionFieldsError,
   } = useAssayDataSheetDefinitionFields();
 
-  if (isAssayDataSheetDefinitionFieldsLoading || isLoading) return <Spinner />;
-  if (isAssayDataSheetDefinitionFieldsError || isError || !fields || !data)
-    return <ErrorPage error={assayDataSheetDefinitionFieldsError ?? error} />;
+  if (
+    isAssayDataSheetDefinitionFieldsLoading ||
+    isLoading ||
+    isAssayModelLoading
+  )
+    return <Spinner />;
+  if (
+    isAssayDataSheetDefinitionFieldsError ||
+    isError ||
+    !fields ||
+    !data ||
+    isAssayModelError ||
+    !assayModel
+  )
+    return (
+      <ErrorPage
+        error={assayDataSheetDefinitionFieldsError ?? error ?? assayModelError}
+      />
+    );
 
   return (
     <Routes>
-      <Route element={<DataSheetTabs sheetDefinitions={data} />}>
-        <Route
-          path="new"
-          element={<NewDataSheet assayModelId={assay_model_id} />}
-        />
-        <Route
-          path=":sheet_id/clone/*"
-          element={<CloneDataSheet assayModelId={assay_model_id} />}
-        />
+      <Route element={<DataSheetTabs sheetDefinitions={data} assayModel={assayModel} />}>
+        {assayModel.publication_status_id__name !== "Published" && (
+          <>
+            <Route
+              path="new"
+              element={<NewDataSheet assayModelId={assay_model_id} />}
+            />
+            <Route
+              path=":sheet_id/clone/*"
+              element={<CloneDataSheet assayModelId={assay_model_id} />}
+            />
+          </>
+        )}
         <Route
           path=":sheet_id/*"
-          element={<EditDataSheet assayModelId={assay_model_id} />}
+          element={<EditDataSheet assayModelId={assay_model_id} assayModel={assayModel} />}
         />
         <Route
           path="*"

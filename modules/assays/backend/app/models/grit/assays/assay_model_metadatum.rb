@@ -22,11 +22,17 @@ module Grit::Assays
 
     belongs_to :assay_metadata_definition
     belongs_to :assay_model
-    has_many :assay_metadata, dependent: :destroy
+
+    before_save :check_model_publication_status
 
     entity_crud_with read: [],
       create: [ "Administrator", "AssayAdministrator" ],
       update: [ "Administrator", "AssayAdministrator" ],
       destroy: [ "Administrator", "AssayAdministrator" ]
+
+    private
+      def check_model_publication_status
+        raise "Cannot modify metadata definitions of a published Assay Model" if assay_model.publication_status.name === "Published"
+      end
   end
 end

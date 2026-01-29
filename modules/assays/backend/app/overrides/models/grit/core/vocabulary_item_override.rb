@@ -19,19 +19,11 @@
 Grit::Core::VocabularyItem.class_eval do
   has_many :experiment_metadata_template_metadata, dependent: :destroy, class_name: "Grit::Assays::ExperimentMetadataTemplateMetadatum"
 
-  before_destroy :check_experiment_data_sheet_record_values
   before_destroy :check_experiment_metadata
 
-  def check_experiment_data_sheet_record_values
-    used_as_value = Grit::Assays::AssayDataSheetColumn.unscoped
-      .includes(:experiment_data_sheet_values)
-      .where(data_type_id: self.vocabulary.data_type.id)
-      .any? do |assay_data_sheet_column|
-        assay_data_sheet_column.experiment_data_sheet_values.any? do |value|
-          value.entity_id_value == self.id
-        end
-      end
-    raise "'#{self.name}' of '#{self.vocabulary.name}' is used as value of at least one experiment data point" if used_as_value
+  def check_experiment_metadata
+    used_as_metadata = Grit::Assays::ExperimentMetadatum.unscoped.where(vocabulary_id: vocabulary_id, vocabulary_item_id: id).count(:all).positive?
+    raise "'#{self.name}' of '#{self.vocabulary.name}' is used as value of at least one experiment metadata" if used_as_metadata
   end
 
   def check_experiment_metadata

@@ -76,7 +76,7 @@ const ExperimentPlot = ({ experiment }: Props) => {
     "AssayAdministrator",
     "AssayUser",
   ]);
-  const { plot_id } = useParams() as { plot_id: string };
+  const { experiment_id, plot_id } = useParams() as { experiment_id: string; plot_id: string };
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -151,7 +151,7 @@ const ExperimentPlot = ({ experiment }: Props) => {
     isLoading: isDataLoading,
     isError: isDataError,
     error: dataError,
-  } = useExperimentDataSheetRecords(plot.data_sheet_id);
+  } = useExperimentDataSheetRecords(experiment_id, plot.data_sheet_id);
 
   const plotData = useMemo(
     () => getPlotData(data ?? [], columns ?? []),
@@ -228,8 +228,8 @@ const ExperimentPlot = ({ experiment }: Props) => {
         <Select
           label="Data sheet"
           options={experiment.data_sheets.map(
-            ({ assay_data_sheet_definition_id__name, id }) => ({
-              label: assay_data_sheet_definition_id__name,
+            ({ name, id }) => ({
+              label: name,
               value: id,
             }),
           )}

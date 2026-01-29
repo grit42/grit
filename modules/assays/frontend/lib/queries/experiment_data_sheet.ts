@@ -3,10 +3,7 @@ import { EntityData, useEntityData } from "@grit42/core";
 import { useMemo } from "react";
 
 export interface ExperimentDataSheetData extends EntityData {
-  assay_data_sheet_definition_id: number;
-  assay_data_sheet_definition_id__name: string;
-  experiment_id: number;
-  experiment_id__name: string;
+  name: string;
 }
 
 export const useExperimentDataSheetFromLoadSet = (

@@ -108,13 +108,13 @@ export const useInfinitePublishedAssayModels = (
 };
 
 export const useAssayModel = (
-  vocabularyId: string | number,
+  assayModelId: string | number,
   params: URLParams = {},
   queryOptions: Partial<UseQueryOptions<AssayModelData | null, string>> = {},
 ) => {
   return useEntityDatum<AssayModelData>(
     "grit/assays/assay_models",
-    vocabularyId,
+    assayModelId.toString(),
     params,
     queryOptions,
   );
