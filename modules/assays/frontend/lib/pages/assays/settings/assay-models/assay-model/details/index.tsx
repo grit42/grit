@@ -168,7 +168,12 @@ const AssayModelActions = ({
   };
 
   const onDraft = async () => {
-    if (!assayModel.id) {
+    if (
+      !assayModel.id ||
+      !window.confirm(
+        `Are you sure you want to convert this Assay Model to draft? All related experiments and existing data will be permanently deleted. This action is irreversible.`,
+      )
+    ) {
       return;
     }
     await draftMutation.mutateAsync();
@@ -232,14 +237,14 @@ const AssayModelActions = ({
               display: "flex",
               flexDirection: "column",
               gap: "var(--spacing)",
-            width: "80ch"
+              width: "80ch",
             }}
           >
             <h3>Convert this Assay Model to Draft</h3>
             <p>
-              Converting this Assay Model to draft will allow you to make changes to its
-              Metadata and Data Sheets. However, all related experiments and
-              existing data will be permanently deleted.{" "}
+              Converting this Assay Model to draft will allow you to make
+              changes to its Metadata and Data Sheets. However, all related
+              experiments and existing data will be permanently deleted.{" "}
               <b>This data cannot be recovered.</b>
             </p>
           </div>
@@ -266,7 +271,7 @@ const AssayModelActions = ({
             display: "flex",
             flexDirection: "column",
             gap: "var(--spacing)",
-            width: "80ch"
+            width: "80ch",
           }}
         >
           <h3>Delete this Assay Model</h3>
@@ -307,7 +312,10 @@ const AssayModelForm = ({
     assayModel.id ?? -1,
   );
 
-  const fields = fieldsFromProps.map((f) => ({...f, disabled: assayModel.publication_status_id__name === "Published"}))
+  const fields = fieldsFromProps.map((f) => ({
+    ...f,
+    disabled: assayModel.publication_status_id__name === "Published",
+  }));
 
   const form = useForm<Partial<AssayModelData>>({
     defaultValues: formData,

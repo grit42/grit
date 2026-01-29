@@ -173,7 +173,7 @@ const ExperimentMetadataForm = ({
           style={{ gridColumnStart: 1 }}
           onClick={() => setSelectorOpen(true)}
         >
-          Add metadata
+          Add optional metadata
         </Button>
       )}
     </>

@@ -184,7 +184,12 @@ const ExperimentActions = ({
   };
 
   const onDraft = async () => {
-    if (!experiment.id) {
+    if (
+      !experiment.id ||
+      !window.confirm(
+        `Are you sure you want to convert this Experiment to draft?`,
+      )
+    ) {
       return;
     }
     await draftMutation.mutateAsync();
@@ -219,7 +224,9 @@ const ExperimentActions = ({
             }}
           >
             <h3>Publish this Experiment</h3>
-            <p>Publishing this Assay Model will make it in Data Tables.</p>
+            <p>
+              Publishing this Experiment will make it available in Data Tables.
+            </p>
           </div>
           <Button
             color="secondary"
