@@ -17,7 +17,7 @@
 #++
 
 module Grit::Assays
-  class ExperimentDataSheetRecord < ApplicationRecord
+  class ExperimentDataSheetRecord < ApplicationRecord # TODO: fix not use activerecord
     include Grit::Core::GritEntityRecord
 
     entity_crud_with create: [ "Administrator", "AssayAdministrator", "AssayUser" ],

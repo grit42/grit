@@ -19,7 +19,6 @@
 Grit::Core::Vocabulary.class_eval do
   before_destroy :check_compound_property
   before_destroy :check_batch_property
-  before_destroy :check_assay_metadata_definition
 
   def check_compound_property
     if Grit::Compounds::CompoundProperty.unscoped.where(data_type_id: self.data_type.id).count.positive?

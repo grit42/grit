@@ -19,7 +19,6 @@
 Grit::Core::VocabularyItem.class_eval do
   before_destroy :check_compound_property_values
   before_destroy :check_batch_property_values
-  before_destroy :check_assay_metadata
 
   def check_compound_property_values
     used_as_value = Grit::Compounds::CompoundProperty.unscoped
