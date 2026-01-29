@@ -117,7 +117,7 @@ module Grit::Assays
           if column.data_type.is_entity
             t.column column.safe_name, :bigint
           else
-            t.column column.safe_name, column.data_type.name
+            t.column column.safe_name, column.data_type.sql_name
           end
         end
         t.column :number, :bigint

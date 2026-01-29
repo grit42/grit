@@ -87,7 +87,7 @@ module Grit::Assays
             t.column column.safe_name, :bigint, null: !column.required
             foreign_key_colums.push column
           else
-            t.column column.safe_name, column.data_type.name, null: !column.required
+            t.column column.safe_name, column.data_type.sql_name, null: !column.required
           end
         end
       end
