@@ -81,13 +81,11 @@ const DataSheetTabs = ({
         [styles.withMetadataDefinitions]: !!metadataDefinitions?.length,
       })}
     >
-      <div style={{ gridRowStart: 1, gridRowEnd: -1, display: "grid", gridTemplateRows: "1fr"}}>
       <ExperimentMetadataFilters
         assayModelId={assay_model_id}
         metadataFilters={metadataFilters}
         setMetadataFilters={setMetadataFilters}
       />
-      </div>
       <Tabs
         selectedTab={selectedTab}
         onTabChange={handleTabChange}

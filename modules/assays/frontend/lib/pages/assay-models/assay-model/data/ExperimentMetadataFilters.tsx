@@ -151,6 +151,10 @@ const ExperimentMetadataFilters = ({
     return <ErrorPage error={metadataDefinitionsError} />;
   }
 
+  if (metadataDefinitions.length == 0) {
+    return null;
+  }
+
   const onClose = (id?: number) => {
     if (id) {
       setSelectedMetadataDefinitions(
@@ -168,6 +172,7 @@ const ExperimentMetadataFilters = ({
         gap: "calc(var(--spacing) * 2)",
         gridAutoRows: "max-content",
         overflow: "auto",
+        gridRowStart: 1, gridRowEnd: -1
       }}
     >
       <div
