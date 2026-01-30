@@ -116,6 +116,10 @@ module Grit::Assays
         columns.each do |column|
           if column.data_type.is_entity
             t.column column.safe_name, :bigint
+          elsif column.data_type.name == "integer"
+            t.column column.safe_name, :numeric, precision: 1000, scale: 0
+          elsif column.data_type.name == "decimal"
+            t.column column.safe_name, :numeric
           else
             t.column column.safe_name, column.data_type.sql_name
           end
@@ -181,9 +185,12 @@ module Grit::Assays
           if entity_property[:required] && value.nil?
             record[:errors] ||= {}
             record[:errors][entity_property_name] = [ "can't be blank" ]
-          elsif (entity_property[:type].to_s == "integer" or entity_property[:type].to_s == "float" or entity_property[:type].to_s == "decimal") and !value.nil? and !value.blank? and !/^[+\-]?(\d+\.\d*|\d*\.\d+|\d+)([eE][+\-]?\d+)?$/.match?(value.to_s)
+          elsif entity_property[:type].to_s == "decimal" and !value.nil? and !value.blank? and !/^[+\-]?(\d+\.\d*|\d*\.\d+|\d+)([eE][+\-]?\d+)?$/.match?(value.to_s)
             record[:errors] ||= {}
             record[:errors][entity_property_name] = [ "is not a number" ]
+          elsif entity_property[:type].to_s == "integer" and !value.nil? and !value.blank? and !/^[+\-]?\d+([eE][+]?\d+)?$/.match?(value.to_s)
+            record[:errors] ||= {}
+            record[:errors][entity_property_name] = [ "is not a integer" ]
           elsif entity_property[:type].to_s == "datetime" and !value.nil? and !value.blank?
             begin
               record[entity_property_name] = DateTime.parse(value)

@@ -86,6 +86,10 @@ module Grit::Assays
           if column.data_type.is_entity
             t.column column.safe_name, :bigint, null: !column.required
             foreign_key_colums.push column
+          elsif column.data_type.name == "integer"
+            t.column column.safe_name, :numeric, precision: 1000, scale: 0, null: !column.required
+          elsif column.data_type.name == "decimal"
+            t.column column.safe_name, :numeric, null: !column.required
           else
             t.column column.safe_name, column.data_type.sql_name, null: !column.required
           end
