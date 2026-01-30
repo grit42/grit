@@ -258,7 +258,7 @@ const ExperimentActions = ({
             <h3>Convert this Experiment to Draft</h3>
             <p>
               Converting this Experiment to draft will allow you to make changes
-              to its Metadata and Data Sheets. It will not be available in Data
+              to its Metadata and Data Sheets Records. It will not be available in Data
               Tables until it is published again.
             </p>
           </div>
