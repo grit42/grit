@@ -25,12 +25,17 @@ export interface LoadSetMapping {
   value: string | number | boolean | null;
 }
 
+export interface NewLoadSetBlockData extends EntityProperties {
+  name: string;
+  separator: string;
+  data: string;
+}
+
 export interface NewLoadSetData extends EntityProperties {
   name: string;
   entity: string;
-  data: string;
   origin_id: number;
-  separator: string | null;
+  blocks: NewLoadSetBlockData[];
 }
 
 export interface LoadSetDataUpdateData extends EntityProperties {

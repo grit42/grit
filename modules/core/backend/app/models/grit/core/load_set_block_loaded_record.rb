@@ -17,6 +17,6 @@
 #++
 
 module Grit::Core
-  class LoadSetLoadedRecord < ApplicationRecord
+  class LoadSetBlockLoadedRecord < ApplicationRecord
   end
 end

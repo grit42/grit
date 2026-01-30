@@ -54,6 +54,7 @@ postgres-data-backup
 node_modules
 dist
 **/backend/test/dummy/public/*
+**/backend/test/dummy/storage/*
 !**/backend/test/dummy/public/.keep
 apps/**/server/public/*
 !apps/**/server/public/.keep

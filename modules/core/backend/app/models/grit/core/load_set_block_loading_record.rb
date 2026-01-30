@@ -17,7 +17,6 @@
 #++
 
 module Grit::Core
-  class LoadSetLoadingRecord < ApplicationRecord
-    has_many :load_set_loading_record_property_values, dependent: :destroy
+  class LoadSetBlockLoadingRecord < ApplicationRecord
   end
 end

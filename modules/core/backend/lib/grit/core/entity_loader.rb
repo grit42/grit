@@ -102,22 +102,27 @@ module Grit::Core
     end
 
     def self.create(params)
-      data = read_data(params[:data].tempfile)
+      # data = read_data(params[:data].tempfile)
 
-      parsed_data = self.parse(data, params[:separator])
+      # parsed_data = self.parse(data, params[:separator])
 
-      record = Grit::Core::LoadSet.new({
+      load_set = Grit::Core::LoadSet.new({
         name: params[:name],
         entity: params[:entity],
-        data: data,
-        separator: params[:separator],
-        parsed_data: parsed_data,
         origin_id: params[:origin_id],
-        status_id: Grit::Core::LoadSetStatus.find_by(name: "Mapping").id
       })
 
-      record.save!
-      record
+      load_set.save!
+
+      block = Grit::Core::LoadSetBlock.new({
+        load_set_id: load_set.id,
+        name: params[:blocks]["0"]["name"],
+        separator: params[:blocks]["0"]["separator"],
+        data: params[:blocks]["0"]["data"],
+        status_id: Grit::Core::LoadSetStatus.find_by(name: "Mapping").id
+      })
+      block.save!
+      load_set
     end
 
     def self.destroy(load_set)

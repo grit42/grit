@@ -6,17 +6,10 @@ class CreateGritCoreLoadSets < ActiveRecord::Migration[7.2]
       t.datetime :created_at, null: false, default: -> { 'CURRENT_TIMESTAMP' }
       t.string :updated_by, limit: 30
       t.datetime :updated_at
+
       t.string :name, null: false
       t.string :entity, null: false
-      t.datetime :process_start
-      t.datetime :process_end
-      t.blob :data, null: false
-      t.jsonb :parsed_data, null: false, default: []
-      t.json :mappings
-      t.json :record_errors
-      t.integer :item_count
 
-      t.references :status, foreign_key: { name: "core_load_sets_core_load_set_status_id_fkey", to_table: "grit_core_load_set_statuses" }, null: false
       t.references :origin, foreign_key: { name: "core_load_sets_core_origin_id_fkey", to_table: "grit_core_origins" }, null: false
     end
 

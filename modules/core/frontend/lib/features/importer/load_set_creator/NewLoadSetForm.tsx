@@ -16,7 +16,7 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { InputError, Surface } from "@grit42/client-library/components";
+import { Button, InputError, Surface } from "@grit42/client-library/components";
 import { useForm, useStore } from "@grit42/form";
 import { useNavigate } from "react-router-dom";
 import {
@@ -28,20 +28,22 @@ import {
 } from "@grit42/form";
 import { useCreateLoadSetMutation } from "../mutations";
 import { NewLoadSetData } from "../types";
-import EditorInput from "../../../components/EditorInput";
 import styles from "./loadSetCreator.module.scss";
 import { newLoadSetPayload } from "../utils/payload";
 import { useImporter } from "../ImportersContext";
+import { EditorInput } from "../../../components";
 
 export interface NewLoadSetFormProps {
   entity: string;
-  fields: FormFieldDef[];
+  loadSetFields: FormFieldDef[];
+  loadSetBlockFields: FormFieldDef[];
   initialValues: Partial<NewLoadSetData>;
 }
 
 const NewLoadSetForm = ({
   entity,
-  fields,
+  loadSetFields,
+  loadSetBlockFields,
   initialValues,
 }: NewLoadSetFormProps) => {
   const { guessDataSetValues } = useImporter(entity);
@@ -49,37 +51,38 @@ const NewLoadSetForm = ({
   const createLoadSetMutation = useCreateLoadSetMutation();
 
   const form = useForm<Partial<NewLoadSetData>>({
-    validators: {
-      onMount: () => "Provide either a file or text data",
-      onChange: ({ value }) =>
-        value.data && value.data.length > 0
-          ? undefined
-          : "Provide either a file or text data",
-    },
+    // validators: {
+    //   onMount: () => "Provide either a file or text data",
+    //   onChange: ({ value }) =>
+    //     value.data && value.data.length > 0
+    //       ? undefined
+    //       : "Provide either a file or text data",
+    // },
     onSubmit: genericErrorHandler(async ({ value }) => {
+      console.log("wut", value)
       const loadSet = await createLoadSetMutation.mutateAsync(
-        newLoadSetPayload(fields, value as NewLoadSetData),
+        newLoadSetPayload(value as NewLoadSetData),
       );
       navigate(`../${loadSet.id}`, { relative: "path" });
     }),
     defaultValues: initialValues,
   });
 
-  const handleDataChange: FieldListenerFn<NewLoadSetData, "data"> = ({
+  const handleDataChange: FieldListenerFn<NewLoadSetData, "blocks[0].data"> = ({
     fieldApi,
   }) => {
-    fieldApi.form.validateField("data", "submit");
+    fieldApi.form.validateField("blocks[0].data", "submit");
   };
 
-  const handleDataBlur: FieldListenerFn<NewLoadSetData, "data"> = async ({
+  const handleDataBlur: FieldListenerFn<NewLoadSetData, "blocks[0].data"> = async ({
     value,
     fieldApi,
   }) => {
     try {
       const formUpdates = await guessDataSetValues<NewLoadSetData>(value);
       Object.keys(formUpdates).forEach((key) => {
-        fieldApi.form.setFieldValue(key, formUpdates[key]);
-        fieldApi.form.setFieldMeta(key, (meta) => ({
+        fieldApi.form.setFieldValue(`blocks[0].${key}`, formUpdates[key]);
+        fieldApi.form.setFieldMeta(`blocks[0].${key}`, (meta) => ({
           ...meta,
           errorMap: {
             ...meta.errorMap,
@@ -91,7 +94,7 @@ const NewLoadSetForm = ({
       if (e && typeof e.errors === "object" && e.errors !== null) {
         Object.keys(e.errors).forEach((key) => {
           if (typeof e.errors[key] === "string") {
-            fieldApi.form.setFieldMeta(key, (meta) => ({
+            fieldApi.form.setFieldMeta(`blocks[0].${key}`, (meta) => ({
               ...meta,
               errorMap: {
                 ...meta.errorMap,
@@ -108,8 +111,9 @@ const NewLoadSetForm = ({
     Array.from(new Set(errors)).join("\n"),
   );
 
-  const dataErrors = useStore(form.store, ({ fieldMeta }) =>
-    Array.from(new Set(fieldMeta.data?.errors)).join("\n"),
+  const hasBlocks = useStore(
+    form.baseStore,
+    ({ values }) => !!values.blocks?.length,
   );
 
   return (
@@ -129,12 +133,12 @@ const NewLoadSetForm = ({
       <Surface className={styles.content}>
         <div className={styles.formFields}>
           {errors && <p className={styles.error}>{errors}</p>}
-          {fields.map((f) => (
+          {loadSetFields.map((f) => (
             <FormField key={f.name} form={form} fieldDef={f} />
           ))}
-          <InputError error={dataErrors} />
+          {/* <InputError error={dataErrors} /> */}
         </div>
-
+        {/*
         <form.Field
           name="data"
           listeners={{
@@ -151,8 +155,47 @@ const NewLoadSetForm = ({
               showInitialOverlay
             />
           )}
-        />
+        /> */}
       </Surface>
+      <form.Field name="blocks" mode="array">
+        {() => (
+          <Surface className={styles.blockFormFields}>
+          <div className={styles.blockFormInputs}>
+            {loadSetBlockFields.map((f) => (
+              <FormField
+                key={f.name}
+                form={form}
+                fieldDef={{ ...f, name: `blocks[0].${f.name}` }}
+              />
+            ))}
+            </div>
+            <form.Field
+              name="blocks[0].data"
+              listeners={{
+                onChange: handleDataChange,
+                onBlur: handleDataBlur,
+              }}
+              children={(field) => (
+                <div style={{gridRowStart: 2, gridColumnStart: 1, gridColumnEnd: -1}}>
+                <EditorInput
+                  onChange={field.handleChange}
+                  onBlur={field.handleBlur}
+                  value={field.state.value as string}
+                  label="Data *"
+                  showFilePicker
+                  showInitialOverlay
+                />
+                </div>
+              )}
+            />
+          </Surface>
+        )}
+      </form.Field>
+      {!hasBlocks && (
+        <div className={styles.noFiles}>
+          <Button color="secondary">Select a file</Button>
+        </div>
+      )}
     </form>
   );
 };
