@@ -25,6 +25,10 @@ const ITEMS = [
     label: "Experiments",
   },
   {
+    identifier: "data",
+    label: "Data",
+  },
+  {
     identifier: "data-sheets",
     label: "Data sheets",
   },

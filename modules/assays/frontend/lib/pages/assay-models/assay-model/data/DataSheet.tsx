@@ -16,86 +16,66 @@
  * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { useEffect, useMemo } from "react";
-import {
-  Link,
-  Navigate,
-  Route,
-  Routes,
-  useNavigate,
-  useParams,
-} from "react-router-dom";
+import { useMemo } from "react";
+import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import { Button, ErrorPage, Spinner } from "@grit42/client-library/components";
 import { ExperimentDataSheetData } from "../../../../queries/experiment_data_sheet";
 import {
+  AssayDataSheetRecordData,
   ExperimentDataSheetRecordData,
   useExperimentDataSheetRecordColumns,
-  useInfiniteExperimentDataSheetRecords,
 } from "../../../../queries/experiment_data_sheet_records";
 import { useTableColumns } from "@grit42/core/utils";
-import { Table, useSetupTableState } from "@grit42/table";
-import ExperimentDataSheetRecordFormWrapper from "./RecordForm";
-import { useToolbar } from "@grit42/core/Toolbar";
-import styles from "./dataSheet.module.scss";
-import { useHasRoles } from "@grit42/core";
-import { ExperimentData, useExperiment } from "../../../../queries/experiments";
+import { Filter, Table, useSetupTableState } from "@grit42/table";
+import styles from "./dataSheets.module.scss";
+import { useInfiniteAssayModelDataSheetRecords } from "../../../../queries/assay_models";
 
 const getRowId = (data: ExperimentDataSheetRecordData) => data.id.toString();
 
 const ExperimentDataSheetRecords = ({
   dataSheet,
-  experiment,
+  metadataFilters,
 }: {
   dataSheet: ExperimentDataSheetData;
-  experiment: ExperimentData;
+  metadataFilters: Record<string, number[]>;
 }) => {
-  const { experiment_id } = useParams() as { experiment_id: string };
-  const canCrudRecord = useHasRoles([
-    "Administrator",
-    "AssayAdministrator",
-    "AssayUser",
-  ]) && experiment.publication_status_id__name !== "Published";
-  const registerToolbarAction = useToolbar();
   const navigate = useNavigate();
   const { data: columns } = useExperimentDataSheetRecordColumns(dataSheet.id);
 
-  const tableColumns = useTableColumns<ExperimentDataSheetRecordData>(columns);
+  const tableColumns = useTableColumns<AssayDataSheetRecordData>(columns);
 
-  const tableState = useSetupTableState<ExperimentDataSheetRecordData>(
-    `data-sheet-${dataSheet.id}-${experiment_id}`,
+  const tableState = useSetupTableState<AssayDataSheetRecordData>(
+    `data-sheet-assay-model-${dataSheet.id}`,
     tableColumns,
   );
+
+  const filters = useMemo(
+    () =>
+      Object.keys(metadataFilters).map(
+        (key): Filter => ({
+          active: true,
+          column: `emd_${key}`,
+          id: `emd_${key}`,
+          operator: "in_list",
+          property: `emd_${key}`,
+          property_type: "integer",
+          type: "integer",
+          value: metadataFilters[key],
+        }),
+      ),
+    [metadataFilters],
+  );
+
   const { data, isLoading, isError, error, fetchNextPage, isFetchingNextPage } =
-    useInfiniteExperimentDataSheetRecords(
-      experiment_id,
+    useInfiniteAssayModelDataSheetRecords(
       dataSheet.id,
       tableState.sorting,
-      tableState.filters,
+      filters,
     );
 
   const flatData = useMemo(
     () => data?.pages.flatMap(({ data }) => data) ?? [],
     [data],
-  );
-
-  useEffect(
-    () =>
-      registerToolbarAction({
-        importItems: canCrudRecord ? [
-          {
-            id: "IMPORT_DATA",
-            text: "Import data",
-            onClick: () =>
-              navigate(
-                `/core/load_sets/new?entity=Grit::Assays::ExperimentDataSheetRecord&experiment_id=${experiment_id}&assay_data_sheet_definition_id=${dataSheet.id}`,
-              ),
-          },
-        ] : undefined,
-        import: {
-          requiredRoles: ["Administrator", "AssayAdministrator", "AssayUser"],
-        },
-      }),
-    [canCrudRecord, dataSheet, experiment_id, navigate, registerToolbarAction],
   );
 
   return (
@@ -114,15 +94,10 @@ const ExperimentDataSheetRecords = ({
     >
       <Table
         className={styles.table}
-        headerActions={
-          canCrudRecord ? (
-            <Button onClick={() => navigate("records/new")}>New</Button>
-          ) : undefined
-        }
         getRowId={getRowId}
         tableState={tableState}
         onRowClick={
-          canCrudRecord ? ({ id }) => navigate(`records/${id}`) : undefined
+          ({ original }) => navigate(`/assays/experiments/${original.experiment_id}/sheets/${dataSheet.id}`)
         }
         data={flatData}
         loading={isLoading}
@@ -137,32 +112,35 @@ const ExperimentDataSheetRecords = ({
   );
 };
 
-const ExperimentDataSheet = ({
+const DataSheet = ({
   dataSheets,
+  metadataFilters,
 }: {
   dataSheets: ExperimentDataSheetData[];
+  metadataFilters: Record<string, number[]>;
 }) => {
-  const { sheet_id, experiment_id } = useParams() as {
+  const { sheet_id } = useParams() as {
     sheet_id: string;
-    experiment_id: string;
   };
-  const { data: experiment } = useExperiment(experiment_id);
-
   const dataSheet = useMemo(
     () => dataSheets.find(({ id }) => sheet_id === id.toString()),
     [dataSheets, sheet_id],
   );
 
   const { data, isLoading, isError, error } =
-    useExperimentDataSheetRecordColumns(dataSheet?.id ?? "", undefined, {
-      enabled: !!dataSheet,
-    });
+    useExperimentDataSheetRecordColumns(
+      dataSheet?.id ?? "",
+      { with_experiment_id: true },
+      {
+        enabled: !!dataSheet,
+      },
+    );
 
   if (isLoading || !dataSheet) return <Spinner />;
   if (isError || !data)
     return (
       <ErrorPage error={error}>
-        <Link to="../details">
+        <Link to="../experiments">
           <Button>Back</Button>
         </Link>
       </ErrorPage>
@@ -173,17 +151,11 @@ const ExperimentDataSheet = ({
   }
 
   return (
-    <Routes>
-      <Route
-        index
-        element={<ExperimentDataSheetRecords dataSheet={dataSheet} experiment={experiment!} />}
-      />
-      <Route
-        path="records/:record_id"
-        element={<ExperimentDataSheetRecordFormWrapper />}
-      />
-    </Routes>
+    <ExperimentDataSheetRecords
+      dataSheet={dataSheet}
+      metadataFilters={metadataFilters}
+    />
   );
 };
 
-export default ExperimentDataSheet;
+export default DataSheet;

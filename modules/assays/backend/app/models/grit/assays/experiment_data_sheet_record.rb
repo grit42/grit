@@ -83,7 +83,7 @@ module Grit::Assays
         end
 
         def self.entity_properties(**args)
-          [
+          props = [
             {
               display_name: "Created at",
               name: "created_at",
@@ -103,9 +103,24 @@ module Grit::Assays
               display_name: "Updated by",
               name: "updated_by",
               type: "string",
-            },
-            *self.assay_data_sheet_definition_properties.filter { |p| p[:name] != "experiment_id" }
-          ]
+            }]
+
+          if args[:with_experiment_id]
+            props.push({
+              display_name: "Experiment",
+              name: "experiment_id",
+              type: "entity",
+              entity: {
+                full_name: "Grit::Assays::Experiment",
+                name: "Experiment",
+                path: "grit/assays/experiments",
+                primary_key: "id",
+                primary_key_type: "integer",
+              }
+            })
+          end
+
+          props.concat(self.assay_data_sheet_definition_properties.filter { |p| p[:name] != "experiment_id" })
         end
 
         def self.entity_field_from_property(property)
@@ -239,9 +254,16 @@ module Grit::Assays
       def self.by_assay_data_sheet_definition(params)
         raise "No assay_data_sheet_definition_id specified" if params["assay_data_sheet_definition_id"].nil?
         klass = sheet_record_klass(params["assay_data_sheet_definition_id"])
-        klass.detailed(params)
-          .joins("JOIN grit_assays_experiments grit_assays_experiments__ on grit_assays_experiments__.id = #{klass.table_name}.experiment_id")
-          .where("grit_assays_experiments__.publication_status_id" => Grit::Core::PublicationStatus.find_by(name: "Published").id)
+        query = klass.detailed(params)
+          .with(experiment_with_metadata: Experiment.published)
+          .joins("JOIN experiment_with_metadata grit_assays_experiments__ on grit_assays_experiments__.id = #{klass.table_name}.experiment_id")
+          .select("grit_assays_experiments__.name as experiment_id__name")
+        AssayMetadataDefinition.all.each do |md|
+          query = query
+            .select("grit_assays_experiments__.#{md.safe_name} as emd_#{md.safe_name}")
+            .select("grit_assays_experiments__.#{md.safe_name}__name as emd_#{md.safe_name}__name")
+        end
+        query
       end
 
       def self.detailed(params = nil)
