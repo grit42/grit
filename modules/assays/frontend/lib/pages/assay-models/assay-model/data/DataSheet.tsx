@@ -50,8 +50,8 @@ const ExperimentDataSheetRecords = ({
   );
 
   const filters = useMemo(
-    () =>
-      Object.keys(metadataFilters).map(
+    () => {
+      const filters = Object.keys(metadataFilters).map(
         (key): Filter => ({
           active: true,
           column: `emd_${key}`,
@@ -62,8 +62,10 @@ const ExperimentDataSheetRecords = ({
           type: "integer",
           value: metadataFilters[key],
         }),
-      ),
-    [metadataFilters],
+      )
+      return filters.concat(tableState.filters)
+    },
+    [metadataFilters, tableState.filters],
   );
 
   const { data, isLoading, isError, error, fetchNextPage, isFetchingNextPage } =
