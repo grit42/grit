@@ -240,9 +240,9 @@ module Grit::Assays
     def self.rollback(load_set)
       record_load_set = Grit::Assays::ExperimentDataSheetRecordLoadSet.find_by(load_set_id: load_set.id)
       load_set_entity = ExperimentDataSheetRecord.sheet_record_klass(record_load_set.assay_data_sheet_definition_id)
-      load_set_entity.destroy_by("id IN (SELECT record_id FROM grit_core_load_set_loaded_records WHERE grit_core_load_set_loaded_records.load_set_id = #{load_set.id})")
-      Grit::Core::LoadSetLoadedRecord.destroy_by(load_set_id: load_set.id)
-      Grit::Core::LoadSetLoadingRecord.destroy_by(load_set_id: load_set.id)
+      load_set_entity.delete_by("id IN (SELECT record_id FROM grit_core_load_set_loaded_records WHERE grit_core_load_set_loaded_records.load_set_id = #{load_set.id})")
+      Grit::Core::LoadSetLoadedRecord.delete_by(load_set_id: load_set.id)
+      Grit::Core::LoadSetLoadingRecord.delete_by(load_set_id: load_set.id)
     end
 
     def self.mapping_fields(load_set)
