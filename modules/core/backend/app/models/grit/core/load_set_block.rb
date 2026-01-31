@@ -25,6 +25,9 @@ module Grit::Core
     has_one_attached :data
 
     before_destroy :check_status
+    before_destroy :drop_table
+    after_commit :initialize_table
+    after_save :drop_raw_data_table
 
     entity_crud_with create: [], read: [], update: [], destroy: []
 
@@ -69,6 +72,15 @@ module Grit::Core
     #   .joins("LEFT OUTER JOIN grit_core_origins grit_core_origins__ ON grit_core_origins__.id = grit_core_load_sets.origin_id")
     # end
 
+    def self.preview_data(params = nil)
+      raise "No load set block id provided" if params.nil? or params[:load_set_block_id].nil?
+      self.unscoped.from("raw_lsb_#{params[:load_set_block_id]}").select("raw_lsb_#{params[:load_set_block_id]}.*")
+    end
+
+    def preview_data
+      LoadSetBlock.preview_data({load_set_block_id: id})
+    end
+
     def self.by_entity(params)
       self.detailed.where([ "grit_core_load_sets.entity = ?", params[:entity] ])
     end
@@ -109,17 +121,18 @@ module Grit::Core
 
     def create_table
       data.open do |file|
-
         io = file.instance_of?(String) ? File.open(file, get_file_mode('r', options[:encoding])) : file
         line = io.gets
-        headers_list = CSV.parse(line,
+        csv_headers_list = CSV.parse(line,
                           col_sep: separator,
                           liberal_parsing: true,
                           encoding: "utf-8"
                         )[0]
 
         columns_list = []
-        headers_list.each_index do |index|
+        headers_list = []
+        csv_headers_list.each_with_index do |h,index|
+          headers_list.push ({ name: "col_#{index}", display_name: h })
           columns_list.push "col_#{index}"
         end
 
@@ -147,7 +160,27 @@ module Grit::Core
             connection.raw_connection.put_copy_data(cd)
           end
         end
+
+        update_column(:headers, headers_list)
       end
+    end
+
+    def initialize_table
+      return if status.name != "Created"
+      LoadSetBlock.transaction do
+        update_column(:status_id, Grit::Core::LoadSetStatus.find_by(name: "Initializing").id)
+        create_table
+        update_column(:status_id, Grit::Core::LoadSetStatus.find_by(name: "Mapping").id)
+      rescue StandardError => e
+        logger.info e.to_s
+        logger.info e.backtrace.join("\n")
+        raise ActiveRecord::Rollback
+      end
+    end
+
+    def drop_raw_data_table
+      return if status.name != "Succeeded"
+      drop_table
     end
 
     private

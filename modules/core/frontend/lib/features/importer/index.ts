@@ -36,8 +36,8 @@ export {
   useCreateLoadSetMutation,
   useSetLoadSetMappingsMutation,
   useRollbackLoadSetMutation,
-  useConfirmLoadSetMutation,
-  useValidateLoadSetMutation,
+  useConfirmLoadSetBlockMutation,
+  useValidateLoadSetBlockMutation,
   useSetLoadSetDataMutation,
 } from "./mutations";
 

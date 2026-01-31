@@ -34,19 +34,15 @@ const MappingFields = ({
     undefined
   >;
   entityFields: FormFieldDef[];
-  headers: Array<string | null>;
+  headers: { name: string; display_name: string | null }[];
 }) => {
   const headerOptions = useMemo(() => {
-    const nonEmptyHeaders = headers
-      .map((header, index) => ({ header, originalIndex: index }))
-      .filter(({ header }) => header !== null) as {
-      header: string;
-      originalIndex: number;
-    }[];
-    return nonEmptyHeaders.map(({ header, originalIndex }) => ({
-      value: originalIndex.toString(),
-      label: header,
-    }));
+    return headers
+      .filter(({ display_name }) => display_name !== null)
+      .map(({ name, display_name }) => ({
+        value: name,
+        label: display_name ?? name,
+      }));
   }, [headers]);
 
   return (

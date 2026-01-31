@@ -17,12 +17,11 @@
  */
 
 import { Tabs } from "@grit42/client-library/components";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { GritColumnDef, Table } from "@grit42/table";
 import styles from "./loadSetEditor.module.scss";
-import { LoadSetData, LoadSetPreviewData } from "../types";
-import { useToolbar } from "../../../Toolbar";
-import { downloadBlob } from "@grit42/client-library/utils";
+import { LoadSetData } from "../types";
+import { useInfiniteLoadSetBlockPreviewData } from "../queries";
 
 const ERROR_COLUMNS: GritColumnDef[] = [
   {
@@ -55,66 +54,52 @@ const ERROR_COLUMNS: GritColumnDef[] = [
   },
 ];
 
-const WARNING_COLUMNS: GritColumnDef[] = [
-  {
-    accessorKey: "index",
-    header: "Line",
-    id: "index",
-    type: "integer",
-    size: 40,
-  },
-  {
-    accessorKey: "column",
-    header: "Column",
-    id: "column",
-    type: "string",
-    size: 150,
-  },
-  {
-    accessorKey: "warning",
-    header: "Warning",
-    id: "warning",
-    type: "string",
-    size: 500,
-  },
-];
+// const WARNING_COLUMNS: GritColumnDef[] = [
+//   {
+//     accessorKey: "index",
+//     header: "Line",
+//     id: "index",
+//     type: "integer",
+//     size: 40,
+//   },
+//   {
+//     accessorKey: "column",
+//     header: "Column",
+//     id: "column",
+//     type: "string",
+//     size: 150,
+//   },
+//   {
+//     accessorKey: "warning",
+//     header: "Warning",
+//     id: "warning",
+//     type: "string",
+//     size: 500,
+//   },
+// ];
 
-const LoadSetInfo = ({
+const PreviewDataTable = ({
   loadSet,
-  previewData,
   headerMappings,
+  columns,
 }: {
   loadSet: LoadSetData;
-  previewData: LoadSetPreviewData;
   headerMappings: Record<string, string[]>;
+  columns: { name: string; display_name: string | null }[];
 }) => {
-  const registerToolbarActions = useToolbar();
-  const [selectedTab, setSelectedTab] = useState(0);
-
-  useEffect(() => {
-    setSelectedTab(
-      (loadSet.record_errors ?? []).length > 0 ||
-        (loadSet.record_warnings ?? []).length > 0
-        ? 1
-        : 0,
-    );
-  }, [loadSet.record_errors, loadSet.record_warnings]);
-
   const dataSetColumns = useMemo(() => {
-    const nonEmptyHeaders = previewData.headers
-      .map((header, index) => ({ header, originalIndex: index }))
-      .filter(({ header }) => header !== null) as {
-      header: string;
-      originalIndex: number;
-    }[];
-
-    return nonEmptyHeaders.map(({ header, originalIndex }) => ({
-      header,
-      id: originalIndex.toString(),
-      type: "string",
-      accessorKey: originalIndex.toString(),
-    }));
-  }, [previewData.headers]);
+    return columns
+      .filter(({ display_name }) => display_name !== null)
+      .map(
+        ({ display_name, name }) =>
+          ({
+            header: display_name ?? name,
+            id: name,
+            type: "string",
+            accessorKey: name,
+          } satisfies GritColumnDef),
+      );
+  }, [columns]);
 
   const previewDataColumns = useMemo(
     () =>
@@ -132,6 +117,124 @@ const LoadSetInfo = ({
     [dataSetColumns, headerMappings],
   );
 
+  const { data, isLoading, isError, error, fetchNextPage, isFetchingNextPage } =
+    useInfiniteLoadSetBlockPreviewData(loadSet.load_set_blocks[0].id);
+
+  const flatData = useMemo(
+    () => data?.pages.flatMap(({ data }) => data) ?? [],
+    [data],
+  );
+
+  return (
+    <Table
+      columns={previewDataColumns}
+      data={flatData}
+      disableFooter
+      settings={{
+        disableColumnReorder: true,
+        disableColumnSorting: true,
+        disableFilters: true,
+        disableVisibilitySettings: true,
+      }}
+      loading={isLoading}
+      noDataMessage={isError ? error : undefined}
+      pagination={{
+        fetchNextPage,
+        isFetchingNextPage,
+        totalRows: data?.pages[0].total,
+      }}
+    />
+  );
+};
+
+// const ErrorsTable = ({
+//   loadSet,
+//   headerMappings,
+//   columns,
+// }: {
+//   loadSet: LoadSetData;
+//   headerMappings: Record<string, string[]>;
+//   columns: { name: string; display_name: string | null }[];
+// }) => {
+//   const dataSetColumns = useMemo(() => {
+//     return columns
+//       .filter(({ display_name }) => display_name !== null)
+//       .map(
+//         ({ display_name, name }) =>
+//           ({
+//             header: display_name ?? name,
+//             id: name,
+//             type: "string",
+//             accessorKey: name,
+//           } satisfies GritColumnDef),
+//       );
+//   }, [columns]);
+
+//   const { data, isLoading, isError, error, fetchNextPage, isFetchingNextPage } =
+//     useInfiniteLoadSetBlockPreviewData(loadSet.load_set_blocks[0].id);
+
+//   const flatData = useMemo(
+//     () => data?.pages.flatMap(({ data }) => data) ?? [],
+//     [data],
+//   );
+
+//   return (
+//     <Table
+//       columns={ERROR_COLUMNS}
+//       data={flatData}
+//       disableFooter
+//       settings={{
+//         disableColumnReorder: true,
+//         disableColumnSorting: true,
+//         disableFilters: true,
+//         disableVisibilitySettings: true,
+//       }}
+//       loading={isLoading}
+//       noDataMessage={isError ? error : undefined}
+//       pagination={{
+//         fetchNextPage,
+//         isFetchingNextPage,
+//         totalRows: data?.pages[0].total,
+//       }}
+//     />
+//   );
+// };
+
+const LoadSetInfo = ({
+  loadSet,
+  headerMappings,
+  columns,
+}: {
+  loadSet: LoadSetData;
+  headerMappings: Record<string, string[]>;
+  columns: { name: string; display_name: string | null }[];
+}) => {
+  // const registerToolbarActions = useToolbar();
+  const [selectedTab, setSelectedTab] = useState(0);
+
+  useEffect(() => {
+    setSelectedTab(
+      (loadSet.record_errors ?? []).length > 0 ||
+        (loadSet.record_warnings ?? []).length > 0
+        ? 1
+        : 0,
+    );
+  }, [loadSet.record_errors, loadSet.record_warnings]);
+
+  const dataSetColumns = useMemo(() => {
+    return columns
+      .filter(({ display_name }) => display_name !== null)
+      .map(
+        ({ display_name, name }) =>
+          ({
+            header: display_name ?? name,
+            id: name,
+            type: "string",
+            accessorKey: name,
+          } satisfies GritColumnDef),
+      );
+  }, [columns]);
+
   const errorRowColumns = useMemo(
     () => [
       {
@@ -146,146 +249,139 @@ const LoadSetInfo = ({
     [dataSetColumns],
   );
 
-  const data: Record<string, string | number>[] = useMemo(
-    () =>
-      previewData.data.map((datum) =>
-        datum.reduce((acc, prop, i) => ({ ...acc, [i.toString()]: prop }), {}),
-      ),
-    [previewData.data],
-  );
 
-  const errorData = useMemo(
-    () =>
-      loadSet.record_errors?.flatMap((e) => {
-        const rows = [];
-        for (const key in e.errors) {
-          for (const i of e.errors[key]) {
-            // Validate bounds before accessing arrays
-            const headerIndex = Number(loadSet.mappings?.[key].header);
-            const isValidHeaderIndex =
-              headerIndex >= 0 && headerIndex < previewData.headers.length;
-            const isValidDataIndex =
-              e.index >= 0 && e.index < previewData.data.length;
+  // const errorData = useMemo(
+  //   () =>
+  //     loadSet.record_errors?.flatMap((e) => {
+  //       const rows = [];
+  //       for (const key in e.errors) {
+  //         for (const i of e.errors[key]) {
+  //           // Validate bounds before accessing arrays
+  //           const headerIndex = Number(loadSet.mappings?.[key].header);
+  //           const isValidHeaderIndex =
+  //             headerIndex >= 0 && headerIndex < previewData.headers.length;
+  //           const isValidDataIndex =
+  //             e.index >= 0 && e.index < previewData.data.length;
 
-            rows.push({
-              index: e.index + 2,
-              column: loadSet.mappings?.[key]?.header
-                ? isValidHeaderIndex
-                  ? previewData.headers[headerIndex]
-                  : "Invalid header"
-                : "Constant value",
-              value: loadSet.mappings?.[key]?.header
-                ? isValidDataIndex && isValidHeaderIndex
-                  ? previewData.data[e.index][headerIndex]
-                  : "Invalid data"
-                : loadSet.mappings?.[key]?.value,
-              error: i,
-            });
-          }
-        }
-        return rows;
-      }) ?? [],
-    [
-      loadSet.mappings,
-      loadSet.record_errors,
-      previewData.data,
-      previewData.headers,
-    ],
-  );
+  //           rows.push({
+  //             index: e.index + 2,
+  //             column: loadSet.mappings?.[key]?.header
+  //               ? isValidHeaderIndex
+  //                 ? previewData.headers[headerIndex]
+  //                 : "Invalid header"
+  //               : "Constant value",
+  //             value: loadSet.mappings?.[key]?.header
+  //               ? isValidDataIndex && isValidHeaderIndex
+  //                 ? previewData.data[e.index][headerIndex]
+  //                 : "Invalid data"
+  //               : loadSet.mappings?.[key]?.value,
+  //             error: i,
+  //           });
+  //         }
+  //       }
+  //       return rows;
+  //     }) ?? [],
+  //   [
+  //     loadSet.mappings,
+  //     loadSet.record_errors,
+  //     previewData.data,
+  //     previewData.headers,
+  //   ],
+  // );
 
-  const errorRowData = useMemo(() => {
-    const errorRows: Record<string, string | number>[] = [];
-    if (!loadSet.record_errors) return errorRows;
-    const errorRowIndexes = new Set<number>();
-    for (const { index } of loadSet.record_errors) {
-      errorRowIndexes.add(index);
-    }
-    for (let i = 0; i < data.length; i++) {
-      if (errorRowIndexes.has(i)) {
-        errorRows.push({ ...data[i], index: i + 2 });
-      }
-    }
-    return errorRows;
-  }, [data, loadSet.record_errors]);
+  // const errorRowData = useMemo(() => {
+  //   const errorRows: Record<string, string | number>[] = [];
+  //   if (!loadSet.record_errors) return errorRows;
+  //   const errorRowIndexes = new Set<number>();
+  //   for (const { index } of loadSet.record_errors) {
+  //     errorRowIndexes.add(index);
+  //   }
+  //   for (let i = 0; i < data.length; i++) {
+  //     if (errorRowIndexes.has(i)) {
+  //       errorRows.push({ ...data[i], index: i + 2 });
+  //     }
+  //   }
+  //   return errorRows;
+  // }, [data, loadSet.record_errors]);
 
-  const warningData = useMemo(
-    () =>
-      loadSet.record_warnings?.flatMap((w) => {
-        const rows = [];
-        for (const key in w.warnings) {
-          for (const i of w.warnings[key]) {
-            rows.push({
-              index: w.index + 2,
-              column: key,
-              warning: i,
-            });
-          }
-        }
-        return rows;
-      }) ?? [],
-    [loadSet.record_warnings],
-  );
+  // const warningData = useMemo(
+  //   () =>
+  //     loadSet.record_warnings?.flatMap((w) => {
+  //       const rows = [];
+  //       for (const key in w.warnings) {
+  //         for (const i of w.warnings[key]) {
+  //           rows.push({
+  //             index: w.index + 2,
+  //             column: key,
+  //             warning: i,
+  //           });
+  //         }
+  //       }
+  //       return rows;
+  //     }) ?? [],
+  //   [loadSet.record_warnings],
+  // );
 
-  const sanitizeForCSV = (value: string | number): string => {
-    const str = String(value);
-    if (
-      str.startsWith("=") ||
-      str.startsWith("+") ||
-      str.startsWith("-") ||
-      str.startsWith("@") ||
-      str.startsWith("\t") ||
-      str.startsWith("\r")
-    ) {
-      return `'${str}`;
-    }
-    return str;
-  };
+  // const sanitizeForCSV = (value: string | number): string => {
+  //   const str = String(value);
+  //   if (
+  //     str.startsWith("=") ||
+  //     str.startsWith("+") ||
+  //     str.startsWith("-") ||
+  //     str.startsWith("@") ||
+  //     str.startsWith("\t") ||
+  //     str.startsWith("\r")
+  //   ) {
+  //     return `'${str}`;
+  //   }
+  //   return str;
+  // };
 
-  const exportErrors = useCallback(() => {
-    const headerRow = `${ERROR_COLUMNS.map(({ header }) => header).join(
-      ",",
-    )}\n`;
-    const dataRows = (errorData as Record<string, string | number>[])
-      .map((d) =>
-        ERROR_COLUMNS.map(({ id }) => sanitizeForCSV(d[id] || "")).join(","),
-      )
-      .join("\n");
+  // const exportErrors = useCallback(() => {
+  //   const headerRow = `${ERROR_COLUMNS.map(({ header }) => header).join(
+  //     ",",
+  //   )}\n`;
+  //   const dataRows = (errorData as Record<string, string | number>[])
+  //     .map((d) =>
+  //       ERROR_COLUMNS.map(({ id }) => sanitizeForCSV(d[id] || "")).join(","),
+  //     )
+  //     .join("\n");
 
-    downloadBlob(new Blob([headerRow, dataRows]), `${loadSet.name}_errors.csv`);
-  }, [errorData, loadSet.name]);
+  //   downloadBlob(new Blob([headerRow, dataRows]), `${loadSet.name}_errors.csv`);
+  // }, [errorData, loadSet.name]);
 
-  const exportErroredRows = useCallback(() => {
-    const headerRow = `${errorRowColumns
-      .map(({ header }) => header)
-      .join(",")}\n`;
-    const dataRows = errorRowData
-      .map((d) =>
-        errorRowColumns.map(({ id }) => sanitizeForCSV(d[id] || "")).join(","),
-      )
-      .join("\n");
+  // const exportErroredRows = useCallback(() => {
+  //   const headerRow = `${errorRowColumns
+  //     .map(({ header }) => header)
+  //     .join(",")}\n`;
+  //   const dataRows = errorRowData
+  //     .map((d) =>
+  //       errorRowColumns.map(({ id }) => sanitizeForCSV(d[id] || "")).join(","),
+  //     )
+  //     .join("\n");
 
-    downloadBlob(
-      new Blob([headerRow, dataRows]),
-      `${loadSet.name}_errored_rows.csv`,
-    );
-  }, [errorRowColumns, errorRowData, loadSet.name]);
+  //   downloadBlob(
+  //     new Blob([headerRow, dataRows]),
+  //     `${loadSet.name}_errored_rows.csv`,
+  //   );
+  // }, [errorRowColumns, errorRowData, loadSet.name]);
 
-  useEffect(() => {
-    return registerToolbarActions({
-      exportItems: [
-        {
-          id: "EXPORT_ERRORS",
-          text: "Export errors",
-          onClick: exportErrors,
-        },
-        {
-          id: "EXPORT_ERRORED_ROWS",
-          text: "Export errored rows",
-          onClick: exportErroredRows,
-        },
-      ],
-    });
-  }, [exportErroredRows, exportErrors, registerToolbarActions]);
+  // useEffect(() => {
+  //   return registerToolbarActions({
+  //     exportItems: [
+  //       {
+  //         id: "EXPORT_ERRORS",
+  //         text: "Export errors",
+  //         onClick: exportErrors,
+  //       },
+  //       {
+  //         id: "EXPORT_ERRORED_ROWS",
+  //         text: "Export errored rows",
+  //         onClick: exportErroredRows,
+  //       },
+  //     ],
+  //   });
+  // }, [exportErroredRows, exportErrors, registerToolbarActions]);
 
   return (
     <div className={styles.loadSetInfo}>
@@ -301,85 +397,79 @@ const LoadSetInfo = ({
               className: styles.loadSetInfoTab,
             },
             panel: (
-              <Table
-                columns={previewDataColumns}
-                data={data}
-                disableFooter
-                settings={{
-                  disableColumnReorder: true,
-                  disableColumnSorting: true,
-                  disableFilters: true,
-                  disableVisibilitySettings: true,
-                }}
+              <PreviewDataTable
+                columns={columns}
+                headerMappings={headerMappings}
+                loadSet={loadSet}
               />
             ),
           },
-          ...(errorData.length > 0
-            ? [
-                {
-                  key: "errors",
-                  name: "Errors",
-                  panelProps: {
-                    className: styles.loadSetInfoTab,
-                  },
-                  panel: (
-                    <Table
-                      columns={ERROR_COLUMNS}
-                      data={errorData}
-                      disableFooter
-                      settings={{
-                        disableColumnReorder: true,
-                        disableColumnSorting: true,
-                        disableFilters: true,
-                        disableVisibilitySettings: true,
-                      }}
-                    />
-                  ),
-                },
-                {
-                  key: "errored-rows",
-                  name: "Errored rows",
-                  panelProps: { className: styles.loadSetInfoTab },
-                  panel: (
-                    <Table
-                      columns={errorRowColumns}
-                      data={errorRowData}
-                      disableFooter
-                      settings={{
-                        disableColumnReorder: true,
-                        disableColumnSorting: true,
-                        disableFilters: true,
-                        disableVisibilitySettings: true,
-                      }}
-                    />
-                  ),
-                },
-              ]
-            : []),
-          ...(warningData.length > 0
-            ? [
-                {
-                  key: "warnings",
-                  name: "Warnings",
-                  panelProps: {
-                    className: styles.loadSetInfoTab,
-                  },
-                  panel: (
-                    <Table
-                      columns={WARNING_COLUMNS}
-                      data={warningData}
-                      disableFooter
-                      settings={{
-                        disableColumnReorder: true,
-                        disableColumnSorting: true,
-                        disableFilters: true,
-                        disableVisibilitySettings: true,
-                      }}
-                    />
-                  ),
-                },
-              ]
-            : []),
+          // ...(errorData.length > 0
+          //   ? [
+          //       {
+          //         key: "errors",
+          //         name: "Errors",
+          //         panelProps: {
+          //           className: styles.loadSetInfoTab,
+          //         },
+          //         panel: (
+          //           <Table
+          //             columns={ERROR_COLUMNS}
+          //             data={errorData}
+          //             disableFooter
+          //             settings={{
+          //               disableColumnReorder: true,
+          //               disableColumnSorting: true,
+          //               disableFilters: true,
+          //               disableVisibilitySettings: true,
+          //             }}
+          //           />
+          //         ),
+          //       },
+          //       {
+          //         key: "errored-rows",
+          //         name: "Errored rows",
+          //         panelProps: { className: styles.loadSetInfoTab },
+          //         panel: (
+          //           <Table
+          //             columns={errorRowColumns}
+          //             data={errorRowData}
+          //             disableFooter
+          //             settings={{
+          //               disableColumnReorder: true,
+          //               disableColumnSorting: true,
+          //               disableFilters: true,
+          //               disableVisibilitySettings: true,
+          //             }}
+          //           />
+          //         ),
+          //       },
+          //     ]
+          //   : []),
+          // ...(warningData.length > 0
+          //   ? [
+          //       {
+          //         key: "warnings",
+          //         name: "Warnings",
+          //         panelProps: {
+          //           className: styles.loadSetInfoTab,
+          //         },
+          //         panel: (
+          //           <Table
+          //             columns={WARNING_COLUMNS}
+          //             data={warningData}
+          //             disableFooter
+          //             settings={{
+          //               disableColumnReorder: true,
+          //               disableColumnSorting: true,
+          //               disableFilters: true,
+          //               disableVisibilitySettings: true,
+          //             }}
+          //           />
+          //         ),
+          //       },
+          //     ]
+          //   : []),
         ]}
       />
     </div>

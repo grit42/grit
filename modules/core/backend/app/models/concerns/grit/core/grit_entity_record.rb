@@ -226,9 +226,9 @@ module Grit::Core::GritEntityRecord
       self.detailed_scope(params)
     end
 
-    def by_load_set(params)
-      raise "Load set id must be specified" if !params or !params[:load_set_id]
-      self.detailed.where("#{self.table_name}.id IN (SELECT record_id FROM grit_core_load_set_loaded_records WHERE grit_core_load_set_loaded_records.load_set_id = ?)", params[:load_set_id].to_i).order(:created_at)
+    def by_load_set_block(params)
+      raise "Load set block id must be specified" if !params or !params[:load_set_block_id]
+      self.detailed.where("#{self.table_name}.id IN (SELECT record_id FROM grit_core_load_set_block_loaded_records WHERE grit_core_load_set_block_loaded_records.load_set_block_id = ?)", params[:load_set_block_id].to_i).order(:created_at)
     end
 
     def entity_crud

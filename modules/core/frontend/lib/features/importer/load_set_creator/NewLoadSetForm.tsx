@@ -68,21 +68,21 @@ const NewLoadSetForm = ({
     defaultValues: initialValues,
   });
 
-  const handleDataChange: FieldListenerFn<NewLoadSetData, "blocks[0].data"> = ({
+  const handleDataChange: FieldListenerFn<NewLoadSetData, "load_set_blocks[0].data"> = ({
     fieldApi,
   }) => {
-    fieldApi.form.validateField("blocks[0].data", "submit");
+    fieldApi.form.validateField("load_set_blocks[0].data", "submit");
   };
 
-  const handleDataBlur: FieldListenerFn<NewLoadSetData, "blocks[0].data"> = async ({
+  const handleDataBlur: FieldListenerFn<NewLoadSetData, "load_set_blocks[0].data"> = async ({
     value,
     fieldApi,
   }) => {
     try {
       const formUpdates = await guessDataSetValues<NewLoadSetData>(value);
       Object.keys(formUpdates).forEach((key) => {
-        fieldApi.form.setFieldValue(`blocks[0].${key}`, formUpdates[key]);
-        fieldApi.form.setFieldMeta(`blocks[0].${key}`, (meta) => ({
+        fieldApi.form.setFieldValue(`load_set_blocks[0].${key}`, formUpdates[key]);
+        fieldApi.form.setFieldMeta(`load_set_blocks[0].${key}`, (meta) => ({
           ...meta,
           errorMap: {
             ...meta.errorMap,
@@ -94,7 +94,7 @@ const NewLoadSetForm = ({
       if (e && typeof e.errors === "object" && e.errors !== null) {
         Object.keys(e.errors).forEach((key) => {
           if (typeof e.errors[key] === "string") {
-            fieldApi.form.setFieldMeta(`blocks[0].${key}`, (meta) => ({
+            fieldApi.form.setFieldMeta(`load_set_blocks[0].${key}`, (meta) => ({
               ...meta,
               errorMap: {
                 ...meta.errorMap,
@@ -165,12 +165,12 @@ const NewLoadSetForm = ({
               <FormField
                 key={f.name}
                 form={form}
-                fieldDef={{ ...f, name: `blocks[0].${f.name}` }}
+                fieldDef={{ ...f, name: `load_set_blocks[0].${f.name}` }}
               />
             ))}
             </div>
             <form.Field
-              name="blocks[0].data"
+              name="load_set_blocks[0].data"
               listeners={{
                 onChange: handleDataChange,
                 onBlur: handleDataBlur,

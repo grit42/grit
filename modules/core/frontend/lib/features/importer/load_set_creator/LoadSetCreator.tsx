@@ -53,7 +53,7 @@ const LoadSetCreator = ({ entity }: LoadSetCreatorProps) => {
     const values: Partial<NewLoadSetData> = {
       entity,
       name: `${entity}-${new Date().toISOString()}`,
-      blocks: [{
+      load_set_blocks: [{
         name: "",
         separator: ",",
         data: ""

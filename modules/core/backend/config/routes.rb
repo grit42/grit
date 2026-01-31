@@ -28,6 +28,23 @@ Grit::Core::Engine.routes.draw do
     post :rollback
     get :entity_info
   end
+  resources :load_set_blocks do
+    collection do
+      get :fields
+    end
+
+    get :data_set_fields
+    get :mapping_fields
+    get :preview_data
+    get :data
+    get :loaded_data_columns
+    post :set_mappings
+    post :set_data
+    post :validate
+    post :confirm
+    post :rollback
+    get :entity_info
+  end
 
   resources :load_set_statuses
 

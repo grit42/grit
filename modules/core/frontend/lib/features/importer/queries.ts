@@ -23,10 +23,18 @@ import {
   useQuery,
   UseQueryResult,
   UseQueryOptions,
+  URLParams,
+  UndefinedInitialDataInfiniteOptions,
+  PaginatedEndpointSuccess,
+  useInfiniteQuery,
+  getURLParams,
+  getSortParams,
+  getFilterParams,
 } from "@grit42/api";
 import { LoadSetPreviewData } from "./types";
 import { FormFieldDef } from "@grit42/form";
-import { EntityInfo, EntityPropertyDef } from "../entities";
+import { EntityData, EntityInfo, EntityPropertyDef, useInfiniteEntityData } from "../entities";
+import { Filter, SortingState } from "@grit42/table";
 
 export const useLoadSetFields = (
   entity: string,
@@ -88,6 +96,26 @@ export const useLoadSetMappingFields = (
   });
 };
 
+export const useLoadSetBlockMappingFields = (
+  loadSetBlockId: number,
+): UseQueryResult<FormFieldDef[], string> => {
+  return useQuery<FormFieldDef[], string>({
+    queryKey: ["loadSetBlockMappingFields", loadSetBlockId],
+    queryFn: async (): Promise<FormFieldDef[]> => {
+      const response = await request<
+        EndpointSuccess<FormFieldDef[]>,
+        EndpointError
+      >(`/grit/core/load_set_blocks/${loadSetBlockId}/mapping_fields`);
+
+      if (!response.success) {
+        throw response.errors;
+      }
+
+      return response.data;
+    },
+  });
+};
+
 export const useLoadSetPreviewData = (
   loadSetId: number,
 ): UseQueryResult<LoadSetPreviewData, string> => {
@@ -105,6 +133,56 @@ export const useLoadSetPreviewData = (
 
       return response.data;
     },
+  });
+};
+
+export type LoadSetBlockPreviewData = Record<string, string>;
+
+export const useInfiniteLoadSetBlockPreviewData = (
+  loadSetBlockId: number,
+  sort?: SortingState,
+  filter?: Filter[],
+  params: URLParams = {},
+  queryOptions: Partial<
+    UndefinedInitialDataInfiniteOptions<
+      PaginatedEndpointSuccess<LoadSetBlockPreviewData[]>,
+      string
+    >
+  > = {},
+) => {
+  return useInfiniteQuery({
+    queryKey: [
+      "entities",
+      "infiniteData",
+      `grit/core/load_set_blocks/${loadSetBlockId}/preview_data`,
+      sort ?? [],
+      filter ?? [],
+      JSON.stringify(params),
+    ],
+    queryFn: async ({ pageParam }): Promise<PaginatedEndpointSuccess<LoadSetBlockPreviewData[]>> => {
+      const response = await request<
+        PaginatedEndpointSuccess<LoadSetBlockPreviewData[]>,
+        EndpointError
+      >(
+        `/grit/core/load_set_blocks/${loadSetBlockId}/preview_data?${getURLParams({
+          ...getSortParams(sort ?? []),
+          ...getFilterParams(filter ?? []),
+          offset: pageParam as number,
+          limit: 500,
+          ...params,
+        })}`,
+      );
+
+      if (!response.success) {
+        throw response.errors;
+      }
+
+      return response;
+    },
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) =>
+      lastPage.cursor === lastPage.total ? null : lastPage.cursor,
+    ...queryOptions,
   });
 };
 
@@ -151,6 +229,30 @@ export const useLoadSetEntity = (
   });
 };
 
+
+export const useLoadSetBlockEntity = (
+  loadSetBlockId: number,
+  queryOptions: Partial<UseQueryOptions<EntityInfo | null, string>> = {},
+): UseQueryResult<EntityInfo | null, string> => {
+  return useQuery({
+    queryKey: ["loadSetBlockEntity", loadSetBlockId],
+    queryFn: async (): Promise<EntityInfo | null> => {
+      const response = await request<
+        EndpointSuccess<EntityInfo>,
+        EndpointError
+      >(`/grit/core/load_set_blocks/${loadSetBlockId}/entity_info`);
+
+      if (!response.success) {
+        throw response.errors;
+      }
+
+      return response.data as EntityInfo;
+    },
+    staleTime: 0,
+    ...queryOptions,
+  });
+};
+
 export const useLoadSetLoadedDataColumns = (
   loadSetId: number,
 ): UseQueryResult<EntityPropertyDef[], string> => {
@@ -161,6 +263,27 @@ export const useLoadSetLoadedDataColumns = (
         EndpointSuccess<EntityPropertyDef[]>,
         EndpointError
       >(`/grit/core/load_sets/${loadSetId}/loaded_data_columns`);
+
+      if (!response.success) {
+        throw response.errors;
+      }
+
+      return response.data as EntityPropertyDef[];
+    },
+  });
+};
+
+
+export const useLoadSetBlockLoadedDataColumns = (
+  loadSetBlockId: number,
+): UseQueryResult<EntityPropertyDef[], string> => {
+  return useQuery<EntityPropertyDef[], string>({
+    queryKey: ["loadSetBlockLoadedDataColumns", loadSetBlockId],
+    queryFn: async (): Promise<EntityPropertyDef[]> => {
+      const response = await request<
+        EndpointSuccess<EntityPropertyDef[]>,
+        EndpointError
+      >(`/grit/core/load_set_blocks/${loadSetBlockId}/loaded_data_columns`);
 
       if (!response.success) {
         throw response.errors;

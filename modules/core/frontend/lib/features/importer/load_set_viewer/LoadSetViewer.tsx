@@ -23,18 +23,18 @@ import {
   Spinner,
 } from "@grit42/client-library/components";
 import { useQueryClient } from "@grit42/api";
-import {
-  EntityData,
-  useEntity,
-  useInfiniteEntityData,
-} from "../../entities";
+import { EntityData, useEntity, useInfiniteEntityData } from "../../entities";
 import { Table, useSetupTableState } from "@grit42/table";
 import { useMemo } from "react";
-import { useRollbackLoadSetMutation } from "../mutations";
+import { useRollbackLoadSetBlockMutation } from "../mutations";
 import { LoadSetData } from "../types";
 import { useTableColumns } from "../../../utils";
 import styles from "./loadSetViewer.module.scss";
-import { useLoadSetEntity, useLoadSetLoadedDataColumns } from "../queries";
+import {
+  useLoadSetBlockEntity,
+  useLoadSetBlockLoadedDataColumns,
+  useLoadSetLoadedDataColumns,
+} from "../queries";
 import { useImporter } from "../ImportersContext";
 import { toast } from "@grit42/notifications";
 
@@ -45,19 +45,21 @@ interface Props {
 const LoadSetViewer = ({ loadSet }: Props) => {
   const { LoadSetViewerExtraActions } = useImporter(loadSet.entity);
   const queryClient = useQueryClient();
-  const rollbackLoadSetMutation = useRollbackLoadSetMutation(loadSet.id);
+  const rollbackLoadSetMutation = useRollbackLoadSetBlockMutation(
+    loadSet.load_set_blocks[0].id,
+  );
 
   const {
     data: info,
     isError: isInfoError,
     error: infoError,
-  } = useLoadSetEntity(loadSet.id);
+  } = useLoadSetBlockEntity(loadSet.load_set_blocks[0].id);
 
   const {
     data: columns,
     isError: isColumnsError,
     error: columnsError,
-  } = useLoadSetLoadedDataColumns(loadSet.id);
+  } = useLoadSetBlockLoadedDataColumns(loadSet.load_set_blocks[0].id);
 
   const tableColumns = useTableColumns(columns);
 
@@ -80,7 +82,10 @@ const LoadSetViewer = ({ loadSet }: Props) => {
     info?.path ?? "",
     tableState.sorting,
     tableState.filters,
-    { scope: "by_load_set", load_set_id: loadSet.id },
+    {
+      scope: "by_load_set_block",
+      load_set_block_id: loadSet.load_set_blocks[0].id,
+    },
     { enabled: !!info?.path },
   );
 
@@ -153,7 +158,9 @@ const LoadSetViewer = ({ loadSet }: Props) => {
 const LoadSetViewerWrapper = ({ loadSet }: Props) => {
   const { isLoading: isInfoLoading } = useEntity(loadSet.entity);
 
-  const { isLoading: isColumnsLoading } = useLoadSetLoadedDataColumns(loadSet.id);
+  const { isLoading: isColumnsLoading } = useLoadSetBlockLoadedDataColumns(
+    loadSet.load_set_blocks[0].id,
+  );
 
   if (isColumnsLoading || isInfoLoading) {
     return <Spinner />;

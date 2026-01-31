@@ -8,7 +8,8 @@ class CreateGritCoreLoadSetBlocks < ActiveRecord::Migration[7.2]
       t.datetime :updated_at
 
       t.string :name, null: false
-      t.json :mappings, default: {}
+      t.jsonb :headers, default: []
+      t.jsonb :mappings, default: {}
       t.string :separator, null: false
 
       t.references :load_set, foreign_key: { name: "core_load_set_blocks_core_load_set_id_fkey", to_table: "grit_core_load_sets" }, null: false

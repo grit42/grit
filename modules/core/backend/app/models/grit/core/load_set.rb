@@ -86,7 +86,7 @@ module Grit::Core
 
     private
       def check_status
-        throw :abort if self.status.name == "Succeeded"
+        throw :abort if self.load_set_blocks.any? { |lsb| lsb.status.name == "Succeeded" }
       end
   end
 end

@@ -68,7 +68,7 @@ module Grit::Core
 
       load_set = Grit::Core::LoadSet.find(id)
 
-      if load_set.status.name == "Succeeded"
+      if load_set.load_set_blocks.any? { |lsb| lsb.status.name == "Succeeded" }
         render json: { success: false, errors: "Cannot delete succeeded load set, it must be undone first." }, status: :forbidden
         return
       end

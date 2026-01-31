@@ -35,7 +35,7 @@ export interface NewLoadSetData extends EntityProperties {
   name: string;
   entity: string;
   origin_id: number;
-  blocks: NewLoadSetBlockData[];
+  load_set_blocks: NewLoadSetBlockData[];
 }
 
 export interface LoadSetDataUpdateData extends EntityProperties {
@@ -43,11 +43,21 @@ export interface LoadSetDataUpdateData extends EntityProperties {
   separator: string | null;
 }
 
+export interface LoadSetBlockData extends EntityData {
+  name: string;
+  separator: string;
+  headers: {name: string, display_name: string | null}[];
+  status_id: number;
+  status_id__name: string;
+  mappings?: Record<string, LoadSetMapping>;
+}
+
 export interface LoadSetData extends EntityData {
   entity: string;
-  separator: string | null;
   origin_id: number;
   origin_id__name: string;
+  load_set_blocks: LoadSetBlockData[];
+
   status_id: number;
   status_id__name: string;
   mappings?: Record<string, LoadSetMapping>;

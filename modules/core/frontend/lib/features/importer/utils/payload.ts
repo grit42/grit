@@ -8,11 +8,11 @@ export const newLoadSetPayload = (
   formData.append("entity", formValue.entity);
   formData.append("origin_id", formValue.origin_id.toString());
 
-  formValue.blocks.forEach((block, index) => {
-    formData.append(`blocks[${index}][name]`, block.name);
-    formData.append(`blocks[${index}][separator]`, block.separator);
+  formValue.load_set_blocks.forEach((block, index) => {
+    formData.append(`load_set_blocks[${index}][name]`, block.name);
+    formData.append(`load_set_blocks[${index}][separator]`, block.separator);
     formData.append(
-      `blocks[${index}][data]`,
+      `load_set_blocks[${index}][data]`,
       new File([block.data], `${formValue.name}.txt`, {
         type: "text/plain",
       }),

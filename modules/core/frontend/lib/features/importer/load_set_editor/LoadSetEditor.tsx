@@ -26,11 +26,16 @@ import { useNavigate } from "react-router-dom";
 import { getURLParams, useQueryClient } from "@grit42/api";
 import { useMemo, useState } from "react";
 import {
-  useConfirmLoadSetMutation,
+  useConfirmLoadSetBlockMutation,
+  useRollbackLoadSetBlockMutation,
   useRollbackLoadSetMutation,
-  useValidateLoadSetMutation,
+  useValidateLoadSetBlockMutation,
 } from "../mutations";
-import { useLoadSetMappingFields, useLoadSetPreviewData } from "../queries";
+import {
+  useLoadSetBlockMappingFields,
+  useLoadSetMappingFields,
+  useLoadSetPreviewData,
+} from "../queries";
 import { LoadSetData, LoadSetMapping } from "../types";
 import { useDestroyEntityMutation } from "../../entities";
 import { useForm, useStore } from "@grit42/form";
@@ -58,29 +63,29 @@ const LoadSetEditor = ({
     mappingFromProps ?? {},
   );
 
-  const {
-    data: previewData,
-    isLoading: isPreviewDataLoading,
-    isError: isPreviewDataError,
-    error: previewDataError,
-  } = useLoadSetPreviewData(loadSet.id);
+  // const {
+  //   data: previewData,
+  //   isLoading: isPreviewDataLoading,
+  //   isError: isPreviewDataError,
+  //   error: previewDataError,
+  // } = useLoadSetPreviewData(loadSet.id);
 
   const {
     data: fields,
     isLoading: isFieldsLoading,
     isError: isFieldsError,
     error: fieldsError,
-  } = useLoadSetMappingFields(loadSet.id);
+  } = useLoadSetBlockMappingFields(loadSet.id);
 
-  const validateLoadSetMutation = useValidateLoadSetMutation(loadSet.id);
-  const confirmLoadSetMutation = useConfirmLoadSetMutation(loadSet.id);
-  const rollbackLoadSetMutation = useRollbackLoadSetMutation(loadSet.id);
+  const validateLoadSetMutation = useValidateLoadSetBlockMutation(loadSet.load_set_blocks[0].id);
+  const confirmLoadSetMutation = useConfirmLoadSetBlockMutation(loadSet.load_set_blocks[0].id);
+  const rollbackLoadSetMutation = useRollbackLoadSetBlockMutation(loadSet.load_set_blocks[0].id);
 
   const destroyLoadSetMutation = useDestroyEntityMutation(
     "grit/core/load_sets",
   );
 
-  const isValidated = loadSet.status_id__name === "Validated";
+  const isValidated = loadSet.load_set_blocks[0].status_id__name === "Validated";
 
   const handleSubmit = async (mappings: Record<string, LoadSetMapping>) => {
     if (isValidated) {
@@ -144,21 +149,18 @@ const LoadSetEditor = ({
     );
   };
 
-  const defaultValues = useMemo(
-    () => {
-      if (!fields) return {};
-      return fields.reduce((acc, f) => {
-        return {
-          ...acc,
-          [`${f.name}-header`]: mappings[f.name]?.header ?? "",
-          [`${f.name}-constant`]: mappings[f.name]?.constant ?? false,
-          [`${f.name}-find_by`]: mappings[f.name]?.find_by ?? "",
-          [`${f.name}-value`]: mappings[f.name]?.value ?? null,
-        };
-      }, {})
-    },
-    [mappings, fields],
-  );
+  const defaultValues = useMemo(() => {
+    if (!fields) return {};
+    return fields.reduce((acc, f) => {
+      return {
+        ...acc,
+        [`${f.name}-header`]: mappings[f.name]?.header ?? "",
+        [`${f.name}-constant`]: mappings[f.name]?.constant ?? false,
+        [`${f.name}-find_by`]: mappings[f.name]?.find_by ?? "",
+        [`${f.name}-value`]: mappings[f.name]?.value ?? null,
+      };
+    }, {});
+  }, [mappings, fields]);
 
   const form = useForm<Record<string, string | number | boolean | null>>({
     onSubmit: async ({ value }) => {
@@ -178,35 +180,12 @@ const LoadSetEditor = ({
     defaultValues,
   });
 
-  const headerMappings = useStore(form.baseStore, ({ values }) => {
-    const headerMappings: Record<string, string[]> = {};
-    for (const key in values) {
-      if (
-        key.endsWith("-header") &&
-        values[key] !== "" &&
-        values[key] !== null
-      ) {
-        const field = fields?.find(
-          (f) => f.name === key.replace("-header", ""),
-        );
-        if (field) {
-          headerMappings[values[key] as string] = headerMappings[
-            values[key] as string
-          ]?.concat(field?.display_name ?? field?.name) ?? [
-            field?.display_name ?? field?.name,
-          ];
-        }
-      }
-    }
-    return headerMappings;
-  });
-
-  if (isFieldsLoading || isPreviewDataLoading) {
+  if (isFieldsLoading) {
     return <Spinner />;
   }
 
-  if (isFieldsError || !fields || isPreviewDataError || !previewData) {
-    return <p>{fieldsError ?? previewDataError ?? "An error occurred"}</p>;
+  if (isFieldsError || !fields) {
+    return <p>{fieldsError ?? "An error occurred"}</p>;
   }
 
   return (
@@ -234,14 +213,14 @@ const LoadSetEditor = ({
                 >
                   Cancel import
                 </Button>
-                {isValidated && <Button
-                  onClick={handleRollback}
-                  loading={
-                    rollbackLoadSetMutation.isPending
-                  }
-                >
-                  Make changes
-                </Button>}
+                {isValidated && (
+                  <Button
+                    onClick={handleRollback}
+                    loading={rollbackLoadSetMutation.isPending}
+                  >
+                    Make changes
+                  </Button>
+                )}
                 {!isValidated && (
                   <Button onClick={() => setIsOpen(true)}>Edit data set</Button>
                 )}
@@ -271,53 +250,50 @@ const LoadSetEditor = ({
             disabled={isValidated}
             entityFields={fields}
             form={form}
-            headers={previewData.headers}
+            headers={loadSet.load_set_blocks[0].headers}
           />
           <LoadSetInfo
             loadSet={loadSet}
-            previewData={previewData}
-            headerMappings={headerMappings}
+            columns={loadSet.load_set_blocks[0].headers}
+            headerMappings={{}}
           />
         </div>
       </form>
-      {isOpen && (
+      {/* {isOpen && (
         <UpdateLoadSetDataDialog
           isOpen
           loadSet={loadSet}
           previewData={previewData}
           onClose={() => setIsOpen(false)}
         />
-      )}
+      )} */}
     </>
   );
 };
 
 const LoadSetEditorWrapper = ({ loadSet }: LoadSetEditorProps) => {
   const {
-    data: previewData,
-    isLoading: isPreviewDataLoading,
-    isError: isPreviewDataError,
-    error: previewDataError,
-  } = useLoadSetPreviewData(loadSet.id);
-
-  const {
     data: fields,
     isLoading: isFieldsLoading,
     isError: isFieldsError,
     error: fieldsError,
-  } = useLoadSetMappingFields(loadSet.id);
+  } = useLoadSetBlockMappingFields(loadSet.id);
 
   const mappings = useMemo(
-    () => loadSet?.mappings ?? getAutoMappings(fields, previewData?.headers),
-    [fields, loadSet?.mappings, previewData?.headers],
+    () =>
+      loadSet?.load_set_blocks[0].mappings &&
+      Object.keys(loadSet.load_set_blocks[0].mappings).length
+        ? loadSet.load_set_blocks[0].mappings
+        : getAutoMappings(fields, loadSet?.load_set_blocks[0].headers),
+    [fields, loadSet?.load_set_blocks],
   );
 
-  if (isFieldsLoading || isPreviewDataLoading) {
+  if (isFieldsLoading) {
     return <Spinner />;
   }
 
-  if (isFieldsError || !fields || isPreviewDataError || !previewData) {
-    return <ErrorPage error={fieldsError ?? previewDataError} />;
+  if (isFieldsError || !fields) {
+    return <ErrorPage error={fieldsError} />;
   }
 
   return <LoadSetEditor loadSet={loadSet} mappings={mappings} />;

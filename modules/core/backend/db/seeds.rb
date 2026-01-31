@@ -281,6 +281,9 @@ Grit::Core::User.insert({
 
 Grit::Core::UserRole.insert({ user_id: 1, role_id: 1 }) if Grit::Core::UserRole.find_by(user_id: 1, role_id: 1).nil?
 
+Grit::Core::LoadSetStatus.insert({ name: 'Created', description: 'Created' }) if Grit::Core::LoadSetStatus.find_by(name: 'Created').nil?
+Grit::Core::LoadSetStatus.insert({ name: 'Initializing', description: 'Initializing' }) if Grit::Core::LoadSetStatus.find_by(name: 'Initializing').nil?
+Grit::Core::LoadSetStatus.insert({ name: 'Errored', description: 'Errored' }) if Grit::Core::LoadSetStatus.find_by(name: 'Errored').nil?
 Grit::Core::LoadSetStatus.insert({ name: 'Mapping', description: 'The columns must be mapped to attributes' }) if Grit::Core::LoadSetStatus.find_by(name: 'Mapping').nil?
 Grit::Core::LoadSetStatus.insert({ name: 'Mapped', description: 'The columns have been mapped to attributes and the dataset must be validated' }) if Grit::Core::LoadSetStatus.find_by(name: 'Mapped').nil?
 Grit::Core::LoadSetStatus.insert({ name: 'Validating', description: 'The dataset is being validated' }) if Grit::Core::LoadSetStatus.find_by(name: 'Validating').nil?

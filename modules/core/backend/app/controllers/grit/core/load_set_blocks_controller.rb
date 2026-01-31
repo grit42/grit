@@ -101,7 +101,7 @@ module Grit::Core
     end
 
     def mapping_fields
-      load_set = Grit::Core::LoadSet.find(params[:load_set_id])
+      load_set = Grit::Core::LoadSet.find(params[:load_set_block_id])
 
       render json: { success: true, data: Grit::Core::EntityLoader.load_set_mapping_fields(load_set) }
     rescue StandardError => e
@@ -111,7 +111,7 @@ module Grit::Core
     end
 
     def loaded_data_columns
-      load_set = Grit::Core::LoadSet.find(params[:load_set_id])
+      load_set = Grit::Core::LoadSetBlock.find(params[:load_set_block_id]).load_set
 
       render json: { success: true, data: Grit::Core::EntityLoader.load_set_loaded_data_columns(load_set) }
     rescue StandardError => e
@@ -121,7 +121,7 @@ module Grit::Core
     end
 
     def entity_info
-      load_set = Grit::Core::LoadSet.find(params[:load_set_id])
+      load_set = Grit::Core::LoadSetBlock.find(params[:load_set_block_id]).load_set
 
       render json: { success: true, data: Grit::Core::EntityLoader.load_set_entity_info(load_set) }
     rescue StandardError => e
@@ -143,6 +143,11 @@ module Grit::Core
       render json: { success: false, errors: e.to_s }, status: :internal_server_error
     end
 
+    def preview_data
+      params[:scope] = "preview_data"
+      index
+    end
+
     def data
       load_set = Grit::Core::LoadSet.find(params[:load_set_id])
 
@@ -156,37 +161,34 @@ module Grit::Core
     def validate
       ActiveRecord::Base.transaction do
         begin
-          load_set = Grit::Core::LoadSet.find(params[:load_set_id])
-          if load_set.status.name != "Mapping" && load_set.status.name != "Invalidated"
+          load_set_block = Grit::Core::LoadSetBlock.find(params[:load_set_block_id])
+          if load_set_block.status.name != "Mapping" && load_set_block.status.name != "Invalidated"
             render json: { success: false, errors: 'Only load set with "Mapping" or "Invalidated" status can be validated' }, status: :forbidden
             return
           end
 
-          load_set.status_id = Grit::Core::LoadSetStatus.find_by_name("Validating").id
-          load_set.mappings = params[:mappings] unless params[:mappings].nil?
+          load_set_block.status_id = Grit::Core::LoadSetStatus.find_by_name("Validating").id
+          load_set_block.mappings = params[:mappings] unless params[:mappings].nil?
 
-          if load_set.mappings.nil?
+          if load_set_block.mappings.nil?
             render json: { success: false, errors: "No mappings provided" }, status: :unprocessable_entity
             return
           end
 
-          load_set.save!
+          load_set_block.save!
 
-          validation_results = Grit::Core::EntityLoader.validate_load_set(load_set)
-
-          load_set.record_warnings = validation_results[:warnings]
-          load_set.record_errors = validation_results[:errors]
+          validation_results = Grit::Core::EntityLoader.validate_load_set_block(load_set_block)
 
           if validation_results[:errors].length > 0
-            load_set.status_id = Grit::Core::LoadSetStatus.find_by_name("Invalidated").id
-            load_set.save!
+            load_set_block.status_id = Grit::Core::LoadSetStatus.find_by_name("Invalidated").id
+            load_set_block.save!
             render json: { success: false, errors: "The data set contains errors" }, status: :unprocessable_entity
             return
           end
 
-          load_set.status_id = Grit::Core::LoadSetStatus.find_by_name("Validated").id
-          load_set.save!
-          render json: { success: true, data: load_set }
+          load_set_block.status_id = Grit::Core::LoadSetStatus.find_by_name("Validated").id
+          load_set_block.save!
+          render json: { success: true, data: load_set_block }
         rescue StandardError => e
           logger.info e.to_s
           logger.info e.backtrace.join("\n")
@@ -199,18 +201,18 @@ module Grit::Core
     def confirm
       ActiveRecord::Base.transaction do
         begin
-          load_set = Grit::Core::LoadSet.find(params[:load_set_id])
+          load_set_block = Grit::Core::LoadSetBlock.find(params[:load_set_block_id])
 
-          unless load_set.status.name == "Validated" || load_set.status.name == "Invalidated"
+          unless load_set_block.status.name == "Validated" || load_set_block.status.name == "Invalidated"
             render json: { success: false, errors: 'Only load set with "Validated" or "Invalidated" status can be confirmed' }, status: :forbidden
             return
           end
 
-          Grit::Core::EntityLoader.confirm_load_set(load_set)
+          Grit::Core::EntityLoader.confirm_load_set_block(load_set_block)
 
-          load_set.status_id = Grit::Core::LoadSetStatus.find_by_name("Succeeded").id
-          load_set.save!
-          render json: { success: true, data: load_set }
+          load_set_block.status_id = Grit::Core::LoadSetStatus.find_by_name("Succeeded").id
+          load_set_block.save!
+          render json: { success: true, data: load_set_block }
         rescue StandardError => e
           logger.info e.to_s
           logger.info e.backtrace.join("\n")
@@ -223,17 +225,13 @@ module Grit::Core
     def rollback
       ActiveRecord::Base.transaction do
         begin
-          load_set = Grit::Core::LoadSet.find(params[:load_set_id])
+          load_set_block = Grit::Core::LoadSetBlock.find(params[:load_set_block_id])
 
-          load_set_entity = load_set.entity.constantize
+          Grit::Core::EntityLoader.rollback_load_set_block(load_set_block)
 
-          Grit::Core::EntityLoader.rollback_load_set(load_set)
-
-          load_set.status_id = Grit::Core::LoadSetStatus.find_by_name("Mapping").id
-          load_set.record_warnings = nil
-          load_set.record_errors = nil
-          load_set.save!
-          render json: { success: true, data: load_set }
+          load_set_block.status_id = Grit::Core::LoadSetStatus.find_by_name("Created").id
+          load_set_block.save!
+          render json: { success: true, data: load_set_block }
         rescue StandardError => e
           logger.info e.to_s
           logger.info e.backtrace.join("\n")
