@@ -288,8 +288,9 @@ module Grit::Core
           end
         end
         t.column :number, :bigint
-        t.column :errors, :jsonb
-        t.column :warnings, :jsonb
+        t.column :datum, :jsonb
+        t.column :record_errors, :jsonb
+        t.column :record_warnings, :jsonb
       end
     end
 
@@ -371,8 +372,14 @@ module Grit::Core
 
         unless record[:errors].nil?
           errors.push({ index: datum[:row], datum: datum, errors: record[:errors] })
+          records.push ({
+            number: datum[:row],
+            datum: datum,
+            record_errors: record[:errors],
+          })
+        else
+          records.push record
         end
-        records.push record
       end
       load_set_record_klass.insert_all(records)
       { errors: errors }

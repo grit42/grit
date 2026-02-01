@@ -50,31 +50,20 @@ module Grit::Core
           }}
     end
 
-    # def self.detailed(params = nil)
-    #   self.unscoped
-    #   .select("grit_core_load_sets.id")
-    #   .select("grit_core_load_sets.created_at")
-    #   .select("grit_core_load_sets.created_by")
-    #   .select("grit_core_load_sets.updated_at")
-    #   .select("grit_core_load_sets.updated_by")
-    #   .select("grit_core_load_sets.name")
-    #   .select("grit_core_load_sets.entity")
-    #   .select("grit_core_load_sets.separator")
-    #   .select("grit_core_load_sets.origin_id")
-    #   .select("grit_core_load_sets.status_id")
-    #   .select("grit_core_load_sets.item_count")
-    #   .select("grit_core_load_sets.mappings")
-    #   .select("grit_core_load_sets.record_errors")
-    #   .select("grit_core_load_sets.record_warnings")
-    #   .select("grit_core_load_set_statuses__.name as status_id__name")
-    #   .select("grit_core_origins__.name as origin_id__name")
-    #   .joins("LEFT OUTER JOIN grit_core_load_set_statuses grit_core_load_set_statuses__ ON grit_core_load_set_statuses__.id = grit_core_load_sets.status_id")
-    #   .joins("LEFT OUTER JOIN grit_core_origins grit_core_origins__ ON grit_core_origins__.id = grit_core_load_sets.origin_id")
-    # end
-
     def self.preview_data(params = nil)
       raise "No load set block id provided" if params.nil? or params[:load_set_block_id].nil?
       self.unscoped.from("raw_lsb_#{params[:load_set_block_id]}").select("raw_lsb_#{params[:load_set_block_id]}.*")
+    end
+
+    def self.errored_data(params = nil)
+      raise "No load set block id provided" if params.nil? or params[:load_set_block_id].nil?
+      self.unscoped.from("lsb_#{params[:load_set_block_id]}")
+        .select(
+          "lsb_#{params[:load_set_block_id]}.number",
+          "lsb_#{params[:load_set_block_id]}.datum",
+          "lsb_#{params[:load_set_block_id]}.record_errors"
+        )
+        .where("lsb_#{params[:load_set_block_id]}.record_errors IS NOT NULL")
     end
 
     def preview_data
@@ -90,13 +79,6 @@ module Grit::Core
       .joins("INNER JOIN grit_core_vocabulary_item_load_sets grit_core_vocabulary_item_load_sets__ on grit_core_vocabulary_item_load_sets__.load_set_id = grit_core_load_sets.id")
       .where(ActiveRecord::Base.sanitize_sql_array([ "grit_core_vocabulary_item_load_sets__.vocabulary_id = ?", params[:vocabulary_id] ]))
     end
-
-    # def self.with_data
-    #   self.details
-    #   .select("
-    #     grit_core_load_sets.data
-    #   ")
-    # end
 
     MAX_FILE_SIZE = 50.megabytes
 

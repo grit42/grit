@@ -21,7 +21,10 @@ import { useEffect, useMemo, useState } from "react";
 import { GritColumnDef, Table } from "@grit42/table";
 import styles from "./loadSetEditor.module.scss";
 import { LoadSetData } from "../types";
-import { useInfiniteLoadSetBlockPreviewData } from "../queries";
+import {
+  useInfiniteLoadSetBlockErroredData,
+  useInfiniteLoadSetBlockPreviewData,
+} from "../queries";
 
 const ERROR_COLUMNS: GritColumnDef[] = [
   {
@@ -147,58 +150,80 @@ const PreviewDataTable = ({
   );
 };
 
-// const ErrorsTable = ({
-//   loadSet,
-//   headerMappings,
-//   columns,
-// }: {
-//   loadSet: LoadSetData;
-//   headerMappings: Record<string, string[]>;
-//   columns: { name: string; display_name: string | null }[];
-// }) => {
-//   const dataSetColumns = useMemo(() => {
-//     return columns
-//       .filter(({ display_name }) => display_name !== null)
-//       .map(
-//         ({ display_name, name }) =>
-//           ({
-//             header: display_name ?? name,
-//             id: name,
-//             type: "string",
-//             accessorKey: name,
-//           } satisfies GritColumnDef),
-//       );
-//   }, [columns]);
+const ErrorsTable = ({
+  loadSet,
+  headerMappings,
+  columns,
+}: {
+  loadSet: LoadSetData;
+  headerMappings: Record<string, string[]>;
+  columns: { name: string; display_name: string | null }[];
+}) => {
+  const dataSetColumns = useMemo(() => {
+    return columns
+      .filter(({ display_name }) => display_name !== null)
+      .map(
+        ({ display_name, name }) =>
+          ({
+            header: display_name ?? name,
+            id: name,
+            type: "string",
+            accessorKey: name,
+          } satisfies GritColumnDef),
+      );
+  }, [columns]);
 
-//   const { data, isLoading, isError, error, fetchNextPage, isFetchingNextPage } =
-//     useInfiniteLoadSetBlockPreviewData(loadSet.load_set_blocks[0].id);
+  const { data, isLoading, isError, error, fetchNextPage, isFetchingNextPage } =
+    useInfiniteLoadSetBlockErroredData(loadSet.load_set_blocks[0].id);
 
-//   const flatData = useMemo(
-//     () => data?.pages.flatMap(({ data }) => data) ?? [],
-//     [data],
-//   );
+  const flatData = useMemo(() => {
+    if (!data) return [];
+    return data.pages.flatMap(({ data }) => {
+      return data.flatMap((e) => {
+        const rows = [];
+        for (const key in e.record_errors) {
+          for (const i of e.record_errors[key]) {
+            rows.push({
+              index: e.number,
+              column: loadSet.load_set_blocks[0].mappings?.[key]?.header
+                ? columns.find(
+                    ({ name }) =>
+                      name === loadSet.load_set_blocks[0].mappings![key].header,
+                  )?.display_name ?? "Invalid header"
+                : "Constant value",
+              value: loadSet.mappings?.[key]?.header
+                ? e.datum[loadSet.mappings?.[key]?.header]
+                : loadSet.mappings?.[key]?.value,
+              error: i,
+            });
+          }
+        }
+        return rows;
+      });
+    });
+  }, [columns, data, loadSet.load_set_blocks, loadSet.mappings]);
 
-//   return (
-//     <Table
-//       columns={ERROR_COLUMNS}
-//       data={flatData}
-//       disableFooter
-//       settings={{
-//         disableColumnReorder: true,
-//         disableColumnSorting: true,
-//         disableFilters: true,
-//         disableVisibilitySettings: true,
-//       }}
-//       loading={isLoading}
-//       noDataMessage={isError ? error : undefined}
-//       pagination={{
-//         fetchNextPage,
-//         isFetchingNextPage,
-//         totalRows: data?.pages[0].total,
-//       }}
-//     />
-//   );
-// };
+  return (
+    <Table
+      columns={ERROR_COLUMNS}
+      data={flatData}
+      disableFooter
+      settings={{
+        disableColumnReorder: true,
+        disableColumnSorting: true,
+        disableFilters: true,
+        disableVisibilitySettings: true,
+      }}
+      loading={isLoading}
+      noDataMessage={isError ? error : undefined}
+      pagination={{
+        fetchNextPage,
+        isFetchingNextPage,
+        totalRows: data?.pages[0].total,
+      }}
+    />
+  );
+};
 
 const LoadSetInfo = ({
   loadSet,
@@ -221,34 +246,33 @@ const LoadSetInfo = ({
     );
   }, [loadSet.record_errors, loadSet.record_warnings]);
 
-  const dataSetColumns = useMemo(() => {
-    return columns
-      .filter(({ display_name }) => display_name !== null)
-      .map(
-        ({ display_name, name }) =>
-          ({
-            header: display_name ?? name,
-            id: name,
-            type: "string",
-            accessorKey: name,
-          } satisfies GritColumnDef),
-      );
-  }, [columns]);
+  // const dataSetColumns = useMemo(() => {
+  //   return columns
+  //     .filter(({ display_name }) => display_name !== null)
+  //     .map(
+  //       ({ display_name, name }) =>
+  //         ({
+  //           header: display_name ?? name,
+  //           id: name,
+  //           type: "string",
+  //           accessorKey: name,
+  //         } satisfies GritColumnDef),
+  //     );
+  // }, [columns]);
 
-  const errorRowColumns = useMemo(
-    () => [
-      {
-        accessorKey: "index",
-        header: "Line",
-        id: "index",
-        type: "integer",
-        size: 40,
-      },
-      ...dataSetColumns,
-    ],
-    [dataSetColumns],
-  );
-
+  // const errorRowColumns = useMemo(
+  //   () => [
+  //     {
+  //       accessorKey: "index",
+  //       header: "Line",
+  //       id: "index",
+  //       type: "integer",
+  //       size: 40,
+  //     },
+  //     ...dataSetColumns,
+  //   ],
+  //   [dataSetColumns],
+  // );
 
   // const errorData = useMemo(
   //   () =>
@@ -404,6 +428,20 @@ const LoadSetInfo = ({
               />
             ),
           },
+          {
+            key: "errors",
+            name: "Errors",
+            panelProps: {
+              className: styles.loadSetInfoTab,
+            },
+            panel: (
+              <ErrorsTable
+                columns={columns}
+                headerMappings={headerMappings}
+                loadSet={loadSet}
+              />
+            ),
+          },
           // ...(errorData.length > 0
           //   ? [
           //       {
@@ -413,16 +451,10 @@ const LoadSetInfo = ({
           //           className: styles.loadSetInfoTab,
           //         },
           //         panel: (
-          //           <Table
-          //             columns={ERROR_COLUMNS}
-          //             data={errorData}
-          //             disableFooter
-          //             settings={{
-          //               disableColumnReorder: true,
-          //               disableColumnSorting: true,
-          //               disableFilters: true,
-          //               disableVisibilitySettings: true,
-          //             }}
+          //           <ErrorsTable
+          //             columns={columns}
+          //             headerMappings={headerMappings}
+          //             loadSet={loadSet}
           //           />
           //         ),
           //       },

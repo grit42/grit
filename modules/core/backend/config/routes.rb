@@ -36,6 +36,8 @@ Grit::Core::Engine.routes.draw do
     get :data_set_fields
     get :mapping_fields
     get :preview_data
+    get :validated_data
+    get :errored_data
     get :data
     get :loaded_data_columns
     post :set_mappings

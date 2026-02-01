@@ -131,20 +131,12 @@ module Grit::Core
     end
 
     def preview_data
-      load_set = Grit::Core::LoadSet.find(params[:load_set_id])
-
-      headers = load_set.parsed_data[0]
-      data = load_set.parsed_data[1..100] # TODO FIX
-
-      render json: { success: true, data: { headers: headers, data: data } }
-    rescue StandardError => e
-      logger.info e.to_s
-      logger.info e.backtrace.join("\n")
-      render json: { success: false, errors: e.to_s }, status: :internal_server_error
+      params[:scope] = "preview_data"
+      index
     end
 
-    def preview_data
-      params[:scope] = "preview_data"
+    def errored_data
+      params[:scope] = "errored_data"
       index
     end
 
