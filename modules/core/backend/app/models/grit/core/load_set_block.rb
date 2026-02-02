@@ -25,9 +25,9 @@ module Grit::Core
     has_one_attached :data
 
     before_destroy :check_status
-    before_destroy :drop_table
-    after_commit :initialize_table
-    after_save :drop_raw_data_table
+    before_destroy :drop_tables
+    after_commit :create_tables_if_created
+    after_save :drop_tables_if_succeeded
 
     entity_crud_with create: [], read: [], update: [], destroy: []
 
@@ -59,7 +59,7 @@ module Grit::Core
       raise "No load set block id provided" if params.nil? or params[:load_set_block_id].nil?
       self.unscoped.from("lsb_#{params[:load_set_block_id]}")
         .select(
-          "lsb_#{params[:load_set_block_id]}.number",
+          "lsb_#{params[:load_set_block_id]}.line",
           "lsb_#{params[:load_set_block_id]}.datum",
           "lsb_#{params[:load_set_block_id]}.record_errors"
         )
@@ -80,80 +80,115 @@ module Grit::Core
       .where(ActiveRecord::Base.sanitize_sql_array([ "grit_core_vocabulary_item_load_sets__.vocabulary_id = ?", params[:vocabulary_id] ]))
     end
 
-    MAX_FILE_SIZE = 50.megabytes
-
-    def self.read_file(file)
-      if file.size > MAX_FILE_SIZE
-        raise MaxFileSizeExceededError.new "File size exceeds maximum allowed size of 50MB"
-        return
-      end
-
-      content = "".force_encoding("UTF-8")
-      until file.eof?
-        content << file.read(1.megabyte)
-      end
-      content
+    def loading_records_table_name
+      "lsb_#{id}"
     end
 
-    def drop_table
+    def raw_data_table_name
+      "raw_lsb_#{id}"
+    end
+
+    def drop_tables
       connection = ActiveRecord::Base.connection
-      table = "lsb_#{id}"
-      raw_table = "raw_lsb_#{id}"
-      connection.drop_table table, if_exists: true
-      connection.drop_table raw_table, if_exists: true
+      connection.drop_table loading_records_table_name, if_exists: true
+      connection.drop_table raw_data_table_name, if_exists: true
     end
 
-    def create_table
-      data.open do |file|
-        io = file.instance_of?(String) ? File.open(file, get_file_mode('r', options[:encoding])) : file
+    def self.columns_from_file(load_set_block)
+      load_set_block.data.open do |io|
+        columns = []
         line = io.gets
-        csv_headers_list = CSV.parse(line,
-                          col_sep: separator,
-                          liberal_parsing: true,
-                          encoding: "utf-8"
-                        )[0]
-
-        columns_list = []
-        headers_list = []
-        csv_headers_list.each_with_index do |h,index|
-          headers_list.push ({ name: "col_#{index}", display_name: h })
-          columns_list.push "col_#{index}"
-        end
-
-        columns_string = columns_list.size > 0 ? "(\"row\",\"#{columns_list.join('","')}\")" : ""
-        quote = '"'
-        options_string = "WITH (" + ["DELIMITER '#{separator}'", "QUOTE '#{quote}'", "FORMAT CSV"].compact.join(', ') + ")"
-
-        connection = ActiveRecord::Base.connection
-
-        table = "raw_lsb_#{id}"
-        connection.drop_table table, if_exists: true
-        connection.create_table table, id: false do |t|
-          t.integer :row
-          columns_list.each do |column|
-            t.string column
-          end
-        end
-
-        connection.raw_connection.copy_data %{COPY "#{table}" #{columns_string} FROM STDIN #{options_string}} do
-          file.each_line(chomp: true).with_index do |line, lineno|
-            cd = "#{lineno+1},#{line}"
-
-            row = CSV.parse_line(cd.strip, col_sep: separator)
-            cd = CSV.generate_line(row, col_sep: separator)
-            connection.raw_connection.put_copy_data(cd)
-          end
-        end
-
-        update_column(:headers, headers_list)
+        CSV.parse_line(line, col_sep: load_set_block.separator, liberal_parsing: true, encoding: "utf-8")
+          .each_with_index.map { |h,index| { name: "col_#{index}", display_name: h } }
       end
     end
 
-    def initialize_table
+    def self.columns_from_entity(load_set_block)
+      load_set_block.load_set.entity.constantize.entity_properties
+    end
+
+    def self.records_from_file(load_set_block)
+      load_set_block.data.open do |file|
+        file.each_line(chomp: true).with_index do |line, index|
+          next if index == 0
+          line_with_line_number = "#{index+1},#{line}"
+          row = CSV.parse_line(line_with_line_number.strip, col_sep: load_set_block.separator)
+          yield CSV.generate_line(row, col_sep: load_set_block.separator) if block_given?
+        end
+      end
+    end
+
+    def drop_raw_data_table
+      ActiveRecord::Base.connection.drop_table raw_data_table_name, if_exists: true
+    end
+
+    def drop_loading_records_table
+      ActiveRecord::Base.connection.drop_table loading_records_table_name, if_exists: true
+    end
+
+    def drop_tables
+      drop_raw_data_table
+      drop_loading_records_table
+    end
+
+    def create_raw_data_table
+      drop_raw_data_table
+      columns = headers.map { |h| h["name"] }
+      ActiveRecord::Base.connection.create_table raw_data_table_name, id: false do |t|
+        t.integer :line
+        columns.each do |column|
+          t.string column
+        end
+      end
+    end
+
+    def seed_raw_data_table
+      columns_string = headers.size > 0 ? "(\"line\",\"#{headers.map { |h| h["name"] }.join('","')}\")" : ""
+      options_string = "WITH (" + ["DELIMITER '#{separator}'", "QUOTE '\"'", "FORMAT CSV"].compact.join(', ') + ")"
+
+      raw_connection = ActiveRecord::Base.connection.raw_connection
+      raw_connection.copy_data %{COPY "#{raw_data_table_name}" #{columns_string} FROM STDIN #{options_string}} do
+        Grit::Core::LoadSetBlock.records_from_file(self) do |line|
+          raw_connection.put_copy_data(line)
+        end
+      end
+    end
+
+    def initialize_raw_data_table
+      update_column(:headers, Grit::Core::LoadSetBlock.columns_from_file(self))
+      create_raw_data_table
+      seed_raw_data_table
+    end
+
+    def create_loading_records_table
+      drop_loading_records_table
+      columns = Grit::Core::LoadSetBlock.columns_from_entity(self)
+      ActiveRecord::Base.connection.create_table loading_records_table_name, id: false, if_not_exists: true do |t|
+        columns.reject { |column| ["id","created_at","created_by","updated_at","updated_by"].include? column[:name] } .each do |column|
+          if column[:type].to_s == "entity" or column[:type].to_s == "integer"
+            t.column column[:name], :bigint
+          elsif column[:type].to_s == "decimal"
+            t.column column[:name], :numeric
+          else
+            t.column column[:name], column[:type]
+          end
+        end
+        t.column :line, :bigint
+        t.column :datum, :jsonb
+        t.column :record_errors, :jsonb
+      end
+    end
+
+    def create_tables
+      initialize_raw_data_table
+      create_loading_records_table
+    end
+
+    def create_tables_if_created
       return if status.name != "Created"
       LoadSetBlock.transaction do
         update_column(:status_id, Grit::Core::LoadSetStatus.find_by(name: "Initializing").id)
-        create_table
+        create_tables
         update_column(:status_id, Grit::Core::LoadSetStatus.find_by(name: "Mapping").id)
       rescue StandardError => e
         logger.info e.to_s
@@ -162,9 +197,28 @@ module Grit::Core
       end
     end
 
-    def drop_raw_data_table
+    def drop_tables_if_succeeded
       return if status.name != "Succeeded"
-      drop_table
+      drop_tables
+    end
+
+    def record_klass
+      load_set_block = self
+      fields = load_set.entity.constantize.entity_fields
+      klass = Class.new(ActiveRecord::Base) do
+        self.table_name = load_set_block.loading_records_table_name
+        @load_set_block = load_set_block
+        @fields = fields
+
+        def self.for_confirm
+          query = self.unscoped.select("'#{Grit::Core::User.current.login}' as created_by")
+          @fields.each do |column|
+            query = query.select("#{self.table_name}.#{column[:name]}")
+          end
+          query
+        end
+      end
+      klass
     end
 
     private
