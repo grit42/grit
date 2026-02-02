@@ -40,6 +40,10 @@ module Grit::Core
       loader(params[:entity]).fields(params)
     end
 
+    def self.load_set_block_fields(params)
+      loader(params[:entity]).block_fields(params)
+    end
+
     def self.create_load_set(params)
       loader(params[:entity]).create(params)
     end
@@ -58,6 +62,10 @@ module Grit::Core
 
     def self.load_set_mapping_fields(load_set)
       loader(load_set.entity).mapping_fields(load_set)
+    end
+
+    def self.load_set_block_mapping_fields(load_set_block)
+      loader(load_set_block.load_set.entity).block_mapping_fields(load_set_block)
     end
 
     def self.load_set_entity_info(load_set)
@@ -102,8 +110,13 @@ module Grit::Core
 
     protected
     def self.fields(params)
-      fields = Grit::Core::LoadSet.entity_fields.filter { |f| f[:name] != "data" }.to_h { |item| [ item[:name], item.dup ] }
+      fields = Grit::Core::LoadSet.entity_fields.to_h { |item| [ item[:name], item.dup ] }
       fields["entity"][:disabled] = true unless fields["entity"].nil?
+      fields.values
+    end
+
+    def self.block_fields(params)
+      fields = Grit::Core::LoadSetBlock.entity_fields.filter { |f| f[:name] != "data" }.to_h { |item| [ item[:name], item.dup ] }
       fields["separator"][:required] = true unless fields["separator"].nil?
       fields["separator"][:placeholder] = "Will attempt to guess based on provided data" unless fields["separator"].nil?
       fields.values
@@ -111,11 +124,6 @@ module Grit::Core
 
     def self.data_set_fields(params)
       self.fields(params).filter { |f| f[:name] == "separator" }
-    end
-
-    def self.show(load_set)
-      load_set_blocks = Grit::Core::LoadSetBlock.detailed.where(load_set_id: load_set.id)
-      { **load_set.as_json, load_set_blocks: load_set_blocks.as_json }
     end
 
     def self.create(params)
@@ -138,6 +146,11 @@ module Grit::Core
       load_set
     end
 
+    def self.show(load_set)
+      load_set_blocks = Grit::Core::LoadSetBlock.detailed.where(load_set_id: load_set.id)
+      { **load_set.as_json, load_set_blocks: load_set_blocks.as_json }
+    end
+
     def self.destroy(load_set)
       load_set.destroy!
     end
@@ -146,9 +159,13 @@ module Grit::Core
       load_set.entity.constantize.entity_columns(**self.show(load_set).symbolize_keys!)
     end
 
+    def self.base_record_props(load_set_block)
+      {}
+    end
+
     def self.validate_block(load_set_block)
-      load_set_entity = load_set_block.load_set.entity.constantize
-      load_set_entity_properties = load_set_entity.entity_fields
+      load_set_entity = block_entity(load_set_block)
+      load_set_entity_properties = block_mapping_fields(load_set_block)
 
       Grit::Core::LoadSetBlockLoadingRecord.delete_by(load_set_block_id: load_set_block.id)
 
@@ -157,6 +174,8 @@ module Grit::Core
       errors = []
       records = []
 
+      new_record_props = base_record_props(load_set_block)
+
       load_set_block.preview_data.each do |datum|
         record = {
           line: datum[:line],
@@ -164,7 +183,9 @@ module Grit::Core
           record_errors: nil,
         }
 
-        record_props = {}
+        record_props = new_record_props.dup
+
+        Rails.logger.info record_props
 
         load_set_entity_properties.each do |entity_property|
           entity_property_name = entity_property[:name].to_s
@@ -267,6 +288,14 @@ module Grit::Core
 
     def self.mapping_fields(load_set)
       load_set.entity.constantize.entity_fields
+    end
+
+    def self.block_mapping_fields(load_set_block)
+      load_set_block.load_set.entity.constantize.entity_fields
+    end
+
+    def self.block_entity(load_set_block)
+      load_set_block.load_set.entity.constantize
     end
 
     def self.set_block_data(load_set_block, params)

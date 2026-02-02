@@ -22,6 +22,7 @@ import { useMemo } from "react";
 import NewLoadSetForm from "./NewLoadSetForm";
 import { NewLoadSetData } from "../types";
 import { useEntityFields } from "../../entities";
+import { useLoadSetBlockFields } from "../queries";
 
 export interface LoadSetCreatorProps {
   entity: string;
@@ -44,20 +45,21 @@ const LoadSetCreator = ({ entity }: LoadSetCreatorProps) => {
     isLoading: isLoadSetBlockFieldsLoading,
     isError: isLoadSetBlockFieldsError,
     error: loadSetBlockFieldsError,
-  } = useEntityFields("Grit::Core::LoadSetBlock");
+  } = useLoadSetBlockFields(entity);
 
   const initialValues = useMemo((): Partial<NewLoadSetData> => {
     const values: Partial<NewLoadSetData> = {
       entity,
       name: `${entity}-${new Date().toISOString()}`,
-      load_set_blocks: [{
-        name: "",
-        separator: ",",
-        data: ""
-      }],
+      load_set_blocks: [
+        {
+          name: "",
+          separator: ",",
+          data: "",
+        },
+      ],
     };
-    if (!loadSetFields) return values;
-    for (const field of loadSetFields) {
+    loadSetFields?.forEach((field) => {
       if (searchParams.has(field.name)) {
         switch (field.type) {
           case "integer": {
@@ -70,12 +72,35 @@ const LoadSetCreator = ({ entity }: LoadSetCreatorProps) => {
             values[field.name] = searchParams.get(field.name);
         }
       }
-    }
+    });
+    loadSetBlockFields?.forEach((field) => {
+      if (searchParams.has(field.name)) {
+        switch (field.type) {
+          case "integer": {
+            const paramValue = searchParams.get(field.name);
+            values.load_set_blocks![0][field.name] =
+              paramValue !== null ? Number(paramValue) : null;
+            break;
+          }
+          default:
+            values.load_set_blocks![0][field.name] = searchParams.get(
+              field.name,
+            );
+        }
+      }
+    });
+    console.log(values)
     return values;
-  }, [loadSetFields, entity, searchParams]);
+  }, [entity, loadSetFields, loadSetBlockFields, searchParams]);
 
   if (isLoading || isLoadSetBlockFieldsLoading) return <Spinner />;
-  if (isError || !loadSetFields || isLoadSetBlockFieldsError || !loadSetBlockFields) return <ErrorPage error={error ?? loadSetBlockFieldsError} />;
+  if (
+    isError ||
+    !loadSetFields ||
+    isLoadSetBlockFieldsError ||
+    !loadSetBlockFields
+  )
+    return <ErrorPage error={error ?? loadSetBlockFieldsError} />;
 
   return (
     <NewLoadSetForm

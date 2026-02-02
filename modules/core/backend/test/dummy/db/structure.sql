@@ -1,4 +1,4 @@
-\restrict 8yDMWsTn9r2Z79Le3pkFlt1aq4iEHwtRKU20UgHbKerJBldRlrxQzaRM10ykdBU
+\restrict BL2Ii9gW11PxxVWeXNhm3Kwsq9rnbPkS7EMCm4CtrdcaSRZB4fOYaTYp5MqJJ1C
 
 -- Dumped from database version 16.3 (Debian 16.3-1.pgdg120+1)
 -- Dumped by pg_dump version 16.11
@@ -414,7 +414,8 @@ CREATE TABLE public.grit_core_load_set_blocks (
     updated_by character varying(30),
     updated_at timestamp(6) without time zone,
     name character varying NOT NULL,
-    mappings json DEFAULT '{}'::json,
+    headers jsonb DEFAULT '[]'::jsonb,
+    mappings jsonb DEFAULT '{}'::jsonb,
     separator character varying NOT NULL,
     load_set_id bigint NOT NULL,
     status_id bigint NOT NULL
@@ -448,9 +449,7 @@ CREATE TABLE public.grit_core_load_sets (
     updated_at timestamp(6) without time zone,
     name character varying NOT NULL,
     entity character varying NOT NULL,
-    origin_id bigint NOT NULL,
-    record_warnings json,
-    separator character varying
+    origin_id bigint NOT NULL
 );
 
 
@@ -602,16 +601,16 @@ CREATE TABLE public.grit_core_vocabularies (
 
 
 --
--- Name: grit_core_vocabulary_item_load_sets; Type: TABLE; Schema: public; Owner: -
+-- Name: grit_core_vocabulary_item_load_set_blocks; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.grit_core_vocabulary_item_load_sets (
+CREATE TABLE public.grit_core_vocabulary_item_load_set_blocks (
     id bigint DEFAULT nextval('public.grit_seq'::regclass) NOT NULL,
     created_by character varying(30) DEFAULT 'SYSTEM'::character varying NOT NULL,
     created_at timestamp(6) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_by character varying(30),
     updated_at timestamp(6) without time zone,
-    load_set_id bigint NOT NULL,
+    load_set_block_id bigint NOT NULL,
     vocabulary_id bigint NOT NULL
 );
 
@@ -846,11 +845,11 @@ ALTER TABLE ONLY public.grit_core_vocabularies
 
 
 --
--- Name: grit_core_vocabulary_item_load_sets grit_core_vocabulary_item_load_sets_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: grit_core_vocabulary_item_load_set_blocks grit_core_vocabulary_item_load_set_blocks_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.grit_core_vocabulary_item_load_sets
-    ADD CONSTRAINT grit_core_vocabulary_item_load_sets_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.grit_core_vocabulary_item_load_set_blocks
+    ADD CONSTRAINT grit_core_vocabulary_item_load_set_blocks_pkey PRIMARY KEY (id);
 
 
 --
@@ -906,10 +905,24 @@ CREATE INDEX idx_on_load_set_block_id_04cc5c0519 ON public.grit_core_load_set_bl
 
 
 --
+-- Name: idx_on_load_set_block_id_cd39507407; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_on_load_set_block_id_cd39507407 ON public.grit_core_vocabulary_item_load_set_blocks USING btree (load_set_block_id);
+
+
+--
 -- Name: idx_on_load_set_block_id_d6f197c749; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_on_load_set_block_id_d6f197c749 ON public.grit_core_load_set_block_loaded_records USING btree (load_set_block_id);
+
+
+--
+-- Name: idx_on_vocabulary_id_af8a787680; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_on_vocabulary_id_af8a787680 ON public.grit_core_vocabulary_item_load_set_blocks USING btree (vocabulary_id);
 
 
 --
@@ -1088,20 +1101,6 @@ CREATE UNIQUE INDEX index_grit_core_vocabularies_on_name ON public.grit_core_voc
 
 
 --
--- Name: index_grit_core_vocabulary_item_load_sets_on_load_set_id; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX index_grit_core_vocabulary_item_load_sets_on_load_set_id ON public.grit_core_vocabulary_item_load_sets USING btree (load_set_id);
-
-
---
--- Name: index_grit_core_vocabulary_item_load_sets_on_vocabulary_id; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX index_grit_core_vocabulary_item_load_sets_on_vocabulary_id ON public.grit_core_vocabulary_item_load_sets USING btree (vocabulary_id);
-
-
---
 -- Name: index_grit_core_vocabulary_items_on_name; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1235,10 +1234,10 @@ CREATE TRIGGER manage_stamps_grit_core_vocabularies BEFORE INSERT OR UPDATE ON p
 
 
 --
--- Name: grit_core_vocabulary_item_load_sets manage_stamps_grit_core_vocabulary_item_load_sets; Type: TRIGGER; Schema: public; Owner: -
+-- Name: grit_core_vocabulary_item_load_set_blocks manage_stamps_grit_core_vocabulary_item_load_set_blocks; Type: TRIGGER; Schema: public; Owner: -
 --
 
-CREATE TRIGGER manage_stamps_grit_core_vocabulary_item_load_sets BEFORE INSERT OR UPDATE ON public.grit_core_vocabulary_item_load_sets FOR EACH ROW EXECUTE FUNCTION public.manage_stamps();
+CREATE TRIGGER manage_stamps_grit_core_vocabulary_item_load_set_blocks BEFORE INSERT OR UPDATE ON public.grit_core_vocabulary_item_load_set_blocks FOR EACH ROW EXECUTE FUNCTION public.manage_stamps();
 
 
 --
@@ -1337,19 +1336,19 @@ ALTER TABLE ONLY public.grit_core_users
 
 
 --
--- Name: grit_core_vocabulary_item_load_sets core_vocabulary_item_load_sets_core_load_set_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: grit_core_vocabulary_item_load_set_blocks core_vocabulary_item_load_set_blocks_core_load_set_block_id_fke; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.grit_core_vocabulary_item_load_sets
-    ADD CONSTRAINT core_vocabulary_item_load_sets_core_load_set_id_fkey FOREIGN KEY (load_set_id) REFERENCES public.grit_core_load_sets(id);
+ALTER TABLE ONLY public.grit_core_vocabulary_item_load_set_blocks
+    ADD CONSTRAINT core_vocabulary_item_load_set_blocks_core_load_set_block_id_fke FOREIGN KEY (load_set_block_id) REFERENCES public.grit_core_load_set_blocks(id);
 
 
 --
--- Name: grit_core_vocabulary_item_load_sets core_vocabulary_item_load_sets_core_vocabularies_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: grit_core_vocabulary_item_load_set_blocks core_vocabulary_item_load_set_blocks_core_vocabularies_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.grit_core_vocabulary_item_load_sets
-    ADD CONSTRAINT core_vocabulary_item_load_sets_core_vocabularies_fkey FOREIGN KEY (vocabulary_id) REFERENCES public.grit_core_vocabularies(id);
+ALTER TABLE ONLY public.grit_core_vocabulary_item_load_set_blocks
+    ADD CONSTRAINT core_vocabulary_item_load_set_blocks_core_vocabularies_fkey FOREIGN KEY (vocabulary_id) REFERENCES public.grit_core_vocabularies(id);
 
 
 --
@@ -1388,7 +1387,7 @@ ALTER TABLE ONLY public.test_entities
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 8yDMWsTn9r2Z79Le3pkFlt1aq4iEHwtRKU20UgHbKerJBldRlrxQzaRM10ykdBU
+\unrestrict BL2Ii9gW11PxxVWeXNhm3Kwsq9rnbPkS7EMCm4CtrdcaSRZB4fOYaTYp5MqJJ1C
 
 SET search_path TO "$user", public;
 
@@ -1398,12 +1397,10 @@ INSERT INTO "schema_migrations" (version) VALUES
 ('20250624081122'),
 ('20250624080646'),
 ('20250622125208'),
-('20250522140707'),
 ('20250521124829'),
 ('20250411144141'),
 ('20250411045043'),
 ('20250408050849'),
-('20250326121851'),
 ('20250205130307'),
 ('20250205093246'),
 ('20250109121325'),

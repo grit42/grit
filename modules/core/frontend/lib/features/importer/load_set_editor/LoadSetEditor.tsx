@@ -60,19 +60,12 @@ const LoadSetEditor = ({
     mappingFromProps ?? {},
   );
 
-  // const {
-  //   data: previewData,
-  //   isLoading: isPreviewDataLoading,
-  //   isError: isPreviewDataError,
-  //   error: previewDataError,
-  // } = useLoadSetPreviewData(loadSet.id);
-
   const {
     data: fields,
     isLoading: isFieldsLoading,
     isError: isFieldsError,
     error: fieldsError,
-  } = useLoadSetBlockMappingFields(loadSet.id);
+  } = useLoadSetBlockMappingFields(loadSet.load_set_blocks[0].id);
 
   const validateLoadSetMutation = useValidateLoadSetBlockMutation(loadSet.load_set_blocks[0].id);
   const confirmLoadSetMutation = useConfirmLoadSetBlockMutation(loadSet.load_set_blocks[0].id);
@@ -273,7 +266,7 @@ const LoadSetEditorWrapper = ({ loadSet }: LoadSetEditorProps) => {
     isLoading: isFieldsLoading,
     isError: isFieldsError,
     error: fieldsError,
-  } = useLoadSetBlockMappingFields(loadSet.id);
+  } = useLoadSetBlockMappingFields(loadSet.load_set_blocks[0].id);
 
   const mappings = useMemo(
     () =>

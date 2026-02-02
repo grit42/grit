@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 const VocabularyItemLoadSetViewerExtraActions = ({loadSet}: LoadSetViewerExtraActionsProps) => {
   return (
     <Link
-      to={`/core/vocabularies/${loadSet.vocabulary_id}`}
+      to={`/core/vocabularies/${loadSet.load_set_blocks[0].vocabulary_id}`}
     >
       <Button color="secondary">Go to vocabulary</Button>
     </Link>

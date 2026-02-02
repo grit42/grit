@@ -83,7 +83,7 @@ module Grit::Core
     end
 
     def fields
-      render json: { success: true, data: Grit::Core::EntityLoader.load_set_fields(params) }
+      render json: { success: true, data: Grit::Core::EntityLoader.load_set_block_fields(params) }
     rescue StandardError => e
       logger.info e.to_s
       logger.info e.backtrace.join("\n")
@@ -101,9 +101,9 @@ module Grit::Core
     end
 
     def mapping_fields
-      load_set = Grit::Core::LoadSet.find(params[:load_set_block_id])
+      load_set_block = Grit::Core::LoadSetBlock.find(params[:load_set_block_id])
 
-      render json: { success: true, data: Grit::Core::EntityLoader.load_set_mapping_fields(load_set) }
+      render json: { success: true, data: Grit::Core::EntityLoader.load_set_block_mapping_fields(load_set_block) }
     rescue StandardError => e
       logger.info e.to_s
       logger.info e.backtrace.join("\n")

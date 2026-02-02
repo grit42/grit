@@ -1,8 +1,8 @@
 module Grit::Core
-  class VocabularyItemLoadSet < ApplicationRecord
+  class VocabularyItemLoadSetBlock < ApplicationRecord
     include Grit::Core::GritEntityRecord
 
-    belongs_to :load_set
+    belongs_to :load_set_block
     belongs_to :vocabulary
 
     entity_crud_with read: [],

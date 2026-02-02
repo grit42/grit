@@ -60,7 +60,7 @@ const NewLoadSetForm = ({
     },
     onSubmit: genericErrorHandler(async ({ value }) => {
       const loadSet = await createLoadSetMutation.mutateAsync(
-        newLoadSetPayload(value as NewLoadSetData),
+        newLoadSetPayload(value as NewLoadSetData, loadSetFields, loadSetBlockFields),
       );
       navigate(`../${loadSet.id}`, { relative: "path" });
     }),

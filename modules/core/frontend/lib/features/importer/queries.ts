@@ -56,6 +56,26 @@ export const useLoadSetFields = (
   });
 };
 
+export const useLoadSetBlockFields = (
+  entity: string,
+): UseQueryResult<FormFieldDef[], string> => {
+  return useQuery<FormFieldDef[], string>({
+    queryKey: ["loadSetBlockFields", entity],
+    queryFn: async (): Promise<FormFieldDef[]> => {
+      const response = await request<
+        EndpointSuccess<FormFieldDef[]>,
+        EndpointError
+      >(`/grit/core/load_set_blocks/fields?entity=${entity}`);
+
+      if (!response.success) {
+        throw response.errors;
+      }
+
+      return response.data;
+    },
+  });
+};
+
 export const useLoadSetDataSetFields = (
   loadSetId: number,
 ): UseQueryResult<FormFieldDef[], string> => {
