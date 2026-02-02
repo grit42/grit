@@ -253,7 +253,7 @@ const LoadSetEditor = ({
         <UpdateLoadSetDataDialog
           isOpen
           loadSet={loadSet}
-          onClose={() => {console.log("hm");setIsOpen(false)}}
+          onClose={() => setIsOpen(false)}
         />
       )}
     </>

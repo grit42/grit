@@ -28,7 +28,7 @@ import {
 
 const ERROR_COLUMNS: GritColumnDef[] = [
   {
-    accessorKey: "index",
+    accessorKey: "line",
     header: "Line",
     id: "index",
     type: "integer",
@@ -167,7 +167,7 @@ const ErrorsTable = ({
         for (const key in e.record_errors) {
           for (const i of e.record_errors[key]) {
             rows.push({
-              index: e.number + 1,
+              line: e.line,
               column: loadSet.load_set_blocks[0].mappings?.[key]?.header
                 ? columns.find(
                     ({ name }) =>
@@ -218,7 +218,7 @@ const ErroredRowsTable = ({
   const dataSetColumns = useMemo(() => {
     return [
       {
-        accessorKey: "index",
+        accessorKey: "line",
         header: "Line",
         id: "index",
         type: "integer",
@@ -242,10 +242,7 @@ const ErroredRowsTable = ({
     useInfiniteLoadSetBlockErroredData(loadSet.load_set_blocks[0].id);
 
   const flatData = useMemo(
-    () =>
-      data?.pages.flatMap(({ data }) =>
-        data.map((d) => ({ ...d.datum, index: d.number + 1 })),
-      ) ?? [],
+    () => data?.pages.flatMap(({ data }) => data.map((d) => d.datum)) ?? [],
     [data],
   );
 

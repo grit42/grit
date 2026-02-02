@@ -80,7 +80,6 @@ const UpdateLoadSetDataDialog = (
       const loadSetBlock = await setLoadSetDataMutation.mutateAsync(
         updateLoadSetBlockDataPayload(value),
       );
-      console.log("huh");
       await Promise.all([
         queryClient.invalidateQueries({
           queryKey: [
@@ -102,9 +101,7 @@ const UpdateLoadSetDataDialog = (
           exact: false,
         }),
       ]);
-      console.log("huh");
       props.onClose();
-      console.log("huh");
     }),
     defaultValues: {
       ...props.loadSet.load_set_blocks[0],

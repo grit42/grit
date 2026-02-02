@@ -35,7 +35,6 @@ export const newLoadSetPayload = (
       if (!field.name) continue;
 
       const fieldValue = formValue.load_set_blocks[index][field.name];
-      console.log(formValue, `load_set_blocks[${index}][${field.name}]`, fieldValue)
       if (
         fieldValue !== undefined &&
         fieldValue !== null &&

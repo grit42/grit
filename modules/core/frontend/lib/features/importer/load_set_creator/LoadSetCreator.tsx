@@ -89,7 +89,6 @@ const LoadSetCreator = ({ entity }: LoadSetCreatorProps) => {
         }
       }
     });
-    console.log(values)
     return values;
   }, [entity, loadSetFields, loadSetBlockFields, searchParams]);
 

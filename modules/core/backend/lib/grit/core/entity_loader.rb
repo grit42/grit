@@ -173,6 +173,7 @@ module Grit::Core
 
       errors = []
       records = []
+      unique_properties = {}
 
       new_record_props = base_record_props(load_set_block)
 
@@ -184,8 +185,6 @@ module Grit::Core
         }
 
         record_props = new_record_props.dup
-
-        Rails.logger.info record_props
 
         load_set_entity_properties.each do |entity_property|
           entity_property_name = entity_property[:name].to_s
@@ -242,6 +241,19 @@ module Grit::Core
               value = nil
               record[:record_errors] ||= {}
               record[:record_errors][entity_property_name] = [ "Unable to parse date, please use YYYY/MM/DD or ISO 8601" ]
+            end
+          end
+
+          if entity_property[:unique]
+            unique_properties[entity_property_name] ||= []
+
+            duplicate_values = unique_properties[entity_property_name].select { |o| o == value }
+
+            if duplicate_values.length.positive?
+              record[:record_errors] ||= {}
+              record[:record_errors][entity_property_name] = [ "should be unique (duplicate in file)" ]
+            else
+              unique_properties[entity_property_name].push(value)
             end
           end
         end

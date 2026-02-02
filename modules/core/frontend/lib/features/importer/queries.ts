@@ -207,7 +207,7 @@ export const useInfiniteLoadSetBlockPreviewData = (
 };
 
 export interface LoadSetBlockErroredData {
-  number: number;
+  line: number;
   datum: any;
   record_errors: Record<string, string>
 }
