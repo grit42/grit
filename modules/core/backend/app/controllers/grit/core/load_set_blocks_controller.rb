@@ -141,9 +141,9 @@ module Grit::Core
     end
 
     def data
-      load_set = Grit::Core::LoadSet.find(params[:load_set_id])
+      load_set_block = Grit::Core::LoadSetBlock.find(params[:load_set_block_id])
 
-      send_data load_set.data, disposition: :inline, type: "text/plain"
+      send_data load_set_block.data.download, filename: load_set_block.data.filename.to_s, content_type: load_set_block.data.content_type, disposition: :inline
     rescue StandardError => e
       logger.info e.to_s
       logger.info e.backtrace.join("\n")
@@ -260,11 +260,11 @@ module Grit::Core
     def set_data
       ActiveRecord::Base.transaction do
         begin
-          load_set = Grit::Core::LoadSet.find(params[:load_set_id])
+          load_set_block = Grit::Core::LoadSetBlock.find(params[:load_set_block_id])
 
-          load_set = Grit::Core::EntityLoader.set_load_set_data(load_set, params[:data].tempfile, **params.permit!.to_h.symbolize_keys)
+          load_set_block = Grit::Core::EntityLoader.set_load_set_block_data(load_set_block, params.permit!.to_h.symbolize_keys)
 
-          render json: { success: true, data: load_set }
+          render json: { success: true, data: load_set_block }
           return
         rescue EntityLoader::MaxFileSizeExceededError => e
           logger.info e.to_s
@@ -281,7 +281,7 @@ module Grit::Core
 
     private
       def permitted_params
-        [ "name", "entity", "origin_id", "data", "mappings", "separator" ]
+        [ "name", "origin_id", "data", "mappings", "separator" ]
       end
   end
 end

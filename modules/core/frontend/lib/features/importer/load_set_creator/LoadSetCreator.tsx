@@ -44,10 +44,7 @@ const LoadSetCreator = ({ entity }: LoadSetCreatorProps) => {
     isLoading: isLoadSetBlockFieldsLoading,
     isError: isLoadSetBlockFieldsError,
     error: loadSetBlockFieldsError,
-  } = useEntityFields("Grit::Core::LoadSetBlock", undefined, {
-    select: (fields) =>
-      fields.map((f) => (f.name === "entity" ? { ...f, disabled: true } : f)),
-  });
+  } = useEntityFields("Grit::Core::LoadSetBlock");
 
   const initialValues = useMemo((): Partial<NewLoadSetData> => {
     const values: Partial<NewLoadSetData> = {

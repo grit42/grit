@@ -97,8 +97,10 @@ module Grit::Core
 
     def drop_table
       connection = ActiveRecord::Base.connection
-      table = "raw_lsb_#{id}"
+      table = "lsb_#{id}"
+      raw_table = "raw_lsb_#{id}"
       connection.drop_table table, if_exists: true
+      connection.drop_table raw_table, if_exists: true
     end
 
     def create_table

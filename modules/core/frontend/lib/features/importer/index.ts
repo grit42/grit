@@ -54,7 +54,7 @@ export type {
   LoadSetMapping,
   LoadSetPreviewData,
   NewLoadSetData,
-  LoadSetDataUpdateData,
+  LoadSetBlockDataUpdateData,
 } from "./types";
 
 export * from "./load_set_creator";

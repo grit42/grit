@@ -26,19 +26,16 @@ import { useNavigate } from "react-router-dom";
 import { getURLParams, useQueryClient } from "@grit42/api";
 import { useMemo, useState } from "react";
 import {
+  useValidateLoadSetBlockMutation,
   useConfirmLoadSetBlockMutation,
   useRollbackLoadSetBlockMutation,
-  useRollbackLoadSetMutation,
-  useValidateLoadSetBlockMutation,
 } from "../mutations";
 import {
   useLoadSetBlockMappingFields,
-  useLoadSetMappingFields,
-  useLoadSetPreviewData,
 } from "../queries";
 import { LoadSetData, LoadSetMapping } from "../types";
 import { useDestroyEntityMutation } from "../../entities";
-import { useForm, useStore } from "@grit42/form";
+import { useForm } from "@grit42/form";
 import styles from "./loadSetEditor.module.scss";
 import MappingFields from "./MappingFields";
 import LoadSetInfo from "./LoadSetInfo";
@@ -224,7 +221,7 @@ const LoadSetEditor = ({
                 {!isValidated && (
                   <Button onClick={() => setIsOpen(true)}>Edit data set</Button>
                 )}
-                {loadSet.status_id__name === "Invalidated" && (
+                {loadSet.load_set_blocks[0].status_id__name === "Invalidated" && (
                   <Button
                     loading={confirmLoadSetMutation.isPending}
                     color="danger"
@@ -259,14 +256,13 @@ const LoadSetEditor = ({
           />
         </div>
       </form>
-      {/* {isOpen && (
+      {isOpen && (
         <UpdateLoadSetDataDialog
           isOpen
           loadSet={loadSet}
-          previewData={previewData}
-          onClose={() => setIsOpen(false)}
+          onClose={() => {console.log("hm");setIsOpen(false)}}
         />
-      )} */}
+      )}
     </>
   );
 };

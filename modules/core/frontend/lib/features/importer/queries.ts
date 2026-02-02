@@ -33,7 +33,7 @@ import {
 } from "@grit42/api";
 import { LoadSetPreviewData } from "./types";
 import { FormFieldDef } from "@grit42/form";
-import { EntityData, EntityInfo, EntityPropertyDef, useInfiniteEntityData } from "../entities";
+import { EntityInfo, EntityPropertyDef } from "../entities";
 import { Filter, SortingState } from "@grit42/table";
 
 export const useLoadSetFields = (
@@ -249,6 +249,25 @@ export const useLoadSetData = (
     queryFn: async (): Promise<string> => {
       const response = await request<string, EndpointError>(
         `/grit/core/load_sets/${loadSetId}/data`,
+      );
+
+      if (typeof response !== "string" && !response.success) {
+        throw response.errors;
+      }
+
+      return response as string;
+    },
+  });
+};
+
+export const useLoadSetBlockData = (
+  loadSetBlockId: number,
+): UseQueryResult<string, string> => {
+  return useQuery<string, string>({
+    queryKey: ["loadSetBlockData", loadSetBlockId],
+    queryFn: async (): Promise<string> => {
+      const response = await request<string, EndpointError>(
+        `/grit/core/load_set_blocks/${loadSetBlockId}/data`,
       );
 
       if (typeof response !== "string" && !response.success) {

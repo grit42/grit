@@ -16,7 +16,7 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Button, InputError, Surface } from "@grit42/client-library/components";
+import { Button, Surface } from "@grit42/client-library/components";
 import { useForm, useStore } from "@grit42/form";
 import { useNavigate } from "react-router-dom";
 import {
@@ -51,15 +51,14 @@ const NewLoadSetForm = ({
   const createLoadSetMutation = useCreateLoadSetMutation();
 
   const form = useForm<Partial<NewLoadSetData>>({
-    // validators: {
-    //   onMount: () => "Provide either a file or text data",
-    //   onChange: ({ value }) =>
-    //     value.data && value.data.length > 0
-    //       ? undefined
-    //       : "Provide either a file or text data",
-    // },
+    validators: {
+      onMount: () => "Provide either a file or text data",
+      onChange: ({ value }) =>
+        value.load_set_blocks?.[0].data && value.load_set_blocks[0].data.length > 0
+          ? undefined
+          : "Provide either a file or text data",
+    },
     onSubmit: genericErrorHandler(async ({ value }) => {
-      console.log("wut", value)
       const loadSet = await createLoadSetMutation.mutateAsync(
         newLoadSetPayload(value as NewLoadSetData),
       );
@@ -113,7 +112,7 @@ const NewLoadSetForm = ({
 
   const hasBlocks = useStore(
     form.baseStore,
-    ({ values }) => !!values.blocks?.length,
+    ({ values }) => !!values.load_set_blocks?.length,
   );
 
   return (
@@ -132,30 +131,12 @@ const NewLoadSetForm = ({
 
       <Surface className={styles.content}>
         <div className={styles.formFields}>
-          {errors && <p className={styles.error}>{errors}</p>}
           {loadSetFields.map((f) => (
             <FormField key={f.name} form={form} fieldDef={f} />
           ))}
+          {errors && <p className={styles.error}>{errors}</p>}
           {/* <InputError error={dataErrors} /> */}
         </div>
-        {/*
-        <form.Field
-          name="data"
-          listeners={{
-            onChange: handleDataChange,
-            onBlur: handleDataBlur,
-          }}
-          children={(field) => (
-            <EditorInput
-              onChange={field.handleChange}
-              onBlur={field.handleBlur}
-              value={field.state.value}
-              label="Data *"
-              showFilePicker
-              showInitialOverlay
-            />
-          )}
-        /> */}
       </Surface>
       <form.Field name="blocks" mode="array">
         {() => (

@@ -33,7 +33,6 @@ import styles from "./loadSetViewer.module.scss";
 import {
   useLoadSetBlockEntity,
   useLoadSetBlockLoadedDataColumns,
-  useLoadSetLoadedDataColumns,
 } from "../queries";
 import { useImporter } from "../ImportersContext";
 import { toast } from "@grit42/notifications";

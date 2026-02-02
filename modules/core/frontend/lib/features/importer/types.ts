@@ -38,9 +38,10 @@ export interface NewLoadSetData extends EntityProperties {
   load_set_blocks: NewLoadSetBlockData[];
 }
 
-export interface LoadSetDataUpdateData extends EntityProperties {
+export interface LoadSetBlockDataUpdateData extends EntityProperties {
   data: string;
-  separator: string | null;
+  name: string;
+  separator: string;
 }
 
 export interface LoadSetBlockData extends EntityData {

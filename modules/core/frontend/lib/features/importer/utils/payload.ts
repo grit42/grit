@@ -1,8 +1,6 @@
-import { NewLoadSetData } from "../types";
+import { LoadSetBlockDataUpdateData, NewLoadSetData } from "../types";
 
-export const newLoadSetPayload = (
-  formValue: NewLoadSetData,
-): FormData => {
+export const newLoadSetPayload = (formValue: NewLoadSetData): FormData => {
   const formData = new FormData();
   formData.append("name", formValue.name);
   formData.append("entity", formValue.entity);
@@ -18,21 +16,20 @@ export const newLoadSetPayload = (
       }),
     );
   });
+  return formData;
+};
 
-  // formData.append(
-  //   "data",
-  //   new File([formValue.data], `${formValue.name}.csv`, {
-  //     type: "text/csv",
-  //   }),
-  // );
-  // for (const field of fields) {
-  //   if (!field.name) continue;
-
-  //   const fieldValue = formValue[field.name as keyof T];
-  //   if (fieldValue !== undefined && fieldValue !== null && fieldValue !== "") {
-  //     const stringValue = String(fieldValue);
-  //     formData.append(field.name, stringValue);
-  //   }
-  // }
+export const updateLoadSetBlockDataPayload = (
+  formValue: LoadSetBlockDataUpdateData,
+): FormData => {
+  const formData = new FormData();
+  formData.append("name", formValue.name);
+  formData.append("separator", formValue.separator);
+  formData.append(
+    `data`,
+    new File([formValue.data], `${formValue.name}.txt`, {
+      type: "text/plain",
+    }),
+  );
   return formData;
 };

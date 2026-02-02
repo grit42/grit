@@ -25,12 +25,15 @@ import {
 } from "@grit42/client-library/components";
 import { useQueryClient } from "@grit42/api";
 import { useEffect } from "react";
-import { useSetLoadSetDataMutation } from "../mutations";
-import { useLoadSetData, useLoadSetDataSetFields } from "../queries";
 import {
+  useSetLoadSetBlockDataMutation,
+} from "../mutations";
+import {
+  useLoadSetBlockData,
+} from "../queries";
+import {
+  LoadSetBlockDataUpdateData,
   LoadSetData,
-  LoadSetDataUpdateData,
-  LoadSetPreviewData,
 } from "../types";
 import {
   AddFormControl,
@@ -42,92 +45,91 @@ import {
 import styles from "./loadSetEditor.module.scss";
 import EditorInput from "../../../components/EditorInput";
 import { useImporter } from "../ImportersContext";
-import { newLoadSetPayload } from "../utils";
+import { updateLoadSetBlockDataPayload } from "../utils";
+import { useEntityFields } from "../../entities";
 
 const UpdateLoadSetDataDialog = (
   props: DialogProps & {
+    onClose: () => void;
     loadSet: LoadSetData;
-    previewData: LoadSetPreviewData;
   },
 ) => {
   const { guessDataSetValues } = useImporter(props.loadSet.entity);
 
   const {
-    data: loadSetDataSetFields,
-    isLoading,
-    isError,
-    error,
-  } = useLoadSetDataSetFields(props.loadSet.id);
+    data: loadSetBlockFields,
+    isLoading: isLoadSetBlockFieldsLoading,
+    isError: isLoadSetBlockFieldsError,
+    error: loadSetBlockFieldsError,
+  } = useEntityFields("Grit::Core::LoadSetBlock");
 
   const {
-    data: loadSetData,
-    isLoading: isLoadSetDataLoading,
-    isError: isLoadSetDataError,
-    error: loadSetDataError,
-  } = useLoadSetData(props.loadSet.id);
+    data: loadSetBlockData,
+    isLoading: isLoadSetBlockDataLoading,
+    isError: isLoadSetBlockDataError,
+    error: loadSetBlockDataError,
+  } = useLoadSetBlockData(props.loadSet.load_set_blocks[0].id);
 
-  const setLoadSetDataMutation = useSetLoadSetDataMutation(props.loadSet.id);
+  const setLoadSetDataMutation = useSetLoadSetBlockDataMutation(
+    props.loadSet.load_set_blocks[0].id,
+  );
   const queryClient = useQueryClient();
 
-  const form = useForm<LoadSetDataUpdateData>({
+  const form = useForm<LoadSetBlockDataUpdateData>({
     onSubmit: genericErrorHandler(async ({ value }) => {
-      const formData = new FormData();
-      formData.append("separator", value.separator ?? "");
-      formData.append(
-        "data",
-        new File([value.data], `updated_data.csv`, {
-          type: "application/csv",
-        }),
+      const loadSetBlock = await setLoadSetDataMutation.mutateAsync(
+        updateLoadSetBlockDataPayload(value),
       );
-      const loadSet = await setLoadSetDataMutation.mutateAsync(
-        newLoadSetPayload<LoadSetDataUpdateData>(
-          loadSetDataSetFields ?? [],
-          value,
-        ),
-      );
+      console.log("huh");
       await Promise.all([
         queryClient.invalidateQueries({
-          queryKey: ["loadSetPreviewData", loadSet.id],
+          queryKey: [
+            "entities",
+            "infiniteData",
+            `grit/core/load_set_blocks/${loadSetBlock.id}/preview_data`,
+          ],
         }),
         queryClient.invalidateQueries({
-          queryKey: ["loadSetData", loadSet.id],
+          queryKey: ["loadSetBlockData", loadSetBlock.id],
         }),
         queryClient.invalidateQueries({
           queryKey: [
             "entities",
             "datum",
             "grit/core/load_sets",
-            loadSet.id.toString(),
+            loadSetBlock.load_set_id!.toString(),
           ],
           exact: false,
         }),
       ]);
-      props.onClose?.();
+      console.log("huh");
+      props.onClose();
+      console.log("huh");
     }),
     defaultValues: {
-      ...props.loadSet,
-      data: loadSetData ?? "",
+      ...props.loadSet.load_set_blocks[0],
+      data: loadSetBlockData ?? "",
     },
   });
 
   useEffect(() => {
-    if (loadSetData) {
-      form.setFieldValue("data", loadSetData);
+    if (loadSetBlockData) {
+      form.setFieldValue("data", loadSetBlockData);
     }
-  }, [loadSetData, form]);
+  }, [loadSetBlockData, form]);
 
-  const handleDataChange: FieldListenerFn<LoadSetDataUpdateData, "data"> = ({
+  const handleDataChange: FieldListenerFn<LoadSetBlockDataUpdateData, "data"> = ({
     fieldApi,
   }) => {
     fieldApi.form.validateField("data", "submit");
   };
 
   const handleDataBlur: FieldListenerFn<
-    LoadSetDataUpdateData,
+    LoadSetBlockDataUpdateData,
     "data"
   > = async ({ value, fieldApi }) => {
     try {
-      const formUpdates = await guessDataSetValues<LoadSetDataUpdateData>(
+      const formUpdates = await guessDataSetValues<LoadSetBlockDataUpdateData>(
         value,
       );
       Object.keys(formUpdates).forEach((key) => {
@@ -155,14 +157,20 @@ const UpdateLoadSetDataDialog = (
     }
   };
 
-  if (isLoading || isLoadSetDataLoading) return <Spinner />;
+  if (isLoadSetBlockFieldsLoading || isLoadSetBlockDataLoading) {
+    return <Spinner />;
+  }
+
   if (
-    isError ||
-    !loadSetDataSetFields?.length ||
-    isLoadSetDataError ||
-    !loadSetData
-  )
-    return <ErrorPage error={error ?? loadSetDataError} />;
+    isLoadSetBlockFieldsError ||
+    !loadSetBlockFields?.length ||
+    isLoadSetBlockDataError ||
+    !loadSetBlockData
+  ) {
+    return (
+      <ErrorPage error={loadSetBlockFieldsError ?? loadSetBlockDataError} />
+    );
+  }
 
   return (
     <Dialog {...props} className={styles.updateDataSetDialog}>
@@ -191,7 +199,7 @@ const UpdateLoadSetDataDialog = (
               />
             )}
           />
-          {loadSetDataSetFields.map((f) => (
+          {loadSetBlockFields.map((f) => (
             <FormField form={form} fieldDef={f} key={f.name} />
           ))}
         </Surface>

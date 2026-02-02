@@ -96,6 +96,10 @@ module Grit::Core
       loader(load_set.entity).set_data(load_set, data, **args)
     end
 
+    def self.set_load_set_block_data(load_set_block, data, **args)
+      loader(load_set_block.load_set.entity).set_block_data(load_set_block, data, **args)
+    end
+
     protected
     def self.fields(params)
       fields = Grit::Core::LoadSet.entity_fields.filter { |f| f[:name] != "data" }.to_h { |item| [ item[:name], item.dup ] }
@@ -246,15 +250,6 @@ module Grit::Core
 
           @fields.each do |column|
             query = query.select("#{self.table_name}.#{column[:name]}")
-            # if column.data_type.is_entity
-            #   entity_klass = column.data_type.model
-            #   query = query
-            #     .joins("LEFT OUTER JOIN #{column.data_type.table_name} #{column.safe_name}__entities on #{column.safe_name}__entities.id = #{@sheet.table_name}.#{column.safe_name}")
-            #   for display_property in entity_klass.display_properties do
-            #     query = query
-            #       .select("#{column.safe_name}__entities.#{display_property[:name]} as #{column.safe_name}__#{display_property[:name]}") unless entity_klass.display_properties.nil?
-            #   end
-            # end
           end
           query
         end
@@ -300,7 +295,8 @@ module Grit::Core
 
 
     def self.validate_block(load_set_block)
-      load_set_entity_properties = load_set_block.load_set.entity.constantize.entity_fields
+      load_set_entity = load_set_block.load_set.entity.constantize
+      load_set_entity_properties = load_set_entity.entity_fields
 
       Grit::Core::LoadSetBlockLoadingRecord.delete_by(load_set_block_id: load_set_block.id)
 
@@ -313,8 +309,11 @@ module Grit::Core
       load_set_block.preview_data.each do |datum|
         record = {
           number: datum[:row],
-          errors: nil,
+          datum: datum,
+          record_errors: nil,
         }
+
+        record_props = {}
 
         load_set_entity_properties.each do |entity_property|
           entity_property_name = entity_property[:name].to_s
@@ -330,56 +329,60 @@ module Grit::Core
               field_entity = entity_property[:entity][:full_name].constantize
               value = field_entity.loader_find_by!(find_by, datum[header], options: entity_property[:entity][:options]).id
             rescue NameError
-              record[:errors] ||= {}
-              record[:errors][entity_property_name] = [ "#{entity_property[:entity][:name]}: No such model" ]
+              record[:record_errors] ||= {}
+              record[:record_errors][entity_property_name] = [ "#{entity_property[:entity][:name]}: No such model" ]
               value = 0
             rescue ActiveRecord::RecordNotFound
-              record[:errors] ||= {}
-              record[:errors][entity_property_name] = [ "could not find #{entity_property[:entity][:name]} with '#{find_by}' = #{datum[header]}" ]
+              record[:record_errors] ||= {}
+              record[:record_errors][entity_property_name] = [ "could not find #{entity_property[:entity][:name]} with '#{find_by}' = #{datum[header]}" ]
               value = 0
             end
           elsif !header.nil?
             value = datum[header]
           end
 
-          record[entity_property_name] = value
+          record_props[entity_property_name] = value
 
           if entity_property[:required] && value.nil?
-            record[:errors] ||= {}
-            record[:errors][entity_property_name] = [ "can't be blank" ]
+            value = nil
+            record[:record_errors] ||= {}
+            record[:record_errors][entity_property_name] = [ "can't be blank" ]
           elsif entity_property[:type].to_s == "decimal" and !value.nil? and !value.blank? and !/^[+\-]?(\d+\.\d*|\d*\.\d+|\d+)([eE][+\-]?\d+)?$/.match?(value.to_s)
-            record[:errors] ||= {}
-            record[:errors][entity_property_name] = [ "is not a number" ]
+            value = nil
+            record[:record_errors] ||= {}
+            record[:record_errors][entity_property_name] = [ "is not a number" ]
           elsif entity_property[:type].to_s == "integer" and !value.nil? and !value.blank? and !/^[+\-]?\d+([eE][+]?\d+)?$/.match?(value.to_s)
-            record[:errors] ||= {}
-            record[:errors][entity_property_name] = [ "is not a integer" ]
+            value = nil
+            record[:record_errors] ||= {}
+            record[:record_errors][entity_property_name] = [ "is not a integer" ]
           elsif entity_property[:type].to_s == "datetime" and !value.nil? and !value.blank?
             begin
-              record[entity_property_name] = DateTime.parse(value)
+              record_props[entity_property_name] = DateTime.parse(value)
             rescue
-              record[:errors] ||= {}
-              record[:errors][entity_property_name] = [ "Unable to parse datetime, please use YYYY/MM/DD HH:mm:ss or ISO 8601" ]
+              value = nil
+              record[:record_errors] ||= {}
+              record[:record_errors][entity_property_name] = [ "Unable to parse datetime, please use YYYY/MM/DD HH:mm:ss or ISO 8601" ]
             end
           elsif entity_property[:type].to_s == "date" and !value.nil? and !value.blank?
             begin
-              record[entity_property_name] = Date.parse(value)
+              record_props[entity_property_name] = Date.parse(value)
             rescue
-              record[:errors] ||= {}
-              record[:errors][entity_property_name] = [ "Unable to parse date, please use YYYY/MM/DD or ISO 8601" ]
+              value = nil
+              record[:record_errors] ||= {}
+              record[:record_errors][entity_property_name] = [ "Unable to parse date, please use YYYY/MM/DD or ISO 8601" ]
             end
           end
         end
 
-        unless record[:errors].nil?
-          errors.push({ index: datum[:row], datum: datum, errors: record[:errors] })
-          records.push ({
-            number: datum[:row],
-            datum: datum,
-            record_errors: record[:errors],
-          })
-        else
-          records.push record
+        if record[:record_errors].nil?
+          blah = load_set_entity.new(record_props)
+          record[:record_errors] = blah.errors unless blah.valid?
         end
+
+        unless record[:record_errors].nil?
+          errors.push({ index: datum[:row], datum: datum, errors: record[:record_errors] })
+        end
+        records.push({ **record, **record_props })
       end
       load_set_record_klass.insert_all(records)
       { errors: errors }
@@ -428,7 +431,7 @@ module Grit::Core
       insert += ") "
 
       load_set_record_klass = load_set_block_record_klass(load_set_block)
-      insert += load_set_record_klass.for_confirm.where(errors: nil).to_sql
+      insert += load_set_record_klass.for_confirm.where(record_errors: nil).to_sql
       insert += " RETURNING id) INSERT INTO grit_core_load_set_block_loaded_records(\"record_id\",\"load_set_block_id\",\"table\") SELECT inserted_records.id,#{load_set_block.id}, '#{entity_klass.table_name}' from inserted_records"
 
       ActiveRecord::Base.transaction do
@@ -471,6 +474,18 @@ module Grit::Core
         load_set.save!
       end
       load_set
+    end
+
+    def self.set_block_data(load_set_block, params)
+      load_set_block.separator = params[:separator]
+      load_set_block.data = params[:data]
+      load_set_block.name = params[:name]
+      load_set_block.status_id = Grit::Core::LoadSetStatus.find_by(name: "Created").id
+      ActiveRecord::Base.transaction do
+        load_set_block.drop_table
+        load_set_block.save!
+      end
+      load_set_block
     end
 
     def self.entity_info(load_set)

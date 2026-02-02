@@ -104,6 +104,31 @@ export const useSetLoadSetDataMutation = (loadSetId: number) => {
   });
 };
 
+export const useSetLoadSetBlockDataMutation = (loadSetBlockId: number) => {
+  return useMutation<LoadSetBlockData, EndpointErrorErrors<LoadSetBlockData>, FormData>({
+    mutationKey: ["setLoadSetBlockData", loadSetBlockId],
+    mutationFn: async (data: FormData) => {
+      const response = await request<
+        EndpointSuccess<LoadSetBlockData>,
+        EndpointError
+      >(`/grit/core/load_set_blocks/${loadSetBlockId}/set_data`, {
+        method: "POST",
+        data,
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      if (!response.success) {
+        throw response.errors;
+      }
+
+      return response.data;
+    },
+    onError: notifyOnError,
+  });
+};
+
 export const useValidateLoadSetBlockMutation = (loadSetBlockId: number) => {
   return useMutation<
     LoadSetBlockData,
