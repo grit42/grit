@@ -28,11 +28,6 @@ module Grit::Compounds
       [ *load_set_block_fields.values, *Grit::Compounds::CompoundLoadSetBlock.entity_fields ]
     end
 
-    def self.parse(data, separator, structure_format)
-      return Grit::Compounds::SDF.parse(data) if structure_format == "molfile"
-      super(data, separator)
-    end
-
     def self.create(params)
       load_set = super
 
@@ -84,8 +79,6 @@ module Grit::Compounds
       new_record_props = base_record_props(load_set_block)
 
       load_set_block.preview_data.each do |datum|
-        compound_name_origin_id = {}
-
         record = {
           line: datum[:line],
           datum: datum,
@@ -121,10 +114,6 @@ module Grit::Compounds
           end
 
           record_props[entity_property_name] = value
-
-          if entity_property_name == "origin_id" || entity_property_name == "name"
-            compound_name_origin_id[entity_property_name] = value
-          end
 
           if entity_property[:required] && value.nil?
             value = nil
@@ -168,17 +157,6 @@ module Grit::Compounds
               unique_properties[entity_property_name].push(value)
             end
           end
-        end
-
-        unique_properties["name_origin_id"] ||= []
-
-        duplicate_values = unique_properties["name_origin_id"].reject { |o| o["name"] != compound_name_origin_id["name"] || o["origin_id"] != compound_name_origin_id["origin_id"] }
-
-        if duplicate_values.length.positive?
-          record[:record_errors] ||= {}
-          record[:record_errors]["name"] = [ "should be unique (duplicate in file)" ]
-        else
-          unique_properties["name_origin_id"].push(compound_name_origin_id)
         end
 
         if record[:record_errors].nil?
@@ -272,59 +250,7 @@ module Grit::Compounds
       Grit::Compounds::Molecule.delete_by("id IN (SELECT record_id FROM grit_core_load_set_block_loaded_records WHERE grit_core_load_set_block_loaded_records.load_set_block_id = #{load_set_block.id})")
       Grit::Compounds::CompoundPropertyValue.delete_by("id IN (SELECT record_id FROM grit_core_load_set_block_loaded_records WHERE grit_core_load_set_block_loaded_records.load_set_block_id = #{load_set_block.id})")
       Grit::Compounds::Compound.delete_by("id IN (SELECT record_id FROM grit_core_load_set_block_loaded_records WHERE grit_core_load_set_block_loaded_records.load_set_block_id = #{load_set_block.id})")
-    end
-
-    def self.confirm(load_set)
-      compound_load_set = Grit::Compounds::CompoundLoadSet.find_by(load_set_id: load_set.id)
-      load_set_entity_properties = Grit::Compounds::Compound.entity_properties(compound_type_id: compound_load_set.compound_type_id)
-
-      ActiveRecord::Base.transaction do
-        Grit::Core::LoadSetLoadingRecord.includes(:load_set_loading_record_property_values).where(load_set_id: load_set.id).each do |loading_record|
-          record_props = {}
-          record_props["compound_type_id"] = compound_load_set.compound_type_id
-          loading_record.load_set_loading_record_property_values.each do |loading_record_property_value|
-            entity_property = load_set_entity_properties.find { |p| p[:name] == loading_record_property_value.name }
-            if entity_property[:type] == "entity"
-              record_props[loading_record_property_value.name] = loading_record_property_value.entity_id_value
-            elsif entity_property[:type] == "mol"
-              record_props[loading_record_property_value.name] = loading_record_property_value.string_value
-            else
-              record_props[loading_record_property_value.name] = loading_record_property_value["#{entity_property[:type]}_value"]
-            end
-          end
-
-          record_ids = Grit::Compounds::Compound.create(record_props, compound_load_set.structure_format)
-
-          Grit::Core::LoadSetLoadedRecord.new({
-            load_set_id: load_set.id,
-            table: "grit_compounds_compounds",
-            record_id: record_ids[:compound_id]
-          }).save!
-
-          Grit::Core::LoadSetLoadedRecord.new({
-            load_set_id: load_set.id,
-            table: "grit_compounds_molecules",
-            record_id: record_ids[:molecule_id]
-          }).save! unless record_ids[:molecule_id].nil?
-
-          Grit::Core::LoadSetLoadedRecord.new({
-            load_set_id: load_set.id,
-            table: "grit_compounds_molecules_compounds",
-            record_id: record_ids[:molecules_compound_id]
-          }).save! unless record_ids[:molecules_compound_id].nil?
-
-          record_ids[:compound_property_value_ids].each do |compound_property_value_id|
-            Grit::Core::LoadSetLoadedRecord.new({
-              load_set_id: load_set.id,
-              table: "grit_compounds_compound_property_values",
-              record_id: compound_property_value_id
-            }).save!
-          end
-        end
-
-        Grit::Core::LoadSetLoadingRecordPropertyValue.delete_by(load_set_id: load_set.id)
-        Grit::Core::LoadSetLoadingRecord.delete_by(load_set_id: load_set.id)
-      end
+      Grit::Core::LoadSetBlockLoadedRecord.delete_by(load_set_block_id: load_set_block.id)
     end
 
     def self.block_mapping_fields(load_set_block)
