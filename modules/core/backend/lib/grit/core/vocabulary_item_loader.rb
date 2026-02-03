@@ -28,7 +28,7 @@ module Grit::Core
     def self.create(params)
       load_set = super
 
-      vocabulary_item_load_set = Grit::Core::VocabularyItemLoadSetBlock.create!({
+      Grit::Core::VocabularyItemLoadSetBlock.create!({
         load_set_block_id: load_set.load_set_blocks[0].id,
         vocabulary_id: params[:load_set_blocks]["0"]["vocabulary_id"]
       })

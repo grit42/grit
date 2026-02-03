@@ -68,6 +68,10 @@ module Grit::Core
       loader(load_set_block.load_set.entity).block_mapping_fields(load_set_block)
     end
 
+    def self.load_set_block_loading_fields(load_set_block)
+      loader(load_set_block.load_set.entity).block_loading_fields(load_set_block)
+    end
+
     def self.load_set_entity_info(load_set)
       loader(load_set.entity).entity_info(load_set)
     end
@@ -164,10 +168,10 @@ module Grit::Core
     end
 
     def self.validate_block(load_set_block)
+      load_set_block.truncate_loading_records_table
+
       load_set_entity = block_entity(load_set_block)
       load_set_entity_properties = block_mapping_fields(load_set_block)
-
-      Grit::Core::LoadSetBlockLoadingRecord.delete_by(load_set_block_id: load_set_block.id)
 
       load_set_block_record_klass = load_set_block.record_klass
 
@@ -303,6 +307,10 @@ module Grit::Core
     end
 
     def self.block_mapping_fields(load_set_block)
+      load_set_block.load_set.entity.constantize.entity_fields
+    end
+
+    def self.block_loading_fields(load_set_block)
       load_set_block.load_set.entity.constantize.entity_fields
     end
 

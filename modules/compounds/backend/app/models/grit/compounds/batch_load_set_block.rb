@@ -17,10 +17,10 @@
 #++
 
 module Grit::Compounds
-  class BatchLoadSet < ApplicationRecord
+  class BatchLoadSetBlock < ApplicationRecord
     include Grit::Core::GritEntityRecord
 
-    belongs_to :load_set, class_name: "Grit::Core::LoadSet"
+    belongs_to :load_set_block, class_name: "Grit::Core::LoadSetBlock"
     belongs_to :compound_type, class_name: "Grit::Compounds::CompoundType"
 
     entity_crud_with read: [],

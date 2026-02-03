@@ -30,9 +30,7 @@ import {
   useConfirmLoadSetBlockMutation,
   useRollbackLoadSetBlockMutation,
 } from "../mutations";
-import {
-  useLoadSetBlockMappingFields,
-} from "../queries";
+import { useLoadSetBlockMappingFields } from "../queries";
 import { LoadSetData, LoadSetMapping } from "../types";
 import { useDestroyEntityMutation } from "../../entities";
 import { useForm } from "@grit42/form";
@@ -67,15 +65,22 @@ const LoadSetEditor = ({
     error: fieldsError,
   } = useLoadSetBlockMappingFields(loadSet.load_set_blocks[0].id);
 
-  const validateLoadSetMutation = useValidateLoadSetBlockMutation(loadSet.load_set_blocks[0].id);
-  const confirmLoadSetMutation = useConfirmLoadSetBlockMutation(loadSet.load_set_blocks[0].id);
-  const rollbackLoadSetMutation = useRollbackLoadSetBlockMutation(loadSet.load_set_blocks[0].id);
+  const validateLoadSetMutation = useValidateLoadSetBlockMutation(
+    loadSet.load_set_blocks[0].id,
+  );
+  const confirmLoadSetMutation = useConfirmLoadSetBlockMutation(
+    loadSet.load_set_blocks[0].id,
+  );
+  const rollbackLoadSetMutation = useRollbackLoadSetBlockMutation(
+    loadSet.load_set_blocks[0].id,
+  );
 
   const destroyLoadSetMutation = useDestroyEntityMutation(
     "grit/core/load_sets",
   );
 
-  const isValidated = loadSet.load_set_blocks[0].status_id__name === "Validated";
+  const isValidated =
+    loadSet.load_set_blocks[0].status_id__name === "Validated";
 
   const handleSubmit = async (mappings: Record<string, LoadSetMapping>) => {
     if (isValidated) {
@@ -89,15 +94,25 @@ const LoadSetEditor = ({
       await validateLoadSetMutation.mutateAsync(mappings);
     } finally {
       setMappings(mappings);
-      queryClient.invalidateQueries({
-        queryKey: [
-          "entities",
-          "datum",
-          "grit/core/load_sets",
-          loadSet.id.toString(),
-        ],
-        exact: false,
-      });
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: [
+            "entities",
+            "datum",
+            "grit/core/load_sets",
+            loadSet.id.toString(),
+          ],
+          exact: false,
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [
+            "entities",
+            "infiniteData",
+            `grit/core/load_set_blocks/${loadSet.load_set_blocks[0].id}/errored_data`,
+          ],
+          exact: false,
+        }),
+      ]);
     }
   };
 
@@ -214,7 +229,8 @@ const LoadSetEditor = ({
                 {!isValidated && (
                   <Button onClick={() => setIsOpen(true)}>Edit data set</Button>
                 )}
-                {loadSet.load_set_blocks[0].status_id__name === "Invalidated" && (
+                {loadSet.load_set_blocks[0].status_id__name ===
+                  "Invalidated" && (
                   <Button
                     loading={confirmLoadSetMutation.isPending}
                     color="danger"

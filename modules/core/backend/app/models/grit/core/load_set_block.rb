@@ -104,7 +104,7 @@ module Grit::Core
     end
 
     def self.columns_from_entity(load_set_block)
-      load_set_block.load_set.entity.constantize.entity_properties
+      Grit::Core::EntityLoader.loader(load_set_block.load_set.entity).block_loading_fields(load_set_block)
     end
 
     def self.records_from_file(load_set_block)
@@ -124,6 +124,10 @@ module Grit::Core
 
     def drop_loading_records_table
       ActiveRecord::Base.connection.drop_table loading_records_table_name, if_exists: true
+    end
+
+    def truncate_loading_records_table
+      ActiveRecord::Base.connection.truncate loading_records_table_name
     end
 
     def drop_tables
@@ -176,6 +180,7 @@ module Grit::Core
         t.column :line, :bigint
         t.column :datum, :jsonb
         t.column :record_errors, :jsonb
+        t.column :record_warnings, :jsonb
       end
     end
 
@@ -204,7 +209,7 @@ module Grit::Core
 
     def record_klass
       load_set_block = self
-      fields = load_set.entity.constantize.entity_fields
+      fields = Grit::Core::LoadSetBlock.columns_from_entity(self)
       klass = Class.new(ActiveRecord::Base) do
         self.table_name = load_set_block.loading_records_table_name
         @load_set_block = load_set_block
