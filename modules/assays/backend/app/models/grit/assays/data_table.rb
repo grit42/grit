@@ -52,9 +52,7 @@ module Grit::Assays
     end
 
     def add_entity_type_display_columns
-      logger.info entity_data_type.model.name
       self.entity_data_type.model.display_properties.each do |display_property|
-        logger.info display_property.as_json
         begin
           DataTableColumn.create!(
             data_table_id: self.id,

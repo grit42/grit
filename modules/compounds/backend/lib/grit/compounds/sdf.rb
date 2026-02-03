@@ -24,7 +24,7 @@ module Grit
   module Compounds
     class SDF
       def self.parse(data, **args)
-        prop_names = Set["molfile"]
+        prop_names = Set["molecule"]
         records = []
         record = {}
         record_lines = []
@@ -35,7 +35,7 @@ module Grit
 
           mol_block = record_lines[0..mol_end]
 
-          record["molfile"] = mol_block.join("\n")
+          record["molecule"] = mol_block.join("\n")
 
           prop_def = nil
           prop_name = nil
@@ -66,6 +66,57 @@ module Grit
           prop_names,
           *records.map { |r| prop_names.map { |p| r[p] } }
         ]
+      end
+
+      def self.each_record(io)
+        prop_names = Set["molecule"]
+        record = {}
+        record_lines = []
+        mol_block = []
+        counter = 0
+        io.each_line(chomp: true) do |line|
+          record_lines.push line and next if line != "$$$$"
+          mol_end = record_lines.find_index("M  END")
+
+          mol_block = record_lines[0..mol_end]
+
+          record["molecule"] = mol_block.join("\n")
+
+          prop_def = nil
+          prop_name = nil
+          prop_lines = []
+          record_lines[mol_end+1..].each do |line|
+            if line.strip == ""
+              record[prop_name] = prop_lines.join("\n")
+              prop_name = nil
+              prop_lines = []
+            elsif prop_def = /^>\s+<(?<prop_name>\w+)>$/.match(line)
+              raise Grit::Core::EntityLoader::ParseException.new "Malformed SDF file" unless prop_name.nil?
+              prop_name = prop_def[:prop_name]
+              prop_names.add(prop_name)
+            else
+              prop_lines.push line
+            end
+          end
+          yield record, counter if block_given?
+          record = {}
+          record_lines = []
+          counter = counter + 1
+        end
+      end
+
+      def self.properties(io)
+        prop_names = Set["molecule"]
+
+        io.each_line do |line|
+          prop_def = /^>\s+<(?<prop_name>\w+)>$/.match(line)
+          unless prop_def.nil?
+            prop_name = prop_def[:prop_name]
+            prop_names.add(prop_name)
+          end
+        end
+
+        prop_names.to_a
       end
     end
   end

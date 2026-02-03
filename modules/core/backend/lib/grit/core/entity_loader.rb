@@ -112,6 +112,14 @@ module Grit::Core
       loader(load_set_block.load_set.entity).set_block_data(load_set_block, data, **args)
     end
 
+    def self.load_set_block_columns_from_file(load_set_block)
+      loader(load_set_block.load_set.entity).columns_from_file(load_set_block)
+    end
+
+    def self.load_set_block_records_from_file(load_set_block, &block)
+      loader(load_set_block.load_set.entity).records_from_file(load_set_block, &block)
+    end
+
     protected
     def self.fields(params)
       fields = Grit::Core::LoadSet.entity_fields.to_h { |item| [ item[:name], item.dup ] }
@@ -339,6 +347,33 @@ module Grit::Core
         path: model.name.underscore.pluralize,
         dictionary: true
       }
+    end
+
+    def self.columns_from_csv(load_set_block)
+      load_set_block.data.open do |io|
+        line = io.gets
+        CSV.parse_line(line, col_sep: load_set_block.separator, liberal_parsing: true, encoding: "utf-8")
+          .each_with_index.map { |h,index| { name: "col_#{index}", display_name: h } }
+      end
+    end
+
+    def self.columns_from_file(load_set_block)
+      columns_from_csv(load_set_block)
+    end
+
+    def self.records_from_csv(load_set_block)
+      load_set_block.data.open do |file|
+        file.each_line(chomp: true).with_index do |line, index|
+          next if index == 0
+          line_with_line_number = "#{index+1},#{line}"
+          row = CSV.parse_line(line_with_line_number.strip, col_sep: load_set_block.separator)
+          yield CSV.generate_line(row, col_sep: ",")
+        end
+      end
+    end
+
+    def self.records_from_file(load_set_block, &block)
+      records_from_csv(load_set_block, &block)
     end
   end
 end

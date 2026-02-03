@@ -189,6 +189,7 @@ module Grit::Compounds
 
         unless record_props["molecule"].nil?
           molecule_id = (structure_format == "molfile" ? Grit::Compounds::Molecule.by_molfile(record_props["molecule"]) : Grit::Compounds::Molecule.by_smiles(record_props["molecule"]))&.id
+          record_props["molecule"] = "mol_from_ctab('#{record_props["molecule"]}'::cstring)" if structure_format == "molfile"
           if molecule_id
             record[:record_warnings] ||= {}
             record[:record_warnings]["molecule"] = [ "structure already registered, this compound will be linked to the existing structure" ]
@@ -266,6 +267,13 @@ module Grit::Compounds
       end
     end
 
+    def self.rollback_block(load_set_block)
+      Grit::Compounds::MoleculesCompound.delete_by("id IN (SELECT record_id FROM grit_core_load_set_block_loaded_records WHERE grit_core_load_set_block_loaded_records.load_set_block_id = #{load_set_block.id})")
+      Grit::Compounds::Molecule.delete_by("id IN (SELECT record_id FROM grit_core_load_set_block_loaded_records WHERE grit_core_load_set_block_loaded_records.load_set_block_id = #{load_set_block.id})")
+      Grit::Compounds::CompoundPropertyValue.delete_by("id IN (SELECT record_id FROM grit_core_load_set_block_loaded_records WHERE grit_core_load_set_block_loaded_records.load_set_block_id = #{load_set_block.id})")
+      Grit::Compounds::Compound.delete_by("id IN (SELECT record_id FROM grit_core_load_set_block_loaded_records WHERE grit_core_load_set_block_loaded_records.load_set_block_id = #{load_set_block.id})")
+    end
+
     def self.confirm(load_set)
       compound_load_set = Grit::Compounds::CompoundLoadSet.find_by(load_set_id: load_set.id)
       load_set_entity_properties = Grit::Compounds::Compound.entity_properties(compound_type_id: compound_load_set.compound_type_id)
@@ -326,29 +334,37 @@ module Grit::Compounds
 
     def self.block_loading_fields(load_set_block)
       compound_load_set_block = Grit::Compounds::CompoundLoadSetBlock.find_by(load_set_block_id: load_set_block.id)
-      Grit::Compounds::Compound.entity_fields(compound_type_id: compound_load_set_block.compound_type_id).filter { |f| ![ "molweight", "logp", "molformula", "number" ].include?(f[:name]) }
+      Grit::Compounds::Compound.entity_fields(compound_type_id: compound_load_set_block.compound_type_id)
+        .filter { |f| ![ "molweight", "logp", "molformula", "number" ].include?(f[:name]) }
+        .map { |f| f[:type] == "mol" ? { **f, type: "text" } : f }
     end
 
-    def self.set_data(load_set, tempfile, **args)
-      data = read_data(tempfile)
-      compound_load_set = Grit::Compounds::CompoundLoadSet.find_by(load_set_id: load_set.id)
-      parsed_data = self.parse(data, args[:separator], args[:structure_format] || compound_load_set.structure_format)
-      load_set.data = data
-      load_set.separator = args[:separator]
-      load_set.parsed_data = parsed_data
-      load_set.status_id = Grit::Core::LoadSetStatus.find_by(name: "Mapping").id
-      load_set.record_errors = nil
-      load_set.record_warnings = nil
-
-      compound_load_set.structure_format = args[:structure_format] unless args[:structure_format].nil?
-
-      ActiveRecord::Base.transaction do
-        Grit::Core::LoadSetLoadingRecordPropertyValue.delete_by(load_set_id: load_set.id)
-        Grit::Core::LoadSetLoadingRecord.delete_by(load_set_id: load_set.id)
-        load_set.save!
-        compound_load_set.save!
+    def self.columns_from_sdf(load_set_block)
+      load_set_block.data.open do |io|
+        Grit::Compounds::SDF.properties(io)
+          .each_with_index.map { |h,index| { name: "col_#{index}", display_name: h } }
       end
-      load_set
+    end
+
+    def self.columns_from_file(load_set_block)
+      compound_load_set_block = Grit::Compounds::CompoundLoadSetBlock.find_by(load_set_block_id: load_set_block.id)
+      return columns_from_sdf(load_set_block) if compound_load_set_block.structure_format == "molfile"
+      columns_from_csv(load_set_block)
+    end
+
+    def self.records_from_sdf(load_set_block, &block)
+      load_set_block.data.open do |file|
+        Grit::Compounds::SDF.each_record(file) do |record, recordno|
+          row = [ recordno, *load_set_block.headers.map { |h| record[h["display_name"]] } ]
+          yield CSV.generate_line(row, col_sep: ",")
+        end
+      end
+    end
+
+    def self.records_from_file(load_set_block, &block)
+      compound_load_set_block = Grit::Compounds::CompoundLoadSetBlock.find_by(load_set_block_id: load_set_block.id)
+      return records_from_sdf(load_set_block, &block) if compound_load_set_block.structure_format == "molfile"
+      records_from_csv(load_set_block, &block)
     end
   end
 end

@@ -67,7 +67,7 @@ module Grit::Core
     end
 
     def preview_data
-      LoadSetBlock.preview_data({load_set_block_id: id})
+      LoadSetBlock.preview_data({ load_set_block_id: id })
     end
 
     def self.by_entity(params)
@@ -92,19 +92,6 @@ module Grit::Core
       connection = ActiveRecord::Base.connection
       connection.drop_table loading_records_table_name, if_exists: true
       connection.drop_table raw_data_table_name, if_exists: true
-    end
-
-    def self.columns_from_file(load_set_block)
-      load_set_block.data.open do |io|
-        columns = []
-        line = io.gets
-        CSV.parse_line(line, col_sep: load_set_block.separator, liberal_parsing: true, encoding: "utf-8")
-          .each_with_index.map { |h,index| { name: "col_#{index}", display_name: h } }
-      end
-    end
-
-    def self.columns_from_entity(load_set_block)
-      Grit::Core::EntityLoader.loader(load_set_block.load_set.entity).block_loading_fields(load_set_block)
     end
 
     def self.records_from_file(load_set_block)
@@ -148,25 +135,25 @@ module Grit::Core
 
     def seed_raw_data_table
       columns_string = headers.size > 0 ? "(\"line\",\"#{headers.map { |h| h["name"] }.join('","')}\")" : ""
-      options_string = "WITH (" + ["DELIMITER '#{separator}'", "QUOTE '\"'", "FORMAT CSV"].compact.join(', ') + ")"
+      options_string = "WITH (" + [ "DELIMITER ','", "QUOTE '\"'", "FORMAT CSV" ].compact.join(", ") + ")"
 
       raw_connection = ActiveRecord::Base.connection.raw_connection
       raw_connection.copy_data %{COPY "#{raw_data_table_name}" #{columns_string} FROM STDIN #{options_string}} do
-        Grit::Core::LoadSetBlock.records_from_file(self) do |line|
-          raw_connection.put_copy_data(line)
+        Grit::Core::EntityLoader.load_set_block_records_from_file(self) do |line|
+          raw_connection.put_copy_data(line) unless line.nil?
         end
       end
     end
 
     def initialize_raw_data_table
-      update_column(:headers, Grit::Core::LoadSetBlock.columns_from_file(self))
+      update_column(:headers, Grit::Core::EntityLoader.load_set_block_columns_from_file(self))
       create_raw_data_table
       seed_raw_data_table
     end
 
     def create_loading_records_table
       drop_loading_records_table
-      columns = Grit::Core::LoadSetBlock.columns_from_entity(self)
+      columns = Grit::Core::EntityLoader.load_set_block_loading_fields(self)
       ActiveRecord::Base.connection.create_table loading_records_table_name, id: false, if_not_exists: true do |t|
         columns.reject { |column| ["id","created_at","created_by","updated_at","updated_by"].include? column[:name] } .each do |column|
           if column[:type].to_s == "entity" or column[:type].to_s == "integer"
@@ -209,7 +196,7 @@ module Grit::Core
 
     def record_klass
       load_set_block = self
-      fields = Grit::Core::LoadSetBlock.columns_from_entity(self)
+      fields = Grit::Core::EntityLoader.load_set_block_loading_fields(self)
       klass = Class.new(ActiveRecord::Base) do
         self.table_name = load_set_block.loading_records_table_name
         @load_set_block = load_set_block
