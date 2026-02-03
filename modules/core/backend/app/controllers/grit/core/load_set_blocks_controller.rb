@@ -111,9 +111,9 @@ module Grit::Core
     end
 
     def loaded_data_columns
-      load_set = Grit::Core::LoadSetBlock.find(params[:load_set_block_id]).load_set
+      load_set_block = Grit::Core::LoadSetBlock.find(params[:load_set_block_id])
 
-      render json: { success: true, data: Grit::Core::EntityLoader.load_set_loaded_data_columns(load_set) }
+      render json: { success: true, data: Grit::Core::EntityLoader.load_set_block_loaded_data_columns(load_set_block) }
     rescue StandardError => e
       logger.info e.to_s
       logger.info e.backtrace.join("\n")
@@ -121,9 +121,9 @@ module Grit::Core
     end
 
     def entity_info
-      load_set = Grit::Core::LoadSetBlock.find(params[:load_set_block_id]).load_set
+      load_set_block = Grit::Core::LoadSetBlock.find(params[:load_set_block_id])
 
-      render json: { success: true, data: Grit::Core::EntityLoader.load_set_entity_info(load_set) }
+      render json: { success: true, data: Grit::Core::EntityLoader.load_set_block_entity_info(load_set_block) }
     rescue StandardError => e
       logger.info e.to_s
       logger.info e.backtrace.join("\n")

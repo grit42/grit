@@ -76,8 +76,16 @@ module Grit::Core
       loader(load_set.entity).entity_info(load_set)
     end
 
+    def self.load_set_block_entity_info(load_set_block)
+      loader(load_set_block.load_set.entity).block_entity_info(load_set_block)
+    end
+
     def self.load_set_loaded_data_columns(load_set)
       loader(load_set.entity).loaded_data_columns(load_set)
+    end
+
+    def self.load_set_block_loaded_data_columns(load_set_block)
+      loader(load_set_block.load_set.entity).block_loaded_data_columns(load_set_block)
     end
 
     def self.confirm_load_set(load_set)
@@ -169,6 +177,10 @@ module Grit::Core
 
     def self.loaded_data_columns(load_set)
       load_set.entity.constantize.entity_columns(**self.show(load_set).symbolize_keys!)
+    end
+
+    def self.block_loaded_data_columns(load_set_block)
+      load_set_block.load_set.entity.constantize.entity_columns(**load_set_block.as_json.symbolize_keys!)
     end
 
     def self.base_record_props(load_set_block)
@@ -285,18 +297,18 @@ module Grit::Core
     end
 
     def self.confirm_block(load_set_block)
-      entity_klass = load_set_block.load_set.entity.constantize
-      fields = load_set_block.load_set.entity.constantize.entity_fields
+      load_set_entity = block_entity(load_set_block)
+      load_set_entity_properties = block_loading_fields(load_set_block)
 
-      insert = "WITH inserted_records as (INSERT INTO #{entity_klass.table_name}(created_by"
-      fields.each do |column|
+      insert = "WITH inserted_records as (INSERT INTO #{load_set_entity.table_name}(created_by"
+      load_set_entity_properties.each do |column|
         insert += ",#{column[:name]}"
       end
       insert += ") "
 
       load_set_block_record_klass = load_set_block.record_klass
       insert += load_set_block_record_klass.for_confirm.where(record_errors: nil).to_sql
-      insert += " RETURNING id) INSERT INTO grit_core_load_set_block_loaded_records(\"record_id\",\"load_set_block_id\",\"table\") SELECT inserted_records.id,#{load_set_block.id}, '#{entity_klass.table_name}' from inserted_records"
+      insert += " RETURNING id) INSERT INTO grit_core_load_set_block_loaded_records(\"record_id\",\"load_set_block_id\",\"table\") SELECT inserted_records.id,#{load_set_block.id}, '#{load_set_entity.table_name}' from inserted_records"
 
       ActiveRecord::Base.transaction do
         ActiveRecord::Base.connection.execute(insert)
@@ -340,6 +352,17 @@ module Grit::Core
 
     def self.entity_info(load_set)
       model = load_set.entity.constantize
+      {
+        full_name: model.name,
+        name: model.name.demodulize.underscore.humanize,
+        plural: model.name.demodulize.underscore.humanize.pluralize,
+        path: model.name.underscore.pluralize,
+        dictionary: true
+      }
+    end
+
+    def self.block_entity_info(load_set_block)
+      model = load_set_block.load_set.entity.constantize
       {
         full_name: model.name,
         name: model.name.demodulize.underscore.humanize,

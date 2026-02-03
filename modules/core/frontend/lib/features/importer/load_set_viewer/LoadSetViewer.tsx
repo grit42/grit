@@ -155,7 +155,9 @@ const LoadSetViewer = ({ loadSet }: Props) => {
 };
 
 const LoadSetViewerWrapper = ({ loadSet }: Props) => {
-  const { isLoading: isInfoLoading } = useEntity(loadSet.entity);
+  const { isLoading: isInfoLoading } = useLoadSetBlockEntity(
+    loadSet.load_set_blocks[0].id,
+  );
 
   const { isLoading: isColumnsLoading } = useLoadSetBlockLoadedDataColumns(
     loadSet.load_set_blocks[0].id,

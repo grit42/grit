@@ -17,10 +17,10 @@
 #++
 
 module Grit::Assays
-  class ExperimentDataSheetRecordLoadSet < ApplicationRecord
+  class ExperimentDataSheetRecordLoadSetBlock < ApplicationRecord
     include Grit::Core::GritEntityRecord
 
-    belongs_to :load_set, class_name: "Grit::Core::LoadSet"
+    belongs_to :load_set_block, class_name: "Grit::Core::LoadSetBlock"
     belongs_to :assay_data_sheet_definition
 
     entity_crud_with create: [ "Administrator", "AssayAdministrator", "AssayUser" ],
