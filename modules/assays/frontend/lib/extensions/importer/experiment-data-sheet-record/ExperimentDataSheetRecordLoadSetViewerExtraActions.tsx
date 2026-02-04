@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 const ExperimentDataSheetRecordLoadSetViewerExtraActions = ({loadSet}: LoadSetViewerExtraActionsProps) => {
   return (
     <Link
-      to={`/assays/experiments/${loadSet.experiment_id}/sheets/${loadSet.experiment_data_sheet_id}`}
+      to={`/assays/experiments/${loadSet.experiment_id}/sheets/${loadSet.assay_data_sheet_definition_id}`}
     >
       <Button color="secondary">Go to experiment</Button>
     </Link>

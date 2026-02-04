@@ -23,9 +23,7 @@ module Grit::Assays
     belongs_to :assay_data_sheet_definition
     belongs_to :data_type, class_name: "Grit::Core::DataType"
     belongs_to :unit, class_name: "Grit::Core::Unit", optional: true
-    has_many :experiment_data_sheet_values
-
-    before_destroy :delete_dependents
+    has_many :data_table_columns, dependent: :destroy
 
     display_column "name"
 
@@ -34,11 +32,13 @@ module Grit::Assays
       update: [ "Administrator", "AssayAdministrator" ],
       destroy: [ "Administrator", "AssayAdministrator" ]
 
-    validates :name, uniqueness: { scope: :assay_data_sheet_definition_id, message: "has already been taken in this data sheet" }, length: { minimum: 3 }
+    validates :name, uniqueness: { scope: :assay_data_sheet_definition_id, message: "has already been taken in this data sheet" }, length: { minimum: 1 }
     validates :safe_name, uniqueness: { scope: :assay_data_sheet_definition_id, message: "has already been taken in this data sheet" }, length: { minimum: 3, maximum: 30 }
     validates :safe_name, format: { with: /\A[a-z_]{2}/, message: "should start with two lowercase letters or underscores" }
     validates :safe_name, format: { with: /\A[a-z0-9_]*\z/, message: "should contain only lowercase letters, numbers and underscores" }
     validate :safe_name_not_conflict
+
+    before_save :check_model_publication_status
 
     def safe_name_not_conflict
       return unless self.safe_name_changed?
@@ -54,8 +54,9 @@ module Grit::Assays
         .select("grit_assays_assay_models.name as assay_model_id__name")
     end
 
-    def delete_dependents
-      Grit::Assays::ExperimentDataSheetValue.unscoped.where(assay_data_sheet_column_id: self.id).delete_all
-    end
+    private
+      def check_model_publication_status
+        raise "Cannot modify columns of a published Assay Model" if assay_data_sheet_definition.assay_model.publication_status.name === "Published"
+      end
   end
 end

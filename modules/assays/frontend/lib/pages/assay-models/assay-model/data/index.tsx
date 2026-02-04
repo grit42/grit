@@ -22,9 +22,10 @@ import {
   useAssayDataSheetDefinitionFields,
   useAssayDataSheetDefinitions,
 } from "../../../../queries/assay_data_sheet_definitions";
-import DataSheet from "./DataSheet";
 import DataSheetTabs from "./DataSheetTabs";
 import { useAssayDataSheetColumnColumns } from "../../../../queries/assay_data_sheet_columns";
+import DataSheet from "./DataSheet";
+import { useLocalStorage } from "@grit42/client-library/hooks";
 
 const AssayModelDataSheets = () => {
   const { assay_model_id } = useParams() as { assay_model_id: string };
@@ -32,6 +33,8 @@ const AssayModelDataSheets = () => {
   const { data, isLoading, isError, error } = useAssayDataSheetDefinitions(
     assay_model_id,
   );
+
+  const [mf, smf] = useLocalStorage(`assay-model-data-metadata-${assay_model_id}`, {})
 
   const {
     data: fields,
@@ -47,10 +50,10 @@ const AssayModelDataSheets = () => {
 
   return (
     <Routes>
-      <Route element={<DataSheetTabs sheetDefinitions={data} />}>
+      <Route element={<DataSheetTabs sheetDefinitions={data} metadataFilters={mf} setMetadataFilters={smf} />}>
         <Route
           path=":sheet_id/*"
-          element={<DataSheet assayModelId={assay_model_id} />}
+          element={<DataSheet dataSheets={data} metadataFilters={mf} />}
         />
         <Route
           path="*"

@@ -21,11 +21,14 @@ module Grit::Assays
     include Grit::Core::GritEntityRecord
 
     belongs_to :vocabulary, class_name: "Grit::Core::Vocabulary"
-    has_many :assay_model_metadata, dependent: :destroy
+    has_many :experiment_metadata, dependent: :destroy
     has_many :experiment_metadata_template_metadata, dependent: :destroy
+
+    before_destroy :check_experiment_metadata
 
     display_column "name"
 
+    validates :safe_name, uniqueness: true, length: { minimum: 3, maximum: 30 }
     validates :safe_name, format: { with: /\A[a-z_]{2}/, message: "should start with two lowercase letters or underscores" }
     validates :safe_name, format: { with: /\A[a-z0-9_]*\z/, message: "should contain only lowercase letters, numbers and underscores" }
     validate :safe_name_not_conflict
@@ -49,5 +52,12 @@ module Grit::Assays
       create: [ "Administrator", "AssayAdministrator" ],
       update: [ "Administrator", "AssayAdministrator" ],
       destroy: [ "Administrator", "AssayAdministrator" ]
+
+    private
+
+      def check_experiment_metadata
+        used_as_metadata = Grit::Assays::AssayModelMetadatum.unscoped.where(assay_metadata_definition_id: id).count(:all).positive?
+        raise "'#{self.name}' is required in at least one assay model" if used_as_metadata
+      end
   end
 end

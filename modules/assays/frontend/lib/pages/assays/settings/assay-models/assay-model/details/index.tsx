@@ -19,7 +19,16 @@ import {
   getVisibleFieldData,
   useForm,
 } from "@grit42/form";
-import { useQueryClient } from "@grit42/api";
+import {
+  EndpointError,
+  EndpointErrorErrors,
+  EndpointSuccess,
+  notifyOnError,
+  request,
+  useMutation,
+  UseMutationOptions,
+  useQueryClient,
+} from "@grit42/api";
 import {
   useCreateEntityMutation,
   useEditEntityMutation,
@@ -28,8 +37,263 @@ import {
 import { useState } from "react";
 import styles from "../../assayModels.module.scss";
 
+export const usePublishAssayModelMutation = (
+  id: string | number,
+  mutationOptions: UseMutationOptions<
+    AssayModelData,
+    EndpointErrorErrors<AssayModelData>
+  > = {},
+) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ["publishAssayModel", id.toString()],
+    mutationFn: async () => {
+      const response = await request<
+        EndpointSuccess<AssayModelData>,
+        EndpointError<EndpointErrorErrors<AssayModelData>>
+      >(`grit/assays/assay_models/${id}/publish`, {
+        method: "POST",
+      });
+      if (!response.success) {
+        throw response.errors;
+      }
+
+      return response.data;
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: [
+            "entities",
+            "datum",
+            "grit/assays/assay_models",
+            id.toString(),
+          ],
+          refetchType: "all",
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["entities", "data", "grit/assays/assay_models"],
+          refetchType: "all",
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["entities", "infiniteData", "grit/assays/assay_models"],
+          refetchType: "all",
+        }),
+      ]);
+    },
+    onError: notifyOnError,
+    ...mutationOptions,
+  });
+};
+
+export const useDraftAssayModelMutation = (
+  id: string | number,
+  mutationOptions: UseMutationOptions<
+    AssayModelData,
+    EndpointErrorErrors<AssayModelData>
+  > = {},
+) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ["draftAssayModel", id.toString()],
+    mutationFn: async () => {
+      const response = await request<
+        EndpointSuccess<AssayModelData>,
+        EndpointError<EndpointErrorErrors<AssayModelData>>
+      >(`grit/assays/assay_models/${id}/draft`, {
+        method: "POST",
+      });
+      if (!response.success) {
+        throw response.errors;
+      }
+
+      return response.data;
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: [
+            "entities",
+            "datum",
+            "grit/assays/assay_models",
+            id.toString(),
+          ],
+          refetchType: "all",
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["entities", "data", "grit/assays/assay_models"],
+          refetchType: "all",
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["entities", "infiniteData", "grit/assays/assay_models"],
+          refetchType: "all",
+        }),
+      ]);
+    },
+    onError: notifyOnError,
+    ...mutationOptions,
+  });
+};
+
+const AssayModelActions = ({
+  assayModel,
+}: {
+  assayModel: Partial<AssayModelData>;
+}) => {
+  const navigate = useNavigate();
+  const destroyEntityMutation = useDestroyEntityMutation(
+    "grit/assays/assay_models",
+  );
+
+  const publishMutation = usePublishAssayModelMutation(assayModel.id!);
+  const draftMutation = useDraftAssayModelMutation(assayModel.id!);
+
+  const onDelete = async () => {
+    if (
+      !assayModel.id ||
+      !window.confirm(
+        `Are you sure you want to delete this assay model? This action is irreversible`,
+      )
+    )
+      return;
+    await destroyEntityMutation.mutateAsync(assayModel.id);
+    navigate("../..");
+  };
+
+  const onPublish = async () => {
+    if (!assayModel.id) {
+      return;
+    }
+    await publishMutation.mutateAsync();
+  };
+
+  const onDraft = async () => {
+    if (
+      !assayModel.id ||
+      !window.confirm(
+        `Are you sure you want to convert this Assay Model to draft? All related experiments and existing data will be permanently deleted. This action is irreversible.`,
+      )
+    ) {
+      return;
+    }
+    await draftMutation.mutateAsync();
+  };
+
+  if (!assayModel.id) {
+    return null;
+  }
+
+  return (
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "1fr",
+      }}
+    >
+      {assayModel.publication_status_id__name === "Draft" && (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: "var(--spacing)",
+            marginBlock: "calc(var(--spacing)*4)",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "var(--spacing)",
+            }}
+          >
+            <h3>Publish this Assay Model</h3>
+            <p>
+              Publishing this Assay Model will make it available for creating
+              Experiments and for use in Data Tables.
+            </p>
+          </div>
+          <Button
+            color="secondary"
+            onClick={onPublish}
+            loading={publishMutation.isPending}
+          >
+            Publish
+          </Button>
+        </div>
+      )}
+      {assayModel.publication_status_id__name === "Published" && (
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr max-content",
+            alignItems: "center",
+            gap: "var(--spacing)",
+            marginBlock: "calc(var(--spacing)*4)",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "var(--spacing)",
+              width: "80ch",
+            }}
+          >
+            <h3>Convert this Assay Model to Draft</h3>
+            <p>
+              Converting this Assay Model to draft will allow you to make
+              changes to its Metadata and Data Sheets. However, all related
+              experiments and existing data will be permanently deleted.{" "}
+              <b>This data cannot be recovered.</b>
+            </p>
+          </div>
+          <Button
+            color="danger"
+            onClick={onDraft}
+            loading={draftMutation.isPending}
+          >
+            Convert to Draft
+          </Button>
+        </div>
+      )}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr max-content",
+          alignItems: "center",
+          gap: "var(--spacing)",
+          marginBlock: "calc(var(--spacing)*4)",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "var(--spacing)",
+            width: "80ch",
+          }}
+        >
+          <h3>Delete this Assay Model</h3>
+          <p>
+            Deleting this Assay Model will permanently remove all related
+            experiments and existing data. <b>This action is irreversible.</b>
+          </p>
+        </div>
+        <Button
+          color="danger"
+          onClick={onDelete}
+          loading={destroyEntityMutation.isPending}
+        >
+          Delete
+        </Button>
+      </div>
+    </div>
+  );
+};
+
 const AssayModelForm = ({
-  fields,
+  fields: fieldsFromProps,
   assayModel,
 }: {
   fields: FormFieldDef[];
@@ -48,9 +312,10 @@ const AssayModelForm = ({
     assayModel.id ?? -1,
   );
 
-  const destroyEntityMutation = useDestroyEntityMutation(
-    "grit/assays/assay_models",
-  );
+  const fields = fieldsFromProps.map((f) => ({
+    ...f,
+    disabled: assayModel.publication_status_id__name === "Published",
+  }));
 
   const form = useForm<Partial<AssayModelData>>({
     defaultValues: formData,
@@ -86,18 +351,6 @@ const AssayModelForm = ({
       }
     }),
   });
-
-  const onDelete = async () => {
-    if (
-      !assayModel.id ||
-      !window.confirm(
-        `Are you sure you want to delete this assay type? This action is irreversible`,
-      )
-    )
-      return;
-    await destroyEntityMutation.mutateAsync(assayModel.id);
-    navigate("../..");
-  };
 
   return (
     <div className={styles.model}>
@@ -170,20 +423,12 @@ const AssayModelForm = ({
                       <Button>Clone</Button>
                     </Link>
                   )}
-                  {!!assayModel.id && (
-                    <Button
-                      color="danger"
-                      onClick={onDelete}
-                      loading={destroyEntityMutation.isPending}
-                    >
-                      Delete
-                    </Button>
-                  )}
                 </ButtonGroup>
               );
             }}
           />
         </Form>
+        {assayModel.id && <AssayModelActions assayModel={assayModel} />}
       </Surface>
     </div>
   );
@@ -197,7 +442,10 @@ const Details = () => {
     isLoading: isAssayModelFieldsLoading,
     isError: isAssayModelFieldsError,
     error: assayModelFieldsError,
-  } = useAssayModelFields();
+  } = useAssayModelFields(undefined, {
+    select: (data) =>
+      data.filter(({ name }) => name !== "publication_status_id"),
+  });
 
   const { data, isLoading, isError, error } = useAssayModel(assay_model_id);
 

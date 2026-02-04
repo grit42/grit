@@ -65,5 +65,11 @@ module Grit::Core
       model_scope = model_scope.where(vocabulary_id: self.meta["vocabulary_id"]) if model == Grit::Core::VocabularyItem
       model_scope
     end
+
+    def sql_name
+      raise "no sql name for entity types" if is_entity
+      return "bigint" if name == "integer"
+      name
+    end
   end
 end

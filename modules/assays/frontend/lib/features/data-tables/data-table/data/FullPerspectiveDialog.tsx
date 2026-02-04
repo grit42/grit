@@ -130,7 +130,7 @@ const FullPerspectiveDialog = ({
           data={rows ?? []}
           onRowClick={(row) =>
             navigate(
-              `/assays/experiments/${row.original.experiment_id}/sheets/${row.original.experiment_data_sheet_id}`,
+              `/assays/experiments/${row.original.experiment_id}/sheets/${row.original.assay_data_sheet_definition_id}`,
             )
           }
         />

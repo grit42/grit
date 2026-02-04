@@ -1,4 +1,4 @@
-\restrict QOY6I62lGRLQ4aCQOV3EyiXHNbaFpP9xltHUjtpN9nsJQYBy9F322rPLvNQJk76
+\restrict ZmF7UacjxW3NX2fPLPnInaaf5y6k4DGw6SlCr7hDveHaahzV05l0eEbjOZQwTnT
 
 -- Dumped from database version 16.3 (Debian 16.3-1.pgdg120+1)
 -- Dumped by pg_dump version 16.11
@@ -331,7 +331,7 @@ CREATE TABLE public.grit_assays_assay_models (
     name character varying NOT NULL,
     description text,
     assay_type_id bigint NOT NULL,
-    publication_status_id bigint DEFAULT 10000 NOT NULL
+    publication_status_id bigint NOT NULL
 );
 
 
@@ -418,60 +418,6 @@ CREATE TABLE public.grit_assays_experiment_data_sheet_record_load_sets (
     updated_at timestamp(6) without time zone,
     load_set_id bigint NOT NULL,
     experiment_id bigint NOT NULL,
-    experiment_data_sheet_id bigint NOT NULL
-);
-
-
---
--- Name: grit_assays_experiment_data_sheet_records; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.grit_assays_experiment_data_sheet_records (
-    id bigint DEFAULT nextval('public.grit_seq'::regclass) NOT NULL,
-    created_by character varying(30) DEFAULT 'SYSTEM'::character varying NOT NULL,
-    created_at timestamp(6) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_by character varying(30),
-    updated_at timestamp(6) without time zone,
-    experiment_data_sheet_id bigint NOT NULL
-);
-
-
---
--- Name: grit_assays_experiment_data_sheet_values; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.grit_assays_experiment_data_sheet_values (
-    id bigint DEFAULT nextval('public.grit_seq'::regclass) NOT NULL,
-    created_by character varying(30) DEFAULT 'SYSTEM'::character varying NOT NULL,
-    created_at timestamp(6) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_by character varying(30),
-    updated_at timestamp(6) without time zone,
-    numeric_sign character varying,
-    string_value character varying,
-    integer_value integer,
-    decimal_value numeric,
-    float_value double precision,
-    text_value text,
-    datetime_value timestamp(6) without time zone DEFAULT NULL::timestamp without time zone,
-    date_value date,
-    boolean_value boolean,
-    entity_id_value bigint,
-    experiment_data_sheet_record_id bigint NOT NULL,
-    assay_data_sheet_column_id bigint NOT NULL
-);
-
-
---
--- Name: grit_assays_experiment_data_sheets; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.grit_assays_experiment_data_sheets (
-    id bigint DEFAULT nextval('public.grit_seq'::regclass) NOT NULL,
-    created_by character varying(30) DEFAULT 'SYSTEM'::character varying NOT NULL,
-    created_at timestamp(6) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_by character varying(30),
-    updated_at timestamp(6) without time zone,
-    experiment_id bigint NOT NULL,
     assay_data_sheet_definition_id bigint NOT NULL
 );
 
@@ -539,7 +485,7 @@ CREATE TABLE public.grit_assays_experiments (
     description text,
     plots json DEFAULT '{}'::json,
     assay_model_id bigint NOT NULL,
-    publication_status_id bigint DEFAULT 10000 NOT NULL
+    publication_status_id bigint NOT NULL
 );
 
 
@@ -958,30 +904,6 @@ ALTER TABLE ONLY public.grit_assays_experiment_data_sheet_record_load_sets
 
 
 --
--- Name: grit_assays_experiment_data_sheet_records grit_assays_experiment_data_sheet_records_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.grit_assays_experiment_data_sheet_records
-    ADD CONSTRAINT grit_assays_experiment_data_sheet_records_pkey PRIMARY KEY (id);
-
-
---
--- Name: grit_assays_experiment_data_sheet_values grit_assays_experiment_data_sheet_values_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.grit_assays_experiment_data_sheet_values
-    ADD CONSTRAINT grit_assays_experiment_data_sheet_values_pkey PRIMARY KEY (id);
-
-
---
--- Name: grit_assays_experiment_data_sheets grit_assays_experiment_data_sheets_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.grit_assays_experiment_data_sheets
-    ADD CONSTRAINT grit_assays_experiment_data_sheets_pkey PRIMARY KEY (id);
-
-
---
 -- Name: grit_assays_experiment_metadata grit_assays_experiment_metadata_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1187,13 +1109,6 @@ CREATE UNIQUE INDEX idx_locations_on_name_unique ON public.grit_core_locations U
 
 
 --
--- Name: idx_on_assay_data_sheet_column_id_afe0d153c1; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_on_assay_data_sheet_column_id_afe0d153c1 ON public.grit_assays_experiment_data_sheet_values USING btree (assay_data_sheet_column_id);
-
-
---
 -- Name: idx_on_assay_data_sheet_column_id_c4cb5d8972; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1201,17 +1116,17 @@ CREATE INDEX idx_on_assay_data_sheet_column_id_c4cb5d8972 ON public.grit_assays_
 
 
 --
+-- Name: idx_on_assay_data_sheet_definition_id_0b215fd500; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_on_assay_data_sheet_definition_id_0b215fd500 ON public.grit_assays_experiment_data_sheet_record_load_sets USING btree (assay_data_sheet_definition_id);
+
+
+--
 -- Name: idx_on_assay_data_sheet_definition_id_438432fccb; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_on_assay_data_sheet_definition_id_438432fccb ON public.grit_assays_assay_data_sheet_columns USING btree (assay_data_sheet_definition_id);
-
-
---
--- Name: idx_on_assay_data_sheet_definition_id_7fcda1e0ab; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_on_assay_data_sheet_definition_id_7fcda1e0ab ON public.grit_assays_experiment_data_sheets USING btree (assay_data_sheet_definition_id);
 
 
 --
@@ -1240,27 +1155,6 @@ CREATE INDEX idx_on_assay_metadata_definition_id_b0d816b3b9 ON public.grit_assay
 --
 
 CREATE INDEX idx_on_assay_model_id_2bc4030155 ON public.grit_assays_assay_data_sheet_definitions USING btree (assay_model_id);
-
-
---
--- Name: idx_on_experiment_data_sheet_id_5828138a9c; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_on_experiment_data_sheet_id_5828138a9c ON public.grit_assays_experiment_data_sheet_records USING btree (experiment_data_sheet_id);
-
-
---
--- Name: idx_on_experiment_data_sheet_id_b0765600c6; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_on_experiment_data_sheet_id_b0765600c6 ON public.grit_assays_experiment_data_sheet_record_load_sets USING btree (experiment_data_sheet_id);
-
-
---
--- Name: idx_on_experiment_data_sheet_record_id_fc7b9eceab; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_on_experiment_data_sheet_record_id_fc7b9eceab ON public.grit_assays_experiment_data_sheet_values USING btree (experiment_data_sheet_record_id);
 
 
 --
@@ -1443,13 +1337,6 @@ CREATE INDEX index_grit_assays_data_tables_on_entity_data_type_id ON public.grit
 --
 
 CREATE UNIQUE INDEX index_grit_assays_data_tables_on_name ON public.grit_assays_data_tables USING btree (name);
-
-
---
--- Name: index_grit_assays_experiment_data_sheets_on_experiment_id; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX index_grit_assays_experiment_data_sheets_on_experiment_id ON public.grit_assays_experiment_data_sheets USING btree (experiment_id);
 
 
 --
@@ -1663,13 +1550,6 @@ CREATE UNIQUE INDEX uniq_assay_model_metadata_definition_per_assay_model ON publ
 
 
 --
--- Name: uniq_data_sheet_definition_per_experiment; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE UNIQUE INDEX uniq_data_sheet_definition_per_experiment ON public.grit_assays_experiment_data_sheets USING btree (assay_data_sheet_definition_id, experiment_id);
-
-
---
 -- Name: uniq_metadata_definition_per_experiment; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1758,27 +1638,6 @@ CREATE TRIGGER manage_stamps_grit_assays_data_tables BEFORE INSERT OR UPDATE ON 
 --
 
 CREATE TRIGGER manage_stamps_grit_assays_experiment_data_sheet_record_load_set BEFORE INSERT OR UPDATE ON public.grit_assays_experiment_data_sheet_record_load_sets FOR EACH ROW EXECUTE FUNCTION public.manage_stamps();
-
-
---
--- Name: grit_assays_experiment_data_sheet_records manage_stamps_grit_assays_experiment_data_sheet_records; Type: TRIGGER; Schema: public; Owner: -
---
-
-CREATE TRIGGER manage_stamps_grit_assays_experiment_data_sheet_records BEFORE INSERT OR UPDATE ON public.grit_assays_experiment_data_sheet_records FOR EACH ROW EXECUTE FUNCTION public.manage_stamps();
-
-
---
--- Name: grit_assays_experiment_data_sheet_values manage_stamps_grit_assays_experiment_data_sheet_values; Type: TRIGGER; Schema: public; Owner: -
---
-
-CREATE TRIGGER manage_stamps_grit_assays_experiment_data_sheet_values BEFORE INSERT OR UPDATE ON public.grit_assays_experiment_data_sheet_values FOR EACH ROW EXECUTE FUNCTION public.manage_stamps();
-
-
---
--- Name: grit_assays_experiment_data_sheets manage_stamps_grit_assays_experiment_data_sheets; Type: TRIGGER; Schema: public; Owner: -
---
-
-CREATE TRIGGER manage_stamps_grit_assays_experiment_data_sheets BEFORE INSERT OR UPDATE ON public.grit_assays_experiment_data_sheets FOR EACH ROW EXECUTE FUNCTION public.manage_stamps();
 
 
 --
@@ -2033,46 +1892,6 @@ ALTER TABLE ONLY public.grit_assays_experiment_data_sheet_record_load_sets
 
 
 --
--- Name: grit_assays_experiment_data_sheet_records assays_experiment_data_sheet_records_assays_experiment_data_she; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.grit_assays_experiment_data_sheet_records
-    ADD CONSTRAINT assays_experiment_data_sheet_records_assays_experiment_data_she FOREIGN KEY (experiment_data_sheet_id) REFERENCES public.grit_assays_experiment_data_sheets(id);
-
-
---
--- Name: grit_assays_experiment_data_sheet_values assays_experiment_data_sheet_values_assays_assay_data_sheet_col; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.grit_assays_experiment_data_sheet_values
-    ADD CONSTRAINT assays_experiment_data_sheet_values_assays_assay_data_sheet_col FOREIGN KEY (assay_data_sheet_column_id) REFERENCES public.grit_assays_assay_data_sheet_columns(id);
-
-
---
--- Name: grit_assays_experiment_data_sheet_values assays_experiment_data_sheet_values_assays_experiment_data_shee; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.grit_assays_experiment_data_sheet_values
-    ADD CONSTRAINT assays_experiment_data_sheet_values_assays_experiment_data_shee FOREIGN KEY (experiment_data_sheet_record_id) REFERENCES public.grit_assays_experiment_data_sheet_records(id);
-
-
---
--- Name: grit_assays_experiment_data_sheets assays_experiment_data_sheets_assays_assay_data_sheet_definitio; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.grit_assays_experiment_data_sheets
-    ADD CONSTRAINT assays_experiment_data_sheets_assays_assay_data_sheet_definitio FOREIGN KEY (assay_data_sheet_definition_id) REFERENCES public.grit_assays_assay_data_sheet_definitions(id);
-
-
---
--- Name: grit_assays_experiment_data_sheets assays_experiment_data_sheets_assays_experiment_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.grit_assays_experiment_data_sheets
-    ADD CONSTRAINT assays_experiment_data_sheets_assays_experiment_id_fkey FOREIGN KEY (experiment_id) REFERENCES public.grit_assays_experiments(id);
-
-
---
 -- Name: grit_assays_experiment_metadata assays_experiment_metadata_assays_assay_metadata_definition_id_; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2237,7 +2056,7 @@ ALTER TABLE ONLY public.grit_core_vocabulary_items
 --
 
 ALTER TABLE ONLY public.grit_assays_experiment_data_sheet_record_load_sets
-    ADD CONSTRAINT data_sheet_record_load_sets_data_sheet_id_fkey FOREIGN KEY (experiment_data_sheet_id) REFERENCES public.grit_assays_experiment_data_sheets(id);
+    ADD CONSTRAINT data_sheet_record_load_sets_data_sheet_id_fkey FOREIGN KEY (assay_data_sheet_definition_id) REFERENCES public.grit_assays_assay_data_sheet_definitions(id);
 
 
 --
@@ -2300,7 +2119,7 @@ ALTER TABLE ONLY public.grit_assays_assay_models
 -- PostgreSQL database dump complete
 --
 
-\unrestrict QOY6I62lGRLQ4aCQOV3EyiXHNbaFpP9xltHUjtpN9nsJQYBy9F322rPLvNQJk76
+\unrestrict ZmF7UacjxW3NX2fPLPnInaaf5y6k4DGw6SlCr7hDveHaahzV05l0eEbjOZQwTnT
 
 SET search_path TO "$user", public;
 
@@ -2334,9 +2153,6 @@ INSERT INTO "schema_migrations" (version) VALUES
 ('20250408051559'),
 ('20250408050849'),
 ('20250405081044'),
-('20250402122044'),
-('20250402115821'),
-('20250402095542'),
 ('20250402092852'),
 ('20250331113610'),
 ('20250331112438'),

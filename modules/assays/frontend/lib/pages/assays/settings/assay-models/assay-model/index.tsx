@@ -57,7 +57,13 @@ const TABS = [
   },
 ];
 
-const AssayModelTabs = ({ name }: { name: string }) => {
+const AssayModelTabs = ({
+  name,
+  publication_status_id__name,
+}: {
+  name: string;
+  publication_status_id__name: string;
+}) => {
   const navigate = useNavigate();
   const match = useMatch(
     "/assays/assay-models/settings/assay-models/:assay_model_id/:tab/*",
@@ -81,21 +87,29 @@ const AssayModelTabs = ({ name }: { name: string }) => {
     <div
       style={{
         display: "grid",
-        gridTemplateRows: tab === "data-sheet-loader" ? "min-content 1fr" : "min-content min-content 1fr",
+        gridTemplateRows:
+          tab === "data-sheet-loader"
+            ? "min-content 1fr"
+            : "min-content min-content 1fr",
         height: "100%",
         alignSelf: "stretch",
       }}
     >
-      <h2 style={{ alignSelf: "baseline", marginBottom: ".5em" }}>{name}</h2>
-      {tab !== "data-sheet-loader" && <Tabs
-        onTabChange={handleTabChange}
-        selectedTab={selectedTab}
-        tabs={TABS.map((t) => ({
-          key: t.url,
-          name: t.label,
-          panel: <></>,
-        }))}
-      />}
+      <div style={{ alignSelf: "baseline", marginBottom: ".5em", display: "flex", alignItems: "baseline", gap: "var(--spacing)" }}>
+        <h2>{name}</h2>
+        <em>{publication_status_id__name}</em>
+      </div>
+      {tab !== "data-sheet-loader" && (
+        <Tabs
+          onTabChange={handleTabChange}
+          selectedTab={selectedTab}
+          tabs={TABS.map((t) => ({
+            key: t.url,
+            name: t.label,
+            panel: <></>,
+          }))}
+        />
+      )}
       <Outlet />
     </div>
   );
@@ -122,14 +136,16 @@ const AssayModel = () => {
 
   return (
     <Routes>
-      <Route element={<AssayModelTabs name={data.name} />}>
+      <Route element={<AssayModelTabs name={data.name} publication_status_id__name={data.publication_status_id__name} />}>
         {TABS.map(({ url, Tab }) => (
           <Route key={url} path={`${url}/*`} element={<Tab />} />
         ))}
-        <Route
-          path="data-sheet-loader/*"
-          element={<DataSheetLoader assayModel={data} />}
-        />
+        {data.publication_status_id__name !== "Published" && (
+          <Route
+            path="data-sheet-loader/*"
+            element={<DataSheetLoader assayModel={data} />}
+          />
+        )}
         <Route path="*" element={<Navigate to={TABS[0].url} replace />} />
       </Route>
     </Routes>

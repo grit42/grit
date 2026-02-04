@@ -53,21 +53,22 @@ const ExperimentDataSheetRecordForm = ({
   fields: FormFieldDef[];
   experimentDataSheetRecord: Partial<ExperimentDataSheetRecordData>;
 }) => {
+  const { experiment_id } = useParams() as { experiment_id: string };
   const navigate = useNavigate();
 
   const createEntityMutation =
     useCreateEntityMutation<ExperimentDataSheetRecordData>(
-      "grit/assays/experiment_data_sheet_records",
+    `grit/assays/assay_data_sheet_definitions/${experimentDataSheetId}/experiment_data_sheet_records`,
     );
 
   const editEntityMutation =
     useEditEntityMutation<ExperimentDataSheetRecordData>(
-      "grit/assays/experiment_data_sheet_records",
+    `grit/assays/assay_data_sheet_definitions/${experimentDataSheetId}/experiment_data_sheet_records`,
       experimentDataSheetRecord.id ?? -1,
     );
 
   const destroyEntityMutation = useDestroyEntityMutation(
-    "grit/assays/experiment_data_sheet_records",
+    `grit/assays/assay_data_sheet_definitions/${experimentDataSheetId}/experiment_data_sheet_records`,
   );
 
   const form = useForm<Partial<ExperimentDataSheetRecordData>>({
@@ -78,7 +79,8 @@ const ExperimentDataSheetRecordForm = ({
           formValue,
           fields,
         ),
-        experiment_data_sheet_id: experimentDataSheetId,
+        experiment_id,
+        data_sheet_id: experimentDataSheetId,
       };
       if (!experimentDataSheetRecord.id) {
         await createEntityMutation.mutateAsync(

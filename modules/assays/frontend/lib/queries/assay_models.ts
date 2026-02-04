@@ -25,9 +25,15 @@ import {
   useEntityFields,
   useInfiniteEntityData,
 } from "@grit42/core";
-import { UseQueryOptions, URLParams, UndefinedInitialDataInfiniteOptions, PaginatedEndpointSuccess } from "@grit42/api";
+import {
+  UseQueryOptions,
+  URLParams,
+  UndefinedInitialDataInfiniteOptions,
+  PaginatedEndpointSuccess,
+} from "@grit42/api";
 import { Filter, SortingState } from "@grit42/table";
 import { FormFieldDef } from "@grit42/form";
+import { AssayDataSheetRecordData } from "./experiment_data_sheet_records";
 
 export const useAssayModelColumns = (
   params: Record<string, any> = {},
@@ -75,7 +81,6 @@ export const useAssayModels = (
   );
 };
 
-
 export const usePublishedAssayModels = (
   sort?: SortingState,
   filter?: Filter[],
@@ -86,36 +91,61 @@ export const usePublishedAssayModels = (
     "grit/assays/assay_models",
     sort,
     filter,
-    {...params, scope: "published" },
+    { ...params, scope: "published" },
     queryOptions,
   );
 };
-
 
 export const useInfinitePublishedAssayModels = (
   sort?: SortingState,
   filter?: Filter[],
   params: URLParams = {},
-  queryOptions: Partial<UndefinedInitialDataInfiniteOptions<PaginatedEndpointSuccess<AssayModelData[]>, string>> = {},
+  queryOptions: Partial<
+    UndefinedInitialDataInfiniteOptions<
+      PaginatedEndpointSuccess<AssayModelData[]>,
+      string
+    >
+  > = {},
 ) => {
   return useInfiniteEntityData<AssayModelData>(
     "grit/assays/assay_models",
     sort,
     filter,
-    {...params, scope: "published" },
+    { ...params, scope: "published" },
     queryOptions,
   );
 };
 
 export const useAssayModel = (
-  vocabularyId: string | number,
+  assayModelId: string | number,
   params: URLParams = {},
   queryOptions: Partial<UseQueryOptions<AssayModelData | null, string>> = {},
 ) => {
   return useEntityDatum<AssayModelData>(
     "grit/assays/assay_models",
-    vocabularyId,
+    assayModelId.toString(),
     params,
+    queryOptions,
+  );
+};
+
+export const useInfiniteAssayModelDataSheetRecords = (
+  assay_data_sheet_definition_id: number | string,
+  sort?: SortingState,
+  filter?: Filter[],
+  params: URLParams = {},
+  queryOptions: Partial<
+    UndefinedInitialDataInfiniteOptions<
+      PaginatedEndpointSuccess<AssayDataSheetRecordData[]>,
+      string
+    >
+  > = {},
+) => {
+  return useInfiniteEntityData<AssayDataSheetRecordData>(
+    `grit/assays/assay_data_sheet_definitions/${assay_data_sheet_definition_id}/experiment_data_sheet_records`,
+    sort ?? [],
+    filter ?? [],
+    { scope: "by_assay_data_sheet_definition", ...params },
     queryOptions,
   );
 };

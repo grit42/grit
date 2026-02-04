@@ -17,12 +17,11 @@ Grit::Assays::Engine.routes.draw do
     resources :data_table_entities
     resources :data_table_columns
   end
-  resources :experiment_data_sheet_values
-  resources :experiment_data_sheet_records
-  resources :experiment_data_sheets
 
   resources :experiments do
     get :export
+    post :publish
+    post :draft
   end
 
   resources :assay_data_sheet_columns
@@ -30,11 +29,14 @@ Grit::Assays::Engine.routes.draw do
     collection do
       post :create_bulk
     end
+    resources :experiment_data_sheet_records
   end
   resources :assay_metadata_definitions
   resources :assay_model_metadata
   resources :assay_models do
     post :update_metadata
+    post :publish
+    post :draft
   end
   resources :assay_types
 end

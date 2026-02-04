@@ -64,7 +64,7 @@ module Grit::Core
     end
 
     def destroy
-      id = params[:id]
+      id = params[:ids]
 
       load_set = Grit::Core::LoadSet.find(id)
 
@@ -120,11 +120,21 @@ module Grit::Core
       render json: { success: false, errors: e.to_s }, status: :internal_server_error
     end
 
+    def entity_info
+      load_set = Grit::Core::LoadSet.find(params[:load_set_id])
+
+      render json: { success: true, data: Grit::Core::EntityLoader.load_set_entity_info(load_set) }
+    rescue StandardError => e
+      logger.info e.to_s
+      logger.info e.backtrace.join("\n")
+      render json: { success: false, errors: e.to_s }, status: :internal_server_error
+    end
+
     def preview_data
       load_set = Grit::Core::LoadSet.find(params[:load_set_id])
 
       headers = load_set.parsed_data[0]
-      data = load_set.parsed_data[1..]
+      data = load_set.parsed_data[1..100] # TODO FIX
 
       render json: { success: true, data: { headers: headers, data: data } }
     rescue StandardError => e
@@ -217,9 +227,7 @@ module Grit::Core
 
           load_set_entity = load_set.entity.constantize
 
-          load_set_entity.destroy_by("id IN (SELECT record_id FROM grit_core_load_set_loaded_records WHERE grit_core_load_set_loaded_records.load_set_id = #{load_set.id})")
-          Grit::Core::LoadSetLoadedRecord.destroy_by(load_set_id: load_set.id)
-          Grit::Core::LoadSetLoadingRecord.destroy_by(load_set_id: load_set.id)
+          Grit::Core::EntityLoader.rollback_load_set(load_set)
 
           load_set.status_id = Grit::Core::LoadSetStatus.find_by_name("Mapping").id
           load_set.record_warnings = nil

@@ -21,7 +21,7 @@ const ExperimentPlotTabs = ({ experiment }: Props) => {
     "Administrator",
     "AssayAdministrator",
     "AssayUser",
-  ]);
+  ]) && experiment.publication_status_id__name !== "Published";
   const navigate = useNavigate();
   const { plot_id } = useParams() as { plot_id: string };
 
@@ -76,6 +76,12 @@ const ExperimentPlots = ({ experiment }: Props) => {
   if (!experiment.data_sheets.length) {
     return (
       <ErrorPage error="The assay model does not define data sheets, plots cannot be added." />
+    );
+  }
+
+  if (experiment.publication_status_id__name === "Published" && Object.keys(experiment.plots).length === 0) {
+    return (
+      <ErrorPage error="This experiment has no plots." />
     );
   }
 

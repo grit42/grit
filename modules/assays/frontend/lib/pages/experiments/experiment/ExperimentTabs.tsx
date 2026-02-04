@@ -33,12 +33,10 @@ const ExperimentTabs = ({ experiment }: { experiment: ExperimentData }) => {
   const tabs = useMemo(
     () => [
       { url: "details", label: "Details" },
-      ...(experiment.data_sheets ?? []).map(
-        ({ id, assay_data_sheet_definition_id__name }) => ({
-          url: `sheets/${id.toString()}`,
-          label: assay_data_sheet_definition_id__name,
-        }),
-      ),
+      ...(experiment.data_sheets ?? []).map(({ id, name }) => ({
+        url: `sheets/${id.toString()}`,
+        label: name,
+      })),
       { url: "plots", label: "Plots" },
       { url: "load-sets", label: "Load sets" },
     ],
@@ -65,7 +63,10 @@ const ExperimentTabs = ({ experiment }: { experiment: ExperimentData }) => {
 
   return (
     <div className={styles.container}>
-      <h2 className={styles.title}>{experiment.name}</h2>
+      <div className={styles.nameAndStatus}>
+        <h2>{experiment.name}</h2>
+        <em>{experiment.publication_status_id__name}</em>
+      </div>
       <Tabs
         onTabChange={handleTabChange}
         selectedTab={selectedTab}

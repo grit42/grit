@@ -42,6 +42,10 @@ import {
 import styles from "../../assayModels.module.scss";
 import DataSheetColumns from "./data-sheet-columns";
 import z from "zod";
+import {
+  AssayModelData,
+  useAssayModel,
+} from "../../../../../../queries/assay_models";
 
 const AssayDataSheetDefinitionForm = ({
   fields,
@@ -55,6 +59,8 @@ const AssayDataSheetDefinitionForm = ({
   onDeleteRedirectId: string;
 }) => {
   const { assay_model_id } = useParams() as { assay_model_id: string };
+  const { data: assayModel } = useAssayModel(assay_model_id);
+
   const navigate = useNavigate();
 
   const validators = useMemo(
@@ -137,7 +143,11 @@ const AssayDataSheetDefinitionForm = ({
           {fields.map((f) => (
             <FormField
               form={form}
-              fieldDef={f}
+              fieldDef={{
+                ...f,
+                disabled:
+                  assayModel?.publication_status_id__name === "Published",
+              }}
               key={f.name}
               validators={{
                 onChange: validators[f.name as "name"],
@@ -168,25 +178,25 @@ const AssayDataSheetDefinitionForm = ({
                 {isDirty && (
                   <Button onClick={() => form.reset()}>Revert changes</Button>
                 )}
-                {/* {!isDirty && (
-                  <Button onClick={() => navigate("..")}>Back</Button>
-                )} */}
-                {!isDirty && (
-                  <Link
-                    to={{
-                      pathname: "clone",
-                    }}
+                {!isDirty &&
+                  assayModel?.publication_status_id__name !== "Published" && (
+                    <Link
+                      to={{
+                        pathname: "clone",
+                      }}
+                    >
+                      <Button>Clone</Button>
+                    </Link>
+                  )}
+                {assayModel?.publication_status_id__name !== "Published" && (
+                  <Button
+                    color="danger"
+                    onClick={onDelete}
+                    loading={destroyEntityMutation.isPending}
                   >
-                    <Button>Clone</Button>
-                  </Link>
+                    Delete
+                  </Button>
                 )}
-                <Button
-                  color="danger"
-                  onClick={onDelete}
-                  loading={destroyEntityMutation.isPending}
-                >
-                  Delete
-                </Button>
               </ButtonGroup>
             );
           }}
@@ -196,7 +206,13 @@ const AssayDataSheetDefinitionForm = ({
   );
 };
 
-const EditDataSheet = ({ assayModelId }: { assayModelId: string }) => {
+const EditDataSheet = ({
+  assayModelId,
+  assayModel,
+}: {
+  assayModelId: string;
+  assayModel: AssayModelData;
+}) => {
   const { sheet_id } = useParams() as { sheet_id: string | undefined };
 
   const { data, isLoading, isError, error } =
@@ -246,7 +262,7 @@ const EditDataSheet = ({ assayModelId }: { assayModelId: string }) => {
         onDeleteRedirectId={deleteRedirectId}
         sheets={otherSheetDefinitions ?? []}
       />
-      <DataSheetColumns />
+      <DataSheetColumns assayModel={assayModel} />
     </div>
   );
 };

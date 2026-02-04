@@ -21,7 +21,7 @@ module Grit::Assays
     include Grit::Core::GritEntityRecord
 
     belongs_to :load_set, class_name: "Grit::Core::LoadSet"
-    belongs_to :experiment_data_sheet
+    belongs_to :assay_data_sheet_definition
 
     entity_crud_with create: [ "Administrator", "AssayAdministrator", "AssayUser" ],
       read: [],
@@ -30,14 +30,8 @@ module Grit::Assays
 
     def self.entity_fields(**args)
       @entity_fields ||= self.entity_fields_from_properties(
-        self.entity_properties.select { |p| [ "experiment_id", "experiment_data_sheet_id" ].include?(p[:name]) }
-      ).map { |p|
-        if p[:name] == "experiment_data_sheet_id"
-          p[:entity][:display_column] = "assay_data_sheet_definition_id__name"
-          p[:entity][:display_column_type] = "string"
-        end
-        p
-      }
+        self.entity_properties.select { |p| [ "experiment_id", "assay_data_sheet_definition_id" ].include?(p[:name]) }
+      )
     end
   end
 end

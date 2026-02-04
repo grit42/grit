@@ -26,6 +26,8 @@ module Grit::Assays
     def create
       ActiveRecord::Base.transaction do
         record = Grit::Assays::Experiment.new(params.permit(self.permitted_params))
+        record.publication_status = Grit::Core::PublicationStatus.find_by(name: "Draft")
+
         if !record.save
           render json: { success: false, errors: record.errors }, status: :unprocessable_entity
           raise ActiveRecord::Rollback
@@ -34,12 +36,6 @@ module Grit::Assays
 
         if !record.set_metadata_values(params)
           render json: { success: false, errors: record.errors }, status: :unprocessable_entity
-          raise ActiveRecord::Rollback
-          return
-        end
-
-        if !record.create_data_sheets
-          render json: { success: false, errors: "Could not create data sheets" }, status: :internal_server_error
           raise ActiveRecord::Rollback
           return
         end
@@ -84,7 +80,7 @@ module Grit::Assays
       experiment = show_entity(params)
       experiment = {
         **experiment.as_json,
-        data_sheets: Grit::Assays::ExperimentDataSheet.detailed.where(experiment_id: experiment.id).order(sort: :asc).find_all
+        data_sheets: AssayDataSheetDefinition.detailed.where(assay_model_id: experiment.assay_model_id).order(sort: :asc).find_all
       }
 
       render json: { success: true, data: experiment }
@@ -103,16 +99,60 @@ module Grit::Assays
       end
     end
 
+    def publish
+      Experiment.transaction do
+        record = Experiment.find(params[:experiment_id])
+        record.publication_status = Grit::Core::PublicationStatus.find_by(name: "Published")
+        unless record.save
+          render json: { success: false, errors: record.errors }, status: :unprocessable_entity
+          return
+        end
+        render json: { success: true, data: record }
+      rescue ActiveRecord::RecordNotFound => e
+        logger.info e.to_s
+        logger.info e.backtrace.join("\n")
+        render json: { success: false, errors: e.to_s }, status: :not_found
+        raise ActiveRecord::Rollback
+      rescue StandardError => e
+        logger.info e.to_s
+        logger.info e.backtrace.join("\n")
+        render json: { success: false, errors: e.to_s }, status: :internal_server_error
+        raise ActiveRecord::Rollback
+      end
+    end
+
+    def draft
+      Experiment.transaction do
+        record = Experiment.find(params[:experiment_id])
+        record.publication_status = Grit::Core::PublicationStatus.find_by(name: "Draft")
+        unless record.save
+          render json: { success: false, errors: record.errors }, status: :unprocessable_entity
+          return
+        end
+        render json: { success: true, data: record }
+      rescue ActiveRecord::RecordNotFound => e
+        logger.info e.to_s
+        logger.info e.backtrace.join("\n")
+        render json: { success: false, errors: e.to_s }, status: :not_found
+        raise ActiveRecord::Rollback
+      rescue StandardError => e
+        logger.info e.to_s
+        logger.info e.backtrace.join("\n")
+        render json: { success: false, errors: e.to_s }, status: :internal_server_error
+        raise ActiveRecord::Rollback
+      end
+    end
+
     private
 
     def permitted_params
-      [ :name, :description, :assay_model_id, :publication_status_id, plots: {} ]
+      [ :name, :description, :assay_model_id, plots: {} ]
     end
 
     def do_export(experiment, temp_file)
       Zip::OutputStream.open(temp_file) { |zos| }
       Zip::File.open(temp_file.path, Zip::File::CREATE) do |zipfile|
-        experiment.experiment_data_sheets.each do |data_sheet|
+        experiment.assay_model.assay_data_sheet_definitions.each do |data_sheet|
           data_sheet_for_experiment(zipfile, experiment, data_sheet)
         end
       end
@@ -120,16 +160,16 @@ module Grit::Assays
     end
 
     def data_sheet_for_experiment(zipfile, experiment, data_sheet)
-      columns = Grit::Assays::ExperimentDataSheetRecord.entity_columns(experiment_data_sheet_id: data_sheet[:id]).reject { |c| c[:default_hidden] }
+      columns = Grit::Assays::ExperimentDataSheetRecord.entity_columns(assay_data_sheet_definition_id: data_sheet[:id]).reject { |c| c[:default_hidden] }
 
-      data_sheet_filename = "#{experiment[:name]}_#{data_sheet.assay_data_sheet_definition[:name]}.csv"
+      data_sheet_filename = "#{experiment[:name]}_#{data_sheet[:name]}.csv"
       temp_file = Tempfile.new(data_sheet_filename)
       record_columns = columns.map do |column|
         "\"sub\".\"#{column[:name]}\" as \"#{column[:display_name]}\""
       end
 
       begin
-        data_sheet_sql = Grit::Assays::ExperimentDataSheetRecord.detailed(experiment_data_sheet_id: data_sheet[:id]).to_sql
+        data_sheet_sql = Grit::Assays::ExperimentDataSheetRecord.sheet_record_klass(data_sheet[:id]).detailed.where(experiment_id: experiment[:id]).to_sql
         data_sheet_copy_sql = "COPY (SELECT #{record_columns.join(',')} from (#{data_sheet_sql}) sub) TO STDOUT WITH DELIMITER ',' CSV HEADER"
 
         ActiveRecord::Base.connection.raw_connection.copy_data(data_sheet_copy_sql) do
@@ -139,7 +179,7 @@ module Grit::Assays
         end
 
         temp_file.rewind
-        zipfile.add("#{experiment[:name]}/#{data_sheet.assay_data_sheet_definition[:name]}.csv", temp_file.path)
+        zipfile.add("#{experiment[:name]}/#{data_sheet[:name]}.csv", temp_file.path)
         zipfile.commit
       ensure
         temp_file.close
