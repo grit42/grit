@@ -22,7 +22,10 @@ module Grit::Assays
   class ExperimentDataSheetRecordLoader < Grit::Core::EntityLoader
     protected
     def self.block_fields(params)
-      [ *super(params), *Grit::Assays::ExperimentDataSheetRecordLoadSetBlock.entity_fields ]
+      [
+        *super(params),
+        *Grit::Assays::ExperimentDataSheetRecordLoadSetBlock.entity_fields
+          .map { |f| ({**f, disabled: f[:disabled] || f[:name] == "experiment_id" }) } ]
     end
 
     def self.create(params)

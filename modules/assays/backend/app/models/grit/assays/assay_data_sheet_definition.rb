@@ -22,7 +22,7 @@ module Grit::Assays
 
     belongs_to :assay_model
     has_many :assay_data_sheet_columns, dependent: :destroy
-    has_many :experiment_data_sheet_record_load_sets, dependent: :destroy
+    has_many :experiment_data_sheet_record_load_set_blocks, dependent: :destroy
 
     display_column "name"
 
