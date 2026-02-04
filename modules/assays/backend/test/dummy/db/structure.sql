@@ -1220,6 +1220,13 @@ CREATE INDEX idx_on_assay_data_sheet_column_id_c4cb5d8972 ON public.grit_assays_
 
 
 --
+-- Name: idx_on_assay_data_sheet_definition_id_0b215fd500; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_on_assay_data_sheet_definition_id_0b215fd500 ON public.grit_assays_experiment_data_sheet_record_load_sets USING btree (assay_data_sheet_definition_id);
+
+
+--
 -- Name: idx_on_assay_data_sheet_definition_id_438432fccb; Type: INDEX; Schema: public; Owner: -
 --
 
