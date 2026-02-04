@@ -8,6 +8,7 @@ class CreateGritCoreLoadSetBlocks < ActiveRecord::Migration[7.2]
       t.datetime :updated_at
 
       t.string :name, null: false
+      t.string :error
       t.jsonb :headers, default: []
       t.jsonb :mappings, default: {}
       t.string :separator, null: false

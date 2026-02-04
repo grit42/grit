@@ -31,7 +31,6 @@ import {
   getSortParams,
   getFilterParams,
 } from "@grit42/api";
-import { LoadSetPreviewData } from "./types";
 import { FormFieldDef } from "@grit42/form";
 import { EntityInfo, EntityPropertyDef } from "../entities";
 import { Filter, SortingState } from "@grit42/table";
@@ -58,6 +57,7 @@ export const useLoadSetFields = (
 
 export const useLoadSetBlockFields = (
   entity: string,
+  queryOptions: Partial<UseQueryOptions<FormFieldDef[], string>> = {},
 ): UseQueryResult<FormFieldDef[], string> => {
   return useQuery<FormFieldDef[], string>({
     queryKey: ["loadSetBlockFields", entity],
@@ -73,39 +73,20 @@ export const useLoadSetBlockFields = (
 
       return response.data;
     },
+    ...queryOptions
   });
 };
 
-export const useLoadSetDataSetFields = (
-  loadSetId: number,
+export const useLoadSetBlockSetDataFields = (
+  loadSetBlockId: number,
 ): UseQueryResult<FormFieldDef[], string> => {
   return useQuery<FormFieldDef[], string>({
-    queryKey: ["loadSetDataSetFields", loadSetId],
+    queryKey: ["loadSetBlockSetDataFields", loadSetBlockId],
     queryFn: async (): Promise<FormFieldDef[]> => {
       const response = await request<
         EndpointSuccess<FormFieldDef[]>,
         EndpointError
-      >(`/grit/core/load_sets/${loadSetId}/data_set_fields`);
-
-      if (!response.success) {
-        throw response.errors;
-      }
-
-      return response.data;
-    },
-  });
-};
-
-export const useLoadSetMappingFields = (
-  loadSetId: number,
-): UseQueryResult<FormFieldDef[], string> => {
-  return useQuery<FormFieldDef[], string>({
-    queryKey: ["loadSetMappingFields", loadSetId],
-    queryFn: async (): Promise<FormFieldDef[]> => {
-      const response = await request<
-        EndpointSuccess<FormFieldDef[]>,
-        EndpointError
-      >(`/grit/core/load_sets/${loadSetId}/mapping_fields`);
+      >(`/grit/core/load_set_blocks/${loadSetBlockId}/data_set_fields`);
 
       if (!response.success) {
         throw response.errors;
@@ -126,26 +107,6 @@ export const useLoadSetBlockMappingFields = (
         EndpointSuccess<FormFieldDef[]>,
         EndpointError
       >(`/grit/core/load_set_blocks/${loadSetBlockId}/mapping_fields`);
-
-      if (!response.success) {
-        throw response.errors;
-      }
-
-      return response.data;
-    },
-  });
-};
-
-export const useLoadSetPreviewData = (
-  loadSetId: number,
-): UseQueryResult<LoadSetPreviewData, string> => {
-  return useQuery<LoadSetPreviewData, string>({
-    queryKey: ["loadSetPreviewData", loadSetId],
-    queryFn: async (): Promise<LoadSetPreviewData> => {
-      const response = await request<
-        EndpointSuccess<LoadSetPreviewData>,
-        EndpointError
-      >(`/grit/core/load_sets/${loadSetId}/preview_data`);
 
       if (!response.success) {
         throw response.errors;

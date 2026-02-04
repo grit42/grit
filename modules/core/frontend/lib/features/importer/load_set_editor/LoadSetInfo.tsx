@@ -16,7 +16,7 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Tabs } from "@grit42/client-library/components";
+import { Button, ErrorPage, Tabs } from "@grit42/client-library/components";
 import { useEffect, useMemo, useState } from "react";
 import { GritColumnDef, Table } from "@grit42/table";
 import styles from "./loadSetEditor.module.scss";
@@ -25,6 +25,8 @@ import {
   useInfiniteLoadSetBlockErroredData,
   useInfiniteLoadSetBlockPreviewData,
 } from "../queries";
+import { useInitializeLoadSetBlockMutation } from "../mutations";
+import { useQueryClient } from "@grit42/api";
 
 const ERROR_COLUMNS: GritColumnDef[] = [
   {
@@ -281,6 +283,9 @@ const LoadSetInfo = ({
 
   const isInvalidated =
     loadSet.load_set_blocks[0].status_id__name === "Invalidated";
+
+  const isCreated = loadSet.load_set_blocks[0].status_id__name === "Created";
+  const isErrored = loadSet.load_set_blocks[0].status_id__name === "Errored";
 
   useEffect(() => {
     setSelectedTab(isInvalidated ? 1 : 0);

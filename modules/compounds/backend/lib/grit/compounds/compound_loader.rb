@@ -28,6 +28,10 @@ module Grit::Compounds
       [ *load_set_block_fields.values, *Grit::Compounds::CompoundLoadSetBlock.entity_fields ]
     end
 
+    def self.block_set_data_fields(params)
+      self.block_fields(params).filter { |f| ["separator", "structure_format"].include? f[:name] }
+    end
+
     def self.create(params)
       load_set = super
 
@@ -167,7 +171,6 @@ module Grit::Compounds
 
         unless record_props["molecule"].nil?
           molecule_id = (structure_format == "molfile" ? Grit::Compounds::Molecule.by_molfile(record_props["molecule"]) : Grit::Compounds::Molecule.by_smiles(record_props["molecule"]))&.id
-          record_props["molecule"] = "mol_from_ctab('#{record_props["molecule"]}'::cstring)" if structure_format == "molfile"
           if molecule_id
             record[:record_warnings] ||= {}
             record[:record_warnings]["molecule"] = [ "structure already registered, this compound will be linked to the existing structure" ]
@@ -265,6 +268,22 @@ module Grit::Compounds
         .map { |f| f[:type] == "mol" ? { **f, type: "text" } : f }
     end
 
+    def self.set_block_data(load_set_block, params)
+      compound_load_set_block = Grit::Compounds::CompoundLoadSetBlock.find_by(load_set_block_id: load_set_block.id)
+      ActiveRecord::Base.transaction do
+        load_set_block.separator = params[:separator] unless params[:separator].nil?
+        compound_load_set_block.structure_format = params[:structure_format] unless params[:structure_format].nil?
+        load_set_block.data = params[:data] unless params[:data].nil?
+        load_set_block.name = params[:name] unless params[:name].nil?
+        load_set_block.status_id = Grit::Core::LoadSetStatus.find_by(name: "Created").id
+        load_set_block.drop_tables
+        load_set_block.save!
+        compound_load_set_block.save!
+      end
+      load_set_block
+    end
+
+
     def self.columns_from_sdf(load_set_block)
       load_set_block.data.open do |io|
         Grit::Compounds::SDF.properties(io)
@@ -281,8 +300,10 @@ module Grit::Compounds
     def self.records_from_sdf(load_set_block, &block)
       load_set_block.data.open do |file|
         Grit::Compounds::SDF.each_record(file) do |record, recordno|
-          row = [ recordno, *load_set_block.headers.map { |h| record[h["display_name"]] } ]
-          yield CSV.generate_line(row, col_sep: ",")
+          row = load_set_block.headers.map { |h| record[h["display_name"]] }
+          next if row.compact.blank?
+          row_with_record_number = [ recordno, *row ]
+          yield CSV.generate_line(row_with_record_number, col_sep: ",")
         end
       end
     end

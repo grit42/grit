@@ -1,4 +1,4 @@
-\restrict BL2Ii9gW11PxxVWeXNhm3Kwsq9rnbPkS7EMCm4CtrdcaSRZB4fOYaTYp5MqJJ1C
+\restrict BMIEtMz01cmgVQKG3XkVwhitTfhiV9nbhyfZtowzPcGzCA300jjmw0VLreUCI3m
 
 -- Dumped from database version 16.3 (Debian 16.3-1.pgdg120+1)
 -- Dumped by pg_dump version 16.11
@@ -389,21 +389,6 @@ CREATE TABLE public.grit_core_load_set_block_loaded_records (
 
 
 --
--- Name: grit_core_load_set_block_loading_records; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.grit_core_load_set_block_loading_records (
-    id bigint DEFAULT nextval('public.grit_seq'::regclass) NOT NULL,
-    created_by character varying(30) DEFAULT 'SYSTEM'::character varying NOT NULL,
-    created_at timestamp(6) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_by character varying(30),
-    updated_at timestamp(6) without time zone,
-    number integer,
-    load_set_block_id bigint NOT NULL
-);
-
-
---
 -- Name: grit_core_load_set_blocks; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -414,6 +399,7 @@ CREATE TABLE public.grit_core_load_set_blocks (
     updated_by character varying(30),
     updated_at timestamp(6) without time zone,
     name character varying NOT NULL,
+    error character varying,
     headers jsonb DEFAULT '[]'::jsonb,
     mappings jsonb DEFAULT '{}'::jsonb,
     separator character varying NOT NULL,
@@ -749,14 +735,6 @@ ALTER TABLE ONLY public.grit_core_load_set_block_loaded_records
 
 
 --
--- Name: grit_core_load_set_block_loading_records grit_core_load_set_block_loading_records_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.grit_core_load_set_block_loading_records
-    ADD CONSTRAINT grit_core_load_set_block_loading_records_pkey PRIMARY KEY (id);
-
-
---
 -- Name: grit_core_load_set_blocks grit_core_load_set_blocks_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -895,13 +873,6 @@ CREATE UNIQUE INDEX idx_countries_on_name_unique ON public.grit_core_countries U
 --
 
 CREATE UNIQUE INDEX idx_locations_on_name_unique ON public.grit_core_locations USING btree (name);
-
-
---
--- Name: idx_on_load_set_block_id_04cc5c0519; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_on_load_set_block_id_04cc5c0519 ON public.grit_core_load_set_block_loading_records USING btree (load_set_block_id);
 
 
 --
@@ -1150,13 +1121,6 @@ CREATE TRIGGER manage_stamps_grit_core_load_set_block_loaded_records BEFORE INSE
 
 
 --
--- Name: grit_core_load_set_block_loading_records manage_stamps_grit_core_load_set_block_loading_records; Type: TRIGGER; Schema: public; Owner: -
---
-
-CREATE TRIGGER manage_stamps_grit_core_load_set_block_loading_records BEFORE INSERT OR UPDATE ON public.grit_core_load_set_block_loading_records FOR EACH ROW EXECUTE FUNCTION public.manage_stamps();
-
-
---
 -- Name: grit_core_load_set_blocks manage_stamps_grit_core_load_set_blocks; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -1253,14 +1217,6 @@ CREATE TRIGGER manage_stamps_grit_core_vocabulary_items BEFORE INSERT OR UPDATE 
 
 ALTER TABLE ONLY public.grit_core_load_set_block_loaded_records
     ADD CONSTRAINT core_load_set_block_loaded_records_core_load_set_block_id_fkey FOREIGN KEY (load_set_block_id) REFERENCES public.grit_core_load_set_blocks(id);
-
-
---
--- Name: grit_core_load_set_block_loading_records core_load_set_block_loading_records_core_load_set_block_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.grit_core_load_set_block_loading_records
-    ADD CONSTRAINT core_load_set_block_loading_records_core_load_set_block_id_fkey FOREIGN KEY (load_set_block_id) REFERENCES public.grit_core_load_set_blocks(id);
 
 
 --
@@ -1387,7 +1343,7 @@ ALTER TABLE ONLY public.test_entities
 -- PostgreSQL database dump complete
 --
 
-\unrestrict BL2Ii9gW11PxxVWeXNhm3Kwsq9rnbPkS7EMCm4CtrdcaSRZB4fOYaTYp5MqJJ1C
+\unrestrict BMIEtMz01cmgVQKG3XkVwhitTfhiV9nbhyfZtowzPcGzCA300jjmw0VLreUCI3m
 
 SET search_path TO "$user", public;
 
@@ -1405,7 +1361,6 @@ INSERT INTO "schema_migrations" (version) VALUES
 ('20250205093246'),
 ('20250109121325'),
 ('20241212062610'),
-('20241212062035'),
 ('20241212062001'),
 ('20241212062000'),
 ('20241212061707'),

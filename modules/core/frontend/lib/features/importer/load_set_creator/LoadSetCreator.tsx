@@ -45,15 +45,18 @@ const LoadSetCreator = ({ entity }: LoadSetCreatorProps) => {
     isLoading: isLoadSetBlockFieldsLoading,
     isError: isLoadSetBlockFieldsError,
     error: loadSetBlockFieldsError,
-  } = useLoadSetBlockFields(entity);
+  } = useLoadSetBlockFields(entity, {
+    select: (fields) => fields.filter(({ name }) => name !== "name"),
+  });
 
   const initialValues = useMemo((): Partial<NewLoadSetData> => {
+    const name = `${entity}-${new Date().toISOString()}`
     const values: Partial<NewLoadSetData> = {
       entity,
-      name: `${entity}-${new Date().toISOString()}`,
+      name,
       load_set_blocks: [
         {
-          name: "",
+          name,
           separator: ",",
           data: "",
         },

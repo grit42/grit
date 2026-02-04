@@ -44,7 +44,6 @@ export const useCreateLoadSetMutation = () => {
       if (!response.success) {
         throw response.errors;
       }
-
       return response.data;
     },
     onError: notifyOnError,
@@ -117,6 +116,30 @@ export const useSetLoadSetBlockDataMutation = (loadSetBlockId: number) => {
         headers: {
           "Content-Type": "multipart/form-data",
         },
+      });
+
+      if (!response.success) {
+        throw response.errors;
+      }
+
+      return response.data;
+    },
+    onError: notifyOnError,
+  });
+};
+
+export const useInitializeLoadSetBlockMutation = (loadSetBlockId: number) => {
+  return useMutation<
+    LoadSetBlockData,
+    EndpointErrorErrors<LoadSetBlockData>
+  >({
+    mutationKey: ["initializeLoadSetBlock", loadSetBlockId],
+    mutationFn: async () => {
+      const response = await request<
+        EndpointSuccess<LoadSetBlockData>,
+        EndpointError<EndpointErrorErrors<LoadSetBlockData>>
+      >(`/grit/core/load_set_blocks/${loadSetBlockId}/initialize_data`, {
+        method: "POST",
       });
 
       if (!response.success) {

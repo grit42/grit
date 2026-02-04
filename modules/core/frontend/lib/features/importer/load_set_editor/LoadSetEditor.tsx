@@ -24,14 +24,15 @@ import {
 } from "@grit42/client-library/components";
 import { useNavigate } from "react-router-dom";
 import { getURLParams, useQueryClient } from "@grit42/api";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   useValidateLoadSetBlockMutation,
   useConfirmLoadSetBlockMutation,
   useRollbackLoadSetBlockMutation,
+  useInitializeLoadSetBlockMutation,
 } from "../mutations";
 import { useLoadSetBlockMappingFields } from "../queries";
-import { LoadSetData, LoadSetMapping } from "../types";
+import { LoadSetBlockData, LoadSetData, LoadSetMapping } from "../types";
 import { useDestroyEntityMutation } from "../../entities";
 import { useForm } from "@grit42/form";
 import styles from "./loadSetEditor.module.scss";
@@ -276,6 +277,112 @@ const LoadSetEditor = ({
   );
 };
 
+const LoadSetBlockInitializer = ({
+  load_set_block,
+}: {
+  load_set_block: LoadSetBlockData;
+}) => {
+  const fetchRef = useRef(false);
+  const queryClient = useQueryClient();
+
+  const initializeMutation = useInitializeLoadSetBlockMutation(
+    load_set_block.id,
+  );
+
+  const handleInitialize = useCallback(async () => {
+    try {
+      await initializeMutation.mutateAsync();
+    } finally {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: [
+            "entities",
+            "datum",
+            "grit/core/load_sets",
+            load_set_block.load_set_id.toString(),
+          ],
+          exact: false,
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [
+            "entities",
+            "infiniteData",
+            `grit/core/load_set_blocks/${load_set_block.id}/preview_data`,
+          ],
+          exact: false,
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [
+            "entities",
+            "infiniteData",
+            `grit/core/load_set_blocks/${load_set_block.id}/errored_data`,
+          ],
+          exact: false,
+        }),
+      ]);
+    }
+  }, [
+    initializeMutation,
+    load_set_block.id,
+    load_set_block.load_set_id,
+    queryClient,
+  ]);
+
+  useEffect(() => {
+    if (load_set_block.status_id__name === "Created" && !fetchRef.current) {
+      handleInitialize();
+      fetchRef.current = true;
+    }
+  }, [handleInitialize, load_set_block.status_id__name]);
+
+  return (
+    <ErrorPage error="Preparing the upload">
+      <Spinner />
+    </ErrorPage>
+  );
+};
+
+const LoadSetBlockError = ({ load_set }: { load_set: LoadSetData }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const destroyLoadSetMutation = useDestroyEntityMutation(
+    "grit/core/load_sets",
+  );
+
+  const handleCancel = async () => {
+    await destroyLoadSetMutation.mutateAsync(load_set.id);
+    navigate(
+      `/core/load_sets/new?${getURLParams(
+        getLoadSetPropertiesForCancel(load_set),
+      )}`,
+    );
+  };
+
+  return (
+    <>
+      <ErrorPage error={load_set.load_set_blocks[0].error}>
+        <ButtonGroup>
+          <Button
+            onClick={handleCancel}
+            loading={destroyLoadSetMutation.isPending}
+          >
+            Cancel import
+          </Button>
+          <Button onClick={() => setIsOpen(true)}>Change data set</Button>
+        </ButtonGroup>
+      </ErrorPage>
+      {isOpen && (
+        <UpdateLoadSetDataDialog
+          isOpen
+          loadSet={load_set}
+          onClose={() => setIsOpen(false)}
+        />
+      )}
+    </>
+  );
+};
+
 const LoadSetEditorWrapper = ({ loadSet }: LoadSetEditorProps) => {
   const {
     data: fields,
@@ -299,6 +406,16 @@ const LoadSetEditorWrapper = ({ loadSet }: LoadSetEditorProps) => {
 
   if (isFieldsError || !fields) {
     return <ErrorPage error={fieldsError} />;
+  }
+
+  if (loadSet.load_set_blocks[0].status_id__name === "Created") {
+    return (
+      <LoadSetBlockInitializer load_set_block={loadSet.load_set_blocks[0]} />
+    );
+  }
+
+  if (loadSet.load_set_blocks[0].status_id__name === "Errored") {
+    return <LoadSetBlockError load_set={loadSet} />;
   }
 
   return <LoadSetEditor loadSet={loadSet} mappings={mappings} />;

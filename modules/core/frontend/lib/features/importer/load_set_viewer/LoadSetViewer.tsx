@@ -23,7 +23,7 @@ import {
   Spinner,
 } from "@grit42/client-library/components";
 import { useQueryClient } from "@grit42/api";
-import { EntityData, useEntity, useInfiniteEntityData } from "../../entities";
+import { EntityData, useInfiniteEntityData } from "../../entities";
 import { Table, useSetupTableState } from "@grit42/table";
 import { useMemo } from "react";
 import { useRollbackLoadSetBlockMutation } from "../mutations";

@@ -26,8 +26,24 @@ module Grit::Core
 
     before_destroy :check_status
     before_destroy :drop_tables
-    after_commit :create_tables_if_created
     after_save :drop_tables_if_succeeded
+
+    class_eval do
+      _validators.delete("separator")
+
+      _validate_callbacks.each do |callback|
+        if callback.filter.respond_to? :attributes
+          callback.filter.attributes.delete "separator"
+        end
+      end
+    end
+
+    validate :separator_set
+
+    def separator_set
+      return if separator == "\t"
+      errors.add(:separator, "cannot be blank") if separator.nil? || separator.blank?
+    end
 
     entity_crud_with create: [], read: [], update: [], destroy: []
 
@@ -137,12 +153,33 @@ module Grit::Core
       columns_string = headers.size > 0 ? "(\"line\",\"#{headers.map { |h| h["name"] }.join('","')}\")" : ""
       options_string = "WITH (" + [ "DELIMITER ','", "QUOTE '\"'", "FORMAT CSV" ].compact.join(", ") + ")"
 
-      raw_connection = ActiveRecord::Base.connection.raw_connection
-      raw_connection.copy_data %{COPY "#{raw_data_table_name}" #{columns_string} FROM STDIN #{options_string}} do
+      db_connection =  ActiveRecord::Base.connection_pool.checkout
+      raw_connection = db_connection.raw_connection
+      raw_connection.copy_data %(COPY "#{raw_data_table_name}" #{columns_string} FROM STDIN #{options_string}) do
         Grit::Core::EntityLoader.load_set_block_records_from_file(self) do |line|
           raw_connection.put_copy_data(line) unless line.nil?
         end
       end
+    rescue PG::BadCopyFileFormat => e
+      logger.info e.to_s
+      logger.info e.backtrace.join("\n")
+      self.error = "Malformed CSV file"
+      self.status_id = Grit::Core::LoadSetStatus.find_by(name: "Errored").id
+      self.save!
+      raise "Malformed CSV file"
+    rescue StandardError => e
+      logger.info e.to_s
+      logger.info e.backtrace.join("\n")
+      self.error = e.to_s
+      self.status_id = Grit::Core::LoadSetStatus.find_by(name: "Errored").id
+      self.save!
+      raise e.to_s
+    ensure
+      ActiveRecord::Base.connection_pool.checkin(db_connection)
+    end
+
+    def headers_from_file
+      update_column(:headers, Grit::Core::EntityLoader.load_set_block_columns_from_file(self))
     end
 
     def initialize_raw_data_table
@@ -176,17 +213,9 @@ module Grit::Core
       create_loading_records_table
     end
 
-    def create_tables_if_created
-      return if status.name != "Created"
-      LoadSetBlock.transaction do
-        update_column(:status_id, Grit::Core::LoadSetStatus.find_by(name: "Initializing").id)
-        create_tables
-        update_column(:status_id, Grit::Core::LoadSetStatus.find_by(name: "Mapping").id)
-      rescue StandardError => e
-        logger.info e.to_s
-        logger.info e.backtrace.join("\n")
-        raise ActiveRecord::Rollback
-      end
+    def initialize_data
+      create_tables
+      update_column(:status_id, Grit::Core::LoadSetStatus.find_by(name: "Mapping").id)
     end
 
     def drop_tables_if_succeeded

@@ -48,6 +48,10 @@ module Grit::Core
       loader(params[:entity]).create(params)
     end
 
+    def self.load_set_block_set_data_fields(load_set_block)
+      loader(load_set_block.load_set.entity).block_set_data_fields(load_set_block)
+    end
+
     def self.load_set_data_fields(load_set)
       loader(load_set.entity).data_set_fields(load_set)
     end
@@ -140,6 +144,10 @@ module Grit::Core
       fields["separator"][:required] = true unless fields["separator"].nil?
       fields["separator"][:placeholder] = "Will attempt to guess based on provided data" unless fields["separator"].nil?
       fields.values
+    end
+
+    def self.block_set_data_fields(params)
+      self.block_fields(params).filter { |f| f[:name] == "separator" }
     end
 
     def self.data_set_fields(params)
@@ -339,9 +347,9 @@ module Grit::Core
     end
 
     def self.set_block_data(load_set_block, params)
-      load_set_block.separator = params[:separator]
-      load_set_block.data = params[:data]
-      load_set_block.name = params[:name]
+      load_set_block.separator = params[:separator] unless params[:separator].nil?
+      load_set_block.data = params[:data] unless params[:data].nil?
+      load_set_block.name = params[:name] unless params[:name].nil?
       load_set_block.status_id = Grit::Core::LoadSetStatus.find_by(name: "Created").id
       ActiveRecord::Base.transaction do
         load_set_block.drop_tables
@@ -388,7 +396,8 @@ module Grit::Core
       load_set_block.data.open do |file|
         file.each_line(chomp: true).with_index do |line, index|
           next if index == 0
-          line_with_line_number = "#{index+1},#{line}"
+          next if line.nil? || line.blank?
+          line_with_line_number = "#{index+1}#{load_set_block.separator}#{line}"
           row = CSV.parse_line(line_with_line_number.strip, col_sep: load_set_block.separator)
           yield CSV.generate_line(row, col_sep: ",")
         end

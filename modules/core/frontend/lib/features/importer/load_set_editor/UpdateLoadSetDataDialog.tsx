@@ -25,16 +25,9 @@ import {
 } from "@grit42/client-library/components";
 import { useQueryClient } from "@grit42/api";
 import { useEffect } from "react";
-import {
-  useSetLoadSetBlockDataMutation,
-} from "../mutations";
-import {
-  useLoadSetBlockData,
-} from "../queries";
-import {
-  LoadSetBlockDataUpdateData,
-  LoadSetData,
-} from "../types";
+import { useSetLoadSetBlockDataMutation } from "../mutations";
+import { useLoadSetBlockData, useLoadSetBlockSetDataFields } from "../queries";
+import { LoadSetBlockDataUpdateData, LoadSetData } from "../types";
 import {
   AddFormControl,
   FieldListenerFn,
@@ -46,7 +39,6 @@ import styles from "./loadSetEditor.module.scss";
 import EditorInput from "../../../components/EditorInput";
 import { useImporter } from "../ImportersContext";
 import { updateLoadSetBlockDataPayload } from "../utils";
-import { useEntityFields } from "../../entities";
 
 const UpdateLoadSetDataDialog = (
   props: DialogProps & {
@@ -61,7 +53,7 @@ const UpdateLoadSetDataDialog = (
     isLoading: isLoadSetBlockFieldsLoading,
     isError: isLoadSetBlockFieldsError,
     error: loadSetBlockFieldsError,
-  } = useEntityFields("Grit::Core::LoadSetBlock");
+  } = useLoadSetBlockSetDataFields(props.loadSet.load_set_blocks[0].id);
 
   const {
     data: loadSetBlockData,
@@ -78,7 +70,7 @@ const UpdateLoadSetDataDialog = (
   const form = useForm<LoadSetBlockDataUpdateData>({
     onSubmit: genericErrorHandler(async ({ value }) => {
       const loadSetBlock = await setLoadSetDataMutation.mutateAsync(
-        updateLoadSetBlockDataPayload(value),
+        updateLoadSetBlockDataPayload(value, loadSetBlockFields ?? []),
       );
       await Promise.all([
         queryClient.invalidateQueries({
@@ -115,9 +107,10 @@ const UpdateLoadSetDataDialog = (
     }
   }, [loadSetBlockData, form]);
 
-  const handleDataChange: FieldListenerFn<LoadSetBlockDataUpdateData, "data"> = ({
-    fieldApi,
-  }) => {
+  const handleDataChange: FieldListenerFn<
+    LoadSetBlockDataUpdateData,
+    "data"
+  > = ({ fieldApi }) => {
     fieldApi.form.validateField("data", "submit");
   };
 

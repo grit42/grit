@@ -42,6 +42,7 @@ Grit::Core::Engine.routes.draw do
     get :loaded_data_columns
     post :set_mappings
     post :set_data
+    post :initialize_data
     post :validate
     post :confirm
     post :rollback

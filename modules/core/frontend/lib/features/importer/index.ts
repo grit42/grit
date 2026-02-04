@@ -43,8 +43,6 @@ export {
 
 export {
   useLoadSetFields,
-  useLoadSetMappingFields,
-  useLoadSetPreviewData,
   useLoadSetData,
 } from "./queries";
 

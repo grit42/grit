@@ -23,6 +23,9 @@ require "grit/core/entity_loader"
 module Grit
   module Compounds
     class SDF
+      class MalformedSdfFile < RuntimeError
+      end
+
       def self.each_record(io)
         prop_names = Set["molecule"]
         record = {}
@@ -32,6 +35,8 @@ module Grit
         io.each_line(chomp: true) do |line|
           record_lines.push line and next if line != "$$$$"
           mol_end = record_lines.find_index("M  END")
+
+          raise MalformedSdfFile.new "Malformed SDF file" if mol_end.nil?
 
           mol_block = record_lines[0..mol_end]
 
@@ -46,7 +51,7 @@ module Grit
               prop_name = nil
               prop_lines = []
             elsif prop_def = /^>\s+<(?<prop_name>\w+)>$/.match(line)
-              raise Grit::Core::EntityLoader::ParseException.new "Malformed SDF file" unless prop_name.nil?
+              raise MalformedSdfFile.new "Malformed SDF file" unless prop_name.nil?
               prop_name = prop_def[:prop_name]
               prop_names.add(prop_name)
             else
