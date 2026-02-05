@@ -155,10 +155,12 @@ module Grit::Assays
       end
 
       def destroy_load_sets
-        Grit::Core::LoadSet.detailed
+        load_sets = Grit::Core::LoadSet.detailed
           .joins("JOIN grit_core_load_set_blocks lsb ON lsb.load_set_id = grit_core_load_sets.id")
           .joins("JOIN grit_assays_experiment_data_sheet_record_load_set_blocks edsrlsb ON edsrlsb.load_set_block_id = lsb.id")
-          .where("edsrlsb.experiment_id = ?", self.id).destroy_all
+          .where("edsrlsb.experiment_id = ?", self.id)
+        load_sets.each { |ls| ls.rollback }
+        load_sets.destroy_all
       end
   end
 end

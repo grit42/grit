@@ -64,7 +64,7 @@ module Grit::Assays
     def self.rollback_block(load_set_block)
       experiment_data_sheet_record_load_set_block = Grit::Assays::ExperimentDataSheetRecordLoadSetBlock.find_by(load_set_block_id: load_set_block.id)
       experiment_data_sheet_record_klass = experiment_data_sheet_record_load_set_block.assay_data_sheet_definition.sheet_record_klass
-      experiment_data_sheet_record_klass.delete_by("id IN (SELECT record_id FROM grit_core_load_set_block_loaded_records WHERE grit_core_load_set_block_loaded_records.load_set_block_id = #{load_set_block.id})")
+      experiment_data_sheet_record_klass.delete_by("id IN (SELECT record_id FROM grit_core_load_set_block_loaded_records WHERE grit_core_load_set_block_loaded_records.load_set_block_id = #{load_set_block.id})") if experiment_data_sheet_record_klass.table_exists?
       Grit::Core::LoadSetBlockLoadedRecord.delete_by(load_set_block_id: load_set_block.id)
     end
 

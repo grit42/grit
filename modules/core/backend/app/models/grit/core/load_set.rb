@@ -38,6 +38,16 @@ module Grit::Core
         .where(ActiveRecord::Base.sanitize_sql_array([ "grit_core_vocabulary_item_load_set_blocks__.vocabulary_id = ?", params[:vocabulary_id] ]))
     end
 
+    def rollback
+      loader = Grit::Core::EntityLoader.loader(entity)
+      errored_status = Grit::Core::LoadSetStatus.find_by(name: "Errored")
+      load_set_blocks.each do |lsb|
+        loader.rollback_block(lsb)
+        lsb.status = errored_status
+        lsb.save!
+      end
+    end
+
     private
       def check_status
         throw :abort if self.load_set_blocks.any? { |lsb| lsb.status.name == "Succeeded" }
