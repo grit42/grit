@@ -293,7 +293,7 @@ Grit::Core::LoadSetStatus.insert({ name: 'Succeeded', description: 'The upload s
 
 Grit::Core::DataType.upsert({ name: "string", description: "Best for short text. Displayed as a single line input" }, unique_by: :name)
 Grit::Core::DataType.upsert({ name: "text", description: "Best for longer text. Displayed as a multiline input" }, unique_by: :name)
-Grit::Core::DataType.upsert({ name: "integer", description: "Prefer over decimal when the values are always integer number" }, unique_by: :name)
+Grit::Core::DataType.upsert({ name: "integer", description: "Prefer over decimal when the values are always integer number. Use decimal if values can be higher than 2^63-1 or lower than -2^63" }, unique_by: :name)
 Grit::Core::DataType.upsert({ name: "decimal", description: "Exact decimal numbers" }, unique_by: :name)
 Grit::Core::DataType.upsert({ name: "date", description: "Prefer over datetime when only the date is relevant" }, unique_by: :name)
 Grit::Core::DataType.upsert({ name: "datetime", description: "Date and time"  }, unique_by: :name)

@@ -196,7 +196,7 @@ module Grit::Core
           if column[:type].to_s == "entity" or column[:type].to_s == "integer"
             t.column column[:name], :bigint
           elsif column[:type].to_s == "decimal"
-            t.column column[:name], :numeric
+            t.column column[:name], :decimal
           else
             t.column column[:name], column[:type]
           end
