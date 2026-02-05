@@ -17,7 +17,7 @@
  */
 
 import { Table, useSetupTableState } from "@grit42/table";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useToolbar } from "@grit42/core/Toolbar";
 import Circle1NewIcon from "@grit42/client-library/icons/Circle1New";
 import { useNavigate } from "react-router-dom";
@@ -26,7 +26,7 @@ import { useTableColumns } from "@grit42/core/utils";
 import styles from "./assayMetadataDefinitions.module.scss";
 import {
   useAssayMetadataDefinitionColumns,
-  useAssayMetadataDefinitions,
+  useInfiniteAssayMetadataDefinitions,
 } from "../../../../queries/assay_metadata_definitions";
 
 const DEFAULT_COLUMN_SIZES = {
@@ -37,7 +37,6 @@ const DEFAULT_COLUMN_SIZES = {
 const AssayMetadataDefinitionsTable = () => {
   const registerToolbarActions = useToolbar();
   const navigate = useNavigate();
-  const { data: assayMetadataDefinitions } = useAssayMetadataDefinitions();
   const { data: assayMetadataDefinitionColumns } =
     useAssayMetadataDefinitionColumns(undefined, {
       select: (data) =>
@@ -67,7 +66,24 @@ const AssayMetadataDefinitionsTable = () => {
 
   const tableState = useSetupTableState(
     "admin-assay_metadata_definitions-list",
-    tableColumns
+    tableColumns,
+  );
+
+  const {
+    data,
+    isFetching,
+    isFetchingNextPage,
+    isError,
+    error,
+    fetchNextPage,
+  } = useInfiniteAssayMetadataDefinitions(
+    tableState.sorting,
+    tableState.filters,
+  );
+
+  const flatData = useMemo(
+    () => data?.pages.flatMap(({ data }) => data) ?? [],
+    [data],
   );
 
   return (
@@ -76,8 +92,15 @@ const AssayMetadataDefinitionsTable = () => {
       tableState={tableState}
       headerActions={<Button onClick={navigateToNew}>New</Button>}
       className={styles.table}
-      data={assayMetadataDefinitions}
+      data={flatData}
       onRowClick={(row) => navigate(`${row.original.id}`)}
+      loading={isFetching}
+      noDataMessage={isError ? error : undefined}
+      pagination={{
+        fetchNextPage,
+        isFetchingNextPage,
+        totalRows: data?.pages[0]?.total,
+      }}
     />
   );
 };
@@ -89,11 +112,9 @@ const AssayMetadataDefinitionsTableWrapper = () => {
     error: assayMetadataDefinitionColumnsError,
   } = useAssayMetadataDefinitionColumns();
 
-  const { isLoading, isError, error } = useAssayMetadataDefinitions();
-
-  if (isAssayMetadataDefinitionColumnsLoading || isLoading) return <Spinner />;
-  if (isAssayMetadataDefinitionColumnsError || isError)
-    return <ErrorPage error={assayMetadataDefinitionColumnsError ?? error} />;
+  if (isAssayMetadataDefinitionColumnsLoading) return <Spinner />;
+  if (isAssayMetadataDefinitionColumnsError)
+    return <ErrorPage error={assayMetadataDefinitionColumnsError} />;
   return <AssayMetadataDefinitionsTable />;
 };
 

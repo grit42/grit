@@ -23,11 +23,12 @@ import styles from "./details.module.scss";
 import {
   ExperimentMetadataTemplateData,
   useExperimentMetadataTemplateColumns,
-  useExperimentMetadataTemplates,
+  useInfiniteExperimentMetadataTemplates,
 } from "../../../../queries/experiment_metadata_templates";
 import { ReactFormExtendedApi } from "@grit42/form";
 import { ExperimentData } from "../../../../queries/experiments";
 import { useAssayMetadataDefinitions } from "../../../../queries/assay_metadata_definitions";
+import { useMemo } from "react";
 
 const DEFAULT_COLUMN_SIZES = {
   name: 200,
@@ -41,8 +42,6 @@ const ExperimentMetadataTemplatesTable = ({
 }) => {
   const { data: metadataDefinitions } = useAssayMetadataDefinitions();
 
-  const { data: experimentMetadataTemplates } =
-    useExperimentMetadataTemplates();
   const { data: experimentMetadataTemplateColumns } =
     useExperimentMetadataTemplateColumns(undefined, {
       select: (data) =>
@@ -68,6 +67,23 @@ const ExperimentMetadataTemplatesTable = ({
     },
   );
 
+  const {
+    data,
+    isFetching,
+    isFetchingNextPage,
+    isError,
+    error,
+    fetchNextPage,
+  } = useInfiniteExperimentMetadataTemplates(
+    tableState.sorting,
+    tableState.filters,
+  );
+
+  const flatData = useMemo(
+    () => data?.pages.flatMap(({ data }) => data) ?? [],
+    [data],
+  );
+
   const applyMetadataTemplate = (template: ExperimentMetadataTemplateData) => {
     metadataDefinitions?.forEach(({ safe_name }) => {
       if (template[safe_name]) {
@@ -85,8 +101,15 @@ const ExperimentMetadataTemplatesTable = ({
       header="Pick Metadata Templates"
       tableState={tableState}
       className={styles.metadataTemplatesTable}
-      data={experimentMetadataTemplates}
       onRowClick={({ original }) => applyMetadataTemplate(original)}
+      data={flatData}
+      loading={isFetching}
+      noDataMessage={isError ? error : undefined}
+      pagination={{
+        fetchNextPage,
+        isFetchingNextPage,
+        totalRows: data?.pages[0]?.total,
+      }}
     />
   );
 };
@@ -107,25 +130,16 @@ const ExperimentMetadataTemplates = ({
     error: metadataDefinitionsError,
   } = useAssayMetadataDefinitions();
 
-  const { isLoading, isError, error } = useExperimentMetadataTemplates();
-
   if (
     isExperimentMetadataTemplateColumnsLoading ||
-    isLoading ||
     isMetadataDefinitionsLoading
   )
     return <Spinner />;
-  if (
-    isExperimentMetadataTemplateColumnsError ||
-    isError ||
-    isMetadataDefinitionsError
-  )
+  if (isExperimentMetadataTemplateColumnsError || isMetadataDefinitionsError)
     return (
       <ErrorPage
         error={
-          ExperimentMetadataTemplateColumnsError ??
-          error ??
-          metadataDefinitionsError
+          ExperimentMetadataTemplateColumnsError ?? metadataDefinitionsError
         }
       />
     );

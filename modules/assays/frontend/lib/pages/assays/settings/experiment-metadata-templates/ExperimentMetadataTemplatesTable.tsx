@@ -17,7 +17,7 @@
  */
 
 import { Row, Table, useSetupTableState } from "@grit42/table";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useToolbar } from "@grit42/core/Toolbar";
 import Circle1NewIcon from "@grit42/client-library/icons/Circle1New";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -27,7 +27,7 @@ import styles from "./experimentMetadataTemplates.module.scss";
 import {
   ExperimentMetadataTemplateData,
   useExperimentMetadataTemplateColumns,
-  useExperimentMetadataTemplates,
+  useInfiniteExperimentMetadataTemplates,
 } from "../../../../queries/experiment_metadata_templates";
 
 const DEFAULT_COLUMN_SIZES = {
@@ -43,8 +43,6 @@ const ExperimentMetadataTemplatesTable = ({
   const registerToolbarActions = useToolbar();
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const { data: experimentMetadataTemplates } =
-    useExperimentMetadataTemplates();
   const { data: experimentMetadataTemplateColumns } =
     useExperimentMetadataTemplateColumns(undefined, {
       select: (data) =>
@@ -79,14 +77,38 @@ const ExperimentMetadataTemplatesTable = ({
     tableColumns,
   );
 
+  const {
+    data,
+    isFetching,
+    isFetchingNextPage,
+    isError,
+    error,
+    fetchNextPage,
+  } = useInfiniteExperimentMetadataTemplates(
+    tableState.sorting,
+    tableState.filters,
+  );
+
+  const flatData = useMemo(
+    () => data?.pages.flatMap(({ data }) => data) ?? [],
+    [data],
+  );
+
   return (
     <Table<ExperimentMetadataTemplateData>
       header="Experiment Metadata Templates"
       tableState={tableState}
       headerActions={<Button onClick={navigateToNew}>New</Button>}
       className={styles.table}
-      data={experimentMetadataTemplates}
       onRowClick={onRowClick ?? ((row) => navigate(`${row.original.id}`))}
+      data={flatData}
+      loading={isFetching}
+      noDataMessage={isError ? error : undefined}
+      pagination={{
+        fetchNextPage,
+        isFetchingNextPage,
+        totalRows: data?.pages[0]?.total,
+      }}
     />
   );
 };
@@ -102,14 +124,9 @@ const ExperimentMetadataTemplatesTableWrapper = ({
     error: ExperimentMetadataTemplateColumnsError,
   } = useExperimentMetadataTemplateColumns();
 
-  const { isLoading, isError, error } = useExperimentMetadataTemplates();
-
-  if (isExperimentMetadataTemplateColumnsLoading || isLoading)
-    return <Spinner />;
-  if (isExperimentMetadataTemplateColumnsError || isError)
-    return (
-      <ErrorPage error={ExperimentMetadataTemplateColumnsError ?? error} />
-    );
+  if (isExperimentMetadataTemplateColumnsLoading) return <Spinner />;
+  if (isExperimentMetadataTemplateColumnsError)
+    return <ErrorPage error={ExperimentMetadataTemplateColumnsError} />;
   return <ExperimentMetadataTemplatesTable onRowClick={onRowClick} />;
 };
 

@@ -96,6 +96,26 @@ export const usePublishedAssayModels = (
   );
 };
 
+export const useInfiniteAssayModels = (
+  sort?: SortingState,
+  filter?: Filter[],
+  params: URLParams = {},
+  queryOptions: Partial<
+    UndefinedInitialDataInfiniteOptions<
+      PaginatedEndpointSuccess<AssayModelData[]>,
+      string
+    >
+  > = {},
+) => {
+  return useInfiniteEntityData<AssayModelData>(
+    "grit/assays/assay_models",
+    sort,
+    filter,
+    params,
+    queryOptions,
+  );
+};
+
 export const useInfinitePublishedAssayModels = (
   sort?: SortingState,
   filter?: Filter[],
