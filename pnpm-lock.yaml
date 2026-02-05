@@ -326,6 +326,9 @@ importers:
       '@grit42/api':
         specifier: workspace:*
         version: link:../../../packages/frontend/api
+      '@grit42/assays':
+        specifier: workspace:*
+        version: link:../../assays/frontend
       '@grit42/client-library':
         specifier: workspace:*
         version: link:../../../packages/frontend/client-library

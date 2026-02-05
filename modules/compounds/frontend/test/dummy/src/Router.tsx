@@ -26,6 +26,9 @@ import { Spinner } from "@grit42/client-library/components";
 import CoreMeta from "@grit42/core/meta";
 const CoreRouter = lazy(() => import("@grit42/core/router"));
 
+import AssaysMeta from "@grit42/assays/meta";
+const AssaysRouter = lazy(() => import("@grit42/assays/router"));
+
 import CompoundsMeta from "@grit42/compounds/meta";
 const CompoundsRouter = lazy(() => import("@grit42/compounds/router"));
 
@@ -35,6 +38,7 @@ const Router = () => {
       <Routes>
         <Route path={`${CoreMeta.rootRoute}/*`} element={<CoreRouter />} />
         <Route path={`${CompoundsMeta.rootRoute}/*`} element={<CompoundsRouter />} />
+        <Route path={`${AssaysMeta.rootRoute}/*`} element={<AssaysRouter />} />
         <Route
           index
           path="*"
