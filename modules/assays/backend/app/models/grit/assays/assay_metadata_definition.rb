@@ -24,7 +24,8 @@ module Grit::Assays
     has_many :experiment_metadata, dependent: :destroy
     has_many :experiment_metadata_template_metadata, dependent: :destroy
 
-    before_destroy :check_experiment_metadata
+    before_save :check_in_use
+    before_destroy :check_required_in_assay_model
 
     display_column "name"
 
@@ -55,9 +56,16 @@ module Grit::Assays
 
     private
 
-      def check_experiment_metadata
-        used_as_metadata = Grit::Assays::AssayModelMetadatum.unscoped.where(assay_metadata_definition_id: id).count(:all).positive?
-        raise "'#{self.name}' is required in at least one assay model" if used_as_metadata
+      def check_in_use
+        return if new_record?
+        in_use = Grit::Assays::AssayModelMetadatum.unscoped.where(assay_metadata_definition_id: id).count(:all).positive?
+        in_use ||= ExperimentMetadatum.unscoped.where(assay_metadata_definition_id: id).count(:all).positive?
+        raise "Cannot modify a metadata definition already in use" if in_use
+      end
+
+      def check_required_in_assay_model
+        required_in_assay_model = Grit::Assays::AssayModelMetadatum.unscoped.where(assay_metadata_definition_id: id).count(:all).positive?
+        raise "'#{self.name}' is required in at least one assay model" if required_in_assay_model
       end
   end
 end
