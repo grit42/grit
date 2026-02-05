@@ -135,7 +135,6 @@ const NewLoadSetForm = ({
             <FormField key={f.name} form={form} fieldDef={f} />
           ))}
           {errors && <p className={styles.error}>{errors}</p>}
-          {/* <InputError error={dataErrors} /> */}
         </div>
       </Surface>
       <form.Field name="blocks" mode="array">

@@ -45,7 +45,6 @@ const LoadSet = ({ id }: { id: string }) => {
   }
 
   if (data.load_set_blocks[0].status_id__name === "Succeeded") {
-    // return <h1>Yes!</h1>
     return <LoadSetViewer loadSet={data} />;
   }
 
