@@ -150,7 +150,7 @@ const LoadSetEditor = ({
     await destroyLoadSetMutation.mutateAsync(loadSet.id);
     navigate(
       `/core/load_sets/new?${getURLParams(
-        getLoadSetPropertiesForCancel(loadSet),
+        getLoadSetPropertiesForCancel({...loadSet, ...loadSet.load_set_blocks[0]}),
       )}`,
     );
   };
