@@ -307,7 +307,7 @@ module Grit::Compounds
     def self.columns_from_sdf(load_set_block)
       load_set_block.data.open do |io|
         Grit::Compounds::SDF.properties(io)
-          .each_with_index.map { |h,index| { name: "col_#{index}", display_name: h } }
+          .each_with_index.map { |h,index| { name: "col_#{index}", display_name: h.strip } }
       end
     end
 
@@ -322,7 +322,7 @@ module Grit::Compounds
         Grit::Compounds::SDF.each_record(file) do |record, recordno|
           row = load_set_block.headers.map { |h| record[h["display_name"]] }
           next if row.compact.blank?
-          row_with_record_number = [ recordno, *row ]
+          row_with_record_number = [ recordno, *row ].map(&:strip)
           yield CSV.generate_line(row_with_record_number, col_sep: ",")
         end
       end

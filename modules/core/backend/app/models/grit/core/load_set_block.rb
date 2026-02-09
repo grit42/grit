@@ -186,7 +186,7 @@ module Grit::Core
     end
 
     def initialize_raw_data_table
-      update_column(:headers, Grit::Core::EntityLoader.load_set_block_columns_from_file(self))
+      headers_from_file
       create_raw_data_table
       seed_raw_data_table
     end

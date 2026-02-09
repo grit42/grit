@@ -404,7 +404,7 @@ module Grit::Core
       load_set_block.data.open do |io|
         line = io.gets
         CSV.parse_line(line, col_sep: load_set_block.separator, liberal_parsing: true, encoding: "utf-8")
-          .each_with_index.map { |h,index| { name: "col_#{index}", display_name: h } }
+          .each_with_index.map { |h,index| { name: "col_#{index}", display_name: h.strip } }
       end
     end
 
@@ -418,7 +418,7 @@ module Grit::Core
           next if index == 0
           next if line.nil? || line.blank?
           line_with_line_number = "#{index+1}#{load_set_block.separator}#{line}"
-          row = CSV.parse_line(line_with_line_number.strip, col_sep: load_set_block.separator)
+          row = CSV.parse_line(line_with_line_number.strip, col_sep: load_set_block.separator).map(&:strip)
           yield CSV.generate_line(row, col_sep: ",")
         end
       end
