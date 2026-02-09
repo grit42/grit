@@ -35,8 +35,7 @@ module Grit::Assays
 
     def safe_name_not_conflict
       return unless self.safe_name_changed?
-      if Grit::Assays::DataTableColumn.respond_to?(self.safe_name)
-
+      if Grit::Assays::DataTableRow.new.respond_to?(self.safe_name)
         errors.add("safe_name", "cannot be used as a safe name")
       end
     end

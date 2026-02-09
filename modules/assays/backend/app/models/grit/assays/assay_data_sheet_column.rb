@@ -42,7 +42,7 @@ module Grit::Assays
 
     def safe_name_not_conflict
       return unless self.safe_name_changed?
-      if Grit::Assays::AssayDataSheetColumn.respond_to?(self.safe_name)
+      if ActiveRecord::Base.instance_methods.include?(self.safe_name.to_sym) || ["id","created_at","created_by","updated_at","updated_by","experiment_id"].include?(self.safe_name)
         errors.add("safe_name", "cannot be used as a safe name")
       end
     end
