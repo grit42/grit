@@ -58,6 +58,16 @@ const DataSheetDefinitionEditorIssues = ({
           issues.forEach((issue) => dataSheetIssues.push([field, issue]));
         }
       });
+      const issues = Array.from(
+        new Set(
+          errorTree.properties?.sheets?.items?.[sheetIndex]?.properties?.[
+            "columns" as keyof DataSheetDefinitionFull
+          ]?.errors ?? [],
+        ),
+      );
+      if (issues.length) {
+        issues.forEach((issue) => dataSheetIssues.push([{name: "columns", display_name: "Columns", type: "string"}, issue]));
+      }
       sheet.columns.forEach((column, columnIndex) => {
         const dataSheetColumnIssues: [FormFieldDef, string][] = [];
         DATA_SHEET_COLUMN_FIELDS.forEach((field) => {

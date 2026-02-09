@@ -1,4 +1,4 @@
-\restrict 0Ohvdif7PY0bCGFDgaoqLiZ2kw1WVpMW8rwK4mrkCs1Eo8xBkuEZI47Z3iibFgJ
+\restrict DJjd3WMjjd5mGydjNS8YxfzhvGkv08pdX4xDWyGr8hqfcfH4FWXODlqNtgtDlpb
 
 -- Dumped from database version 16.3 (Debian 16.3-1.pgdg120+1)
 -- Dumped by pg_dump version 16.11
@@ -648,6 +648,7 @@ CREATE TABLE public.grit_core_load_set_blocks (
     updated_by character varying(30),
     updated_at timestamp(6) without time zone,
     name character varying NOT NULL,
+    error character varying,
     headers jsonb DEFAULT '[]'::jsonb,
     mappings jsonb DEFAULT '{}'::jsonb,
     separator character varying NOT NULL,
@@ -1217,13 +1218,6 @@ CREATE UNIQUE INDEX idx_locations_on_name_unique ON public.grit_core_locations U
 --
 
 CREATE INDEX idx_on_assay_data_sheet_column_id_c4cb5d8972 ON public.grit_assays_data_table_columns USING btree (assay_data_sheet_column_id);
-
-
---
--- Name: idx_on_assay_data_sheet_definition_id_0b215fd500; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_on_assay_data_sheet_definition_id_0b215fd500 ON public.grit_assays_experiment_data_sheet_record_load_sets USING btree (assay_data_sheet_definition_id);
 
 
 --
@@ -2237,7 +2231,7 @@ ALTER TABLE ONLY public.active_storage_attachments
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 0Ohvdif7PY0bCGFDgaoqLiZ2kw1WVpMW8rwK4mrkCs1Eo8xBkuEZI47Z3iibFgJ
+\unrestrict DJjd3WMjjd5mGydjNS8YxfzhvGkv08pdX4xDWyGr8hqfcfH4FWXODlqNtgtDlpb
 
 SET search_path TO "$user", public;
 

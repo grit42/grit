@@ -166,11 +166,17 @@ const AssayDataSheetColumnForm = ({
     navigate("..");
   };
 
+  const canCreateColumn =
+    assayModel?.publication_status_id__name === "Draft" &&
+    assayDataSheetColumns.length < 249;
+
   return (
     <Surface className={styles.modelForm}>
-      {assayModel?.publication_status_id__name !== "Published" && <h2 style={{ alignSelf: "baseline", marginBottom: "1em" }}>
-        Edit column
-      </h2>}
+      {assayModel?.publication_status_id__name !== "Published" && (
+        <h2 style={{ alignSelf: "baseline", marginBottom: "1em" }}>
+          Edit column
+        </h2>
+      )}
       <Form<Partial<AssayDataSheetColumnData>> form={form}>
         <div
           style={{
@@ -253,16 +259,11 @@ const AssayDataSheetColumnForm = ({
                 {!isDirty && (
                   <Button onClick={() => navigate("..")}>Back</Button>
                 )}
-                {!isDirty &&
-                  assayModel?.publication_status_id__name !== "Published" && (
-                    <Link
-                      to={{
-                        pathname: "clone",
-                      }}
-                    >
-                      <Button>Clone</Button>
-                    </Link>
-                  )}
+                {!isDirty && canCreateColumn && (
+                  <Link to="clone">
+                    <Button>Clone</Button>
+                  </Link>
+                )}
                 {assayModel?.publication_status_id__name !== "Published" && (
                   <Button
                     color="danger"

@@ -61,6 +61,12 @@ const DataSheetColumnsTable = ({
     { enabled: sheetId !== "new" },
   );
 
+  const canCreateColumn =
+    sheetId !== "new" &&
+    assayModel?.publication_status_id__name === "Draft" &&
+    data &&
+    data.length < 250;
+
   const navigateToNew = useCallback(() => navigate("new"), [navigate]);
 
   useEffect(() => {
@@ -71,18 +77,11 @@ const DataSheetColumnsTable = ({
           icon: <Circle1NewIcon />,
           label: "New column",
           onClick: navigateToNew,
-          disabled:
-            sheetId === "new" ||
-            assayModel?.publication_status_id__name === "Published",
+          disabled: !canCreateColumn,
         },
       ],
     });
-  }, [
-    registerToolbarActions,
-    navigateToNew,
-    sheetId,
-    assayModel?.publication_status_id__name,
-  ]);
+  }, [registerToolbarActions, navigateToNew, sheetId, canCreateColumn]);
 
   return (
     <>
@@ -92,12 +91,11 @@ const DataSheetColumnsTable = ({
           tableState={tableState}
           loading={isLoading}
           headerActions={
-            assayModel?.publication_status_id__name ===
-            "Published" ? undefined : (
+            canCreateColumn ? (
               <Button disabled={sheetId === "new"} onClick={navigateToNew}>
                 New
               </Button>
-            )
+            ) : undefined
           }
           className={styles.typesTable}
           data={data ?? []}
