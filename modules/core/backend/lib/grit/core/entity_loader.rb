@@ -158,7 +158,7 @@ module Grit::Core
       load_set = Grit::Core::LoadSet.new({
         name: params[:name],
         entity: params[:entity],
-        origin_id: params[:origin_id],
+        origin_id: params[:origin_id]
       })
 
       load_set.save!
@@ -201,24 +201,36 @@ module Grit::Core
       load_set_entity = block_entity(load_set_block)
       load_set_entity_properties = block_mapping_fields(load_set_block)
 
-      load_set_block_record_klass = load_set_block.record_klass
+      load_set_block_record_klass = load_set_block.loading_record_klass
 
       errors = []
       records = []
-      unique_properties = {}
+      unique_properties = Hash.new { |h, k| h[k] = Set.new }
+      has_errors = false
+      record = nil
+      record_props = nil
+      entity_property_name = nil
+      mapping = nil
+      find_by = nil
+      header = nil
+      value = nil
+      duplicate_values = nil
+      load_set_entity_record = nil
 
       new_record_props = base_record_props(load_set_block)
 
-      load_set_block.preview_data.each do |datum|
+      load_set_block.preview_data.find_each do |datum|
         record = {
           line: datum[:line],
-          datum: datum,
           record_errors: nil,
         }
 
         record_props = new_record_props.dup
 
         load_set_entity_properties.each do |entity_property|
+          value = nil
+          find_by = nil
+          header = nil
           entity_property_name = entity_property[:name].to_s
           mapping = load_set_block.mappings[entity_property_name]
           next if mapping.nil?
@@ -229,7 +241,8 @@ module Grit::Core
             value = mapping["value"]
           elsif !find_by.blank? and !datum[header].blank?
             begin
-              field_entity = entity_property[:entity][:full_name].constantize
+              entity_property[:_klass] ||= entity_property[:entity][:full_name].constantize
+              field_entity = entity_property[:_klass]
               value = field_entity.loader_find_by!(find_by, datum[header], options: entity_property[:entity][:options]).id
             rescue NameError
               record[:record_errors] ||= {}
@@ -258,6 +271,10 @@ module Grit::Core
             value = nil
             record[:record_errors] ||= {}
             record[:record_errors][entity_property_name] = [ "is not a integer" ]
+          elsif entity_property[:type].to_s == "integer" and !value.nil? and !value.blank? and (value.to_i < -(2**53-1) || value.to_i > 2**53-1)
+            value = nil
+            record[:record_errors] ||= {}
+            record[:record_errors][entity_property_name] = [ "is out of range" ]
           elsif entity_property[:type].to_s == "datetime" and !value.nil? and !value.blank?
             begin
               record_props[entity_property_name] = DateTime.parse(value)
@@ -277,31 +294,34 @@ module Grit::Core
           end
 
           if entity_property[:unique]
-            unique_properties[entity_property_name] ||= []
-
-            duplicate_values = unique_properties[entity_property_name].select { |o| o == value }
-
-            if duplicate_values.length.positive?
+            if unique_properties[entity_property_name].include?(value)
               record[:record_errors] ||= {}
-              record[:record_errors][entity_property_name] = [ "should be unique (duplicate in file)" ]
+              record[:record_errors][entity_property_name] = ["should be unique (duplicate in file)"]
             else
-              unique_properties[entity_property_name].push(value)
+              unique_properties[entity_property_name].add(value)
             end
           end
         end
 
         if record[:record_errors].nil?
-          blah = load_set_entity.new(record_props)
-          record[:record_errors] = blah.errors unless blah.valid?
+          load_set_entity_record = load_set_entity.new(record_props)
+          record[:record_errors] = load_set_entity_record.errors unless load_set_entity_record.valid?
         end
 
         unless record[:record_errors].nil?
-          errors.push({ line: datum[:line], datum: datum, errors: record[:record_errors] })
+          has_errors = true
         end
-        records.push({ **record, **record_props })
+
+        record.merge!(record_props)
+        records.push record
+
+        if records.length >= 1000
+          load_set_block_record_klass.insert_all(records)
+          records = []
+        end
       end
-      load_set_block_record_klass.insert_all(records)
-      { errors: errors }
+      load_set_block_record_klass.insert_all(records) if records.length.positive?
+      !has_errors
     end
 
     def self.confirm_block(load_set_block)
@@ -314,7 +334,7 @@ module Grit::Core
       end
       insert += ") "
 
-      load_set_block_record_klass = load_set_block.record_klass
+      load_set_block_record_klass = load_set_block.loading_record_klass
       insert += load_set_block_record_klass.for_confirm.where(record_errors: nil).to_sql
       insert += " RETURNING id) INSERT INTO grit_core_load_set_block_loaded_records(\"record_id\",\"load_set_block_id\",\"table\") SELECT inserted_records.id,#{load_set_block.id}, '#{load_set_entity.table_name}' from inserted_records"
 

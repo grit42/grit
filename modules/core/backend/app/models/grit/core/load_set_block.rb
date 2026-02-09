@@ -73,17 +73,19 @@ module Grit::Core
 
     def self.errored_data(params = nil)
       raise "No load set block id provided" if params.nil? or params[:load_set_block_id].nil?
-      self.unscoped.from("lsb_#{params[:load_set_block_id]}")
+      load_set_block_id =  params[:load_set_block_id]
+      self.unscoped.from("lsb_#{load_set_block_id}")
         .select(
-          "lsb_#{params[:load_set_block_id]}.line",
-          "lsb_#{params[:load_set_block_id]}.datum",
-          "lsb_#{params[:load_set_block_id]}.record_errors"
+          "lsb_#{load_set_block_id}.line",
+          "to_jsonb(raw_lsb_#{load_set_block_id}) as datum",
+          "lsb_#{load_set_block_id}.record_errors",
         )
-        .where("lsb_#{params[:load_set_block_id]}.record_errors IS NOT NULL")
+        .joins("JOIN raw_lsb_#{load_set_block_id} ON raw_lsb_#{load_set_block_id}.line = lsb_#{load_set_block_id}.line")
+        .where("lsb_#{load_set_block_id}.record_errors IS NOT NULL")
     end
 
     def preview_data
-      LoadSetBlock.preview_data({ load_set_block_id: id })
+      raw_data_klass
     end
 
     def self.by_entity(params)
@@ -142,7 +144,8 @@ module Grit::Core
       drop_raw_data_table
       columns = headers.map { |h| h["name"] }
       ActiveRecord::Base.connection.create_table raw_data_table_name, id: false do |t|
-        t.integer :line
+        # t.bigint :id
+        t.bigint :line, primary_key: true
         columns.each do |column|
           t.string column
         end
@@ -223,7 +226,15 @@ module Grit::Core
       drop_tables
     end
 
-    def record_klass
+    def raw_data_klass
+      load_set_block = self
+      klass = Class.new(ActiveRecord::Base) do
+        self.table_name = load_set_block.raw_data_table_name
+      end
+      klass
+    end
+
+    def loading_record_klass
       load_set_block = self
       fields = Grit::Core::EntityLoader.load_set_block_loading_fields(self)
       klass = Class.new(ActiveRecord::Base) do

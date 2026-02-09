@@ -55,11 +55,8 @@ module Grit::Core::GritEntityRecord
       self.class.columns.each do |column|
         next if ![ :integer, :float ].include?(column.sql_type_metadata.type) or column.sql_type_metadata.sql_type.end_with? "[]"
 
-        if column.sql_type_metadata.type == :integer && self[column.name].present? && self[column.name].to_i.bit_length > column.sql_type_metadata.limit * 8
+        if column.sql_type_metadata.type == :integer && self[column.name].present? && (self[column.name].to_i < -(2**53-1) || self[column.name].to_i > 2**53-1)
           errors.add(column.name, "is out of range")
-        elsif column.sql_type_metadata.type == :float && self[column.name].present?
-          errors.add(column.name, "is out of range") if self[column.name].to_f.infinite?
-          errors.add(column.name, "is not a number") if self[column.name].to_f.nan?
         end
       end
     end

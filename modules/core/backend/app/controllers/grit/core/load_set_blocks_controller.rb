@@ -169,9 +169,7 @@ module Grit::Core
 
           load_set_block.save!
 
-          validation_results = Grit::Core::EntityLoader.validate_load_set_block(load_set_block)
-
-          if validation_results[:errors].length > 0
+          if !Grit::Core::EntityLoader.validate_load_set_block(load_set_block)
             load_set_block.status_id = Grit::Core::LoadSetStatus.find_by_name("Invalidated").id
             load_set_block.save!
             render json: { success: false, errors: "The data set contains errors" }, status: :unprocessable_entity

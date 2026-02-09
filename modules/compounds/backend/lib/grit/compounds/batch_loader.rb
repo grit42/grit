@@ -63,36 +63,50 @@ module Grit::Compounds
       batch_load_set_block = Grit::Compounds::BatchLoadSetBlock.find_by(load_set_block_id: load_set_block.id)
       compound_type_id = batch_load_set_block.compound_type_id
       batch_properties = Grit::Compounds::BatchProperty.where(compound_type_id: [ compound_type_id, nil ])
+      db_property_names = Grit::Compounds::Batch.db_properties.map { |prop| prop[:name] }
 
-      load_set_block_record_klass = load_set_block.record_klass
+      load_set_block_record_klass = load_set_block.loading_record_klass
 
       errors = []
       records = []
-      unique_properties = {}
+      unique_properties = Hash.new { |h, k| h[k] = Set.new }
+      has_errors = false
+      record = nil
+      record_props = nil
+      entity_property_name = nil
+      mapping = nil
+      find_by = nil
+      header = nil
+      value = nil
+      duplicate_values = nil
+      load_set_entity_record = nil
+      value_prop_name = nil
 
       new_record_props = base_record_props(load_set_block)
 
-      load_set_block.preview_data.each do |datum|
+      load_set_block.preview_data.find_each do |datum|
         record = {
           line: datum[:line],
-          datum: datum,
           record_errors: nil
         }
 
         record_props = new_record_props.dup
 
         load_set_entity_properties.each do |entity_property|
+          value = nil
+          find_by = nil
+          header = nil
           entity_property_name = entity_property[:name].to_s
           mapping = load_set_block.mappings[entity_property_name]
           next if mapping.nil?
           find_by = mapping["find_by"]
           header = mapping["header"] unless mapping["header"].nil? or mapping["header"].blank?
-          value = nil
           if mapping["constant"]
             value = mapping["value"]
           elsif !find_by.blank? and !datum[header].blank?
             begin
-              field_entity = entity_property[:entity][:full_name].constantize
+              entity_property[:_klass] ||= entity_property[:entity][:full_name].constantize
+              field_entity = entity_property[:_klass]
               value = field_entity.loader_find_by!(find_by, datum[header], options: entity_property[:entity][:options]).id
             rescue NameError
               record[:record_errors] ||= {}
@@ -121,6 +135,10 @@ module Grit::Compounds
             value = nil
             record[:record_errors] ||= {}
             record[:record_errors][entity_property_name] = [ "is not a integer" ]
+          elsif entity_property[:type].to_s == "integer" and !value.nil? and !value.blank? and (value.to_i < -(2**53-1) || value.to_i > 2**53-1)
+            value = nil
+            record[:record_errors] ||= {}
+            record[:record_errors][entity_property_name] = [ "is out of range" ]
           elsif entity_property[:type].to_s == "datetime" and !value.nil? and !value.blank?
             begin
               record_props[entity_property_name] = DateTime.parse(value)
@@ -140,21 +158,16 @@ module Grit::Compounds
           end
 
           if entity_property[:unique]
-            unique_properties[entity_property_name] ||= []
-
-            duplicate_values = unique_properties[entity_property_name].select { |o| o == value }
-
-            if duplicate_values.length.positive?
+            if unique_properties[entity_property_name].include?(value)
               record[:record_errors] ||= {}
-              record[:record_errors][entity_property_name] = [ "should be unique (duplicate in file)" ]
+              record[:record_errors][entity_property_name] = ["should be unique (duplicate in file)"]
             else
-              unique_properties[entity_property_name].push(value)
+              unique_properties[entity_property_name].add(value)
             end
           end
         end
 
         if record[:record_errors].nil?
-          db_property_names = Grit::Compounds::Batch.db_properties.map { |prop| prop[:name] }
           load_set_entity_record = load_set_entity.new(record_props.select { |key| db_property_names.include?(key) })
           record[:record_errors] = load_set_entity_record.errors unless load_set_entity_record.valid?
         end
@@ -175,12 +188,19 @@ module Grit::Compounds
         end
 
         unless record[:record_errors].nil?
-          errors.push({ line: datum[:line], datum: datum, errors: record[:record_errors] })
+          has_errors = true
         end
-        records.push({ **record, **record_props })
+
+        record.merge!(record_props)
+        records.push record
+
+        if records.length >= 1000
+          load_set_block_record_klass.insert_all(records)
+          records = []
+        end
       end
-      load_set_block_record_klass.insert_all(records)
-      { errors: errors }
+      load_set_block_record_klass.insert_all(records) if records.length.positive?
+      !has_errors
     end
 
     def self.confirm_block(load_set_block)
@@ -191,7 +211,7 @@ module Grit::Compounds
       entity_klass = load_set_block.load_set.entity.constantize
       fields = load_set_block.load_set.entity.constantize.entity_fields
 
-      load_set_block_record_klass = load_set_block.record_klass
+      load_set_block_record_klass = load_set_block.loading_record_klass
       ActiveRecord::Base.transaction do
         load_set_block_record_klass.for_confirm.where(record_errors: nil).each do |record|
           record_ids = Grit::Compounds::Batch.create(record)

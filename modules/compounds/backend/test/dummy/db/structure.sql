@@ -1,4 +1,4 @@
-\restrict 7ghCDgglrUGqiQoqo6oQGi7P6Iq0Ufp6Q2eR2tQU5woqQw2WguCZJ7ehWrcRjv4
+\restrict d9NGPb9czWlLQb2OdSMSYKXPvurY4SaFnj1xzYKdItZlZHbUI5Gliv8dJ0t9CqC
 
 -- Dumped from database version 16.3 (Debian 16.3-1.pgdg120+1)
 -- Dumped by pg_dump version 16.11
@@ -424,7 +424,7 @@ CREATE TABLE public.grit_compounds_batch_property_values (
     updated_at timestamp(6) without time zone,
     numeric_sign character varying,
     string_value character varying,
-    integer_value integer,
+    integer_value bigint,
     decimal_value numeric,
     float_value double precision,
     text_value text,
@@ -517,7 +517,7 @@ CREATE TABLE public.grit_compounds_compound_property_values (
     updated_at timestamp(6) without time zone,
     numeric_sign character varying,
     string_value character varying,
-    integer_value integer,
+    integer_value bigint,
     decimal_value numeric,
     float_value double precision,
     text_value text,
@@ -681,21 +681,6 @@ CREATE TABLE public.grit_core_load_set_block_loaded_records (
 
 
 --
--- Name: grit_core_load_set_block_loading_records; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.grit_core_load_set_block_loading_records (
-    id bigint DEFAULT nextval('public.grit_seq'::regclass) NOT NULL,
-    created_by character varying(30) DEFAULT 'SYSTEM'::character varying NOT NULL,
-    created_at timestamp(6) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_by character varying(30),
-    updated_at timestamp(6) without time zone,
-    number integer,
-    load_set_block_id bigint NOT NULL
-);
-
-
---
 -- Name: grit_core_load_set_blocks; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -706,6 +691,7 @@ CREATE TABLE public.grit_core_load_set_blocks (
     updated_by character varying(30),
     updated_at timestamp(6) without time zone,
     name character varying NOT NULL,
+    error character varying,
     headers jsonb DEFAULT '[]'::jsonb,
     mappings jsonb DEFAULT '{}'::jsonb,
     separator character varying NOT NULL,
@@ -1114,14 +1100,6 @@ ALTER TABLE ONLY public.grit_core_load_set_block_loaded_records
 
 
 --
--- Name: grit_core_load_set_block_loading_records grit_core_load_set_block_loading_records_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.grit_core_load_set_block_loading_records
-    ADD CONSTRAINT grit_core_load_set_block_loading_records_pkey PRIMARY KEY (id);
-
-
---
 -- Name: grit_core_load_set_blocks grit_core_load_set_blocks_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1350,13 +1328,6 @@ CREATE INDEX idx_on_compound_property_id_d44c6d4eeb ON public.grit_compounds_com
 --
 
 CREATE INDEX idx_on_compound_type_id_9e3ae0bd7f ON public.grit_compounds_compound_load_set_blocks USING btree (compound_type_id);
-
-
---
--- Name: idx_on_load_set_block_id_04cc5c0519; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_on_load_set_block_id_04cc5c0519 ON public.grit_core_load_set_block_loading_records USING btree (load_set_block_id);
 
 
 --
@@ -1815,13 +1786,6 @@ CREATE TRIGGER manage_stamps_grit_core_load_set_block_loaded_records BEFORE INSE
 
 
 --
--- Name: grit_core_load_set_block_loading_records manage_stamps_grit_core_load_set_block_loading_records; Type: TRIGGER; Schema: public; Owner: -
---
-
-CREATE TRIGGER manage_stamps_grit_core_load_set_block_loading_records BEFORE INSERT OR UPDATE ON public.grit_core_load_set_block_loading_records FOR EACH ROW EXECUTE FUNCTION public.manage_stamps();
-
-
---
 -- Name: grit_core_load_set_blocks manage_stamps_grit_core_load_set_blocks; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -2072,14 +2036,6 @@ ALTER TABLE ONLY public.grit_core_load_set_block_loaded_records
 
 
 --
--- Name: grit_core_load_set_block_loading_records core_load_set_block_loading_records_core_load_set_block_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.grit_core_load_set_block_loading_records
-    ADD CONSTRAINT core_load_set_block_loading_records_core_load_set_block_id_fkey FOREIGN KEY (load_set_block_id) REFERENCES public.grit_core_load_set_blocks(id);
-
-
---
 -- Name: grit_core_load_set_blocks core_load_set_blocks_core_load_set_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2227,7 +2183,7 @@ ALTER TABLE ONLY public.grit_compounds_compound_property_values
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 7ghCDgglrUGqiQoqo6oQGi7P6Iq0Ufp6Q2eR2tQU5woqQw2WguCZJ7ehWrcRjv4
+\unrestrict d9NGPb9czWlLQb2OdSMSYKXPvurY4SaFnj1xzYKdItZlZHbUI5Gliv8dJ0t9CqC
 
 SET search_path TO "$user", public;
 
@@ -2262,7 +2218,6 @@ INSERT INTO "schema_migrations" (version) VALUES
 ('20250205093246'),
 ('20250203140045'),
 ('20241212062610'),
-('20241212062035'),
 ('20241212062001'),
 ('20241212062000'),
 ('20241212061707'),

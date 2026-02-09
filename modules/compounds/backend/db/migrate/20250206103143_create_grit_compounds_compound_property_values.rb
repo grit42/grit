@@ -9,7 +9,7 @@ class CreateGritCompoundsCompoundPropertyValues < ActiveRecord::Migration[7.2]
 
       t.string :numeric_sign, null: true, default: nil
       t.string :string_value, null: true, default: nil
-      t.integer :integer_value, null: true, default: nil
+      t.bigint :integer_value, null: true, default: nil
       t.decimal :decimal_value, null: true, default: nil
       t.float :float_value, null: true, default: nil
       t.text :text_value, null: true, default: nil
