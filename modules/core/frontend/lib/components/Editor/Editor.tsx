@@ -111,7 +111,9 @@ const Editor = ({
             event.stopPropagation();
 
             const file = event.dataTransfer.files[0];
-            if (file) {
+            if (file && file.size > 500 * 1024 * 1024) {
+              toast.error("File is too large.");
+            } else if (file) {
               const reader = new FileReader();
 
               reader.onload = (event) => {
@@ -210,7 +212,7 @@ const Editor = ({
           event.stopPropagation();
 
           const file = event.target.files?.[0];
-          if (file && file.size > 10000 * 1024 * 1024) {
+          if (file && file.size > 500 * 1024 * 1024) {
             toast.error("File is too large.");
           } else if (file) {
             const reader = new FileReader();
