@@ -140,6 +140,11 @@ module Grit::Core
       index
     end
 
+    def warning_data
+      params[:scope] = "warning_data"
+      index
+    end
+
     def export_errored_rows
       raise "No load set block id provided" if params[:load_set_block_id].nil?
       load_set_block = Grit::Core::LoadSetBlock.find(params[:load_set_block_id])
@@ -191,6 +196,8 @@ module Grit::Core
 
           load_set_block.status_id = Grit::Core::LoadSetStatus.find_by_name("Validating").id
           load_set_block.mappings = params[:mappings] unless params[:mappings].nil?
+          load_set_block.has_errors = false
+          load_set_block.has_warnings = false
 
           if load_set_block.mappings.nil?
             render json: { success: false, errors: "No mappings provided" }, status: :unprocessable_entity
@@ -199,7 +206,11 @@ module Grit::Core
 
           load_set_block.save!
 
-          if !Grit::Core::EntityLoader.validate_load_set_block(load_set_block)
+          validation_result = Grit::Core::EntityLoader.validate_load_set_block(load_set_block)
+          load_set_block.has_errors = validation_result[:has_errors]
+          load_set_block.has_warnings = validation_result[:has_warnings]
+
+          if load_set_block.has_errors
             load_set_block.status_id = Grit::Core::LoadSetStatus.find_by_name("Invalidated").id
             load_set_block.save!
             render json: { success: false, errors: "The data set contains errors" }, status: :unprocessable_entity
@@ -283,7 +294,10 @@ module Grit::Core
 
           load_set.mappings = params[:mappings]
           load_set.record_errors = nil
-          load_set.save
+          load_set_block.has_errors = false
+          load_set_block.has_warnings = false
+
+          load_set.save!
 
           render json: { success: true, data: load_set }
         rescue StandardError => e

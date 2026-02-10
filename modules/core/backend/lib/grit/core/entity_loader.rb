@@ -321,7 +321,7 @@ module Grit::Core
         end
       end
       load_set_block_record_klass.insert_all(records) if records.length.positive?
-      !has_errors
+      { has_errors: has_errors, has_warnings: false }
     end
 
     def self.confirm_block(load_set_block)
@@ -370,6 +370,8 @@ module Grit::Core
       load_set_block.separator = params[:separator] unless params[:separator].nil?
       load_set_block.data = params[:data] unless params[:data].nil?
       load_set_block.name = params[:name] unless params[:name].nil?
+      load_set_block.has_errors = false
+      load_set_block.has_warnings = false
       load_set_block.status_id = Grit::Core::LoadSetStatus.find_by(name: "Created").id
       ActiveRecord::Base.transaction do
         load_set_block.drop_tables

@@ -53,6 +53,8 @@ export interface LoadSetBlockData extends EntityData {
   status_id__name: string;
   mappings?: Record<string, LoadSetMapping>;
   error: string | null;
+  has_errors: boolean;
+  has_warnings: boolean;
 }
 
 export interface LoadSetData extends EntityData {

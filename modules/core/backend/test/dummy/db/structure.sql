@@ -1,4 +1,4 @@
-\restrict BMIEtMz01cmgVQKG3XkVwhitTfhiV9nbhyfZtowzPcGzCA300jjmw0VLreUCI3m
+\restrict dOJuOYsdJxy68tlcPTT4s6Xf8WMPEcZzkpjJHhGN87xeHu2mp8hDkenM3g2Ft3j
 
 -- Dumped from database version 16.3 (Debian 16.3-1.pgdg120+1)
 -- Dumped by pg_dump version 16.11
@@ -403,6 +403,8 @@ CREATE TABLE public.grit_core_load_set_blocks (
     headers jsonb DEFAULT '[]'::jsonb,
     mappings jsonb DEFAULT '{}'::jsonb,
     separator character varying NOT NULL,
+    has_errors boolean DEFAULT false,
+    has_warnings boolean DEFAULT false,
     load_set_id bigint NOT NULL,
     status_id bigint NOT NULL
 );
@@ -1343,7 +1345,7 @@ ALTER TABLE ONLY public.test_entities
 -- PostgreSQL database dump complete
 --
 
-\unrestrict BMIEtMz01cmgVQKG3XkVwhitTfhiV9nbhyfZtowzPcGzCA300jjmw0VLreUCI3m
+\unrestrict dOJuOYsdJxy68tlcPTT4s6Xf8WMPEcZzkpjJHhGN87xeHu2mp8hDkenM3g2Ft3j
 
 SET search_path TO "$user", public;
 

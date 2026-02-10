@@ -24,6 +24,7 @@ import { LoadSetData } from "../types";
 import {
   useInfiniteLoadSetBlockErroredData,
   useInfiniteLoadSetBlockPreviewData,
+  useInfiniteLoadSetBlockWarningData,
 } from "../queries";
 import { useToolbar } from "../../../Toolbar";
 import { toast, upsert } from "@grit42/notifications";
@@ -60,29 +61,29 @@ const ERROR_COLUMNS: GritColumnDef[] = [
   },
 ];
 
-// const WARNING_COLUMNS: GritColumnDef[] = [
-//   {
-//     accessorKey: "index",
-//     header: "Line",
-//     id: "index",
-//     type: "integer",
-//     size: 40,
-//   },
-//   {
-//     accessorKey: "column",
-//     header: "Column",
-//     id: "column",
-//     type: "string",
-//     size: 150,
-//   },
-//   {
-//     accessorKey: "warning",
-//     header: "Warning",
-//     id: "warning",
-//     type: "string",
-//     size: 500,
-//   },
-// ];
+const WARNING_COLUMNS: GritColumnDef[] = [
+  {
+    accessorKey: "line",
+    header: "Line",
+    id: "line",
+    type: "integer",
+    size: 40,
+  },
+  {
+    accessorKey: "column",
+    header: "Column",
+    id: "column",
+    type: "string",
+    size: 150,
+  },
+  {
+    accessorKey: "warning",
+    header: "Warning",
+    id: "warning",
+    type: "string",
+    size: 500,
+  },
+];
 
 const PreviewDataTable = ({
   loadSet,
@@ -246,6 +247,51 @@ const ErrorsTable = ({
   );
 };
 
+const WarningsTable = ({ loadSet }: { loadSet: LoadSetData }) => {
+  const { data, isLoading, isError, error, fetchNextPage, isFetchingNextPage } =
+    useInfiniteLoadSetBlockWarningData(loadSet.load_set_blocks[0].id);
+
+  const flatData = useMemo(() => {
+    if (!data) return [];
+    return data.pages.flatMap(({ data }) => {
+      return data.flatMap((w) => {
+        const rows = [];
+        for (const key in w.record_warnings) {
+          for (const i of w.record_warnings[key]) {
+            rows.push({
+              line: w.line,
+              column: key,
+              warning: i,
+            });
+          }
+        }
+        return rows;
+      });
+    });
+  }, [data]);
+
+  return (
+    <Table
+      columns={WARNING_COLUMNS}
+      data={flatData}
+      disableFooter
+      settings={{
+        disableColumnReorder: true,
+        disableColumnSorting: true,
+        disableFilters: true,
+        disableVisibilitySettings: true,
+      }}
+      loading={isLoading}
+      noDataMessage={isError ? error : undefined}
+      pagination={{
+        fetchNextPage,
+        isFetchingNextPage,
+        totalRows: data?.pages[0].total,
+      }}
+    />
+  );
+};
+
 const ErroredRowsTable = ({
   loadSet,
   columns,
@@ -352,91 +398,14 @@ const LoadSetInfo = ({
   // const registerToolbarActions = useToolbar();
   const [selectedTab, setSelectedTab] = useState(0);
 
-  const isInvalidated =
-    loadSet.load_set_blocks[0].status_id__name === "Invalidated";
-
   useEffect(() => {
-    setSelectedTab(isInvalidated ? 1 : 0);
-  }, [isInvalidated]);
-
-  // const warningData = useMemo(
-  //   () =>
-  //     loadSet.record_warnings?.flatMap((w) => {
-  //       const rows = [];
-  //       for (const key in w.warnings) {
-  //         for (const i of w.warnings[key]) {
-  //           rows.push({
-  //             index: w.index + 2,
-  //             column: key,
-  //             warning: i,
-  //           });
-  //         }
-  //       }
-  //       return rows;
-  //     }) ?? [],
-  //   [loadSet.record_warnings],
-  // );
-
-  // const sanitizeForCSV = (value: string | number): string => {
-  //   const str = String(value);
-  //   if (
-  //     str.startsWith("=") ||
-  //     str.startsWith("+") ||
-  //     str.startsWith("-") ||
-  //     str.startsWith("@") ||
-  //     str.startsWith("\t") ||
-  //     str.startsWith("\r")
-  //   ) {
-  //     return `'${str}`;
-  //   }
-  //   return str;
-  // };
-
-  // const exportErrors = useCallback(() => {
-  //   const headerRow = `${ERROR_COLUMNS.map(({ header }) => header).join(
-  //     ",",
-  //   )}\n`;
-  //   const dataRows = (errorData as Record<string, string | number>[])
-  //     .map((d) =>
-  //       ERROR_COLUMNS.map(({ id }) => sanitizeForCSV(d[id] || "")).join(","),
-  //     )
-  //     .join("\n");
-
-  //   downloadBlob(new Blob([headerRow, dataRows]), `${loadSet.name}_errors.csv`);
-  // }, [errorData, loadSet.name]);
-
-  // const exportErroredRows = useCallback(() => {
-  //   const headerRow = `${errorRowColumns
-  //     .map(({ header }) => header)
-  //     .join(",")}\n`;
-  //   const dataRows = errorRowData
-  //     .map((d) =>
-  //       errorRowColumns.map(({ id }) => sanitizeForCSV(d[id] || "")).join(","),
-  //     )
-  //     .join("\n");
-
-  //   downloadBlob(
-  //     new Blob([headerRow, dataRows]),
-  //     `${loadSet.name}_errored_rows.csv`,
-  //   );
-  // }, [errorRowColumns, errorRowData, loadSet.name]);
-
-  // useEffect(() => {
-  //   return registerToolbarActions({
-  //     exportItems: [
-  //       {
-  //         id: "EXPORT_ERRORS",
-  //         text: "Export errors",
-  //         onClick: exportErrors,
-  //       },
-  //       {
-  //         id: "EXPORT_ERRORED_ROWS",
-  //         text: "Export errored rows",
-  //         onClick: exportErroredRows,
-  //       },
-  //     ],
-  //   });
-  // }, [exportErroredRows, exportErrors, registerToolbarActions]);
+    setSelectedTab(
+      loadSet.load_set_blocks[0].has_errors ||
+        loadSet.load_set_blocks[0].has_warnings
+        ? 1
+        : 0,
+    );
+  }, [loadSet.load_set_blocks]);
 
   return (
     <div className={styles.loadSetInfo}>
@@ -459,7 +428,7 @@ const LoadSetInfo = ({
               />
             ),
           },
-          ...(isInvalidated
+          ...(loadSet.load_set_blocks[0].has_errors
             ? [
                 {
                   key: "errors",
@@ -478,6 +447,18 @@ const LoadSetInfo = ({
                   panel: (
                     <ErroredRowsTable columns={columns} loadSet={loadSet} />
                   ),
+                },
+              ]
+            : []),
+          ...(loadSet.load_set_blocks[0].has_warnings
+            ? [
+                {
+                  key: "warnings",
+                  name: "Warnings",
+                  panelProps: {
+                    className: styles.loadSetInfoTab,
+                  },
+                  panel: <WarningsTable loadSet={loadSet} />,
                 },
               ]
             : []),

@@ -84,6 +84,19 @@ module Grit::Core
         .where("lsb_#{load_set_block_id}.record_errors IS NOT NULL")
     end
 
+    def self.warning_data(params = nil)
+      raise "No load set block id provided" if params.nil? or params[:load_set_block_id].nil?
+      load_set_block_id =  params[:load_set_block_id]
+      self.unscoped.from("lsb_#{load_set_block_id}")
+        .select(
+          "lsb_#{load_set_block_id}.line",
+          "to_jsonb(raw_lsb_#{load_set_block_id}) as datum",
+          "lsb_#{load_set_block_id}.record_warnings",
+        )
+        .joins("JOIN raw_lsb_#{load_set_block_id} ON raw_lsb_#{load_set_block_id}.line = lsb_#{load_set_block_id}.line")
+        .where("lsb_#{load_set_block_id}.record_warnings IS NOT NULL")
+    end
+
     def flattened_errors
       load_set_block = self
       load_set_block_id =  self.id

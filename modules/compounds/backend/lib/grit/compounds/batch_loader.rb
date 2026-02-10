@@ -200,7 +200,7 @@ module Grit::Compounds
         end
       end
       load_set_block_record_klass.insert_all(records) if records.length.positive?
-      !has_errors
+      { has_errors: has_errors, has_warnings: false }
     end
 
     def self.confirm_block(load_set_block)

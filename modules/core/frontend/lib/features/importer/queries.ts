@@ -221,6 +221,60 @@ export const useInfiniteLoadSetBlockErroredData = (
   });
 };
 
+export interface LoadSetBlockWarningData {
+  line: number;
+  datum: any;
+  record_warnings: Record<string, string>
+}
+
+export const useInfiniteLoadSetBlockWarningData = (
+  loadSetBlockId: number,
+  sort?: SortingState,
+  filter?: Filter[],
+  params: URLParams = {},
+  queryOptions: Partial<
+    UndefinedInitialDataInfiniteOptions<
+      PaginatedEndpointSuccess<LoadSetBlockWarningData[]>,
+      string
+    >
+  > = {},
+) => {
+  return useInfiniteQuery({
+    queryKey: [
+      "entities",
+      "infiniteData",
+      `grit/core/load_set_blocks/${loadSetBlockId}/warning_data`,
+      sort ?? [],
+      filter ?? [],
+      JSON.stringify(params),
+    ],
+    queryFn: async ({ pageParam }): Promise<PaginatedEndpointSuccess<LoadSetBlockWarningData[]>> => {
+      const response = await request<
+        PaginatedEndpointSuccess<LoadSetBlockWarningData[]>,
+        EndpointError
+      >(
+        `/grit/core/load_set_blocks/${loadSetBlockId}/warning_data?${getURLParams({
+          ...getSortParams(sort ?? []),
+          ...getFilterParams(filter ?? []),
+          offset: pageParam as number,
+          limit: 500,
+          ...params,
+        })}`,
+      );
+
+      if (!response.success) {
+        throw response.errors;
+      }
+
+      return response;
+    },
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) =>
+      lastPage.cursor === lastPage.total ? null : lastPage.cursor,
+    ...queryOptions,
+  });
+};
+
 
 export const useLoadSetData = (
   loadSetId: number,

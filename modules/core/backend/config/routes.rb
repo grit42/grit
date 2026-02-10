@@ -38,6 +38,7 @@ Grit::Core::Engine.routes.draw do
     get :preview_data
     get :validated_data
     get :errored_data
+    get :warning_data
     get :data
     get :loaded_data_columns
     get :export_errored_rows

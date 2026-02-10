@@ -81,6 +81,7 @@ module Grit::Compounds
       records = []
       unique_properties = Hash.new { |h, k| h[k] = Set.new }
       has_errors = false
+      has_warnings = false
       record = nil
       record_props = nil
       entity_property_name = nil
@@ -185,6 +186,7 @@ module Grit::Compounds
         unless record_props["molecule"].nil? || record_props["molecule"].blank?
           molecule_id = (structure_format == "molfile" ? Grit::Compounds::Molecule.by_molfile(record_props["molecule"]) : Grit::Compounds::Molecule.by_smiles(record_props["molecule"]))&.id
           if molecule_id
+            has_warnings = true
             record[:record_warnings] ||= {}
             record[:record_warnings]["molecule"] = [ "structure already registered, this compound will be linked to the existing structure" ]
           elsif !ActiveRecord::Base.connection.execute(ActiveRecord::Base.send(:sanitize_sql_array, [ "SELECT is_valid_#{structure_format == "molfile" ? "ctab" : "smiles"}(?) as valid", record_props["molecule"] ])).first["valid"]
@@ -222,7 +224,7 @@ module Grit::Compounds
         end
       end
       load_set_block_record_klass.insert_all(records) if records.length.positive?
-      !has_errors
+      { has_errors: has_errors, has_warnings: has_warnings }
     end
 
     def self.confirm_block(load_set_block)
@@ -296,6 +298,8 @@ module Grit::Compounds
         load_set_block.data = params[:data] unless params[:data].nil?
         load_set_block.name = params[:name] unless params[:name].nil?
         load_set_block.status_id = Grit::Core::LoadSetStatus.find_by(name: "Created").id
+        load_set_block.has_errors = false
+        load_set_block.has_warnings = false
         load_set_block.drop_tables
         load_set_block.save!
         compound_load_set_block.save!
