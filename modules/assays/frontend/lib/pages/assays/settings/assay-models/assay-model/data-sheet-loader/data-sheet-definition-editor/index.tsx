@@ -32,6 +32,7 @@ const DataSheetDefinitionEditor = ({
   );
 
   const [state, dispatch] = useFormReducer(dataSetDefinition);
+  console.log(state)
 
   const { errorTree, valid, value } = useMemo(() => {
     const result = refinedSchema.safeParse(state.dataSetDefinition);
@@ -79,7 +80,7 @@ const DataSheetDefinitionEditor = ({
 
   if (!state.dataSetDefinition.sheets.length) {
     return (
-      <ErrorPage error={"No sheet Sherlock"}>
+      <ErrorPage error={"No sheet to import"}>
         <Button onClick={() => navigate("../map")}>Back</Button>
       </ErrorPage>
     );

@@ -54,12 +54,10 @@ export interface SheetWithColumns extends Sheet {
 
 const SheetMapper = ({
   sheets,
-  sheetsWithColumns: sheetsWithColumnsFromProps,
   setSheetsWithOptions,
   setSheetsWithColumns,
 }: {
   sheets: SheetWithOptions[];
-  sheetsWithColumns: SheetWithColumns[];
   setSheetsWithOptions: (sheets: SheetWithOptions[]) => void;
   setSheetsWithColumns: (sheets: SheetWithColumns[]) => void;
 }) => {
@@ -116,13 +114,7 @@ const SheetMapper = ({
           ? "Include at least one sheet"
           : undefined,
     },
-    onSubmit: async ({ value, formApi }) => {
-
-      if (formApi.state.isPristine && sheetsWithColumnsFromProps.length) {
-        navigate(`../edit`);
-        return;
-      }
-
+    onSubmit: async ({ value }) => {
       const sheetsWithColumns = await Promise.all(
         value.sheets
           .filter((s) => s.include)
