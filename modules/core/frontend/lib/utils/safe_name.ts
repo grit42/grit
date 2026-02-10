@@ -24,5 +24,5 @@ export function toSafeIdentifier(input: string, replacement = "_"): string {
     .trim()
     .replace(new RegExp("[^a-z0-9]", "g"), replacement);
 
-  return /^[0-9]/.test(normalized) ? `__${normalized}` : normalized;
+  return (/^[0-9]|^.[0-9]/.test(normalized) ? `__${normalized}` : normalized).slice(0, 30);
 }
