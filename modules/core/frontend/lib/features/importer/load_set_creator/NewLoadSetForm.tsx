@@ -162,49 +162,43 @@ const NewLoadSetForm = ({
           {loadSetFields.map((f) => (
             <FormField key={f.name} form={form} fieldDef={f} />
           ))}
-          {errors && <p className={styles.error}>{errors}</p>}
+          {loadSetBlockFields.map((f) => (
+            <FormField
+              key={f.name}
+              form={form}
+              fieldDef={{ ...f, name: `load_set_blocks[0].${f.name}` }}
+            />
+          ))}
         </div>
       </Surface>
-      <form.Field name="blocks" mode="array">
-        {() => (
-          <Surface className={styles.blockFormFields}>
-            <div className={styles.blockFormInputs}>
-              {loadSetBlockFields.map((f) => (
-                <FormField
-                  key={f.name}
-                  form={form}
-                  fieldDef={{ ...f, name: `load_set_blocks[0].${f.name}` }}
-                />
-              ))}
-            </div>
-            <form.Field
-              name="load_set_blocks[0].data"
-              listeners={{
-                onChange: handleDataChange,
-                onBlur: handleDataBlur,
+      <Surface className={styles.blockFormFields}>
+        {errors && <p className={styles.error}>{errors}</p>}
+        <form.Field
+          name="load_set_blocks[0].data"
+          listeners={{
+            onChange: handleDataChange,
+            onBlur: handleDataBlur,
+          }}
+          children={(field) => (
+            <div
+              style={{
+                gridRowStart: 2,
+                gridColumnStart: 1,
+                gridColumnEnd: -1,
               }}
-              children={(field) => (
-                <div
-                  style={{
-                    gridRowStart: 2,
-                    gridColumnStart: 1,
-                    gridColumnEnd: -1,
-                  }}
-                >
-                  <EditorInput
-                    onChange={field.handleChange}
-                    onBlur={field.handleBlur}
-                    value={field.state.value as string}
-                    label="Data *"
-                    showFilePicker
-                    showInitialOverlay
-                  />
-                </div>
-              )}
-            />
-          </Surface>
-        )}
-      </form.Field>
+            >
+              <EditorInput
+                onChange={field.handleChange}
+                onBlur={field.handleBlur}
+                value={field.state.value as string}
+                label="Data *"
+                showFilePicker
+                showInitialOverlay
+              />
+            </div>
+          )}
+        />
+      </Surface>
       {!hasBlocks && (
         <div className={styles.noFiles}>
           <Button color="secondary">Select a file</Button>
