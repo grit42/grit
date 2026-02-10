@@ -40,6 +40,8 @@ Grit::Core::Engine.routes.draw do
     get :errored_data
     get :data
     get :loaded_data_columns
+    get :export_errored_rows
+    get :export_errors
     post :set_mappings
     post :set_data
     post :initialize_data

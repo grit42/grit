@@ -140,6 +140,36 @@ module Grit::Core
       index
     end
 
+    def export_errored_rows
+      raise "No load set block id provided" if params[:load_set_block_id].nil?
+      load_set_block = Grit::Core::LoadSetBlock.find(params[:load_set_block_id])
+      columns = load_set_block.headers
+      scope = load_set_block.errored_rows
+
+      Grit::Core::Exporter.scope_to_csv(scope, columns) do |file|
+        send_data file.read, filename: "#{load_set_block.name}_errored_rows.csv", content_type: "application/csv"
+      end
+    rescue StandardError => e
+      logger.info e.to_s
+      logger.info e.backtrace.join("\n")
+      render json: { success: false, errors: e.to_s }, status: :internal_server_error
+    end
+
+    def export_errors
+      raise "No load set block id provided" if params[:load_set_block_id].nil?
+      load_set_block = Grit::Core::LoadSetBlock.find(params[:load_set_block_id])
+      columns = [{"name" => "line", "display_name" => "Line"},{"name" => "column_name", "display_name" => "Column"},{"name" => "value", "display_name" => "Value"},{"name" => "error", "display_name" => "Error"}]
+      scope = load_set_block.flattened_errors
+
+      Grit::Core::Exporter.scope_to_csv(scope, columns) do |file|
+        send_data file.read, filename: "#{load_set_block.name}_errors.csv", content_type: "application/csv"
+      end
+    rescue StandardError => e
+      logger.info e.to_s
+      logger.info e.backtrace.join("\n")
+      render json: { success: false, errors: e.to_s }, status: :internal_server_error
+    end
+
     def data
       load_set_block = Grit::Core::LoadSetBlock.find(params[:load_set_block_id])
 

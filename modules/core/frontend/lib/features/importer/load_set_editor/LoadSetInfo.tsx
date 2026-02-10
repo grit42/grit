@@ -17,7 +17,7 @@
  */
 
 import { Tabs } from "@grit42/client-library/components";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { GritColumnDef, Table } from "@grit42/table";
 import styles from "./loadSetEditor.module.scss";
 import { LoadSetData } from "../types";
@@ -25,6 +25,9 @@ import {
   useInfiniteLoadSetBlockErroredData,
   useInfiniteLoadSetBlockPreviewData,
 } from "../queries";
+import { useToolbar } from "../../../Toolbar";
+import { toast, upsert } from "@grit42/notifications";
+import { downloadFile } from "@grit42/client-library/utils";
 
 const ERROR_COLUMNS: GritColumnDef[] = [
   {
@@ -159,6 +162,41 @@ const ErrorsTable = ({
   const { data, isLoading, isError, error, fetchNextPage, isFetchingNextPage } =
     useInfiniteLoadSetBlockErroredData(loadSet.load_set_blocks[0].id);
 
+  const registerToolbarActions = useToolbar();
+  const handleExport = useCallback(async () => {
+    const toastId = toast("Preparing file...", {
+      autoClose: false,
+      type: "default",
+      isLoading: true,
+    });
+
+    try {
+      downloadFile(
+        `/api/grit/core/load_set_blocks/${loadSet.load_set_blocks[0].id}/export_errors`,
+      );
+      toast.dismiss(toastId);
+    } catch (e: any) {
+      const errorMessage = typeof e === "string" ? e : e.toString();
+      upsert(errorMessage, {
+        autoClose: 10000,
+        type: "error",
+        isLoading: false,
+      });
+    }
+  }, [loadSet.load_set_blocks]);
+
+  useEffect(() => {
+    return registerToolbarActions({
+      exportItems: [
+        {
+          id: "EXPORT_ERRORS",
+          text: "Export errors",
+          onClick: handleExport,
+        },
+      ],
+    });
+  }, [registerToolbarActions, handleExport]);
+
   const flatData = useMemo(() => {
     if (!data) return [];
     return data.pages.flatMap(({ data }) => {
@@ -237,6 +275,41 @@ const ErroredRowsTable = ({
         ),
     ];
   }, [columns]);
+
+  const registerToolbarActions = useToolbar();
+  const handleExport = useCallback(async () => {
+    const toastId = toast("Preparing file...", {
+      autoClose: false,
+      type: "default",
+      isLoading: true,
+    });
+
+    try {
+      downloadFile(
+        `/api/grit/core/load_set_blocks/${loadSet.load_set_blocks[0].id}/export_errored_rows`,
+      );
+      toast.dismiss(toastId);
+    } catch (e: any) {
+      const errorMessage = typeof e === "string" ? e : e.toString();
+      upsert(errorMessage, {
+        autoClose: 10000,
+        type: "error",
+        isLoading: false,
+      });
+    }
+  }, [loadSet.load_set_blocks]);
+
+  useEffect(() => {
+    return registerToolbarActions({
+      exportItems: [
+        {
+          id: "EXPORT_ERRORED_ROWS",
+          text: "Export errored rows",
+          onClick: handleExport,
+        },
+      ],
+    });
+  }, [registerToolbarActions, handleExport]);
 
   const { data, isLoading, isError, error, fetchNextPage, isFetchingNextPage } =
     useInfiniteLoadSetBlockErroredData(loadSet.load_set_blocks[0].id);

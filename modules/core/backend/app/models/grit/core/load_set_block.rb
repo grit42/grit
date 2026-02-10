@@ -84,6 +84,47 @@ module Grit::Core
         .where("lsb_#{load_set_block_id}.record_errors IS NOT NULL")
     end
 
+    def flattened_errors
+      load_set_block = self
+      load_set_block_id =  self.id
+
+      property_column_mapping_values = load_set_block.mappings.map do |key,mapping|
+        if mapping["constant"]
+          "('#{key}','Constant value',NULL)"
+        else
+          header = load_set_block.headers.find { |h| h["name"] == mapping["header"] }
+          header.nil? ? nil : "('#{key}','#{header["display_name"]}','#{mapping["header"]}')"
+        end
+      end
+      .select { |v| !v.nil? }
+
+      property_column_mappings_sql = "SELECT PROPERTY, CSV_COLUMN_NAME, DB_COLUMN_NAME FROM ( VALUES " + property_column_mapping_values.join(',') + " ) AS T (PROPERTY, CSV_COLUMN_NAME, DB_COLUMN_NAME)"
+
+      self.class.unscoped.from("lsb_#{load_set_block_id}")
+        .select(
+          "lsb_#{load_set_block_id}.line",
+          "property_column_mappings.csv_column_name as column_name",
+          "to_jsonb(raw_lsb_#{load_set_block_id}) ->> property_column_mappings.db_column_name as value",
+          "a.value as error"
+        )
+        .joins("join raw_lsb_#{load_set_block_id} on lsb_#{load_set_block_id}.line = raw_lsb_#{load_set_block_id}.line")
+        .joins("cross join lateral jsonb_each(lsb_#{load_set_block_id}.record_errors) as e (error_key, value)")
+        .joins("cross join lateral jsonb_array_elements_text(e.value) as a (value)")
+        .joins("join property_column_mappings on property_column_mappings.property = e.error_key")
+        .where("lsb_#{load_set_block_id}.record_errors is not null")
+        .with(property_column_mappings: Arel.sql(property_column_mappings_sql))
+    end
+
+    def errored_rows
+      load_set_block_id =  self.id
+      self.class.unscoped.from("raw_lsb_#{load_set_block_id}")
+        .select(
+          "raw_lsb_#{load_set_block_id}.*",
+        )
+        .joins("JOIN lsb_#{load_set_block_id} ON raw_lsb_#{load_set_block_id}.line = lsb_#{load_set_block_id}.line")
+        .where("lsb_#{load_set_block_id}.record_errors IS NOT NULL")
+    end
+
     def preview_data
       raw_data_klass
     end
@@ -144,7 +185,6 @@ module Grit::Core
       drop_raw_data_table
       columns = headers.map { |h| h["name"] }
       ActiveRecord::Base.connection.create_table raw_data_table_name, id: false do |t|
-        # t.bigint :id
         t.bigint :line, primary_key: true
         columns.each do |column|
           t.string column
@@ -195,6 +235,7 @@ module Grit::Core
       drop_loading_records_table
       columns = Grit::Core::EntityLoader.load_set_block_loading_fields(self)
       ActiveRecord::Base.connection.create_table loading_records_table_name, id: false, if_not_exists: true do |t|
+        t.bigint :line, primary_key: true
         columns.reject { |column| ["id","created_at","created_by","updated_at","updated_by"].include? column[:name] } .each do |column|
           if column[:type].to_s == "entity" or column[:type].to_s == "integer"
             t.column column[:name], :bigint
@@ -204,10 +245,8 @@ module Grit::Core
             t.column column[:name], column[:type]
           end
         end
-        t.column :line, :bigint
-        t.column :datum, :jsonb
-        t.column :record_errors, :jsonb
-        t.column :record_warnings, :jsonb
+        t.jsonb :record_errors
+        t.jsonb :record_warnings
       end
     end
 
