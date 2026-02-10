@@ -16,13 +16,17 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Button, Surface } from "@grit42/client-library/components";
-import { useForm, useStore } from "@grit42/form";
+import {
+  Button,
+  ButtonGroup,
+  Surface,
+} from "@grit42/client-library/components";
 import { useNavigate } from "react-router-dom";
 import {
+  useForm,
+  useStore,
   FormField,
   genericErrorHandler,
-  AddFormControl,
   FormFieldDef,
   FieldListenerFn,
 } from "@grit42/form";
@@ -54,33 +58,42 @@ const NewLoadSetForm = ({
     validators: {
       onMount: () => "Provide either a file or text data",
       onChange: ({ value }) =>
-        value.load_set_blocks?.[0].data && value.load_set_blocks[0].data.length > 0
+        value.load_set_blocks?.[0].data &&
+        value.load_set_blocks[0].data.length > 0
           ? undefined
           : "Provide either a file or text data",
     },
     onSubmit: genericErrorHandler(async ({ value }) => {
       const loadSet = await createLoadSetMutation.mutateAsync(
-        newLoadSetPayload(value as NewLoadSetData, loadSetFields, loadSetBlockFields),
+        newLoadSetPayload(
+          value as NewLoadSetData,
+          loadSetFields,
+          loadSetBlockFields,
+        ),
       );
       navigate(`../${loadSet.id}`, { relative: "path" });
     }),
     defaultValues: initialValues,
   });
 
-  const handleDataChange: FieldListenerFn<NewLoadSetData, "load_set_blocks[0].data"> = ({
-    fieldApi,
-  }) => {
+  const handleDataChange: FieldListenerFn<
+    NewLoadSetData,
+    "load_set_blocks[0].data"
+  > = ({ fieldApi }) => {
     fieldApi.form.validateField("load_set_blocks[0].data", "submit");
   };
 
-  const handleDataBlur: FieldListenerFn<NewLoadSetData, "load_set_blocks[0].data"> = async ({
-    value,
-    fieldApi,
-  }) => {
+  const handleDataBlur: FieldListenerFn<
+    NewLoadSetData,
+    "load_set_blocks[0].data"
+  > = async ({ value, fieldApi }) => {
     try {
       const formUpdates = await guessDataSetValues<NewLoadSetData>(value);
       Object.keys(formUpdates).forEach((key) => {
-        fieldApi.form.setFieldValue(`load_set_blocks[0].${key}`, formUpdates[key]);
+        fieldApi.form.setFieldValue(
+          `load_set_blocks[0].${key}`,
+          formUpdates[key],
+        );
         fieldApi.form.setFieldMeta(`load_set_blocks[0].${key}`, (meta) => ({
           ...meta,
           errorMap: {
@@ -126,7 +139,22 @@ const NewLoadSetForm = ({
     >
       <div className={styles.header}>
         <h1>Upload data</h1>
-        <AddFormControl form={form} label="Start import" />
+        <form.Subscribe
+          selector={(state) => [state.canSubmit, state.isSubmitting]}
+          children={([canSubmit, isSubmitting]) => (
+            <ButtonGroup>
+              <Button onClick={() => navigate(-1)}>Cancel</Button>
+              <Button
+                color="secondary"
+                disabled={!canSubmit}
+                type="submit"
+                loading={isSubmitting}
+              >
+                Start import
+              </Button>
+            </ButtonGroup>
+          )}
+        />
       </div>
 
       <Surface className={styles.content}>
@@ -140,14 +168,14 @@ const NewLoadSetForm = ({
       <form.Field name="blocks" mode="array">
         {() => (
           <Surface className={styles.blockFormFields}>
-          <div className={styles.blockFormInputs}>
-            {loadSetBlockFields.map((f) => (
-              <FormField
-                key={f.name}
-                form={form}
-                fieldDef={{ ...f, name: `load_set_blocks[0].${f.name}` }}
-              />
-            ))}
+            <div className={styles.blockFormInputs}>
+              {loadSetBlockFields.map((f) => (
+                <FormField
+                  key={f.name}
+                  form={form}
+                  fieldDef={{ ...f, name: `load_set_blocks[0].${f.name}` }}
+                />
+              ))}
             </div>
             <form.Field
               name="load_set_blocks[0].data"
@@ -156,15 +184,21 @@ const NewLoadSetForm = ({
                 onBlur: handleDataBlur,
               }}
               children={(field) => (
-                <div style={{gridRowStart: 2, gridColumnStart: 1, gridColumnEnd: -1}}>
-                <EditorInput
-                  onChange={field.handleChange}
-                  onBlur={field.handleBlur}
-                  value={field.state.value as string}
-                  label="Data *"
-                  showFilePicker
-                  showInitialOverlay
-                />
+                <div
+                  style={{
+                    gridRowStart: 2,
+                    gridColumnStart: 1,
+                    gridColumnEnd: -1,
+                  }}
+                >
+                  <EditorInput
+                    onChange={field.handleChange}
+                    onBlur={field.handleBlur}
+                    value={field.state.value as string}
+                    label="Data *"
+                    showFilePicker
+                    showInitialOverlay
+                  />
                 </div>
               )}
             />
