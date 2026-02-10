@@ -15,11 +15,11 @@ import {
 import { Row, Table, useSetupTableState } from "@grit42/table";
 import { useTableColumns } from "@grit42/core/utils";
 import { Link, Route, Routes, useParams } from "react-router-dom";
-import { queryClient } from "@grit42/api";
 import {
   AssayModelData,
   useAssayModel,
 } from "../../../../../../queries/assay_models";
+import { useQueryClient } from "@grit42/api";
 
 const getRowId = (data: EntityData) => data.id.toString();
 
@@ -30,6 +30,7 @@ const AssayMetadataDefinitionSelector = ({
   assayModelId: string | number;
   columns: EntityPropertyDef<AssayMetadataDefinitionData>[];
 }) => {
+  const queryClient = useQueryClient();
   const tableColumns = useTableColumns(columns);
   const availableTableState = useSetupTableState(
     "assay-model-available-metadata",
@@ -111,7 +112,7 @@ const AssayMetadataDefinitionSelector = ({
         ],
       });
     },
-    [queryClient],
+    [assayModelId, createEntityMutation, queryClient],
   );
 
   const onSelectedRowClick = useCallback(
@@ -127,7 +128,7 @@ const AssayMetadataDefinitionSelector = ({
         ],
       });
     },
-    [queryClient],
+    [destroyEntityMutation, queryClient],
   );
 
   return (
@@ -223,7 +224,9 @@ const AssayModelMetadata = ({
       data={modelMetadata}
       noDataMessage={
         (isModelMetadataError ? modelMetadataError : undefined) ??
-        "No metadata selected"
+        assayModel?.publication_status_id__name !== "Published"
+          ? "No metadata selected"
+          : "This assay model does not define any metadata"
       }
     />
   );
@@ -257,7 +260,11 @@ const Metadata = () => {
       <Route
         index
         element={
-          <AssayModelMetadata columns={columns} assayModelId={assay_model_id} assayModel={assayModel}/>
+          <AssayModelMetadata
+            columns={columns}
+            assayModelId={assay_model_id}
+            assayModel={assayModel}
+          />
         }
       />
       {assayModel?.publication_status_id__name !== "Published" && (
