@@ -1,4 +1,4 @@
-\restrict DJjd3WMjjd5mGydjNS8YxfzhvGkv08pdX4xDWyGr8hqfcfH4FWXODlqNtgtDlpb
+\restrict Uq2Q5FUgvRTQNITAnzDZRAf67T6iCVTlcw1O2eAeFCYDeEdFHTODz3FMoJzRHSX
 
 -- Dumped from database version 16.3 (Debian 16.3-1.pgdg120+1)
 -- Dumped by pg_dump version 16.11
@@ -652,6 +652,8 @@ CREATE TABLE public.grit_core_load_set_blocks (
     headers jsonb DEFAULT '[]'::jsonb,
     mappings jsonb DEFAULT '{}'::jsonb,
     separator character varying NOT NULL,
+    has_errors boolean DEFAULT false,
+    has_warnings boolean DEFAULT false,
     load_set_id bigint NOT NULL,
     status_id bigint NOT NULL
 );
@@ -2231,7 +2233,7 @@ ALTER TABLE ONLY public.active_storage_attachments
 -- PostgreSQL database dump complete
 --
 
-\unrestrict DJjd3WMjjd5mGydjNS8YxfzhvGkv08pdX4xDWyGr8hqfcfH4FWXODlqNtgtDlpb
+\unrestrict Uq2Q5FUgvRTQNITAnzDZRAf67T6iCVTlcw1O2eAeFCYDeEdFHTODz3FMoJzRHSX
 
 SET search_path TO "$user", public;
 
