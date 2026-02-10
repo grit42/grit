@@ -47,7 +47,7 @@ module Grit
           prop_lines = []
           record_lines[mol_end+1..].each do |line|
             if line.strip == ""
-              record[prop_name] = prop_lines.join("\n")
+              record[prop_name] = prop_lines.join("\n").strip
               prop_name = nil
               prop_lines = []
             elsif prop_def = /^>\s+<(?<prop_name>\w+)>$/.match(line)

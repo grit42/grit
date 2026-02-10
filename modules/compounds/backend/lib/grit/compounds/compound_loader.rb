@@ -326,7 +326,7 @@ module Grit::Compounds
         Grit::Compounds::SDF.each_record(file) do |record, recordno|
           row = load_set_block.headers.map { |h| record[h["display_name"]] }
           next if row.compact.blank?
-          row_with_record_number = [ recordno, *row ].map(&:strip)
+          row_with_record_number = [ recordno, *row ]
           yield CSV.generate_line(row_with_record_number, col_sep: ",")
         end
       end

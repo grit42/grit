@@ -1,4 +1,4 @@
-\restrict d9NGPb9czWlLQb2OdSMSYKXPvurY4SaFnj1xzYKdItZlZHbUI5Gliv8dJ0t9CqC
+\restrict ChRN9BAMch7nztgnJy1qiCp5zJqfxuvVfiecBw9G1542bP2mnemUblKPcQapvLt
 
 -- Dumped from database version 16.3 (Debian 16.3-1.pgdg120+1)
 -- Dumped by pg_dump version 16.11
@@ -695,6 +695,8 @@ CREATE TABLE public.grit_core_load_set_blocks (
     headers jsonb DEFAULT '[]'::jsonb,
     mappings jsonb DEFAULT '{}'::jsonb,
     separator character varying NOT NULL,
+    has_errors boolean DEFAULT false,
+    has_warnings boolean DEFAULT false,
     load_set_id bigint NOT NULL,
     status_id bigint NOT NULL
 );
@@ -2183,7 +2185,7 @@ ALTER TABLE ONLY public.grit_compounds_compound_property_values
 -- PostgreSQL database dump complete
 --
 
-\unrestrict d9NGPb9czWlLQb2OdSMSYKXPvurY4SaFnj1xzYKdItZlZHbUI5Gliv8dJ0t9CqC
+\unrestrict ChRN9BAMch7nztgnJy1qiCp5zJqfxuvVfiecBw9G1542bP2mnemUblKPcQapvLt
 
 SET search_path TO "$user", public;
 
