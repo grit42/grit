@@ -27,7 +27,7 @@ grit makes managing structured experimental data a breeze. **Assay Types** enabl
 
 grit fully supports Ontologies for high quality, consistent and interoperable data. **Vocabularies** provide lists of controlled terms that can be used as data source for **Compound Properties** and data points in **Experiments**.
 
-[Learn more about grit Vocabularies](./general/vocabularies/)
+[Learn more about grit Vocabularies](./vocabularies/)
 
 ### Security and user management
 

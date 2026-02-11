@@ -7,9 +7,9 @@ sidebar_position: 2
 
 Assay Metadata enable tracking contextual information around your experimental data, such as the Bacteria Strain used or the Site the experiment was run in, and provide an easy way to group related experiments.
 
-Assay Metadata are based on [Vocabularies](/docs/general/vocabularies/index.md).
+Assay Metadata are based on [Vocabularies](/docs/vocabularies/index.md).
 
-Assay Metadata are not required, but it is strongly recommended using them to improve the Findability and Interoperability. Assay Metadata are also relevant in [Data Tables](/docs/data-tables/assay-data-sheet-columns.md), where they can be used to determine aggregated Experiments.
+Assay Metadata are not required, but it is strongly recommended using them to improve the Findability and Interoperability. Assay Metadata are also relevant in [Data Tables](/docs/data-tables/index.md), where they can be used to determine aggregated Experiments in an [Assay Data Sheet Column](/docs/data-tables/assay-data-sheet-columns.md).
 
 ## Managing Assay Metadata
 
