@@ -1,27 +1,41 @@
 ---
-sidebar_label: 'Assay types'
+sidebar_label: 'Assay Types'
 sidebar_position: 1
 ---
 
-# Assay types
+# Assay Types
+
+Assay Types organise Assay Models in broad scientific categories such as in vivo, in vitro, or biochemical. They enable easy filtering for finding related Assay Models.
+
+## Managing Assay Types
+
+:::note
+Managing Assay Types requires the **Administrator** or **AssayAdministrator** role.
+:::
+
+Assay Types can be managed in the Assay Model administration section, which can be accessed as follows:
+1) Go to the Assay Models menu
+2) Click the gears icon top right in the toolbar
+
+![Going to Assay Models administration](./assets/assay_models_administration.png)
 
 
-Assay types is basically a grouping of similar assays (in vitro and in vivo etc) and hence a way to filter the assays based on group/area they belong to as can be seen from the main Assays overview.
+### Creating an Assay Type
 
-Selecting the "Plate based in vitro" assay type results in no assay models and assays.
+To create an Assay Type, navigate to the Assay Model administration, then:
 
-![Assay types filtering](./assets/assay_type_filtering.png)
-
-Whereas selecting the "in vitro" assay type at the top show the available assay model.
-
-![Assay types filtering2](./assets/assay_type_filtering2.png)
-
-
-Adding new assay types is very easy (NOTE: But does require admin rights):
-
-1) Go to the Assay menu
-2) Click the gears icon top right in the toolbar (you need the AssyAdministrator role to be able to do so)
-2) Select the Types tab
-3) Click the New button and add Name and potentially a Description in the appearing form
+1) Select the *Types* tab
+2) Click the New button
 
 ![Assay types](./assets/assay_types.png)
+
+1) Provide a name and an optional description
+2) Click **Save**
+
+![Edit assay type](./assets/edit_assay_type.png)
+
+### Modifying an Assay Type
+
+To modify an existing Assay Type, click it in the list, make your changes and click **Save**.
+
+
