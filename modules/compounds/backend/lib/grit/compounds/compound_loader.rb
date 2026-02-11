@@ -64,160 +64,53 @@ module Grit::Compounds
       { "compound_type_id" => Grit::Compounds::CompoundLoadSetBlock.find_by(load_set_block_id: load_set_block.id).compound_type_id }
     end
 
-    def self.validate_block(load_set_block)
-      load_set_block.truncate_loading_records_table
-
-      load_set_entity = block_entity(load_set_block)
-      load_set_entity_properties = block_mapping_fields(load_set_block)
+    def self.validate_block_context(load_set_block)
       compound_load_set_block = Grit::Compounds::CompoundLoadSetBlock.find_by(load_set_block_id: load_set_block.id)
-      structure_format = compound_load_set_block.structure_format
-      compound_type_id = compound_load_set_block.compound_type_id
-      compound_properties = Grit::Compounds::CompoundProperty.where(compound_type_id: [ compound_type_id, nil ])
-      db_property_names = Grit::Compounds::Compound.db_properties.map { |prop| prop[:name] }
+      {
+        structure_format: compound_load_set_block.structure_format,
+        compound_properties: Grit::Compounds::CompoundProperty.where(compound_type_id: [ compound_load_set_block.compound_type_id, nil ]),
+        db_property_names: Grit::Compounds::Compound.db_properties.map { |prop| prop[:name] },
+      }
+    end
 
-      load_set_block_record_klass = load_set_block.loading_record_klass
-
-      records = []
-      unique_properties = Hash.new { |h, k| h[k] = Set.new }
-      has_errors = false
+    def self.validate_record(load_set_entity, record, record_props, context)
       has_warnings = false
 
-      new_record_props = base_record_props(load_set_block)
+      if record[:record_errors].nil?
+        load_set_entity_record = load_set_entity.new(record_props.select { |key| context[:db_property_names].include?(key) })
+        record[:record_errors] = load_set_entity_record.errors unless load_set_entity_record.valid?
+      end
 
-      load_set_block.preview_data.find_each do |datum|
-        record = {
-          line: datum[:line],
-          record_errors: nil
-        }
-
-        record_props = new_record_props.dup
-
-        load_set_entity_properties.each do |entity_property|
-          value = nil
-          find_by = nil
-          header = nil
-          entity_property_name = entity_property[:name].to_s
-          mapping = load_set_block.mappings[entity_property_name]
-          next if mapping.nil?
-          find_by = mapping["find_by"]
-          header = mapping["header"] unless mapping["header"].nil? or mapping["header"].blank?
-          if mapping["constant"]
-            value = mapping["value"]
-          elsif !find_by.blank? and !datum[header].blank?
-            begin
-              entity_property[:_klass] ||= entity_property[:entity][:full_name].constantize
-              field_entity = entity_property[:_klass]
-              value = field_entity.loader_find_by!(find_by, datum[header], options: entity_property[:entity][:options]).id
-            rescue NameError
-              record[:record_errors] ||= {}
-              record[:record_errors][entity_property_name] = [ "#{entity_property[:entity][:name]}: No such model" ]
-              value = 0
-            rescue ActiveRecord::RecordNotFound
-              record[:record_errors] ||= {}
-              record[:record_errors][entity_property_name] = [ "could not find #{entity_property[:entity][:name]} with '#{find_by}' = #{datum[header]}" ]
-              value = 0
-            end
-          elsif !header.nil?
-            value = datum[header]
-          end
-
-          record_props[entity_property_name] = value
-
-          if entity_property[:required] && value.nil?
-            record[:record_errors] ||= {}
-            record[:record_errors][entity_property_name] = [ "can't be blank" ]
-          elsif entity_property[:type].to_s == "decimal" and value.present? and !/^[+\-]?(\d+\.\d*|\d*\.\d+|\d+)([eE][+\-]?\d+)?$/.match?(value.to_s)
-            record_props[entity_property_name] = nil
-            value = nil
-            record[:record_errors] ||= {}
-            record[:record_errors][entity_property_name] = [ "is not a number" ]
-          elsif entity_property[:type].to_s == "integer" and value.present? and !/^[+\-]?\d+([eE][+]?\d+)?$/.match?(value.to_s)
-            record_props[entity_property_name] = nil
-            value = nil
-            record[:record_errors] ||= {}
-            record[:record_errors][entity_property_name] = [ "is not a integer" ]
-          elsif entity_property[:type].to_s == "integer" and value.present? and (value.to_i < -(2**53-1) || value.to_i > 2**53-1)
-            record_props[entity_property_name] = nil
-            value = nil
-            record[:record_errors] ||= {}
-            record[:record_errors][entity_property_name] = [ "is out of range" ]
-          elsif entity_property[:type].to_s == "datetime" and value.present?
-            begin
-              record_props[entity_property_name] = DateTime.parse(value)
-            rescue ArgumentError
-              record_props[entity_property_name] = nil
-              value = nil
-              record[:record_errors] ||= {}
-              record[:record_errors][entity_property_name] = [ "Unable to parse datetime, please use YYYY/MM/DD HH:mm:ss or ISO 8601" ]
-            end
-          elsif entity_property[:type].to_s == "date" and value.present?
-            begin
-              record_props[entity_property_name] = Date.parse(value)
-            rescue ArgumentError
-              record_props[entity_property_name] = nil
-              value = nil
-              record[:record_errors] ||= {}
-              record[:record_errors][entity_property_name] = [ "Unable to parse date, please use YYYY/MM/DD or ISO 8601" ]
-            end
-          end
-
-          if entity_property[:unique]
-            if unique_properties[entity_property_name].include?(value)
-              record[:record_errors] ||= {}
-              record[:record_errors][entity_property_name] = ["should be unique (duplicate in file)"]
-            else
-              unique_properties[entity_property_name].add(value)
-            end
-          end
-        end
-
-        if record[:record_errors].nil?
-          load_set_entity_record = load_set_entity.new(record_props.select { |key| db_property_names.include?(key) })
-          record[:record_errors] = load_set_entity_record.errors unless load_set_entity_record.valid?
-        end
-
-        unless record_props["molecule"].blank?
-          molecule_id = (structure_format == "molfile" ? Grit::Compounds::Molecule.by_molfile(record_props["molecule"]) : Grit::Compounds::Molecule.by_smiles(record_props["molecule"]))&.id
-          if molecule_id
-            has_warnings = true
-            record[:record_warnings] ||= {}
-            record[:record_warnings]["molecule"] = [ "structure already registered, this compound will be linked to the existing structure" ]
-          elsif !ActiveRecord::Base.connection.execute(ActiveRecord::Base.send(:sanitize_sql_array, [ "SELECT is_valid_#{structure_format == "molfile" ? "ctab" : "smiles"}(?) as valid", record_props["molecule"] ])).first["valid"]
-            record_props["molecule"] = nil
-            record[:record_errors] ||= {}
-            record[:record_errors]["molecule"] = [ "is not a valid structure" ]
-          end
-        end
-
-        compound_properties.each do |prop|
-          unless record_props[prop.safe_name].nil?
-            prop_value = Grit::Compounds::CompoundPropertyValue.new(
-              compound_property_id: prop.id,
-            )
-            value_prop_name = prop.data_type.is_entity ? "entity_id_value" : "#{prop.data_type.name}_value"
-            prop_value[value_prop_name] = record_props[prop.safe_name]
-            prop_value.property_value
-            unless prop_value.errors.blank?
-              record[:record_errors] ||= {}
-              record[:record_errors][prop.safe_name] = prop_value.errors[value_prop_name]
-            end
-          end
-        end
-
-        unless record[:record_errors].nil?
-          has_errors = true
-        end
-
-        record.merge!(record_props)
-        records.push record
-
-        if records.length >= 1000
-          load_set_block_record_klass.insert_all(records)
-          records = []
+      unless record_props["molecule"].blank?
+        structure_format = context[:structure_format]
+        molecule_id = (structure_format == "molfile" ? Grit::Compounds::Molecule.by_molfile(record_props["molecule"]) : Grit::Compounds::Molecule.by_smiles(record_props["molecule"]))&.id
+        if molecule_id
+          has_warnings = true
+          record[:record_warnings] ||= {}
+          record[:record_warnings]["molecule"] = [ "structure already registered, this compound will be linked to the existing structure" ]
+        elsif !ActiveRecord::Base.connection.execute(ActiveRecord::Base.send(:sanitize_sql_array, [ "SELECT is_valid_#{structure_format == "molfile" ? "ctab" : "smiles"}(?) as valid", record_props["molecule"] ])).first["valid"]
+          record_props["molecule"] = nil
+          record[:record_errors] ||= {}
+          record[:record_errors]["molecule"] = [ "is not a valid structure" ]
         end
       end
-      load_set_block_record_klass.insert_all(records) if records.length.positive?
-      { has_errors: has_errors, has_warnings: has_warnings }
+
+      context[:compound_properties].each do |prop|
+        unless record_props[prop.safe_name].nil?
+          prop_value = Grit::Compounds::CompoundPropertyValue.new(
+            compound_property_id: prop.id,
+          )
+          value_prop_name = prop.data_type.is_entity ? "entity_id_value" : "#{prop.data_type.name}_value"
+          prop_value[value_prop_name] = record_props[prop.safe_name]
+          prop_value.property_value
+          unless prop_value.errors.blank?
+            record[:record_errors] ||= {}
+            record[:record_errors][prop.safe_name] = prop_value.errors[value_prop_name]
+          end
+        end
+      end
+
+      { has_warnings: has_warnings }
     end
 
     def self.confirm_block(load_set_block)

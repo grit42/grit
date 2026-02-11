@@ -1,4 +1,4 @@
-\restrict FwE9fHpaZ3AsXXYMDv8N9V5MNWqR3AgbQhgMtY7QVfkd1ap1wsf0PFtDTlz2zZP
+\restrict KCJexdCW6XEFcRjbeqr8A8V3A94tmMgycDSPjgWHF1wALwZNL2IiswrXJoWweXF
 
 -- Dumped from database version 16.3 (Debian 16.3-1.pgdg120+1)
 -- Dumped by pg_dump version 16.11
@@ -673,7 +673,7 @@ CREATE TABLE public.grit_compounds_batch_property_values (
     updated_at timestamp(6) without time zone,
     numeric_sign character varying,
     string_value character varying,
-    integer_value integer,
+    integer_value bigint,
     decimal_value numeric,
     float_value double precision,
     text_value text,
@@ -766,7 +766,7 @@ CREATE TABLE public.grit_compounds_compound_property_values (
     updated_at timestamp(6) without time zone,
     numeric_sign character varying,
     string_value character varying,
-    integer_value integer,
+    integer_value bigint,
     decimal_value numeric,
     float_value double precision,
     text_value text,
@@ -944,6 +944,8 @@ CREATE TABLE public.grit_core_load_set_blocks (
     headers jsonb DEFAULT '[]'::jsonb,
     mappings jsonb DEFAULT '{}'::jsonb,
     separator character varying NOT NULL,
+    has_errors boolean DEFAULT false,
+    has_warnings boolean DEFAULT false,
     load_set_id bigint NOT NULL,
     status_id bigint NOT NULL
 );
@@ -3117,7 +3119,7 @@ ALTER TABLE ONLY public.grit_compounds_compound_property_values
 -- PostgreSQL database dump complete
 --
 
-\unrestrict FwE9fHpaZ3AsXXYMDv8N9V5MNWqR3AgbQhgMtY7QVfkd1ap1wsf0PFtDTlz2zZP
+\unrestrict KCJexdCW6XEFcRjbeqr8A8V3A94tmMgycDSPjgWHF1wALwZNL2IiswrXJoWweXF
 
 SET search_path TO "$user", public;
 

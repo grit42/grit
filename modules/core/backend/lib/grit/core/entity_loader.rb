@@ -195,115 +195,32 @@ module Grit::Core
       {}
     end
 
+    def self.validate_block_context(load_set_block)
+      {}
+    end
+
     def self.validate_block(load_set_block)
       load_set_block.truncate_loading_records_table
 
       load_set_entity = block_entity(load_set_block)
       load_set_entity_properties = block_mapping_fields(load_set_block)
-
       load_set_block_record_klass = load_set_block.loading_record_klass
+      context = validate_block_context(load_set_block)
 
       records = []
       unique_properties = Hash.new { |h, k| h[k] = Set.new }
       has_errors = false
-
+      has_warnings = false
       new_record_props = base_record_props(load_set_block)
 
       load_set_block.preview_data.find_each do |datum|
-        record = {
-          line: datum[:line],
-          record_errors: nil,
-        }
-
+        record = { line: datum[:line], record_errors: nil }
         record_props = new_record_props.dup
 
-        load_set_entity_properties.each do |entity_property|
-          value = nil
-          find_by = nil
-          header = nil
-          entity_property_name = entity_property[:name].to_s
-          mapping = load_set_block.mappings[entity_property_name]
-          next if mapping.nil?
-          find_by = mapping["find_by"]
-          header = mapping["header"] unless mapping["header"].nil? or mapping["header"].blank?
-          if mapping["constant"]
-            value = mapping["value"]
-          elsif !find_by.blank? and !datum[header].blank?
-            begin
-              entity_property[:_klass] ||= entity_property[:entity][:full_name].constantize
-              field_entity = entity_property[:_klass]
-              value = field_entity.loader_find_by!(find_by, datum[header], options: entity_property[:entity][:options]).id
-            rescue NameError
-              record[:record_errors] ||= {}
-              record[:record_errors][entity_property_name] = [ "#{entity_property[:entity][:name]}: No such model" ]
-              value = 0
-            rescue ActiveRecord::RecordNotFound
-              record[:record_errors] ||= {}
-              record[:record_errors][entity_property_name] = [ "could not find #{entity_property[:entity][:name]} with '#{find_by}' = #{datum[header]}" ]
-              value = 0
-            end
-          elsif !header.nil?
-            value = datum[header]
-          end
-
-          record_props[entity_property_name] = value
-
-          if entity_property[:required] && value.nil?
-            record[:record_errors] ||= {}
-            record[:record_errors][entity_property_name] = [ "can't be blank" ]
-          elsif entity_property[:type].to_s == "decimal" and value.present? and !/^[+\-]?(\d+\.\d*|\d*\.\d+|\d+)([eE][+\-]?\d+)?$/.match?(value.to_s)
-            record_props[entity_property_name] = nil
-            value = nil
-            record[:record_errors] ||= {}
-            record[:record_errors][entity_property_name] = [ "is not a number" ]
-          elsif entity_property[:type].to_s == "integer" and value.present? and !/^[+\-]?\d+([eE][+]?\d+)?$/.match?(value.to_s)
-            record_props[entity_property_name] = nil
-            value = nil
-            record[:record_errors] ||= {}
-            record[:record_errors][entity_property_name] = [ "is not a integer" ]
-          elsif entity_property[:type].to_s == "integer" and value.present? and (value.to_i < -(2**53-1) || value.to_i > 2**53-1)
-            record_props[entity_property_name] = nil
-            value = nil
-            record[:record_errors] ||= {}
-            record[:record_errors][entity_property_name] = [ "is out of range" ]
-          elsif entity_property[:type].to_s == "datetime" and value.present?
-            begin
-              record_props[entity_property_name] = DateTime.parse(value)
-            rescue ArgumentError
-              record_props[entity_property_name] = nil
-              value = nil
-              record[:record_errors] ||= {}
-              record[:record_errors][entity_property_name] = [ "Unable to parse datetime, please use YYYY/MM/DD HH:mm:ss or ISO 8601" ]
-            end
-          elsif entity_property[:type].to_s == "date" and value.present?
-            begin
-              record_props[entity_property_name] = Date.parse(value)
-            rescue ArgumentError
-              record_props[entity_property_name] = nil
-              value = nil
-              record[:record_errors] ||= {}
-              record[:record_errors][entity_property_name] = [ "Unable to parse date, please use YYYY/MM/DD or ISO 8601" ]
-            end
-          end
-
-          if entity_property[:unique]
-            if unique_properties[entity_property_name].include?(value)
-              record[:record_errors] ||= {}
-              record[:record_errors][entity_property_name] = ["should be unique (duplicate in file)"]
-            else
-              unique_properties[entity_property_name].add(value)
-            end
-          end
-        end
-
-        if record[:record_errors].nil?
-          load_set_entity_record = load_set_entity.new(record_props)
-          record[:record_errors] = load_set_entity_record.errors unless load_set_entity_record.valid?
-        end
-
-        unless record[:record_errors].nil?
-          has_errors = true
-        end
+        validate_record_properties(load_set_entity_properties, load_set_block, datum, record, record_props, unique_properties)
+        result = validate_record(load_set_entity, record, record_props, context)
+        has_warnings = true if result[:has_warnings]
+        has_errors = true unless record[:record_errors].nil?
 
         record.merge!(record_props)
         records.push record
@@ -314,7 +231,96 @@ module Grit::Core
         end
       end
       load_set_block_record_klass.insert_all(records) if records.length.positive?
-      { has_errors: has_errors, has_warnings: false }
+      { has_errors: has_errors, has_warnings: has_warnings }
+    end
+
+    def self.validate_record_properties(properties, load_set_block, datum, record, record_props, unique_properties)
+      properties.each do |entity_property|
+        value = nil
+        find_by = nil
+        header = nil
+        entity_property_name = entity_property[:name].to_s
+        mapping = load_set_block.mappings[entity_property_name]
+        next if mapping.nil?
+        find_by = mapping["find_by"]
+        header = mapping["header"] unless mapping["header"].nil? or mapping["header"].blank?
+        if mapping["constant"]
+          value = mapping["value"]
+        elsif !find_by.blank? and !datum[header].blank?
+          begin
+            entity_property[:_klass] ||= entity_property[:entity][:full_name].constantize
+            field_entity = entity_property[:_klass]
+            value = field_entity.loader_find_by!(find_by, datum[header], options: entity_property[:entity][:options]).id
+          rescue NameError
+            record[:record_errors] ||= {}
+            record[:record_errors][entity_property_name] = [ "#{entity_property[:entity][:name]}: No such model" ]
+            value = 0
+          rescue ActiveRecord::RecordNotFound
+            record[:record_errors] ||= {}
+            record[:record_errors][entity_property_name] = [ "could not find #{entity_property[:entity][:name]} with '#{find_by}' = #{datum[header]}" ]
+            value = 0
+          end
+        elsif !header.nil?
+          value = datum[header]
+        end
+
+        record_props[entity_property_name] = value
+
+        if entity_property[:required] && value.nil?
+          record[:record_errors] ||= {}
+          record[:record_errors][entity_property_name] = [ "can't be blank" ]
+        elsif entity_property[:type].to_s == "decimal" and value.present? and !/^[+\-]?(\d+\.\d*|\d*\.\d+|\d+)([eE][+\-]?\d+)?$/.match?(value.to_s)
+          record_props[entity_property_name] = nil
+          value = nil
+          record[:record_errors] ||= {}
+          record[:record_errors][entity_property_name] = [ "is not a number" ]
+        elsif entity_property[:type].to_s == "integer" and value.present? and !/^[+\-]?\d+([eE][+]?\d+)?$/.match?(value.to_s)
+          record_props[entity_property_name] = nil
+          value = nil
+          record[:record_errors] ||= {}
+          record[:record_errors][entity_property_name] = [ "is not a integer" ]
+        elsif entity_property[:type].to_s == "integer" and value.present? and (value.to_i < -(2**53-1) || value.to_i > 2**53-1)
+          record_props[entity_property_name] = nil
+          value = nil
+          record[:record_errors] ||= {}
+          record[:record_errors][entity_property_name] = [ "is out of range" ]
+        elsif entity_property[:type].to_s == "datetime" and value.present?
+          begin
+            record_props[entity_property_name] = DateTime.parse(value)
+          rescue ArgumentError
+            record_props[entity_property_name] = nil
+            value = nil
+            record[:record_errors] ||= {}
+            record[:record_errors][entity_property_name] = [ "Unable to parse datetime, please use YYYY/MM/DD HH:mm:ss or ISO 8601" ]
+          end
+        elsif entity_property[:type].to_s == "date" and value.present?
+          begin
+            record_props[entity_property_name] = Date.parse(value)
+          rescue ArgumentError
+            record_props[entity_property_name] = nil
+            value = nil
+            record[:record_errors] ||= {}
+            record[:record_errors][entity_property_name] = [ "Unable to parse date, please use YYYY/MM/DD or ISO 8601" ]
+          end
+        end
+
+        if entity_property[:unique]
+          if unique_properties[entity_property_name].include?(value)
+            record[:record_errors] ||= {}
+            record[:record_errors][entity_property_name] = ["should be unique (duplicate in file)"]
+          else
+            unique_properties[entity_property_name].add(value)
+          end
+        end
+      end
+    end
+
+    def self.validate_record(load_set_entity, record, record_props, context)
+      if record[:record_errors].nil?
+        load_set_entity_record = load_set_entity.new(record_props)
+        record[:record_errors] = load_set_entity_record.errors unless load_set_entity_record.valid?
+      end
+      { has_warnings: false }
     end
 
     def self.confirm_block(load_set_block)
@@ -408,12 +414,13 @@ module Grit::Core
     end
 
     def self.records_from_csv(load_set_block)
+      strip_converter = proc { |field| field.respond_to?(:strip) ? field.strip : field }
       load_set_block.data.open do |file|
         file.each_line(chomp: true).with_index do |line, index|
           next if index == 0
           next if line.nil? || line.blank?
           line_with_line_number = "#{index+1}#{load_set_block.separator}#{line}"
-          row = CSV.parse_line(line_with_line_number.strip, col_sep: load_set_block.separator).map(&:strip)
+          row = CSV.parse_line(line_with_line_number.strip, col_sep: load_set_block.separator, converters: strip_converter)
           yield CSV.generate_line(row, col_sep: ",")
         end
       end
