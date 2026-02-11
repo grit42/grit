@@ -271,6 +271,8 @@ module Grit::Core
           Grit::Core::EntityLoader.rollback_load_set_block(load_set_block)
 
           load_set_block.status_id = Grit::Core::LoadSetStatus.find_by_name("Created").id
+          load_set_block.has_errors = false
+          load_set_block.has_warnings = false
           load_set_block.save!
           render json: { success: true, data: load_set_block }
         rescue StandardError => e

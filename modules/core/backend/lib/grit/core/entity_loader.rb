@@ -266,7 +266,8 @@ module Grit::Core
 
         record_props[entity_property_name] = value
 
-        if entity_property[:required] && value.nil?
+        if entity_property[:required] && (value.nil? || (["string", "text"].include?(entity_property[:type].to_s) && value.blank?))
+          record_props[entity_property_name] = nil
           record[:record_errors] ||= {}
           record[:record_errors][entity_property_name] = [ "can't be blank" ]
         elsif entity_property[:type].to_s == "decimal" and value.present? and !/^[+\-]?(\d+\.\d*|\d*\.\d+|\d+)([eE][+\-]?\d+)?$/.match?(value.to_s)

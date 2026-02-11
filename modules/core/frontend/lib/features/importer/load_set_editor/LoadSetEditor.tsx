@@ -150,7 +150,10 @@ const LoadSetEditor = ({
     await destroyLoadSetMutation.mutateAsync(loadSet.id);
     navigate(
       `/core/load_sets/new?${getURLParams(
-        getLoadSetPropertiesForCancel({...loadSet, ...loadSet.load_set_blocks[0]}),
+        getLoadSetPropertiesForCancel({
+          ...loadSet,
+          ...loadSet.load_set_blocks[0],
+        }),
       )}`,
     );
   };
@@ -212,6 +215,7 @@ const LoadSetEditor = ({
               <ButtonGroup>
                 <Button
                   onClick={handleCancel}
+                  disabled={validateLoadSetMutation.isPending}
                   loading={
                     rollbackLoadSetMutation.isPending ||
                     destroyLoadSetMutation.isPending
@@ -228,12 +232,18 @@ const LoadSetEditor = ({
                   </Button>
                 )}
                 {!isValidated && (
-                  <Button onClick={() => setIsOpen(true)}>Edit data set</Button>
+                  <Button
+                    disabled={validateLoadSetMutation.isPending}
+                    onClick={() => setIsOpen(true)}
+                  >
+                    Edit data set
+                  </Button>
                 )}
                 {loadSet.load_set_blocks[0].status_id__name ===
                   "Invalidated" && (
                   <Button
                     loading={confirmLoadSetMutation.isPending}
+                    disabled={validateLoadSetMutation.isPending}
                     color="danger"
                     onClick={handleConfirm}
                   >
@@ -242,7 +252,7 @@ const LoadSetEditor = ({
                 )}
                 <Button
                   color="secondary"
-                  disabled={!canSubmit}
+                  disabled={!canSubmit || confirmLoadSetMutation.isPending}
                   type="submit"
                   loading={isSubmitting}
                 >
