@@ -22,8 +22,6 @@ module Grit::Assays
 
     def create_bulk
       params.permit!
-      # permitted = params.permit(sheets: [ *self.permitted_params, columns: [ :name, :safe_name, :description, :sort, :required, :data_type_id, :unit_id ] ])
-      # logger.info sheets
       errors = []
       sheets = []
       AssayDataSheetDefinition.transaction do

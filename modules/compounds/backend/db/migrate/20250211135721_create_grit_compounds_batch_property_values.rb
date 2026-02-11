@@ -11,7 +11,6 @@ class CreateGritCompoundsBatchPropertyValues < ActiveRecord::Migration[7.2]
       t.string :string_value, null: true, default: nil
       t.bigint :integer_value, null: true, default: nil
       t.decimal :decimal_value, null: true, default: nil
-      t.float :float_value, null: true, default: nil
       t.text :text_value, null: true, default: nil
       t.datetime :datetime_value, null: true, default: nil
       t.date :date_value, null: true, default: nil

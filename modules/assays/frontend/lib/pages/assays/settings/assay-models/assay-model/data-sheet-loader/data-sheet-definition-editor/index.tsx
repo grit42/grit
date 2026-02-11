@@ -32,7 +32,6 @@ const DataSheetDefinitionEditor = ({
   );
 
   const [state, dispatch] = useFormReducer(dataSetDefinition);
-  console.log(state)
 
   const { errorTree, valid, value } = useMemo(() => {
     const result = refinedSchema.safeParse(state.dataSetDefinition);

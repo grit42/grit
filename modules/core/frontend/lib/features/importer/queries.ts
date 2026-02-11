@@ -35,26 +35,6 @@ import { FormFieldDef } from "@grit42/form";
 import { EntityInfo, EntityPropertyDef } from "../entities";
 import { Filter, SortingState } from "@grit42/table";
 
-export const useLoadSetFields = (
-  entity: string,
-): UseQueryResult<FormFieldDef[], string> => {
-  return useQuery<FormFieldDef[], string>({
-    queryKey: ["loadSetFields", entity],
-    queryFn: async (): Promise<FormFieldDef[]> => {
-      const response = await request<
-        EndpointSuccess<FormFieldDef[]>,
-        EndpointError
-      >(`/grit/core/load_sets/fields?entity=${entity}`);
-
-      if (!response.success) {
-        throw response.errors;
-      }
-
-      return response.data;
-    },
-  });
-};
-
 export const useLoadSetBlockFields = (
   entity: string,
   queryOptions: Partial<UseQueryOptions<FormFieldDef[], string>> = {},
@@ -276,25 +256,6 @@ export const useInfiniteLoadSetBlockWarningData = (
 };
 
 
-export const useLoadSetData = (
-  loadSetId: number,
-): UseQueryResult<string, string> => {
-  return useQuery<string, string>({
-    queryKey: ["loadSetData", loadSetId],
-    queryFn: async (): Promise<string> => {
-      const response = await request<string, EndpointError>(
-        `/grit/core/load_sets/${loadSetId}/data`,
-      );
-
-      if (typeof response !== "string" && !response.success) {
-        throw response.errors;
-      }
-
-      return response as string;
-    },
-  });
-};
-
 export const useLoadSetBlockData = (
   loadSetBlockId: number,
 ): UseQueryResult<string, string> => {
@@ -313,31 +274,6 @@ export const useLoadSetBlockData = (
     },
   });
 };
-
-export const useLoadSetEntity = (
-  loadSetId: number,
-
-  queryOptions: Partial<UseQueryOptions<EntityInfo | null, string>> = {},
-): UseQueryResult<EntityInfo | null, string> => {
-  return useQuery({
-    queryKey: ["loadSetEntity", loadSetId],
-    queryFn: async (): Promise<EntityInfo | null> => {
-      const response = await request<
-        EndpointSuccess<EntityInfo>,
-        EndpointError
-      >(`/grit/core/load_sets/${loadSetId}/entity_info`);
-
-      if (!response.success) {
-        throw response.errors;
-      }
-
-      return response.data as EntityInfo;
-    },
-    staleTime: 0,
-    ...queryOptions,
-  });
-};
-
 
 export const useLoadSetBlockEntity = (
   loadSetBlockId: number,
@@ -361,27 +297,6 @@ export const useLoadSetBlockEntity = (
     ...queryOptions,
   });
 };
-
-export const useLoadSetLoadedDataColumns = (
-  loadSetId: number,
-): UseQueryResult<EntityPropertyDef[], string> => {
-  return useQuery<EntityPropertyDef[], string>({
-    queryKey: ["loadSetLoadedDataColumns", loadSetId],
-    queryFn: async (): Promise<EntityPropertyDef[]> => {
-      const response = await request<
-        EndpointSuccess<EntityPropertyDef[]>,
-        EndpointError
-      >(`/grit/core/load_sets/${loadSetId}/loaded_data_columns`);
-
-      if (!response.success) {
-        throw response.errors;
-      }
-
-      return response.data as EntityPropertyDef[];
-    },
-  });
-};
-
 
 export const useLoadSetBlockLoadedDataColumns = (
   loadSetBlockId: number,

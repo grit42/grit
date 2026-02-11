@@ -50,59 +50,6 @@ export const useCreateLoadSetMutation = () => {
   });
 };
 
-export const useSetLoadSetMappingsMutation = (loadSetId: number) => {
-  return useMutation<
-    LoadSetData,
-    EndpointErrorErrors<LoadSetData>,
-    Record<string, LoadSetMapping>
-  >({
-    mutationKey: ["setLoadSetMappings", loadSetId],
-    mutationFn: async (mappings: Record<string, LoadSetMapping>) => {
-      const response = await request<
-        EndpointSuccess<LoadSetData>,
-        EndpointError
-      >(`/grit/core/load_sets/${loadSetId}/set_mappings`, {
-        method: "POST",
-        data: {
-          mappings,
-        },
-      });
-
-      if (!response.success) {
-        throw response.errors;
-      }
-
-      return response.data;
-    },
-    onError: notifyOnError,
-  });
-};
-
-export const useSetLoadSetDataMutation = (loadSetId: number) => {
-  return useMutation<LoadSetData, EndpointErrorErrors<LoadSetData>, FormData>({
-    mutationKey: ["setLoadSetData", loadSetId],
-    mutationFn: async (data: FormData) => {
-      const response = await request<
-        EndpointSuccess<LoadSetData>,
-        EndpointError
-      >(`/grit/core/load_sets/${loadSetId}/set_data`, {
-        method: "POST",
-        data,
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-
-      if (!response.success) {
-        throw response.errors;
-      }
-
-      return response.data;
-    },
-    onError: notifyOnError,
-  });
-};
-
 export const useSetLoadSetBlockDataMutation = (loadSetBlockId: number) => {
   return useMutation<LoadSetBlockData, EndpointErrorErrors<LoadSetBlockData>, FormData>({
     mutationKey: ["setLoadSetBlockData", loadSetBlockId],
@@ -188,27 +135,6 @@ export const useConfirmLoadSetBlockMutation = (loadSetBlockId: number) => {
         EndpointSuccess<LoadSetData>,
         EndpointError
       >(`/grit/core/load_set_blocks/${loadSetBlockId}/confirm`, {
-        method: "POST",
-      });
-
-      if (!response.success) {
-        throw response.errors;
-      }
-
-      return response.data;
-    },
-    onError: notifyOnError,
-  });
-};
-
-export const useRollbackLoadSetMutation = (loadSetId: number) => {
-  return useMutation<LoadSetData, string>({
-    mutationKey: ["rollbackLoadSet", loadSetId],
-    mutationFn: async () => {
-      const response = await request<
-        EndpointSuccess<LoadSetData>,
-        EndpointError
-      >(`/grit/core/load_sets/${loadSetId}/rollback`, {
         method: "POST",
       });
 

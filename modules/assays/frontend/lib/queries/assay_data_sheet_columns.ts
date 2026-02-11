@@ -58,8 +58,8 @@ export interface AssayDataSheetColumnData extends EntityData {
 
 export const useAssayDataSheetColumns = (
   assayDataSheetDefinitionId: number | string,
-  sort?: SortingState,
-  filter?: Filter[],
+  sort: SortingState = [],
+  filter: Filter[] = [],
   params: URLParams = {},
   queryOptions: Partial<
     UseQueryOptions<AssayDataSheetColumnData[], string>
@@ -67,7 +67,7 @@ export const useAssayDataSheetColumns = (
 ) => {
   return useEntityData<AssayDataSheetColumnData>(
     "grit/assays/assay_data_sheet_columns",
-    sort
+    sort.length > 0
       ? sort
       : [
           {
