@@ -67,20 +67,9 @@ module Grit::Compounds
 
       load_set_block_record_klass = load_set_block.loading_record_klass
 
-      errors = []
       records = []
       unique_properties = Hash.new { |h, k| h[k] = Set.new }
       has_errors = false
-      record = nil
-      record_props = nil
-      entity_property_name = nil
-      mapping = nil
-      find_by = nil
-      header = nil
-      value = nil
-      duplicate_values = nil
-      load_set_entity_record = nil
-      value_prop_name = nil
 
       new_record_props = base_record_props(load_set_block)
 
@@ -124,33 +113,37 @@ module Grit::Compounds
           record_props[entity_property_name] = value
 
           if entity_property[:required] && value.nil?
-            value = nil
             record[:record_errors] ||= {}
             record[:record_errors][entity_property_name] = [ "can't be blank" ]
-          elsif entity_property[:type].to_s == "decimal" and !value.nil? and !value.blank? and !/^[+\-]?(\d+\.\d*|\d*\.\d+|\d+)([eE][+\-]?\d+)?$/.match?(value.to_s)
+          elsif entity_property[:type].to_s == "decimal" and value.present? and !/^[+\-]?(\d+\.\d*|\d*\.\d+|\d+)([eE][+\-]?\d+)?$/.match?(value.to_s)
+            record_props[entity_property_name] = nil
             value = nil
             record[:record_errors] ||= {}
             record[:record_errors][entity_property_name] = [ "is not a number" ]
-          elsif entity_property[:type].to_s == "integer" and !value.nil? and !value.blank? and !/^[+\-]?\d+([eE][+]?\d+)?$/.match?(value.to_s)
+          elsif entity_property[:type].to_s == "integer" and value.present? and !/^[+\-]?\d+([eE][+]?\d+)?$/.match?(value.to_s)
+            record_props[entity_property_name] = nil
             value = nil
             record[:record_errors] ||= {}
             record[:record_errors][entity_property_name] = [ "is not a integer" ]
-          elsif entity_property[:type].to_s == "integer" and !value.nil? and !value.blank? and (value.to_i < -(2**53-1) || value.to_i > 2**53-1)
+          elsif entity_property[:type].to_s == "integer" and value.present? and (value.to_i < -(2**53-1) || value.to_i > 2**53-1)
+            record_props[entity_property_name] = nil
             value = nil
             record[:record_errors] ||= {}
             record[:record_errors][entity_property_name] = [ "is out of range" ]
-          elsif entity_property[:type].to_s == "datetime" and !value.nil? and !value.blank?
+          elsif entity_property[:type].to_s == "datetime" and value.present?
             begin
               record_props[entity_property_name] = DateTime.parse(value)
-            rescue
+            rescue ArgumentError
+              record_props[entity_property_name] = nil
               value = nil
               record[:record_errors] ||= {}
               record[:record_errors][entity_property_name] = [ "Unable to parse datetime, please use YYYY/MM/DD HH:mm:ss or ISO 8601" ]
             end
-          elsif entity_property[:type].to_s == "date" and !value.nil? and !value.blank?
+          elsif entity_property[:type].to_s == "date" and value.present?
             begin
               record_props[entity_property_name] = Date.parse(value)
-            rescue
+            rescue ArgumentError
+              record_props[entity_property_name] = nil
               value = nil
               record[:record_errors] ||= {}
               record[:record_errors][entity_property_name] = [ "Unable to parse date, please use YYYY/MM/DD or ISO 8601" ]
