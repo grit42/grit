@@ -24,7 +24,7 @@ Metadata Definitions can be managed in the Assay Model administration section, w
 1) Go to the Assay Models menu
 2) Click the gears icon top right in the toolbar
 
-<!-- ![Going to Assay Models administration](./assets/assay_models_administration.png) -->
+![Assay Models administration](../assets/assay_models_administration.png)
 
 ### Creating Metadata Definitions
 
