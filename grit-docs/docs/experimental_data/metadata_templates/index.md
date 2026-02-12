@@ -1,6 +1,6 @@
 ---
 sidebar_label: 'Metadata Templates'
-sidebar_position: 40
+sidebar_position: 50
 description: 'Shortcuts for Experiment Metadata Values'
 ---
 

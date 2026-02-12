@@ -1,0 +1,9 @@
+{
+  "label": "Data tables",
+  "description": "Visualise data across Assay Models and Experiments",
+  "position": 40,
+  "link": {
+    "type": "doc",
+    "id": "index"
+  }
+}
