@@ -1,6 +1,6 @@
 # Assay Models
 
-[Assay Models](./assay_models/index.md) define the blueprint for how specific types of assays should be recorded. Each assay model is tailored to a particular experimental approach and includes both a set of [metadata fields](./assay_models/metadata.md) and one or more [data sheets](./assay_models/data_sheets/index.md).
+[Assay Models](./managing_assay_models/index.md) define the blueprint for how experimental data should be recorded. Each assay model is tailored to a particular experimental approach and includes both a set of [metadata fields](./managing_assay_models/metadata.md) and one or more [data sheets](./managing_assay_models/data_sheets/index.md).
 
 Assay Models are grouped in [Assay Types](./assay_types.md).
 

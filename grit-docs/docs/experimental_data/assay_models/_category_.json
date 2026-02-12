@@ -1,0 +1,9 @@
+{
+    "label": "Assay Models",
+    "position": 10,
+    "description": "Structure for experimental data",
+    "link": {
+      "type": "doc",
+      "id": "index"
+    }
+}
