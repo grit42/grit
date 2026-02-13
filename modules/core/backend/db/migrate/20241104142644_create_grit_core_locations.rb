@@ -6,7 +6,7 @@ class CreateGritCoreLocations < ActiveRecord::Migration[7.2]
       t.datetime :created_at, null: false, default: -> { 'CURRENT_TIMESTAMP' }
       t.string :updated_by, limit: 30
       t.datetime :updated_at
-      t.string :name, null: false
+      t.string :name, null: false, index: { unique: true, name: 'idx_locations_on_name_unique' }
       t.text :print_address
       t.references :country, null: false, foreign_key: { name: "core_locations_core_country_id_fkey", to_table: "grit_core_countries" }
       t.references :origin, null: false, foreign_key: { name: "core_locations_core_origin_id_fkey", to_table: "grit_core_origins" }

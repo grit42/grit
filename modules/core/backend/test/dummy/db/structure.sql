@@ -1,4 +1,4 @@
-\restrict dOJuOYsdJxy68tlcPTT4s6Xf8WMPEcZzkpjJHhGN87xeHu2mp8hDkenM3g2Ft3j
+\restrict 99LeM90HJMQaUZonyZPqL6FKtyUq6mFtA6agvdFdmscVpzqXawqpujU5tyZzN2w
 
 -- Dumped from database version 16.3 (Debian 16.3-1.pgdg120+1)
 -- Dumped by pg_dump version 16.11
@@ -1345,7 +1345,7 @@ ALTER TABLE ONLY public.test_entities
 -- PostgreSQL database dump complete
 --
 
-\unrestrict dOJuOYsdJxy68tlcPTT4s6Xf8WMPEcZzkpjJHhGN87xeHu2mp8hDkenM3g2Ft3j
+\unrestrict 99LeM90HJMQaUZonyZPqL6FKtyUq6mFtA6agvdFdmscVpzqXawqpujU5tyZzN2w
 
 SET search_path TO "$user", public;
 
@@ -1354,10 +1354,6 @@ INSERT INTO "schema_migrations" (version) VALUES
 ('20250625074209'),
 ('20250624081122'),
 ('20250624080646'),
-('20250622125208'),
-('20250521124829'),
-('20250411144141'),
-('20250411045043'),
 ('20250408050849'),
 ('20250205130307'),
 ('20250205093246'),
