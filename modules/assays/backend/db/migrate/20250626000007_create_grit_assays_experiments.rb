@@ -11,6 +11,7 @@ class CreateGritAssaysExperiments < ActiveRecord::Migration[7.2]
       t.json :plots, default: {}
 
       t.references :assay_model, null: false, foreign_key: { name: "assays_experiments_assays_assay_model_id_fkey", to_table: "grit_assays_assay_models" }
+      t.references :publication_status, null: false, foreign_key: { name: "assays_experiments_core_publication_status_id_fkey", to_table: "grit_core_publication_statuses" }
     end
 
     execute "CREATE TRIGGER manage_stamps_grit_assays_experiments BEFORE INSERT OR UPDATE ON public.grit_assays_experiments FOR EACH ROW EXECUTE FUNCTION public.manage_stamps();"

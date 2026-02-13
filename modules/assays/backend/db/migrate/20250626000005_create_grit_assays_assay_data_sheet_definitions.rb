@@ -9,6 +9,9 @@ class CreateGritAssaysAssayDataSheetDefinitions < ActiveRecord::Migration[7.2]
       t.string :name, null: false, index: true
       t.text :description
 
+      t.boolean :result, default: false, comment: "Make this data available in Data Tables"
+      t.integer :sort
+
       t.references :assay_model, null: false, foreign_key: { name: "assays_assay_data_sheet_definitions_assays_assay_model_id_fkey", to_table: "grit_assays_assay_models" }
       t.index [ :name, :assay_model_id ], unique: true, name: "uniq_assay_data_sheet_definition_name_per_assay_model"
     end

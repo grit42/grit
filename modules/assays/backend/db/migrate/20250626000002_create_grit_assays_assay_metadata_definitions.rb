@@ -10,7 +10,7 @@ class CreateGritAssaysAssayMetadataDefinitions < ActiveRecord::Migration[7.2]
       t.string :safe_name, null: false, index: { unique: true }, limit: 30
       t.text :description
 
-      t.references :vocabulary, null: false, foreign_key: { name: "assays_assay_metadata_definitions_assays_vocabulary_id_fkey", to_table: "grit_assays_vocabularies" }
+      t.references :vocabulary, null: false, foreign_key: { name: "assays_assay_metadata_definitions_core_vocabulary_id_fkey", to_table: "grit_core_vocabularies" }
     end
 
     execute "CREATE TRIGGER manage_stamps_grit_assays_assay_metadata_definitions BEFORE INSERT OR UPDATE ON public.grit_assays_assay_metadata_definitions FOR EACH ROW EXECUTE FUNCTION public.manage_stamps();"

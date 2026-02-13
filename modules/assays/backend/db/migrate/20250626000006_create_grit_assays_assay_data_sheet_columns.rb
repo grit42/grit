@@ -8,7 +8,7 @@ class CreateGritAssaysAssayDataSheetColumns < ActiveRecord::Migration[7.2]
       t.datetime :updated_at
 
       t.string :name, null: false
-      t.string :safe_name, null: false
+      t.string :safe_name, null: false, limit: 30
       t.text :description
       t.integer :sort
       t.boolean :required, null: false, default: false

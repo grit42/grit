@@ -10,6 +10,7 @@ class CreateGritAssaysAssayModels < ActiveRecord::Migration[7.2]
       t.text :description
 
       t.references :assay_type, null: false, foreign_key: { name: "assays_assay_models_assays_assay_type_id_fkey", to_table: "grit_assays_assay_types" }
+      t.references :publication_status, null: false, foreign_key: { name: "assays_assay_models_core_publication_status_id_fkey", to_table: "grit_core_publication_statuses" }
     end
 
     execute "CREATE TRIGGER manage_stamps_grit_assays_assay_models BEFORE INSERT OR UPDATE ON public.grit_assays_assay_models FOR EACH ROW EXECUTE FUNCTION public.manage_stamps();"
