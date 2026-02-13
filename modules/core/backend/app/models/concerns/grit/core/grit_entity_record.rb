@@ -46,7 +46,9 @@ module Grit::Core::GritEntityRecord
         validates column.name, inclusion: { in: [ true, false ] } if column.sql_type_metadata.type == :boolean && !column.null
         validates column.name, length: { maximum: column.sql_type_metadata.limit } unless column.sql_type_metadata.limit.nil? or ![ :string, :text ].include?(column.sql_type_metadata.type)
       end
-    rescue
+    rescue StandardError => e
+      logger.info e.to_s
+      logger.info e.backtrace.join("\n")
     end
 
     validate :numbers_in_range

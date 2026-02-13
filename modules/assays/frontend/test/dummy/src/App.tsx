@@ -41,7 +41,7 @@ const App = () => {
   const { data: session, isLoading } = useSession();
 
   if (isLoading && !session) {
-    <ThemeProvider colorScheme={"dark"} displayDensity={"comfortable"}>
+    return <ThemeProvider colorScheme={"dark"} displayDensity={"comfortable"}>
       <div
         className={styles.appContainer}
         style={{
