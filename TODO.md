@@ -25,6 +25,18 @@
 - [x] Remove duplicate `molecule_id = molecule_record.id` line in `Compound.create`
 - [ ] Fix Prettier version mismatch — root `package.json` has v2, pnpm catalog has v3
 
+## Ruby/Rails Nx Integration
+
+- [ ] Add CI/CD GitHub Actions workflows for test, lint, and release
+- [ ] Add lint/format targets (RuboCop) for Ruby projects in the Nx plugin
+- [ ] Improve inter-gem dependency version bumping in `RubyVersionActions`
+- [ ] Add separate cached `build` target for `.gem` artifacts
+- [ ] Add `db:prepare` Nx target on the host app with engine dependencies
+- [ ] Enable caching for Ruby lint and format targets
+- [ ] Add typecheck-equivalent for Ruby (Sorbet/RBS)
+- [ ] Improve dev experience with `nx watch` for engine gem changes
+- [ ] Add integration/system test target on `grit-grit` across all engines
+
 ## Improvements
 
 - [ ] Add frontend unit tests for `@grit42/form`, `@grit42/table`, `@grit42/notifications`, `@grit42/plots`, `@grit42/api`, `@grit42/client-library`
