@@ -5,7 +5,7 @@ sidebar_position: 2
 
 # Assay Data Sheet columns
 
-Data tables **Assay Data Sheet columns** display experimental data. **Assay Data Sheet columns** are selected from [Assay Models](../assays/setting-up/assay_models/index.md) and aggregate data from **Published** experiments belonging to the **Assay Model**. **Assays** filter can be configured to aggregate data from specific **Assays**.
+Data tables **Assay Data Sheet columns** display experimental data. **Assay Data Sheet columns** are selected from [Assay Models](../assay_models) and aggregate data from **Published** experiments belonging to the **Assay Model**. Filters can be configured to aggregate data from specific **Experiments**.
 
 **Assay Data Sheet columns** are managed under the **Columns** > **Assay columns** tab (1).
 Click **Add entity attribute** (2) to add a column displaying an entity attribute to the data table.
@@ -14,7 +14,7 @@ Click **Add entity attribute** (2) to add a column displaying an entity attribut
 
 In the list, select the assay data sheet column to add by clicking the row.
 
-![Add entity attribute column](./assets/select_assay_column.png)
+![Add assay data sheet column](./assets/select_assay_column.png)
 
 In the form, configure the column details and click **Save**.
 
@@ -22,7 +22,7 @@ In the form, configure the column details and click **Save**.
 2. A machine-friendly name, only alphanumerical characters and underscores (**\_**).
 3. An optional sort indication used to define the default position of the column, a lower value is closer to the start.
 4. The [aggregation method](#aggregation-methods) that should be used to produce a single value when there are multiple results for the entity.
-5. [Assay filters](#assays-filter) to select a specific subset of assays to get results from.
+5. [Experiments filter](#experiments-filters) to select a specific subset of Experiments to get results from.
 
 ![Add assay column form](./assets/add_assay_column_form.png)
 
@@ -58,8 +58,6 @@ Available aggregation methods depend on the data type of the assay data sheet co
   - AND: true if all values are true
   - OR: true if any value is true
 
-## Assays filter
+## Experiments Filter
 
-Assay data sheet columns data is aggregated from **Published Experiments** of the corresponding **Assay model**. The Assays filter can be used to target specific **Assays** of the model. If **Assays** are selected, only data from **Experiments** belonging to the selected **Assays** will be aggregated. If no **Assays** are selected, all **Experiments** from all **Assays** of the **Assay Model** are used.
-
-This enables grouping data from **Assays** that may differ only by some **Metadata**, such as the site or lab the **Assay** was run in.
+Experimental data is aggregated from **Published Experiments** of the corresponding **Assay model**. The Experiments Filter can be used to target specific **Experiments** of the model, based on their **Metadata**. If **Experiments** are selected, only data from these **Experiments** will be aggregated. If no selection is made, all **Experiments** matching the **Metadata Filters** will be used.
