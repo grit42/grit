@@ -21,7 +21,7 @@ grit enables registration of a wide range of therapeutics modalities, referred t
 
 grit makes managing structured experimental data a breeze. **Assay Types** enable grouping data sets in broad categories, **Assay Models** define the shape of your experimental data and associated metadata, and **Experiments** store your results. Results can be entered manually with simple forms and in bulk via a strictly validated data upload process. Results can be visualised in plots. Experimental data can be aggregated in SAR-inspired **Data Tables** to support decision-making right in the platform and export to external analysis tools.
 
-[Learn more about grit Assays](./assays/)
+[Learn more about grit Experiments](./experimental_data/)
 
 ### Ontologies
 
