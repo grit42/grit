@@ -1,4 +1,4 @@
-\restrict KCJexdCW6XEFcRjbeqr8A8V3A94tmMgycDSPjgWHF1wALwZNL2IiswrXJoWweXF
+\restrict CaUxW3fkqSBZUxHW4c81hvrR3ofCK7KRAIla5ONgdF1gdNxVlH36zHh2Mykbz08
 
 -- Dumped from database version 16.3 (Debian 16.3-1.pgdg120+1)
 -- Dumped by pg_dump version 16.11
@@ -409,9 +409,9 @@ CREATE TABLE public.grit_assays_assay_data_sheet_definitions (
     updated_at timestamp(6) without time zone,
     name character varying NOT NULL,
     description text,
-    assay_model_id bigint NOT NULL,
     result boolean DEFAULT false,
-    sort integer
+    sort integer,
+    assay_model_id bigint NOT NULL
 );
 
 
@@ -2674,6 +2674,14 @@ ALTER TABLE ONLY public.grit_assays_assay_models
 
 
 --
+-- Name: grit_assays_assay_models assays_assay_models_core_publication_status_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.grit_assays_assay_models
+    ADD CONSTRAINT assays_assay_models_core_publication_status_id_fkey FOREIGN KEY (publication_status_id) REFERENCES public.grit_core_publication_statuses(id);
+
+
+--
 -- Name: grit_assays_data_table_columns assays_data_table_entities_assays_assay_data_sheet_column_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2751,6 +2759,14 @@ ALTER TABLE ONLY public.grit_assays_experiment_metadata
 
 ALTER TABLE ONLY public.grit_assays_experiments
     ADD CONSTRAINT assays_experiments_assays_assay_model_id_fkey FOREIGN KEY (assay_model_id) REFERENCES public.grit_assays_assay_models(id);
+
+
+--
+-- Name: grit_assays_experiments assays_experiments_core_publication_status_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.grit_assays_experiments
+    ADD CONSTRAINT assays_experiments_core_publication_status_id_fkey FOREIGN KEY (publication_status_id) REFERENCES public.grit_core_publication_statuses(id);
 
 
 --
@@ -3058,22 +3074,6 @@ ALTER TABLE ONLY public.active_storage_variant_records
 
 
 --
--- Name: grit_assays_experiments fk_rails_a98d5fb787; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.grit_assays_experiments
-    ADD CONSTRAINT fk_rails_a98d5fb787 FOREIGN KEY (publication_status_id) REFERENCES public.grit_core_publication_statuses(id);
-
-
---
--- Name: grit_assays_assay_models fk_rails_ab9bae66d5; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.grit_assays_assay_models
-    ADD CONSTRAINT fk_rails_ab9bae66d5 FOREIGN KEY (publication_status_id) REFERENCES public.grit_core_publication_statuses(id);
-
-
---
 -- Name: active_storage_attachments fk_rails_c3b3935057; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3117,71 +3117,44 @@ ALTER TABLE ONLY public.grit_compounds_compound_property_values
 -- PostgreSQL database dump complete
 --
 
-\unrestrict KCJexdCW6XEFcRjbeqr8A8V3A94tmMgycDSPjgWHF1wALwZNL2IiswrXJoWweXF
+\unrestrict CaUxW3fkqSBZUxHW4c81hvrR3ofCK7KRAIla5ONgdF1gdNxVlH36zHh2Mykbz08
 
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
 ('20260204123909'),
-('20260122141641'),
-('20260119104242'),
-('20260119103321'),
-('20260112122804'),
-('20251125102855'),
-('20251113133402'),
-('20251113130627'),
-('20251113130626'),
-('20251113130217'),
-('20251113130216'),
-('20250818115347'),
-('20250818113922'),
-('20250818111536'),
+('20250627000012'),
+('20250627000011'),
+('20250627000010'),
+('20250627000009'),
+('20250627000008'),
+('20250627000007'),
+('20250627000006'),
+('20250627000005'),
+('20250627000004'),
+('20250627000003'),
+('20250627000002'),
+('20250627000001'),
+('20250626000014'),
+('20250626000013'),
+('20250626000012'),
+('20250626000011'),
+('20250626000010'),
+('20250626000009'),
+('20250626000008'),
+('20250626000007'),
+('20250626000006'),
+('20250626000005'),
+('20250626000004'),
+('20250626000003'),
+('20250626000002'),
+('20250626000001'),
 ('20250625074209'),
-('20250624115056'),
 ('20250624081122'),
 ('20250624080646'),
-('20250624080000'),
-('20250622125208'),
-('20250521140707'),
-('20250521124829'),
-('20250414050030'),
-('20250411144141'),
-('20250411055514'),
-('20250411053433'),
-('20250411050930'),
-('20250411045043'),
-('20250409120352'),
-('20250408051620'),
-('20250408051604'),
-('20250408051559'),
 ('20250408050849'),
-('20250405081044'),
-('20250402092852'),
-('20250331113610'),
-('20250331112438'),
-('20250329035034'),
-('20250329034353'),
-('20250328160707'),
-('20250328155337'),
-('20250328155336'),
-('20250328154105'),
-('20250327141129'),
-('20250327140611'),
-('20250318083907'),
-('20250225120820'),
-('20250214120404'),
-('20250211135721'),
-('20250211133705'),
-('20250211130413'),
-('20250210122502'),
-('20250206103143'),
-('20250206101007'),
-('20250206092302'),
-('20250206083642'),
-('20250206071057'),
 ('20250205130307'),
 ('20250205093246'),
-('20250203140045'),
 ('20241212062610'),
 ('20241212062001'),
 ('20241212062000'),
