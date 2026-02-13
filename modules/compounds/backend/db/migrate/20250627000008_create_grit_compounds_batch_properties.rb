@@ -7,8 +7,8 @@ class CreateGritCompoundsBatchProperties < ActiveRecord::Migration[7.2]
       t.string :updated_by, limit: 30
       t.datetime :updated_at
 
-      t.string :name, null: false
-      t.string :safe_name, null: false
+      t.string :name, null: false, index: { unique: true, name: 'idx_grit_compounds_batch_properties_on_name_unique' }
+      t.string :safe_name, null: false, limit: 30, index: { unique: true, name: 'idx_grit_compounds_batch_properties_on_safe_name_unique' }
       t.text :description
       t.integer :sort
       t.boolean :required, null: false, default: false

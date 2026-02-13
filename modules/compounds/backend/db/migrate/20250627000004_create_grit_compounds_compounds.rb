@@ -16,8 +16,8 @@ class CreateGritCompoundsCompounds < ActiveRecord::Migration[7.2]
       t.string :updated_by, limit: 30
       t.datetime :updated_at
 
-      t.string :name, null: false
-      t.string :origin_name, null: false
+      t.string :number, null: false, index: { unique: true, name: 'idx_grit_compounds_compounds_on_number_unique' }
+      t.string :name, null: false, index: { unique: true, name: 'idx_grit_compounds_compounds_on_name_unique' }
       t.text :description
 
       t.references :compound_type, null: false, foreign_key: { name: "compounds_compounds_compounds_compound_types_fkey", to_table: "grit_compounds_compound_types" }
