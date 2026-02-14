@@ -2,7 +2,7 @@
 
 ## Critical Bugs
 
-- [ ] Fix missing `return` in `App.tsx` loading spinner branch — JSX is evaluated but never returned
+- [x] Fix missing `return` in `App.tsx` loading spinner branch — JSX is evaluated but never returned
 - [x] Fix `GritEntityController#show` — "not found" branch silently does nothing due to redundant `unless @record.nil?` guard
 - [x] Fix `production.rb` — `config.force_ssl = false` at line ~100 overrides `config.force_ssl = true` set earlier
 

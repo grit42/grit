@@ -38,61 +38,63 @@ const App = () => {
   const { data: session, isLoading } = useSession();
 
   if (isLoading && !session) {
-    <ThemeProvider colorScheme={"dark"} displayDensity={"comfortable"}>
-      <div
-        className={styles.appContainer}
-        style={{
-          height: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Spinner />
-      </div>
-    </ThemeProvider>;
+    return (
+      <ThemeProvider colorScheme={"dark"} displayDensity={"comfortable"}>
+        <div
+          className={styles.appContainer}
+          style={{
+            height: "100vh",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Spinner />
+        </div>
+      </ThemeProvider>
+    );
   }
 
   return (
-    <HelmetProvider>
-      <Helmet>
-        <title>grit</title>
-      </Helmet>
-      <ThemeProvider
-        colorScheme={session?.settings.theme ?? "dark"}
-        displayDensity={session?.settings.display_density ?? "comfortable"}
+    <ThemeProvider
+      colorScheme={session?.settings.theme ?? "dark"}
+      displayDensity={session?.settings.display_density ?? "comfortable"}
+    >
+      <div
+        className={classnames(styles.appContainer, {
+          [styles.withHeader]: !!session,
+        })}
       >
+        <Header navItems={CoreMeta.navItems} />
+        {session && <Toolbar />}
         <div
-          className={classnames(styles.appContainer, {
-            [styles.withHeader]: !!session,
+          className={classnames(styles.appBodyContainer, {
+            [styles.withPadding]: !!session,
           })}
         >
-          <Header navItems={CoreMeta.navItems} />
-          {session && <Toolbar />}
-          <div
-            className={classnames(styles.appBodyContainer, {
-              [styles.withPadding]: !!session,
-            })}
-          >
-            <Router />
-          </div>
+          <Router />
         </div>
-      </ThemeProvider>
-    </HelmetProvider>
+      </div>
+    </ThemeProvider>
   );
 };
 
 const AppWrapper = () => {
   return (
     <StrictMode>
-      <QueryClientProvider client={queryClient}>
-        <Provider>
-          <Registrant />
-          <BrowserRouter basename="/app">
-            <App />
-          </BrowserRouter>
-        </Provider>
-      </QueryClientProvider>
+      <HelmetProvider>
+        <Helmet>
+          <title>grit</title>
+        </Helmet>
+        <QueryClientProvider client={queryClient}>
+          <Provider>
+            <Registrant />
+            <BrowserRouter basename="/app">
+              <App />
+            </BrowserRouter>
+          </Provider>
+        </QueryClientProvider>
+      </HelmetProvider>
     </StrictMode>
   );
 };
