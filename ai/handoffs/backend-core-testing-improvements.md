@@ -306,3 +306,41 @@ before_destroy :check_dependencies
 
 - [ ] Run full test suite passes
 - [ ] No regressions in existing tests
+
+## Side Quest: Fix Pre-existing Test Failures
+
+During Phase 1, several pre-existing test failures were discovered that are unrelated to the refactoring work. These should be addressed separately.
+
+### Issue 1: UsersController double render error
+
+**File:** `test/controllers/grit/core/users_controller_test.rb:78`
+**Test:** `test_not_admin_should_not_show_user_for_user_admin`
+**Error:** `AbstractController::DoubleRenderError` in `grit_entity_controller.rb:176`
+
+The `show` action's rescue block calls `render` after the main block has already rendered. Need to add `return` after the first render or restructure the error handling.
+
+### Issue 2: LoadSetsController tests assume old schema
+
+**Files:** `test/controllers/grit/core/load_sets_controller_test.rb`
+**Tests:** Multiple failures (8 tests)
+
+The `LoadSet` model schema has changed significantly:
+
+- Old schema had: `mappings`, `data`, `parsed_data`, `status_id` columns
+- Current schema has: `id`, `name`, `entity`, `origin_id` only
+
+The tests reference the old API that expected data/mappings on LoadSet directly. The data loading logic has moved to `LoadSetBlock` model. These tests need to be rewritten to match the current architecture.
+
+**Affected tests:**
+
+- `test_should_create_load_set` - expects `load_set_blocks` params
+- `test_should_update_mapping_load_set,_validate_and_confirm`
+- `test_should_update_load_set_and_fail_to_validate_*` (multiple)
+- `test_should_not_destroy_succeeded_load_set`
+- `test_should_rollback_and_destroy_load_set`
+
+### Recommended approach
+
+1. Review the current `LoadSet` and `LoadSetBlock` models to understand the new data loading flow
+2. Rewrite `load_sets_controller_test.rb` to test the current API
+3. Fix the double render issue in `GritEntityController#show`
