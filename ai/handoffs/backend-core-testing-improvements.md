@@ -275,16 +275,19 @@ before_destroy :check_dependencies
 
 ## Checklist
 
-### Phase 1: Cleanup
+### Phase 1: Cleanup (COMPLETED)
 
-- [ ] Delete 14 empty placeholder model test files
-- [ ] Create `test/support/grit_entity_controller_test_helper.rb`
-- [ ] Update `test_helper.rb` to require support files
-- [ ] Refactor `countries_controller_test.rb`
-- [ ] Refactor `roles_controller_test.rb`
-- [ ] Refactor `locations_controller_test.rb`
-- [ ] Refactor `origins_controller_test.rb`
-- [ ] Refactor `units_controller_test.rb`
+- [x] Delete 14 empty placeholder model test files
+- [x] Create `test/support/grit_entity_controller_test_helper.rb`
+- [x] Update `test_helper.rb` to require support files
+- [x] Refactor `countries_controller_test.rb`
+- [x] Refactor `roles_controller_test.rb`
+- [x] Refactor `locations_controller_test.rb`
+- [x] Refactor `origins_controller_test.rb`
+- [x] Refactor `units_controller_test.rb`
+- [x] Fix broken fixtures:
+  - Renamed `load_set_loaded_records.yml` to `load_set_block_loaded_records.yml`
+  - Fixed `load_sets.yml` to match current schema (removed obsolete columns)
 
 ### Phase 2: New Unit Tests
 

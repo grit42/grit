@@ -2,35 +2,19 @@ test_entity_succeeded:
   id: 42
   name: "test-entity-succeeded"
   entity: "TestEntity"
-  mappings: {}
-  data: "Name\nHarold\nBrent\n"
-  parsed_data: [["Name"],["Harold"],["Brent"]]
-  status_id: 47
   origin_id: 1
 
 test_entity_mapping:
   name: "test-entity-mapping"
   entity: "TestEntity"
-  mappings: {}
-  data: "Name\nHarold\nBrent\n"
-  parsed_data: [["Name"],["Harold"],["Brent"]]
-  status_id: 42
   origin_id: 1
 
 test_entity_missing_required:
   name: "test-entity-missing-required"
   entity: "TestEntity"
-  mappings: {}
-  data: "Name\n \nBrent\n"
-  parsed_data: [["Name"],[""],["Brent"]]
-  status_id: 42
   origin_id: 1
 
 test_entity_wrong_data:
   name: "test-entity-wrong-data"
   entity: "TestEntity"
-  mappings: {}
-  parsed_data: [["Name","Data"],["Brent","aaa"]]
-  data: "Name,Data\nBrent,aaa\n"
-  status_id: 42
   origin_id: 1

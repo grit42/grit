@@ -2,8 +2,7 @@ require "test_helper"
 
 module Grit::Core
   class RolesControllerTest < ActionDispatch::IntegrationTest
-    include Engine.routes.url_helpers
-    include Authlogic::TestCase
+    include GritEntityControllerTestHelper
 
     setup do
       activate_authlogic
@@ -11,35 +10,16 @@ module Grit::Core
       @role = grit_core_roles(:one)
     end
 
-    test "should get index" do
-      get roles_url, as: :json
-      assert_response :success
-    end
-
-    test "should not create role" do
-      assert_no_difference("Role.count") do
-        post roles_url, params: { name: "Test", description: "Test role" }, as: :json
-      end
-
-      assert_response :forbidden
-    end
-
-    test "should show role" do
-      get role_url(@role), as: :json
-      assert_response :success
-    end
-
-    test "should not update role" do
-      patch role_url(@role), params: { name: "Updated role" }, as: :json
-      assert_response :forbidden
-    end
-
-    test "should not destroy role" do
-      assert_no_difference("Role.count") do
-        delete role_url(@role), as: :json
-      end
-
-      assert_response :forbidden
+    test "read-only entity behavior" do
+      assert_read_only_entity(
+        model_class: Role,
+        index_url: roles_url,
+        show_url: role_url(@role),
+        create_params: { name: "Test", description: "Test role" },
+        update_url: role_url(@role),
+        update_params: { name: "Updated role" },
+        destroy_url: role_url(@role)
+      )
     end
   end
 end
