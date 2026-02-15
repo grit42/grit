@@ -1,16 +1,18 @@
 # Backend Core Module Testing Improvements
 
-**Status:** Ready for implementation  
-**Priority:** Medium  
+**Status:** Phase 2 completed, Phase 3 remaining
+**Priority:** Medium
 **Estimated effort:** 4-6 hours across multiple sessions
 
 ## Overview
 
-The backend core module (`modules/core/backend/`) has testing issues that need addressing:
+The backend core module (`modules/core/backend/`) had testing issues that have been largely addressed:
 
-1. 14 model test files are empty placeholders with no actual tests
-2. Controller tests have significant duplication across similar entity patterns
-3. Complex business logic in several models lacks unit test coverage
+1. ~~14 model test files are empty placeholders with no actual tests~~ (FIXED in Phase 1)
+2. ~~Controller tests have significant duplication across similar entity patterns~~ (FIXED in Phase 1)
+3. ~~Complex business logic in several models lacks unit test coverage~~ (FIXED in Phase 2)
+
+**Current test suite: 130 tests, 293 assertions, 0 failures**
 
 ## Current Test Structure
 
@@ -289,14 +291,16 @@ before_destroy :check_dependencies
   - Renamed `load_set_loaded_records.yml` to `load_set_block_loaded_records.yml`
   - Fixed `load_sets.yml` to match current schema (removed obsolete columns)
 
-### Phase 2: New Unit Tests
+### Phase 2: New Unit Tests (COMPLETED)
 
-- [ ] Create `user_test.rb` (~20 tests)
-- [ ] Create `user_role_test.rb` (~5 tests)
-- [ ] Create `load_set_block_test.rb` (~8 tests)
-- [ ] Create `load_set_test.rb` (~5 tests)
-- [ ] Create `data_type_test.rb` (~5 tests)
-- [ ] Create `role_test.rb` (~3 tests)
+- [x] Create `user_test.rb` (26 tests)
+- [x] Create `user_role_test.rb` (3 tests)
+- [x] Create `load_set_block_test.rb` (12 tests)
+- [x] Create `load_set_test.rb` (9 tests)
+- [x] Create `data_type_test.rb` (8 tests)
+- [x] Create `role_test.rb` (4 tests)
+
+Note: Some tests from the original plan were simplified or adjusted due to the caching behavior of `Role.access?` and `RequestStore` that makes isolated unit testing challenging. The tests focus on functionality that can be reliably tested without cross-test state pollution.
 
 ### Phase 3: Concern Tests
 
@@ -304,54 +308,5 @@ before_destroy :check_dependencies
 
 ### Verification
 
-- [ ] Run full test suite passes
-- [ ] No regressions in existing tests
-
-## Side Quest: Fix Pre-existing Test Failures
-
-During Phase 1, several pre-existing test failures were discovered that are unrelated to the refactoring work. These should be addressed separately.
-
-### Issue 1: UsersController double render error (FIXED)
-
-**File:** `test/controllers/grit/core/users_controller_test.rb:78`
-**Test:** `test_not_admin_should_not_show_user_for_user_admin`
-**Error:** `AbstractController::DoubleRenderError` in `grit_entity_controller.rb:176`
-
-**Fix:** Added `return if performed?` check in `GritEntityController#show` after calling `show_entity(params)`. When `get_scope` renders a `:bad_request` error (e.g., non-admin accessing `user_administration` scope), the `performed?` check prevents the `show` method from attempting a second render.
-
-### Issue 2: LoadSetsController tests assume old schema (FIXED)
-
-**Files:** `test/controllers/grit/core/load_sets_controller_test.rb`
-**Tests:** Multiple failures (8 tests)
-
-The `LoadSet` model schema had changed significantly:
-
-- Old schema had: `mappings`, `data`, `parsed_data`, `status_id` columns
-- Current schema has: `id`, `name`, `entity`, `origin_id` only
-
-The tests referenced the old API that expected data/mappings on LoadSet directly. The data loading logic has moved to `LoadSetBlock` model.
-
-**Fix applied:**
-
-1. **Rewrote test file** (`load_sets_controller_test.rb`) with 6 focused tests:
-
-   - `test_should_get_index` - basic index test
-   - `test_should_create_load_set_with_load_set_blocks` - creates LoadSet with nested `load_set_blocks` params
-   - `test_should_show_load_set` - verifies show includes load_set_blocks
-   - `test_should_not_destroy_succeeded_load_set` - tests forbidden response for succeeded blocks
-   - `test_should_destroy_load_set_without_succeeded_blocks` - tests successful deletion
-   - `test_should_rollback_load_set_and_then_destroy` - tests rollback then destroy flow
-
-2. **Fixed LoadSetsController#destroy** to use correct params:
-
-   - Changed from `params[:ids]` to `params[:id] if params[:id] != "destroy"` (matching GritEntityController pattern)
-
-3. **Added LoadSetsController#rollback** method that was missing but had routes defined
-
-4. **Created fixtures:**
-   - `load_set_blocks.yml` - 4 test blocks in different states (mapping, succeeded)
-   - `load_set_block_loaded_records.yml` - records linking succeeded block to test entities
-   - Updated `load_set_statuses.yml` - added missing "Created", "Initializing", "Errored" statuses
-   - Added `test_entity_missing_required.csv` and `test_entity_wrong_data.csv` test files
-
-Note: The old validation tests that tested mapping/validation/confirmation at the LoadSet level were removed since this functionality now lives at the LoadSetBlock level. Tests for LoadSetBlock validation should be added as a separate test file (`load_set_blocks_controller_test.rb`).
+- [x] Run full test suite passes (130 tests, 293 assertions, 0 failures)
+- [x] No regressions in existing tests
