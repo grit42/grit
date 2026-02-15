@@ -311,13 +311,13 @@ before_destroy :check_dependencies
 
 During Phase 1, several pre-existing test failures were discovered that are unrelated to the refactoring work. These should be addressed separately.
 
-### Issue 1: UsersController double render error
+### Issue 1: UsersController double render error (FIXED)
 
 **File:** `test/controllers/grit/core/users_controller_test.rb:78`
 **Test:** `test_not_admin_should_not_show_user_for_user_admin`
 **Error:** `AbstractController::DoubleRenderError` in `grit_entity_controller.rb:176`
 
-The `show` action's rescue block calls `render` after the main block has already rendered. Need to add `return` after the first render or restructure the error handling.
+**Fix:** Added `return if performed?` check in `GritEntityController#show` after calling `show_entity(params)`. When `get_scope` renders a `:bad_request` error (e.g., non-admin accessing `user_administration` scope), the `performed?` check prevents the `show` method from attempting a second render.
 
 ### Issue 2: LoadSetsController tests assume old schema
 

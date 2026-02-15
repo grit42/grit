@@ -165,6 +165,8 @@ module Grit::Core::GritEntityController
 
     def show
       @record = show_entity(params)
+      return if performed?
+
       if @record.nil?
         render json: { success: false, errors: "Not found" }
       else
