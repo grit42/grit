@@ -253,9 +253,5 @@ module Grit::Core::GritEntityRecord
         destroy: destroy
       }
     end
-
-    def entity_table_with(default_visible: nil, default_hidden: nil)
-      @entity_table_columns = { default_visible: default_visible, default_hidden: default_hidden }
-    end
   end
 end
