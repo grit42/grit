@@ -1,6 +1,6 @@
 # Backend Core Module Testing Improvements
 
-**Status:** Phase 2 completed, Phase 3 remaining
+**Status:** COMPLETED (all phases)
 **Priority:** Medium
 **Estimated effort:** 4-6 hours across multiple sessions
 
@@ -12,15 +12,18 @@ The backend core module (`modules/core/backend/`) had testing issues that have b
 2. ~~Controller tests have significant duplication across similar entity patterns~~ (FIXED in Phase 1)
 3. ~~Complex business logic in several models lacks unit test coverage~~ (FIXED in Phase 2)
 
-**Current test suite: 130 tests, 293 assertions, 0 failures**
+**Final test suite: 160 tests, 378 assertions, 0 failures**
 
 ## Current Test Structure
 
 ```
 modules/core/backend/test/
 ├── controllers/grit/core/     # 13 controller integration tests
-├── models/grit/core/          # 15 model tests (14 empty, 1 active)
+├── models/
+│   ├── concerns/              # Concern tests (GritEntityRecord)
+│   └── grit/core/             # 7 model tests (active)
 ├── fixtures/grit/core/        # YAML fixtures for test data
+├── support/                   # Test helpers
 ├── grit/                      # Library tests (minimal)
 ├── dummy/                     # Rails dummy app for engine testing
 └── test_helper.rb             # Test configuration
@@ -302,11 +305,22 @@ before_destroy :check_dependencies
 
 Note: Some tests from the original plan were simplified or adjusted due to the caching behavior of `Role.access?` and `RequestStore` that makes isolated unit testing challenging. The tests focus on functionality that can be reliably tested without cross-test state pollution.
 
-### Phase 3: Concern Tests
+### Phase 3: Concern Tests (COMPLETED)
 
-- [ ] Create `grit_entity_record_test.rb` (~10 tests)
+- [x] Create `grit_entity_record_test.rb` (30 tests, 85 assertions)
+
+Tests cover:
+
+- Auto-validation from database schema (uniqueness, presence, length mechanism)
+- `numbers_in_range` validation for safe JavaScript integers (2^53-1 bounds)
+- `set_updater` callback populating created_by/updated_by
+- `entity_crud_with` permission configuration
+- Database introspection methods (foreign_keys, indexes, unique_properties, db_properties)
+- Entity metadata methods (display_properties, entity_properties, entity_fields, entity_columns)
+- Query building (detailed scope with foreign key joins)
+- `loader_find_by!` method
 
 ### Verification
 
-- [x] Run full test suite passes (130 tests, 293 assertions, 0 failures)
+- [x] Run full test suite passes (160 tests, 378 assertions, 0 failures)
 - [x] No regressions in existing tests
