@@ -64,7 +64,8 @@ module Grit::Core
     end
 
     def destroy
-      id = params[:ids]
+      id = params[:id] if params[:id] != "destroy"
+      id = params[:ids] if params[:id] == "destroy"
 
       load_set = Grit::Core::LoadSet.find(id)
 
@@ -80,6 +81,21 @@ module Grit::Core
       logger.info e.to_s
       logger.info e.backtrace.join("\n")
       render json: { success: false, errors: e.to_s }, status: :internal_server_error
+    end
+
+    def rollback
+      ActiveRecord::Base.transaction do
+        begin
+          load_set = Grit::Core::LoadSet.find(params[:load_set_id])
+          load_set.rollback
+          render json: { success: true, data: load_set }
+        rescue StandardError => e
+          logger.info e.to_s
+          logger.info e.backtrace.join("\n")
+          render json: { success: false, errors: e.to_s }, status: :internal_server_error
+          raise ActiveRecord::Rollback
+        end
+      end
     end
 
     private

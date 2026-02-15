@@ -1,3 +1,13 @@
+created:
+  id: 40
+  name: 'Created'
+  description: 'Created'
+
+initializing:
+  id: 41
+  name: 'Initializing'
+  description: 'Initializing'
+
 mapping:
   id: 42
   name: 'Mapping'
@@ -27,3 +37,8 @@ succeeded:
   id: 47
   name: 'Succeeded'
   description: 'The upload succeded'
+
+errored:
+  id: 48
+  name: 'Errored'
+  description: 'Errored'

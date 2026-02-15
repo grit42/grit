@@ -319,28 +319,39 @@ During Phase 1, several pre-existing test failures were discovered that are unre
 
 **Fix:** Added `return if performed?` check in `GritEntityController#show` after calling `show_entity(params)`. When `get_scope` renders a `:bad_request` error (e.g., non-admin accessing `user_administration` scope), the `performed?` check prevents the `show` method from attempting a second render.
 
-### Issue 2: LoadSetsController tests assume old schema
+### Issue 2: LoadSetsController tests assume old schema (FIXED)
 
 **Files:** `test/controllers/grit/core/load_sets_controller_test.rb`
 **Tests:** Multiple failures (8 tests)
 
-The `LoadSet` model schema has changed significantly:
+The `LoadSet` model schema had changed significantly:
 
 - Old schema had: `mappings`, `data`, `parsed_data`, `status_id` columns
 - Current schema has: `id`, `name`, `entity`, `origin_id` only
 
-The tests reference the old API that expected data/mappings on LoadSet directly. The data loading logic has moved to `LoadSetBlock` model. These tests need to be rewritten to match the current architecture.
+The tests referenced the old API that expected data/mappings on LoadSet directly. The data loading logic has moved to `LoadSetBlock` model.
 
-**Affected tests:**
+**Fix applied:**
 
-- `test_should_create_load_set` - expects `load_set_blocks` params
-- `test_should_update_mapping_load_set,_validate_and_confirm`
-- `test_should_update_load_set_and_fail_to_validate_*` (multiple)
-- `test_should_not_destroy_succeeded_load_set`
-- `test_should_rollback_and_destroy_load_set`
+1. **Rewrote test file** (`load_sets_controller_test.rb`) with 6 focused tests:
 
-### Recommended approach
+   - `test_should_get_index` - basic index test
+   - `test_should_create_load_set_with_load_set_blocks` - creates LoadSet with nested `load_set_blocks` params
+   - `test_should_show_load_set` - verifies show includes load_set_blocks
+   - `test_should_not_destroy_succeeded_load_set` - tests forbidden response for succeeded blocks
+   - `test_should_destroy_load_set_without_succeeded_blocks` - tests successful deletion
+   - `test_should_rollback_load_set_and_then_destroy` - tests rollback then destroy flow
 
-1. Review the current `LoadSet` and `LoadSetBlock` models to understand the new data loading flow
-2. Rewrite `load_sets_controller_test.rb` to test the current API
-3. Fix the double render issue in `GritEntityController#show`
+2. **Fixed LoadSetsController#destroy** to use correct params:
+
+   - Changed from `params[:ids]` to `params[:id] if params[:id] != "destroy"` (matching GritEntityController pattern)
+
+3. **Added LoadSetsController#rollback** method that was missing but had routes defined
+
+4. **Created fixtures:**
+   - `load_set_blocks.yml` - 4 test blocks in different states (mapping, succeeded)
+   - `load_set_block_loaded_records.yml` - records linking succeeded block to test entities
+   - Updated `load_set_statuses.yml` - added missing "Created", "Initializing", "Errored" statuses
+   - Added `test_entity_missing_required.csv` and `test_entity_wrong_data.csv` test files
+
+Note: The old validation tests that tested mapping/validation/confirmation at the LoadSet level were removed since this functionality now lives at the LoadSetBlock level. Tests for LoadSetBlock validation should be added as a separate test file (`load_set_blocks_controller_test.rb`).

@@ -1,1 +1,14 @@
-# Empty fixture - no load_set_blocks fixture exists to reference
+# Records loaded by the succeeded load set block
+# These link to test_entities via record_id
+
+loaded_record_one:
+  id: 200
+  record_id: 42
+  load_set_block_id: 103
+  table: "test_entities"
+
+loaded_record_two:
+  id: 201
+  record_id: 43
+  load_set_block_id: 103
+  table: "test_entities"

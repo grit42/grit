@@ -9,6 +9,7 @@ module Grit::Core
       activate_authlogic
       login(grit_core_users(:admin))
       @load_set = grit_core_load_sets(:test_entity_mapping)
+      @load_set_block = grit_core_load_set_blocks(:test_entity_mapping_block)
     end
 
     test "should get index" do
@@ -16,15 +17,22 @@ module Grit::Core
       assert_response :success
     end
 
-    test "should create load_set" do
+    test "should create load_set with load_set_blocks" do
       assert_difference("LoadSet.count") do
-        post load_sets_url, params: {
-          name: "test-entity-2",
-          entity: "TestEntity",
-          separator: ",",
-          data: file_fixture_upload("test_entity.csv", "application/csv"),
-          origin_id: 42
-        }
+        assert_difference("LoadSetBlock.count") do
+          post load_sets_url, params: {
+            name: "test-entity-new",
+            entity: "TestEntity",
+            origin_id: grit_core_origins(:one).id,
+            load_set_blocks: {
+              "0" => {
+                name: "test-block",
+                separator: ",",
+                data: fixture_file_upload("test_entity.csv", "text/csv")
+              }
+            }
+          }
+        end
       end
 
       assert_response :created
@@ -33,114 +41,10 @@ module Grit::Core
     test "should show load_set" do
       get load_set_url(@load_set), as: :json
       assert_response :success
-    end
 
-    test "should update mapping load_set, validate and confirm" do
-      post load_set_set_mappings_url(@load_set), params: {
-        mappings: {
-          name: {
-            header: 0
-          }
-        }
-      }, as: :json
-
-      assert_response :success
-
-      post load_set_validate_url(@load_set), as: :json
-
-      assert_response :success
-
-      assert_difference("TestEntity.count", 2) do
-        post load_set_confirm_url(@load_set), as: :json
-      end
-    end
-
-    test "should update load_set and fail to validate missing required" do
-      @load_set = grit_core_load_sets(:test_entity_missing_required)
-
-      post load_set_set_mappings_url(@load_set), params: {
-        mappings: {
-          name: {
-            header: 0
-          }
-        }
-      }, as: :json
-
-      assert_response :success
-
-      post load_set_validate_url(@load_set), as: :json
-
-      assert_response :unprocessable_entity
-
-      # errors = JSON.parse(@response.body)["errors"]
-
-      assert Grit::Core::LoadSet.find(@load_set.id).record_errors[0]["errors"]["name"][0] == "can't be blank"
-    end
-
-    test "should update load_set and fail to validate not a number" do
-      @load_set = grit_core_load_sets(:test_entity_wrong_data)
-      post load_set_set_mappings_url(@load_set), params: {
-        mappings: {
-          name: {
-            header: 0
-          },
-          integer: {
-            header: 1
-          }
-        }
-      }, as: :json
-
-      assert_response :success
-
-      post load_set_validate_url(@load_set), as: :json
-
-      assert_response :unprocessable_entity
-
-      assert Grit::Core::LoadSet.find(@load_set.id).record_errors[0]["errors"]["integer"][0] == "is not a number"
-    end
-
-    test "should update load_set and fail to validate not an ISO date" do
-      @load_set = grit_core_load_sets(:test_entity_wrong_data)
-      post load_set_set_mappings_url(@load_set), params: {
-        mappings: {
-          name: {
-            header: 0
-          },
-          date: {
-            header: 1
-          }
-        }
-      }, as: :json
-
-      assert_response :success
-
-      post load_set_validate_url(@load_set), as: :json
-
-      assert_response :unprocessable_entity
-
-      assert Grit::Core::LoadSet.find(@load_set.id).record_errors[0]["errors"]["date"][0] == "Unable to parse date, please use YYYY/MM/DD or ISO 8601"
-    end
-
-    test "should update load_set and fail to validate not an ISO datetime" do
-      @load_set = grit_core_load_sets(:test_entity_wrong_data)
-      post load_set_set_mappings_url(@load_set), params: {
-        mappings: {
-          name: {
-            header: 0
-          },
-          datetime: {
-            header: 1
-          }
-        }
-      }, as: :json
-
-      assert_response :success
-
-      post load_set_validate_url(@load_set), as: :json
-
-      assert_response :unprocessable_entity
-
-      assert Grit::Core::LoadSet.find(@load_set.id).record_errors[0]["errors"]["datetime"][0] == "Unable to parse datetime, please use YYYY/MM/DD HH:mm:ss or ISO 8601"
+      data = JSON.parse(response.body)["data"]
+      assert_equal @load_set.name, data["name"]
+      assert_includes data.keys, "load_set_blocks"
     end
 
     test "should not destroy succeeded load_set" do
@@ -150,16 +54,45 @@ module Grit::Core
       end
 
       assert_response :forbidden
+      assert_includes JSON.parse(response.body)["errors"], "it must be undone first"
     end
 
-    test "should rollback and destroy load_set" do
+    test "should destroy load_set without succeeded blocks" do
+      # Create a fresh load set without succeeded blocks
+      post load_sets_url, params: {
+        name: "test-entity-to-delete",
+        entity: "TestEntity",
+        origin_id: grit_core_origins(:one).id,
+        load_set_blocks: {
+          "0" => {
+            name: "test-block",
+            separator: ",",
+            data: fixture_file_upload("test_entity.csv", "text/csv")
+          }
+        }
+      }
+      assert_response :created
+
+      created_load_set = LoadSet.find_by(name: "test-entity-to-delete")
+
+      assert_difference("LoadSet.count", -1) do
+        delete load_set_url(created_load_set), as: :json
+      end
+
+      assert_response :success
+    end
+
+    test "should rollback load_set and then destroy" do
       @load_set = grit_core_load_sets(:test_entity_succeeded)
+
+      # Rollback should succeed and change TestEntity count
       assert_difference("TestEntity.count", -2) do
-        post load_set_rollback_url(@load_set)
+        post load_set_rollback_url(@load_set), as: :json
       end
 
       assert_response :success
 
+      # After rollback, blocks are no longer in "Succeeded" status, so destroy should work
       assert_difference("LoadSet.count", -1) do
         delete load_set_url(@load_set), as: :json
       end
