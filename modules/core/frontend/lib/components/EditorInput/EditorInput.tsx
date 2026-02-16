@@ -37,7 +37,7 @@ const EditorInput = (props: EditorInputProps) => {
         gridTemplateRows: "min-content minmax(0px, 1fr)",
       }}
     >
-      {props.label && <InputLabel label={props.label} />}
+      {props.label && <InputLabel label={props.label} description="Max. 100 MB" />}
       <Editor {...props} showFilePicker={props.showFilePicker ?? true} showInitialOverlay={props.showInitialOverlay ?? false} />
     </div>
   );
