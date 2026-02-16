@@ -2,7 +2,11 @@ require "test_helper"
 
 module Grit::Compounds
   class BatchLoaderTest < ActiveSupport::TestCase
+    include Authlogic::TestCase
+
     setup do
+      activate_authlogic
+      Grit::Core::UserSession.create(grit_core_users(:admin))
       @compound_type = grit_compounds_compound_types(:screening)
       @compound = grit_compounds_compounds(:one)
       @origin = grit_core_origins(:one)
@@ -198,6 +202,67 @@ module Grit::Compounds
 
       assert_not_nil props["compound_type_id"]
       assert_equal @compound_type.id, props["compound_type_id"]
+    end
+
+    # =========================================================================
+    # Negative Tests
+    # =========================================================================
+
+    test "create should raise error with invalid compound_type_id" do
+      invalid_params = {
+        name: "invalid-batch-load",
+        entity: "Grit::Compounds::Batch",
+        origin_id: @origin.id,
+        load_set_blocks: {
+          "0" => {
+            name: "test-block",
+            separator: ",",
+            compound_type_id: -999  # Invalid ID
+          }
+        }
+      }
+
+      assert_raises(ActiveRecord::RecordInvalid) do
+        BatchLoader.send(:create, invalid_params)
+      end
+    end
+
+    test "create should raise error with nil compound_type_id" do
+      invalid_params = {
+        name: "nil-compound-type-batch-load",
+        entity: "Grit::Compounds::Batch",
+        origin_id: @origin.id,
+        load_set_blocks: {
+          "0" => {
+            name: "test-block",
+            separator: ",",
+            compound_type_id: nil
+          }
+        }
+      }
+
+      assert_raises(ActiveRecord::RecordInvalid) do
+        BatchLoader.send(:create, invalid_params)
+      end
+    end
+
+    test "validate_record should handle missing required fields and add errors" do
+      context = {
+        batch_properties: [],
+        db_property_names: Grit::Compounds::Batch.db_properties.map { |prop| prop[:name] }
+      }
+
+      record = {}
+      record_props = {
+        # Missing required fields: compound_id, origin_id
+        "compound_type_id" => @compound_type.id
+      }
+
+      BatchLoader.send(:validate_record, Grit::Compounds::Batch, record, record_props, context)
+
+      assert_not_nil record[:record_errors], "Should have errors for missing required fields"
+      # compound_id is required for batch
+      assert record[:record_errors].has_key?(:compound_id), "Should have error for missing compound_id"
     end
   end
 end

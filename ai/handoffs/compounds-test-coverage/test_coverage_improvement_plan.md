@@ -539,8 +539,8 @@ None remaining after bug fix.
 2. ~~Task 7.1 - CompoundLoader unit tests (most value, covers complex logic)~~ - COMPLETED
 3. Task 7.3 - Property value verification (validates business logic)
 4. ~~Task 7.2 - BatchLoader unit tests (similar pattern to 7.1)~~ - COMPLETED
-5. Task 7.4 - Negative tests (error handling confidence)
-6. Task 7.5 - CSV branch coverage
+5. ~~Task 7.4 - Negative tests (error handling confidence)~~ - COMPLETED
+6. ~~Task 7.5 - CSV branch coverage~~ - COMPLETED
 7. Task 7.6 - Performance test
 
 ### Tasks 7.1 & 7.2 Implementation Details - COMPLETED
@@ -579,8 +579,8 @@ None remaining after bug fix.
 
 ### Estimated Remaining Effort
 
-- **Remaining Tasks (7.3-7.6)**: 4-6 hours
-- **Current Coverage**: 127 runs, 453 assertions
+- **Remaining Tasks (7.3, 7.6)**: 2-3 hours
+- **Current Coverage**: 136 runs, 473 assertions
 
 ### Quality Metrics After Tasks 7.1 & 7.2
 
@@ -595,3 +595,73 @@ None remaining after bug fix.
 | Batch Model            | 13     | 13    |
 | Integration (Compound) | 6      | 6     |
 | Integration (Batch)    | 4      | 4     |
+
+### Tasks 7.4 & 7.5 Implementation Details - COMPLETED
+
+**Implementation Date**: 2026-02-16
+
+**Task 7.4 - Negative Tests Added**:
+
+**CompoundLoader (19 total tests, up from 13)**:
+
+1. `test_create_should_raise_error_with_invalid_compound_type_id` - Tests error on invalid compound_type_id
+2. `test_create_should_raise_error_with_nil_compound_type_id` - Tests error on nil compound_type_id
+3. `test_validate_record_should_handle_missing_required_fields_and_add_errors` - Tests validation errors for missing required fields (origin_id)
+
+**BatchLoader (14 total tests, up from 11)**:
+
+1. `test_create_should_raise_error_with_invalid_compound_type_id` - Tests error on invalid compound_type_id
+2. `test_create_should_raise_error_with_nil_compound_type_id` - Tests error on nil compound_type_id
+3. `test_validate_record_should_handle_missing_required_fields_and_add_errors` - Tests validation errors for missing required fields (compound_id)
+
+**Task 7.5 - CSV Branch Tests Added**:
+
+**CompoundLoader (19 total tests)**:
+
+1. `test_columns_from_file_should_use_CSV_parser_when_structure_format_is_not_molfile` - Verifies CSV parser is used for SMILES format
+2. `test_columns_from_file_should_use_SDF_parser_when_structure_format_is_molfile` - Verifies SDF parser is used for molfile format
+3. `test_records_from_file_should_use_CSV_parser_when_structure_format_is_not_molfile` - Tests CSV record parsing for SMILES format
+
+**Files Modified**:
+
+- `test/lib/grit/compounds/compound_loader_test.rb` - Added 6 new tests, Authlogic integration
+- `test/lib/grit/compounds/batch_loader_test.rb` - Added 3 new tests, Authlogic integration
+
+**Fixture Files Created**:
+
+- `test/fixtures/files/compounds.csv` - Simple CSV with SMILES, Name, Description columns
+
+### Current Status: Tasks 7.4 & 7.5 COMPLETED ✅
+
+**Total Test Coverage After Tasks 7.4 & 7.5**:
+
+- **Before**: 127 runs, 453 assertions
+- **After**: 136 runs, 473 assertions
+- **Increase**: +9 runs (+7%), +20 assertions (+4%)
+
+### Quality Metrics After Tasks 7.4 & 7.5
+
+| Component              | Before | After |
+| ---------------------- | ------ | ----- |
+| SDF Library            | 10     | 10    |
+| CompoundLoader         | 13     | 19    |
+| BatchLoader            | 11     | 14    |
+| MoleculesController    | 5      | 5     |
+| Molecule Model         | 10     | 10    |
+| Compound Model         | 22     | 22    |
+| Batch Model            | 13     | 13    |
+| Integration (Compound) | 6      | 6     |
+| Integration (Batch)    | 4      | 4     |
+
+### Overall Progress Summary
+
+**From Initial State to Current**:
+
+- **Initial**: 37 runs, 65 assertions
+- **Current**: 136 runs, 473 assertions
+- **Total Increase**: +99 runs (+268%), +408 assertions (+628%)
+
+### Remaining Tasks
+
+- **Task 7.3**: Property value verification in integration tests (optional)
+- **Task 7.6**: Performance test for large SDF files (optional)

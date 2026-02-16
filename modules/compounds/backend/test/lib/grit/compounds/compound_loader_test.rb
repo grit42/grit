@@ -2,7 +2,11 @@ require "test_helper"
 
 module Grit::Compounds
   class CompoundLoaderTest < ActiveSupport::TestCase
+    include Authlogic::TestCase
+
     setup do
+      activate_authlogic
+      Grit::Core::UserSession.create(grit_core_users(:admin))
       @compound_type = grit_compounds_compound_types(:screening)
       @origin = grit_core_origins(:one)
       @valid_molfile = File.read(file_fixture("simple.sdf")).split("M  END").first + "M  END"
@@ -239,6 +243,180 @@ module Grit::Compounds
 
       assert_not_nil props["compound_type_id"]
       assert_equal @compound_type.id, props["compound_type_id"]
+    end
+
+    # =========================================================================
+    # Negative Tests
+    # =========================================================================
+
+    test "create should raise error with invalid compound_type_id" do
+      invalid_params = {
+        name: "invalid-compound-load",
+        entity: "Grit::Compounds::Compound",
+        origin_id: @origin.id,
+        load_set_blocks: {
+          "0" => {
+            name: "test-block",
+            separator: "$$$$",
+            compound_type_id: -999,  # Invalid ID
+            structure_format: "molfile"
+          }
+        }
+      }
+
+      assert_raises(ActiveRecord::RecordInvalid) do
+        CompoundLoader.send(:create, invalid_params)
+      end
+    end
+
+    test "create should raise error with nil compound_type_id" do
+      invalid_params = {
+        name: "nil-compound-type-load",
+        entity: "Grit::Compounds::Compound",
+        origin_id: @origin.id,
+        load_set_blocks: {
+          "0" => {
+            name: "test-block",
+            separator: "$$$$",
+            compound_type_id: nil,
+            structure_format: "molfile"
+          }
+        }
+      }
+
+      assert_raises(ActiveRecord::RecordInvalid) do
+        CompoundLoader.send(:create, invalid_params)
+      end
+    end
+
+    test "validate_record should handle missing required fields and add errors" do
+      context = {
+        structure_format: "molfile",
+        compound_properties: [],
+        db_property_names: Grit::Compounds::Compound.db_properties.map { |prop| prop[:name] }
+      }
+
+      record = {}
+      record_props = {
+        # Missing required fields: name, origin_id
+        "compound_type_id" => @compound_type.id
+      }
+
+      CompoundLoader.send(:validate_record, Grit::Compounds::Compound, record, record_props, context)
+
+      assert_not_nil record[:record_errors], "Should have errors for missing required fields"
+      # origin_id is required
+      assert record[:record_errors].has_key?(:origin_id), "Should have error for missing origin_id"
+    end
+
+    # =========================================================================
+    # CSV Branch Tests
+    # =========================================================================
+
+    test "columns_from_file should use CSV parser when structure_format is not molfile" do
+      # Create a load set with SMILES structure format (CSV-like)
+      load_set = Grit::Core::LoadSet.create!(
+        name: "csv-test-load-set",
+        entity: "Grit::Compounds::Compound",
+        origin_id: @origin.id
+      )
+
+      load_set_block = Grit::Core::LoadSetBlock.create!(
+        name: "csv-test-block",
+        load_set_id: load_set.id,
+        status_id: Grit::Core::LoadSetStatus.find_by(name: "Created").id,
+        separator: ",",
+        has_errors: false,
+        has_warnings: false
+      )
+
+      # Attach the CSV file
+      load_set_block.data.attach(
+        io: File.open(file_fixture("compounds.csv")),
+        filename: "compounds.csv",
+        content_type: "text/csv"
+      )
+
+      # Create compound load set block with SMILES format (not molfile)
+      Grit::Compounds::CompoundLoadSetBlock.create!(
+        load_set_block_id: load_set_block.id,
+        compound_type_id: @compound_type.id,
+        structure_format: "smiles"
+      )
+
+      # Call columns_from_file - it should use CSV parser for non-molfile formats
+      columns = CompoundLoader.send(:columns_from_file, load_set_block)
+
+      assert_equal 3, columns.length
+      assert_equal "col_0", columns[0][:name]
+      assert_equal "SMILES", columns[0][:display_name]
+      assert_equal "col_1", columns[1][:name]
+      assert_equal "Name", columns[1][:display_name]
+      assert_equal "col_2", columns[2][:name]
+      assert_equal "Description", columns[2][:display_name]
+    ensure
+      load_set&.destroy
+    end
+
+    test "columns_from_file should use SDF parser when structure_format is molfile" do
+      load_set_block = grit_core_load_set_blocks(:compound_loading_validated_block)
+
+      # Attach an SDF file to the block
+      load_set_block.data.attach(
+        io: File.open(file_fixture("simple.sdf")),
+        filename: "simple.sdf",
+        content_type: "chemical/x-mdl-sdfile"
+      )
+
+      columns = CompoundLoader.send(:columns_from_file, load_set_block)
+
+      # SDF parser returns molecule as first property
+      assert columns.any? { |col| col[:display_name] == "molecule" }
+      assert columns.any? { |col| col[:display_name] == "SMILES" }
+    end
+
+    test "records_from_file should use CSV parser when structure_format is not molfile" do
+      # Create a load set with SMILES structure format
+      load_set = Grit::Core::LoadSet.create!(
+        name: "csv-records-test",
+        entity: "Grit::Compounds::Compound",
+        origin_id: @origin.id
+      )
+
+      load_set_block = Grit::Core::LoadSetBlock.create!(
+        name: "csv-records-block",
+        load_set_id: load_set.id,
+        status_id: Grit::Core::LoadSetStatus.find_by(name: "Created").id,
+        separator: ",",
+        headers: '[{"name": "col_0", "display_name": "SMILES"}, {"name": "col_1", "display_name": "Name"}, {"name": "col_2", "display_name": "Description"}]',
+        has_errors: false,
+        has_warnings: false
+      )
+
+      load_set_block.data.attach(
+        io: File.open(file_fixture("compounds.csv")),
+        filename: "compounds.csv",
+        content_type: "text/csv"
+      )
+
+      Grit::Compounds::CompoundLoadSetBlock.create!(
+        load_set_block_id: load_set_block.id,
+        compound_type_id: @compound_type.id,
+        structure_format: "smiles"
+      )
+
+      # Collect records from file
+      records = []
+      CompoundLoader.send(:records_from_file, load_set_block) do |record|
+        records << record
+      end
+
+      # CSV file has 2 data rows (header is skipped)
+      assert_equal 2, records.length
+      # First record should contain Ethanol data
+      assert_includes records[0], "Ethanol"
+    ensure
+      load_set&.destroy
     end
   end
 end
