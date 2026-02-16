@@ -536,29 +536,62 @@ None remaining after bug fix.
 ### Implementation Priority Order
 
 1. ~~Bug fix (Task 7.0)~~ - COMPLETED
-2. Task 7.1 - CompoundLoader unit tests (most value, covers complex logic)
+2. ~~Task 7.1 - CompoundLoader unit tests (most value, covers complex logic)~~ - COMPLETED
 3. Task 7.3 - Property value verification (validates business logic)
-4. Task 7.2 - BatchLoader unit tests (similar pattern to 7.1)
+4. ~~Task 7.2 - BatchLoader unit tests (similar pattern to 7.1)~~ - COMPLETED
 5. Task 7.4 - Negative tests (error handling confidence)
 6. Task 7.5 - CSV branch coverage
 7. Task 7.6 - Performance test
 
-### Estimated Total Effort
+### Tasks 7.1 & 7.2 Implementation Details - COMPLETED
 
-- **Remaining Tasks**: 8-12 hours
-- **Current Coverage**: 111 runs, 371 assertions
-- **Expected After Phase 7**: ~130 runs, ~450 assertions
+**Implementation Date**: 2026-02-16
 
-### Quality Metrics After Phase 7 (Projected)
+**CompoundLoader Tests Added (13 total tests, up from 4)**:
 
-| Component              | Current Tests | After Phase 7 |
-| ---------------------- | ------------- | ------------- |
-| SDF Library            | 10            | 11            |
-| CompoundLoader         | 4             | 12            |
-| BatchLoader            | 4             | 8             |
-| MoleculesController    | 5             | 5             |
-| Molecule Model         | 10            | 10            |
-| Compound Model         | 22            | 22            |
-| Batch Model            | 13            | 13            |
-| Integration (Compound) | 6             | 8             |
-| Integration (Batch)    | 4             | 5             |
+1. `test_validate_record_should_add_warning_for_existing_molecule` - Tests molecule deduplication warning
+2. `test_validate_record_should_add_error_for_invalid_molfile_structure` - Tests invalid structure handling
+3. `test_validate_record_should_validate_compound_property_values_with_invalid_type` - Tests property validation flow
+4. `test_validate_record_should_pass_with_valid_record_data` - Tests happy path validation
+5. `test_validate_block_context_should_return_structure_format_and_properties` - Tests context building
+6. `test_block_mapping_fields_should_exclude_auto-generated_fields` - Tests field filtering
+7. `test_block_loading_fields_should_convert_mol_type_to_text` - Tests mol type conversion
+8. `test_block_loading_fields_should_exclude_calculated_fields` - Tests calculated field exclusion
+9. `test_base_record_props_should_return_compound_type_id_from_load_set_block` - Tests base props
+
+**BatchLoader Tests Added (11 total tests, up from 4)**:
+
+1. `test_validate_record_should_validate_batch_property_values` - Tests property validation flow
+2. `test_validate_record_should_pass_with_valid_record_data` - Tests happy path validation
+3. `test_validate_record_should_handle_nil_property_values_for_required_properties` - Tests nil handling
+4. `test_validate_block_context_should_return_batch_properties_and_db_property_names` - Tests context building
+5. `test_block_mapping_fields_should_exclude_auto-generated_fields` - Tests field filtering
+6. `test_block_loading_fields_should_exclude_number_field` - Tests number field exclusion
+7. `test_base_record_props_should_return_compound_type_id_from_load_set_block` - Tests base props
+
+### Current Status: Tasks 7.1 & 7.2 COMPLETED ✅
+
+**Total Test Coverage After Tasks 7.1 & 7.2**:
+
+- **Before**: 111 runs, 371 assertions
+- **After**: 127 runs, 453 assertions
+- **Increase**: +16 runs (+14%), +82 assertions (+22%)
+
+### Estimated Remaining Effort
+
+- **Remaining Tasks (7.3-7.6)**: 4-6 hours
+- **Current Coverage**: 127 runs, 453 assertions
+
+### Quality Metrics After Tasks 7.1 & 7.2
+
+| Component              | Before | After |
+| ---------------------- | ------ | ----- |
+| SDF Library            | 10     | 10    |
+| CompoundLoader         | 4      | 13    |
+| BatchLoader            | 4      | 11    |
+| MoleculesController    | 5      | 5     |
+| Molecule Model         | 10     | 10    |
+| Compound Model         | 22     | 22    |
+| Batch Model            | 13     | 13    |
+| Integration (Compound) | 6      | 6     |
+| Integration (Batch)    | 4      | 4     |

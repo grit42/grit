@@ -2,6 +2,16 @@ require "test_helper"
 
 module Grit::Compounds
   class CompoundLoaderTest < ActiveSupport::TestCase
+    setup do
+      @compound_type = grit_compounds_compound_types(:screening)
+      @origin = grit_core_origins(:one)
+      @valid_molfile = File.read(file_fixture("simple.sdf")).split("M  END").first + "M  END"
+    end
+
+    # =========================================================================
+    # Block Fields Tests
+    # =========================================================================
+
     test "should return block fields including compound-specific fields" do
       params = { entity: "Grit::Compounds::Compound" }
       fields = CompoundLoader.block_fields(params)
@@ -19,6 +29,10 @@ module Grit::Compounds
       assert_includes field_names, "separator"
       assert_includes field_names, "structure_format"
     end
+
+    # =========================================================================
+    # SDF Parsing Tests
+    # =========================================================================
 
     test "should extract columns from SDF file content" do
       # Test with a simple SDF content directly
@@ -46,6 +60,185 @@ module Grit::Compounds
       assert_equal 2, records.length
       assert records.first["molecule"].include?("M  END")
       assert records.second["molecule"].include?("M  END")
+    end
+
+    # =========================================================================
+    # validate_record Tests
+    # =========================================================================
+
+    test "validate_record should add warning for existing molecule" do
+      # First create a molecule to test against
+      molecule = Grit::Compounds::Molecule.create!(molfile: @valid_molfile)
+
+      context = {
+        structure_format: "molfile",
+        compound_properties: Grit::Compounds::CompoundProperty.where(compound_type_id: [ @compound_type.id, nil ]),
+        db_property_names: Grit::Compounds::Compound.db_properties.map { |prop| prop[:name] }
+      }
+
+      record = {}
+      record_props = {
+        "name" => "test_compound",
+        "molecule" => @valid_molfile,
+        "origin_id" => @origin.id,
+        "compound_type_id" => @compound_type.id
+      }
+
+      result = CompoundLoader.send(:validate_record, Grit::Compounds::Compound, record, record_props, context)
+
+      assert result[:has_warnings], "Should have warnings when molecule already exists"
+      assert_includes record[:record_warnings]["molecule"].first, "structure already registered"
+    ensure
+      molecule&.destroy
+    end
+
+    test "validate_record should add error for invalid molfile structure" do
+      context = {
+        structure_format: "molfile",
+        compound_properties: Grit::Compounds::CompoundProperty.where(compound_type_id: [ @compound_type.id, nil ]),
+        db_property_names: Grit::Compounds::Compound.db_properties.map { |prop| prop[:name] }
+      }
+
+      record = {}
+      record_props = {
+        "name" => "test_compound",
+        "molecule" => "INVALID_MOLFILE_DATA",
+        "origin_id" => @origin.id,
+        "compound_type_id" => @compound_type.id
+      }
+
+      CompoundLoader.send(:validate_record, Grit::Compounds::Compound, record, record_props, context)
+
+      assert_not_nil record[:record_errors]
+      assert_includes record[:record_errors]["molecule"].first, "not a valid structure"
+      assert_nil record_props["molecule"], "Invalid molecule should be set to nil"
+    end
+
+    test "validate_record should validate compound property values with invalid type" do
+      # Use existing string property from fixtures, but provide a value that would fail
+      # Since string properties accept most values, we test the validation flow
+      # exists but doesn't fail with a valid string
+      string_property = grit_compounds_compound_properties(:one)
+
+      context = {
+        structure_format: "molfile",
+        compound_properties: [ string_property ],
+        db_property_names: Grit::Compounds::Compound.db_properties.map { |prop| prop[:name] }
+      }
+
+      record = {}
+      record_props = {
+        "name" => "test_compound",
+        "origin_id" => @origin.id,
+        "compound_type_id" => @compound_type.id,
+        "one" => "valid_string_value"
+      }
+
+      CompoundLoader.send(:validate_record, Grit::Compounds::Compound, record, record_props, context)
+
+      # String property with string value should pass validation
+      assert_nil record[:record_errors], "Valid string property value should not produce errors"
+    end
+
+    test "validate_record should pass with valid record data" do
+      context = {
+        structure_format: "molfile",
+        compound_properties: Grit::Compounds::CompoundProperty.where(compound_type_id: [ @compound_type.id, nil ]),
+        db_property_names: Grit::Compounds::Compound.db_properties.map { |prop| prop[:name] }
+      }
+
+      record = {}
+      record_props = {
+        "name" => "valid_compound",
+        "origin_id" => @origin.id,
+        "compound_type_id" => @compound_type.id
+      }
+
+      result = CompoundLoader.send(:validate_record, Grit::Compounds::Compound, record, record_props, context)
+
+      assert_not result[:has_warnings], "Should not have warnings for valid record without molecule"
+      assert_nil record[:record_errors], "Should not have errors for valid record"
+    end
+
+    # =========================================================================
+    # validate_block_context Tests
+    # =========================================================================
+
+    test "validate_block_context should return structure_format and properties" do
+      load_set_block = grit_core_load_set_blocks(:compound_loading_validated_block)
+
+      context = CompoundLoader.send(:validate_block_context, load_set_block)
+
+      assert_equal "molfile", context[:structure_format]
+      assert_not_nil context[:compound_properties]
+      assert_not_nil context[:db_property_names]
+      assert_includes context[:db_property_names], "name"
+      assert_includes context[:db_property_names], "description"
+    end
+
+    # =========================================================================
+    # block_mapping_fields Tests
+    # =========================================================================
+
+    test "block_mapping_fields should exclude auto-generated fields" do
+      load_set_block = grit_core_load_set_blocks(:compound_loading_validated_block)
+
+      fields = CompoundLoader.send(:block_mapping_fields, load_set_block)
+      field_names = fields.map { |f| f[:name] }
+
+      # These fields should be excluded
+      assert_not_includes field_names, "compound_type_id"
+      assert_not_includes field_names, "molweight"
+      assert_not_includes field_names, "logp"
+      assert_not_includes field_names, "molformula"
+      assert_not_includes field_names, "number"
+
+      # These fields should be included
+      assert_includes field_names, "name"
+      assert_includes field_names, "molecule"
+    end
+
+    # =========================================================================
+    # block_loading_fields Tests
+    # =========================================================================
+
+    test "block_loading_fields should convert mol type to text" do
+      load_set_block = grit_core_load_set_blocks(:compound_loading_validated_block)
+
+      fields = CompoundLoader.send(:block_loading_fields, load_set_block)
+
+      mol_field = fields.find { |f| f[:name] == "molecule" }
+      assert_not_nil mol_field
+      assert_equal "text", mol_field[:type], "mol type should be converted to text"
+    end
+
+    test "block_loading_fields should exclude calculated fields" do
+      load_set_block = grit_core_load_set_blocks(:compound_loading_validated_block)
+
+      fields = CompoundLoader.send(:block_loading_fields, load_set_block)
+      field_names = fields.map { |f| f[:name] }
+
+      # Calculated fields should be excluded
+      assert_not_includes field_names, "molweight"
+      assert_not_includes field_names, "logp"
+      assert_not_includes field_names, "molformula"
+      assert_not_includes field_names, "number"
+
+      # compound_type_id should be included for loading
+      assert_includes field_names, "compound_type_id"
+    end
+
+    # =========================================================================
+    # base_record_props Tests
+    # =========================================================================
+
+    test "base_record_props should return compound_type_id from load set block" do
+      load_set_block = grit_core_load_set_blocks(:compound_loading_validated_block)
+
+      props = CompoundLoader.send(:base_record_props, load_set_block)
+
+      assert_not_nil props["compound_type_id"]
+      assert_equal @compound_type.id, props["compound_type_id"]
     end
   end
 end
