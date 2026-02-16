@@ -1,0 +1,9 @@
+ethanol_compound_one:
+  molecule: ethanol
+  compound: one
+propanol_compound_one:
+  molecule: propanol
+  compound: two
+ethanol_compound_three:
+  molecule: ethanol
+  compound: three

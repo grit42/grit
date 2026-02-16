@@ -1,0 +1,8 @@
+ethanol:
+  molfile: "ethanol.mol"
+  canonical_smiles: CCO
+  molid: 1
+propanol:
+  molfile: "propanol.mol"
+  canonical_smiles: CCCO
+  molid: 2
