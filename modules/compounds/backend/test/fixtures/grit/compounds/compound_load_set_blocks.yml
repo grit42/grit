@@ -1,0 +1,12 @@
+# Compound-specific load set block data
+# Links to grit_core_load_set_blocks via load_set_block_id
+
+compound_loading_validated_block:
+  load_set_block_id: 201
+  compound_type: screening
+  structure_format: "molfile"
+
+compound_loading_succeeded_block:
+  load_set_block_id: 202
+  compound_type: screening
+  structure_format: "molfile"

@@ -18,7 +18,7 @@ module Grit::Compounds
       assert_response :success
       response_body = JSON.parse(@response.body)
       assert response_body["success"]
-      assert response_body["data"]["molfile"] = @valid_molfile
+      assert_equal @valid_molfile, response_body["data"]["molfile"]
       assert_nil response_body["data"]["existing_molecule_id"]
       assert_empty response_body["data"]["existing_molecule_compounds"]
     end
