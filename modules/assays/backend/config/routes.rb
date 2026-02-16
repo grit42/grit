@@ -22,6 +22,9 @@ Grit::Assays::Engine.routes.draw do
     get :export
     post :publish
     post :draft
+    post :attach_files
+    post :detach_files
+    get :attached_files
   end
 
   resources :assay_data_sheet_columns

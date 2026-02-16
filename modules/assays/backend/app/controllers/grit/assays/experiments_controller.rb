@@ -143,6 +143,43 @@ module Grit::Assays
       end
     end
 
+    def attach_files
+      record = Experiment.find(params[:experiment_id])
+      permitted = params.permit(files: [])
+      record.attached_files.attach(permitted[:files])
+      render json: { success: true }
+    rescue StandardError => e
+      logger.info e.to_s
+      logger.info e.backtrace.join("\n")
+      render json: { success: false, errors: e.to_s }, status: :internal_server_error
+    end
+
+    def detach_files
+      record = Experiment.find(params[:experiment_id])
+      files_info = record.attached_files.each do |f|
+        if params[:file_ids].include? f.id
+          logger.info params[:file_ids]
+          logger.info f.id
+          f.purge
+        end
+      end
+      render json: { success: true }
+    rescue StandardError => e
+      logger.info e.to_s
+      logger.info e.backtrace.join("\n")
+      render json: { success: false, errors: e.to_s }, status: :internal_server_error
+    end
+
+    def attached_files
+      record = Experiment.find(params[:experiment_id])
+      files_info = record.attached_files.map { |f| { filename: f.filename, id: f.id, blob_id: f.blob_id } }
+      render json: { success: true, data: files_info }
+    rescue StandardError => e
+      logger.info e.to_s
+      logger.info e.backtrace.join("\n")
+      render json: { success: false, errors: e.to_s }, status: :internal_server_error
+    end
+
     private
 
     def permitted_params
