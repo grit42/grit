@@ -1,3 +1,4 @@
+
 simple.sdf
 
   3  2  0  0  0  0            999 V2000
@@ -7,6 +8,7 @@ simple.sdf
   1  2  1  0  0  0  0
   2  3  2  0  0  0  0
 M  END
+
 > <SMILES>
 CCO
 

@@ -24,3 +24,8 @@ def login(user, password = "password")
   post "/api/grit/core/user_session", params: { user_session: {
     login: user.login, password: password } }
 end
+
+def logout
+  delete "/api/grit/core/user_session"
+end
+
