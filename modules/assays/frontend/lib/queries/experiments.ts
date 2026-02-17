@@ -30,6 +30,13 @@ import {
   URLParams,
   UndefinedInitialDataInfiniteOptions,
   PaginatedEndpointSuccess,
+  request,
+  EndpointSuccess,
+  EndpointError,
+  getURLParams,
+  getSortParams,
+  getFilterParams,
+  useQuery,
 } from "@grit42/api";
 import { Filter, SortingState } from "@grit42/table";
 import { FormFieldDef } from "@grit42/form";
@@ -162,4 +169,50 @@ export const usePublishedExperimentsOfModel = (
     { ...params, scope: "published" },
     queryOptions,
   );
+};
+
+export interface ExperimentAttachedFile {
+  id: number;
+  blob_id: number;
+  filename: string;
+}
+
+export const useExperimentAttachedFiles = (
+  experimentId: string | number,
+  sort?: SortingState,
+  filter?: Filter[],
+  params: URLParams = {},
+  queryOptions: Partial<UseQueryOptions<ExperimentAttachedFile[], string>> = {},
+) => {
+  return useQuery({
+    queryKey: [
+      "experiment_attached_files",
+      experimentId,
+      sort ?? [],
+      filter ?? [],
+      JSON.stringify(params),
+    ],
+    queryFn: async (): Promise<ExperimentAttachedFile[]> => {
+      const response = await request<
+        EndpointSuccess<ExperimentAttachedFile[]>,
+        EndpointError
+      >(
+        `/grit/assays/experiments/${experimentId}/experiment_attachments?${getURLParams(
+          {
+            ...getSortParams(sort ?? []),
+            ...getFilterParams(filter ?? []),
+            limit: -1,
+            ...params,
+          },
+        )}`,
+      );
+
+      if (!response.success) {
+        throw response.errors;
+      }
+
+      return response.data;
+    },
+    ...queryOptions,
+  });
 };
