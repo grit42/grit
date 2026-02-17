@@ -38,6 +38,24 @@ module Grit::Assays
     def create
       record = Experiment.find(params[:experiment_id])
       permitted = params.permit(files: [])
+
+      unique_filenames = permitted[:files].map { |f| f.original_filename }.uniq
+      if unique_filenames.length != permitted[:files].length
+        render json: { success: false, errors: "Cannot upload multiple files with the same name." }, status: :unprocessable_entity
+        return
+      end
+
+      duplicate_names_in_attached_files = false
+      record.attached_files.each do |f|
+        next if duplicate_names_in_attached_files
+        duplicate_names_in_attached_files = unique_filenames.include? f.filename.to_s
+      end
+
+      if duplicate_names_in_attached_files
+        render json: { success: false, errors: "Some files have the same name as already attached files." }, status: :unprocessable_entity
+        return
+      end
+
       record.attached_files.attach(permitted[:files])
       render json: { success: true }
     rescue StandardError => e

@@ -90,29 +90,21 @@ const ExperimentFiles = ({ experiment }: { experiment: ExperimentData }) => {
     onSubmit: genericErrorHandler(async ({ value, formApi }) => {
       const formData = new FormData();
       value.files.forEach((file) => formData.append("files[]", file));
-      try {
-        await attachMutation.mutateAsync(formData);
-        await queryClient.invalidateQueries({
-          queryKey: ["experiment_attached_files", experiment.id],
-        });
-        formApi.setFieldValue("files", []);
-        setIsAdding(false);
-      } catch (e: any) {
-        toast.error(e);
-      }
+      await attachMutation.mutateAsync(formData);
+      await queryClient.invalidateQueries({
+        queryKey: ["experiment_attached_files", experiment.id],
+      });
+      formApi.setFieldValue("files", []);
+      setIsAdding(false);
     }),
   });
 
   const handleDetach = async (ids: Array<string | number>) => {
-    try {
-      await detachMutation.mutateAsync(ids);
-      await queryClient.invalidateQueries({
-        queryKey: ["experiment_attached_files", experiment.id],
-      });
-      tableState.setRowSelection({});
-    } catch (e: any) {
-      toast.error(e);
-    }
+    await detachMutation.mutateAsync(ids);
+    await queryClient.invalidateQueries({
+      queryKey: ["experiment_attached_files", experiment.id],
+    });
+    tableState.setRowSelection({});
   };
 
   const handleDownload = async (id: string | number | null = null) => {
@@ -136,7 +128,8 @@ const ExperimentFiles = ({ experiment }: { experiment: ExperimentData }) => {
 
   const handleCancel = () => {
     setIsAdding(false);
-    form.setFieldValue("files", []);
+    form.reset({files: []});
+    form.validate("mount")
   };
 
   const hasSelected = Object.keys(tableState.rowSelection).length > 0;
