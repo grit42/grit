@@ -45,6 +45,7 @@ import styles from "./files.module.scss";
 import { useEffect, useState } from "react";
 import { downloadFile } from "@grit42/client-library/utils";
 import { useHasRoles } from "@grit42/core";
+import { toast } from "@grit42/notifications";
 
 const COLUMNS: GritColumnDef<ExperimentAttachedFile>[] = [
   {
@@ -97,7 +98,7 @@ const ExperimentFiles = ({ experiment }: { experiment: ExperimentData }) => {
         formApi.setFieldValue("files", []);
         setIsAdding(false);
       } catch (e: any) {
-        console.log(e);
+        toast.error(e);
       }
     }),
   });
@@ -110,13 +111,12 @@ const ExperimentFiles = ({ experiment }: { experiment: ExperimentData }) => {
       });
       tableState.setRowSelection({});
     } catch (e: any) {
-      console.log(e);
+      toast.error(e);
     }
   };
 
   const handleDownload = async (id: string | number | null = null) => {
     const ids = id === null ? Object.keys(tableState.rowSelection) : [id];
-    // if (!ids.length) return;
     try {
       downloadFile(
         `/api/grit/assays/experiments/${
@@ -124,7 +124,7 @@ const ExperimentFiles = ({ experiment }: { experiment: ExperimentData }) => {
         }/experiment_attachments/export?ids=${ids.join(",")}`,
       );
     } catch (e: any) {
-      console.log(e);
+      toast.error(e);
     }
   };
 
