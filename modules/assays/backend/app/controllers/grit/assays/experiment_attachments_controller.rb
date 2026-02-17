@@ -21,6 +21,10 @@ require "csv"
 
 module Grit::Assays
   class ExperimentAttachmentsController < ApplicationController
+    before_action :check_read, only: %i[ index export ]
+    before_action :check_create, only: :create
+    before_action :check_destroy, only: :destroy
+
     def export
       params[:ids] ||= ""
       ids = params[:ids].split(",").map(&:to_i)
@@ -119,6 +123,45 @@ module Grit::Assays
                   filename: archive_filename,
                   type: "application/zip",
                   disposition: "attachment"
+      end
+    end
+
+    def check_read
+      if Grit::Assays::Experiment.entity_crud[:read].nil? or
+        (
+          !Grit::Assays::Experiment.entity_crud[:read].length.zero? and
+          !Grit::Core::User.current.one_of_these_roles?(Grit::Assays::Experiment.entity_crud[:read])
+        )
+          render json: {
+            success: false,
+            errors: "You do not have the permissions required to read Experiment attachments"
+          }, status: :forbidden
+      end
+    end
+
+    def check_create
+      if Grit::Assays::Experiment.entity_crud[:create].nil? or
+        (
+          !Grit::Assays::Experiment.entity_crud[:create].length.zero? and
+          !Grit::Core::User.current.one_of_these_roles?(Grit::Assays::Experiment.entity_crud[:create])
+        )
+          render json: {
+            success: false,
+            errors: "You do not have the permissions required to create Experiment attachments"
+          }, status: :forbidden
+      end
+    end
+
+    def check_destroy
+      if Grit::Assays::Experiment.entity_crud[:destroy].nil? or
+        (
+          !Grit::Assays::Experiment.entity_crud[:destroy].length.zero? and
+          !Grit::Core::User.current.one_of_these_roles?(Grit::Assays::Experiment.entity_crud[:destroy])
+        )
+          render json: {
+            success: false,
+            errors: "You do not have the permissions required to delete Experiment attachments"
+          }, status: :forbidden
       end
     end
   end

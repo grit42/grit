@@ -167,24 +167,24 @@ const ExperimentFiles = ({ experiment }: { experiment: ExperimentData }) => {
           }
           onRowClick={({ id }) => handleDownload(id)}
           headerActions={
-            canCrudExperiment ? (
-              <ButtonGroup>
-                {!hasSelected && (
-                  <Button onClick={() => handleDownload()}>
-                    Download all files
-                  </Button>
-                )}
-                {hasSelected && (
-                  <Button
-                    onClick={() => handleDownload()}
-                    disabled={!hasSelected}
-                  >
-                    Download selected files
-                  </Button>
-                )}
+            <ButtonGroup>
+              {!hasSelected && (
+                <Button onClick={() => handleDownload()}>
+                  Download all files
+                </Button>
+              )}
+              {hasSelected && (
+                <Button
+                  onClick={() => handleDownload()}
+                  disabled={!hasSelected}
+                >
+                  Download selected files
+                </Button>
+              )}
+              {canCrudExperiment && (
                 <Button onClick={() => setIsAdding(true)}>Attach files</Button>
-              </ButtonGroup>
-            ) : undefined
+              )}
+            </ButtonGroup>
           }
         />
       )}
