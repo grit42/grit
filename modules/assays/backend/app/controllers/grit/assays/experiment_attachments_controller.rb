@@ -104,7 +104,7 @@ module Grit::Assays
             next unless ids.include?(attached_file.id)
 
             attached_file.open do |file|
-              entry_name = "#{record[:name]}_attachments/#{attached_file.name}"
+              entry_name = "#{record[:name]}_attachments/#{attached_file.filename}"
 
               zos.put_next_entry(entry_name)
 
