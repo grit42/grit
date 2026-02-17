@@ -197,7 +197,7 @@ export const useExperimentAttachedFiles = (
         EndpointSuccess<ExperimentAttachedFile[]>,
         EndpointError
       >(
-        `/grit/assays/experiments/${experimentId}/attached_files?${getURLParams(
+        `/grit/assays/experiments/${experimentId}/experiment_attachments?${getURLParams(
           {
             ...getSortParams(sort ?? []),
             ...getFilterParams(filter ?? []),

@@ -20,10 +20,11 @@ import {
   ExperimentAttachedFile,
   useExperimentAttachedFiles,
 } from "../../../../queries/experiments";
-import { GritColumnDef, Table } from "@grit42/table";
+import { GritColumnDef, Table, useSetupTableState } from "@grit42/table";
 import z from "zod";
 import styles from "./details.module.scss";
 import { useEffect, useState } from "react";
+import { downloadFile } from "@grit42/client-library/utils";
 
 const COLUMNS: GritColumnDef<ExperimentAttachedFile>[] = [
   {
@@ -33,6 +34,8 @@ const COLUMNS: GritColumnDef<ExperimentAttachedFile>[] = [
     size: 300,
   },
 ];
+
+const getRowId = (row: ExperimentAttachedFile) => row.id.toString();
 
 const ExperimentAttachedFiles = ({
   experimentId,
@@ -47,6 +50,16 @@ const ExperimentAttachedFiles = ({
   const detachMutation = useDetachFilesFromExperimentMutation(experimentId);
   const { data, isLoading, isError, error } =
     useExperimentAttachedFiles(experimentId);
+
+  const tableState = useSetupTableState("experiment-attched-files", COLUMNS, {
+    settings: {
+      disableColumnReorder: true,
+      disableFilters: true,
+      disableColumnSorting: true,
+      disableVisibilitySettings: true,
+      enableSelection: true,
+    },
+  });
 
   const form = useForm<{ files: File[] }>({
     defaultValues: { files: [] },
@@ -76,6 +89,21 @@ const ExperimentAttachedFiles = ({
       await queryClient.invalidateQueries({
         queryKey: ["experiment_attached_files", experimentId],
       });
+      tableState.setRowSelection({});
+    } catch (e: any) {
+      console.log(e);
+    }
+  };
+
+  const handleDownload = async (id: string | number | null = null) => {
+    const ids = id === null ? Object.keys(tableState.rowSelection) : [id];
+    if (!ids.length) return;
+    try {
+      downloadFile(
+        `/api/grit/assays/experiments/${experimentId}/experiment_attachments/export?ids=${ids.join(
+          ",",
+        )}`,
+      );
     } catch (e: any) {
       console.log(e);
     }
@@ -92,6 +120,8 @@ const ExperimentAttachedFiles = ({
     form.setFieldValue("files", []);
   };
 
+  const hasSelected = Object.keys(tableState.rowSelection).length > 0;
+
   const BinaryInput = useFormInput("binary");
 
   return (
@@ -105,13 +135,8 @@ const ExperimentAttachedFiles = ({
     >
       {!isAdding && (
         <Table<ExperimentAttachedFile>
-          settings={{
-            disableColumnReorder: true,
-            disableFilters: true,
-            disableColumnSorting: true,
-            disableVisibilitySettings: true,
-          }}
-          columns={COLUMNS}
+          getRowId={getRowId}
+          tableState={tableState}
           data={data}
           loading={isLoading}
           header="Attached files"
@@ -120,9 +145,16 @@ const ExperimentAttachedFiles = ({
           onDelete={(rows) =>
             handleDetach(rows.map(({ original }) => original.id))
           }
+          onRowClick={({ id }) => handleDownload(id)}
           headerActions={
             canCrudExperiment ? (
               <ButtonGroup>
+                <Button
+                  onClick={() => handleDownload()}
+                  disabled={!hasSelected}
+                >
+                  Download selected files
+                </Button>
                 <Button onClick={() => setIsAdding(true)}>Attach files</Button>
               </ButtonGroup>
             ) : undefined

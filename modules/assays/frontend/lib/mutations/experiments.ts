@@ -33,7 +33,7 @@ export const useAttachFilesToExperimentMutation = (
     mutationKey: ["attachFilesToExperiment", experimentId.toString()],
     mutationFn: async (data: FormData) => {
       const response = await request<EndpointSuccess, EndpointError<string>>(
-        `grit/assays/experiments/${experimentId}/attach_files`,
+        `grit/assays/experiments/${experimentId}/experiment_attachments`,
         {
           method: "POST",
           data,
@@ -58,13 +58,13 @@ export const useDetachFilesFromExperimentMutation = (
 ) => {
   return useMutation({
     mutationKey: ["detachFilesToExperiment", experimentId.toString()],
-    mutationFn: async (file_ids: Array<string | number>) => {
+    mutationFn: async (ids: Array<string | number>) => {
       const response = await request<EndpointSuccess, EndpointError<string>>(
-        `grit/assays/experiments/${experimentId}/detach_files`,
+        `grit/assays/experiments/${experimentId}/experiment_attachments/destroy`,
         {
-          method: "POST",
+          method: "DELETE",
           data: {
-            file_ids
+            ids
           },
         },
       );
