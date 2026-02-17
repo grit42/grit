@@ -23,8 +23,9 @@ import {
   useEntityData,
   useEntityDatum,
   useEntityFields,
+  useInfiniteEntityData,
 } from "@grit42/core";
-import { UseQueryOptions, URLParams } from "@grit42/api";
+import { UseQueryOptions, URLParams, UndefinedInitialDataInfiniteOptions, PaginatedEndpointSuccess } from "@grit42/api";
 import { Filter, SortingState } from "@grit42/table";
 import { FormFieldDef } from "@grit42/form";
 
@@ -65,6 +66,26 @@ export const useAssayMetadataDefinitions = (
   > = {},
 ) => {
   return useEntityData<AssayMetadataDefinitionData>(
+    "grit/assays/assay_metadata_definitions",
+    sort,
+    filter,
+    params,
+    queryOptions,
+  );
+};
+
+export const useInfiniteAssayMetadataDefinitions = (
+  sort?: SortingState,
+  filter?: Filter[],
+  params: URLParams = {},
+  queryOptions: Partial<
+    UndefinedInitialDataInfiniteOptions<
+      PaginatedEndpointSuccess<AssayMetadataDefinitionData[]>,
+      string
+    >
+  > = {},
+) => {
+  return useInfiniteEntityData<AssayMetadataDefinitionData>(
     "grit/assays/assay_metadata_definitions",
     sort,
     filter,

@@ -25,24 +25,44 @@ export interface LoadSetMapping {
   value: string | number | boolean | null;
 }
 
+export interface NewLoadSetBlockData extends EntityProperties {
+  name: string;
+  separator: string;
+  data: string;
+}
+
 export interface NewLoadSetData extends EntityProperties {
   name: string;
   entity: string;
-  data: string;
   origin_id: number;
-  separator: string | null;
+  load_set_blocks: NewLoadSetBlockData[];
 }
 
-export interface LoadSetDataUpdateData extends EntityProperties {
+export interface LoadSetBlockDataUpdateData extends EntityProperties {
   data: string;
-  separator: string | null;
+  name: string;
+  separator: string;
+}
+
+export interface LoadSetBlockData extends EntityData {
+  load_set_id: number;
+  name: string;
+  separator: string;
+  headers: {name: string, display_name: string | null}[];
+  status_id: number;
+  status_id__name: string;
+  mappings?: Record<string, LoadSetMapping>;
+  error: string | null;
+  has_errors: boolean;
+  has_warnings: boolean;
 }
 
 export interface LoadSetData extends EntityData {
   entity: string;
-  separator: string | null;
   origin_id: number;
   origin_id__name: string;
+  load_set_blocks: LoadSetBlockData[];
+
   status_id: number;
   status_id__name: string;
   mappings?: Record<string, LoadSetMapping>;

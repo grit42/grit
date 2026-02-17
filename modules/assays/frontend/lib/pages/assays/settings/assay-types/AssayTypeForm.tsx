@@ -87,10 +87,7 @@ const AssayTypeForm = ({
         );
         setFormData(newEntity);
         formApi.reset();
-        navigate(`../${newEntity.id}`, {
-          relative: "path",
-          replace: true,
-        });
+        navigate("..");
       } else {
         setFormData(
           await editEntityMutation.mutateAsync(value as AssayTypeData),

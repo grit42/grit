@@ -26,7 +26,9 @@ module Grit::Assays
     belongs_to :assay_model
     belongs_to :publication_status, class_name: "Grit::Core::PublicationStatus"
     has_many :experiment_metadata, dependent: :destroy
-    has_many :experiment_data_sheet_record_load_sets, dependent: :destroy
+    has_many :experiment_data_sheet_record_load_set_blocks
+
+    before_destroy :destroy_load_sets
 
     display_column "name"
 
@@ -150,6 +152,15 @@ module Grit::Assays
       def check_publication_status
         return if publication_status_changed?
         raise "Cannot modify a published Experiment" if publication_status.name === "Published"
+      end
+
+      def destroy_load_sets
+        load_sets = Grit::Core::LoadSet.detailed
+          .joins("JOIN grit_core_load_set_blocks lsb ON lsb.load_set_id = grit_core_load_sets.id")
+          .joins("JOIN grit_assays_experiment_data_sheet_record_load_set_blocks edsrlsb ON edsrlsb.load_set_block_id = lsb.id")
+          .where("edsrlsb.experiment_id = ?", self.id)
+        load_sets.each { |ls| ls.rollback }
+        load_sets.destroy_all
       end
   end
 end

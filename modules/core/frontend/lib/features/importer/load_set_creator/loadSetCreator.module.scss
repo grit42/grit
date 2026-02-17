@@ -5,17 +5,27 @@
   width: 100%;
   display: grid;
   grid-template-rows: min-content 1fr;
+  grid-template-columns: max-content 1fr;
   gap: theme.$spacing;
 }
+
 .header {
   display: flex;
   justify-content: space-between;
+  grid-column-start: 1;
+  grid-column-end: -1;
 
   h1 {
     color: theme.$palette-secondary-main;
   }
 }
 
+.noFiles {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
 
 .content {
   width: 100%;
@@ -34,6 +44,21 @@
   padding-bottom: theme.$spacing;
   max-height: 100%;
   overflow-y: auto;
+}
+
+.blockFormFields {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: min-content 1fr;
+  gap: theme.$spacing;
+  max-height: 100%;
+  width: 100%;
+
+  .blockFormInputs {
+    display: grid;
+    gap: theme.$spacing;
+    grid-template-columns: repeat(auto-fit, 300px);
+  }
 }
 
 .error {

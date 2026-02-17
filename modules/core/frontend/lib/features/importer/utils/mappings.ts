@@ -23,22 +23,22 @@ import { FormFieldDef } from "@grit42/form";
 
 export const getAutoMappings = (
   fields?: FormFieldDef[],
-  headers?: Array<string | null>,
+  headers?: Array<{display_name: string | null, name: string}>,
 ) => {
   if (!fields || !headers) return null;
   const lowerCaseHeaders = headers
-    .filter((h) => h !== null)
-    .map((h) => h.toLowerCase());
+    .filter(({display_name}) => display_name !== null)
+    .map(({display_name, name}) => ({name, display_name:display_name!.toLowerCase()}));
   const mappings: Record<string, LoadSetMapping> = {};
   for (const field of fields) {
-    const header = lowerCaseHeaders.findIndex(
+    const header = lowerCaseHeaders.find(
       (h) =>
-        h === field.name.toLowerCase() ||
-        h === field.display_name.toLowerCase(),
+        h.display_name === field.name.toLowerCase() ||
+        h.display_name === field.display_name.toLowerCase(),
     );
-    if (header !== -1)
+    if (header)
       mappings[field.name] = {
-        header: header.toString(),
+        header: header.name.toString(),
         find_by:
           field.type === "entity"
             ? (field as EntityFormFieldDef).entity.display_column

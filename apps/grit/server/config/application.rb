@@ -5,7 +5,7 @@ require "rails"
 require "active_model/railtie"
 # require "active_job/railtie"
 require "active_record/railtie"
-# require "active_storage/engine"
+require "active_storage/engine"
 require "action_controller/railtie"
 require "action_mailer/railtie"
 # require "action_mailbox/engine"
@@ -39,6 +39,10 @@ module Grit
       authentication: "plain",
       enable_starttls_auto: true
     }
+
+    # Store files locally.
+    config.active_storage.service = :local
+
     # Configuration for the application, engines, and railties goes here.
     #
     # These settings can be overridden in specific environments using the files

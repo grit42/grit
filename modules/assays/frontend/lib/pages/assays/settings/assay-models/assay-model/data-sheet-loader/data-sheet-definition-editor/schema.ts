@@ -35,6 +35,7 @@ export const dataSheetDefinitionSchema = z.object({
   sort: z.nullish(z.coerce.number<number>().int()),
   columns: z
     .array(dataSheetColumnDefinitionSchema)
+    .max(250, "A Data Sheet Definition cannot have more than 250 columns")
     .superRefine((items, ctx) => {
       const uniqueSafeNames = new Map<string, number>();
       const uniqueNames = new Map<string, number>();

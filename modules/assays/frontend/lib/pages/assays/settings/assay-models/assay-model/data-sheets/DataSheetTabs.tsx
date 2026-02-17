@@ -18,7 +18,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Outlet, useMatch, useNavigate } from "react-router-dom";
-import { Tabs } from "@grit42/client-library/components";
+import { ErrorPage, Tabs } from "@grit42/client-library/components";
 import { useToolbar } from "@grit42/core/Toolbar";
 import Circle1NewIcon from "@grit42/client-library/icons/Circle1New";
 import { AssayDataSheetDefinitionData } from "../../../../../../queries/assay_data_sheet_definitions";
@@ -86,13 +86,16 @@ const DataSheetTabs = ({ sheetDefinitions, assayModel }: Props) => {
             assayModel.publication_status_id__name === "Published",
         },
       ],
-      importItems: assayModel.publication_status_id__name === "Published" ? undefined : [
-        {
-          id: "IMPORT_SHEETS",
-          text: "Import data sheets",
-          onClick: () => navigate("../data-sheet-loader/files"),
-        },
-      ],
+      importItems:
+        assayModel.publication_status_id__name === "Published"
+          ? undefined
+          : [
+              {
+                id: "IMPORT_SHEETS",
+                text: "Import data sheets",
+                onClick: () => navigate("../data-sheet-loader/files"),
+              },
+            ],
     });
   }, [
     registerToolbarActions,
@@ -116,6 +119,10 @@ const DataSheetTabs = ({ sheetDefinitions, assayModel }: Props) => {
       name: "+ New sheet",
       panel: <></>,
     });
+  }
+
+  if (assayModel.publication_status_id__name === "Published" && sheetDefinitions.length === 0) {
+    return <ErrorPage error="This model does not define any data sheets" />;
   }
 
   return (

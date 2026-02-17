@@ -48,7 +48,6 @@ const DataSheetColumnsTable = ({ sheetId }: { sheetId: string }) => {
     sheetId,
     tableState.sorting,
     tableState.filters,
-    undefined,
   );
 
   return (

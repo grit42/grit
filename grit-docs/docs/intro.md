@@ -19,15 +19,15 @@ grit enables registration of a wide range of therapeutics modalities, referred t
 
 ### Experimental data
 
-grit makes managing structured experimental data a breeze. **Assay Types** enable grouping data sets in broad categories, **Assay Models** define the shape of your experimental data and associated metadata, **Assays** provide an umbrella for directly comparable data sets and **Experiments** store your results. Results can be entered manually with simple forms and in bulk via a strictly validated data upload process. Results can be visualised in plots. Experimental data can be aggregated in SAR-inspired **Data Tables** to support decision-making right in the platform and export to external analysis tools.
+grit makes managing structured experimental data a breeze. **Assay Types** enable grouping data sets in broad categories, **Assay Models** define the shape of your experimental data and associated metadata, and **Experiments** store your results. Results can be entered manually with simple forms and in bulk via a strictly validated data upload process. Results can be visualised in plots. Experimental data can be aggregated in SAR-inspired **Data Tables** to support decision-making right in the platform and export to external analysis tools.
 
-[Learn more about grit Assays](./assays/)
+[Learn more about Experimental Data in grit](./experimental_data/)
 
 ### Ontologies
 
 grit fully supports Ontologies for high quality, consistent and interoperable data. **Vocabularies** provide lists of controlled terms that can be used as data source for **Compound Properties** and data points in **Experiments**.
 
-[Learn more about grit Vocabularies](./general/vocabularies/)
+[Learn more about grit Vocabularies](./vocabularies/)
 
 ### Security and user management
 

@@ -23,6 +23,9 @@ import { useTheme } from "@grit42/client-library/hooks";
 import * as monaco from "monaco-editor";
 import { toast } from "@grit42/notifications";
 
+const MAX_FILE_SIZE = 100 * 1024 * 1024;
+const MAX_FILE_SIZE_ERROR = "This file is too large (over 100 MB)."
+
 const Editor = ({
   value,
   onChange,
@@ -111,7 +114,9 @@ const Editor = ({
             event.stopPropagation();
 
             const file = event.dataTransfer.files[0];
-            if (file) {
+            if (file && file.size > MAX_FILE_SIZE) {
+              toast.error(MAX_FILE_SIZE_ERROR);
+            } else if (file) {
               const reader = new FileReader();
 
               reader.onload = (event) => {
@@ -210,7 +215,9 @@ const Editor = ({
           event.stopPropagation();
 
           const file = event.target.files?.[0];
-          if (file) {
+          if (file && file.size > MAX_FILE_SIZE) {
+            toast.error(MAX_FILE_SIZE_ERROR);
+          } else if (file) {
             const reader = new FileReader();
 
             reader.onload = (event) => {

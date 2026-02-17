@@ -281,6 +281,9 @@ Grit::Core::User.insert({
 
 Grit::Core::UserRole.insert({ user_id: 1, role_id: 1 }) if Grit::Core::UserRole.find_by(user_id: 1, role_id: 1).nil?
 
+Grit::Core::LoadSetStatus.insert({ name: 'Created', description: 'Created' }) if Grit::Core::LoadSetStatus.find_by(name: 'Created').nil?
+Grit::Core::LoadSetStatus.insert({ name: 'Initializing', description: 'Initializing' }) if Grit::Core::LoadSetStatus.find_by(name: 'Initializing').nil?
+Grit::Core::LoadSetStatus.insert({ name: 'Errored', description: 'Errored' }) if Grit::Core::LoadSetStatus.find_by(name: 'Errored').nil?
 Grit::Core::LoadSetStatus.insert({ name: 'Mapping', description: 'The columns must be mapped to attributes' }) if Grit::Core::LoadSetStatus.find_by(name: 'Mapping').nil?
 Grit::Core::LoadSetStatus.insert({ name: 'Mapped', description: 'The columns have been mapped to attributes and the dataset must be validated' }) if Grit::Core::LoadSetStatus.find_by(name: 'Mapped').nil?
 Grit::Core::LoadSetStatus.insert({ name: 'Validating', description: 'The dataset is being validated' }) if Grit::Core::LoadSetStatus.find_by(name: 'Validating').nil?
@@ -290,7 +293,7 @@ Grit::Core::LoadSetStatus.insert({ name: 'Succeeded', description: 'The upload s
 
 Grit::Core::DataType.upsert({ name: "string", description: "Best for short text. Displayed as a single line input" }, unique_by: :name)
 Grit::Core::DataType.upsert({ name: "text", description: "Best for longer text. Displayed as a multiline input" }, unique_by: :name)
-Grit::Core::DataType.upsert({ name: "integer", description: "Prefer over decimal when the values are always integer number" }, unique_by: :name)
+Grit::Core::DataType.upsert({ name: "integer", description: "Prefer over decimal when the values are always integer number. Use decimal if values can be higher than 2^63-1 or lower than -2^63" }, unique_by: :name)
 Grit::Core::DataType.upsert({ name: "decimal", description: "Exact decimal numbers" }, unique_by: :name)
 Grit::Core::DataType.upsert({ name: "date", description: "Prefer over datetime when only the date is relevant" }, unique_by: :name)
 Grit::Core::DataType.upsert({ name: "datetime", description: "Date and time"  }, unique_by: :name)

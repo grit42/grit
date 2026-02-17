@@ -23,49 +23,60 @@ require "grit/core/entity_loader"
 module Grit
   module Compounds
     class SDF
-      def self.parse(data, **args)
-        prop_names = Set["molfile"]
-        records = []
+      class MalformedSdfFile < RuntimeError
+      end
+
+      def self.each_record(io)
+        prop_names = Set["molecule"]
         record = {}
         record_lines = []
         mol_block = []
-        data.each_line(chomp: true).each do |line|
+        counter = 0
+        io.each_line(chomp: true) do |line|
           record_lines.push line and next if line != "$$$$"
           mol_end = record_lines.find_index("M  END")
 
+          raise MalformedSdfFile.new "Malformed SDF file" if mol_end.nil?
+
           mol_block = record_lines[0..mol_end]
 
-          record["molfile"] = mol_block.join("\n")
+          record["molecule"] = mol_block.join("\n")
 
           prop_def = nil
           prop_name = nil
           prop_lines = []
           record_lines[mol_end+1..].each do |line|
             if line.strip == ""
-              record[prop_name] = prop_lines.join("\n")
+              record[prop_name] = prop_lines.join("\n").strip
               prop_name = nil
               prop_lines = []
             elsif prop_def = /^>\s+<(?<prop_name>\w+)>$/.match(line)
-              raise Grit::Core::EntityLoader::ParseException.new "Malformed SDF file" unless prop_name.nil?
+              raise MalformedSdfFile.new "Malformed SDF file" unless prop_name.nil?
               prop_name = prop_def[:prop_name]
               prop_names.add(prop_name)
             else
               prop_lines.push line
             end
           end
-          records.push record
+          yield record, counter if block_given?
           record = {}
           record_lines = []
+          counter = counter + 1
+        end
+      end
+
+      def self.properties(io)
+        prop_names = Set["molecule"]
+
+        io.each_line do |line|
+          prop_def = /^>\s+<(?<prop_name>\w+)>$/.match(line)
+          unless prop_def.nil?
+            prop_name = prop_def[:prop_name]
+            prop_names.add(prop_name)
+          end
         end
 
-        raise Grit::Core::EntityLoader::ParseException.new "No structure found" if records.length == 0
-
-        prop_names = prop_names.to_a
-
-        [
-          prop_names,
-          *records.map { |r| prop_names.map { |p| r[p] } }
-        ]
+        prop_names.to_a
       end
     end
   end

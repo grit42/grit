@@ -268,7 +268,7 @@ module Grit::Assays
 
       def self.detailed(params = nil)
         params = params.as_json
-        raise "No assay_data_sheet_definition_id specified" if params["assay_data_sheet_definition_id"].nil?
+        raise "No assay_data_sheet_definition_id specified" if params.nil? or params["assay_data_sheet_definition_id"].nil?
         sheet_record_klass(params["assay_data_sheet_definition_id"]).detailed(params)
       end
 
@@ -278,5 +278,11 @@ module Grit::Assays
         assay_data_sheet_definition = Grit::Assays::AssayDataSheetDefinition.find(record_load_set.assay_data_sheet_definition_id)
         self.detailed(record_load_set.as_json).where("#{assay_data_sheet_definition.table_name}.id IN (SELECT record_id FROM grit_core_load_set_loaded_records WHERE grit_core_load_set_loaded_records.load_set_id = ?)", params[:load_set_id].to_i).order(:created_at)
       end
-  end
+
+      def self.by_load_set_block(params)
+        raise "Load set block id must be specified" if !params or !params[:load_set_block_id]
+        assay_data_sheet_definition = Grit::Assays::ExperimentDataSheetRecordLoadSetBlock.find_by(load_set_block_id: params[:load_set_block_id]).assay_data_sheet_definition
+        assay_data_sheet_definition.sheet_record_klass.detailed.where("#{assay_data_sheet_definition.table_name}.id IN (SELECT record_id FROM grit_core_load_set_block_loaded_records WHERE grit_core_load_set_block_loaded_records.load_set_block_id = ?)", params[:load_set_block_id].to_i).order(:created_at)
+      end
+    end
 end

@@ -20,53 +20,11 @@ module Grit::Core
   class LoadSet < ApplicationRecord
     include Grit::Core::GritEntityRecord
 
-    belongs_to :status, class_name: "Grit::Core::LoadSetStatus"
-    has_many :load_set_loading_records, dependent: :destroy
+    has_many :load_set_blocks, dependent: :destroy
 
     before_destroy :check_status
 
     entity_crud_with create: [], read: [], update: [], destroy: []
-
-    def self.entity_fields
-      @entity_fields ||= self.entity_fields_from_properties(
-        self.db_properties
-          .select { |p| [ "name", "entity", "origin_id", "separator" ].include?(p[:name]) })
-          .map { |p| p[:name] != "separator" ? p : {
-            **p,
-            type: "select",
-            select: {
-              options: [
-                { label: "Comma ( , )", value: "," },
-                { label: "Tab ( \\t )", value: "\t" },
-                { label: "Semicolon ( ; )", value: ";" },
-                { label: "Colon ( : )", value: ":" },
-                { label: "Pipe ( | )", value: "|" }
-              ]
-            }
-          }}
-    end
-
-    def self.detailed(params = nil)
-      self.unscoped
-      .select("grit_core_load_sets.id")
-      .select("grit_core_load_sets.created_at")
-      .select("grit_core_load_sets.created_by")
-      .select("grit_core_load_sets.updated_at")
-      .select("grit_core_load_sets.updated_by")
-      .select("grit_core_load_sets.name")
-      .select("grit_core_load_sets.entity")
-      .select("grit_core_load_sets.separator")
-      .select("grit_core_load_sets.origin_id")
-      .select("grit_core_load_sets.status_id")
-      .select("grit_core_load_sets.item_count")
-      .select("grit_core_load_sets.mappings")
-      .select("grit_core_load_sets.record_errors")
-      .select("grit_core_load_sets.record_warnings")
-      .select("grit_core_load_set_statuses__.name as status_id__name")
-      .select("grit_core_origins__.name as origin_id__name")
-      .joins("LEFT OUTER JOIN grit_core_load_set_statuses grit_core_load_set_statuses__ ON grit_core_load_set_statuses__.id = grit_core_load_sets.status_id")
-      .joins("LEFT OUTER JOIN grit_core_origins grit_core_origins__ ON grit_core_origins__.id = grit_core_load_sets.origin_id")
-    end
 
     def self.by_entity(params)
       self.detailed.where([ "grit_core_load_sets.entity = ?", params[:entity] ])
@@ -74,20 +32,25 @@ module Grit::Core
 
     def self.by_vocabulary(params = nil)
       self.detailed
-      .joins("INNER JOIN grit_core_vocabulary_item_load_sets grit_core_vocabulary_item_load_sets__ on grit_core_vocabulary_item_load_sets__.load_set_id = grit_core_load_sets.id")
-      .where(ActiveRecord::Base.sanitize_sql_array([ "grit_core_vocabulary_item_load_sets__.vocabulary_id = ?", params[:vocabulary_id] ]))
+        .distinct("grit_core_load_sets.id")
+        .joins("JOIN grit_core_load_set_blocks grit_core_load_set_blocks__ on grit_core_load_set_blocks__.load_set_id = grit_core_load_sets.id")
+        .joins("JOIN grit_core_vocabulary_item_load_set_blocks grit_core_vocabulary_item_load_set_blocks__ on grit_core_vocabulary_item_load_set_blocks__.load_set_block_id = grit_core_load_set_blocks__.id")
+        .where(ActiveRecord::Base.sanitize_sql_array([ "grit_core_vocabulary_item_load_set_blocks__.vocabulary_id = ?", params[:vocabulary_id] ]))
     end
 
-    def self.with_data
-      self.details
-      .select("
-        grit_core_load_sets.data
-      ")
+    def rollback
+      loader = Grit::Core::EntityLoader.loader(entity)
+      errored_status = Grit::Core::LoadSetStatus.find_by(name: "Errored")
+      load_set_blocks.each do |lsb|
+        loader.rollback_block(lsb)
+        lsb.status = errored_status
+        lsb.save!
+      end
     end
 
     private
       def check_status
-        throw :abort if self.status.name == "Succeeded"
+        throw :abort if self.load_set_blocks.any? { |lsb| lsb.status.name == "Succeeded" }
       end
   end
 end

@@ -1,7 +1,7 @@
-\restrict wZR5kBZGeUyRzSAQDffHkDimJFieQvu9IiEquwLCsz3Hz7Pu4PrV3CwwUCkkGgw
+\restrict 99LeM90HJMQaUZonyZPqL6FKtyUq6mFtA6agvdFdmscVpzqXawqpujU5tyZzN2w
 
 -- Dumped from database version 16.3 (Debian 16.3-1.pgdg120+1)
--- Dumped by pg_dump version 16.10 (Ubuntu 16.10-0ubuntu0.24.04.1)
+-- Dumped by pg_dump version 16.11
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -189,6 +189,105 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
+-- Name: active_storage_attachments; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.active_storage_attachments (
+    id bigint NOT NULL,
+    name character varying NOT NULL,
+    record_type character varying NOT NULL,
+    record_id bigint NOT NULL,
+    blob_id bigint NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: active_storage_attachments_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.active_storage_attachments_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: active_storage_attachments_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.active_storage_attachments_id_seq OWNED BY public.active_storage_attachments.id;
+
+
+--
+-- Name: active_storage_blobs; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.active_storage_blobs (
+    id bigint NOT NULL,
+    key character varying NOT NULL,
+    filename character varying NOT NULL,
+    content_type character varying,
+    metadata text,
+    service_name character varying NOT NULL,
+    byte_size bigint NOT NULL,
+    checksum character varying,
+    created_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: active_storage_blobs_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.active_storage_blobs_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: active_storage_blobs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.active_storage_blobs_id_seq OWNED BY public.active_storage_blobs.id;
+
+
+--
+-- Name: active_storage_variant_records; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.active_storage_variant_records (
+    id bigint NOT NULL,
+    blob_id bigint NOT NULL,
+    variation_digest character varying NOT NULL
+);
+
+
+--
+-- Name: active_storage_variant_records_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.active_storage_variant_records_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: active_storage_variant_records_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.active_storage_variant_records_id_seq OWNED BY public.active_storage_variant_records.id;
+
+
+--
 -- Name: ar_internal_metadata; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -274,10 +373,10 @@ CREATE TABLE public.grit_core_data_types (
 
 
 --
--- Name: grit_core_load_set_loaded_records; Type: TABLE; Schema: public; Owner: -
+-- Name: grit_core_load_set_block_loaded_records; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.grit_core_load_set_loaded_records (
+CREATE TABLE public.grit_core_load_set_block_loaded_records (
     id bigint DEFAULT nextval('public.grit_seq'::regclass) NOT NULL,
     created_by character varying(30) DEFAULT 'SYSTEM'::character varying NOT NULL,
     created_at timestamp(6) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -285,48 +384,29 @@ CREATE TABLE public.grit_core_load_set_loaded_records (
     updated_at timestamp(6) without time zone,
     "table" character varying NOT NULL,
     record_id bigint NOT NULL,
-    load_set_id bigint
+    load_set_block_id bigint
 );
 
 
 --
--- Name: grit_core_load_set_loading_record_property_values; Type: TABLE; Schema: public; Owner: -
+-- Name: grit_core_load_set_blocks; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.grit_core_load_set_loading_record_property_values (
+CREATE TABLE public.grit_core_load_set_blocks (
     id bigint DEFAULT nextval('public.grit_seq'::regclass) NOT NULL,
     created_by character varying(30) DEFAULT 'SYSTEM'::character varying NOT NULL,
     created_at timestamp(6) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_by character varying(30),
     updated_at timestamp(6) without time zone,
-    name character varying,
-    numeric_sign character varying,
-    string_value character varying,
-    integer_value integer,
-    decimal_value numeric,
-    float_value double precision,
-    text_value text,
-    datetime_value timestamp(6) without time zone DEFAULT NULL::timestamp without time zone,
-    date_value date,
-    boolean_value boolean,
-    entity_id_value bigint,
+    name character varying NOT NULL,
+    error character varying,
+    headers jsonb DEFAULT '[]'::jsonb,
+    mappings jsonb DEFAULT '{}'::jsonb,
+    separator character varying NOT NULL,
+    has_errors boolean DEFAULT false,
+    has_warnings boolean DEFAULT false,
     load_set_id bigint NOT NULL,
-    load_set_loading_record_id bigint NOT NULL
-);
-
-
---
--- Name: grit_core_load_set_loading_records; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.grit_core_load_set_loading_records (
-    id bigint DEFAULT nextval('public.grit_seq'::regclass) NOT NULL,
-    created_by character varying(30) DEFAULT 'SYSTEM'::character varying NOT NULL,
-    created_at timestamp(6) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_by character varying(30),
-    updated_at timestamp(6) without time zone,
-    number integer,
-    load_set_id bigint NOT NULL
+    status_id bigint NOT NULL
 );
 
 
@@ -357,17 +437,7 @@ CREATE TABLE public.grit_core_load_sets (
     updated_at timestamp(6) without time zone,
     name character varying NOT NULL,
     entity character varying NOT NULL,
-    process_start timestamp(6) without time zone,
-    process_end timestamp(6) without time zone,
-    data bytea NOT NULL,
-    parsed_data jsonb DEFAULT '[]'::jsonb NOT NULL,
-    mappings json,
-    record_errors json,
-    item_count integer,
-    status_id bigint NOT NULL,
-    origin_id bigint NOT NULL,
-    record_warnings json,
-    separator character varying
+    origin_id bigint NOT NULL
 );
 
 
@@ -519,16 +589,16 @@ CREATE TABLE public.grit_core_vocabularies (
 
 
 --
--- Name: grit_core_vocabulary_item_load_sets; Type: TABLE; Schema: public; Owner: -
+-- Name: grit_core_vocabulary_item_load_set_blocks; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.grit_core_vocabulary_item_load_sets (
+CREATE TABLE public.grit_core_vocabulary_item_load_set_blocks (
     id bigint DEFAULT nextval('public.grit_seq'::regclass) NOT NULL,
     created_by character varying(30) DEFAULT 'SYSTEM'::character varying NOT NULL,
     created_at timestamp(6) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_by character varying(30),
     updated_at timestamp(6) without time zone,
-    load_set_id bigint NOT NULL,
+    load_set_block_id bigint NOT NULL,
     vocabulary_id bigint NOT NULL
 );
 
@@ -582,6 +652,51 @@ CREATE TABLE public.test_entities (
 
 
 --
+-- Name: active_storage_attachments id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.active_storage_attachments ALTER COLUMN id SET DEFAULT nextval('public.active_storage_attachments_id_seq'::regclass);
+
+
+--
+-- Name: active_storage_blobs id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.active_storage_blobs ALTER COLUMN id SET DEFAULT nextval('public.active_storage_blobs_id_seq'::regclass);
+
+
+--
+-- Name: active_storage_variant_records id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.active_storage_variant_records ALTER COLUMN id SET DEFAULT nextval('public.active_storage_variant_records_id_seq'::regclass);
+
+
+--
+-- Name: active_storage_attachments active_storage_attachments_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.active_storage_attachments
+    ADD CONSTRAINT active_storage_attachments_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: active_storage_blobs active_storage_blobs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.active_storage_blobs
+    ADD CONSTRAINT active_storage_blobs_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: active_storage_variant_records active_storage_variant_records_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.active_storage_variant_records
+    ADD CONSTRAINT active_storage_variant_records_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: ar_internal_metadata ar_internal_metadata_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -614,27 +729,19 @@ ALTER TABLE ONLY public.grit_core_data_types
 
 
 --
--- Name: grit_core_load_set_loaded_records grit_core_load_set_loaded_records_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: grit_core_load_set_block_loaded_records grit_core_load_set_block_loaded_records_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.grit_core_load_set_loaded_records
-    ADD CONSTRAINT grit_core_load_set_loaded_records_pkey PRIMARY KEY (id);
-
-
---
--- Name: grit_core_load_set_loading_record_property_values grit_core_load_set_loading_record_property_values_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.grit_core_load_set_loading_record_property_values
-    ADD CONSTRAINT grit_core_load_set_loading_record_property_values_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.grit_core_load_set_block_loaded_records
+    ADD CONSTRAINT grit_core_load_set_block_loaded_records_pkey PRIMARY KEY (id);
 
 
 --
--- Name: grit_core_load_set_loading_records grit_core_load_set_loading_records_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: grit_core_load_set_blocks grit_core_load_set_blocks_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.grit_core_load_set_loading_records
-    ADD CONSTRAINT grit_core_load_set_loading_records_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.grit_core_load_set_blocks
+    ADD CONSTRAINT grit_core_load_set_blocks_pkey PRIMARY KEY (id);
 
 
 --
@@ -718,11 +825,11 @@ ALTER TABLE ONLY public.grit_core_vocabularies
 
 
 --
--- Name: grit_core_vocabulary_item_load_sets grit_core_vocabulary_item_load_sets_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: grit_core_vocabulary_item_load_set_blocks grit_core_vocabulary_item_load_set_blocks_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.grit_core_vocabulary_item_load_sets
-    ADD CONSTRAINT grit_core_vocabulary_item_load_sets_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.grit_core_vocabulary_item_load_set_blocks
+    ADD CONSTRAINT grit_core_vocabulary_item_load_set_blocks_pkey PRIMARY KEY (id);
 
 
 --
@@ -771,17 +878,24 @@ CREATE UNIQUE INDEX idx_locations_on_name_unique ON public.grit_core_locations U
 
 
 --
--- Name: idx_on_load_set_id_b4686def04; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_on_load_set_block_id_cd39507407; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_on_load_set_id_b4686def04 ON public.grit_core_load_set_loading_record_property_values USING btree (load_set_id);
+CREATE INDEX idx_on_load_set_block_id_cd39507407 ON public.grit_core_vocabulary_item_load_set_blocks USING btree (load_set_block_id);
 
 
 --
--- Name: idx_on_load_set_loading_record_id_c95f80162e; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_on_load_set_block_id_d6f197c749; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_on_load_set_loading_record_id_c95f80162e ON public.grit_core_load_set_loading_record_property_values USING btree (load_set_loading_record_id);
+CREATE INDEX idx_on_load_set_block_id_d6f197c749 ON public.grit_core_load_set_block_loaded_records USING btree (load_set_block_id);
+
+
+--
+-- Name: idx_on_vocabulary_id_af8a787680; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_on_vocabulary_id_af8a787680 ON public.grit_core_vocabulary_item_load_set_blocks USING btree (vocabulary_id);
 
 
 --
@@ -820,6 +934,34 @@ CREATE UNIQUE INDEX idx_units_on_name_unique ON public.grit_core_units USING btr
 
 
 --
+-- Name: index_active_storage_attachments_on_blob_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_active_storage_attachments_on_blob_id ON public.active_storage_attachments USING btree (blob_id);
+
+
+--
+-- Name: index_active_storage_attachments_uniqueness; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_active_storage_attachments_uniqueness ON public.active_storage_attachments USING btree (record_type, record_id, name, blob_id);
+
+
+--
+-- Name: index_active_storage_blobs_on_key; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_active_storage_blobs_on_key ON public.active_storage_blobs USING btree (key);
+
+
+--
+-- Name: index_active_storage_variant_records_uniqueness; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_active_storage_variant_records_uniqueness ON public.active_storage_variant_records USING btree (blob_id, variation_digest);
+
+
+--
 -- Name: index_grit_core_data_types_on_name; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -827,17 +969,17 @@ CREATE UNIQUE INDEX index_grit_core_data_types_on_name ON public.grit_core_data_
 
 
 --
--- Name: index_grit_core_load_set_loaded_records_on_load_set_id; Type: INDEX; Schema: public; Owner: -
+-- Name: index_grit_core_load_set_blocks_on_load_set_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX index_grit_core_load_set_loaded_records_on_load_set_id ON public.grit_core_load_set_loaded_records USING btree (load_set_id);
+CREATE INDEX index_grit_core_load_set_blocks_on_load_set_id ON public.grit_core_load_set_blocks USING btree (load_set_id);
 
 
 --
--- Name: index_grit_core_load_set_loading_records_on_load_set_id; Type: INDEX; Schema: public; Owner: -
+-- Name: index_grit_core_load_set_blocks_on_status_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX index_grit_core_load_set_loading_records_on_load_set_id ON public.grit_core_load_set_loading_records USING btree (load_set_id);
+CREATE INDEX index_grit_core_load_set_blocks_on_status_id ON public.grit_core_load_set_blocks USING btree (status_id);
 
 
 --
@@ -845,13 +987,6 @@ CREATE INDEX index_grit_core_load_set_loading_records_on_load_set_id ON public.g
 --
 
 CREATE INDEX index_grit_core_load_sets_on_origin_id ON public.grit_core_load_sets USING btree (origin_id);
-
-
---
--- Name: index_grit_core_load_sets_on_status_id; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX index_grit_core_load_sets_on_status_id ON public.grit_core_load_sets USING btree (status_id);
 
 
 --
@@ -939,20 +1074,6 @@ CREATE UNIQUE INDEX index_grit_core_vocabularies_on_name ON public.grit_core_voc
 
 
 --
--- Name: index_grit_core_vocabulary_item_load_sets_on_load_set_id; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX index_grit_core_vocabulary_item_load_sets_on_load_set_id ON public.grit_core_vocabulary_item_load_sets USING btree (load_set_id);
-
-
---
--- Name: index_grit_core_vocabulary_item_load_sets_on_vocabulary_id; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX index_grit_core_vocabulary_item_load_sets_on_vocabulary_id ON public.grit_core_vocabulary_item_load_sets USING btree (vocabulary_id);
-
-
---
 -- Name: index_grit_core_vocabulary_items_on_name; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -995,24 +1116,17 @@ CREATE TRIGGER manage_stamps_grit_core_data_types BEFORE INSERT OR UPDATE ON pub
 
 
 --
--- Name: grit_core_load_set_loaded_records manage_stamps_grit_core_load_set_loaded_records; Type: TRIGGER; Schema: public; Owner: -
+-- Name: grit_core_load_set_block_loaded_records manage_stamps_grit_core_load_set_block_loaded_records; Type: TRIGGER; Schema: public; Owner: -
 --
 
-CREATE TRIGGER manage_stamps_grit_core_load_set_loaded_records BEFORE INSERT OR UPDATE ON public.grit_core_load_set_loaded_records FOR EACH ROW EXECUTE FUNCTION public.manage_stamps();
-
-
---
--- Name: grit_core_load_set_loading_record_property_values manage_stamps_grit_core_load_set_loading_record_property_values; Type: TRIGGER; Schema: public; Owner: -
---
-
-CREATE TRIGGER manage_stamps_grit_core_load_set_loading_record_property_values BEFORE INSERT OR UPDATE ON public.grit_core_load_set_loading_record_property_values FOR EACH ROW EXECUTE FUNCTION public.manage_stamps();
+CREATE TRIGGER manage_stamps_grit_core_load_set_block_loaded_records BEFORE INSERT OR UPDATE ON public.grit_core_load_set_block_loaded_records FOR EACH ROW EXECUTE FUNCTION public.manage_stamps();
 
 
 --
--- Name: grit_core_load_set_loading_records manage_stamps_grit_core_load_set_loading_records; Type: TRIGGER; Schema: public; Owner: -
+-- Name: grit_core_load_set_blocks manage_stamps_grit_core_load_set_blocks; Type: TRIGGER; Schema: public; Owner: -
 --
 
-CREATE TRIGGER manage_stamps_grit_core_load_set_loading_records BEFORE INSERT OR UPDATE ON public.grit_core_load_set_loading_records FOR EACH ROW EXECUTE FUNCTION public.manage_stamps();
+CREATE TRIGGER manage_stamps_grit_core_load_set_blocks BEFORE INSERT OR UPDATE ON public.grit_core_load_set_blocks FOR EACH ROW EXECUTE FUNCTION public.manage_stamps();
 
 
 --
@@ -1086,10 +1200,10 @@ CREATE TRIGGER manage_stamps_grit_core_vocabularies BEFORE INSERT OR UPDATE ON p
 
 
 --
--- Name: grit_core_vocabulary_item_load_sets manage_stamps_grit_core_vocabulary_item_load_sets; Type: TRIGGER; Schema: public; Owner: -
+-- Name: grit_core_vocabulary_item_load_set_blocks manage_stamps_grit_core_vocabulary_item_load_set_blocks; Type: TRIGGER; Schema: public; Owner: -
 --
 
-CREATE TRIGGER manage_stamps_grit_core_vocabulary_item_load_sets BEFORE INSERT OR UPDATE ON public.grit_core_vocabulary_item_load_sets FOR EACH ROW EXECUTE FUNCTION public.manage_stamps();
+CREATE TRIGGER manage_stamps_grit_core_vocabulary_item_load_set_blocks BEFORE INSERT OR UPDATE ON public.grit_core_vocabulary_item_load_set_blocks FOR EACH ROW EXECUTE FUNCTION public.manage_stamps();
 
 
 --
@@ -1100,43 +1214,27 @@ CREATE TRIGGER manage_stamps_grit_core_vocabulary_items BEFORE INSERT OR UPDATE 
 
 
 --
--- Name: grit_core_load_set_loaded_records core_load_set_loaded_records_core_load_set_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: grit_core_load_set_block_loaded_records core_load_set_block_loaded_records_core_load_set_block_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.grit_core_load_set_loaded_records
-    ADD CONSTRAINT core_load_set_loaded_records_core_load_set_id_fkey FOREIGN KEY (load_set_id) REFERENCES public.grit_core_load_sets(id);
-
-
---
--- Name: grit_core_load_set_loading_record_property_values core_load_set_loading_record_property_values_core_load_set_id_f; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.grit_core_load_set_loading_record_property_values
-    ADD CONSTRAINT core_load_set_loading_record_property_values_core_load_set_id_f FOREIGN KEY (load_set_id) REFERENCES public.grit_core_load_sets(id);
+ALTER TABLE ONLY public.grit_core_load_set_block_loaded_records
+    ADD CONSTRAINT core_load_set_block_loaded_records_core_load_set_block_id_fkey FOREIGN KEY (load_set_block_id) REFERENCES public.grit_core_load_set_blocks(id);
 
 
 --
--- Name: grit_core_load_set_loading_records core_load_set_loading_records_core_load_set_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: grit_core_load_set_blocks core_load_set_blocks_core_load_set_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.grit_core_load_set_loading_records
-    ADD CONSTRAINT core_load_set_loading_records_core_load_set_id_fkey FOREIGN KEY (load_set_id) REFERENCES public.grit_core_load_sets(id);
-
-
---
--- Name: grit_core_load_set_loading_record_property_values core_load_set_loading_records_core_load_set_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.grit_core_load_set_loading_record_property_values
-    ADD CONSTRAINT core_load_set_loading_records_core_load_set_id_fkey FOREIGN KEY (load_set_loading_record_id) REFERENCES public.grit_core_load_set_loading_records(id);
+ALTER TABLE ONLY public.grit_core_load_set_blocks
+    ADD CONSTRAINT core_load_set_blocks_core_load_set_id_fkey FOREIGN KEY (load_set_id) REFERENCES public.grit_core_load_sets(id);
 
 
 --
--- Name: grit_core_load_sets core_load_sets_core_load_set_status_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: grit_core_load_set_blocks core_load_set_blocks_core_load_set_status_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.grit_core_load_sets
-    ADD CONSTRAINT core_load_sets_core_load_set_status_id_fkey FOREIGN KEY (status_id) REFERENCES public.grit_core_load_set_statuses(id);
+ALTER TABLE ONLY public.grit_core_load_set_blocks
+    ADD CONSTRAINT core_load_set_blocks_core_load_set_status_id_fkey FOREIGN KEY (status_id) REFERENCES public.grit_core_load_set_statuses(id);
 
 
 --
@@ -1196,19 +1294,19 @@ ALTER TABLE ONLY public.grit_core_users
 
 
 --
--- Name: grit_core_vocabulary_item_load_sets core_vocabulary_item_load_sets_core_load_set_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: grit_core_vocabulary_item_load_set_blocks core_vocabulary_item_load_set_blocks_core_load_set_block_id_fke; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.grit_core_vocabulary_item_load_sets
-    ADD CONSTRAINT core_vocabulary_item_load_sets_core_load_set_id_fkey FOREIGN KEY (load_set_id) REFERENCES public.grit_core_load_sets(id);
+ALTER TABLE ONLY public.grit_core_vocabulary_item_load_set_blocks
+    ADD CONSTRAINT core_vocabulary_item_load_set_blocks_core_load_set_block_id_fke FOREIGN KEY (load_set_block_id) REFERENCES public.grit_core_load_set_blocks(id);
 
 
 --
--- Name: grit_core_vocabulary_item_load_sets core_vocabulary_item_load_sets_core_vocabularies_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: grit_core_vocabulary_item_load_set_blocks core_vocabulary_item_load_set_blocks_core_vocabularies_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.grit_core_vocabulary_item_load_sets
-    ADD CONSTRAINT core_vocabulary_item_load_sets_core_vocabularies_fkey FOREIGN KEY (vocabulary_id) REFERENCES public.grit_core_vocabularies(id);
+ALTER TABLE ONLY public.grit_core_vocabulary_item_load_set_blocks
+    ADD CONSTRAINT core_vocabulary_item_load_set_blocks_core_vocabularies_fkey FOREIGN KEY (vocabulary_id) REFERENCES public.grit_core_vocabularies(id);
 
 
 --
@@ -1217,6 +1315,22 @@ ALTER TABLE ONLY public.grit_core_vocabulary_item_load_sets
 
 ALTER TABLE ONLY public.grit_core_vocabulary_items
     ADD CONSTRAINT core_vocabulary_items_core_vocabulary_id_fkey FOREIGN KEY (vocabulary_id) REFERENCES public.grit_core_vocabularies(id);
+
+
+--
+-- Name: active_storage_variant_records fk_rails_993965df05; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.active_storage_variant_records
+    ADD CONSTRAINT fk_rails_993965df05 FOREIGN KEY (blob_id) REFERENCES public.active_storage_blobs(id);
+
+
+--
+-- Name: active_storage_attachments fk_rails_c3b3935057; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.active_storage_attachments
+    ADD CONSTRAINT fk_rails_c3b3935057 FOREIGN KEY (blob_id) REFERENCES public.active_storage_blobs(id);
 
 
 --
@@ -1231,28 +1345,22 @@ ALTER TABLE ONLY public.test_entities
 -- PostgreSQL database dump complete
 --
 
-\unrestrict wZR5kBZGeUyRzSAQDffHkDimJFieQvu9IiEquwLCsz3Hz7Pu4PrV3CwwUCkkGgw
+\unrestrict 99LeM90HJMQaUZonyZPqL6FKtyUq6mFtA6agvdFdmscVpzqXawqpujU5tyZzN2w
 
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20260130123817'),
 ('20250625074209'),
 ('20250624081122'),
 ('20250624080646'),
-('20250622125208'),
-('20250522140707'),
-('20250521124829'),
-('20250411144141'),
-('20250411045043'),
 ('20250408050849'),
-('20250326121851'),
 ('20250205130307'),
 ('20250205093246'),
 ('20250109121325'),
 ('20241212062610'),
-('20241212062036'),
-('20241212062035'),
-('20241212062034'),
+('20241212062001'),
+('20241212062000'),
 ('20241212061707'),
 ('20241104161825'),
 ('20241104160815'),

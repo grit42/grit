@@ -19,7 +19,9 @@
 Grit::Core::LoadSet.class_eval do
   def self.by_experiment(params = nil)
     self.detailed
-    .joins("INNER JOIN grit_assays_experiment_data_sheet_record_load_sets grit_assays_experiment_data_sheet_record_load_sets__ on grit_assays_experiment_data_sheet_record_load_sets__.load_set_id = grit_core_load_sets.id")
-    .where(ActiveRecord::Base.sanitize_sql_array([ "grit_assays_experiment_data_sheet_record_load_sets__.experiment_id = ?", params[:experiment_id] ]))
+      .distinct("grit_core_load_sets.id")
+      .joins("JOIN grit_core_load_set_blocks grit_core_load_set_blocks__ on grit_core_load_set_blocks__.load_set_id = grit_core_load_sets.id")
+      .joins("JOIN grit_assays_experiment_data_sheet_record_load_set_blocks grit_assays_experiment_data_sheet_record_load_set_blocks__ on grit_assays_experiment_data_sheet_record_load_set_blocks__.load_set_block_id = grit_core_load_set_blocks__.id")
+      .where(ActiveRecord::Base.sanitize_sql_array([ "grit_assays_experiment_data_sheet_record_load_set_blocks__.experiment_id = ?", params[:experiment_id] ]))
   end
 end

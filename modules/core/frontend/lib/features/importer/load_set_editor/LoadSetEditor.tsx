@@ -24,16 +24,17 @@ import {
 } from "@grit42/client-library/components";
 import { useNavigate } from "react-router-dom";
 import { getURLParams, useQueryClient } from "@grit42/api";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  useConfirmLoadSetMutation,
-  useRollbackLoadSetMutation,
-  useValidateLoadSetMutation,
+  useValidateLoadSetBlockMutation,
+  useConfirmLoadSetBlockMutation,
+  useRollbackLoadSetBlockMutation,
+  useInitializeLoadSetBlockMutation,
 } from "../mutations";
-import { useLoadSetMappingFields, useLoadSetPreviewData } from "../queries";
-import { LoadSetData, LoadSetMapping } from "../types";
+import { useLoadSetBlockMappingFields } from "../queries";
+import { LoadSetBlockData, LoadSetData, LoadSetMapping } from "../types";
 import { useDestroyEntityMutation } from "../../entities";
-import { useForm, useStore } from "@grit42/form";
+import { useForm } from "@grit42/form";
 import styles from "./loadSetEditor.module.scss";
 import MappingFields from "./MappingFields";
 import LoadSetInfo from "./LoadSetInfo";
@@ -59,28 +60,28 @@ const LoadSetEditor = ({
   );
 
   const {
-    data: previewData,
-    isLoading: isPreviewDataLoading,
-    isError: isPreviewDataError,
-    error: previewDataError,
-  } = useLoadSetPreviewData(loadSet.id);
-
-  const {
     data: fields,
     isLoading: isFieldsLoading,
     isError: isFieldsError,
     error: fieldsError,
-  } = useLoadSetMappingFields(loadSet.id);
+  } = useLoadSetBlockMappingFields(loadSet.load_set_blocks[0].id);
 
-  const validateLoadSetMutation = useValidateLoadSetMutation(loadSet.id);
-  const confirmLoadSetMutation = useConfirmLoadSetMutation(loadSet.id);
-  const rollbackLoadSetMutation = useRollbackLoadSetMutation(loadSet.id);
+  const validateLoadSetMutation = useValidateLoadSetBlockMutation(
+    loadSet.load_set_blocks[0].id,
+  );
+  const confirmLoadSetMutation = useConfirmLoadSetBlockMutation(
+    loadSet.load_set_blocks[0].id,
+  );
+  const rollbackLoadSetMutation = useRollbackLoadSetBlockMutation(
+    loadSet.load_set_blocks[0].id,
+  );
 
   const destroyLoadSetMutation = useDestroyEntityMutation(
     "grit/core/load_sets",
   );
 
-  const isValidated = loadSet.status_id__name === "Validated";
+  const isValidated =
+    loadSet.load_set_blocks[0].status_id__name === "Validated";
 
   const handleSubmit = async (mappings: Record<string, LoadSetMapping>) => {
     if (isValidated) {
@@ -94,15 +95,25 @@ const LoadSetEditor = ({
       await validateLoadSetMutation.mutateAsync(mappings);
     } finally {
       setMappings(mappings);
-      queryClient.invalidateQueries({
-        queryKey: [
-          "entities",
-          "datum",
-          "grit/core/load_sets",
-          loadSet.id.toString(),
-        ],
-        exact: false,
-      });
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: [
+            "entities",
+            "datum",
+            "grit/core/load_sets",
+            loadSet.id.toString(),
+          ],
+          exact: false,
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [
+            "entities",
+            "infiniteData",
+            `grit/core/load_set_blocks/${loadSet.load_set_blocks[0].id}/errored_data`,
+          ],
+          exact: false,
+        }),
+      ]);
     }
   };
 
@@ -139,26 +150,26 @@ const LoadSetEditor = ({
     await destroyLoadSetMutation.mutateAsync(loadSet.id);
     navigate(
       `/core/load_sets/new?${getURLParams(
-        getLoadSetPropertiesForCancel(loadSet),
+        getLoadSetPropertiesForCancel({
+          ...loadSet,
+          ...loadSet.load_set_blocks[0],
+        }),
       )}`,
     );
   };
 
-  const defaultValues = useMemo(
-    () => {
-      if (!fields) return {};
-      return fields.reduce((acc, f) => {
-        return {
-          ...acc,
-          [`${f.name}-header`]: mappings[f.name]?.header ?? "",
-          [`${f.name}-constant`]: mappings[f.name]?.constant ?? false,
-          [`${f.name}-find_by`]: mappings[f.name]?.find_by ?? "",
-          [`${f.name}-value`]: mappings[f.name]?.value ?? null,
-        };
-      }, {})
-    },
-    [mappings, fields],
-  );
+  const defaultValues = useMemo(() => {
+    if (!fields) return {};
+    return fields.reduce((acc, f) => {
+      return {
+        ...acc,
+        [`${f.name}-header`]: mappings[f.name]?.header ?? "",
+        [`${f.name}-constant`]: mappings[f.name]?.constant ?? false,
+        [`${f.name}-find_by`]: mappings[f.name]?.find_by ?? "",
+        [`${f.name}-value`]: mappings[f.name]?.value ?? null,
+      };
+    }, {});
+  }, [mappings, fields]);
 
   const form = useForm<Record<string, string | number | boolean | null>>({
     onSubmit: async ({ value }) => {
@@ -178,35 +189,12 @@ const LoadSetEditor = ({
     defaultValues,
   });
 
-  const headerMappings = useStore(form.baseStore, ({ values }) => {
-    const headerMappings: Record<string, string[]> = {};
-    for (const key in values) {
-      if (
-        key.endsWith("-header") &&
-        values[key] !== "" &&
-        values[key] !== null
-      ) {
-        const field = fields?.find(
-          (f) => f.name === key.replace("-header", ""),
-        );
-        if (field) {
-          headerMappings[values[key] as string] = headerMappings[
-            values[key] as string
-          ]?.concat(field?.display_name ?? field?.name) ?? [
-            field?.display_name ?? field?.name,
-          ];
-        }
-      }
-    }
-    return headerMappings;
-  });
-
-  if (isFieldsLoading || isPreviewDataLoading) {
+  if (isFieldsLoading) {
     return <Spinner />;
   }
 
-  if (isFieldsError || !fields || isPreviewDataError || !previewData) {
-    return <p>{fieldsError ?? previewDataError ?? "An error occurred"}</p>;
+  if (isFieldsError || !fields) {
+    return <p>{fieldsError ?? "An error occurred"}</p>;
   }
 
   return (
@@ -227,6 +215,7 @@ const LoadSetEditor = ({
               <ButtonGroup>
                 <Button
                   onClick={handleCancel}
+                  disabled={validateLoadSetMutation.isPending}
                   loading={
                     rollbackLoadSetMutation.isPending ||
                     destroyLoadSetMutation.isPending
@@ -234,20 +223,27 @@ const LoadSetEditor = ({
                 >
                   Cancel import
                 </Button>
-                {isValidated && <Button
-                  onClick={handleRollback}
-                  loading={
-                    rollbackLoadSetMutation.isPending
-                  }
-                >
-                  Make changes
-                </Button>}
-                {!isValidated && (
-                  <Button onClick={() => setIsOpen(true)}>Edit data set</Button>
+                {isValidated && (
+                  <Button
+                    onClick={handleRollback}
+                    loading={rollbackLoadSetMutation.isPending}
+                  >
+                    Make changes
+                  </Button>
                 )}
-                {loadSet.status_id__name === "Invalidated" && (
+                {!isValidated && (
+                  <Button
+                    disabled={validateLoadSetMutation.isPending}
+                    onClick={() => setIsOpen(true)}
+                  >
+                    Edit data set
+                  </Button>
+                )}
+                {loadSet.load_set_blocks[0].status_id__name ===
+                  "Invalidated" && (
                   <Button
                     loading={confirmLoadSetMutation.isPending}
+                    disabled={validateLoadSetMutation.isPending}
                     color="danger"
                     onClick={handleConfirm}
                   >
@@ -256,7 +252,7 @@ const LoadSetEditor = ({
                 )}
                 <Button
                   color="secondary"
-                  disabled={!canSubmit}
+                  disabled={!canSubmit || confirmLoadSetMutation.isPending}
                   type="submit"
                   loading={isSubmitting}
                 >
@@ -271,12 +267,12 @@ const LoadSetEditor = ({
             disabled={isValidated}
             entityFields={fields}
             form={form}
-            headers={previewData.headers}
+            headers={loadSet.load_set_blocks[0].headers}
           />
           <LoadSetInfo
             loadSet={loadSet}
-            previewData={previewData}
-            headerMappings={headerMappings}
+            columns={loadSet.load_set_blocks[0].headers}
+            headerMappings={{}}
           />
         </div>
       </form>
@@ -284,7 +280,112 @@ const LoadSetEditor = ({
         <UpdateLoadSetDataDialog
           isOpen
           loadSet={loadSet}
-          previewData={previewData}
+          onClose={() => setIsOpen(false)}
+        />
+      )}
+    </>
+  );
+};
+
+const LoadSetBlockInitializer = ({
+  load_set_block,
+}: {
+  load_set_block: LoadSetBlockData;
+}) => {
+  const fetchRef = useRef(false);
+  const queryClient = useQueryClient();
+
+  const initializeMutation = useInitializeLoadSetBlockMutation(
+    load_set_block.id,
+  );
+
+  const handleInitialize = useCallback(async () => {
+    try {
+      await initializeMutation.mutateAsync();
+    } finally {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: [
+            "entities",
+            "datum",
+            "grit/core/load_sets",
+            load_set_block.load_set_id.toString(),
+          ],
+          exact: false,
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [
+            "entities",
+            "infiniteData",
+            `grit/core/load_set_blocks/${load_set_block.id}/preview_data`,
+          ],
+          exact: false,
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [
+            "entities",
+            "infiniteData",
+            `grit/core/load_set_blocks/${load_set_block.id}/errored_data`,
+          ],
+          exact: false,
+        }),
+      ]);
+    }
+  }, [
+    initializeMutation,
+    load_set_block.id,
+    load_set_block.load_set_id,
+    queryClient,
+  ]);
+
+  useEffect(() => {
+    if (load_set_block.status_id__name === "Created" && !fetchRef.current) {
+      handleInitialize();
+      fetchRef.current = true;
+    }
+  }, [handleInitialize, load_set_block.status_id__name]);
+
+  return (
+    <ErrorPage error="Preparing the upload">
+      <Spinner />
+    </ErrorPage>
+  );
+};
+
+const LoadSetBlockError = ({ load_set }: { load_set: LoadSetData }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const destroyLoadSetMutation = useDestroyEntityMutation(
+    "grit/core/load_sets",
+  );
+
+  const handleCancel = async () => {
+    await destroyLoadSetMutation.mutateAsync(load_set.id);
+    navigate(
+      `/core/load_sets/new?${getURLParams(
+        getLoadSetPropertiesForCancel(load_set),
+      )}`,
+    );
+  };
+
+  return (
+    <>
+      <ErrorPage error={load_set.load_set_blocks[0].error}>
+        <ButtonGroup>
+          <Button
+            onClick={handleCancel}
+            loading={destroyLoadSetMutation.isPending}
+          >
+            Cancel import
+          </Button>
+          <Button onClick={() => setIsOpen(true)}>Change data set</Button>
+        </ButtonGroup>
+      </ErrorPage>
+      {isOpen && (
+        <UpdateLoadSetDataDialog
+          isOpen
+          loadSet={load_set}
           onClose={() => setIsOpen(false)}
         />
       )}
@@ -294,30 +395,37 @@ const LoadSetEditor = ({
 
 const LoadSetEditorWrapper = ({ loadSet }: LoadSetEditorProps) => {
   const {
-    data: previewData,
-    isLoading: isPreviewDataLoading,
-    isError: isPreviewDataError,
-    error: previewDataError,
-  } = useLoadSetPreviewData(loadSet.id);
-
-  const {
     data: fields,
     isLoading: isFieldsLoading,
     isError: isFieldsError,
     error: fieldsError,
-  } = useLoadSetMappingFields(loadSet.id);
+  } = useLoadSetBlockMappingFields(loadSet.load_set_blocks[0].id);
 
   const mappings = useMemo(
-    () => loadSet?.mappings ?? getAutoMappings(fields, previewData?.headers),
-    [fields, loadSet?.mappings, previewData?.headers],
+    () =>
+      loadSet?.load_set_blocks[0].mappings &&
+      Object.keys(loadSet.load_set_blocks[0].mappings).length
+        ? loadSet.load_set_blocks[0].mappings
+        : getAutoMappings(fields, loadSet?.load_set_blocks[0].headers),
+    [fields, loadSet?.load_set_blocks],
   );
 
-  if (isFieldsLoading || isPreviewDataLoading) {
+  if (isFieldsLoading) {
     return <Spinner />;
   }
 
-  if (isFieldsError || !fields || isPreviewDataError || !previewData) {
-    return <ErrorPage error={fieldsError ?? previewDataError} />;
+  if (isFieldsError || !fields) {
+    return <ErrorPage error={fieldsError} />;
+  }
+
+  if (loadSet.load_set_blocks[0].status_id__name === "Created") {
+    return (
+      <LoadSetBlockInitializer load_set_block={loadSet.load_set_blocks[0]} />
+    );
+  }
+
+  if (loadSet.load_set_blocks[0].status_id__name === "Errored") {
+    return <LoadSetBlockError load_set={loadSet} />;
   }
 
   return <LoadSetEditor loadSet={loadSet} mappings={mappings} />;

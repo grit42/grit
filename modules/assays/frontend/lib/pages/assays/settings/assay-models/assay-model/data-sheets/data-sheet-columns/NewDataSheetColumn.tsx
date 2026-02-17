@@ -17,7 +17,7 @@
  */
 
 import { useMemo } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   Button,
   ButtonGroup,
@@ -147,6 +147,16 @@ const AssayDataSheetColumnForm = ({
       };
     },
   );
+
+  if (assayDataSheetColumns.length >= 250) {
+    return (
+      <ErrorPage error={"A Data Sheet Definition cannot have more than 250 columns"}>
+        <Link to=".." relative="path">
+          <Button>Back</Button>
+        </Link>
+      </ErrorPage>
+    );
+  }
 
   return (
     <Surface className={styles.modelForm}>

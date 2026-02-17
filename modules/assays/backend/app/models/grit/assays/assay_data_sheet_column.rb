@@ -28,9 +28,9 @@ module Grit::Assays
     display_column "name"
 
     entity_crud_with read: [],
-      create: [ "Administrator", "AssayAdministrator" ],
-      update: [ "Administrator", "AssayAdministrator" ],
-      destroy: [ "Administrator", "AssayAdministrator" ]
+    create: [ "Administrator", "AssayAdministrator" ],
+    update: [ "Administrator", "AssayAdministrator" ],
+    destroy: [ "Administrator", "AssayAdministrator" ]
 
     validates :name, uniqueness: { scope: :assay_data_sheet_definition_id, message: "has already been taken in this data sheet" }, length: { minimum: 1 }
     validates :safe_name, uniqueness: { scope: :assay_data_sheet_definition_id, message: "has already been taken in this data sheet" }, length: { minimum: 3, maximum: 30 }
@@ -39,10 +39,11 @@ module Grit::Assays
     validate :safe_name_not_conflict
 
     before_save :check_model_publication_status
+    before_create :check_assay_data_sheet_definition_columns_count
 
     def safe_name_not_conflict
       return unless self.safe_name_changed?
-      if Grit::Assays::AssayDataSheetColumn.respond_to?(self.safe_name)
+      if ActiveRecord::Base.instance_methods.include?(self.safe_name.to_sym) || ["id","created_at","created_by","updated_at","updated_by","experiment_id"].include?(self.safe_name)
         errors.add("safe_name", "cannot be used as a safe name")
       end
     end
@@ -57,6 +58,10 @@ module Grit::Assays
     private
       def check_model_publication_status
         raise "Cannot modify columns of a published Assay Model" if assay_data_sheet_definition.assay_model.publication_status.name === "Published"
+      end
+
+      def check_assay_data_sheet_definition_columns_count
+        raise "A Data Sheet Definition cannot have more than 250 columns" if assay_data_sheet_definition.assay_data_sheet_columns.length >= 250
       end
   end
 end

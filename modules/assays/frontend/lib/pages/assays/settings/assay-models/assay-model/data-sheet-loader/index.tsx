@@ -30,7 +30,6 @@ const DataSheetLoader = ({ assayModel }: { assayModel: AssayModelData }) => {
         element={
           <SheetMapper
             sheets={sheets}
-            sheetsWithColumns={sheetsWithColumns}
             setSheetsWithOptions={setSheets}
             setSheetsWithColumns={setSheetsWithColumns}
           />

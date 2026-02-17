@@ -40,14 +40,6 @@ module Grit::Assays
       self.detailed(params).where("grit_core_publication_statuses__.name = 'Published'")
     end
 
-    def maintain_data_sheet_tables # TODO: remove
-      if publication_status.name == "Draft"
-        drop_tables
-      else
-        create_tables
-      end
-    end
-
     def create_tables
       assay_data_sheet_definitions.each(&:create_table)
     end

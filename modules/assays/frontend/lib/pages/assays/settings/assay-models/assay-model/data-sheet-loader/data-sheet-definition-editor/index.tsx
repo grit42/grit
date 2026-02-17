@@ -60,6 +60,7 @@ const DataSheetDefinitionEditor = ({
       if (typeof errors === "string") {
         upsert(errors, { type: "error" });
       } else if (typeof errors === "object") {
+        upsert("There are errors in your data sheet definitions", { type: "error" });
         dispatch({
           type: "set-submit-errors",
           errors: new ZodError(
@@ -78,7 +79,7 @@ const DataSheetDefinitionEditor = ({
 
   if (!state.dataSetDefinition.sheets.length) {
     return (
-      <ErrorPage error={"No sheet Sherlock"}>
+      <ErrorPage error={"No sheet to import"}>
         <Button onClick={() => navigate("../map")}>Back</Button>
       </ErrorPage>
     );

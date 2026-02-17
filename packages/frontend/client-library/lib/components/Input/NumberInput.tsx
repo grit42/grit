@@ -47,13 +47,14 @@ const NumericInput = forwardRef<HTMLInputElement, NumericInputProps>(
       innerRef.current.dispatchEvent(inputEvent);
     }, []);
 
-    const stringNumberInputValue = Number.isNaN(
-      typeof value === "string" ? parseFloat(value) : value,
-    )
-      ? ""
-      : (value?.toLocaleString(["en-US"], {
-          useGrouping: false,
-        }) ?? "");
+    const stringNumberInputValue =
+      value === "" ||
+      value === "-" ||
+      /^([-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d*)?|\+|-|\.?)$/.test(
+        value as any,
+      )
+        ? value?.toLocaleString(["en-US"], { useGrouping: false })
+        : "";
 
     return (
       <div className={styles.numberInput}>
@@ -88,7 +89,7 @@ const NumericInput = forwardRef<HTMLInputElement, NumericInputProps>(
               inputProps.onKeyDown(e);
             }
           }}
-          value={value !== undefined ? stringNumberInputValue : (value ?? "")}
+          value={value !== undefined ? stringNumberInputValue : value ?? ""}
           pattern="^(?!\.+$).+$" // Only allow numbers
           lang={"en-US"}
           inputMode={type === "integer" ? "numeric" : "decimal"}
@@ -100,7 +101,7 @@ const NumericInput = forwardRef<HTMLInputElement, NumericInputProps>(
                 !/^([-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d*)?|\+|-|\.?)$/.test(
                   newValue,
                 )) ||
-              (type === "integer" && !/^[-+]?\d*$/.test(newValue))
+              (type === "integer" && !/^[-+]?\d*(\.|\.0)?$/.test(newValue))
             ) {
               e.preventDefault();
               return;

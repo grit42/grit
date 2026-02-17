@@ -18,10 +18,11 @@
 
 import { ErrorPage, Spinner } from "@grit42/client-library/components";
 import { useSearchParams } from "react-router-dom";
-import { useLoadSetFields } from "../queries";
 import { useMemo } from "react";
 import NewLoadSetForm from "./NewLoadSetForm";
 import { NewLoadSetData } from "../types";
+import { useEntityFields } from "../../entities";
+import { useLoadSetBlockFields } from "../queries";
 
 export interface LoadSetCreatorProps {
   entity: string;
@@ -34,39 +35,80 @@ const LoadSetCreator = ({ entity }: LoadSetCreatorProps) => {
     isLoading,
     isError,
     error,
-  } = useLoadSetFields(entity);
+  } = useEntityFields("Grit::Core::LoadSet", undefined, {
+    select: (fields) =>
+      fields.map((f) => (f.name === "entity" ? { ...f, disabled: true } : f)),
+  });
+
+  const {
+    data: loadSetBlockFields,
+    isLoading: isLoadSetBlockFieldsLoading,
+    isError: isLoadSetBlockFieldsError,
+    error: loadSetBlockFieldsError,
+  } = useLoadSetBlockFields(entity, {
+    select: (fields) => fields.filter(({ name }) => name !== "name"),
+  });
 
   const initialValues = useMemo((): Partial<NewLoadSetData> => {
+    const name = `${entity}-${new Date().toISOString()}`
     const values: Partial<NewLoadSetData> = {
       entity,
-      name: `${entity}-${new Date().toISOString()}`,
-      data: "",
-      separator: null,
+      name,
+      load_set_blocks: [
+        {
+          name,
+          separator: ",",
+          data: "",
+        },
+      ],
     };
-    if (!loadSetFields) return values;
-    for (const field of loadSetFields) {
+    loadSetFields?.forEach((field) => {
       if (searchParams.has(field.name)) {
         switch (field.type) {
           case "integer": {
             const paramValue = searchParams.get(field.name);
-            values[field.name] = paramValue !== null ? Number(paramValue) : null;
+            values[field.name] =
+              paramValue !== null ? Number(paramValue) : null;
             break;
           }
           default:
             values[field.name] = searchParams.get(field.name);
         }
       }
-    }
+    });
+    loadSetBlockFields?.forEach((field) => {
+      if (searchParams.has(field.name)) {
+        switch (field.type) {
+          case "integer": {
+            const paramValue = searchParams.get(field.name);
+            values.load_set_blocks![0][field.name] =
+              paramValue !== null ? Number(paramValue) : null;
+            break;
+          }
+          default:
+            values.load_set_blocks![0][field.name] = searchParams.get(
+              field.name,
+            );
+        }
+      }
+    });
     return values;
-  }, [loadSetFields, entity, searchParams]);
+  }, [entity, loadSetFields, loadSetBlockFields, searchParams]);
 
-  if (isLoading) return <Spinner />;
-  if (isError || !loadSetFields) return <ErrorPage error={error} />;
+  if (isLoading || isLoadSetBlockFieldsLoading) return <Spinner />;
+  if (
+    isError ||
+    !loadSetFields ||
+    isLoadSetBlockFieldsError ||
+    !loadSetBlockFields
+  )
+    return <ErrorPage error={error ?? loadSetBlockFieldsError} />;
 
   return (
     <NewLoadSetForm
       initialValues={initialValues}
-      fields={loadSetFields}
+      loadSetFields={loadSetFields}
+      loadSetBlockFields={loadSetBlockFields}
       entity={entity}
     />
   );

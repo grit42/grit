@@ -24,7 +24,7 @@ import {
   EndpointErrorErrors,
   notifyOnError,
 } from "@grit42/api";
-import { LoadSetData, LoadSetMapping } from "./types";
+import { LoadSetBlockData, LoadSetData, LoadSetMapping } from "./types";
 
 export const useCreateLoadSetMutation = () => {
   return useMutation<LoadSetData, EndpointErrorErrors<LoadSetData>, FormData>({
@@ -44,49 +44,20 @@ export const useCreateLoadSetMutation = () => {
       if (!response.success) {
         throw response.errors;
       }
-
       return response.data;
     },
     onError: notifyOnError,
   });
 };
 
-export const useSetLoadSetMappingsMutation = (loadSetId: number) => {
-  return useMutation<
-    LoadSetData,
-    EndpointErrorErrors<LoadSetData>,
-    Record<string, LoadSetMapping>
-  >({
-    mutationKey: ["setLoadSetMappings", loadSetId],
-    mutationFn: async (mappings: Record<string, LoadSetMapping>) => {
-      const response = await request<
-        EndpointSuccess<LoadSetData>,
-        EndpointError
-      >(`/grit/core/load_sets/${loadSetId}/set_mappings`, {
-        method: "POST",
-        data: {
-          mappings,
-        },
-      });
-
-      if (!response.success) {
-        throw response.errors;
-      }
-
-      return response.data;
-    },
-    onError: notifyOnError,
-  });
-};
-
-export const useSetLoadSetDataMutation = (loadSetId: number) => {
-  return useMutation<LoadSetData, EndpointErrorErrors<LoadSetData>, FormData>({
-    mutationKey: ["setLoadSetData", loadSetId],
+export const useSetLoadSetBlockDataMutation = (loadSetBlockId: number) => {
+  return useMutation<LoadSetBlockData, EndpointErrorErrors<LoadSetBlockData>, FormData>({
+    mutationKey: ["setLoadSetBlockData", loadSetBlockId],
     mutationFn: async (data: FormData) => {
       const response = await request<
-        EndpointSuccess<LoadSetData>,
+        EndpointSuccess<LoadSetBlockData>,
         EndpointError
-      >(`/grit/core/load_sets/${loadSetId}/set_data`, {
+      >(`/grit/core/load_set_blocks/${loadSetBlockId}/set_data`, {
         method: "POST",
         data,
         headers: {
@@ -104,18 +75,42 @@ export const useSetLoadSetDataMutation = (loadSetId: number) => {
   });
 };
 
-export const useValidateLoadSetMutation = (loadSetId: number) => {
+export const useInitializeLoadSetBlockMutation = (loadSetBlockId: number) => {
   return useMutation<
-    LoadSetData,
-    EndpointErrorErrors<LoadSetData>,
+    LoadSetBlockData,
+    EndpointErrorErrors<LoadSetBlockData>
+  >({
+    mutationKey: ["initializeLoadSetBlock", loadSetBlockId],
+    mutationFn: async () => {
+      const response = await request<
+        EndpointSuccess<LoadSetBlockData>,
+        EndpointError<EndpointErrorErrors<LoadSetBlockData>>
+      >(`/grit/core/load_set_blocks/${loadSetBlockId}/initialize_data`, {
+        method: "POST",
+      });
+
+      if (!response.success) {
+        throw response.errors;
+      }
+
+      return response.data;
+    },
+    onError: notifyOnError,
+  });
+};
+
+export const useValidateLoadSetBlockMutation = (loadSetBlockId: number) => {
+  return useMutation<
+    LoadSetBlockData,
+    EndpointErrorErrors<LoadSetBlockData>,
     Record<string, LoadSetMapping> | undefined
   >({
-    mutationKey: ["validateLoadSet", loadSetId],
+    mutationKey: ["validateLoadSetBlock", loadSetBlockId],
     mutationFn: async (mappings?: Record<string, LoadSetMapping>) => {
       const response = await request<
-        EndpointSuccess<LoadSetData>,
-        EndpointError<EndpointErrorErrors<LoadSetData>>
-      >(`/grit/core/load_sets/${loadSetId}/validate`, {
+        EndpointSuccess<LoadSetBlockData>,
+        EndpointError<EndpointErrorErrors<LoadSetBlockData>>
+      >(`/grit/core/load_set_blocks/${loadSetBlockId}/validate`, {
         method: "POST",
         data: {
           mappings,
@@ -132,14 +127,14 @@ export const useValidateLoadSetMutation = (loadSetId: number) => {
   });
 };
 
-export const useConfirmLoadSetMutation = (loadSetId: number) => {
+export const useConfirmLoadSetBlockMutation = (loadSetBlockId: number) => {
   return useMutation<LoadSetData, string>({
-    mutationKey: ["confirmLoadSet", loadSetId],
+    mutationKey: ["confirmLoadSetBlock", loadSetBlockId],
     mutationFn: async () => {
       const response = await request<
         EndpointSuccess<LoadSetData>,
         EndpointError
-      >(`/grit/core/load_sets/${loadSetId}/confirm`, {
+      >(`/grit/core/load_set_blocks/${loadSetBlockId}/confirm`, {
         method: "POST",
       });
 
@@ -153,14 +148,14 @@ export const useConfirmLoadSetMutation = (loadSetId: number) => {
   });
 };
 
-export const useRollbackLoadSetMutation = (loadSetId: number) => {
+export const useRollbackLoadSetBlockMutation = (loadSetBlockId: number) => {
   return useMutation<LoadSetData, string>({
-    mutationKey: ["rollbackLoadSet", loadSetId],
+    mutationKey: ["rollbackLoadSetBlock", loadSetBlockId],
     mutationFn: async () => {
       const response = await request<
         EndpointSuccess<LoadSetData>,
         EndpointError
-      >(`/grit/core/load_sets/${loadSetId}/rollback`, {
+      >(`/grit/core/load_set_blocks/${loadSetBlockId}/rollback`, {
         method: "POST",
       });
 

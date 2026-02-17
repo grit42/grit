@@ -40,7 +40,7 @@ module Grit::Compounds
 
     def safe_name_not_conflict
       return unless self.safe_name_changed?
-      if Grit::Compounds::Batch.respond_to?(self.safe_name)
+      if Grit::Compounds::Batch.new.respond_to?(self.safe_name)
         errors.add("safe_name", "cannot be used as a safe name")
       end
     end
