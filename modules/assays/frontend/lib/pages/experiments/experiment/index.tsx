@@ -27,6 +27,7 @@ import { downloadFile } from "@grit42/client-library/utils";
 import ExperimentPlots from "./plots";
 import ExperimentLoadSets from "./load-sets";
 import ExperimentTabs from "./ExperimentTabs";
+import ExperimentFiles from "./files";
 
 const Experiment = () => {
   const { experiment_id } = useParams() as { experiment_id: string };
@@ -80,7 +81,10 @@ const Experiment = () => {
           path={`load-sets`}
           element={<ExperimentLoadSets experiment={data} />}
         />
-
+        <Route
+          path={`files`}
+          element={<ExperimentFiles experiment={data} />}
+        />
         <Route path="*" element={<Navigate to="details" replace />} />
       </Route>
     </Routes>

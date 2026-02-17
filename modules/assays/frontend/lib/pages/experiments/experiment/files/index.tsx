@@ -1,3 +1,21 @@
+/**
+ * Copyright 2025 grit42 A/S. <https://grit42.com/>
+ *
+ * This file is part of @grit42/assays.
+ *
+ * @grit42/assays is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or  any later version.
+ *
+ * @grit42/assays is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 import {
   AddFormControl,
   Form,
@@ -18,38 +36,39 @@ import {
 } from "../../../../mutations/experiments";
 import {
   ExperimentAttachedFile,
+  ExperimentData,
   useExperimentAttachedFiles,
 } from "../../../../queries/experiments";
 import { GritColumnDef, Table, useSetupTableState } from "@grit42/table";
 import z from "zod";
-import styles from "./details.module.scss";
+import styles from "./files.module.scss";
 import { useEffect, useState } from "react";
 import { downloadFile } from "@grit42/client-library/utils";
+import { useHasRoles } from "@grit42/core";
 
 const COLUMNS: GritColumnDef<ExperimentAttachedFile>[] = [
   {
     id: "filename",
     header: "File",
     accessorKey: "filename",
-    size: 300,
+    size: 650,
   },
 ];
 
 const getRowId = (row: ExperimentAttachedFile) => row.id.toString();
 
-const ExperimentAttachedFiles = ({
-  experimentId,
-  canCrudExperiment,
-}: {
-  experimentId: number | string;
-  canCrudExperiment: boolean;
-}) => {
+const ExperimentFiles = ({ experiment }: { experiment: ExperimentData }) => {
+  const canCrudExperiment =
+    useHasRoles(["Administrator", "AssayAdministrator", "AssayUser"]) &&
+    experiment.publication_status_id__name !== "Published";
+
   const [isAdding, setIsAdding] = useState(false);
   const queryClient = useQueryClient();
-  const attachMutation = useAttachFilesToExperimentMutation(experimentId);
-  const detachMutation = useDetachFilesFromExperimentMutation(experimentId);
-  const { data, isLoading, isError, error } =
-    useExperimentAttachedFiles(experimentId);
+  const attachMutation = useAttachFilesToExperimentMutation(experiment.id);
+  const detachMutation = useDetachFilesFromExperimentMutation(experiment.id);
+  const { data, isLoading, isError, error } = useExperimentAttachedFiles(
+    experiment.id,
+  );
 
   const tableState = useSetupTableState("experiment-attched-files", COLUMNS, {
     settings: {
@@ -73,7 +92,7 @@ const ExperimentAttachedFiles = ({
       try {
         await attachMutation.mutateAsync(formData);
         await queryClient.invalidateQueries({
-          queryKey: ["experiment_attached_files", experimentId],
+          queryKey: ["experiment_attached_files", experiment.id],
         });
         formApi.setFieldValue("files", []);
         setIsAdding(false);
@@ -87,7 +106,7 @@ const ExperimentAttachedFiles = ({
     try {
       await detachMutation.mutateAsync(ids);
       await queryClient.invalidateQueries({
-        queryKey: ["experiment_attached_files", experimentId],
+        queryKey: ["experiment_attached_files", experiment.id],
       });
       tableState.setRowSelection({});
     } catch (e: any) {
@@ -97,12 +116,12 @@ const ExperimentAttachedFiles = ({
 
   const handleDownload = async (id: string | number | null = null) => {
     const ids = id === null ? Object.keys(tableState.rowSelection) : [id];
-    if (!ids.length) return;
+    // if (!ids.length) return;
     try {
       downloadFile(
-        `/api/grit/assays/experiments/${experimentId}/experiment_attachments/export?ids=${ids.join(
-          ",",
-        )}`,
+        `/api/grit/assays/experiments/${
+          experiment.id
+        }/experiment_attachments/export?ids=${ids.join(",")}`,
       );
     } catch (e: any) {
       console.log(e);
@@ -116,7 +135,7 @@ const ExperimentAttachedFiles = ({
   }, [canCrudExperiment]);
 
   const handleCancel = () => {
-    setIsAdding(true);
+    setIsAdding(false);
     form.setFieldValue("files", []);
   };
 
@@ -131,6 +150,7 @@ const ExperimentAttachedFiles = ({
         gridTemplateColumns: "1fr",
         gap: "var(--spacing)",
         gridTemplateRows: "1fr min-content",
+        marginInline: "auto",
       }}
     >
       {!isAdding && (
@@ -149,12 +169,19 @@ const ExperimentAttachedFiles = ({
           headerActions={
             canCrudExperiment ? (
               <ButtonGroup>
-                <Button
-                  onClick={() => handleDownload()}
-                  disabled={!hasSelected}
-                >
-                  Download selected files
-                </Button>
+                {!hasSelected && (
+                  <Button onClick={() => handleDownload()}>
+                    Download all files
+                  </Button>
+                )}
+                {hasSelected && (
+                  <Button
+                    onClick={() => handleDownload()}
+                    disabled={!hasSelected}
+                  >
+                    Download selected files
+                  </Button>
+                )}
                 <Button onClick={() => setIsAdding(true)}>Attach files</Button>
               </ButtonGroup>
             ) : undefined
@@ -162,11 +189,11 @@ const ExperimentAttachedFiles = ({
         />
       )}
       {isAdding && (
-        <Surface style={{ width: "100%" }}>
+        <Surface style={{ width: 720 }}>
           <h3 style={{ alignSelf: "baseline", marginBottom: "1em" }}>
             Attach new files
           </h3>
-          <Form<{ files: File[] }> form={form} className={styles.filesForm}>
+          <Form<{ files: File[] }> form={form}>
             <div
               style={{
                 display: "grid",
@@ -219,4 +246,4 @@ const ExperimentAttachedFiles = ({
   );
 };
 
-export default ExperimentAttachedFiles;
+export default ExperimentFiles;

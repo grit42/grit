@@ -46,7 +46,6 @@ import {
 import { classnames } from "@grit42/client-library/utils";
 import ExperimentMetadataForm from "./ExperimentMetadataForm";
 import ExperimentMetadataTemplates from "./ExperimentMetadataTemplates";
-import ExperimentAttachedFiles from "./AttachedFiles";
 
 type ExperimentFormFields = {
   assay_model_id_field?: FormFieldDef;
@@ -452,12 +451,6 @@ const ExperimentForm = ({
         </Surface>
         {!experiment.id && <ExperimentMetadataTemplates form={form} />}
       </Form>
-      {experiment.id && (
-        <ExperimentAttachedFiles
-          experimentId={experiment.id}
-          canCrudExperiment={canCrudExperiment}
-        />
-      )}
     </div>
   );
 };

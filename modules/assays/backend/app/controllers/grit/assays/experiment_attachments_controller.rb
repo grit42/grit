@@ -22,13 +22,13 @@ require "csv"
 module Grit::Assays
   class ExperimentAttachmentsController < ApplicationController
     def export
-      ids = params[:ids].split(",")
+      params[:ids] ||= ""
+      ids = params[:ids].split(",").map(&:to_i)
       if ids.length == 1
-        export_one ids[0].to_i
-      elsif ids.length > 1
-        export_many ids.map(&:to_i)
+        export_one ids[0]
+      else
+        export_many ids
       end
-      render plain: "No files to download", status: :not_found unless performed?
     end
 
     def create
@@ -101,7 +101,7 @@ module Grit::Assays
       begin
         Zip::OutputStream.open(temp_file.path) do |zos|
           record.attached_files.each do |attached_file|
-            next unless ids.include?(attached_file.id)
+            next unless ids.blank? || ids.include?(attached_file.id)
 
             attached_file.open do |file|
               entry_name = "#{record[:name]}_attachments/#{attached_file.filename}"

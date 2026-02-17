@@ -24,10 +24,11 @@ import styles from "./experiment.module.scss";
 
 const ExperimentTabs = ({ experiment }: { experiment: ExperimentData }) => {
   const navigate = useNavigate();
-  const match = useMatch("/assays/experiments/:experiment_id/sheets/:tab/*");
-  const plotsMatch = useMatch("/assays/experiments/:experiment_id/plots/*");
-  const loadSetsMatch = useMatch(
-    "/assays/experiments/:experiment_id/load-sets/*",
+  const dynamicTabsMatch = useMatch(
+    "/assays/experiments/:experiment_id/sheets/:tab/*",
+  );
+  const defaultTabsMatch = useMatch(
+    "/assays/experiments/:experiment_id/:tab/*",
   );
 
   const tabs = useMemo(
@@ -38,14 +39,14 @@ const ExperimentTabs = ({ experiment }: { experiment: ExperimentData }) => {
         label: name,
       })),
       { url: "plots", label: "Plots" },
+      { url: "files", label: "Files" },
       { url: "load-sets", label: "Load sets" },
     ],
     [experiment.data_sheets],
   );
 
   const tab =
-    match?.params.tab ??
-    (plotsMatch ? "plots" : loadSetsMatch ? "load-sets" : "details");
+    dynamicTabsMatch?.params.tab ?? defaultTabsMatch?.params.tab ?? "details";
 
   const [selectedTab, setSelectedTab] = useState(
     tabs.findIndex(({ url }) => tab === url || `sheets/${tab}` === url),
