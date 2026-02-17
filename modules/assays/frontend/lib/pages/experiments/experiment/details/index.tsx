@@ -258,8 +258,8 @@ const ExperimentActions = ({
             <h3>Convert this Experiment to Draft</h3>
             <p>
               Converting this Experiment to draft will allow you to make changes
-              to its Metadata and Data Sheets Records. It will not be available
-              in Data Tables until it is published again.
+              to its Metadata and Data Sheets Records. It will not be available in Data
+              Tables until it is published again.
             </p>
           </div>
           <Button
@@ -408,50 +408,41 @@ const ExperimentForm = ({
   }
 
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: experiment.id ? "max-content 1fr" : "1fr",
-      }}
+    <Form<Partial<ExperimentData>>
+      form={form}
+      className={classnames(styles.container, {
+        [styles.withMetadataTemplates]: !experiment.assay_id,
+      })}
     >
-      <Form<Partial<ExperimentData>>
-        form={form}
-        className={classnames(styles.container, {
-          [styles.withMetadataTemplates]: !experiment.assay_id,
-        })}
-      >
-        <Surface className={styles.form}>
-          {!experiment.id && (
-            <h2 className={styles.formTitle}>New experiment</h2>
+      <Surface className={styles.form}>
+        {!experiment.id && <h2 className={styles.formTitle}>New experiment</h2>}
+        <div className={styles.formFields}>
+          {form.state.errorMap.onSubmit && (
+            <div className={styles.formError}>
+              {form.state.errorMap.onSubmit?.toString()}
+            </div>
           )}
-          <div className={styles.formFields}>
-            {form.state.errorMap.onSubmit && (
-              <div className={styles.formError}>
-                {form.state.errorMap.onSubmit?.toString()}
-              </div>
-            )}
-            <div className={styles.formFullwidthField}>
-              <FormField form={form} fieldDef={assay_model_id_field} />
-            </div>
-            <div className={styles.formFullwidthField}>
-              <FormField form={form} fieldDef={name_field} />
-            </div>
-            <div className={styles.formFullwidthField}>
-              <FormField form={form} fieldDef={description_field} />
-            </div>
-            <ExperimentMetadataForm form={form} disabled={!canCrudExperiment} />
+          <div className={styles.formFullwidthField}>
+            <FormField form={form} fieldDef={assay_model_id_field} />
           </div>
-          <FormControls
-            form={form}
-            showCancel
-            cancelLabel={experiment.id ? "Back" : "Cancel"}
-            onCancel={() => navigate(experiment.id ? "../.." : "..")}
-          />
-          {experiment.id && <ExperimentActions experiment={experiment} />}
-        </Surface>
-        {!experiment.id && <ExperimentMetadataTemplates form={form} />}
-      </Form>
-    </div>
+          <div className={styles.formFullwidthField}>
+            <FormField form={form} fieldDef={name_field} />
+          </div>
+          <div className={styles.formFullwidthField}>
+            <FormField form={form} fieldDef={description_field} />
+          </div>
+          <ExperimentMetadataForm form={form} disabled={!canCrudExperiment} />
+        </div>
+        <FormControls
+          form={form}
+          showCancel
+          cancelLabel={experiment.id ? "Back" : "Cancel"}
+          onCancel={() => navigate(experiment.id ? "../.." : "..")}
+        />
+        {experiment.id && <ExperimentActions experiment={experiment} />}
+      </Surface>
+      {!experiment.id && <ExperimentMetadataTemplates form={form} />}
+    </Form>
   );
 };
 
