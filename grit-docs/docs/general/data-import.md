@@ -33,6 +33,10 @@ The first step in the import process prompts to provide a text-based data set al
 In most spreadsheet applications, selecting an area of the spreadsheet and copying it will result in delimiter-separated text which can be pasted directly into the input area.
 :::
 
+:::note
+The file size is limited to 100 MB.
+:::
+
 When all fields have been filled and a data set has been added, click on the **Start import** above the data set to continue.
 
 ![Load set creation form filled](./assets/import_form_filled.png)

@@ -28,6 +28,8 @@ module Grit::Assays
     has_many :experiment_metadata, dependent: :destroy
     has_many :experiment_data_sheet_record_load_set_blocks
 
+    has_many_attached :attached_files
+
     before_destroy :destroy_load_sets
 
     display_column "name"
