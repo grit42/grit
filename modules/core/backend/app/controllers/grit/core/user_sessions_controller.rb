@@ -97,6 +97,7 @@ module Grit::Core
         Grit::Core::UserSession.create!(@user)
         @user.update(
           forgot_token: nil,
+          forgot_token_expires_at: nil,
         )
       end
       render json: { success: true, data: { login: @user.login, twoFactor: two_factor } }
@@ -124,6 +125,7 @@ module Grit::Core
       @user.update(
         two_factor_token: nil,
         forgot_token: nil,
+        forgot_token_expires_at: nil,
       )
 
       Grit::Core::UserSession.create(@user)

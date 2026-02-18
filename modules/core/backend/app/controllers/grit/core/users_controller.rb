@@ -111,11 +111,20 @@ module Grit::Core
       end
 
       if @user
+        if @user.valid_forgot_token?
+          render json: { success: true }
+          return
+        end
+
+        @user.forgot_token = nil
+        @user.forgot_token_expires_at = nil
         @user.forgot_token = SecureRandom.urlsafe_base64(20)
+        @user.forgot_token_expires_at = Grit::Core::User::FORGOT_TOKEN_EXPIRY_HOURS.hours.from_now
         @user.save_without_session_maintenance
+
+        Grit::Core::Mailer.deliver_password_reset(@user).deliver_now
       end
 
-      Grit::Core::Mailer.deliver_password_reset(@user).deliver_now
       render json: { success: true }
     rescue StandardError => e
       logger.warn e.to_s
@@ -129,6 +138,7 @@ module Grit::Core
       @user = Grit::Core::User.find_by(forgot_token: params[:forgot_token])
 
       raise "This password recovery token does not exist" unless @user
+      raise "This password recovery token has expired. Please request a new one." if @user.forgot_token_expired?
       raise "Password and password confirmation do not match" if params[:password] != params[:password_confirmation]
 
       params[:login] = @user.login unless params[:login]
@@ -136,6 +146,7 @@ module Grit::Core
       @user.password = params[:password]
       @user.password_confirmation = params[:password_confirmation]
       @user.forgot_token = nil
+      @user.forgot_token_expires_at = nil
       @user.active = true
 
       if @user.save
@@ -171,8 +182,16 @@ module Grit::Core
         return
       end
 
-      token =SecureRandom.urlsafe_base64(20)
+      if @user.valid_forgot_token?
+        render json: { success: true, token: @user.forgot_token }
+        return
+      end
+
+      @user.forgot_token = nil
+      @user.forgot_token_expires_at = nil
+      token = SecureRandom.urlsafe_base64(20)
       @user.forgot_token = token
+      @user.forgot_token_expires_at = Grit::Core::User::FORGOT_TOKEN_EXPIRY_HOURS.hours.from_now
       @user.save_without_session_maintenance
 
       Grit::Core::Mailer.deliver_password_reset(@user).deliver_now
@@ -303,6 +322,7 @@ module Grit::Core
       @user = Grit::Core::User.find_by(email: params[:user]&.downcase)
 
       @user.forgot_token = nil
+      @user.forgot_token_expires_at = nil
       @user.save_without_session_maintenance
 
       render json: { success: true }

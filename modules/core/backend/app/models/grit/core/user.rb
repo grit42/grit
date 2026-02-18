@@ -81,6 +81,8 @@ module Grit::Core
                 if: :require_password?
               }
 
+    FORGOT_TOKEN_EXPIRY_HOURS = 1
+
     before_validation :random_password, on: :create
     before_create :set_default_values
     before_create :check_user
@@ -144,7 +146,7 @@ module Grit::Core
 
     def self.permitted_params
       %i[login name email origin_id location_id password password_confirmation settings status_id
-         auth_method two_factor profile_picture active]
+         auth_method two_factor profile_picture active forgot_token_expires_at]
     end
 
     acts_as_authentic do |c|
@@ -186,6 +188,14 @@ module Grit::Core
         ) as user_roles__
       ) as role_ids")
       .select("grit_core_users.active")
+    end
+
+    def forgot_token_expired?
+      forgot_token_expires_at.nil? || forgot_token_expires_at < Time.current
+    end
+
+    def valid_forgot_token?
+      forgot_token.present? && !forgot_token_expired?
     end
 
     private
