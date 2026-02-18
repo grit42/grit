@@ -1,0 +1,38 @@
+# Assay Data Sheet Columns - define columns within data sheets
+# References data_types from core fixtures (integer, string)
+
+draft_results_concentration:
+  name: Concentration
+  safe_name: concentration
+  description: Drug concentration in nM
+  sort: 1
+  required: true
+  assay_data_sheet_definition: draft_model_results
+  data_type: integer
+
+draft_results_response:
+  name: Response
+  safe_name: response
+  description: Measured response value
+  sort: 2
+  required: true
+  assay_data_sheet_definition: draft_model_results
+  data_type: integer
+
+draft_raw_measurement:
+  name: Measurement
+  safe_name: measurement
+  description: Raw measurement value
+  sort: 1
+  required: false
+  assay_data_sheet_definition: draft_model_raw_data
+  data_type: string
+
+published_viability:
+  name: Viability Percent
+  safe_name: viability_pct
+  description: Cell viability percentage
+  sort: 1
+  required: true
+  assay_data_sheet_definition: published_model_results
+  data_type: integer

@@ -1,0 +1,13 @@
+# Assay Types - simple lookup table for categorizing assay models
+
+biochemical:
+  name: Biochemical
+  description: Biochemical assays measuring enzyme activity, binding, etc.
+
+cellular:
+  name: Cellular
+  description: Cell-based assays measuring cellular response
+
+in_vivo:
+  name: In Vivo
+  description: In vivo animal studies

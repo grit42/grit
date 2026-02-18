@@ -1,0 +1,23 @@
+# Assay Data Sheet Definitions - define data sheets within an assay model
+# Each assay model can have multiple data sheets
+
+draft_model_results:
+  name: Results
+  description: Main results sheet for the draft model
+  result: true
+  sort: 1
+  assay_model: draft_model
+
+draft_model_raw_data:
+  name: Raw Data
+  description: Raw measurement data for the draft model
+  result: false
+  sort: 2
+  assay_model: draft_model
+
+published_model_results:
+  name: Viability Results
+  description: Cell viability results
+  result: true
+  sort: 1
+  assay_model: published_model

@@ -1,0 +1,14 @@
+# Assay Metadata Definitions - define metadata fields for experiments
+# Each references a vocabulary from core fixtures
+
+species:
+  name: Species
+  safe_name: species
+  description: The species used in the experiment
+  vocabulary: one
+
+tissue_type:
+  name: Tissue Type
+  safe_name: tissue_type
+  description: The tissue type used in the experiment
+  vocabulary: one

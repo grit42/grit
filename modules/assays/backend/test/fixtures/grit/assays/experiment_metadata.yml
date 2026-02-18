@@ -1,0 +1,20 @@
+# Experiment Metadata - actual metadata values for experiments
+# References vocabulary_items from core fixtures (oneone, onetwo)
+
+draft_experiment_species:
+  experiment: draft_experiment
+  assay_metadata_definition: species
+  vocabulary: one
+  vocabulary_item: oneone
+
+published_experiment_species:
+  experiment: published_experiment
+  assay_metadata_definition: species
+  vocabulary: one
+  vocabulary_item: oneone
+
+published_experiment_tissue:
+  experiment: published_experiment
+  assay_metadata_definition: tissue_type
+  vocabulary: one
+  vocabulary_item: onetwo

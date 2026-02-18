@@ -1,0 +1,15 @@
+# Assay Models - define the structure of an assay
+# draft_model: Can be modified, no dynamic tables created yet
+# published_model: Cannot be modified, has dynamic tables created
+
+draft_model:
+  name: Draft Kinase Assay
+  description: A draft kinase assay model that can still be modified
+  assay_type: biochemical
+  publication_status: draft
+
+published_model:
+  name: Published Cell Viability Assay
+  description: A published cell viability assay model with dynamic tables
+  assay_type: cellular
+  publication_status: published

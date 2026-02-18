@@ -89,7 +89,7 @@ module Grit::Assays
     end
 
     def update_metadata
-      Grit::Assays::AssayModelMetadatum.where(assay_metadata_definition_id: params["removed"]).destroy_all
+      Grit::Assays::AssayModelMetadatum.where(assay_metadata_definition_id: params["removed"], assay_model_id: params["assay_model_id"]).destroy_all
       Grit::Assays::AssayModelMetadatum.create(params["added"].map { |id| { assay_metadata_definition_id: id, assay_model_id: params["assay_model_id"] } })
       render json: { success: true }
     rescue StandardError => e

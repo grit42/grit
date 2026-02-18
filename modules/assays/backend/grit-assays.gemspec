@@ -19,5 +19,6 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "rails", '~> 7.2', '>= 7.2.2'
   spec.add_dependency "rubyzip", "~> 2.3", ">= 2.3.2"
+  spec.add_dependency "csv", '~> 3', '>= 3.3.5'
   spec.add_dependency "grit-core", "~> #{Grit::Core::VERSION}"
 end

@@ -1,0 +1,14 @@
+# Assay Model Metadata - links metadata definitions to assay models
+# Defines which metadata fields are required for experiments of each model
+
+draft_model_species:
+  assay_model: draft_model
+  assay_metadata_definition: species
+
+published_model_species:
+  assay_model: published_model
+  assay_metadata_definition: species
+
+published_model_tissue:
+  assay_model: published_model
+  assay_metadata_definition: tissue_type

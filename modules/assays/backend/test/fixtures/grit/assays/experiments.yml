@@ -1,0 +1,15 @@
+# Experiments - instances of assay models with actual data
+# draft_experiment: Can be modified
+# published_experiment: Cannot be modified
+
+draft_experiment:
+  name: Draft Kinase Experiment 001
+  description: A draft experiment that can still be modified
+  assay_model: draft_model
+  publication_status: draft
+
+published_experiment:
+  name: Published Viability Experiment 001
+  description: A published experiment that cannot be modified
+  assay_model: published_model
+  publication_status: published
