@@ -1,3 +1,14 @@
+## 0.9.0
+
+### 🚀 Features
+
+- importer upgrade
+
+### 🩹 Fixes
+
+- not equal operator returns null values
+- fix deletion of single resource
+
 ## 0.8.0
 
 ### 🚀 Features

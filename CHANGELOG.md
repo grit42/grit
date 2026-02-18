@@ -5,7 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.8.0] - 2025-08-01
+## [0.9.0] - 2026-02-18
+
+Experiments overhaul and importer upgrade
+
+### Added
+- (assays) attach files to experiments
+
+### Changed
+- (assays) removed assays in favour of tracking metadata in Experiments
+- (assays) changed storage of experimental data in generated tables
+- (assays, compounds) moved administration sections to **Assay Models** and **Compounds** top level tabs respectively
+- (core) improved import performances
+
+### Fixed
+- (core) not equal operator does not return null values
+- (core) integer inputs now support one "0" in first decimal place
+- (spreadsheet) fixed safe_name generation
+
+
+## [0.8.0] - 2025-12-05
 
 Assay Model Data Sheet loader
 
