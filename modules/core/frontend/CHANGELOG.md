@@ -1,3 +1,18 @@
+## 0.9.0
+
+### 🚀 Features
+
+- importer upgrade
+
+### 🩹 Fixes
+
+- Move UI administration tools for Compounds and Assays from the general Administration area to within the respective modules landing page
+- expose EntitySelector component
+
+### 🧱 Updated Dependencies
+
+- Updated @grit42/client-library to 0.7.3
+
 ## 0.8.0
 
 ### 🚀 Features

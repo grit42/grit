@@ -42,6 +42,9 @@
         }
       }
     },
+    "git": {
+      "tag": false
+    },
     "version": {
       "updateDependents": "never"
     },
