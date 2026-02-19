@@ -53,6 +53,8 @@ Implement essential test coverage for core workflows, with additional coverage f
 
 ### Phase 4: Simple Entity Tests (LOW PRIORITY)
 
+#### Phase 4.1: Simple
+
 | Task                                                          | Status | Notes                    |
 | ------------------------------------------------------------- | ------ | ------------------------ |
 | `assay_type_test.rb` + controller                             | TODO   | Basic CRUD               |
@@ -66,8 +68,13 @@ Implement essential test coverage for core workflows, with additional coverage f
 | `data_table_entity_test.rb` + controller                      | TODO   |                          |
 | `experiment_metadata_template_test.rb` + controller           | TODO   |                          |
 | `experiment_metadata_template_metadatum_test.rb` + controller | TODO   |                          |
-| `experiment_data_sheet_record_test.rb` + controller           | TODO   | Complex - dynamic tables |
 | `experiment_data_sheet_record_load_set_test.rb`               | TODO   |                          |
+
+#### Phase 4.2: Less Simple
+
+| Task                                                          | Status | Notes                    |
+| ------------------------------------------------------------- | ------ | ------------------------ |
+| `experiment_data_sheet_record_test.rb` + controller           | TODO   | Complex - dynamic tables |
 
 ### Phase 5: Verification
 
