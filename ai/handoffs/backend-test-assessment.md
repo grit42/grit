@@ -16,8 +16,8 @@ Goal: slim test suites that test module-specific behavior, not generic framework
 - `load_set_test.rb`, `load_set_block_test.rb` — importer lifecycle
 - Controller tests using `assert_read_only_entity` / `assert_admin_only_crud` helpers
 
-**Gap:**
-- `entity_loader_test.rb` is an empty TODO stub — the import framework has zero test coverage. Either write tests or delete the file.
+**Written:**
+- `entity_loader_test.rb` — 25 tests, 60 assertions: loader dispatch, fields/block_fields, `validate_record_properties` (all mapping/type/uniqueness paths), mapping_fields
 
 ---
 
@@ -92,11 +92,11 @@ Goal: slim test suites that test module-specific behavior, not generic framework
 | Remove | Controller-layer publication status tests where model test covers it |
 | Consolidate | Molecule parsing assertions → SDF unit test + integration test only |
 
-### Phase 2
+### Phase 2 ✅ Complete
 
 | Action | Target |
 |--------|--------|
-| Write or delete | Core `entity_loader_test.rb` empty stub |
+| Write | Core `entity_loader_test.rb` — 25 tests, 60 assertions covering loader dispatch, fields/block_fields, `validate_record_properties` (all 9 mapping/type/uniqueness paths), and mapping_fields |
 
 ### Phase 3
 
