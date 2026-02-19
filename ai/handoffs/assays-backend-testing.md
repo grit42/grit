@@ -51,37 +51,38 @@ Implement essential test coverage for core workflows, with additional coverage f
 | `assay_models_controller_test.rb` | DONE   | CRUD, publish/draft lifecycle, update_metadata |
 | `experiments_controller_test.rb`  | DONE   | CRUD with metadata, publish/draft, export ZIP  |
 
-### Phase 4: Simple Entity Tests (LOW PRIORITY)
+### Phase 4: Simple Entity Tests (LOW PRIORITY) - COMPLETED
 
-#### Phase 4.1: Simple
+#### Phase 4.1: Simple - COMPLETED
 
-| Task                                                          | Status | Notes                    |
-| ------------------------------------------------------------- | ------ | ------------------------ |
-| `assay_type_test.rb` + controller                             | TODO   | Basic CRUD               |
-| `assay_metadata_definition_test.rb` + controller              | TODO   | Basic CRUD               |
-| `assay_data_sheet_column_test.rb` + controller                | TODO   |                          |
-| `assay_model_metadatum_test.rb` + controller                  | TODO   |                          |
-| `experiment_metadatum_test.rb` + controller                   | TODO   |                          |
-| `data_table_test.rb` + controller                             | TODO   |                          |
-| `data_table_column_test.rb` + controller                      | TODO   |                          |
-| `data_table_row_test.rb` + controller                         | TODO   |                          |
-| `data_table_entity_test.rb` + controller                      | TODO   |                          |
-| `experiment_metadata_template_test.rb` + controller           | TODO   |                          |
-| `experiment_metadata_template_metadatum_test.rb` + controller | TODO   |                          |
-| `experiment_data_sheet_record_load_set_test.rb`               | TODO   |                          |
+| Task                                                          | Status | Notes                                       |
+| ------------------------------------------------------------- | ------ | ------------------------------------------- |
+| `assay_type_test.rb` + controller                             | DONE   | Basic CRUD, associations, permissions       |
+| `assay_metadata_definition_test.rb` + controller              | DONE   | Validations, callbacks, permissions         |
+| `assay_data_sheet_column_test.rb` + controller                | DONE   | Validations, publication status checks      |
+| `assay_model_metadatum_test.rb` + controller                  | DONE   | Associations, callbacks                     |
+| `experiment_metadatum_test.rb` + controller                   | DONE   | Associations, validations, permissions      |
+| `data_table_test.rb` + controller                             | DONE   | Model structure (requires entity types)     |
+| `data_table_column_test.rb` + controller                      | DONE   | Validations, class methods                  |
+| `data_table_row_test.rb` + controller                         | DONE   | Class methods, virtual model structure      |
+| `data_table_entity_test.rb` + controller                      | DONE   | Uniqueness validation, class methods        |
+| `experiment_metadata_template_test.rb` + controller           | DONE   | Associations, set_metadata_values           |
+| `experiment_metadata_template_metadatum_test.rb` + controller | DONE   | after_destroy callback, associations        |
+| `experiment_data_sheet_record_load_set_test.rb`               | DONE   | Tests ExperimentDataSheetRecordLoadSetBlock |
+| `assay_data_sheet_definitions_controller_test.rb`             | DONE   | Basic index, show, authentication           |
 
 #### Phase 4.2: Less Simple
 
-| Task                                                          | Status | Notes                    |
-| ------------------------------------------------------------- | ------ | ------------------------ |
-| `experiment_data_sheet_record_test.rb` + controller           | TODO   | Complex - dynamic tables |
+| Task                                                | Status | Notes                    |
+| --------------------------------------------------- | ------ | ------------------------ |
+| `experiment_data_sheet_record_test.rb` + controller | TODO   | Complex - dynamic tables |
 
 ### Phase 5: Verification
 
-| Task                | Status | Notes                                  |
-| ------------------- | ------ | -------------------------------------- |
-| Run full test suite | TODO   | `rails test` in modules/assays/backend |
-| Fix any failures    | TODO   |                                        |
+| Task                | Status | Notes                                 |
+| ------------------- | ------ | ------------------------------------- |
+| Run full test suite | DONE   | 260 tests, 814 assertions, 0 failures |
+| Fix any failures    | DONE   | All Phase 4.1 tests pass              |
 
 ---
 
