@@ -62,28 +62,30 @@ module Grit::Core
     end
 
     def create
-      @user = Grit::Core::User.find_by(login: params[:user_session][:login].downcase)
+      login_input = params[:user_session][:login].downcase
+      @user = Grit::Core::User.find_by(login: login_input)
       if @user.nil?
-        @user = Grit::Core::User.find_by(email: params[:user_session][:login].downcase)
-        params[:user_session][:login] = @user.login unless @user.nil?
+        @user = Grit::Core::User.find_by(email: login_input)
       end
-      raise "User #{params[:user_session][:login]} not found" if @user.nil?
-      raise "User #{params[:user_session][:login]} is inactive" if @user.active? == false
 
-      if !@user.valid_password?(params[:user_session][:password]) then
+      if @user.nil? || @user.active? == false
+        render json: { success: false, errors: "Invalid login or password" }, status: :unauthorized
+        return
+      end
+
+      if !@user.valid_password?(params[:user_session][:password])
         @user.failed_login_count ||= 0
         @user.failed_login_count += 1
         @user.save!
-        if @user.failed_login_count > Grit::Core::UserSession.consecutive_failed_logins_limit then
+        if @user.failed_login_count > Grit::Core::UserSession.consecutive_failed_logins_limit
           @user.active = false
           @user.failed_login_count = 0
           @user.activation_token = SecureRandom.urlsafe_base64(20)
           @user.save!
           Grit::Core::Mailer.deliver_reactivation_instructions(@user).deliver_now
-          raise "Invalid password. Number of failed login attempts exceed limit, account have been disabled"
-        else
-          raise "Invalid password"
         end
+        render json: { success: false, errors: "Invalid login or password" }, status: :unauthorized
+        return
       end
 
       two_factor = false
@@ -97,6 +99,7 @@ module Grit::Core
         Grit::Core::UserSession.create!(@user)
         @user.update(
           forgot_token: nil,
+          forgot_token_expires_at: nil,
         )
       end
       render json: { success: true, data: { login: @user.login, twoFactor: two_factor } }
