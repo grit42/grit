@@ -13,21 +13,6 @@ module Grit::Compounds
       @synonym = grit_compounds_synonyms(:wan)
     end
 
-    # Existing entity properties tests
-    test "entity properties should include dynamic properties" do
-      assert_not false do
-        property_names = Grit::Compounds::Compound.entity_properties.map { |p| p[:name] }
-        [ "name", "number", "origin_id", "compound_type_id", "one", "two" ].all? { |p| property_names.include?(p) }
-      end
-    end
-
-    test "entity properties should include only dynamic properties of the specified type" do
-      assert_not false do
-        property_names = Grit::Compounds::Compound.entity_properties(compound_type_id: grit_compounds_compound_types(:reagent).id).map { |p| p[:name] }
-        [ "one", "two" ].all? { |p| property_names.include?(p) }
-      end
-    end
-
     # Test associations
     test "compound should belong to compound_type" do
       assert_equal @compound_type, @compound.compound_type
@@ -196,17 +181,5 @@ module Grit::Compounds
       assert result.respond_to?(:compound_type_id__name)
     end
 
-    # Test entity_fields and entity_columns
-    test "entity_fields should generate fields from properties" do
-      fields = Compound.entity_fields
-      assert fields.is_a?(Array)
-      assert fields.any? { |f| f[:name] == "name" }
-    end
-
-    test "entity_columns should generate columns from properties" do
-      columns = Compound.entity_columns
-      assert columns.is_a?(Array)
-      assert columns.any? { |c| c[:name] == "name" }
-    end
   end
 end

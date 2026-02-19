@@ -56,15 +56,6 @@ module Grit::Assays
       assert assay_type.valid?
     end
 
-    # --- Display Column ---
-
-    test "has entity properties configured" do
-      properties = AssayType.entity_properties
-      assert properties.any?
-      property_names = properties.map { |p| p[:name] }
-      assert_includes property_names, "name"
-    end
-
     # --- CRUD Permissions ---
 
     test "entity_crud_with is configured correctly" do

@@ -117,13 +117,6 @@ module Grit::Assays
       assert_equal "Updated Draft Name", @draft_model.reload.name
     end
 
-    test "should not update published assay_model" do
-      patch grit_assays.assay_model_url(@published_model), params: { name: "Cannot Update" }, as: :json
-      assert_response :internal_server_error
-      json = JSON.parse(response.body)
-      assert_not json["success"]
-    end
-
     # --- Destroy ---
 
     test "should destroy draft assay_model" do

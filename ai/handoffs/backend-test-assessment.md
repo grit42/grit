@@ -21,14 +21,16 @@ Goal: slim test suites that test module-specific behavior, not generic framework
 
 ---
 
-## Compounds Module (19 files, 8 empty)
+## Compounds Module (11 files) ✅ Phase 1 done
 
-**Delete (no value):**
+**Deleted:**
 - All 8 empty placeholder model test files:
   `batch_property_test.rb`, `batch_property_value_test.rb`, `compound_property_test.rb`, `compound_property_value_test.rb`, `synonym_test.rb`, `compound_type_test.rb`, `batch_load_set_test.rb`, `compound_load_set_test.rb`
 
-**Trim from `batch_test.rb` and `compound_test.rb`:**
-- Remove all entity_properties / entity_fields / entity_columns assertions — already covered by core
+**Trimmed:**
+- `batch_test.rb` — removed 2 `entity_properties` tests + 2 `entity_fields`/`entity_columns` tests
+- `compound_test.rb` — same
+- `compound_loader_test.rb` — removed 2 molecule parsing tests from `validate_record` (existing molecule warning + invalid molfile error); covered by SDF unit test and integration test
 
 **Keep (module-specific):**
 - SMILES/molfile conversion and molecule deduplication logic
@@ -37,25 +39,30 @@ Goal: slim test suites that test module-specific behavior, not generic framework
 - All loader tests (`batch_loader_test.rb`, `compound_loader_test.rb`, `sdf_test.rb`)
 - Integration tests (`batch_loading_test.rb`, `compound_loading_test.rb`)
 
-**Redundancy to address:**
-- Molecule parsing is asserted in 3 places (CompoundLoader validate_record, SDF unit test, integration test). Keep the SDF unit test and integration test; the CompoundLoader assertions are covered by those.
-
 ---
 
-## Assays Module (35 files)
+## Assays Module (34 files) ✅ Phase 1 done
 
-**Trim from every model test:**
-- Remove entity_properties / entity_fields / entity_columns tests — covered by core
+**Deleted:**
+- `test/integration/navigation_test.rb` — empty skeleton
 
-**Trim safe_name validation repetition:**
-- The same safe_name rules (3–30 chars, lowercase/numbers/underscores, no reserved names) are tested across 5+ models: `AssayMetadataDefinition`, `AssayDataSheetColumn`, `DataTableColumn`, etc.
-- Keep: one test per model confirming the constraint is enforced at all
-- Remove: repetitive tests of the same rule (length, charset, uniqueness) on each model
+**Trimmed entity_properties/fields/columns tests:**
+- `assay_type_test.rb` — removed generic "has entity properties configured"
+- `assay_metadata_definition_test.rb` — same
+- `assay_data_sheet_column_test.rb` — same
+- `data_table_test.rb` — removed generic check; kept module-specific `plots` exclusion and `entity_data_type_id` scope tests
+- `experiment_metadata_template_test.rb` — removed generic check
+- `data_table_row_test.rb` — removed 3 `respond_to?` checks for entity_properties/fields/columns
+- `data_table_entity_test.rb` — same
 
-**Trim publication status protection repetition:**
-- The "published model can't be modified" pattern is tested at both model and controller layers for ~4 entities (AssayModel, AssayDataSheetDefinition, Experiment, ExperimentDataSheetRecord)
-- Keep: model-layer tests — this is where the constraint lives
-- Remove: controller-level duplication where the model test already proves the constraint
+**Trimmed safe_name rule repetition:**
+- `assay_metadata_definition_test.rb` — removed 4 generic rule tests (min/max length, start, charset); kept uniqueness check and Experiment method conflict
+- `assay_data_sheet_column_test.rb` — removed 4 generic rule tests; kept uniqueness within sheet and reserved names conflict
+- `data_table_column_test.rb` — removed 3 of 4 rule tests; kept minimum length as the single confirming test
+
+**Trimmed controller-layer publication status duplication:**
+- `assay_models_controller_test.rb` — removed "should not update published assay_model"
+- `experiments_controller_test.rb` — removed "should not update published experiment" and "published experiment cannot be modified"
 
 **Keep (module-specific):**
 - Dynamic table creation/dropping (`AssayModel`, `AssayDataSheetDefinition`) — genuinely unique behavior
@@ -64,17 +71,17 @@ Goal: slim test suites that test module-specific behavior, not generic framework
 - `ExperimentDataSheetRecord` audit fields (created_by/updated_by) — these go through the dynamic klass, not standard GritEntityRecord
 - Publication status lifecycle (publish/draft actions with table create/drop side effects)
 - `AssayMetadataDefinition` safe_name conflict check against Experiment column names — domain-specific
+- `ExperimentDataSheetRecord` controller publication-protection tests (create/update/destroy blocked on published experiment) — no model-layer coverage for this
 
-**Gaps:**
+**Remaining gaps:**
 - DataTable controller tests are near-empty stubs ("requires seeds") — fix or remove; they add noise without coverage
-- `test/integration/` is an empty skeleton — write one smoke test or delete
 - `ExperimentMetadataTemplate` tests create templates but never apply them to experiments
 
 ---
 
 ## Summary Table
 
-### Phase 1
+### Phase 1 ✅ Complete
 
 | Action | Target |
 |--------|--------|
@@ -90,4 +97,9 @@ Goal: slim test suites that test module-specific behavior, not generic framework
 | Action | Target |
 |--------|--------|
 | Write or delete | Core `entity_loader_test.rb` empty stub |
+
+### Phase 3
+
+| Action | Target |
+|--------|--------|
 | Fix or delete | DataTable controller stubs in assays |

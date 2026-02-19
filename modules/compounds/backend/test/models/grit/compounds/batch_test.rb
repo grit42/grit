@@ -13,21 +13,6 @@ module Grit::Compounds
       @origin = grit_core_origins(:one)
     end
 
-    # Existing entity properties tests
-    test "entity properties should include dynamic properties" do
-      assert_not false do
-        property_names = Grit::Compounds::Batch.entity_properties.map { |p| p[:name] }
-        [ "name", "number", "origin_id", "compound_type_id", "compound_id", "one", "two" ].all? { |p| property_names.include?(p) }
-      end
-    end
-
-    test "entity properties should include only dynamic properties of the specified type" do
-      assert_not false do
-        property_names = Grit::Compounds::Batch.entity_properties(compound_type_id: grit_compounds_compound_types(:reagent).id).map { |p| p[:name] }
-        [ "one", "two" ].all? { |p| property_names.include?(p) }
-      end
-    end
-
     # Test associations
     test "batch should belong to compound" do
       assert_equal @compound, @batch.compound
@@ -85,22 +70,6 @@ module Grit::Compounds
       assert result.respond_to?(:compound_id__name)
       assert result.respond_to?(:origin_id__name)
       assert result.respond_to?(:compound_type_id__name)
-    end
-
-    # Test entity_fields and entity_columns
-    test "entity_fields should generate fields from properties" do
-      fields = Batch.entity_fields
-      assert fields.is_a?(Array)
-      assert fields.any? { |f| f[:name] == "name" }
-      assert fields.any? { |f| f[:name] == "compound_id" }
-    end
-
-    test "entity_columns should generate columns from properties" do
-      columns = Batch.entity_columns
-      assert columns.is_a?(Array)
-      assert columns.any? { |c| c[:name] == "name" }
-      # compound_id is displayed as joined columns
-      assert columns.any? { |c| c[:name] == "compound_id__number" || c[:name] == "compound_id__name" }
     end
 
     # Test compound_type_properties

@@ -27,15 +27,6 @@ module Grit::Assays
       assert association.options[:dependent] == :destroy
     end
 
-    # --- Display Column ---
-
-    test "has entity properties configured" do
-      properties = ExperimentMetadataTemplate.entity_properties
-      assert properties.any?
-      property_names = properties.map { |p| p[:name] }
-      assert_includes property_names, "name"
-    end
-
     # --- set_metadata_values ---
 
     test "set_metadata_values creates metadata for template" do

@@ -23,15 +23,6 @@ module Grit::Assays
       assert_equal :belongs_to, DataTable.reflect_on_association(:entity_data_type).macro
     end
 
-    # --- Display Column ---
-
-    test "has entity properties configured" do
-      properties = DataTable.entity_properties
-      assert properties.any?
-      property_names = properties.map { |p| p[:name] }
-      assert_includes property_names, "name"
-    end
-
     # --- Entity Properties ---
 
     test "entity_properties excludes plots field" do

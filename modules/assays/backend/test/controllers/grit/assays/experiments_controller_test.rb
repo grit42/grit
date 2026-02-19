@@ -134,13 +134,6 @@ module Grit::Assays
       assert_equal new_vocab_item.id, metadata.vocabulary_item_id
     end
 
-    test "should not update published experiment" do
-      patch grit_assays.experiment_url(@published_experiment), params: { name: "Cannot Update" }, as: :json
-      assert_response :internal_server_error
-      json = JSON.parse(response.body)
-      assert_not json["success"]
-    end
-
     # --- Destroy ---
 
     test "should destroy draft experiment" do
@@ -173,23 +166,6 @@ module Grit::Assays
       json = JSON.parse(response.body)
       assert json["success"]
       assert_equal "Published", Experiment.find(experiment_id).publication_status.name
-    end
-
-    test "published experiment cannot be modified" do
-      post grit_assays.experiments_url, params: {
-        name: "Publish Lock Test",
-        assay_model_id: @draft_model.id
-      }, as: :json
-      assert_response :created
-      experiment_id = JSON.parse(response.body)["data"]["id"]
-
-      post grit_assays.experiment_publish_url(experiment_id), as: :json
-      assert_response :success
-
-      patch grit_assays.experiment_url(experiment_id), params: { name: "Should Not Work" }, as: :json
-      assert_response :internal_server_error
-
-      assert_equal "Publish Lock Test", Experiment.find(experiment_id).name
     end
 
     # --- Draft (unpublish) ---

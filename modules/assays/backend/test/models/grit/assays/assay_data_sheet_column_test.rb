@@ -65,58 +65,6 @@ module Grit::Assays
       assert column.errors[:safe_name].any? { |e| e.include?("has already been taken") }
     end
 
-    test "requires safe_name minimum length of 3" do
-      column = AssayDataSheetColumn.new(
-        name: "Short",
-        safe_name: "ab",
-        assay_data_sheet_definition: @draft_sheet,
-        data_type: grit_core_data_types(:integer),
-        sort: 10,
-        required: false
-      )
-      assert_not column.valid?
-      assert column.errors[:safe_name].any? { |e| e.include?("too short") }
-    end
-
-    test "requires safe_name maximum length of 30" do
-      column = AssayDataSheetColumn.new(
-        name: "Long",
-        safe_name: "a" * 31,
-        assay_data_sheet_definition: @draft_sheet,
-        data_type: grit_core_data_types(:integer),
-        sort: 10,
-        required: false
-      )
-      assert_not column.valid?
-      assert column.errors[:safe_name].any? { |e| e.include?("too long") }
-    end
-
-    test "requires safe_name to start with lowercase letters or underscores" do
-      column = AssayDataSheetColumn.new(
-        name: "Bad Start",
-        safe_name: "1_bad_start",
-        assay_data_sheet_definition: @draft_sheet,
-        data_type: grit_core_data_types(:integer),
-        sort: 10,
-        required: false
-      )
-      assert_not column.valid?
-      assert column.errors[:safe_name].any? { |e| e.include?("should start with two lowercase letters") }
-    end
-
-    test "requires safe_name to contain only lowercase letters, numbers and underscores" do
-      column = AssayDataSheetColumn.new(
-        name: "Bad Characters",
-        safe_name: "bad-chars",
-        assay_data_sheet_definition: @draft_sheet,
-        data_type: grit_core_data_types(:integer),
-        sort: 10,
-        required: false
-      )
-      assert_not column.valid?
-      assert column.errors[:safe_name].any? { |e| e.include?("should contain only lowercase letters") }
-    end
-
     test "safe_name cannot conflict with reserved names" do
       column = AssayDataSheetColumn.new(
         name: "Conflict",
@@ -178,15 +126,6 @@ module Grit::Assays
       result = AssayDataSheetColumn.detailed.find(@draft_column.id)
       assert_respond_to result, :assay_model_id
       assert_respond_to result, :assay_model_id__name
-    end
-
-    # --- Display Column ---
-
-    test "has entity properties configured" do
-      properties = AssayDataSheetColumn.entity_properties
-      assert properties.any?
-      property_names = properties.map { |p| p[:name] }
-      assert_includes property_names, "name"
     end
 
     # --- CRUD Permissions ---

@@ -50,46 +50,6 @@ module Grit::Assays
       assert_includes definition.errors[:safe_name], "has already been taken"
     end
 
-    test "requires safe_name minimum length of 3" do
-      definition = AssayMetadataDefinition.new(
-        name: "Too Short",
-        safe_name: "ab",
-        vocabulary: grit_core_vocabularies(:one)
-      )
-      assert_not definition.valid?
-      assert definition.errors[:safe_name].any? { |e| e.include?("too short") }
-    end
-
-    test "requires safe_name maximum length of 30" do
-      definition = AssayMetadataDefinition.new(
-        name: "Too Long",
-        safe_name: "a" * 31,
-        vocabulary: grit_core_vocabularies(:one)
-      )
-      assert_not definition.valid?
-      assert definition.errors[:safe_name].any? { |e| e.include?("too long") }
-    end
-
-    test "requires safe_name to start with lowercase letters or underscores" do
-      definition = AssayMetadataDefinition.new(
-        name: "Bad Start",
-        safe_name: "1_bad_start",
-        vocabulary: grit_core_vocabularies(:one)
-      )
-      assert_not definition.valid?
-      assert definition.errors[:safe_name].any? { |e| e.include?("should start with two lowercase letters") }
-    end
-
-    test "requires safe_name to contain only lowercase letters, numbers and underscores" do
-      definition = AssayMetadataDefinition.new(
-        name: "Bad Characters",
-        safe_name: "bad-chars",
-        vocabulary: grit_core_vocabularies(:one)
-      )
-      assert_not definition.valid?
-      assert definition.errors[:safe_name].any? { |e| e.include?("should contain only lowercase letters") }
-    end
-
     test "safe_name cannot conflict with Experiment methods" do
       definition = AssayMetadataDefinition.new(
         name: "Name Conflict",
@@ -142,15 +102,6 @@ module Grit::Assays
       assert_raises(RuntimeError) do
         AssayMetadataDefinition.by_assay_model({})
       end
-    end
-
-    # --- Display Column ---
-
-    test "has entity properties configured" do
-      properties = AssayMetadataDefinition.entity_properties
-      assert properties.any?
-      property_names = properties.map { |p| p[:name] }
-      assert_includes property_names, "name"
     end
 
     # --- CRUD Permissions ---

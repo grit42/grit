@@ -70,54 +70,6 @@ module Grit::Compounds
     # validate_record Tests
     # =========================================================================
 
-    test "validate_record should add warning for existing molecule" do
-      # First create a molecule to test against
-      molecule = Grit::Compounds::Molecule.create!(molfile: @valid_molfile)
-
-      context = {
-        structure_format: "molfile",
-        compound_properties: Grit::Compounds::CompoundProperty.where(compound_type_id: [ @compound_type.id, nil ]),
-        db_property_names: Grit::Compounds::Compound.db_properties.map { |prop| prop[:name] }
-      }
-
-      record = {}
-      record_props = {
-        "name" => "test_compound",
-        "molecule" => @valid_molfile,
-        "origin_id" => @origin.id,
-        "compound_type_id" => @compound_type.id
-      }
-
-      result = CompoundLoader.send(:validate_record, Grit::Compounds::Compound, record, record_props, context)
-
-      assert result[:has_warnings], "Should have warnings when molecule already exists"
-      assert_includes record[:record_warnings]["molecule"].first, "structure already registered"
-    ensure
-      molecule&.destroy
-    end
-
-    test "validate_record should add error for invalid molfile structure" do
-      context = {
-        structure_format: "molfile",
-        compound_properties: Grit::Compounds::CompoundProperty.where(compound_type_id: [ @compound_type.id, nil ]),
-        db_property_names: Grit::Compounds::Compound.db_properties.map { |prop| prop[:name] }
-      }
-
-      record = {}
-      record_props = {
-        "name" => "test_compound",
-        "molecule" => "INVALID_MOLFILE_DATA",
-        "origin_id" => @origin.id,
-        "compound_type_id" => @compound_type.id
-      }
-
-      CompoundLoader.send(:validate_record, Grit::Compounds::Compound, record, record_props, context)
-
-      assert_not_nil record[:record_errors]
-      assert_includes record[:record_errors]["molecule"].first, "not a valid structure"
-      assert_nil record_props["molecule"], "Invalid molecule should be set to nil"
-    end
-
     test "validate_record should validate compound property values with invalid type" do
       # Use existing string property from fixtures, but provide a value that would fail
       # Since string properties accept most values, we test the validation flow

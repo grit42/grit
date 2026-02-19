@@ -31,18 +31,6 @@ module Grit::Assays
 
     # --- Class Methods ---
 
-    test "entity_properties class method exists" do
-      assert DataTableEntity.respond_to?(:entity_properties)
-    end
-
-    test "entity_fields class method exists" do
-      assert DataTableEntity.respond_to?(:entity_fields)
-    end
-
-    test "entity_columns class method exists" do
-      assert DataTableEntity.respond_to?(:entity_columns)
-    end
-
     test "detailed class method exists" do
       assert DataTableEntity.respond_to?(:detailed)
     end

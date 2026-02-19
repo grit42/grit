@@ -54,36 +54,6 @@ module Grit::Assays
       assert column.errors[:safe_name].any? { |e| e.include?("too short") }
     end
 
-    test "requires safe_name maximum length of 30" do
-      column = DataTableColumn.new(
-        name: "Valid Name",
-        safe_name: "a" * 31,
-        data_table_id: 1
-      )
-      assert_not column.valid?
-      assert column.errors[:safe_name].any? { |e| e.include?("too long") }
-    end
-
-    test "requires safe_name to start with lowercase letters or underscores" do
-      column = DataTableColumn.new(
-        name: "Bad Start",
-        safe_name: "1_bad_start",
-        data_table_id: 1
-      )
-      assert_not column.valid?
-      assert column.errors[:safe_name].any? { |e| e.include?("should start with two lowercase letters") }
-    end
-
-    test "requires safe_name to contain only lowercase letters, numbers and underscores" do
-      column = DataTableColumn.new(
-        name: "Bad Characters",
-        safe_name: "bad-chars",
-        data_table_id: 1
-      )
-      assert_not column.valid?
-      assert column.errors[:safe_name].any? { |e| e.include?("should contain only lowercase letters") }
-    end
-
     # --- Class Methods ---
 
     test "detailed class method exists" do
