@@ -1,3 +1,10 @@
+## 0.7.3
+
+### 🩹 Fixes
+
+- integer input with one `0` decimal place
+- Move UI administration tools for Compounds and Assays from the general Administration area to within the respective modules landing page
+
 ## 0.7.2
 
 ### 🩹 Fixes
