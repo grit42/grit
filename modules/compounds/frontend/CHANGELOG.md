@@ -1,3 +1,10 @@
+## 0.9.1
+
+### 🩹 Fixes
+
+- (sdf) allow property names with spaces
+- (sdf) handle windows line endings
+
 ## 0.9.0
 
 ### 🚀 Features
