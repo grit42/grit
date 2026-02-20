@@ -283,7 +283,9 @@ JOIN (
 		    .joins("JOIN grit_core_publication_statuses gaeps on gaeps.id = EXPERIMENTS_WITH_METADATA.publication_status_id and gaeps.name = 'Published'")
 		    .joins("JOIN grit_core_publication_statuses gaamps on gaamps.id = gaam.publication_status_id and gaamps.name = 'Published'")
         .select(
-          "data_sources.#{target_column.safe_name} AS target_id",
+          aggregation_method == "latest" ?
+            "DISTINCT ON (target_id) data_sources.#{target_column.safe_name} AS target_id" :
+            "data_sources.#{target_column.safe_name} AS target_id",
           "data_sources.experiment_id",
           "EXPERIMENTS_WITH_METADATA.name as experiment_id__name",
         )
@@ -300,7 +302,7 @@ JOIN (
       end
 
       if aggregation_method == "latest"
-        subquery = subquery.order(Arel.sql("COALESCE(data_sources.updated_at, data_sources.created_at) DESC")).limit(1)
+        subquery = subquery.order(:target_id, Arel.sql("COALESCE(data_sources.updated_at, data_sources.created_at) DESC"))
       end
 
       subquery = join_entity_table(subquery)
