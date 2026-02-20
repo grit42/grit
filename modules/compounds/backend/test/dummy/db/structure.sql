@@ -1,7 +1,7 @@
-\restrict b8KD4fZmMyPC7k9bGwBpVAP2BOjmXeuDH0I1fMruToZiadHycXXt4gUyH58uFmQ
+\restrict xNd2fGJkHg4pCJ4ftxFSGvGPvn0jIeyDHTiSRnpVibW32laPuNggrn45hV1D2ea
 
 -- Dumped from database version 16.3 (Debian 16.3-1.pgdg120+1)
--- Dumped by pg_dump version 16.11
+-- Dumped by pg_dump version 16.11 (Ubuntu 16.11-0ubuntu0.24.04.1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -2183,7 +2183,7 @@ ALTER TABLE ONLY public.grit_compounds_compound_property_values
 -- PostgreSQL database dump complete
 --
 
-\unrestrict b8KD4fZmMyPC7k9bGwBpVAP2BOjmXeuDH0I1fMruToZiadHycXXt4gUyH58uFmQ
+\unrestrict xNd2fGJkHg4pCJ4ftxFSGvGPvn0jIeyDHTiSRnpVibW32laPuNggrn45hV1D2ea
 
 SET search_path TO "$user", public;
 
