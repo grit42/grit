@@ -2,3 +2,4 @@ grit-docs/**/*.png filter=lfs diff=lfs merge=lfs -text
 grit-docs/**/*.xcf filter=lfs diff=lfs merge=lfs -text
 *.xlsx filter=lfs diff=lfs merge=lfs -text
 *.ods filter=lfs diff=lfs merge=lfs -text
+modules/compounds/backend/test/fixtures/files/simple_crlf.sdf text eol=crlf

@@ -65,6 +65,31 @@ module Grit::Compounds
       assert_equal "0.32", record["LOGP"]
     end
 
+    test "should parse SDF file with Windows (CRLF) line endings" do
+      file = file_fixture("simple_crlf.sdf")
+      properties = SDF.properties(File.open(file))
+
+      assert_includes properties, "molecule"
+      assert_includes properties, "SMILES"
+      assert_includes properties, "MOLWEIGHT"
+      assert_includes properties, "MOLFORMULA"
+      assert_includes properties, "LOGP"
+
+      records = []
+      SDF.each_record(File.open(file)) do |record, counter|
+        records << record
+      end
+
+      assert_equal 1, records.length
+      assert record = records.first
+      assert record["molecule"].include?("C   0  0  0  0  0  0  0  0  0  0  0  0")
+      assert record["molecule"].include?("M  END")
+      assert_equal "CCO", record["SMILES"]
+      assert_equal "46.07", record["MOLWEIGHT"]
+      assert_equal "C2H6O", record["MOLFORMULA"]
+      assert_equal "0.32", record["LOGP"]
+    end
+
     test "should parse multiple records from SDF file" do
       file = file_fixture("multiple.sdf")
       records = []
