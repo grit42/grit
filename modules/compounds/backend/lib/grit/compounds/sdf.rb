@@ -26,6 +26,8 @@ module Grit
       class MalformedSdfFile < RuntimeError
       end
 
+      PROP_DEF_REGEX = /^>\s+<(?<prop_name>\w+(\s+\w+)*)>$/
+
       def self.each_record(io)
         prop_names = Set["molecule"]
         record = {}
@@ -50,7 +52,7 @@ module Grit
               record[prop_name] = prop_lines.join("\n").strip
               prop_name = nil
               prop_lines = []
-            elsif prop_def = /^>\s+<(?<prop_name>\w+)>$/.match(line)
+            elsif prop_def = PROP_DEF_REGEX.match(line)
               raise MalformedSdfFile.new "Malformed SDF file" unless prop_name.nil?
               prop_name = prop_def[:prop_name]
               prop_names.add(prop_name)
@@ -69,7 +71,7 @@ module Grit
         prop_names = Set["molecule"]
 
         io.each_line(chomp: true) do |line|
-          prop_def = /^>\s+<(?<prop_name>\w+)>$/.match(line)
+          prop_def = PROP_DEF_REGEX.match(line)
           unless prop_def.nil?
             prop_name = prop_def[:prop_name]
             prop_names.add(prop_name)
