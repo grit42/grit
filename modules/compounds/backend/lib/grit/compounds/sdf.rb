@@ -68,7 +68,7 @@ module Grit
       def self.properties(io)
         prop_names = Set["molecule"]
 
-        io.each_line do |line|
+        io.each_line(chomp: true) do |line|
           prop_def = /^>\s+<(?<prop_name>\w+)>$/.match(line)
           unless prop_def.nil?
             prop_name = prop_def[:prop_name]
