@@ -19,6 +19,7 @@
 module Grit::Assays
   class DataTableEntity < ApplicationRecord
     include Grit::Core::GritEntityRecord
+    belongs_to :data_table
 
     validates :entity_id, uniqueness: { scope: :data_table_id, message: "has already been included in the data table" }
 

@@ -98,7 +98,7 @@ Goal: slim test suites that test module-specific behavior, not generic framework
 |--------|--------|
 | Write | Core `entity_loader_test.rb` — 25 tests, 60 assertions covering loader dispatch, fields/block_fields, `validate_record_properties` (all 9 mapping/type/uniqueness paths), and mapping_fields |
 
-### Phase 3
+### Phase 3 ✅ Complete
 
 | Action | Target |
 |--------|--------|
