@@ -105,14 +105,14 @@ module Grit::Core
       @user = Grit::Core::User.find_by(login: params[:user]&.downcase)
       @user = Grit::Core::User.find_by(email: params[:user]&.downcase) if @user.nil?
 
-      if @user.nil?
-        render json: { success: false, errors: "No user found" }, status: :not_found
-        return
-      end
+      if @user && !@user.valid_forgot_token?
+        @user.forgot_token = nil
+        @user.forgot_token_expires_at = nil
+        @user.forgot_token = SecureRandom.urlsafe_base64(20)
+        @user.forgot_token_expires_at = Grit::Core::User::FORGOT_TOKEN_EXPIRY_HOURS.hours.from_now
+        @user.save_without_session_maintenance
 
-      unless @user.auth_method == "local"
-        render json: { success: false, errors: "Password reset is not available for SSO accounts" }, status: :bad_request
-        return
+        Grit::Core::Mailer.deliver_password_reset(@user).deliver_now
       end
 
       if @user
