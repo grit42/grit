@@ -82,6 +82,9 @@ module Grit::Core
               }
 
     FORGOT_TOKEN_EXPIRY_HOURS = 1
+    TWO_FACTOR_MAX_ATTEMPTS = 5
+    TWO_FACTOR_LOCKOUT_MINUTES = 15
+    TWO_FACTOR_EXPIRY_MINUTES = 10
 
     before_validation :random_password, on: :create
     before_create :set_default_values
@@ -111,7 +114,9 @@ module Grit::Core
     "current_login_ip",
     "last_login_ip",
     "two_factor_token",
-    "two_factor_expiry"
+    "two_factor_expiry",
+    "two_factor_attempts",
+    "two_factor_locked_until"
   ]
 
     def self.entity_properties(**args)
@@ -146,7 +151,7 @@ module Grit::Core
 
     def self.permitted_params
       %i[login name email origin_id location_id password password_confirmation settings status_id
-         auth_method two_factor profile_picture active forgot_token_expires_at]
+         auth_method two_factor profile_picture active]
     end
 
     acts_as_authentic do |c|
@@ -196,6 +201,34 @@ module Grit::Core
 
     def valid_forgot_token?
       forgot_token.present? && !forgot_token_expired?
+    end
+
+    def two_factor_locked?
+      two_factor_locked_until.present? && two_factor_locked_until > Time.current
+    end
+
+    def two_factor_token_expired?
+      two_factor_expiry.nil? || two_factor_expiry < Time.current
+    end
+
+    def record_failed_two_factor_attempt!
+      increment!(:two_factor_attempts)
+      if two_factor_attempts >= TWO_FACTOR_MAX_ATTEMPTS
+        update!(
+          two_factor_locked_until: TWO_FACTOR_LOCKOUT_MINUTES.minutes.from_now,
+          two_factor_attempts: 0,
+          two_factor_token: nil
+        )
+      end
+    end
+
+    def reset_two_factor_state!
+      update!(
+        two_factor_token: nil,
+        two_factor_attempts: 0,
+        two_factor_locked_until: nil,
+        two_factor_expiry: nil
+      )
     end
 
     private

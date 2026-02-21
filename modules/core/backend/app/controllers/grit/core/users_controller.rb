@@ -103,7 +103,7 @@ module Grit::Core
       end
 
       @user = Grit::Core::User.find_by(login: params[:user]&.downcase)
-      @user = Grit::Core::User.find_by(email: params[:user]&.downcase)
+      @user = Grit::Core::User.find_by(email: params[:user]&.downcase) if @user.nil?
 
       if @user.nil?
         render json: { success: false, errors: "No user found" }, status: :not_found
@@ -170,7 +170,7 @@ module Grit::Core
         return
       end
       @user = Grit::Core::User.find_by(login: params[:user]&.downcase)
-      @user = Grit::Core::User.find_by(email: params[:user]&.downcase)
+      @user = Grit::Core::User.find_by(email: params[:user]&.downcase) if @user.nil?
 
       if @user.nil?
         render json: { success: false, errors: "No user found" }, status: :not_found
@@ -275,7 +275,7 @@ module Grit::Core
         return
       end
       @user = Grit::Core::User.find_by(login: params[:user]&.downcase)
-      @user = Grit::Core::User.find_by(email: params[:user]&.downcase)
+      @user = Grit::Core::User.find_by(email: params[:user]&.downcase) if @user.nil?
 
       @user.reset_single_access_token
       @user.save!
@@ -297,7 +297,7 @@ module Grit::Core
         return
       end
       @user = Grit::Core::User.find_by(login: params[:user]&.downcase)
-      @user = Grit::Core::User.find_by(email: params[:user]&.downcase)
+      @user = Grit::Core::User.find_by(email: params[:user]&.downcase) if @user.nil?
 
       @user.activation_token = nil
       @user.save_without_session_maintenance
@@ -319,7 +319,7 @@ module Grit::Core
         return
       end
       @user = Grit::Core::User.find_by(login: params[:user]&.downcase)
-      @user = Grit::Core::User.find_by(email: params[:user]&.downcase)
+      @user = Grit::Core::User.find_by(email: params[:user]&.downcase) if @user.nil?
 
       @user.forgot_token = nil
       @user.forgot_token_expires_at = nil

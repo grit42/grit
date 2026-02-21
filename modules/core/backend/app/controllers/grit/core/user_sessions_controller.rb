@@ -88,8 +88,10 @@ module Grit::Core
 
       two_factor = false
       if @user.two_factor == true
-        da_token = (0...8).map { rand(65..90).chr }.join
+        da_token = SecureRandom.alphanumeric(8).upcase
         @user.two_factor_token = da_token
+        @user.two_factor_expiry = Grit::Core::User::TWO_FACTOR_EXPIRY_MINUTES.minutes.from_now
+        @user.two_factor_attempts = 0
         @user.save!
         two_factor = true
         Grit::Core::Mailer.deliver_two_factor_instructions(@user).deliver_now
@@ -119,11 +121,18 @@ module Grit::Core
 
       @user = Grit::Core::User.find_by(login: params[:user].downcase)
       @user = Grit::Core::User.find_by(email: params[:user].downcase) if @user.nil?
+      raise "Invalid request" if @user.nil?
 
-      raise "Invalid token" if @user.two_factor_token != params[:token].upcase
+      raise "Account temporarily locked due to too many failed attempts. Try again later." if @user.two_factor_locked?
+      raise "Token has expired. Please log in again." if @user.two_factor_token_expired?
 
-      @user.update(
-        two_factor_token: nil,
+      unless ActiveSupport::SecurityUtils.secure_compare(@user.two_factor_token.to_s, params[:token].upcase)
+        @user.record_failed_two_factor_attempt!
+        raise "Invalid token"
+      end
+
+      @user.reset_two_factor_state!
+      @user.update!(
         forgot_token: nil,
         forgot_token_expires_at: nil,
       )
