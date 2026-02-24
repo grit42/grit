@@ -18,6 +18,6 @@ Gem::Specification.new do |spec|
   end
 
 
-  spec.add_dependency "rails", '~> 7.2', '>= 7.2.2'
+  spec.add_dependency "rails", '~> 8.1'
   spec.add_dependency "grit-core", "~> #{Grit::Core::VERSION}"
 end

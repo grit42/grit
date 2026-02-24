@@ -37,7 +37,7 @@ module Grit::Compounds
       assert response_data["success"]
 
       load_set = Grit::Core::LoadSet.find_by(name: "integration-test-compound-load")
-      load_set_block = load_set.load_set_blocks.first
+      load_set_block = load_set.load_set_blocks.order(:id).first
 
       # Initialize data (parses SDF, creates tables)
       post "/api/grit/core/load_set_blocks/#{load_set_block.id}/initialize_data"
@@ -72,7 +72,7 @@ module Grit::Compounds
       assert_equal molecules_compound_count_before + 1, Grit::Compounds::MoleculesCompound.count
 
       # Verify the compound was created correctly
-      compound = Grit::Compounds::Compound.last
+      compound = Grit::Compounds::Compound.order(:id).last
       assert_equal @compound_type.id, compound.compound_type_id
       assert_equal @origin.id, compound.origin_id
     end
@@ -96,7 +96,7 @@ module Grit::Compounds
       assert_response :created
 
       load_set = Grit::Core::LoadSet.find_by(name: "integration-test-multiple")
-      load_set_block = load_set.load_set_blocks.first
+      load_set_block = load_set.load_set_blocks.order(:id).first
 
       post "/api/grit/core/load_set_blocks/#{load_set_block.id}/initialize_data"
       assert_response :success
@@ -140,7 +140,7 @@ module Grit::Compounds
       assert_response :created
 
       load_set = Grit::Core::LoadSet.find_by(name: "integration-test-first-load")
-      load_set_block = load_set.load_set_blocks.first
+      load_set_block = load_set.load_set_blocks.order(:id).first
 
       post "/api/grit/core/load_set_blocks/#{load_set_block.id}/initialize_data"
       post "/api/grit/core/load_set_blocks/#{load_set_block.id}/validate", params: {
@@ -153,7 +153,7 @@ module Grit::Compounds
       post "/api/grit/core/load_set_blocks/#{load_set_block.id}/confirm"
       assert_response :success
 
-      first_molecule = Grit::Compounds::Molecule.last
+      first_molecule = Grit::Compounds::Molecule.order(:id).last
       molecule_count_after_first = Grit::Compounds::Molecule.count
 
       # Second load: same structure should link to existing molecule
@@ -200,7 +200,7 @@ module Grit::Compounds
       assert_response :success
 
       # Verify the new compound is linked to the existing molecule
-      new_compound = Grit::Compounds::Compound.last
+      new_compound = Grit::Compounds::Compound.order(:id).last
       molecules_compound = Grit::Compounds::MoleculesCompound.find_by(compound_id: new_compound.id)
       assert_equal first_molecule.id, molecules_compound.molecule_id
     end
@@ -224,7 +224,7 @@ module Grit::Compounds
       assert_response :created
 
       load_set = Grit::Core::LoadSet.find_by(name: "integration-test-malformed")
-      load_set_block = load_set.load_set_blocks.first
+      load_set_block = load_set.load_set_blocks.order(:id).first
 
       post "/api/grit/core/load_set_blocks/#{load_set_block.id}/initialize_data"
 
@@ -255,7 +255,7 @@ module Grit::Compounds
       }
 
       load_set = Grit::Core::LoadSet.find_by(name: "integration-test-rollback")
-      load_set_block = load_set.load_set_blocks.first
+      load_set_block = load_set.load_set_blocks.order(:id).first
 
       post "/api/grit/core/load_set_blocks/#{load_set_block.id}/initialize_data"
       post "/api/grit/core/load_set_blocks/#{load_set_block.id}/validate", params: {
@@ -312,7 +312,7 @@ module Grit::Compounds
       assert_equal "Grit::Compounds::Compound", data["entity"]
 
       load_set = Grit::Core::LoadSet.find_by(name: "integration-test-response")
-      load_set_block = load_set.load_set_blocks.first
+      load_set_block = load_set.load_set_blocks.order(:id).first
 
       # Test initialize_data response
       post "/api/grit/core/load_set_blocks/#{load_set_block.id}/initialize_data"

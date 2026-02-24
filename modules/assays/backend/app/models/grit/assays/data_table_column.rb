@@ -23,9 +23,9 @@ module Grit::Assays
     belongs_to :data_table
 
     entity_crud_with read: [],
-      create: ["Administrator", "AssayAdministrator", "AssayUser"],
-      update: ["Administrator", "AssayAdministrator", "AssayUser"],
-      destroy: ["Administrator", "AssayAdministrator", "AssayUser"]
+      create: [ "Administrator", "AssayAdministrator", "AssayUser" ],
+      update: [ "Administrator", "AssayAdministrator", "AssayUser" ],
+      destroy: [ "Administrator", "AssayAdministrator", "AssayUser" ]
 
     validates :name, uniqueness: { scope: :data_table_id, message: "has already been taken in this data table" }, length: { minimum: 1 }
     validates :safe_name, uniqueness: { scope: :data_table_id, message: "has already been taken in this data table" }, length: { minimum: 3, maximum: 30 }
@@ -83,7 +83,7 @@ module Grit::Assays
       raise "'data_table_id' is required" if params["data_table_id"].nil?
       data_table = DataTable.find(params["data_table_id"])
 
-      return AssayDataSheetColumn.detailed.where("grit_assays_assay_data_sheet_definitions__.result IS TRUE")
+      AssayDataSheetColumn.detailed.where("grit_assays_assay_data_sheet_definitions__.result IS TRUE")
         .joins("JOIN grit_assays_assay_models grit_assays_assay_models__ ON grit_assays_assay_models__.id = grit_assays_assay_data_sheet_definitions__.assay_model_id")
         .joins("JOIN grit_core_publication_statuses gaamps on gaamps.id = grit_assays_assay_models__.publication_status_id and gaamps.name = 'Published'")
         .select("grit_assays_assay_models__.id as assay_model_id")
@@ -96,7 +96,7 @@ AND GRIT_ASSAYS_ASSAY_DATA_SHEET_COLUMNS.DATA_TYPE_ID <> #{data_table.entity_dat
       SQL
     end
 
-    def sql_aggregate_method subquery
+    def sql_aggregate_method(subquery)
       if aggregation_method == "latest"
         if assay_data_sheet_column.data_type.is_entity
           return subquery.select(*[
@@ -109,26 +109,26 @@ AND GRIT_ASSAYS_ASSAY_DATA_SHEET_COLUMNS.DATA_TYPE_ID <> #{data_table.entity_dat
         return subquery.select("data_sources.#{assay_data_sheet_column.safe_name} as value")
       end
       case assay_data_sheet_column.data_type.name
-      when "integer","decimal"
+      when "integer", "decimal"
         case aggregation_method
-        when "avg","min","max","count","stddev"
+        when "avg", "min", "max", "count", "stddev"
           return subquery.select("#{aggregation_method}(data_sources.#{assay_data_sheet_column.safe_name}) AS value")
         end
-      when "date","datetime"
+      when "date", "datetime"
         case aggregation_method
-        when "min","max","count"
+        when "min", "max", "count"
           return subquery.select("#{aggregation_method}(data_sources.#{assay_data_sheet_column.safe_name}) AS value")
         when "csv"
           return subquery.select("STRING_AGG(data_sources.#{assay_data_sheet_column.safe_name}::text, ', ') AS value")
         end
       when "boolean"
         case aggregation_method
-        when "and","or"
+        when "and", "or"
           return subquery.select("bool_#{aggregation_method}(data_sources.#{assay_data_sheet_column.safe_name}) AS value")
         when "count"
           return subquery.select("count(data_sources.#{assay_data_sheet_column.safe_name}) AS value")
         end
-      when "string","text"
+      when "string", "text"
         case aggregation_method
         when "count"
           return subquery.select("count(data_sources.#{assay_data_sheet_column.safe_name}) AS value")
@@ -156,13 +156,13 @@ AND GRIT_ASSAYS_ASSAY_DATA_SHEET_COLUMNS.DATA_TYPE_ID <> #{data_table.entity_dat
       raise "Unsupported aggregation method '#{aggregation_method}' for data table column with id='#{id}'"
     end
 
-    def data_table_statement query
+    def data_table_statement(query)
       return assay_data_sheet_column_query(query) if source_type == "assay_data_sheet_column"
       return entity_attribute_query(query) if source_type == "entity_attribute"
       raise "Unsupported source type: '#{source_type}'"
     end
 
-    def entity_attribute_query query
+    def entity_attribute_query(query)
       query = query.select("#{self.safe_name}_join.#{entity_attribute_name} as #{self.safe_name}")
       entity_klass = data_table.entity_data_type.model
       entity_property = entity_klass.entity_properties.find { |p| p[:name] == entity_attribute_name }
@@ -181,10 +181,10 @@ LEFT OUTER JOIN (
     end
 
     def experiments_join
-      join = ["JOIN EXPERIMENTS_WITH_METADATA ON EXPERIMENTS_WITH_METADATA.ID = DATA_SOURCES.EXPERIMENT_ID"]
+      join = [ "JOIN EXPERIMENTS_WITH_METADATA ON EXPERIMENTS_WITH_METADATA.ID = DATA_SOURCES.EXPERIMENT_ID" ]
       join.push "EXPERIMENTS_WITH_METADATA.ID IN (#{self.experiment_ids.join(',')})" if self.experiment_ids.length.positive?
       metadata_definitions = AssayMetadataDefinition.all
-      self.metadata_filters.each do |key,value|
+      self.metadata_filters.each do |key, value|
         metadata_definition = metadata_definitions.find { |d| d.id.to_s == key.to_s }
         unless metadata_definition.nil? || value.nil? || value.blank?
           join.push "EXPERIMENTS_WITH_METADATA.#{metadata_definition.safe_name} IN (#{value.join(",")})"
@@ -193,7 +193,7 @@ LEFT OUTER JOIN (
       join.join(" AND ")
     end
 
-    def join_entity_table subquery
+    def join_entity_table(subquery)
       if assay_data_sheet_column.data_type.is_entity
         entity_join = <<-SQL
 LEFT OUTER JOIN #{assay_data_sheet_column.data_type.table_name} dtv__#{self.safe_name}__entities ON
@@ -204,7 +204,7 @@ dtv__#{self.safe_name}__entities.id = data_sources.#{assay_data_sheet_column.saf
       subquery
     end
 
-    def select_entity_display_properties query
+    def select_entity_display_properties(query)
       if assay_data_sheet_column.data_type.is_entity
         assay_data_sheet_column.data_type.model.display_properties.map do |display_property|
           query = query.select("#{self.safe_name}_join.value__#{display_property[:name]} as #{self.safe_name}__#{display_property[:name]}")
@@ -213,7 +213,7 @@ dtv__#{self.safe_name}__entities.id = data_sources.#{assay_data_sheet_column.saf
       query
     end
 
-    def left_join_subquery query, subquery
+    def left_join_subquery(query, subquery)
       column_join = <<-SQL
 LEFT OUTER JOIN (
   #{subquery.to_sql}
@@ -222,7 +222,7 @@ LEFT OUTER JOIN (
       query.joins(column_join)
     end
 
-    def assay_data_sheet_column_query query
+    def assay_data_sheet_column_query(query)
       return query if assay_data_sheet_column.nil?
       target_column = assay_data_sheet_column.assay_data_sheet_definition.assay_data_sheet_columns.find { |c| c.data_type_id == self.data_table.entity_data_type_id }
       assay_model_data_sheet_class = ExperimentDataSheetRecord.sheet_record_klass(assay_data_sheet_column.assay_data_sheet_definition_id)
@@ -232,9 +232,9 @@ LEFT OUTER JOIN (
       subquery = assay_model_data_sheet_class.unscoped
         .from("#{assay_model_data_sheet_class.table_name} data_sources")
         .joins(experiments_join)
-		    .joins("JOIN grit_assays_assay_models gaam on gaam.id = EXPERIMENTS_WITH_METADATA.assay_model_id")
-		    .joins("JOIN grit_core_publication_statuses gaeps on gaeps.id = EXPERIMENTS_WITH_METADATA.publication_status_id and gaeps.name = 'Published'")
-		    .joins("JOIN grit_core_publication_statuses gaamps on gaamps.id = gaam.publication_status_id and gaamps.name = 'Published'")
+        .joins("JOIN grit_assays_assay_models gaam on gaam.id = EXPERIMENTS_WITH_METADATA.assay_model_id")
+        .joins("JOIN grit_core_publication_statuses gaeps on gaeps.id = EXPERIMENTS_WITH_METADATA.publication_status_id and gaeps.name = 'Published'")
+        .joins("JOIN grit_core_publication_statuses gaamps on gaamps.id = gaam.publication_status_id and gaamps.name = 'Published'")
 
 
       if aggregation_method == "latest"
@@ -251,12 +251,12 @@ LEFT OUTER JOIN (
       left_join_subquery(query, subquery)
     end
 
-    def full_perspective_statement query
+    def full_perspective_statement(query)
       return entity_attribute_query(query) if source_type == "entity_attribute"
-      return full_perspective_query(query)
+      full_perspective_query(query)
     end
 
-    def join_subquery query, subquery
+    def join_subquery(query, subquery)
       column_join = <<-SQL
 JOIN (
   #{subquery.to_sql}
@@ -265,7 +265,7 @@ JOIN (
       query.joins(column_join)
     end
 
-    def full_perspective_query query
+    def full_perspective_query(query)
       query = query.select(
         "#{self.safe_name}_join.value as #{self.safe_name}",
         "#{assay_data_sheet_column.assay_data_sheet_definition_id} as assay_data_sheet_definition_id",
@@ -279,9 +279,9 @@ JOIN (
       subquery = assay_model_data_sheet_class.unscoped
         .from("#{assay_model_data_sheet_class.table_name} data_sources")
         .joins(experiments_join)
-		    .joins("JOIN grit_assays_assay_models gaam on gaam.id = EXPERIMENTS_WITH_METADATA.assay_model_id")
-		    .joins("JOIN grit_core_publication_statuses gaeps on gaeps.id = EXPERIMENTS_WITH_METADATA.publication_status_id and gaeps.name = 'Published'")
-		    .joins("JOIN grit_core_publication_statuses gaamps on gaamps.id = gaam.publication_status_id and gaamps.name = 'Published'")
+        .joins("JOIN grit_assays_assay_models gaam on gaam.id = EXPERIMENTS_WITH_METADATA.assay_model_id")
+        .joins("JOIN grit_core_publication_statuses gaeps on gaeps.id = EXPERIMENTS_WITH_METADATA.publication_status_id and gaeps.name = 'Published'")
+        .joins("JOIN grit_core_publication_statuses gaamps on gaamps.id = gaam.publication_status_id and gaamps.name = 'Published'")
         .select(
           aggregation_method == "latest" ?
             "DISTINCT ON (target_id) data_sources.#{target_column.safe_name} AS target_id" :

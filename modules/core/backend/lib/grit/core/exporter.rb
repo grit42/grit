@@ -27,7 +27,7 @@ module Grit::Core
         temp_file.write(CSV.generate_line(columns.map { |c| c["display_name"] }, col_sep: col_sep))
         ActiveRecord::Base.connection.raw_connection.copy_data(sql) do
           while (row = ActiveRecord::Base.connection.raw_connection.get_copy_data)
-            temp_file.write(row.force_encoding('UTF-8'))
+            temp_file.write(row.force_encoding("UTF-8"))
           end
         end
 

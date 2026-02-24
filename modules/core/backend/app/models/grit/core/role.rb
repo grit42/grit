@@ -27,7 +27,7 @@ module Grit::Core
     has_many :users, through: :user_roles
 
     def self.access?(params)
-      RequestStore.store["Grit::Core::Role.access?#{params[:role_name]}#{Grit::Core::User.current.id}"] ||= where(name: params[:role_name]).first.users.where(id: Grit::Core::User.current.id).count
+      RequestStore.store["Grit::Core::Role.access?#{params[:role_name]}#{Grit::Core::User.current.id}"] ||= find_by(name: params[:role_name]).users.where(id: Grit::Core::User.current.id).count
       count = RequestStore.store["Grit::Core::Role.access?#{params[:role_name]}#{Grit::Core::User.current.id}"]
       count == 1
     end

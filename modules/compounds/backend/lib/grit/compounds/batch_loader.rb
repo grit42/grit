@@ -30,7 +30,7 @@ module Grit::Compounds
 
       Grit::Compounds::BatchLoadSetBlock.create!({
         load_set_block_id: load_set.load_set_blocks[0].id,
-        compound_type_id: params[:load_set_blocks]["0"]["compound_type_id"],
+        compound_type_id: params[:load_set_blocks]["0"]["compound_type_id"]
       })
 
       load_set
@@ -59,7 +59,7 @@ module Grit::Compounds
       batch_load_set_block = Grit::Compounds::BatchLoadSetBlock.find_by(load_set_block_id: load_set_block.id)
       {
         batch_properties: Grit::Compounds::BatchProperty.where(compound_type_id: [ batch_load_set_block.compound_type_id, nil ]),
-        db_property_names: Grit::Compounds::Batch.db_properties.map { |prop| prop[:name] },
+        db_property_names: Grit::Compounds::Batch.db_properties.map { |prop| prop[:name] }
       }
     end
 

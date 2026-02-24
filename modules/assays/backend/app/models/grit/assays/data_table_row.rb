@@ -67,7 +67,7 @@ module Grit::Assays
     end
 
     def self.entity_columns(**args)
-      self.entity_columns_from_properties(self.entity_properties(**args),[ "id" ])
+      self.entity_columns_from_properties(self.entity_properties(**args), [ "id" ])
     end
 
     def self.full_perspective(params = nil)
@@ -94,7 +94,7 @@ module Grit::Assays
         .each do |table_colum|
         query = table_colum.full_perspective_statement(query)
       end
-      return query
+      query
     end
 
     def self.for_data_table(data_table_id)

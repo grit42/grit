@@ -54,8 +54,8 @@ module Grit::Assays
               end
             end
           rescue StandardError => e
-            logger.warn e.to_s;
-            logger.warn e.backtrace.join("\n");
+            logger.warn e.to_s
+            logger.warn e.backtrace.join("\n")
             errors["form"] ||= []
             errors["form"].push e.to_s
           end
@@ -71,8 +71,8 @@ module Grit::Assays
               end
             end
           rescue StandardError => e
-            logger.warn e.to_s;
-            logger.warn e.backtrace.join("\n");
+            logger.warn e.to_s
+            logger.warn e.backtrace.join("\n")
             errors["form"] ||= []
             errors["form"].push e.to_s
           end

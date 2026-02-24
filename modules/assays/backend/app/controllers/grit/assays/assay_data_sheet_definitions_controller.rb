@@ -29,26 +29,26 @@ module Grit::Assays
           begin
             columns = sheet["columns"]
             sheet.delete("columns")
-            assay_data_sheet_definition = AssayDataSheetDefinition.create(sheet.slice("name", "description", "assay_model_id", "result", "sort" ))
+            assay_data_sheet_definition = AssayDataSheetDefinition.create(sheet.slice("name", "description", "assay_model_id", "result", "sort"))
             sheets.push(assay_data_sheet_definition)
             unless assay_data_sheet_definition.errors.blank?
               assay_data_sheet_definition.errors.each do |e|
-                errors.push({message: e.message, path: ["sheets", sheetIndex, e.attribute]})
+                errors.push({ message: e.message, path: [ "sheets", sheetIndex, e.attribute ] })
               end
             else
               columns.each_with_index do |column, columnIndex|
                 assay_data_sheet_column = assay_data_sheet_definition.assay_data_sheet_columns.create(column.slice("name", "safe_name", "description", "sort", "required", "data_type_id", "unit_id"))
                 if assay_data_sheet_column.errors
                   assay_data_sheet_column.errors.each do |e|
-                    errors.push({message: e.message, path: ["sheets", sheetIndex, "columns", columnIndex, e.attribute]})
+                    errors.push({ message: e.message, path: [ "sheets", sheetIndex, "columns", columnIndex, e.attribute ] })
                   end
                 end
               end
             end
           rescue StandardError => e
-            logger.warn e.to_s;
-            logger.warn e.backtrace.join("\n");
-            errors.push({message: e.to_s, path: ["sheets", sheetIndex, "columns"]})
+            logger.warn e.to_s
+            logger.warn e.backtrace.join("\n")
+            errors.push({ message: e.to_s, path: [ "sheets", sheetIndex, "columns" ] })
           end
         end
         unless errors.blank?
@@ -58,8 +58,8 @@ module Grit::Assays
         render json: { success: true, data: sheets }
       end
     rescue StandardError => e
-      logger.warn e.to_s;
-      logger.warn e.backtrace.join("\n");
+      logger.warn e.to_s
+      logger.warn e.backtrace.join("\n")
       render json: { success: false, errors: e.to_s }, status: :internal_server_error
     end
 

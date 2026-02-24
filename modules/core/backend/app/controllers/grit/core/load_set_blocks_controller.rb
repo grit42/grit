@@ -163,7 +163,7 @@ module Grit::Core
     def export_errors
       raise "No load set block id provided" if params[:load_set_block_id].nil?
       load_set_block = Grit::Core::LoadSetBlock.find(params[:load_set_block_id])
-      columns = [{"name" => "line", "display_name" => "Line"},{"name" => "column_name", "display_name" => "Column"},{"name" => "value", "display_name" => "Value"},{"name" => "error", "display_name" => "Error"}]
+      columns = [ { "name" => "line", "display_name" => "Line" }, { "name" => "column_name", "display_name" => "Column" }, { "name" => "value", "display_name" => "Value" }, { "name" => "error", "display_name" => "Error" } ]
       scope = load_set_block.flattened_errors
 
       Grit::Core::Exporter.scope_to_csv(scope, columns) do |file|

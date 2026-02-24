@@ -33,7 +33,7 @@ module Grit::Assays
 
       columns = DataTableColumn.where(data_table_id: json["data"]["id"])
       assert_equal 1, columns.count
-      assert_equal "entity_name", columns.first.safe_name
+      assert_equal "entity_name", columns.order(:id).first.safe_name
     end
 
     # --- Authentication ---

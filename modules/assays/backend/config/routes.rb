@@ -19,7 +19,7 @@ Grit::Assays::Engine.routes.draw do
   end
 
   resources :experiments do
-    resources :experiment_attachments, only: [:index, :create, :destroy] do
+    resources :experiment_attachments, only: [ :index, :create, :destroy ] do
       collection do
         get :export
       end

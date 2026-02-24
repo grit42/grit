@@ -196,16 +196,15 @@ module Grit::Assays
 
       zos.put_next_entry(entry_name)
 
-      db_connection =  ActiveRecord::Base.connection_pool.checkout
-      raw_connection = db_connection.raw_connection
+      ActiveRecord::Base.connection_pool.with_connection do |db_connection|
+        raw_connection = db_connection.raw_connection
 
-      raw_connection.copy_data(data_sheet_copy_sql) do
-        while (row = raw_connection.get_copy_data)
-          zos.write(row.force_encoding("UTF-8"))
+        raw_connection.copy_data(data_sheet_copy_sql) do
+          while (row = raw_connection.get_copy_data)
+            zos.write(row.force_encoding("UTF-8"))
+          end
         end
       end
-    ensure
-      ActiveRecord::Base.connection_pool.checkin(db_connection)
     end
   end
 end

@@ -24,9 +24,9 @@ module Grit::Assays
     validates :entity_id, uniqueness: { scope: :data_table_id, message: "has already been included in the data table" }
 
     entity_crud_with read: [],
-      create: ["Administrator", "AssayAdministrator", "AssayUser"],
-      update: ["Administrator", "AssayAdministrator", "AssayUser"],
-      destroy: ["Administrator", "AssayAdministrator", "AssayUser"]
+      create: [ "Administrator", "AssayAdministrator", "AssayUser" ],
+      update: [ "Administrator", "AssayAdministrator", "AssayUser" ],
+      destroy: [ "Administrator", "AssayAdministrator", "AssayUser" ]
 
     def self.entity_properties(**args)
       DataTable.find(args[:data_table_id]).entity_data_type.model.entity_properties(**args)

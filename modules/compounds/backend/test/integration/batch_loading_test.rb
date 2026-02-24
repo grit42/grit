@@ -41,7 +41,7 @@ module Grit::Compounds
       assert response_data["success"]
 
       load_set = Grit::Core::LoadSet.find_by(name: "integration-test-batch-load")
-      load_set_block = load_set.load_set_blocks.first
+      load_set_block = load_set.load_set_blocks.order(:id).first
 
       post "/api/grit/core/load_set_blocks/#{load_set_block.id}/initialize_data"
       assert_response :success
@@ -62,7 +62,7 @@ module Grit::Compounds
       assert_response :success
 
       # Verify batch linked correctly
-      batch = Grit::Compounds::Batch.last
+      batch = Grit::Compounds::Batch.order(:id).last
       assert_equal @compound.id, batch.compound_id
       assert_equal @compound_type.id, batch.compound_type_id
       assert_equal @origin.id, batch.origin_id
@@ -94,7 +94,7 @@ module Grit::Compounds
       assert_response :created
 
       load_set = Grit::Core::LoadSet.find_by(name: "integration-test-batch-invalid")
-      load_set_block = load_set.load_set_blocks.first
+      load_set_block = load_set.load_set_blocks.order(:id).first
 
       post "/api/grit/core/load_set_blocks/#{load_set_block.id}/initialize_data"
       assert_response :success
@@ -141,7 +141,7 @@ module Grit::Compounds
       assert_response :created
 
       load_set = Grit::Core::LoadSet.find_by(name: "integration-test-batch-rollback")
-      load_set_block = load_set.load_set_blocks.first
+      load_set_block = load_set.load_set_blocks.order(:id).first
 
       post "/api/grit/core/load_set_blocks/#{load_set_block.id}/initialize_data"
       post "/api/grit/core/load_set_blocks/#{load_set_block.id}/validate", params: {
@@ -195,7 +195,7 @@ module Grit::Compounds
       assert_equal "Grit::Compounds::Batch", response_data["data"]["entity"]
 
       load_set = Grit::Core::LoadSet.find_by(name: "integration-test-batch-response")
-      load_set_block = load_set.load_set_blocks.first
+      load_set_block = load_set.load_set_blocks.order(:id).first
 
       # Test initialize_data response
       post "/api/grit/core/load_set_blocks/#{load_set_block.id}/initialize_data"

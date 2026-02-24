@@ -136,11 +136,11 @@ module Grit::Assays
     end
 
     def self.entity_fields(**args)
-      self.entity_fields_from_properties([*self.entity_properties(**args), *self.metadata_properties(**args)])
+      self.entity_fields_from_properties([ *self.entity_properties(**args), *self.metadata_properties(**args) ])
     end
 
     def self.entity_columns(**args)
-      self.entity_columns_from_properties([*self.entity_properties(**args), *self.metadata_properties(**args)])
+      self.entity_columns_from_properties([ *self.entity_properties(**args), *self.metadata_properties(**args) ])
     end
 
     def delete_records

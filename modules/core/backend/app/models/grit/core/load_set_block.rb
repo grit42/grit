@@ -101,7 +101,7 @@ module Grit::Core
       load_set_block = self
       load_set_block_id =  self.id
 
-      property_column_mapping_values = load_set_block.mappings.map do |key,mapping|
+      property_column_mapping_values = load_set_block.mappings.map do |key, mapping|
         if mapping["constant"]
           "('#{key}','Constant value',NULL)"
         else
@@ -111,7 +111,7 @@ module Grit::Core
       end
       .select { |v| !v.nil? }
 
-      property_column_mappings_sql = "SELECT PROPERTY, CSV_COLUMN_NAME, DB_COLUMN_NAME FROM ( VALUES " + property_column_mapping_values.join(',') + " ) AS T (PROPERTY, CSV_COLUMN_NAME, DB_COLUMN_NAME)"
+      property_column_mappings_sql = "SELECT PROPERTY, CSV_COLUMN_NAME, DB_COLUMN_NAME FROM ( VALUES " + property_column_mapping_values.join(",") + " ) AS T (PROPERTY, CSV_COLUMN_NAME, DB_COLUMN_NAME)"
 
       self.class.unscoped.from("lsb_#{load_set_block_id}")
         .select(
@@ -209,11 +209,12 @@ module Grit::Core
       columns_string = headers.size > 0 ? "(\"line\",\"#{headers.map { |h| h["name"] }.join('","')}\")" : ""
       options_string = "WITH (" + [ "DELIMITER ','", "QUOTE '\"'", "FORMAT CSV" ].compact.join(", ") + ")"
 
-      db_connection =  ActiveRecord::Base.connection_pool.checkout
-      raw_connection = db_connection.raw_connection
-      raw_connection.copy_data %(COPY "#{raw_data_table_name}" #{columns_string} FROM STDIN #{options_string}) do
-        Grit::Core::EntityLoader.load_set_block_records_from_file(self) do |line|
-          raw_connection.put_copy_data(line) unless line.nil?
+      ActiveRecord::Base.connection_pool.with_connection do |db_connection|
+        raw_connection = db_connection.raw_connection
+        raw_connection.copy_data %(COPY "#{raw_data_table_name}" #{columns_string} FROM STDIN #{options_string}) do
+          Grit::Core::EntityLoader.load_set_block_records_from_file(self) do |line|
+            raw_connection.put_copy_data(line) unless line.nil?
+          end
         end
       end
     rescue PG::BadCopyFileFormat => e
@@ -230,8 +231,6 @@ module Grit::Core
       self.status_id = Grit::Core::LoadSetStatus.find_by(name: "Errored").id
       self.save!
       raise e.to_s
-    ensure
-      ActiveRecord::Base.connection_pool.checkin(db_connection)
     end
 
     def headers_from_file
@@ -249,7 +248,7 @@ module Grit::Core
       columns = Grit::Core::EntityLoader.load_set_block_loading_fields(self)
       ActiveRecord::Base.connection.create_table loading_records_table_name, id: false, if_not_exists: true do |t|
         t.bigint :line, primary_key: true
-        columns.reject { |column| ["id","created_at","created_by","updated_at","updated_by"].include? column[:name] } .each do |column|
+        columns.reject { |column| [ "id", "created_at", "created_by", "updated_at", "updated_by" ].include? column[:name] } .each do |column|
           if column[:type].to_s == "entity" or column[:type].to_s == "integer"
             t.column column[:name], :bigint
           elsif column[:type].to_s == "decimal"

@@ -86,23 +86,23 @@ module Grit::Assays
             {
               display_name: "Created at",
               name: "created_at",
-              type: "datetime",
+              type: "datetime"
             },
             {
               display_name: "Created by",
               name: "created_by",
-              type: "string",
+              type: "string"
             },
             {
               display_name: "Updated at",
               name: "updated_at",
-              type: "datetime",
+              type: "datetime"
             },
             {
               display_name: "Updated by",
               name: "updated_by",
-              type: "string",
-            }]
+              type: "string"
+            } ]
 
           if args[:with_experiment_id]
             props.push({
@@ -114,7 +114,7 @@ module Grit::Assays
                 name: "Experiment",
                 path: "grit/assays/experiments",
                 primary_key: "id",
-                primary_key_type: "integer",
+                primary_key_type: "integer"
               }
             })
           end
@@ -287,5 +287,5 @@ module Grit::Assays
       def self.entity_crud
         @entity_crud
       end
-    end
+  end
 end

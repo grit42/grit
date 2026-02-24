@@ -373,7 +373,7 @@ module Grit::Assays
       klass.create!(experiment_id: experiment.id, detail_value: 123)
 
       # Query with detailed scope
-      result = klass.detailed.first
+      result = klass.detailed.order(:id).first
 
       assert_not_nil result
       assert_respond_to result, :detail_value

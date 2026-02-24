@@ -55,7 +55,7 @@ module Grit::Assays
       template.set_metadata_values(species_def.safe_name => vocab_item.id)
       template.reload
 
-      metadatum = template.experiment_metadata_template_metadata.first
+      metadatum = template.experiment_metadata_template_metadata.order(:id).first
       assert_not_nil metadatum
 
       template_id = template.id

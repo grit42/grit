@@ -189,7 +189,7 @@ module Grit::Assays
       )
 
       assert_not_nil result
-      record = result.first
+      record = result.order(:id).first
       assert_respond_to record, :value
       assert_equal 77, record.value
     end

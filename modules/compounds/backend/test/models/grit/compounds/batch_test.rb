@@ -63,7 +63,7 @@ module Grit::Compounds
 
     # Test detailed scope
     test "detailed scope should include compound data" do
-      result = Batch.detailed.where(id: @batch.id).first
+      result = Batch.detailed.where(id: @batch.id).order(:id).first
 
       assert_not_nil result
       assert result.respond_to?(:compound_id__number)

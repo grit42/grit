@@ -29,7 +29,7 @@ module Grit::Compounds
     end
 
     def self.block_set_data_fields(params)
-      self.block_fields(params).filter { |f| ["separator", "structure_format"].include? f[:name] }
+      self.block_fields(params).filter { |f| [ "separator", "structure_format" ].include? f[:name] }
     end
 
     def self.create(params)
@@ -69,7 +69,7 @@ module Grit::Compounds
       {
         structure_format: compound_load_set_block.structure_format,
         compound_properties: Grit::Compounds::CompoundProperty.where(compound_type_id: [ compound_load_set_block.compound_type_id, nil ]),
-        db_property_names: Grit::Compounds::Compound.db_properties.map { |prop| prop[:name] },
+        db_property_names: Grit::Compounds::Compound.db_properties.map { |prop| prop[:name] }
       }
     end
 
@@ -197,7 +197,7 @@ module Grit::Compounds
     def self.columns_from_sdf(load_set_block)
       load_set_block.data.open do |io|
         Grit::Compounds::SDF.properties(io)
-          .each_with_index.map { |h,index| { name: "col_#{index}", display_name: h.strip } }
+          .each_with_index.map { |h, index| { name: "col_#{index}", display_name: h.strip } }
       end
     end
 

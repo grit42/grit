@@ -233,9 +233,13 @@ module Grit::Assays
       assert_includes response.headers["Content-Disposition"], "Export Test Experiment.zip"
 
       zip_entries = []
-      Zip::InputStream.open(StringIO.new(response.body)) do |zip|
-        while (entry = zip.get_next_entry)
-          zip_entries << entry.name
+      Tempfile.create([ "test_export", ".zip" ], binmode: true) do |f|
+        f.write(response.body)
+        f.rewind
+        Zip::InputStream.open(f.path) do |zip|
+          while (entry = zip.get_next_entry)
+            zip_entries << entry.name
+          end
         end
       end
 

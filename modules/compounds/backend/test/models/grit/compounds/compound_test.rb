@@ -138,7 +138,7 @@ module Grit::Compounds
     test "find_by_name_or_synonyms should find compound by name" do
       result = Compound.find_by_name_or_synonyms("one")
       assert result.any?
-      assert_equal @compound.id, result.first.id
+      assert_equal @compound.id, result.order(:id).first.id
     end
 
     # Test loader_find_by
@@ -162,7 +162,7 @@ module Grit::Compounds
 
     # Test detailed scope
     test "detailed scope should include molecule data for compounds with structures" do
-      result = Compound.detailed.where(id: @compound.id).first
+      result = Compound.detailed.where(id: @compound.id).order(:id).first
 
       assert_not_nil result
       # Check that molecule-related fields are selected
@@ -174,12 +174,11 @@ module Grit::Compounds
     end
 
     test "detailed scope should include joined table data" do
-      result = Compound.detailed.where(id: @compound.id).first
+      result = Compound.detailed.where(id: @compound.id).order(:id).first
 
       assert_not_nil result
       assert result.respond_to?(:origin_id__name)
       assert result.respond_to?(:compound_type_id__name)
     end
-
   end
 end

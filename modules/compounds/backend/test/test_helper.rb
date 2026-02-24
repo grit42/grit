@@ -28,4 +28,3 @@ end
 def logout
   delete "/api/grit/core/user_session"
 end
-

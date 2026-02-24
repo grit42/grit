@@ -266,7 +266,7 @@ module Grit::Core
 
         record_props[entity_property_name] = value
 
-        if entity_property[:required] && (value.nil? || (["string", "text"].include?(entity_property[:type].to_s) && value.blank?))
+        if entity_property[:required] && (value.nil? || ([ "string", "text" ].include?(entity_property[:type].to_s) && value.blank?))
           record_props[entity_property_name] = nil
           record[:record_errors] ||= {}
           record[:record_errors][entity_property_name] = [ "can't be blank" ]
@@ -308,7 +308,7 @@ module Grit::Core
         if entity_property[:unique]
           if unique_properties[entity_property_name].include?(value)
             record[:record_errors] ||= {}
-            record[:record_errors][entity_property_name] = ["should be unique (duplicate in file)"]
+            record[:record_errors][entity_property_name] = [ "should be unique (duplicate in file)" ]
           else
             unique_properties[entity_property_name].add(value)
           end
@@ -406,7 +406,7 @@ module Grit::Core
       load_set_block.data.open do |io|
         line = io.gets
         CSV.parse_line(line, col_sep: load_set_block.separator, liberal_parsing: true, encoding: "utf-8")
-          .each_with_index.map { |h,index| { name: "col_#{index}", display_name: h.strip } }
+          .each_with_index.map { |h, index| { name: "col_#{index}", display_name: h.strip } }
       end
     end
 

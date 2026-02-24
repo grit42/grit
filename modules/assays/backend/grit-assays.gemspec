@@ -17,8 +17,8 @@ Gem::Specification.new do |spec|
     Dir["{app,config,db,lib}/**/*", "Rakefile", "README.md", "COPYING"]
   end
 
-  spec.add_dependency "rails", '~> 7.2', '>= 7.2.2'
-  spec.add_dependency "rubyzip", "~> 2.3", ">= 2.3.2"
+  spec.add_dependency "rails", '~> 8.1'
+  spec.add_dependency "rubyzip", "~> 3.2"
   spec.add_dependency "csv", '~> 3', '>= 3.3.5'
   spec.add_dependency "grit-core", "~> #{Grit::Core::VERSION}"
 end

@@ -118,7 +118,7 @@ module Grit::Assays
       record = Grit::Assays::Experiment.find(params[:experiment_id])
       archive_filename = "#{record[:name]}_attachments.zip"
 
-      temp_file = Tempfile.new([archive_filename, ".zip"])
+      temp_file = Tempfile.new([ archive_filename, ".zip" ])
 
       begin
         Zip::OutputStream.open(temp_file.path) do |zos|
