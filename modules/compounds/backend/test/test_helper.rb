@@ -28,3 +28,29 @@ end
 def logout
   delete "/api/grit/core/user_session"
 end
+
+def silence_stderr
+  original_stderr = $stderr.clone
+  $stderr.reopen(File.new("/dev/null", "w"))
+  yield
+ensure
+  $stderr.reopen(original_stderr)
+end
+
+ActiveSupport.on_load(:active_record) do
+  ActiveRecord::ConnectionAdapters::PostgreSQLAdapter.class_eval do
+    def configure_connection
+      super
+      # Her går vi helt ned i den rå PG-forbindelse
+      # og kopierer tekst-dekoderen (OID 25) over på mol-OID (31783)
+      raw_conn = @connection
+      text_decoder = raw_conn.type_map_for_results.coders.find { |c| c.oid == 25 }
+      
+      if text_decoder
+        raw_conn.type_map_for_results.register_type(0, 31783, text_decoder)
+      end
+    rescue
+      # Silent rescue for at undgå crash under db:create/migrate
+    end
+  end
+end

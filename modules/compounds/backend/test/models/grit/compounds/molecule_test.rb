@@ -28,8 +28,9 @@ module Grit::Compounds
     end
 
     test "by_molfile should return nil for invalid molfile" do
-      found = Molecule.by_molfile("invalid molfile data")
-      assert_nil found
+      silence_stderr do
+        assert_nil Molecule.by_molfile("invalid molfile data")
+      end
     end
 
     # Test by_smiles class method

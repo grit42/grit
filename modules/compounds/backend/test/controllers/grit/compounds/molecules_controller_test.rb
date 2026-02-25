@@ -38,8 +38,9 @@ module Grit::Compounds
 
     test "should handle invalid molfile in molecule_exists" do
       invalid_molfile = "invalid structure data"
-      post grit_compounds.molecule_exists_molecules_url, params: { molfile: invalid_molfile }, as: :json
-
+      silence_stderr do
+        post grit_compounds.molecule_exists_molecules_url, params: { molfile: invalid_molfile }, as: :json
+      end
       assert_response :success
       response_body = JSON.parse(@response.body)
       assert response_body["success"]
@@ -48,7 +49,9 @@ module Grit::Compounds
     end
 
     test "should handle empty molfile in molecule_exists" do
-      post grit_compounds.molecule_exists_molecules_url, params: { molfile: "" }, as: :json
+      silence_stderr do
+        post grit_compounds.molecule_exists_molecules_url, params: { molfile: "" }, as: :json
+      end
 
       assert_response :success
       response_body = JSON.parse(@response.body)

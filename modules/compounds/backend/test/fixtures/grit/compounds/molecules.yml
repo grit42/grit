@@ -1,8 +1,8 @@
 ethanol:
-  molfile: "ethanol.mol"
+  molfile: <%= File.read("test/fixtures/grit/compounds/ethanol.mol").to_json %>
   canonical_smiles: CCO
   molid: 1
 propanol:
-  molfile: "propanol.mol"
+  molfile: <%= File.read("test/fixtures/grit/compounds/propanol.mol").to_json %>
   canonical_smiles: CCCO
   molid: 2
