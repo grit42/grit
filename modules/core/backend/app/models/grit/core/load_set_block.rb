@@ -209,13 +209,16 @@ module Grit::Core
       columns_string = headers.size > 0 ? "(\"line\",\"#{headers.map { |h| h["name"] }.join('","')}\")" : ""
       options_string = "WITH (" + [ "DELIMITER ','", "QUOTE '\"'", "FORMAT CSV" ].compact.join(", ") + ")"
 
-      ActiveRecord::Base.connection_pool.with_connection do |db_connection|
+      db_connection = ActiveRecord::Base.connection_pool.checkout
+      begin
         raw_connection = db_connection.raw_connection
         raw_connection.copy_data %(COPY "#{raw_data_table_name}" #{columns_string} FROM STDIN #{options_string}) do
           Grit::Core::EntityLoader.load_set_block_records_from_file(self) do |line|
             raw_connection.put_copy_data(line) unless line.nil?
           end
         end
+      ensure
+        ActiveRecord::Base.connection_pool.checkin(db_connection)
       end
     rescue PG::BadCopyFileFormat => e
       logger.info e.to_s
