@@ -27,7 +27,7 @@ module Grit::Assays
     let(:biochemical) { create(:grit_assays_assay_type, :biochemical) }
 
     before do
-      Grit::Core::UserSession.create(admin)
+      set_current_user(admin)
     end
 
     let(:species) do

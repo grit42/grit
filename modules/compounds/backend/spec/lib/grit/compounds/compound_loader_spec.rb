@@ -28,7 +28,7 @@ RSpec.describe Grit::Compounds::CompoundLoader do
 
   before do
     admin = create(:grit_core_user, :admin, :with_admin_role)
-    Grit::Core::UserSession.create(admin)
+    set_current_user(admin)
   end
 
   describe ".block_fields" do

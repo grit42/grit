@@ -16,12 +16,16 @@
 # You should have received a copy of the GNU General Public License along with
 # @grit42/core. If not, see <https://www.gnu.org/licenses/>.
 
+require "factory_bot"
+
+FactoryBot.definition_file_paths = [
+  File.expand_path("../factories", __dir__)
+]
 
 RSpec.configure do |config|
+  config.include FactoryBot::Syntax::Methods
+
   config.before(:suite) do
-    FactoryBot.definition_file_paths = [
-      File.expand_path("../../spec/factories", __dir__)
-    ]
     FactoryBot.find_definitions
   end
 end

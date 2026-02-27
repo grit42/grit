@@ -24,7 +24,7 @@ RSpec.describe Grit::Core::UserRole, type: :model do
   let(:admin_role) { Grit::Core::Role.find_by!(name: "Administrator") }
 
   before(:each) do
-    Grit::Core::UserSession.create(admin)
+    set_current_user(admin)
   end
 
   # check_dependencies callback tests

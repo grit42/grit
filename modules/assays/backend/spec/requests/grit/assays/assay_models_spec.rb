@@ -26,7 +26,7 @@ module Grit::Assays
     let(:integer_type) { create(:grit_core_data_type, :integer) }
 
     before do
-      Grit::Core::UserSession.create(admin)
+      set_current_user(admin)
     end
 
     path "/api/grit/assays/assay_models" do

@@ -27,7 +27,7 @@ RSpec.describe Grit::Core::LoadSetBlock, type: :model do
   let(:load_set) { create(:grit_core_load_set) }
 
   before(:each) do
-    Grit::Core::UserSession.create(admin)
+    set_current_user(admin)
   end
 
   # separator_set validation tests

@@ -27,7 +27,7 @@ RSpec.describe Grit::Compounds::Compound, type: :model do
 
   before do
     admin = create(:grit_core_user, :admin, :with_admin_role)
-    Grit::Core::UserSession.create(admin)
+    set_current_user(admin)
   end
 
   describe "associations" do

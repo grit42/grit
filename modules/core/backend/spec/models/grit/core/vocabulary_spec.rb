@@ -23,7 +23,7 @@ RSpec.describe Grit::Core::Vocabulary, type: :model do
   let(:admin) { create(:grit_core_user, :admin, :with_admin_role) }
 
   before(:each) do
-    Grit::Core::UserSession.create(admin)
+    set_current_user(admin)
   end
 
   let!(:vocabulary) { create(:grit_core_vocabulary, name: "test_vocab") }

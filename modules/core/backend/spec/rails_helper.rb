@@ -19,13 +19,13 @@
 
 ENV["RAILS_ENV"] ||= "test"
 
-require "authlogic"
-require "authlogic/test_case"
-
-# Boot the existing dummy app
+# Boot the existing dummy app (loads Rails + ActiveSupport)
 require_relative "../test/dummy/config/environment"
-abort("The Rails environment is running in production mode!") if Rails.env.production?
 
+# Dev dependencies declared in gemspec are not auto-required by Bundler.require;
+# load them explicitly after Rails boots (they depend on ActiveSupport).
+require "authlogic/test_case"
+require "rswag/specs"
 require "rspec/rails"
 
 # Configure migration paths
@@ -45,8 +45,25 @@ RSpec.configure do |config|
   config.infer_spec_type_from_file_location!
   config.filter_rails_from_backtrace!
 
-  # Include factory_bot methods
-  config.include FactoryBot::Syntax::Methods
+  # Clean up any data left by previous minitest fixture loads or seed data.
+  # Transactional fixtures only rollback within each test — they don't clear
+  # data that existed before the suite started.
+  config.before(:suite) do
+    ActiveRecord::Base.connection.execute("SET session_replication_role = 'replica'")
+    %w[
+      grit_core_user_roles grit_core_users grit_core_roles
+      grit_core_origins grit_core_locations grit_core_countries
+      grit_core_data_types grit_core_units grit_core_publication_statuses
+      grit_core_vocabulary_items grit_core_vocabularies
+      grit_core_load_set_block_loaded_records grit_core_load_set_blocks
+      grit_core_load_set_statuses grit_core_load_sets
+    ].each do |table|
+      ActiveRecord::Base.connection.execute("DELETE FROM #{table}")
+    rescue ActiveRecord::StatementInvalid
+      # Table may not exist yet
+    end
+    ActiveRecord::Base.connection.execute("SET session_replication_role = 'origin'")
+  end
 
   # Include Authlogic test helpers
   config.include Authlogic::TestCase
@@ -54,9 +71,31 @@ RSpec.configure do |config|
   # Include engine routes in request specs
   config.include Grit::Core::Engine.routes.url_helpers, type: :request
 
-  # Activate authlogic before each test
+  # Activate authlogic and seed a bootstrap user so that factory_bot can
+  # create records without hitting the set_updater "no session" error.
+  # The GritEntityRecord concern calls User.current on every save, which
+  # reads from RequestStore. Fixtures bypassed this (no callbacks), but
+  # factory_bot triggers callbacks, so we need a user in RequestStore
+  # before any factory creates run.
   config.before(:each) do
     activate_authlogic
+
+    # Place a temporary stub in RequestStore so model callbacks (set_updater,
+    # check_role, check_user) don't blow up while factory_bot creates the
+    # initial user and its associations. The stub must respond to the same
+    # methods the callbacks call on User.current.
+    # The stub is cleared after each test via RequestStore transaction cleanup,
+    # and specs that call UserSession.create(admin) should clear it explicitly
+    # so User.current re-fetches the real user from the session.
+    RequestStore.store["current_user"] = Struct.new(:login, :id) do
+      def role?(_name = nil)
+        true
+      end
+
+      def active?
+        true
+      end
+    end.new("factory_bootstrap", 0)
   end
 
   # Helper to resolve file fixtures

@@ -30,7 +30,7 @@ module Grit::Assays
     end
 
     before do
-      Grit::Core::UserSession.create(admin)
+      set_current_user(admin)
     end
 
     path "/api/grit/assays/experiment_metadata_templates" do

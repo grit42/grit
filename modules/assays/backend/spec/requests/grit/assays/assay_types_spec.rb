@@ -25,7 +25,7 @@ module Grit::Assays
     let(:assay_type) { create(:grit_assays_assay_type, :biochemical) }
 
     before do
-      Grit::Core::UserSession.create(admin)
+      set_current_user(admin)
     end
 
     path "/api/grit/assays/assay_types" do

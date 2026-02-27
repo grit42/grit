@@ -16,13 +16,18 @@
 # You should have received a copy of the GNU General Public License along with
 # @grit42/compounds. If not, see <https://www.gnu.org/licenses/>.
 
+require "factory_bot"
+
+# Compounds specs need both their own factories and core's (users, origins, etc.)
+FactoryBot.definition_file_paths = [
+  File.expand_path("../factories", __dir__),
+  Grit::Core::Engine.root.join("spec", "factories").to_s
+]
 
 RSpec.configure do |config|
+  config.include FactoryBot::Syntax::Methods
+
   config.before(:suite) do
-    FactoryBot.definition_file_paths = [
-      File.expand_path("../../spec/factories", __dir__),
-      Grit::Core::Engine.root.join("spec", "factories").to_s
-    ]
     FactoryBot.find_definitions
   end
 end

@@ -25,7 +25,7 @@ RSpec.describe Grit::Core::User, type: :model do
   let(:origin) { create(:grit_core_origin) }
 
   before(:each) do
-    Grit::Core::UserSession.create(admin)
+    set_current_user(admin)
   end
 
   # Email validation tests
@@ -161,7 +161,7 @@ RSpec.describe Grit::Core::User, type: :model do
     end
 
     it "user can edit self" do
-      Grit::Core::UserSession.create(notadmin)
+      set_current_user(notadmin)
       notadmin.name = "Updated Name"
       expect(notadmin.save).to be_truthy
     end

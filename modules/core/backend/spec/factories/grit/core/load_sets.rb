@@ -21,7 +21,7 @@ FactoryBot.define do
   factory :grit_core_load_set, class: "Grit::Core::LoadSet" do
     sequence(:name) { |n| "load-set-#{n}" }
     entity { "TestEntity" }
-    association :origin, factory: :grit_core_origin
+    origin_id { create(:grit_core_origin).id }
 
     trait :succeeded do
       name { "test-entity-succeeded" }

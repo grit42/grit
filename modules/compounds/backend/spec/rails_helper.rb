@@ -19,13 +19,13 @@
 
 ENV["RAILS_ENV"] ||= "test"
 
-require "authlogic"
-require "authlogic/test_case"
-
-# Boot the existing dummy app
+# Boot the existing dummy app (loads Rails + ActiveSupport)
 require_relative "../test/dummy/config/environment"
-abort("The Rails environment is running in production mode!") if Rails.env.production?
 
+# Dev dependencies declared in gemspec are not auto-required by Bundler.require;
+# load them explicitly after Rails boots (they depend on ActiveSupport).
+require "authlogic/test_case"
+require "rswag/specs"
 require "rspec/rails"
 
 # Configure migration paths
@@ -63,18 +63,28 @@ RSpec.configure do |config|
   config.infer_spec_type_from_file_location!
   config.filter_rails_from_backtrace!
 
-  # Include factory_bot methods
-  config.include FactoryBot::Syntax::Methods
-
   # Include Authlogic test helpers
   config.include Authlogic::TestCase
 
   # Include engine routes in request specs
   config.include Grit::Core::Engine.routes.url_helpers, type: :request
 
-  # Activate authlogic before each test
+  # Activate authlogic and seed a bootstrap user so that factory_bot can
+  # create records without hitting the set_updater "no session" error.
   config.before(:each) do
     activate_authlogic
+    unless RequestStore.store["current_user"]
+      bootstrap = Struct.new(:login, :id) do
+        def role?(_name = nil)
+          true
+        end
+
+        def active?
+          true
+        end
+      end.new("factory_bootstrap", 0)
+      RequestStore.store["current_user"] = bootstrap
+    end
   end
 
   # Helper to resolve file fixtures

@@ -16,21 +16,31 @@
 # You should have received a copy of the GNU General Public License along with
 # @grit42/core. If not, see <https://www.gnu.org/licenses/>.
 
-
-# Shared authentication helpers for request specs.
-# Provides login/logout via the Grit Core session API.
+# Shared authentication helpers for request and model specs.
 module AuthHelpers
+  # Request spec login: uses the API endpoint
   def login_as(user, password: "password")
     post "/api/grit/core/user_session",
          params: { user_session: { login: user.login, password: password } },
          as: :json
+    # Clear bootstrap stub so User.current re-fetches from real session
+    RequestStore.store.delete("current_user")
   end
 
   def logout
     delete "/api/grit/core/user_session", as: :json
+    RequestStore.store.delete("current_user")
+  end
+
+  # Model spec login: uses Authlogic test mode
+  def set_current_user(user)
+    Grit::Core::UserSession.create(user)
+    # Clear bootstrap stub so User.current re-fetches from real session
+    RequestStore.store.delete("current_user")
   end
 end
 
 RSpec.configure do |config|
   config.include AuthHelpers, type: :request
+  config.include AuthHelpers, type: :model
 end

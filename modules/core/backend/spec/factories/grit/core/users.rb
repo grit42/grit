@@ -36,6 +36,11 @@ FactoryBot.define do
     failed_login_count { 0 }
 
     trait :admin do
+      initialize_with do
+        # Re-use existing admin if present (e.g. from seed data), otherwise build a new one.
+        Grit::Core::User.find_by(login: "admin") || new(**attributes)
+      end
+
       login { "admin" }
       name { "Administrator" }
       email { "admin@example.com" }

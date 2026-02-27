@@ -25,7 +25,7 @@ RSpec.describe Grit::Core::EntityLoader, type: :model do
   let(:origin) { create(:grit_core_origin) }
 
   before(:each) do
-    Grit::Core::UserSession.create(admin)
+    set_current_user(admin)
   end
 
   # =========================================================================

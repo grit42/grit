@@ -24,7 +24,7 @@ RSpec.describe Grit::Core::Role, type: :model do
   let(:admin_role) { described_class.find_by!(name: "Administrator") }
 
   before(:each) do
-    Grit::Core::UserSession.create(admin)
+    set_current_user(admin)
   end
 
   # Associations tests

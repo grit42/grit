@@ -24,7 +24,7 @@ module Grit::Assays
     let(:admin) { create(:grit_core_user, :admin, :with_admin_role) }
 
     before do
-      Grit::Core::UserSession.create(admin)
+      set_current_user(admin)
     end
 
     # --- Basic Model Behavior ---
