@@ -28,4 +28,9 @@ Gem::Specification.new do |spec|
 
   # Authentication and session management
   spec.add_dependency "authlogic", '~> 6.6'
+
+  # Testing
+  spec.add_development_dependency "rspec-rails", "~> 8.0"
+  spec.add_development_dependency "rswag-specs", "~> 2.17"
+  spec.add_development_dependency "factory_bot_rails", "~> 6.5"
 end

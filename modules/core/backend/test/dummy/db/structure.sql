@@ -1,8 +1,3 @@
-\restrict QcZ8PAyiBUoWrcqnYluhfJA8I2f0HFM00yLlIInZ2CeAZWlVheQHmVI6OMqgSe4
-
--- Dumped from database version 16.3 (Debian 16.3-1.pgdg120+1)
--- Dumped by pg_dump version 16.11
-
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
@@ -569,7 +564,10 @@ CREATE TABLE public.grit_core_users (
     two_factor_expiry timestamp(6) without time zone,
     settings jsonb DEFAULT '{}'::jsonb,
     origin_id bigint NOT NULL,
-    location_id bigint
+    location_id bigint,
+    forgot_token_expires_at timestamp(6) without time zone,
+    two_factor_attempts integer DEFAULT 0 NOT NULL,
+    two_factor_locked_until timestamp(6) without time zone
 );
 
 
@@ -1345,12 +1343,12 @@ ALTER TABLE ONLY public.test_entities
 -- PostgreSQL database dump complete
 --
 
-\unrestrict QcZ8PAyiBUoWrcqnYluhfJA8I2f0HFM00yLlIInZ2CeAZWlVheQHmVI6OMqgSe4
-
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
 ('20260130123817'),
+('20250627000000'),
+('20250626000000'),
 ('20250625074209'),
 ('20250624081122'),
 ('20250624080646'),
