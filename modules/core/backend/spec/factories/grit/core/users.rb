@@ -25,22 +25,33 @@ FactoryBot.define do
     active { true }
     association :origin, factory: :grit_core_origin
 
-    # Authlogic tokens are auto-generated, but we set them explicitly
-    # to avoid needing Authlogic active during factory creation.
-    password_salt { Authlogic::Random.hex_token }
-    crypted_password { Authlogic::CryptoProviders::SCrypt.encrypt("password" + password_salt) }
+    # The User model has `before_validation :random_password, on: :create`
+    # which overwrites any password set during factory build. We work around
+    # this by setting the password in after(:create) via update (on: :update
+    # doesn't trigger random_password).
     persistence_token { Authlogic::Random.hex_token }
     single_access_token { Authlogic::Random.friendly_token }
     perishable_token { Authlogic::Random.friendly_token }
     login_count { 0 }
     failed_login_count { 0 }
 
-    trait :admin do
-      initialize_with do
-        # Re-use existing admin if present (e.g. from seed data), otherwise build a new one.
-        Grit::Core::User.find_by(login: "admin") || new(**attributes)
+    after(:create) do |user|
+      # Re-activate authlogic before the save. The User model has
+      # `after_update :new_session` which calls UserSession.new(...),
+      # and that requires an active Authlogic controller. In request
+      # specs, the RequestStore middleware clears RequestStore (including
+      # :authlogic_controller) after each HTTP request, so by the time
+      # a lazy `let` triggers this factory, the controller may be gone.
+      unless RequestStore.store[:authlogic_controller]
+        RequestStore.store[:authlogic_controller] =
+          Authlogic::TestCase::MockController.new
       end
+      user.password = "password"
+      user.password_confirmation = "password"
+      user.save!
+    end
 
+    trait :admin do
       login { "admin" }
       name { "Administrator" }
       email { "admin@example.com" }

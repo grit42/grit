@@ -45,6 +45,34 @@ RSpec.configure do |config|
   config.infer_spec_type_from_file_location!
   config.filter_rails_from_backtrace!
 
+  # Clean up any data left by previous minitest fixture loads or seed data.
+  config.before(:suite) do
+    ActiveRecord::Base.connection.execute("SET session_replication_role = 'replica'")
+    %w[
+      grit_assays_experiment_metadata_template_metadata
+      grit_assays_experiment_metadata_templates
+      grit_assays_experiment_metadata
+      grit_assays_experiment_data_sheet_record_load_set_blocks
+      grit_assays_data_table_columns grit_assays_data_table_entities
+      grit_assays_data_tables grit_assays_experiments
+      grit_assays_assay_data_sheet_columns
+      grit_assays_assay_data_sheet_definitions
+      grit_assays_assay_model_metadata grit_assays_assay_models
+      grit_assays_assay_metadata_definitions grit_assays_assay_types
+      grit_core_user_roles grit_core_users grit_core_roles
+      grit_core_origins grit_core_locations grit_core_countries
+      grit_core_data_types grit_core_units grit_core_publication_statuses
+      grit_core_load_set_block_loaded_records grit_core_load_set_blocks
+      grit_core_load_set_statuses grit_core_load_sets
+      grit_core_vocabulary_items grit_core_vocabularies
+    ].each do |table|
+      ActiveRecord::Base.connection.execute("DELETE FROM #{table}")
+    rescue ActiveRecord::StatementInvalid
+      # Table may not exist yet
+    end
+    ActiveRecord::Base.connection.execute("SET session_replication_role = 'origin'")
+  end
+
   # Include Authlogic test helpers
   config.include Authlogic::TestCase
 
@@ -53,20 +81,28 @@ RSpec.configure do |config|
 
   # Activate authlogic and seed a bootstrap user so that factory_bot can
   # create records without hitting the set_updater "no session" error.
+  # IMPORTANT: Always reset RequestStore — transactional fixtures rollback the
+  # DB but do NOT clear RequestStore, so stale User objects from the previous
+  # test would bypass the bootstrap and cause NoMethodError on role lookups.
   config.before(:each) do
+    # Clear BEFORE activate_authlogic because authlogic stores its controller
+    # in RequestStore.store[:authlogic_controller].
+    RequestStore.store.clear
     activate_authlogic
-    unless RequestStore.store["current_user"]
-      bootstrap = Struct.new(:login, :id) do
-        def role?(_name = nil)
-          true
-        end
+    bootstrap = Struct.new(:login, :id) do
+      def role?(_name = nil)
+        true
+      end
 
-        def active?
-          true
-        end
-      end.new("factory_bootstrap", 0)
-      RequestStore.store["current_user"] = bootstrap
-    end
+      def active?
+        true
+      end
+    end.new("factory_bootstrap", 0)
+    RequestStore.store["current_user"] = bootstrap
+
+    # Seed PublicationStatus records needed by controllers (find_by name).
+    Grit::Core::PublicationStatus.find_or_create_by!(name: "Draft")
+    Grit::Core::PublicationStatus.find_or_create_by!(name: "Published")
   end
 
   # Dynamic tables (ds_{id}) are created via DDL and are not rolled back by

@@ -19,7 +19,7 @@
 
 require "rails_helper"
 
-RSpec.describe "Compound Loading Integration", type: :integration do
+RSpec.describe "Compound Loading Integration", type: :request do
   include AuthHelpers
   include ActionDispatch::TestProcess::FixtureFile
 

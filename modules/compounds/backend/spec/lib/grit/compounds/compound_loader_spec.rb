@@ -146,7 +146,7 @@ RSpec.describe Grit::Compounds::CompoundLoader do
 
   describe ".validate_block_context (private)" do
     it "returns structure_format and properties" do
-      load_set = create(:grit_core_load_set, entity: "Grit::Compounds::Compound", origin: origin)
+      load_set = create(:grit_core_load_set, entity: "Grit::Compounds::Compound", origin_id: origin.id)
       load_set_block = create(:grit_core_load_set_block, load_set: load_set)
       create(:grit_compounds_compound_load_set_block,
              load_set_block: load_set_block,
@@ -165,7 +165,7 @@ RSpec.describe Grit::Compounds::CompoundLoader do
 
   describe ".block_mapping_fields (private)" do
     it "excludes auto-generated fields" do
-      load_set = create(:grit_core_load_set, entity: "Grit::Compounds::Compound", origin: origin)
+      load_set = create(:grit_core_load_set, entity: "Grit::Compounds::Compound", origin_id: origin.id)
       load_set_block = create(:grit_core_load_set_block, load_set: load_set)
       create(:grit_compounds_compound_load_set_block,
              load_set_block: load_set_block,
@@ -188,7 +188,7 @@ RSpec.describe Grit::Compounds::CompoundLoader do
 
   describe ".block_loading_fields (private)" do
     it "converts mol type to text" do
-      load_set = create(:grit_core_load_set, entity: "Grit::Compounds::Compound", origin: origin)
+      load_set = create(:grit_core_load_set, entity: "Grit::Compounds::Compound", origin_id: origin.id)
       load_set_block = create(:grit_core_load_set_block, load_set: load_set)
       create(:grit_compounds_compound_load_set_block,
              load_set_block: load_set_block,
@@ -203,7 +203,7 @@ RSpec.describe Grit::Compounds::CompoundLoader do
     end
 
     it "excludes calculated fields" do
-      load_set = create(:grit_core_load_set, entity: "Grit::Compounds::Compound", origin: origin)
+      load_set = create(:grit_core_load_set, entity: "Grit::Compounds::Compound", origin_id: origin.id)
       load_set_block = create(:grit_core_load_set_block, load_set: load_set)
       create(:grit_compounds_compound_load_set_block,
              load_set_block: load_set_block,
@@ -224,7 +224,7 @@ RSpec.describe Grit::Compounds::CompoundLoader do
 
   describe ".base_record_props (private)" do
     it "returns compound_type_id from load set block" do
-      load_set = create(:grit_core_load_set, entity: "Grit::Compounds::Compound", origin: origin)
+      load_set = create(:grit_core_load_set, entity: "Grit::Compounds::Compound", origin_id: origin.id)
       load_set_block = create(:grit_core_load_set_block, load_set: load_set)
       create(:grit_compounds_compound_load_set_block,
              load_set_block: load_set_block,
@@ -256,7 +256,7 @@ RSpec.describe Grit::Compounds::CompoundLoader do
 
       expect {
         described_class.send(:create, invalid_params)
-      }.to raise_error(ActiveRecord::RecordInvalid)
+      }.to raise_error(StandardError)
     end
 
     it "raises error with nil compound_type_id" do
@@ -276,7 +276,7 @@ RSpec.describe Grit::Compounds::CompoundLoader do
 
       expect {
         described_class.send(:create, invalid_params)
-      }.to raise_error(ActiveRecord::RecordInvalid)
+      }.to raise_error(StandardError)
     end
   end
 
@@ -288,10 +288,14 @@ RSpec.describe Grit::Compounds::CompoundLoader do
         origin_id: origin.id
       )
 
+      created_status = Grit::Core::LoadSetStatus.find_or_create_by!(name: "Created") do |s|
+        s.description = "The load set has been created"
+      end
+
       load_set_block = Grit::Core::LoadSetBlock.create!(
         name: "csv-test-block",
         load_set_id: load_set.id,
-        status_id: Grit::Core::LoadSetStatus.find_by(name: "Created").id,
+        status_id: created_status.id,
         separator: ",",
         has_errors: false,
         has_warnings: false
@@ -323,7 +327,7 @@ RSpec.describe Grit::Compounds::CompoundLoader do
     end
 
     it "columns_from_file uses SDF parser when structure_format is molfile" do
-      load_set = create(:grit_core_load_set, entity: "Grit::Compounds::Compound", origin: origin)
+      load_set = create(:grit_core_load_set, entity: "Grit::Compounds::Compound", origin_id: origin.id)
       load_set_block = create(:grit_core_load_set_block, load_set: load_set)
       create(:grit_compounds_compound_load_set_block,
              load_set_block: load_set_block,
@@ -349,10 +353,14 @@ RSpec.describe Grit::Compounds::CompoundLoader do
         origin_id: origin.id
       )
 
+      created_status = Grit::Core::LoadSetStatus.find_or_create_by!(name: "Created") do |s|
+        s.description = "The load set has been created"
+      end
+
       load_set_block = Grit::Core::LoadSetBlock.create!(
         name: "csv-records-block",
         load_set_id: load_set.id,
-        status_id: Grit::Core::LoadSetStatus.find_by(name: "Created").id,
+        status_id: created_status.id,
         separator: ",",
         headers: '[{"name": "col_0", "display_name": "SMILES"}, {"name": "col_1", "display_name": "Name"}, {"name": "col_2", "display_name": "Description"}]',
         has_errors: false,

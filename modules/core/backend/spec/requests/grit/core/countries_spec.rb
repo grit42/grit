@@ -21,7 +21,7 @@ require "openapi_helper"
 
 RSpec.describe "Countries API", type: :request do
   let(:admin) { create(:grit_core_user, :admin, :with_admin_role) }
-  let(:country) { create(:grit_core_country, :test) }
+  let!(:country) { create(:grit_core_country, :test) }
 
   before(:each) do
     login_as(admin)

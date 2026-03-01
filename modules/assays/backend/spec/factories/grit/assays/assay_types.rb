@@ -23,16 +23,31 @@ FactoryBot.define do
     description { "A test assay type" }
 
     trait :biochemical do
+      initialize_with do
+        Grit::Assays::AssayType.find_or_create_by!(name: "Biochemical") do |at|
+          at.description = "Biochemical assays measuring enzyme activity, binding, etc."
+        end
+      end
       name { "Biochemical" }
       description { "Biochemical assays measuring enzyme activity, binding, etc." }
     end
 
     trait :cellular do
+      initialize_with do
+        Grit::Assays::AssayType.find_or_create_by!(name: "Cellular") do |at|
+          at.description = "Cell-based assays measuring cellular response"
+        end
+      end
       name { "Cellular" }
       description { "Cell-based assays measuring cellular response" }
     end
 
     trait :in_vivo do
+      initialize_with do
+        Grit::Assays::AssayType.find_or_create_by!(name: "In Vivo") do |at|
+          at.description = "In vivo animal studies"
+        end
+      end
       name { "In Vivo" }
       description { "In vivo animal studies" }
     end

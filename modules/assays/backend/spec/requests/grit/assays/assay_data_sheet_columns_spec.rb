@@ -25,7 +25,18 @@ module Grit::Assays
     let(:biochemical) { create(:grit_assays_assay_type, :biochemical) }
     let(:integer_type) { create(:grit_core_data_type, :integer) }
     let(:draft_model) { create(:grit_assays_assay_model, :draft, assay_type: biochemical) }
-    let(:published_model) { create(:grit_assays_assay_model, :published, assay_type: biochemical) }
+    let(:published_model) do
+      m = create(:grit_assays_assay_model, :draft, assay_type: biochemical)
+      # Create sheet and column while still draft, then publish
+      sheet = AssayDataSheetDefinition.create!(name: "Published Results", assay_model: m, result: true, sort: 1)
+      AssayDataSheetColumn.create!(
+        name: "Viability", safe_name: "viability",
+        assay_data_sheet_definition: sheet, data_type: integer_type,
+        sort: 1, required: false
+      )
+      m.update!(publication_status: Grit::Core::PublicationStatus.find_by!(name: "Published"))
+      m
+    end
 
     let(:draft_sheet) do
       AssayDataSheetDefinition.create!(
@@ -34,9 +45,7 @@ module Grit::Assays
     end
 
     let(:published_sheet) do
-      AssayDataSheetDefinition.create!(
-        name: "Published Results", assay_model: published_model, result: true, sort: 1
-      )
+      AssayDataSheetDefinition.find_by!(assay_model: published_model, name: "Published Results")
     end
 
     let(:draft_column) do
@@ -48,11 +57,7 @@ module Grit::Assays
     end
 
     let(:published_column) do
-      AssayDataSheetColumn.create!(
-        name: "Viability", safe_name: "viability",
-        assay_data_sheet_definition: published_sheet, data_type: integer_type,
-        sort: 1, required: false
-      )
+      AssayDataSheetColumn.find_by!(assay_data_sheet_definition: published_sheet, safe_name: "viability")
     end
 
     before do
@@ -81,6 +86,7 @@ module Grit::Assays
         consumes "application/json"
         produces "application/json"
         security [ { cookie_auth: [] } ]
+        parameter name: :params, in: :body, schema: { type: :object }
 
         response "201", "column created on draft model" do
           before { login_as(admin) }
@@ -159,6 +165,7 @@ module Grit::Assays
         consumes "application/json"
         produces "application/json"
         security [ { cookie_auth: [] } ]
+        parameter name: :params, in: :body, schema: { type: :object }
 
         response "200", "column updated on draft model" do
           let(:id) { draft_column.id }

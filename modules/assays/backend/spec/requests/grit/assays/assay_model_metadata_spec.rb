@@ -64,6 +64,7 @@ module Grit::Assays
         consumes "application/json"
         produces "application/json"
         security [ { cookie_auth: [] } ]
+        parameter name: :params, in: :body, schema: { type: :object }
 
         response "201", "assay model metadatum created on draft model" do
           before { login_as(admin) }

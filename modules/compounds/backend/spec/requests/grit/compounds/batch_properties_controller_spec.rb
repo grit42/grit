@@ -29,7 +29,7 @@ RSpec.describe Grit::Compounds::BatchPropertiesController, type: :request do
     Grit::Core::UserRole.find_or_create_by!(user: user, role: role)
     user
   end
-  let(:notadmin) do
+  let!(:notadmin) do
     create(:grit_core_user, login: "notadmin", name: "NotAdmin", email: "notadmin@test.com")
   end
   let(:compound_type) { create(:grit_compounds_compound_type, :screening) }

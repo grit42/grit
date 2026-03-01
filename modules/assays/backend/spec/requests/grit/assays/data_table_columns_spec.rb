@@ -50,6 +50,7 @@ module Grit::Assays
         consumes "application/json"
         produces "application/json"
         security [ { cookie_auth: [] } ]
+        parameter name: :params, in: :body, schema: { type: :object }
 
         response "422", "duplicate safe_name rejected" do
           before { login_as(admin) }

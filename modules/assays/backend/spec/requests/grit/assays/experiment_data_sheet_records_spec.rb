@@ -24,8 +24,8 @@ module Grit::Assays
     let(:admin) { create(:grit_core_user, :admin, :with_admin_role) }
     let(:biochemical) { create(:grit_assays_assay_type, :biochemical) }
     let(:integer_type) { create(:grit_core_data_type, :integer) }
-    let(:draft_status) { create(:grit_core_publication_status, :draft) }
-    let(:published_status) { create(:grit_core_publication_status, :published) }
+    let!(:draft_status) { Grit::Core::PublicationStatus.find_or_create_by!(name: "Draft") }
+    let!(:published_status) { Grit::Core::PublicationStatus.find_or_create_by!(name: "Published") }
 
     let(:model) do
       AssayModel.create!(

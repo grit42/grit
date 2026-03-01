@@ -25,12 +25,26 @@ FactoryBot.define do
     association :vocabulary, factory: :grit_core_vocabulary
 
     trait :species do
+      initialize_with do
+        Grit::Assays::AssayMetadataDefinition.find_or_create_by!(name: "Species") do |md|
+          md.safe_name = "species"
+          md.description = "The species used in the experiment"
+          md.vocabulary = Grit::Core::Vocabulary.first || FactoryBot.create(:grit_core_vocabulary)
+        end
+      end
       name { "Species" }
       safe_name { "species" }
       description { "The species used in the experiment" }
     end
 
     trait :tissue_type do
+      initialize_with do
+        Grit::Assays::AssayMetadataDefinition.find_or_create_by!(name: "Tissue Type") do |md|
+          md.safe_name = "tissue_type"
+          md.description = "The tissue type used in the experiment"
+          md.vocabulary = Grit::Core::Vocabulary.first || FactoryBot.create(:grit_core_vocabulary)
+        end
+      end
       name { "Tissue Type" }
       safe_name { "tissue_type" }
       description { "The tissue type used in the experiment" }

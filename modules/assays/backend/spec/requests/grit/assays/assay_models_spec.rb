@@ -51,6 +51,7 @@ module Grit::Assays
         consumes "application/json"
         produces "application/json"
         security [ { cookie_auth: [] } ]
+        parameter name: :params, in: :body, schema: { type: :object }
 
         response "201", "assay model created with minimal params" do
           before { login_as(admin) }
@@ -105,6 +106,7 @@ module Grit::Assays
         consumes "application/json"
         produces "application/json"
         security [ { cookie_auth: [] } ]
+        parameter name: :params, in: :body, schema: { type: :object }
 
         response "200", "assay model updated" do
           let(:draft_model) { create(:grit_assays_assay_model, :draft, assay_type: biochemical) }

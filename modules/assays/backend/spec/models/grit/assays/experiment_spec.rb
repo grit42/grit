@@ -245,8 +245,12 @@ module Grit::Assays
       end
 
       it "includes metadata values" do
-        result = Experiment.detailed.find(draft_experiment.id)
-        expect(result).to respond_to(species_def.safe_name.to_sym)
+        # Ensure draft_experiment (and species_def) exist before building
+        # the detailed query, which iterates AssayMetadataDefinition.all
+        # to build JOIN/SELECT clauses at call time.
+        id = draft_experiment.id
+        result = Experiment.detailed.find(id)
+        expect(result.attributes).to have_key(species_def.safe_name)
       end
     end
 

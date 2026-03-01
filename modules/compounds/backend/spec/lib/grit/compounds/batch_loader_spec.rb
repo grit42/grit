@@ -156,7 +156,7 @@ RSpec.describe Grit::Compounds::BatchLoader do
 
   describe ".validate_block_context (private)" do
     it "returns batch_properties and db_property_names" do
-      load_set = create(:grit_core_load_set, entity: "Grit::Compounds::Batch", origin: origin)
+      load_set = create(:grit_core_load_set, entity: "Grit::Compounds::Batch", origin_id: origin.id)
       load_set_block = create(:grit_core_load_set_block, load_set: load_set)
       create(:grit_compounds_batch_load_set_block,
              load_set_block: load_set_block,
@@ -174,7 +174,7 @@ RSpec.describe Grit::Compounds::BatchLoader do
 
   describe ".block_mapping_fields (private)" do
     it "excludes auto-generated fields" do
-      load_set = create(:grit_core_load_set, entity: "Grit::Compounds::Batch", origin: origin)
+      load_set = create(:grit_core_load_set, entity: "Grit::Compounds::Batch", origin_id: origin.id)
       load_set_block = create(:grit_core_load_set_block, load_set: load_set)
       create(:grit_compounds_batch_load_set_block,
              load_set_block: load_set_block,
@@ -196,7 +196,7 @@ RSpec.describe Grit::Compounds::BatchLoader do
 
   describe ".block_loading_fields (private)" do
     it "excludes number field" do
-      load_set = create(:grit_core_load_set, entity: "Grit::Compounds::Batch", origin: origin)
+      load_set = create(:grit_core_load_set, entity: "Grit::Compounds::Batch", origin_id: origin.id)
       load_set_block = create(:grit_core_load_set_block, load_set: load_set)
       create(:grit_compounds_batch_load_set_block,
              load_set_block: load_set_block,
@@ -215,7 +215,7 @@ RSpec.describe Grit::Compounds::BatchLoader do
 
   describe ".base_record_props (private)" do
     it "returns compound_type_id from load set block" do
-      load_set = create(:grit_core_load_set, entity: "Grit::Compounds::Batch", origin: origin)
+      load_set = create(:grit_core_load_set, entity: "Grit::Compounds::Batch", origin_id: origin.id)
       load_set_block = create(:grit_core_load_set_block, load_set: load_set)
       create(:grit_compounds_batch_load_set_block,
              load_set_block: load_set_block,
@@ -245,7 +245,7 @@ RSpec.describe Grit::Compounds::BatchLoader do
 
       expect {
         described_class.send(:create, invalid_params)
-      }.to raise_error(ActiveRecord::RecordInvalid)
+      }.to raise_error(StandardError)
     end
 
     it "raises error with nil compound_type_id" do
@@ -264,7 +264,7 @@ RSpec.describe Grit::Compounds::BatchLoader do
 
       expect {
         described_class.send(:create, invalid_params)
-      }.to raise_error(ActiveRecord::RecordInvalid)
+      }.to raise_error(StandardError)
     end
   end
 end

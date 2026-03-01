@@ -78,15 +78,21 @@ RSpec.configure do |config|
   # factory_bot triggers callbacks, so we need a user in RequestStore
   # before any factory creates run.
   config.before(:each) do
+    # IMPORTANT: Always clear RequestStore. Transactional fixtures rollback the
+    # DB between tests but do NOT clear RequestStore, so stale User objects from
+    # a previous test would bypass the bootstrap stub and cause NoMethodError on
+    # role lookups (the real user and its roles no longer exist after rollback).
+    # NOTE: Clear BEFORE activate_authlogic because authlogic stores its
+    # controller in RequestStore.store[:authlogic_controller].
+    RequestStore.store.clear
     activate_authlogic
 
     # Place a temporary stub in RequestStore so model callbacks (set_updater,
     # check_role, check_user) don't blow up while factory_bot creates the
     # initial user and its associations. The stub must respond to the same
     # methods the callbacks call on User.current.
-    # The stub is cleared after each test via RequestStore transaction cleanup,
-    # and specs that call UserSession.create(admin) should clear it explicitly
-    # so User.current re-fetches the real user from the session.
+    # Specs that call set_current_user(admin) or login_as(admin) will clear
+    # the stub so User.current re-fetches the real user from the session.
     RequestStore.store["current_user"] = Struct.new(:login, :id) do
       def role?(_name = nil)
         true

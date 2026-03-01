@@ -105,13 +105,9 @@ RSpec.describe "Vocabularies API", type: :request do
       response "200", "vocabulary destroyed" do
         let(:id) { vocabulary.id }
 
-        it "decreases vocabulary count" do
-          expect {
-            delete "/api/grit/core/vocabularies/#{vocabulary.id}", as: :json
-          }.to change(Grit::Core::Vocabulary, :count).by(-1)
+        run_test! do
+          expect(Grit::Core::Vocabulary.find_by(id: vocabulary.id)).to be_nil
         end
-
-        run_test!
       end
     end
   end

@@ -20,13 +20,14 @@
 require "rails_helper"
 
 RSpec.describe Grit::Compounds::Batch, type: :model do
+  let(:admin) { create(:grit_core_user, :admin, :with_admin_role) }
   let(:origin) { create(:grit_core_origin) }
   let(:compound_type) { create(:grit_compounds_compound_type, :screening) }
   let(:compound) { create(:grit_compounds_compound, origin: origin, compound_type: compound_type) }
   let(:batch) { create(:grit_compounds_batch, compound: compound, compound_type: compound_type, origin: origin) }
 
-  before do
-    admin = create(:grit_core_user, :admin, :with_admin_role)
+  before(:each) do
+    # admin = create(:grit_core_user, :admin, :with_admin_role)
     set_current_user(admin)
   end
 

@@ -36,10 +36,17 @@ module Grit::Assays
       )
     end
 
+    let(:published_model_for_sheet) do
+      create(:grit_assays_assay_model, :draft, assay_type: biochemical)
+    end
+
     let(:published_sheet) do
-      AssayDataSheetDefinition.create!(
-        name: "Viability Results", assay_model: published_model, result: true, sort: 1
+      # Create sheet while model is still draft, then publish the model
+      sheet = AssayDataSheetDefinition.create!(
+        name: "Viability Results", assay_model: published_model_for_sheet, result: true, sort: 1
       )
+      published_model_for_sheet.update_column(:publication_status_id, published_status.id)
+      sheet.reload
     end
 
     let(:draft_column) do
@@ -51,11 +58,19 @@ module Grit::Assays
     end
 
     let(:published_column) do
-      AssayDataSheetColumn.create!(
+      # published_sheet already publishes the model, so just create the column
+      # before publishing by using a fresh model
+      model = create(:grit_assays_assay_model, :draft, assay_type: biochemical)
+      sheet = AssayDataSheetDefinition.create!(
+        name: "Published Column Sheet", assay_model: model, result: true, sort: 1
+      )
+      col = AssayDataSheetColumn.create!(
         name: "Viability", safe_name: "viability",
-        assay_data_sheet_definition: published_sheet, data_type: integer_type,
+        assay_data_sheet_definition: sheet, data_type: integer_type,
         sort: 1, required: false
       )
+      model.update_column(:publication_status_id, published_status.id)
+      col.reload
     end
 
     before do

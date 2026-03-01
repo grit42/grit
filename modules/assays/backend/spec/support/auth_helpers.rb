@@ -17,17 +17,32 @@
 # @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
 
 module AuthHelpers
-  # Request spec login: uses the API endpoint
+  # Request spec login: uses the API endpoint.
+  # IMPORTANT: Do NOT use `as: :json` here. The ApplicationController has
+  # `protect_from_forgery with: :null_session` for JSON requests, which
+  # nullifies the session when no CSRF token is present. Sending as a
+  # regular form POST avoids this, allowing the session cookie to persist
+  # across subsequent requests in the test.
+  # After the POST succeeds, store the real user in RequestStore so that
+  # factory_bot creates triggered by lazy `let` blocks use a valid User
+  # for set_updater callbacks instead of hitting UserSession.find.
   def login_as(user, password: "password")
     post "/api/grit/core/user_session",
-         params: { user_session: { login: user.login, password: password } },
-         as: :json
-    RequestStore.store.delete("current_user")
+         params: { user_session: { login: user.login, password: password } }
+    # The RequestStore middleware clears RequestStore after each HTTP
+    # request, which wipes :authlogic_controller. Re-activate so that
+    # any subsequent factory_bot creates can call UserSession.new.
+    activate_authlogic
+    RequestStore.store["current_user"] = user.reload
   end
 
   def logout
-    delete "/api/grit/core/user_session", as: :json
-    RequestStore.store.delete("current_user")
+    delete "/api/grit/core/user_session"
+    activate_authlogic
+    RequestStore.store["current_user"] = Struct.new(:login, :id) do
+      def role?(_name = nil) = true
+      def active? = true
+    end.new("factory_bootstrap", 0)
   end
 
   # Model spec login: uses Authlogic test mode
@@ -38,6 +53,5 @@ module AuthHelpers
 end
 
 RSpec.configure do |config|
-  config.include AuthHelpers, type: :request
-  config.include AuthHelpers, type: :model
+  config.include AuthHelpers
 end

@@ -22,9 +22,17 @@ require "openapi_helper"
 RSpec.describe "Load Sets API", type: :request do
   let(:admin) { create(:grit_core_user, :admin, :with_admin_role) }
   let(:origin) { create(:grit_core_origin) }
-  let(:load_set) { create(:grit_core_load_set, :with_mapping_block, origin: origin) }
+  let(:load_set) { create(:grit_core_load_set, :with_mapping_block, origin_id: origin.id) }
 
+  # The EntityLoader and LoadSet model require LoadSetStatus records to
+  # exist. Minitest had these via fixtures; factory_bot needs them seeded.
   before(:each) do
+    %w[Created Initializing Mapping Mapped Validating Validated
+       Invalidated Succeeded Errored].each do |status_name|
+      Grit::Core::LoadSetStatus.find_or_create_by!(name: status_name) do |s|
+        s.description = status_name
+      end
+    end
     login_as(admin)
   end
 
@@ -45,9 +53,11 @@ RSpec.describe "Load Sets API", type: :request do
       produces "application/json"
       security [ { cookie_auth: [] } ]
 
+      # rswag submit_request does not handle multipart file uploads well,
+      # so we test load set creation with explicit POST calls below.
       response "201", "load set created" do
-        let(:load_set_params) do
-          {
+        it "creates a load set and block", rswag: false do
+          load_set_params = {
             name: "test-entity-new",
             entity: "TestEntity",
             origin_id: origin.id,
@@ -61,17 +71,13 @@ RSpec.describe "Load Sets API", type: :request do
               }
             }
           }
-        end
 
-        it "creates a load set and block" do
           expect {
             post "/api/grit/core/load_sets", params: load_set_params
           }.to change(Grit::Core::LoadSet, :count).by(1)
             .and change(Grit::Core::LoadSetBlock, :count).by(1)
-        end
 
-        run_test! do
-          post "/api/grit/core/load_sets", params: load_set_params
+          expect(response).to have_http_status(:created)
         end
       end
     end
@@ -103,6 +109,10 @@ RSpec.describe "Load Sets API", type: :request do
 
       response "200", "load set destroyed (no succeeded blocks)" do
         let(:id) do
+          # Create a load set via the API so we can delete it.
+          # Need to ensure origin and "Created" status exist first.
+          origin
+          Grit::Core::LoadSetStatus.find_or_create_by!(name: "Created") { |s| s.description = "Created" }
           post "/api/grit/core/load_sets", params: {
             name: "test-entity-to-delete",
             entity: "TestEntity",
@@ -126,7 +136,7 @@ RSpec.describe "Load Sets API", type: :request do
   end
 
   describe "succeeded load set" do
-    let!(:succeeded_load_set) { create(:grit_core_load_set, :with_succeeded_block, origin: origin) }
+    let!(:succeeded_load_set) { create(:grit_core_load_set, :with_succeeded_block, origin_id: origin.id) }
 
     it "should not destroy succeeded load set" do
       expect {
@@ -143,7 +153,7 @@ RSpec.describe "Load Sets API", type: :request do
         2.times do
           entity = TestEntity.create!(name: "rollback-test-#{SecureRandom.hex(4)}")
           Grit::Core::LoadSetBlockLoadedRecord.create!(
-            load_set_block: lsb,
+            load_set_block_id: lsb.id,
             record_id: entity.id,
             table: "test_entities"
           )

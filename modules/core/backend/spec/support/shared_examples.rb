@@ -22,11 +22,11 @@
 RSpec.shared_examples "a read-only entity" do |opts|
   let(:model_class) { opts[:model_class] }
   let(:index_url) { opts[:index_url] }
-  let(:show_url) { opts[:show_url] }
+  let(:show_url) { opts[:show_url].is_a?(Proc) ? instance_exec(&opts[:show_url]) : opts[:show_url] }
   let(:create_params) { opts[:create_params] }
-  let(:update_url) { opts[:update_url] }
+  let(:update_url) { opts[:update_url].is_a?(Proc) ? instance_exec(&opts[:update_url]) : opts[:update_url] }
   let(:update_params) { opts[:update_params] }
-  let(:destroy_url) { opts[:destroy_url] }
+  let(:destroy_url) { opts[:destroy_url].is_a?(Proc) ? instance_exec(&opts[:destroy_url]) : opts[:destroy_url] }
 
   it "allows index" do
     get index_url, as: :json
@@ -62,14 +62,14 @@ end
 # Anyone can read, only admin can write.
 RSpec.shared_examples "an admin-only CRUD entity" do |opts|
   let(:model_class) { opts[:model_class] }
-  let(:admin_user) { opts[:admin_user] }
-  let(:non_admin_user) { opts[:non_admin_user] }
+  let(:admin_user) { opts[:admin_user].is_a?(Proc) ? instance_exec(&opts[:admin_user]) : opts[:admin_user] }
+  let(:non_admin_user) { opts[:non_admin_user].is_a?(Proc) ? instance_exec(&opts[:non_admin_user]) : opts[:non_admin_user] }
   let(:index_url) { opts[:index_url] }
-  let(:show_url) { opts[:show_url] }
-  let(:create_params) { opts[:create_params] }
-  let(:update_url) { opts[:update_url] }
+  let(:show_url) { opts[:show_url].is_a?(Proc) ? instance_exec(&opts[:show_url]) : opts[:show_url] }
+  let(:create_params) { opts[:create_params].is_a?(Proc) ? instance_exec(&opts[:create_params]) : opts[:create_params] }
+  let(:update_url) { opts[:update_url].is_a?(Proc) ? instance_exec(&opts[:update_url]) : opts[:update_url] }
   let(:update_params) { opts[:update_params] }
-  let(:destroy_url) { opts[:destroy_url] }
+  let(:destroy_url) { opts[:destroy_url].is_a?(Proc) ? instance_exec(&opts[:destroy_url]) : opts[:destroy_url] }
 
   context "as non-admin" do
     before { login_as(non_admin_user) }

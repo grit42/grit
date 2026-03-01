@@ -22,14 +22,14 @@ FactoryBot.define do
     sequence(:name) { |n| "Experiment #{n}" }
     description { "A test experiment" }
     association :assay_model, factory: [ :grit_assays_assay_model, :draft ]
-    association :publication_status, factory: :grit_core_publication_status, strategy: :find_or_create
+    association :publication_status, factory: :grit_core_publication_status
 
     trait :draft do
-      association :publication_status, factory: [ :grit_core_publication_status, :draft ], strategy: :find_or_create
+      association :publication_status, factory: [ :grit_core_publication_status, :draft ]
     end
 
     trait :published do
-      association :publication_status, factory: [ :grit_core_publication_status, :published ], strategy: :find_or_create
+      association :publication_status, factory: [ :grit_core_publication_status, :published ]
     end
   end
 end

@@ -23,7 +23,12 @@ RSpec.describe Grit::Compounds::MoleculesController, type: :request do
   include AuthHelpers
 
   let(:admin) { create(:grit_core_user, :admin, :with_admin_role) }
-  let(:molecule) { create(:grit_compounds_molecule, :ethanol) }
+  let(:molecule) do
+    mol = create(:grit_compounds_molecule, :ethanol)
+    compound = create(:grit_compounds_compound)
+    create(:grit_compounds_molecules_compound, molecule: mol, compound: compound)
+    mol
+  end
   let(:valid_molfile) { File.read(File.join(FILE_FIXTURE_PATH, "simple.sdf")).split("> <").first }
 
   before do

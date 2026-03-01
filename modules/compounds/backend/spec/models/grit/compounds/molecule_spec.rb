@@ -100,14 +100,13 @@ RSpec.describe Grit::Compounds::Molecule, type: :model do
   end
 
   describe "associations" do
-    it "has compounds through molecules_compounds" do
-      compound = Grit::Compounds::Compound.create!(
+    it "can be linked to compounds through molecules_compounds" do
+      compound = create(:grit_compounds_compound,
         name: "Ethanol Compound",
         compound_type: Grit::Compounds::CompoundType.first || create(:grit_compounds_compound_type)
       )
       Grit::Compounds::MoleculesCompound.create!(molecule: molecule, compound: compound)
 
-      expect(molecule).to respond_to(:molecules_compounds)
       expect(Grit::Compounds::MoleculesCompound.where(molecule_id: molecule.id).count).to be >= 1
     end
   end

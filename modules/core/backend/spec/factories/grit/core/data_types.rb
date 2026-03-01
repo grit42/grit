@@ -23,21 +23,25 @@ FactoryBot.define do
     is_entity { false }
 
     trait :integer do
+      initialize_with { Grit::Core::DataType.find_or_create_by!(name: "integer") { |dt| dt.is_entity = false } }
       name { "integer" }
       is_entity { false }
     end
 
     trait :string do
+      initialize_with { Grit::Core::DataType.find_or_create_by!(name: "string") { |dt| dt.is_entity = false } }
       name { "string" }
       is_entity { false }
     end
 
     trait :decimal do
+      initialize_with { Grit::Core::DataType.find_or_create_by!(name: "decimal") { |dt| dt.is_entity = false } }
       name { "decimal" }
       is_entity { false }
     end
 
     trait :boolean do
+      initialize_with { Grit::Core::DataType.find_or_create_by!(name: "boolean") { |dt| dt.is_entity = false } }
       name { "boolean" }
       is_entity { false }
     end

@@ -34,13 +34,16 @@ module Grit::Assays
     let(:item2) { Grit::Core::VocabularyItem.create!(name: "Rat", vocabulary: vocab) }
     let(:data_table) { DataTable.create!(name: "Test Table", entity_data_type: data_type) }
 
-    path "/api/grit/assays/data_table_entities" do
+    path "/api/grit/assays/data_table_entities?data_table_id={data_table_id}" do
+      parameter name: :data_table_id, in: :path, type: :integer
+
       get "Lists all data table entities" do
         tags "Assays - Data Table Entities"
         produces "application/json"
         security [ { cookie_auth: [] } ]
 
         response "200", "data table entities listed (requires auth)" do
+          let(:data_table_id) { data_table.id }
           before { login_as(admin) }
 
           run_test!

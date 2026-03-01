@@ -62,6 +62,7 @@ module Grit::Assays
         consumes "application/json"
         produces "application/json"
         security [ { cookie_auth: [] } ]
+        parameter name: :params, in: :body, schema: { type: :object }
 
         response "201", "assay metadata definition created" do
           before { login_as(admin) }
@@ -129,6 +130,7 @@ module Grit::Assays
         consumes "application/json"
         produces "application/json"
         security [ { cookie_auth: [] } ]
+        parameter name: :params, in: :body, schema: { type: :object }
 
         response "500", "cannot update when in use" do
           let(:id) { species_in_use.id }

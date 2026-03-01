@@ -21,8 +21,15 @@ FactoryBot.define do
   factory :grit_core_location, class: "Grit::Core::Location" do
     sequence(:name) { |n| "Location #{n}" }
     print_address { "123 Test Street, Test City 12345" }
-    association :country, factory: :grit_core_country
-    association :origin, factory: :grit_core_origin
+    # Location has country_id/origin_id columns but no belongs_to
+    # associations, so we use transient attributes to pass objects
+    # and set the IDs directly.
+    transient do
+      country { create(:grit_core_country) }
+      origin { create(:grit_core_origin) }
+    end
+    country_id { country.id }
+    origin_id { origin.id }
 
     trait :north_pole do
       name { "Santa Claus' Shop" }

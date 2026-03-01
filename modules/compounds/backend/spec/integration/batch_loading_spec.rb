@@ -19,7 +19,7 @@
 
 require "rails_helper"
 
-RSpec.describe "Batch Loading Integration", type: :integration do
+RSpec.describe "Batch Loading Integration", type: :request do
   include AuthHelpers
   include ActionDispatch::TestProcess::FixtureFile
 
