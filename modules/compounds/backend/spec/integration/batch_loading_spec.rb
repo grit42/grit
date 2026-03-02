@@ -36,9 +36,22 @@ RSpec.describe "Batch Loading Integration", type: :request do
   end
 
   after do
-    # Clean up non-transactional records
-    Grit::Compounds::Batch.where("name LIKE ?", "batch-%").destroy_all
-    Grit::Core::LoadSet.where("name LIKE ?", "integration-test-batch-%").destroy_all
+    # Clean up ALL non-transactional records in FK-safe order.
+    # Because use_transactional_tests is false, every record persists across
+    # tests and must be removed explicitly.
+    conn = ActiveRecord::Base.connection
+    conn.execute("SET session_replication_role = 'replica'")
+    %w[
+      grit_core_load_set_block_loaded_records grit_core_load_set_blocks
+      grit_core_load_sets
+      grit_compounds_molecules_compounds grit_compounds_batches
+      grit_compounds_compounds grit_compounds_molecules
+      grit_compounds_compound_types
+      grit_core_user_roles grit_core_users grit_core_roles
+      grit_core_origins
+      grit_core_load_set_statuses
+    ].each { |t| conn.execute("DELETE FROM #{t}") rescue nil }
+    conn.execute("SET session_replication_role = 'origin'")
   end
 
   describe "full CSV batch loading workflow" do
