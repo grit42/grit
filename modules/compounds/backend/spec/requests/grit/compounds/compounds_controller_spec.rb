@@ -17,7 +17,7 @@
 # @grit42/compounds. If not, see <https://www.gnu.org/licenses/>.
 
 
-require "openapi_helper"
+require "swagger_helper"
 
 RSpec.describe Grit::Compounds::CompoundsController, type: :request do
   include AuthHelpers

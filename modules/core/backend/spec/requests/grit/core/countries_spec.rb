@@ -17,7 +17,7 @@
 # @grit42/core. If not, see <https://www.gnu.org/licenses/>.
 
 
-require "openapi_helper"
+require "swagger_helper"
 
 RSpec.describe "Countries API", type: :request do
   let(:admin) { create(:grit_core_user, :admin, :with_admin_role) }

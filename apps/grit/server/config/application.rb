@@ -27,4 +27,5 @@ module Grit
     if ENV["RATE_LIMITING_ENABLED"] == "true"
       config.middleware.use Rack::Attack
     end
+  end
 end

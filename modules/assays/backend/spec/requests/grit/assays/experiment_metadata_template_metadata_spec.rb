@@ -17,7 +17,7 @@
 # @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
 
 
-require "openapi_helper"
+require "swagger_helper"
 
 module Grit::Assays
   RSpec.describe "Experiment Metadata Template Metadata API", type: :request do
