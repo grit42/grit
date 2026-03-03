@@ -98,4 +98,81 @@ RSpec.describe Grit::Compounds::BatchPropertiesController, type: :request do
       expect(response).to have_http_status(:internal_server_error)
     end
   end
+
+  path "/api/grit/compounds/batch_properties" do
+    get "Lists all batch properties" do
+      tags "Compounds - Batch Properties"
+      produces "application/json"
+      security [ { cookie_auth: [] } ]
+
+      response "200", "batch properties listed" do
+        before { login_as(notadmin) }
+        run_test!
+      end
+    end
+
+    post "Creates a batch property" do
+      tags "Compounds - Batch Properties"
+      consumes "application/json"
+      produces "application/json"
+      security [ { cookie_auth: [] } ]
+      parameter name: :params, in: :body, schema: { type: :object }
+
+      response "201", "batch property created" do
+        let(:integer_type) { create(:grit_core_data_type, :integer) }
+        let(:params) { { name: "Three", safe_name: "three", compound_type_id: compound_type.id, data_type_id: integer_type.id, sort: 0, required: false } }
+        before { login_as(compound_admin) }
+        run_test!
+      end
+    end
+  end
+
+  path "/api/grit/compounds/batch_properties/{id}" do
+    parameter name: :id, in: :path, type: :integer
+
+    get "Shows a batch property" do
+      tags "Compounds - Batch Properties"
+      produces "application/json"
+      security [ { cookie_auth: [] } ]
+
+      response "200", "batch property found" do
+        let(:id) { batch_property.id }
+        before { login_as(compound_admin) }
+        run_test!
+      end
+    end
+
+    patch "Updates a batch property" do
+      tags "Compounds - Batch Properties"
+      consumes "application/json"
+      produces "application/json"
+      security [ { cookie_auth: [] } ]
+      parameter name: :params, in: :body, schema: { type: :object }
+
+      response "200", "batch property updated" do
+        let(:id) { batch_property.id }
+        let(:params) { { name: "wan" } }
+        before { login_as(compound_admin) }
+        run_test!
+      end
+    end
+
+    delete "Destroys a batch property" do
+      tags "Compounds - Batch Properties"
+      produces "application/json"
+      security [ { cookie_auth: [] } ]
+
+      response "500", "cannot delete batch property with values" do
+        let(:batch) { create(:grit_compounds_batch, compound_type: compound_type) }
+        let(:id) { batch_property.id }
+        before do
+          create(:grit_compounds_batch_property_value,
+                 batch_property: batch_property,
+                 batch: batch)
+          login_as(compound_admin)
+        end
+        run_test!
+      end
+    end
+  end
 end

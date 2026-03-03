@@ -79,4 +79,74 @@ RSpec.describe Grit::Compounds::BatchesController, type: :request do
       expect(response).to have_http_status(:success)
     end
   end
+
+  path "/api/grit/compounds/batches" do
+    get "Lists all batches" do
+      tags "Compounds - Batches"
+      produces "application/json"
+      security [ { cookie_auth: [] } ]
+
+      response "200", "batches listed" do
+        before { login_as(admin) }
+        run_test!
+      end
+    end
+
+    post "Creates a batch" do
+      tags "Compounds - Batches"
+      consumes "application/json"
+      produces "application/json"
+      security [ { cookie_auth: [] } ]
+      parameter name: :params, in: :body, schema: { type: :object }
+
+      response "201", "batch created" do
+        let(:params) { { name: "three", number: "three", origin_id: origin.id, compound_type_id: compound_type.id, compound_id: compound.id } }
+        before { login_as(admin) }
+        run_test!
+      end
+    end
+  end
+
+  path "/api/grit/compounds/batches/{id}" do
+    parameter name: :id, in: :path, type: :integer
+
+    get "Shows a batch" do
+      tags "Compounds - Batches"
+      produces "application/json"
+      security [ { cookie_auth: [] } ]
+
+      response "200", "batch found" do
+        let(:id) { batch.id }
+        before { login_as(admin) }
+        run_test!
+      end
+    end
+
+    patch "Updates a batch" do
+      tags "Compounds - Batches"
+      consumes "application/json"
+      produces "application/json"
+      security [ { cookie_auth: [] } ]
+      parameter name: :params, in: :body, schema: { type: :object }
+
+      response "200", "batch updated" do
+        let(:id) { batch.id }
+        let(:params) { { name: "wan" } }
+        before { login_as(admin) }
+        run_test!
+      end
+    end
+
+    delete "Destroys a batch" do
+      tags "Compounds - Batches"
+      produces "application/json"
+      security [ { cookie_auth: [] } ]
+
+      response "200", "batch destroyed" do
+        let(:id) { batch.id }
+        before { login_as(admin) }
+        run_test!
+      end
+    end
+  end
 end

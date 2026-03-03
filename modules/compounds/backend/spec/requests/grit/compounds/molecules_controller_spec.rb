@@ -93,4 +93,25 @@ RSpec.describe Grit::Compounds::MoleculesController, type: :request do
       expect(response).to have_http_status(:unauthorized)
     end
   end
+
+  path "/api/grit/compounds/molecules/molecule_exists" do
+    post "Checks if a molecule exists" do
+      tags "Compounds - Molecules"
+      consumes "application/json"
+      produces "application/json"
+      security [ { cookie_auth: [] } ]
+      parameter name: :molfile, in: :body, schema: {
+        type: :object,
+        properties: {
+          molfile: { type: :string }
+        }
+      }
+
+      response "200", "molecule check result" do
+        let(:molfile) { valid_molfile }
+        before { login_as(admin) }
+        run_test!
+      end
+    end
+  end
 end

@@ -82,4 +82,74 @@ RSpec.describe Grit::Compounds::CompoundTypesController, type: :request do
       expect(response).to have_http_status(:internal_server_error)
     end
   end
+
+  path "/api/grit/compounds/compound_types" do
+    get "Lists all compound types" do
+      tags "Compounds - Compound Types"
+      produces "application/json"
+      security [ { cookie_auth: [] } ]
+
+      response "200", "compound types listed" do
+        before { login_as(admin) }
+        run_test!
+      end
+    end
+
+    post "Creates a compound type" do
+      tags "Compounds - Compound Types"
+      consumes "application/json"
+      produces "application/json"
+      security [ { cookie_auth: [] } ]
+      parameter name: :params, in: :body, schema: { type: :object }
+
+      response "201", "compound type created" do
+        let(:params) { { name: "test type" } }
+        before { login_as(admin) }
+        run_test!
+      end
+    end
+  end
+
+  path "/api/grit/compounds/compound_types/{id}" do
+    parameter name: :id, in: :path, type: :integer
+
+    get "Shows a compound type" do
+      tags "Compounds - Compound Types"
+      produces "application/json"
+      security [ { cookie_auth: [] } ]
+
+      response "200", "compound type found" do
+        let(:id) { compound_type.id }
+        before { login_as(admin) }
+        run_test!
+      end
+    end
+
+    patch "Updates a compound type" do
+      tags "Compounds - Compound Types"
+      consumes "application/json"
+      produces "application/json"
+      security [ { cookie_auth: [] } ]
+      parameter name: :params, in: :body, schema: { type: :object }
+
+      response "200", "compound type updated" do
+        let(:id) { compound_type.id }
+        let(:params) { { name: "Screaning" } }
+        before { login_as(admin) }
+        run_test!
+      end
+    end
+
+    delete "Destroys a compound type" do
+      tags "Compounds - Compound Types"
+      produces "application/json"
+      security [ { cookie_auth: [] } ]
+
+      response "200", "compound type destroyed" do
+        let(:id) { reagent_type.id }
+        before { login_as(admin) }
+        run_test!
+      end
+    end
+  end
 end

@@ -87,4 +87,74 @@ RSpec.describe Grit::Compounds::CompoundsController, type: :request do
       expect(response).to have_http_status(:success)
     end
   end
+
+  path "/api/grit/compounds/compounds" do
+    get "Lists all compounds" do
+      tags "Compounds - Compounds"
+      produces "application/json"
+      security [ { cookie_auth: [] } ]
+
+      response "200", "compounds listed" do
+        before { login_as(admin) }
+        run_test!
+      end
+    end
+
+    post "Creates a compound" do
+      tags "Compounds - Compounds"
+      consumes "application/json"
+      produces "application/json"
+      security [ { cookie_auth: [] } ]
+      parameter name: :params, in: :body, schema: { type: :object }
+
+      response "201", "compound created" do
+        let(:params) { { name: "four", number: "four", origin_id: origin.id, compound_type_id: compound_type.id } }
+        before { login_as(admin) }
+        run_test!
+      end
+    end
+  end
+
+  path "/api/grit/compounds/compounds/{id}" do
+    parameter name: :id, in: :path, type: :integer
+
+    get "Shows a compound" do
+      tags "Compounds - Compounds"
+      produces "application/json"
+      security [ { cookie_auth: [] } ]
+
+      response "200", "compound found" do
+        let(:id) { compound.id }
+        before { login_as(admin) }
+        run_test!
+      end
+    end
+
+    patch "Updates a compound" do
+      tags "Compounds - Compounds"
+      consumes "application/json"
+      produces "application/json"
+      security [ { cookie_auth: [] } ]
+      parameter name: :params, in: :body, schema: { type: :object }
+
+      response "200", "compound updated" do
+        let(:id) { compound.id }
+        let(:params) { { name: "ouane" } }
+        before { login_as(admin) }
+        run_test!
+      end
+    end
+
+    delete "Destroys a compound" do
+      tags "Compounds - Compounds"
+      produces "application/json"
+      security [ { cookie_auth: [] } ]
+
+      response "200", "compound destroyed" do
+        let(:id) { compound.id }
+        before { login_as(admin) }
+        run_test!
+      end
+    end
+  end
 end

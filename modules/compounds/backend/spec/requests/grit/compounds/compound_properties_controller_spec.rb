@@ -88,4 +88,81 @@ RSpec.describe Grit::Compounds::CompoundPropertiesController, type: :request do
       expect(response).to have_http_status(:internal_server_error)
     end
   end
+
+  path "/api/grit/compounds/compound_properties" do
+    get "Lists all compound properties" do
+      tags "Compounds - Compound Properties"
+      produces "application/json"
+      security [ { cookie_auth: [] } ]
+
+      response "200", "compound properties listed" do
+        before { login_as(admin) }
+        run_test!
+      end
+    end
+
+    post "Creates a compound property" do
+      tags "Compounds - Compound Properties"
+      consumes "application/json"
+      produces "application/json"
+      security [ { cookie_auth: [] } ]
+      parameter name: :params, in: :body, schema: { type: :object }
+
+      response "201", "compound property created" do
+        let(:integer_type) { create(:grit_core_data_type, :integer) }
+        let(:params) { { name: "Three", safe_name: "three", compound_type_id: compound_type.id, data_type_id: integer_type.id, sort: 0, required: false } }
+        before { login_as(admin) }
+        run_test!
+      end
+    end
+  end
+
+  path "/api/grit/compounds/compound_properties/{id}" do
+    parameter name: :id, in: :path, type: :integer
+
+    get "Shows a compound property" do
+      tags "Compounds - Compound Properties"
+      produces "application/json"
+      security [ { cookie_auth: [] } ]
+
+      response "200", "compound property found" do
+        let(:id) { compound_property.id }
+        before { login_as(admin) }
+        run_test!
+      end
+    end
+
+    patch "Updates a compound property" do
+      tags "Compounds - Compound Properties"
+      consumes "application/json"
+      produces "application/json"
+      security [ { cookie_auth: [] } ]
+      parameter name: :params, in: :body, schema: { type: :object }
+
+      response "200", "compound property updated" do
+        let(:id) { compound_property.id }
+        let(:params) { { name: "wan" } }
+        before { login_as(admin) }
+        run_test!
+      end
+    end
+
+    delete "Destroys a compound property" do
+      tags "Compounds - Compound Properties"
+      produces "application/json"
+      security [ { cookie_auth: [] } ]
+
+      response "500", "cannot delete compound property with values" do
+        let(:compound) { create(:grit_compounds_compound, compound_type: compound_type) }
+        let(:id) { compound_property.id }
+        before do
+          create(:grit_compounds_compound_property_value,
+                 compound_property: compound_property,
+                 compound: compound)
+          login_as(admin)
+        end
+        run_test!
+      end
+    end
+  end
 end
