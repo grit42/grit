@@ -28,7 +28,7 @@ export default defineConfig(({ mode, ...rest }) => ({
         target: `http://localhost:3000/`,
         changeOrigin: false,
       },
-      "/api-docs": {
+      "^/api-docs": {
         target: `http://localhost:3000/`,
         changeOrigin: false,
       },
