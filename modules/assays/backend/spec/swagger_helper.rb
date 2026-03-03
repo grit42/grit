@@ -20,9 +20,8 @@
 require "rails_helper"
 
 RSpec.configure do |config|
-  # Output OpenAPI JSON to the main Rails app's openapi/ directory so that
-  # rswag-api (mounted in the main app) can serve it at /api-docs/.
-  config.openapi_root = File.expand_path("../../../../apps/grit/server/openapi", __dir__)
+  # Output OpenAPI JSON to the module's test/dummy/openapi directory
+  config.openapi_root = File.expand_path("../../../assays/backend/test/dummy/openapi", __dir__)
 
   config.openapi_specs = {
     "assays/openapi.json" => {
@@ -33,7 +32,7 @@ RSpec.configure do |config|
         description: "Assays module API — assay models, experiments, data sheets, and data tables."
       },
       servers: [
-        { url: "http://localhost:3000", description: "Development server" }
+        { url: "http://localhost:3001", description: "Module dev server" }
       ],
       components: {
         securitySchemes: {

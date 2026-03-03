@@ -1,0 +1,975 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Grit Assays API",
+    "version": "v1",
+    "description": "Assays module API — assay models, experiments, data sheets, and data tables."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3001",
+      "description": "Module dev server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "cookie_auth": {
+        "type": "apiKey",
+        "name": "_grit_session",
+        "in": "cookie"
+      },
+      "bearer_auth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "API token (single_access_token). Generate via POST /api/grit/core/user/generate_api_token"
+      }
+    }
+  },
+  "security": [
+    {
+      "cookie_auth": []
+    },
+    {
+      "bearer_auth": []
+    }
+  ],
+  "paths": {
+    "/api/grit/assays/assay_data_sheet_columns": {
+      "get": {
+        "summary": "Lists all assay data sheet columns",
+        "tags": [
+          "Assays - Assay Data Sheet Columns"
+        ],
+        "security": [
+          {
+            "cookie_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "assay data sheet columns listed"
+          }
+        }
+      },
+      "post": {
+        "summary": "Creates an assay data sheet column",
+        "tags": [
+          "Assays - Assay Data Sheet Columns"
+        ],
+        "security": [
+          {
+            "cookie_auth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "column created on draft model"
+          },
+          "500": {
+            "description": "cannot create column on published model"
+          },
+          "422": {
+            "description": "cannot create column with invalid safe_name"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/grit/assays/assay_data_sheet_columns/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Shows an assay data sheet column",
+        "tags": [
+          "Assays - Assay Data Sheet Columns"
+        ],
+        "security": [
+          {
+            "cookie_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "assay data sheet column shown"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Updates an assay data sheet column",
+        "tags": [
+          "Assays - Assay Data Sheet Columns"
+        ],
+        "security": [
+          {
+            "cookie_auth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "column updated on draft model"
+          },
+          "500": {
+            "description": "cannot update column on published model"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Destroys an assay data sheet column on draft model",
+        "tags": [
+          "Assays - Assay Data Sheet Columns"
+        ],
+        "security": [
+          {
+            "cookie_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "column destroyed"
+          }
+        }
+      }
+    },
+    "/api/grit/assays/assay_data_sheet_definitions": {
+      "get": {
+        "summary": "Lists all assay data sheet definitions",
+        "tags": [
+          "Assays - Assay Data Sheet Definitions"
+        ],
+        "security": [
+          {
+            "cookie_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "assay data sheet definitions listed"
+          }
+        }
+      }
+    },
+    "/api/grit/assays/assay_data_sheet_definitions/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Shows an assay data sheet definition",
+        "tags": [
+          "Assays - Assay Data Sheet Definitions"
+        ],
+        "security": [
+          {
+            "cookie_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "assay data sheet definition shown"
+          }
+        }
+      }
+    },
+    "/api/grit/assays/assay_metadata_definitions": {
+      "get": {
+        "summary": "Lists all assay metadata definitions",
+        "tags": [
+          "Assays - Assay Metadata Definitions"
+        ],
+        "security": [
+          {
+            "cookie_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "assay metadata definitions listed"
+          }
+        }
+      },
+      "post": {
+        "summary": "Creates an assay metadata definition",
+        "tags": [
+          "Assays - Assay Metadata Definitions"
+        ],
+        "security": [
+          {
+            "cookie_auth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "assay metadata definition created"
+          },
+          "422": {
+            "description": "not created with invalid safe_name"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/grit/assays/assay_metadata_definitions/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Shows an assay metadata definition",
+        "tags": [
+          "Assays - Assay Metadata Definitions"
+        ],
+        "security": [
+          {
+            "cookie_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "assay metadata definition shown"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Cannot update assay metadata definition in use",
+        "tags": [
+          "Assays - Assay Metadata Definitions"
+        ],
+        "security": [
+          {
+            "cookie_auth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "500": {
+            "description": "cannot update when in use"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Cannot destroy assay metadata definition required in assay model",
+        "tags": [
+          "Assays - Assay Metadata Definitions"
+        ],
+        "security": [
+          {
+            "cookie_auth": []
+          }
+        ],
+        "responses": {
+          "500": {
+            "description": "cannot destroy when in use"
+          }
+        }
+      }
+    },
+    "/api/grit/assays/assay_model_metadata": {
+      "get": {
+        "summary": "Lists all assay model metadata",
+        "tags": [
+          "Assays - Assay Model Metadata"
+        ],
+        "security": [
+          {
+            "cookie_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "assay model metadata listed"
+          }
+        }
+      },
+      "post": {
+        "summary": "Creates an assay model metadatum",
+        "tags": [
+          "Assays - Assay Model Metadata"
+        ],
+        "security": [
+          {
+            "cookie_auth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "assay model metadatum created on draft model"
+          },
+          "500": {
+            "description": "cannot create assay model metadatum on published model"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/grit/assays/assay_model_metadata/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Shows an assay model metadatum",
+        "tags": [
+          "Assays - Assay Model Metadata"
+        ],
+        "security": [
+          {
+            "cookie_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "assay model metadatum shown"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Destroys an assay model metadatum on draft model",
+        "tags": [
+          "Assays - Assay Model Metadata"
+        ],
+        "security": [
+          {
+            "cookie_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "assay model metadatum destroyed"
+          }
+        }
+      }
+    },
+    "/api/grit/assays/assay_models": {
+      "get": {
+        "summary": "Lists all assay models",
+        "tags": [
+          "Assays - Assay Models"
+        ],
+        "security": [
+          {
+            "cookie_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "assay models listed"
+          }
+        }
+      },
+      "post": {
+        "summary": "Creates an assay model",
+        "tags": [
+          "Assays - Assay Models"
+        ],
+        "security": [
+          {
+            "cookie_auth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "assay model created with minimal params"
+          },
+          "422": {
+            "description": "assay model not created without name"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/grit/assays/assay_models/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Shows an assay model",
+        "tags": [
+          "Assays - Assay Models"
+        ],
+        "security": [
+          {
+            "cookie_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "assay model shown"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Updates a draft assay model",
+        "tags": [
+          "Assays - Assay Models"
+        ],
+        "security": [
+          {
+            "cookie_auth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "assay model updated"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Destroys a draft assay model",
+        "tags": [
+          "Assays - Assay Models"
+        ],
+        "security": [
+          {
+            "cookie_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "assay model destroyed"
+          }
+        }
+      }
+    },
+    "/api/grit/assays/assay_types": {
+      "get": {
+        "summary": "Lists all assay types",
+        "tags": [
+          "Assays - Assay Types"
+        ],
+        "security": [
+          {
+            "cookie_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "assay types listed"
+          }
+        }
+      },
+      "post": {
+        "summary": "Creates an assay type",
+        "tags": [
+          "Assays - Assay Types"
+        ],
+        "security": [
+          {
+            "cookie_auth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "assay type created"
+          },
+          "422": {
+            "description": "assay type not created without name"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/grit/assays/assay_types/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Shows an assay type",
+        "tags": [
+          "Assays - Assay Types"
+        ],
+        "security": [
+          {
+            "cookie_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "assay type shown"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Updates an assay type",
+        "tags": [
+          "Assays - Assay Types"
+        ],
+        "security": [
+          {
+            "cookie_auth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "assay type updated"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Destroys an assay type",
+        "tags": [
+          "Assays - Assay Types"
+        ],
+        "security": [
+          {
+            "cookie_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "assay type destroyed"
+          }
+        }
+      }
+    },
+    "/api/grit/assays/data_table_columns": {
+      "get": {
+        "summary": "Lists all data table columns",
+        "tags": [
+          "Assays - Data Table Columns"
+        ],
+        "security": [
+          {
+            "cookie_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "data table columns listed (requires auth)"
+          }
+        }
+      },
+      "post": {
+        "summary": "Rejects duplicate safe_name within the same data table",
+        "tags": [
+          "Assays - Data Table Columns"
+        ],
+        "security": [
+          {
+            "cookie_auth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "422": {
+            "description": "duplicate safe_name rejected"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/grit/assays/data_table_entities?data_table_id={data_table_id}": {
+      "parameters": [
+        {
+          "name": "data_table_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Lists all data table entities",
+        "tags": [
+          "Assays - Data Table Entities"
+        ],
+        "security": [
+          {
+            "cookie_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "data table entities listed (requires auth)"
+          }
+        }
+      }
+    },
+    "/api/grit/assays/data_tables": {
+      "get": {
+        "summary": "Lists all data tables",
+        "tags": [
+          "Assays - Data Tables"
+        ],
+        "security": [
+          {
+            "cookie_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "data tables listed (requires auth)"
+          }
+        }
+      },
+      "post": {
+        "summary": "Creates a data table",
+        "tags": [
+          "Assays - Data Tables"
+        ],
+        "security": [
+          {
+            "cookie_auth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "data table created with display columns callback"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/grit/assays/experiment_metadata": {
+      "get": {
+        "summary": "Lists all experiment metadata",
+        "tags": [
+          "Assays - Experiment Metadata"
+        ],
+        "security": [
+          {
+            "cookie_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "experiment metadata listed"
+          }
+        }
+      }
+    },
+    "/api/grit/assays/experiment_metadata/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Shows an experiment metadatum",
+        "tags": [
+          "Assays - Experiment Metadata"
+        ],
+        "security": [
+          {
+            "cookie_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "experiment metadatum shown"
+          }
+        }
+      }
+    },
+    "/api/grit/assays/experiment_metadata_templates": {
+      "get": {
+        "summary": "Lists all experiment metadata templates",
+        "tags": [
+          "Assays - Experiment Metadata Templates"
+        ],
+        "security": [
+          {
+            "cookie_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "experiment metadata templates listed"
+          }
+        }
+      },
+      "post": {
+        "summary": "Creates an experiment metadata template",
+        "tags": [
+          "Assays - Experiment Metadata Templates"
+        ],
+        "security": [
+          {
+            "cookie_auth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "template created"
+          },
+          "422": {
+            "description": "template not created without name"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/grit/assays/experiments": {
+      "get": {
+        "summary": "Lists all experiments",
+        "tags": [
+          "Assays - Experiments"
+        ],
+        "security": [
+          {
+            "cookie_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "experiments listed"
+          }
+        }
+      },
+      "post": {
+        "summary": "Creates an experiment",
+        "tags": [
+          "Assays - Experiments"
+        ],
+        "security": [
+          {
+            "cookie_auth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "experiment created"
+          },
+          "422": {
+            "description": "experiment not created without name"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/grit/assays/experiments/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Shows an experiment",
+        "tags": [
+          "Assays - Experiments"
+        ],
+        "security": [
+          {
+            "cookie_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "experiment shown"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Updates a draft experiment",
+        "tags": [
+          "Assays - Experiments"
+        ],
+        "security": [
+          {
+            "cookie_auth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "experiment updated"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Destroys a draft experiment",
+        "tags": [
+          "Assays - Experiments"
+        ],
+        "security": [
+          {
+            "cookie_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "experiment destroyed"
+          }
+        }
+      }
+    }
+  }
+}
