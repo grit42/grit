@@ -28,12 +28,36 @@ module Grit
       helper_method :current_user_session, :current_user
 
       before_action :set_csrf_token
+      before_action :set_bearer_token
 
       def set_csrf_token
         cookies["csrf-token"] = form_authenticity_token
       end
 
+      # Extract a Bearer token from the Authorization header and inject it
+      # into params[:user_credentials] so that Authlogic's built-in
+      # single_access_token lookup (via UserSession.params_key) can find it.
+      # This enables standard "Authorization: Bearer <token>" header auth
+      # while preserving backwards compatibility with the query param style.
+      def set_bearer_token
+        header = request.headers["Authorization"]
+        return unless header&.start_with?("Bearer ")
+
+        token = header.sub("Bearer ", "")
+        params[:user_credentials] = token unless token.blank?
+      end
+
       private
+
+        # Allow Authlogic single_access_token authentication for any request
+        # type when a Bearer token is present. Without this, Authlogic only
+        # permits single access for RSS/Atom content types by default.
+        # Controllers can still override this method to be more restrictive
+        # (e.g. UsersController limits it to hello_world_api).
+        def single_access_allowed?
+          request.headers["Authorization"]&.start_with?("Bearer ") ||
+            params[:user_credentials].present?
+        end
 
         def current_user_session
           return @current_user_session if defined?(@current_user_session)

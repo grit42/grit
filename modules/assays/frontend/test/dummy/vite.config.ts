@@ -5,7 +5,7 @@ import { resolve } from "path";
 
 export default defineConfig(({ mode, ...rest }) => ({
   ...libConfig({ mode, ...rest }),
-    resolve: {
+  resolve: {
     alias: {
       "@grit42/assays/meta": resolve(__dirname, "../../lib/meta.ts"),
       "@grit42/assays/registrant": resolve(
@@ -23,7 +23,11 @@ export default defineConfig(({ mode, ...rest }) => ({
         target: `http://localhost:3000/`,
         changeOrigin: false,
       },
+      "/api-docs": {
+        target: `http://localhost:3000/`,
+        changeOrigin: false,
+      },
     },
   },
-  plugins: [react()]
+  plugins: [react()],
 }));

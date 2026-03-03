@@ -41,10 +41,15 @@ RSpec.configure do |config|
             type: :apiKey,
             name: "_grit_session",
             in: :cookie
+          },
+          bearer_auth: {
+            type: :http,
+            scheme: :bearer,
+            description: "API token (single_access_token). Generate via POST /api/grit/core/user/generate_api_token"
           }
         }
       },
-      security: [ { cookie_auth: [] } ]
+      security: [ { cookie_auth: [] }, { bearer_auth: [] } ]
     }
   }
 
