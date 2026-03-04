@@ -32,7 +32,7 @@ RSpec.describe "Users API", type: :request do
     get "Lists all users" do
       tags "Core - Users"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       response "200", "anyone can list users" do
         before { login_as(notadmin) }
@@ -59,7 +59,7 @@ RSpec.describe "Users API", type: :request do
       tags "Core - Users"
       consumes "application/json"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
       parameter name: :user_params, in: :body, schema: {
         type: :object,
         properties: {
@@ -136,7 +136,7 @@ RSpec.describe "Users API", type: :request do
     get "Shows a user" do
       tags "Core - Users"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       response "200", "anyone can show user" do
         let(:id) { notadmin.id }
@@ -149,7 +149,7 @@ RSpec.describe "Users API", type: :request do
       tags "Core - Users"
       consumes "application/json"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
       parameter name: :user_params, in: :body, schema: {
         type: :object,
         properties: {
@@ -174,7 +174,7 @@ RSpec.describe "Users API", type: :request do
     delete "Destroys a user" do
       tags "Core - Users"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       response "200", "admin destroys user" do
         let(:id) { notadmin.id }

@@ -44,7 +44,7 @@ module Grit::Assays
       get "Lists all assay metadata definitions" do
         tags "Assays - Assay Metadata Definitions"
         produces "application/json"
-        security [ { cookie_auth: [] } ]
+        security [ { bearer_auth: [] } ]
 
         response "200", "assay metadata definitions listed" do
           before { login_as(admin) }
@@ -61,7 +61,7 @@ module Grit::Assays
         tags "Assays - Assay Metadata Definitions"
         consumes "application/json"
         produces "application/json"
-        security [ { cookie_auth: [] } ]
+        security [ { bearer_auth: [] } ]
         parameter name: :params, in: :body, schema: { type: :object }
 
         response "201", "assay metadata definition created" do
@@ -111,7 +111,7 @@ module Grit::Assays
       get "Shows an assay metadata definition" do
         tags "Assays - Assay Metadata Definitions"
         produces "application/json"
-        security [ { cookie_auth: [] } ]
+        security [ { bearer_auth: [] } ]
 
         response "200", "assay metadata definition shown" do
           let(:id) { species.id }
@@ -129,7 +129,7 @@ module Grit::Assays
         tags "Assays - Assay Metadata Definitions"
         consumes "application/json"
         produces "application/json"
-        security [ { cookie_auth: [] } ]
+        security [ { bearer_auth: [] } ]
         parameter name: :params, in: :body, schema: { type: :object }
 
         response "500", "cannot update when in use" do
@@ -145,7 +145,7 @@ module Grit::Assays
       delete "Cannot destroy assay metadata definition required in assay model" do
         tags "Assays - Assay Metadata Definitions"
         produces "application/json"
-        security [ { cookie_auth: [] } ]
+        security [ { bearer_auth: [] } ]
 
         response "500", "cannot destroy when in use" do
           let(:id) { species_in_use.id }

@@ -103,7 +103,7 @@ RSpec.describe Grit::Compounds::BatchPropertiesController, type: :request do
     get "Lists all batch properties" do
       tags "Compounds - Batch Properties"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       response "200", "batch properties listed" do
         before { login_as(notadmin) }
@@ -115,7 +115,7 @@ RSpec.describe Grit::Compounds::BatchPropertiesController, type: :request do
       tags "Compounds - Batch Properties"
       consumes "application/json"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
       parameter name: :params, in: :body, schema: { type: :object }
 
       response "201", "batch property created" do
@@ -133,7 +133,7 @@ RSpec.describe Grit::Compounds::BatchPropertiesController, type: :request do
     get "Shows a batch property" do
       tags "Compounds - Batch Properties"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       response "200", "batch property found" do
         let(:id) { batch_property.id }
@@ -146,7 +146,7 @@ RSpec.describe Grit::Compounds::BatchPropertiesController, type: :request do
       tags "Compounds - Batch Properties"
       consumes "application/json"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
       parameter name: :params, in: :body, schema: { type: :object }
 
       response "200", "batch property updated" do
@@ -160,7 +160,7 @@ RSpec.describe Grit::Compounds::BatchPropertiesController, type: :request do
     delete "Destroys a batch property" do
       tags "Compounds - Batch Properties"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       response "500", "cannot delete batch property with values" do
         let(:batch) { create(:grit_compounds_batch, compound_type: compound_type) }

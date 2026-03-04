@@ -87,7 +87,7 @@ RSpec.describe Grit::Compounds::CompoundTypesController, type: :request do
     get "Lists all compound types" do
       tags "Compounds - Compound Types"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       response "200", "compound types listed" do
         before { login_as(admin) }
@@ -99,7 +99,7 @@ RSpec.describe Grit::Compounds::CompoundTypesController, type: :request do
       tags "Compounds - Compound Types"
       consumes "application/json"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
       parameter name: :params, in: :body, schema: { type: :object }
 
       response "201", "compound type created" do
@@ -116,7 +116,7 @@ RSpec.describe Grit::Compounds::CompoundTypesController, type: :request do
     get "Shows a compound type" do
       tags "Compounds - Compound Types"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       response "200", "compound type found" do
         let(:id) { compound_type.id }
@@ -129,7 +129,7 @@ RSpec.describe Grit::Compounds::CompoundTypesController, type: :request do
       tags "Compounds - Compound Types"
       consumes "application/json"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
       parameter name: :params, in: :body, schema: { type: :object }
 
       response "200", "compound type updated" do
@@ -143,7 +143,7 @@ RSpec.describe Grit::Compounds::CompoundTypesController, type: :request do
     delete "Destroys a compound type" do
       tags "Compounds - Compound Types"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       response "200", "compound type destroyed" do
         let(:id) { reagent_type.id }

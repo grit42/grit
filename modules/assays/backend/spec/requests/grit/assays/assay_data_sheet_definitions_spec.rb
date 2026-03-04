@@ -39,7 +39,7 @@ module Grit::Assays
       get "Lists all assay data sheet definitions" do
         tags "Assays - Assay Data Sheet Definitions"
         produces "application/json"
-        security [ { cookie_auth: [] } ]
+        security [ { bearer_auth: [] } ]
 
         response "200", "assay data sheet definitions listed" do
           before { login_as(admin) }
@@ -59,7 +59,7 @@ module Grit::Assays
       get "Shows an assay data sheet definition" do
         tags "Assays - Assay Data Sheet Definitions"
         produces "application/json"
-        security [ { cookie_auth: [] } ]
+        security [ { bearer_auth: [] } ]
 
         response "200", "assay data sheet definition shown" do
           let(:id) { draft_sheet.id }

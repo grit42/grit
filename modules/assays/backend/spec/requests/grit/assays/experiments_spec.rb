@@ -41,7 +41,7 @@ module Grit::Assays
       get "Lists all experiments" do
         tags "Assays - Experiments"
         produces "application/json"
-        security [ { cookie_auth: [] } ]
+        security [ { bearer_auth: [] } ]
 
         response "200", "experiments listed" do
           before { login_as(admin) }
@@ -58,7 +58,7 @@ module Grit::Assays
         tags "Assays - Experiments"
         consumes "application/json"
         produces "application/json"
-        security [ { cookie_auth: [] } ]
+        security [ { bearer_auth: [] } ]
         parameter name: :params, in: :body, schema: { type: :object }
 
         response "201", "experiment created" do
@@ -94,7 +94,7 @@ module Grit::Assays
       get "Shows an experiment" do
         tags "Assays - Experiments"
         produces "application/json"
-        security [ { cookie_auth: [] } ]
+        security [ { bearer_auth: [] } ]
 
         response "200", "experiment shown" do
           before { login_as(admin) }
@@ -121,7 +121,7 @@ module Grit::Assays
         tags "Assays - Experiments"
         consumes "application/json"
         produces "application/json"
-        security [ { cookie_auth: [] } ]
+        security [ { bearer_auth: [] } ]
         parameter name: :params, in: :body, schema: { type: :object }
 
         response "200", "experiment updated" do
@@ -149,7 +149,7 @@ module Grit::Assays
       delete "Destroys a draft experiment" do
         tags "Assays - Experiments"
         produces "application/json"
-        security [ { cookie_auth: [] } ]
+        security [ { bearer_auth: [] } ]
 
         response "200", "experiment destroyed" do
           before { login_as(admin) }

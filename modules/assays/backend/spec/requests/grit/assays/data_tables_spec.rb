@@ -35,7 +35,7 @@ module Grit::Assays
       get "Lists all data tables" do
         tags "Assays - Data Tables"
         produces "application/json"
-        security [ { cookie_auth: [] } ]
+        security [ { bearer_auth: [] } ]
 
         response "200", "data tables listed (requires auth)" do
           before { login_as(admin) }
@@ -48,7 +48,7 @@ module Grit::Assays
         tags "Assays - Data Tables"
         consumes "application/json"
         produces "application/json"
-        security [ { cookie_auth: [] } ]
+        security [ { bearer_auth: [] } ]
         parameter name: :params, in: :body, schema: { type: :object }
 
         response "201", "data table created with display columns callback" do

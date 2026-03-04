@@ -39,7 +39,7 @@ RSpec.describe "Units API", type: :request do
     get "Lists all units" do
       tags "Core - Units"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       response "200", "units listed" do
         before { login_as(admin) }
@@ -51,7 +51,7 @@ RSpec.describe "Units API", type: :request do
       tags "Core - Units"
       consumes "application/json"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
       parameter name: :unit_params, in: :body, schema: {
         type: :object,
         properties: {
@@ -80,7 +80,7 @@ RSpec.describe "Units API", type: :request do
     get "Shows a unit" do
       tags "Core - Units"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       response "200", "unit found" do
         let(:id) { unit.id }
@@ -93,7 +93,7 @@ RSpec.describe "Units API", type: :request do
       tags "Core - Units"
       consumes "application/json"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
       parameter name: :unit_params, in: :body, schema: {
         type: :object,
         properties: {
@@ -119,7 +119,7 @@ RSpec.describe "Units API", type: :request do
     delete "Destroys a unit" do
       tags "Core - Units"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       response "200", "unit destroyed" do
         let(:id) { unit.id }

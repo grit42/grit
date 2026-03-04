@@ -40,7 +40,7 @@ RSpec.describe "Roles API", type: :request do
     get "Lists all roles" do
       tags "Core - Roles"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       response "200", "roles listed" do
         before { login_as(admin) }
@@ -52,7 +52,7 @@ RSpec.describe "Roles API", type: :request do
       tags "Core - Roles"
       consumes "application/json"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
       parameter name: :role_params, in: :body, schema: {
         type: :object,
         properties: {
@@ -75,7 +75,7 @@ RSpec.describe "Roles API", type: :request do
     get "Shows a role" do
       tags "Core - Roles"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       response "200", "role found" do
         let(:id) { role.id }
@@ -88,7 +88,7 @@ RSpec.describe "Roles API", type: :request do
       tags "Core - Roles"
       consumes "application/json"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
       parameter name: :role_params, in: :body, schema: {
         type: :object,
         properties: {
@@ -107,7 +107,7 @@ RSpec.describe "Roles API", type: :request do
     delete "Attempts to destroy a role" do
       tags "Core - Roles"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       response "403", "destruction is forbidden" do
         let(:id) { role.id }

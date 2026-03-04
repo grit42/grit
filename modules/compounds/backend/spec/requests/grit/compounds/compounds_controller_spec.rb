@@ -92,7 +92,7 @@ RSpec.describe Grit::Compounds::CompoundsController, type: :request do
     get "Lists all compounds" do
       tags "Compounds - Compounds"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       response "200", "compounds listed" do
         before { login_as(admin) }
@@ -104,7 +104,7 @@ RSpec.describe Grit::Compounds::CompoundsController, type: :request do
       tags "Compounds - Compounds"
       consumes "application/json"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
       parameter name: :params, in: :body, schema: { type: :object }
 
       response "201", "compound created" do
@@ -121,7 +121,7 @@ RSpec.describe Grit::Compounds::CompoundsController, type: :request do
     get "Shows a compound" do
       tags "Compounds - Compounds"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       response "200", "compound found" do
         let(:id) { compound.id }
@@ -134,7 +134,7 @@ RSpec.describe Grit::Compounds::CompoundsController, type: :request do
       tags "Compounds - Compounds"
       consumes "application/json"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
       parameter name: :params, in: :body, schema: { type: :object }
 
       response "200", "compound updated" do
@@ -148,7 +148,7 @@ RSpec.describe Grit::Compounds::CompoundsController, type: :request do
     delete "Destroys a compound" do
       tags "Compounds - Compounds"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       response "200", "compound destroyed" do
         let(:id) { compound.id }

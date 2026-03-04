@@ -31,7 +31,7 @@ RSpec.describe "Load Set Statuses API", type: :request do
     get "Lists all load set statuses" do
       tags "Core - Load Set Statuses"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       response "200", "load set statuses listed" do
         run_test!
@@ -42,7 +42,7 @@ RSpec.describe "Load Set Statuses API", type: :request do
       tags "Core - Load Set Statuses"
       consumes "application/json"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
       parameter name: :status_params, in: :body, schema: {
         type: :object,
         properties: {
@@ -71,7 +71,7 @@ RSpec.describe "Load Set Statuses API", type: :request do
     get "Shows a load set status" do
       tags "Core - Load Set Statuses"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       response "200", "load set status found" do
         let(:id) { load_set_status.id }
@@ -83,7 +83,7 @@ RSpec.describe "Load Set Statuses API", type: :request do
       tags "Core - Load Set Statuses"
       consumes "application/json"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
       parameter name: :status_params, in: :body, schema: {
         type: :object,
         properties: {
@@ -101,7 +101,7 @@ RSpec.describe "Load Set Statuses API", type: :request do
     delete "Attempts to destroy a load set status" do
       tags "Core - Load Set Statuses"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       response "403", "destruction is forbidden" do
         let(:id) { load_set_status.id }

@@ -84,7 +84,7 @@ RSpec.describe Grit::Compounds::BatchesController, type: :request do
     get "Lists all batches" do
       tags "Compounds - Batches"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       response "200", "batches listed" do
         before { login_as(admin) }
@@ -96,7 +96,7 @@ RSpec.describe Grit::Compounds::BatchesController, type: :request do
       tags "Compounds - Batches"
       consumes "application/json"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
       parameter name: :params, in: :body, schema: { type: :object }
 
       response "201", "batch created" do
@@ -113,7 +113,7 @@ RSpec.describe Grit::Compounds::BatchesController, type: :request do
     get "Shows a batch" do
       tags "Compounds - Batches"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       response "200", "batch found" do
         let(:id) { batch.id }
@@ -126,7 +126,7 @@ RSpec.describe Grit::Compounds::BatchesController, type: :request do
       tags "Compounds - Batches"
       consumes "application/json"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
       parameter name: :params, in: :body, schema: { type: :object }
 
       response "200", "batch updated" do
@@ -140,7 +140,7 @@ RSpec.describe Grit::Compounds::BatchesController, type: :request do
     delete "Destroys a batch" do
       tags "Compounds - Batches"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       response "200", "batch destroyed" do
         let(:id) { batch.id }

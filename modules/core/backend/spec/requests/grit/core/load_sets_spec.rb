@@ -40,7 +40,7 @@ RSpec.describe "Load Sets API", type: :request do
     get "Lists all load sets" do
       tags "Core - Load Sets"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       response "200", "load sets listed" do
         run_test!
@@ -51,7 +51,7 @@ RSpec.describe "Load Sets API", type: :request do
       tags "Core - Load Sets"
       consumes "multipart/form-data"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       # rswag submit_request does not handle multipart file uploads well,
       # so we test load set creation with explicit POST calls below.
@@ -89,7 +89,7 @@ RSpec.describe "Load Sets API", type: :request do
     get "Shows a load set" do
       tags "Core - Load Sets"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       response "200", "load set found" do
         let(:id) { load_set.id }
@@ -105,7 +105,7 @@ RSpec.describe "Load Sets API", type: :request do
     delete "Destroys a load set" do
       tags "Core - Load Sets"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       response "200", "load set destroyed (no succeeded blocks)" do
         let(:id) do

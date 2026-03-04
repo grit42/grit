@@ -88,7 +88,7 @@ RSpec.describe Grit::Compounds::SynonymsController, type: :request do
     get "Lists all synonyms" do
       tags "Compounds - Synonyms"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       response "200", "synonyms listed" do
         before { login_as(notadmin) }
@@ -100,7 +100,7 @@ RSpec.describe Grit::Compounds::SynonymsController, type: :request do
       tags "Compounds - Synonyms"
       consumes "application/json"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
       parameter name: :params, in: :body, schema: { type: :object }
 
       response "201", "synonym created" do
@@ -117,7 +117,7 @@ RSpec.describe Grit::Compounds::SynonymsController, type: :request do
     get "Shows a synonym" do
       tags "Compounds - Synonyms"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       response "200", "synonym found" do
         let(:id) { synonym.id }
@@ -130,7 +130,7 @@ RSpec.describe Grit::Compounds::SynonymsController, type: :request do
       tags "Compounds - Synonyms"
       consumes "application/json"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
       parameter name: :params, in: :body, schema: { type: :object }
 
       response "200", "synonym updated" do
@@ -144,7 +144,7 @@ RSpec.describe Grit::Compounds::SynonymsController, type: :request do
     delete "Destroys a synonym" do
       tags "Compounds - Synonyms"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       response "200", "synonym destroyed" do
         let(:id) { synonym.id }

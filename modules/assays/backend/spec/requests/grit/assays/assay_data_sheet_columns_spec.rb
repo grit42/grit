@@ -68,7 +68,7 @@ module Grit::Assays
       get "Lists all assay data sheet columns" do
         tags "Assays - Assay Data Sheet Columns"
         produces "application/json"
-        security [ { cookie_auth: [] } ]
+        security [ { bearer_auth: [] } ]
 
         response "200", "assay data sheet columns listed" do
           before { login_as(admin) }
@@ -85,7 +85,7 @@ module Grit::Assays
         tags "Assays - Assay Data Sheet Columns"
         consumes "application/json"
         produces "application/json"
-        security [ { cookie_auth: [] } ]
+        security [ { bearer_auth: [] } ]
         parameter name: :params, in: :body, schema: { type: :object }
 
         response "201", "column created on draft model" do
@@ -146,7 +146,7 @@ module Grit::Assays
       get "Shows an assay data sheet column" do
         tags "Assays - Assay Data Sheet Columns"
         produces "application/json"
-        security [ { cookie_auth: [] } ]
+        security [ { bearer_auth: [] } ]
 
         response "200", "assay data sheet column shown" do
           let(:id) { draft_column.id }
@@ -164,7 +164,7 @@ module Grit::Assays
         tags "Assays - Assay Data Sheet Columns"
         consumes "application/json"
         produces "application/json"
-        security [ { cookie_auth: [] } ]
+        security [ { bearer_auth: [] } ]
         parameter name: :params, in: :body, schema: { type: :object }
 
         response "200", "column updated on draft model" do
@@ -193,7 +193,7 @@ module Grit::Assays
       delete "Destroys an assay data sheet column on draft model" do
         tags "Assays - Assay Data Sheet Columns"
         produces "application/json"
-        security [ { cookie_auth: [] } ]
+        security [ { bearer_auth: [] } ]
 
         response "200", "column destroyed" do
           before { login_as(admin) }

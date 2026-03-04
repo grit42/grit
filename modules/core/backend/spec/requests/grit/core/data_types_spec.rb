@@ -32,7 +32,7 @@ RSpec.describe "Data Types API", type: :request do
     get "Lists all data types" do
       tags "Core - Data Types"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       response "200", "anyone can list data types" do
         before { login_as(notadmin) }
@@ -44,7 +44,7 @@ RSpec.describe "Data Types API", type: :request do
       tags "Core - Data Types"
       consumes "application/json"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
       parameter name: :data_type_params, in: :body, schema: {
         type: :object,
         properties: {
@@ -72,7 +72,7 @@ RSpec.describe "Data Types API", type: :request do
     get "Shows a data type" do
       tags "Core - Data Types"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       response "200", "anyone can show data type" do
         let(:id) { data_type.id }
@@ -85,7 +85,7 @@ RSpec.describe "Data Types API", type: :request do
       tags "Core - Data Types"
       consumes "application/json"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
       parameter name: :data_type_params, in: :body, schema: {
         type: :object,
         properties: {
@@ -103,7 +103,7 @@ RSpec.describe "Data Types API", type: :request do
     delete "Attempts to destroy a data type" do
       tags "Core - Data Types"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       response "403", "destruction is forbidden" do
         let(:id) { data_type.id }

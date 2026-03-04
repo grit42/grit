@@ -36,7 +36,7 @@ module Grit::Assays
       get "Lists all data table columns" do
         tags "Assays - Data Table Columns"
         produces "application/json"
-        security [ { cookie_auth: [] } ]
+        security [ { bearer_auth: [] } ]
 
         response "200", "data table columns listed (requires auth)" do
           before { login_as(admin) }
@@ -49,7 +49,7 @@ module Grit::Assays
         tags "Assays - Data Table Columns"
         consumes "application/json"
         produces "application/json"
-        security [ { cookie_auth: [] } ]
+        security [ { bearer_auth: [] } ]
         parameter name: :params, in: :body, schema: { type: :object }
 
         response "422", "duplicate safe_name rejected" do

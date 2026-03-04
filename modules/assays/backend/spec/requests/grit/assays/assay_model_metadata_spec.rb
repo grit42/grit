@@ -46,7 +46,7 @@ module Grit::Assays
       get "Lists all assay model metadata" do
         tags "Assays - Assay Model Metadata"
         produces "application/json"
-        security [ { cookie_auth: [] } ]
+        security [ { bearer_auth: [] } ]
 
         response "200", "assay model metadata listed" do
           before { login_as(admin) }
@@ -63,7 +63,7 @@ module Grit::Assays
         tags "Assays - Assay Model Metadata"
         consumes "application/json"
         produces "application/json"
-        security [ { cookie_auth: [] } ]
+        security [ { bearer_auth: [] } ]
         parameter name: :params, in: :body, schema: { type: :object }
 
         response "201", "assay model metadatum created on draft model" do
@@ -113,7 +113,7 @@ module Grit::Assays
       get "Shows an assay model metadatum" do
         tags "Assays - Assay Model Metadata"
         produces "application/json"
-        security [ { cookie_auth: [] } ]
+        security [ { bearer_auth: [] } ]
 
         response "200", "assay model metadatum shown" do
           let(:id) { draft_model_species.id }
@@ -130,7 +130,7 @@ module Grit::Assays
       delete "Destroys an assay model metadatum on draft model" do
         tags "Assays - Assay Model Metadata"
         produces "application/json"
-        security [ { cookie_auth: [] } ]
+        security [ { bearer_auth: [] } ]
 
         response "200", "assay model metadatum destroyed" do
           before { login_as(admin) }

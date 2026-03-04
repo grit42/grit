@@ -99,7 +99,7 @@ RSpec.describe Grit::Compounds::MoleculesController, type: :request do
       tags "Compounds - Molecules"
       consumes "application/json"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
       parameter name: :molfile, in: :body, schema: {
         type: :object,
         properties: {

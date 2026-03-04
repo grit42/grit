@@ -93,7 +93,7 @@ RSpec.describe Grit::Compounds::CompoundPropertiesController, type: :request do
     get "Lists all compound properties" do
       tags "Compounds - Compound Properties"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       response "200", "compound properties listed" do
         before { login_as(admin) }
@@ -105,7 +105,7 @@ RSpec.describe Grit::Compounds::CompoundPropertiesController, type: :request do
       tags "Compounds - Compound Properties"
       consumes "application/json"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
       parameter name: :params, in: :body, schema: { type: :object }
 
       response "201", "compound property created" do
@@ -123,7 +123,7 @@ RSpec.describe Grit::Compounds::CompoundPropertiesController, type: :request do
     get "Shows a compound property" do
       tags "Compounds - Compound Properties"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       response "200", "compound property found" do
         let(:id) { compound_property.id }
@@ -136,7 +136,7 @@ RSpec.describe Grit::Compounds::CompoundPropertiesController, type: :request do
       tags "Compounds - Compound Properties"
       consumes "application/json"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
       parameter name: :params, in: :body, schema: { type: :object }
 
       response "200", "compound property updated" do
@@ -150,7 +150,7 @@ RSpec.describe Grit::Compounds::CompoundPropertiesController, type: :request do
     delete "Destroys a compound property" do
       tags "Compounds - Compound Properties"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       response "500", "cannot delete compound property with values" do
         let(:compound) { create(:grit_compounds_compound, compound_type: compound_type) }

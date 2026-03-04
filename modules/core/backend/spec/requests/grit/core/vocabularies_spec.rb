@@ -31,7 +31,7 @@ RSpec.describe "Vocabularies API", type: :request do
     get "Lists all vocabularies" do
       tags "Core - Vocabularies"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       response "200", "vocabularies listed" do
         run_test!
@@ -42,7 +42,7 @@ RSpec.describe "Vocabularies API", type: :request do
       tags "Core - Vocabularies"
       consumes "application/json"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
       parameter name: :vocab_params, in: :body, schema: {
         type: :object,
         properties: {
@@ -70,7 +70,7 @@ RSpec.describe "Vocabularies API", type: :request do
     get "Shows a vocabulary" do
       tags "Core - Vocabularies"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       response "200", "vocabulary found" do
         let(:id) { vocabulary.id }
@@ -82,7 +82,7 @@ RSpec.describe "Vocabularies API", type: :request do
       tags "Core - Vocabularies"
       consumes "application/json"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
       parameter name: :vocab_params, in: :body, schema: {
         type: :object,
         properties: {
@@ -100,7 +100,7 @@ RSpec.describe "Vocabularies API", type: :request do
     delete "Destroys a vocabulary" do
       tags "Core - Vocabularies"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       response "200", "vocabulary destroyed" do
         let(:id) { vocabulary.id }

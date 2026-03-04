@@ -66,7 +66,20 @@ module Grit
 
         def current_user
           return @current_user if defined?(@current_user)
-          @current_user = current_user_session && current_user_session.user
+          @current_user = if token_authenticated?
+            token_user
+          else
+            current_user_session && current_user_session.user
+          end
+        end
+
+        def token_authenticated?
+          request.headers["Authorization"]&.start_with?("Bearer ")
+        end
+
+        def token_user
+          token = request.headers["Authorization"].sub("Bearer ", "")
+          Grit::Core::User.find_by(single_access_token: token)
         end
 
         def require_user

@@ -31,7 +31,7 @@ RSpec.describe "Publication Statuses API", type: :request do
     get "Lists all publication statuses" do
       tags "Core - Publication Statuses"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       response "200", "publication statuses listed" do
         run_test!
@@ -42,7 +42,7 @@ RSpec.describe "Publication Statuses API", type: :request do
       tags "Core - Publication Statuses"
       consumes "application/json"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
       parameter name: :status_params, in: :body, schema: {
         type: :object,
         properties: {
@@ -70,7 +70,7 @@ RSpec.describe "Publication Statuses API", type: :request do
     get "Shows a publication status" do
       tags "Core - Publication Statuses"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       response "200", "publication status found" do
         let(:id) { publication_status.id }
@@ -82,7 +82,7 @@ RSpec.describe "Publication Statuses API", type: :request do
       tags "Core - Publication Statuses"
       consumes "application/json"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
       parameter name: :status_params, in: :body, schema: {
         type: :object,
         properties: {
@@ -100,7 +100,7 @@ RSpec.describe "Publication Statuses API", type: :request do
     delete "Attempts to destroy a publication status" do
       tags "Core - Publication Statuses"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       response "403", "destruction is forbidden" do
         let(:id) { publication_status.id }

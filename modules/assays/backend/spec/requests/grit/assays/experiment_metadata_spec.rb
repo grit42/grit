@@ -56,7 +56,7 @@ module Grit::Assays
       get "Lists all experiment metadata" do
         tags "Assays - Experiment Metadata"
         produces "application/json"
-        security [ { cookie_auth: [] } ]
+        security [ { bearer_auth: [] } ]
 
         response "200", "experiment metadata listed" do
           before { login_as(admin) }
@@ -76,7 +76,7 @@ module Grit::Assays
       get "Shows an experiment metadatum" do
         tags "Assays - Experiment Metadata"
         produces "application/json"
-        security [ { cookie_auth: [] } ]
+        security [ { bearer_auth: [] } ]
 
         response "200", "experiment metadatum shown" do
           let(:id) { draft_experiment_species.id }

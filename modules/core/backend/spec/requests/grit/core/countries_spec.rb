@@ -40,7 +40,7 @@ RSpec.describe "Countries API", type: :request do
     get "Lists all countries" do
       tags "Core - Countries"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       response "200", "countries listed" do
         before { login_as(admin) }
@@ -52,7 +52,7 @@ RSpec.describe "Countries API", type: :request do
       tags "Core - Countries"
       consumes "application/json"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
       parameter name: :country_params, in: :body, schema: {
         type: :object,
         properties: {
@@ -75,7 +75,7 @@ RSpec.describe "Countries API", type: :request do
     get "Shows a country" do
       tags "Core - Countries"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       response "200", "country found" do
         let(:id) { country.id }
@@ -88,7 +88,7 @@ RSpec.describe "Countries API", type: :request do
       tags "Core - Countries"
       consumes "application/json"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
       parameter name: :country_params, in: :body, schema: {
         type: :object,
         properties: {
@@ -107,7 +107,7 @@ RSpec.describe "Countries API", type: :request do
     delete "Attempts to destroy a country" do
       tags "Core - Countries"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       response "403", "destruction is forbidden" do
         let(:id) { country.id }

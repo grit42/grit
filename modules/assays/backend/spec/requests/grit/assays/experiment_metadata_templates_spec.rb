@@ -37,7 +37,7 @@ module Grit::Assays
       get "Lists all experiment metadata templates" do
         tags "Assays - Experiment Metadata Templates"
         produces "application/json"
-        security [ { cookie_auth: [] } ]
+        security [ { bearer_auth: [] } ]
 
         response "200", "experiment metadata templates listed" do
           before { login_as(admin) }
@@ -54,7 +54,7 @@ module Grit::Assays
         tags "Assays - Experiment Metadata Templates"
         consumes "application/json"
         produces "application/json"
-        security [ { cookie_auth: [] } ]
+        security [ { bearer_auth: [] } ]
         parameter name: :params, in: :body, schema: { type: :object }
 
         response "201", "template created" do

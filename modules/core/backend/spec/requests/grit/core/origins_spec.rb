@@ -39,7 +39,7 @@ RSpec.describe "Origins API", type: :request do
     get "Lists all origins" do
       tags "Core - Origins"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       response "200", "origins listed" do
         before { login_as(admin) }
@@ -51,7 +51,7 @@ RSpec.describe "Origins API", type: :request do
       tags "Core - Origins"
       consumes "application/json"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
       parameter name: :origin_params, in: :body, schema: {
         type: :object,
         properties: {
@@ -81,7 +81,7 @@ RSpec.describe "Origins API", type: :request do
     get "Shows an origin" do
       tags "Core - Origins"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       response "200", "origin found" do
         let(:id) { origin.id }
@@ -94,7 +94,7 @@ RSpec.describe "Origins API", type: :request do
       tags "Core - Origins"
       consumes "application/json"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
       parameter name: :origin_params, in: :body, schema: {
         type: :object,
         properties: {
@@ -120,7 +120,7 @@ RSpec.describe "Origins API", type: :request do
     delete "Destroys an origin" do
       tags "Core - Origins"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       response "200", "origin destroyed" do
         let(:id) { origin.id }

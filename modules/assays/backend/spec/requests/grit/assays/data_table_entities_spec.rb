@@ -40,7 +40,7 @@ module Grit::Assays
       get "Lists all data table entities" do
         tags "Assays - Data Table Entities"
         produces "application/json"
-        security [ { cookie_auth: [] } ]
+        security [ { bearer_auth: [] } ]
 
         response "200", "data table entities listed (requires auth)" do
           let(:data_table_id) { data_table.id }

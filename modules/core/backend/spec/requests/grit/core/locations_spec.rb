@@ -48,7 +48,7 @@ RSpec.describe "Locations API", type: :request do
     get "Lists all locations" do
       tags "Core - Locations"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       response "200", "locations listed" do
         before { login_as(admin) }
@@ -60,7 +60,7 @@ RSpec.describe "Locations API", type: :request do
       tags "Core - Locations"
       consumes "application/json"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
       parameter name: :location_params, in: :body, schema: {
         type: :object,
         properties: {
@@ -105,7 +105,7 @@ RSpec.describe "Locations API", type: :request do
     get "Shows a location" do
       tags "Core - Locations"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       response "200", "location found" do
         let(:id) { location.id }
@@ -118,7 +118,7 @@ RSpec.describe "Locations API", type: :request do
       tags "Core - Locations"
       consumes "application/json"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
       parameter name: :location_params, in: :body, schema: {
         type: :object,
         properties: {
@@ -144,7 +144,7 @@ RSpec.describe "Locations API", type: :request do
     delete "Destroys a location" do
       tags "Core - Locations"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       response "200", "location destroyed" do
         let(:id) { location.id }

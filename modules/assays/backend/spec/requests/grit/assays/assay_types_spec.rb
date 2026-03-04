@@ -32,7 +32,7 @@ module Grit::Assays
       get "Lists all assay types" do
         tags "Assays - Assay Types"
         produces "application/json"
-        security [ { cookie_auth: [] } ]
+        security [ { bearer_auth: [] } ]
 
         response "200", "assay types listed" do
           before do
@@ -52,7 +52,7 @@ module Grit::Assays
         tags "Assays - Assay Types"
         consumes "application/json"
         produces "application/json"
-        security [ { cookie_auth: [] } ]
+        security [ { bearer_auth: [] } ]
         parameter name: :params, in: :body, schema: { type: :object }
 
         response "201", "assay type created" do
@@ -86,7 +86,7 @@ module Grit::Assays
       get "Shows an assay type" do
         tags "Assays - Assay Types"
         produces "application/json"
-        security [ { cookie_auth: [] } ]
+        security [ { bearer_auth: [] } ]
 
         response "200", "assay type shown" do
           let(:id) { assay_type.id }
@@ -104,7 +104,7 @@ module Grit::Assays
         tags "Assays - Assay Types"
         consumes "application/json"
         produces "application/json"
-        security [ { cookie_auth: [] } ]
+        security [ { bearer_auth: [] } ]
         parameter name: :params, in: :body, schema: { type: :object }
 
         response "200", "assay type updated" do
@@ -124,7 +124,7 @@ module Grit::Assays
       delete "Destroys an assay type" do
         tags "Assays - Assay Types"
         produces "application/json"
-        security [ { cookie_auth: [] } ]
+        security [ { bearer_auth: [] } ]
 
         response "200", "assay type destroyed" do
           before { login_as(admin) }

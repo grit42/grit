@@ -32,7 +32,7 @@ RSpec.describe "User Roles API", type: :request do
     get "Attempts to list user roles" do
       tags "Core - User Roles"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       response "403", "listing is forbidden" do
         run_test!
@@ -43,7 +43,7 @@ RSpec.describe "User Roles API", type: :request do
       tags "Core - User Roles"
       consumes "application/json"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
       parameter name: :user_role_params, in: :body, schema: {
         type: :object,
         properties: {
@@ -72,7 +72,7 @@ RSpec.describe "User Roles API", type: :request do
     get "Attempts to show a user role" do
       tags "Core - User Roles"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       response "403", "showing is forbidden" do
         let(:id) { user_role.id }
@@ -84,7 +84,7 @@ RSpec.describe "User Roles API", type: :request do
       tags "Core - User Roles"
       consumes "application/json"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
       parameter name: :user_role_params, in: :body, schema: {
         type: :object,
         properties: {
@@ -102,7 +102,7 @@ RSpec.describe "User Roles API", type: :request do
     delete "Attempts to destroy a user role" do
       tags "Core - User Roles"
       produces "application/json"
-      security [ { cookie_auth: [] } ]
+      security [ { bearer_auth: [] } ]
 
       response "403", "destruction is forbidden" do
         let(:id) { user_role.id }

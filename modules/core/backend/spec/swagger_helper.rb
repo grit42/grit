@@ -36,11 +36,6 @@ RSpec.configure do |config|
       ],
       components: {
         securitySchemes: {
-          cookie_auth: {
-            type: :apiKey,
-            name: "_grit_session",
-            in: :cookie
-          },
           bearer_auth: {
             type: :http,
             scheme: :bearer,
@@ -48,7 +43,7 @@ RSpec.configure do |config|
           }
         }
       },
-      security: [ { cookie_auth: [] }, { bearer_auth: [] } ]
+      security: [ { bearer_auth: [] } ]
     }
   }
 
