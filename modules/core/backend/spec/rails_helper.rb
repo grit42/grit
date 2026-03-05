@@ -37,17 +37,22 @@ ActiveRecord::Migrator.migrations_paths = [
 # Load support files
 Dir[File.expand_path("support/**/*.rb", __dir__)].each { |f| require f }
 
-# File fixtures path (shared with minitest)
-FILE_FIXTURE_PATH = File.expand_path("../test/fixtures/files", __dir__)
+# File fixtures path for request specs that upload files
+FILE_FIXTURE_PATH = "#{__dir__}/fixtures/files"
 
 RSpec.configure do |config|
   config.use_transactional_fixtures = true
   config.infer_spec_type_from_file_location!
   config.filter_rails_from_backtrace!
 
-  # Clean up any data left by previous minitest fixture loads or seed data.
-  # Transactional fixtures only rollback within each test — they don't clear
-  # data that existed before the suite started.
+  # Helper method for rswag to get bearer token from logged-in user
+  def authorization
+    return nil unless defined?(@current_user_session) && @current_user_session&.user
+
+    token = @current_user_session.user.single_access_token
+    "Bearer #{token}" if token
+  end
+
   config.before(:suite) do
     ActiveRecord::Base.connection.execute("SET session_replication_role = 'replica'")
     %w[
@@ -103,7 +108,4 @@ RSpec.configure do |config|
       end
     end.new("factory_bootstrap", 0)
   end
-
-  # Helper to resolve file fixtures
-  config.add_setting :file_fixture_path, default: FILE_FIXTURE_PATH
 end

@@ -37,7 +37,7 @@ ActiveRecord::Migrator.migrations_paths = [
 # Load support files
 Dir[File.expand_path("support/**/*.rb", __dir__)].each { |f| require f }
 
-# File fixtures path (shared with minitest)
+# File fixtures path
 FILE_FIXTURE_PATH = File.expand_path("../test/fixtures/files", __dir__)
 
 RSpec.configure do |config|
@@ -45,7 +45,7 @@ RSpec.configure do |config|
   config.infer_spec_type_from_file_location!
   config.filter_rails_from_backtrace!
 
-  # Clean up any data left by previous minitest fixture loads or seed data.
+  # Clean up data before each test suite run.
   config.before(:suite) do
     ActiveRecord::Base.connection.execute("SET session_replication_role = 'replica'")
     %w[
@@ -111,7 +111,4 @@ RSpec.configure do |config|
     leaked = ActiveRecord::Base.connection.tables.select { |t| t.start_with?("ds_") }
     leaked.each { |t| ActiveRecord::Base.connection.drop_table(t, force: true) }
   end
-
-  # Helper to resolve file fixtures
-  config.add_setting :file_fixture_path, default: FILE_FIXTURE_PATH
 end

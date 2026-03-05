@@ -70,7 +70,7 @@ RSpec.configure do |config|
   config.infer_spec_type_from_file_location!
   config.filter_rails_from_backtrace!
 
-  # Clean up any data left by previous minitest fixture loads or seed data.
+  # Clean up data before each test suite run.
   config.before(:suite) do
     ActiveRecord::Base.connection.execute("SET session_replication_role = 'replica'")
     %w[
@@ -127,7 +127,4 @@ RSpec.configure do |config|
       end
     end
   end
-
-  # Helper to resolve file fixtures
-  config.add_setting :file_fixture_path, default: FILE_FIXTURE_PATH
 end

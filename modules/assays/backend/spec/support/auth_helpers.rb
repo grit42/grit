@@ -33,15 +33,28 @@ module AuthHelpers
     # request, which wipes :authlogic_controller. Re-activate so that
     # any subsequent factory_bot creates can call UserSession.new.
     activate_authlogic
-    RequestStore.store["current_user"] = user.reload
+    @logged_in_user = user.reload
+    RequestStore.store["current_user"] = @logged_in_user
+  end
+
+  # rswag calls this method (capital A) to get the Authorization header
+  # when security [ { bearer_auth: [] } ] is declared in the spec
+  def Authorization
+    return nil unless defined?(@logged_in_user) && @logged_in_user
+
+    "Bearer #{@logged_in_user.single_access_token}"
   end
 
   def logout
     delete "/api/grit/core/user_session"
     activate_authlogic
     RequestStore.store["current_user"] = Struct.new(:login, :id) do
-      def role?(_name = nil) = true
-      def active? = true
+      def role?(_name = nil)
+        true
+      end
+      def active?
+        true
+      end
     end.new("factory_bootstrap", 0)
   end
 

@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License along with
 # @grit42/core. If not, see <https://www.gnu.org/licenses/>.
 
-# Shared authentication helpers for request and model specs.
+# Shared authentication helpers for request specs.
 module AuthHelpers
   # Request spec login: uses the API endpoint.
   # IMPORTANT: Do NOT use `as: :json` here. The ApplicationController has
@@ -35,7 +35,22 @@ module AuthHelpers
     # any subsequent factory_bot creates (triggered by lazy `let`
     # blocks) can call UserSession.new without NotActivatedError.
     activate_authlogic
-    RequestStore.store["current_user"] = user.reload
+    @logged_in_user = user.reload
+    RequestStore.store["current_user"] = @logged_in_user
+  end
+
+  # rswag calls this method to get the Authorization header value
+  # when security [ { bearer_auth: [] } ] is declared in the spec
+  def authorization
+    return nil unless defined?(@logged_in_user) && @logged_in_user
+
+    @logged_in_user.single_access_token
+  end
+
+  # rswag calls this method (capital A) to get the Authorization header
+  def Authorization
+    auth = authorization
+    "Bearer #{auth}" if auth
   end
 
   def logout
@@ -45,8 +60,12 @@ module AuthHelpers
     # creates (triggered by lazy `let` blocks) have a valid
     # User.current for set_updater callbacks.
     RequestStore.store["current_user"] = Struct.new(:login, :id) do
-      def role?(_name = nil) = true
-      def active? = true
+      def role?(_name = nil)
+        true
+      end
+      def active?
+        true
+      end
     end.new("factory_bootstrap", 0)
   end
 
