@@ -65,6 +65,14 @@ ActiveSupport.on_load(:active_record) do
   ActiveRecord::ConnectionAdapters::PostgreSQLAdapter.prepend(RDKitMolTypeMapPatch)
 end
 
+# Reduce SCrypt cost to the minimum for tests. The default max_time of 0.2s
+# causes SCrypt to auto-calibrate to ~200ms per hash. Since every user creation
+# triggers multiple hash/verify cycles (factory create, password set, session
+# creation), this dominates test runtime. Setting max_time to the lowest
+# practical value makes hashing near-instant while still exercising the real
+# code path.
+Authlogic::CryptoProviders::SCrypt.max_time = 0.01
+
 RSpec.configure do |config|
   config.use_transactional_fixtures = true
   config.infer_spec_type_from_file_location!

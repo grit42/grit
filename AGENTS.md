@@ -7,14 +7,13 @@ grit is a scientific research data management platform.
 When writing plans, be extremely concise. Sacrifice grammar for the sake of concision.
 At the end of each plan, list unresolved questions. Ask about edge cases, error handling, and unclear requirements before proceeding.
 End every plan with a numbered list of concrete steps. This should be the last thing visible in the terminal.
-For large changes, persist the plan in a markdown file with a descriptive name in `.plans`
 
 ## Monorepo Structure
 
 Three layers: **apps**, **modules**, and **packages**.
 
-- `apps/grit/client/` — React SPA entry point (Vite), served at `/app` by Rails
-- `apps/grit/server/` — Rails API server, thin shell with zero business logic, just serves the SPA and loads engine gems
+- `apps/{grit}/client/` — React SPA entry point (Vite), served at `/app` by Rails
+- `apps/{grit}/server/` — Rails API server, thin shell with zero business logic, just serves the SPA and loads engine gems
 - `modules/{core,compounds,assays}/` — Feature modules, each with paired `frontend/` and `backend/` directories
 - `packages/frontend/` — Shared UI libraries (all `@grit42/*` scoped): api, client-library, form, table, notifications, plots, spreadsheet
 
@@ -40,7 +39,7 @@ pnpm nx test grit-core                          # run minitest for core engine
 pnpm nx run-many -t test --projects=grit-core,grit-compounds,grit-assays  # all backend tests
 
 # E2E (Playwright)
-pnpm nx run @grit42/core:test:e2e --workers 1  # run Playwright tests
+pnpm nx run @grit42/core:test:e2e  # run Playwright tests
 
 # Dev database
 docker compose -f db/docker-compose.yml up      # start PostgreSQL+RDKit (host network, port 5432)
