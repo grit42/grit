@@ -17,15 +17,17 @@
  */
 
 import { Outlet, Route, Routes } from "react-router-dom";
-import Vocabularies from "../vocabularies";
-import Vocabulary from "../vocabulary";
+import Vocabularies from "./vocabularies";
+import Vocabulary from "./vocabulary";
 
 const VocabulariesTab = () => {
   return (
     <Routes>
       <Route element={<Outlet />}>
         <Route index element={<Vocabularies />} />
-        <Route path="/:vocabulary_id/*" element={<Vocabulary />} />
+        <Route path=":vocabulary_id">
+          <Route index path="*" element={<Vocabulary />} />
+        </Route>
       </Route>
     </Routes>
   );

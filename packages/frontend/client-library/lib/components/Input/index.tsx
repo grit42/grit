@@ -17,7 +17,7 @@
  */
 
 import InputLabel from "../InputLabel";
-import React, { forwardRef, LegacyRef, useMemo } from "react";
+import React, { forwardRef, useMemo } from "react";
 import classNames from "../../utils/classnames";
 import Tooltip from "../Tooltip";
 import styles from "./input.module.scss";
@@ -32,7 +32,7 @@ export interface Props {
   wrapperClassName?: string;
   fieldClassName?: string;
   label?: string;
-  tooltip?: string | JSX.Element;
+  tooltip?: string | React.ReactElement;
   error?: string;
   children?: React.ReactNode;
   description?: string;
@@ -98,7 +98,7 @@ const Input = forwardRef<
         return (
           <Checkbox
             {...(inputProps as Omit<CheckboxProps, "value">)}
-            ref={ref as LegacyRef<HTMLInputElement>}
+            ref={ref as React.Ref<HTMLInputElement>}
             name={label ?? inputProps.name}
             checked={value === true}
           />
@@ -109,7 +109,7 @@ const Input = forwardRef<
         return (
           <textarea
             {...(inputProps as TextAreaProps)}
-            ref={ref as LegacyRef<HTMLTextAreaElement>}
+            ref={ref as React.Ref<HTMLTextAreaElement>}
             name={label ?? inputProps.name}
             placeholder={inputProps.placeholder}
             value={(value as string) ?? ""}
@@ -121,7 +121,7 @@ const Input = forwardRef<
         return (
           <UrlInput
             {...(inputProps as InputProps)}
-            ref={ref as LegacyRef<HTMLInputElement>}
+            ref={ref as React.Ref<HTMLInputElement>}
             type={type as "localurl" | "url"}
             name={label ?? inputProps.name}
             placeholder={inputProps.placeholder}
@@ -139,7 +139,7 @@ const Input = forwardRef<
         return (
           <NumericInput
             {...(inputProps as InputProps)}
-            ref={ref as LegacyRef<HTMLInputElement>}
+            ref={ref as React.Ref<HTMLInputElement>}
             name={label ?? inputProps.name}
             type={type as "number" | "integer" | "decimal" | "float"}
             placeholder={inputProps.placeholder}
@@ -157,7 +157,7 @@ const Input = forwardRef<
         return (
           <DateInput
             {...(inputProps as InputProps)}
-            ref={ref as LegacyRef<HTMLInputElement>}
+            ref={ref as React.Ref<HTMLInputElement>}
             type={type as "date" | "datetime" | "datetime-local"}
             value={value as string}
           />
@@ -167,7 +167,7 @@ const Input = forwardRef<
       return (
         <input
           {...(inputProps as InputProps)}
-          ref={ref as LegacyRef<HTMLInputElement>}
+          ref={ref as React.Ref<HTMLInputElement>}
           type={type}
           name={label ?? inputProps.name}
           placeholder={inputProps.placeholder}

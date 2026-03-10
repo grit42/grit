@@ -17,23 +17,23 @@
  */
 
 import { Table, useSetupTableState } from "@grit42/table";
-import styles from "./dataTableEntities.module.scss";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTableColumns } from "@grit42/core/utils";
 import { useDestroyEntityMutation, useHasRoles } from "@grit42/core";
 import {
-  useDataTableEntities,
+  useInfiniteDataTableEntities,
   useDataTableEntityColumns,
 } from "../../queries/data_table_entities";
 import { Button } from "@grit42/client-library/components";
 import { useQueryClient } from "@grit42/api";
+import { CenteredColumnLayout } from "@grit42/client-library/layouts";
 
 interface Props {
   dataTableId: string | number;
 }
 
-export const DataTableEntitiesTable = ({ dataTableId }: Props) => {
+const DataTableEntitiesTable = ({ dataTableId }: Props) => {
   const navigate = useNavigate();
   const canEditDataTable = useHasRoles([
     "Administrator",
@@ -60,64 +60,74 @@ export const DataTableEntitiesTable = ({ dataTableId }: Props) => {
     },
   );
 
-  const { data: rows, isLoading: isRowsLoading } = useDataTableEntities(
-    dataTableId,
-    tableState.sorting,
-    tableState.filters,
-    undefined,
-    { enabled: dataTableId !== "new" },
+  const { data, isLoading, fetchNextPage, isFetchingNextPage } =
+    useInfiniteDataTableEntities(
+      dataTableId,
+      tableState.sorting,
+      tableState.filters,
+      undefined,
+      { enabled: dataTableId !== "new" },
+    );
+
+  const flatData = useMemo(
+    () => data?.pages.flatMap(({ data }) => data) ?? [],
+    [data],
   );
 
   const navigateToEdit = useCallback(() => navigate("edit"), [navigate]);
 
   return (
-    <div className={styles.entitiesTableContainer}>
-      {dataTableId !== "new" && (
-        <Table
-          header="Entities"
-          tableState={tableState}
-          rowActions={canEditDataTable ? ["delete"] : []}
-          onDelete={async (rows) => {
-            if (
-              !window.confirm(
-                `Are you sure you want to remove ${
-                  rows.length > 1 ? `${rows.length} entities` : "this entity"
-                }? This action is irreversible`,
-              )
+    <CenteredColumnLayout>
+      <Table
+        fitContent
+        header="Entities"
+        tableState={tableState}
+        rowActions={canEditDataTable ? ["delete"] : []}
+        onDelete={async (rows) => {
+          if (
+            !window.confirm(
+              `Are you sure you want to remove ${
+                rows.length > 1 ? `${rows.length} entities` : "this entity"
+              }? This action is irreversible`,
             )
-              return;
-            await destroyEntitiesMutation.mutateAsync(
-              rows.map(({ original }) => original.data_table_entity_id),
-            );
-            await Promise.all([
-              queryClient.invalidateQueries({
-                queryKey: [
-                  "entities",
-                  "data",
-                  `grit/assays/data_tables/${dataTableId}/data_table_entities`,
-                ],
-              }),
-              queryClient.invalidateQueries({
-                queryKey: [
-                  "entities",
-                  "data",
-                  `grit/assays/data_tables/${dataTableId}/data_table_rows`,
-                ],
-              }),
-            ]);
-          }}
-          loading={isRowsLoading}
-          headerActions={
-            canEditDataTable ? (
-              <Button disabled={dataTableId === "new"} onClick={navigateToEdit}>
-                Add
-              </Button>
-            ) : undefined
-          }
-          data={rows ?? []}
-        />
-      )}
-    </div>
+          )
+            return;
+          await destroyEntitiesMutation.mutateAsync(
+            rows.map(({ original }) => original.data_table_entity_id),
+          );
+          await Promise.all([
+            queryClient.invalidateQueries({
+              queryKey: [
+                "entities",
+                "data",
+                `grit/assays/data_tables/${dataTableId}/data_table_entities`,
+              ],
+            }),
+            queryClient.invalidateQueries({
+              queryKey: [
+                "entities",
+                "data",
+                `grit/assays/data_tables/${dataTableId}/data_table_rows`,
+              ],
+            }),
+          ]);
+        }}
+        loading={isLoading}
+        headerActions={
+          canEditDataTable ? (
+            <Button disabled={dataTableId === "new"} onClick={navigateToEdit}>
+              Add
+            </Button>
+          ) : undefined
+        }
+        data={flatData ?? []}
+        pagination={{
+          fetchNextPage,
+          isFetchingNextPage,
+          totalRows: data?.pages[0]?.total,
+        }}
+      />
+    </CenteredColumnLayout>
   );
 };
 

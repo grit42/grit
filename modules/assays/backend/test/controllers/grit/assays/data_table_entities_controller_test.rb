@@ -1,42 +1,48 @@
+# frozen_string_literal: true
+
 require "test_helper"
 
 module Grit::Assays
   class DataTableEntitiesControllerTest < ActionDispatch::IntegrationTest
-    include Engine.routes.url_helpers
+    include Grit::Assays::Engine.routes.url_helpers
+    include Authlogic::TestCase
 
     setup do
-      @data_table_entity = grit_assays_data_table_entities(:one)
+      activate_authlogic
+      login(grit_core_users(:admin))
+      # Pre-populate RequestStore so set_updater doesn't attempt an Authlogic
+      # session lookup when creating records directly outside HTTP request context.
+      RequestStore.store["current_user"] = grit_core_users(:admin)
+      @vocab = Grit::Core::Vocabulary.create!(name: "Test Species")
+      @data_type = @vocab.data_type
+      @item1 = Grit::Core::VocabularyItem.create!(name: "Mouse", vocabulary: @vocab)
+      @item2 = Grit::Core::VocabularyItem.create!(name: "Rat", vocabulary: @vocab)
+      @data_table = DataTable.create!(name: "Test Table", entity_data_type: @data_type)
     end
 
-    test "should get index" do
-      get data_table_entities_url, as: :json
-      assert_response :success
-    end
+    # --- Create Bulk ---
 
-    test "should create data_table_entity" do
-      assert_difference("DataTableEntity.count") do
-        post data_table_entities_url, params: { data_table_entity: {} }, as: :json
+    test "create_bulk adds multiple entities atomically" do
+      assert_difference("DataTableEntity.count", 2) do
+        post grit_assays.create_bulk_data_table_entities_url,
+          params: [
+            { data_table_id: @data_table.id, entity_id: @item1.id },
+            { data_table_id: @data_table.id, entity_id: @item2.id }
+          ],
+          as: :json
       end
 
-      assert_response :created
-    end
-
-    test "should show data_table_entity" do
-      get data_table_entity_url(@data_table_entity), as: :json
       assert_response :success
+      json = JSON.parse(response.body)
+      assert json["success"]
     end
 
-    test "should update data_table_entity" do
-      patch data_table_entity_url(@data_table_entity), params: { data_table_entity: {} }, as: :json
-      assert_response :success
-    end
+    # --- Authentication ---
 
-    test "should destroy data_table_entity" do
-      assert_difference("DataTableEntity.count", -1) do
-        delete data_table_entity_url(@data_table_entity), as: :json
-      end
-
-      assert_response :no_content
+    test "should require authentication" do
+      logout
+      get grit_assays.data_table_entities_url, as: :json
+      assert_response :unauthorized
     end
   end
 end

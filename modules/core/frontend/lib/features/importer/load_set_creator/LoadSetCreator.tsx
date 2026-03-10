@@ -23,10 +23,7 @@ import NewLoadSetForm from "./NewLoadSetForm";
 import { NewLoadSetData } from "../types";
 import { useEntityFields } from "../../entities";
 import { useLoadSetBlockFields } from "../queries";
-
-export interface LoadSetCreatorProps {
-  entity: string;
-}
+import { LoadSetCreatorProps } from "../ImportersContext";
 
 const LoadSetCreator = ({ entity }: LoadSetCreatorProps) => {
   const [searchParams] = useSearchParams();
@@ -50,7 +47,7 @@ const LoadSetCreator = ({ entity }: LoadSetCreatorProps) => {
   });
 
   const initialValues = useMemo((): Partial<NewLoadSetData> => {
-    const name = `${entity}-${new Date().toISOString()}`
+    const name = `${entity}-${new Date().toISOString()}`;
     const values: Partial<NewLoadSetData> = {
       entity,
       name,

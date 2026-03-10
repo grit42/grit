@@ -1,0 +1,9 @@
+@use "@grit42/client-library/theme.scss";
+
+.surface {
+  width: 960px;
+
+  ul {
+    padding-inline-start: theme.$spacing-lg;
+  }
+}

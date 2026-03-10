@@ -16,7 +16,7 @@
  * @grit42/client-library. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import {
   DropzoneProps as ReactDropZoneProps,
   useDropzone,
@@ -56,10 +56,14 @@ const FileInput = ({
   const [files, setFiles] = useState<FileWithPath[]>(
     overrideFiles ?? initialFiles ?? [],
   );
+  const [prevOverrideFiles, setPrevOverrideFiles] = useState<FileWithPath[]>(
+    overrideFiles ?? [],
+  );
 
-  useEffect(() => {
+  if (overrideFiles !== prevOverrideFiles) {
+    setPrevOverrideFiles(overrideFiles ?? []);
     setFiles(overrideFiles ?? []);
-  }, [overrideFiles]);
+  }
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     ...props,

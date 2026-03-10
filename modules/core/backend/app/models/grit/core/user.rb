@@ -108,6 +108,9 @@ module Grit::Core
     "last_login_at",
     "current_login_ip",
     "last_login_ip",
+    "forgot_token",
+    "activation_token",
+    "single_access_token",
     "two_factor_token",
     "two_factor_expiry"
   ]
@@ -186,6 +189,9 @@ module Grit::Core
         ) as user_roles__
       ) as role_ids")
       .select("grit_core_users.active")
+      .select("grit_core_users.forgot_token")
+      .select("grit_core_users.activation_token")
+      .select("grit_core_users.single_access_token")
     end
 
     private

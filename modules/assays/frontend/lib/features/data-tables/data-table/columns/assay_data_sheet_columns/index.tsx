@@ -17,16 +17,10 @@
  */
 
 import { ErrorPage, Spinner } from "@grit42/client-library/components";
-import {
-  Route,
-  Routes,
-  useParams,
-} from "react-router-dom";
+import { Route, Routes, useParams } from "react-router-dom";
 import AssayDataSheetDataTableColumnsTable from "./AssayDataSheetDataTableColumnsTable";
 import AssayDataSheetDataTableColumnSelector from "./AssayDataSheetDataTableColumnSelector";
-import {
-  useDataTableColumnColumns,
-} from "../../../queries/data_table_columns";
+import { useDataTableColumnColumns } from "../../../queries/data_table_columns";
 import { useAssayDataSheetColumnColumns } from "../../../../../queries/assay_data_sheet_columns";
 import NewAssayDataSheetDataTableColumn from "./NewAssayDataSheetDataTableColumn";
 import CloneAssayDataSheetDataTableColumn from "./CloneAssayDataSheetDataTableColumn";
@@ -76,11 +70,15 @@ const AssayDataSheetDataTableColumns = ({
     <Routes>
       <Route
         index
-        element={<AssayDataSheetDataTableColumnsTable dataTableId={dataTableId} />}
+        element={
+          <AssayDataSheetDataTableColumnsTable dataTableId={dataTableId} />
+        }
       />
       <Route
         path="select"
-        element={<AssayDataSheetDataTableColumnSelector dataTableId={dataTableId} />}
+        element={
+          <AssayDataSheetDataTableColumnSelector dataTableId={dataTableId} />
+        }
       />
       <Route
         path=":data_table_column_id"

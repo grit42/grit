@@ -17,7 +17,7 @@ class CreateGritAssaysDataTableColumns < ActiveRecord::Migration[7.2]
       t.jsonb :metadata_filters, default: {}
       t.bigint :experiment_ids, array: true, default: []
 
-      t.unique_constraint([:safe_name,:data_table_id], name: "unique_safe_name_data_table_id", deferrable: :deferred)
+      t.unique_constraint([ :safe_name, :data_table_id ], name: "unique_safe_name_data_table_id", deferrable: :deferred)
     end
 
     execute "CREATE TRIGGER manage_stamps_grit_assays_data_table_columns BEFORE INSERT OR UPDATE ON public.grit_assays_data_table_columns FOR EACH ROW EXECUTE FUNCTION public.manage_stamps();"

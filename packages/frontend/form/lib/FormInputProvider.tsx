@@ -17,6 +17,7 @@
  */
 
 import {
+  ChangeEvent,
   FunctionComponent,
   PropsWithChildren,
   useCallback,
@@ -94,7 +95,7 @@ const TextInput = (props: FormInputProps) => (
     label={getFieldLabel(props.field)}
     placeholder={props.field.display_name}
     type="textarea"
-    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+    onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
       props.handleChange(e.target.value)
     }
     onBlur={props.handleBlur}

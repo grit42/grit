@@ -18,16 +18,16 @@
 
 import { Table, useSetupTableState } from "@grit42/table";
 import { useCallback, useEffect, useMemo } from "react";
-import { useToolbar } from "@grit42/core/Toolbar";
+import { useToolbar } from "@grit42/core";
 import Circle1NewIcon from "@grit42/client-library/icons/Circle1New";
 import { useNavigate } from "react-router-dom";
 import { Button, ErrorPage, Spinner } from "@grit42/client-library/components";
 import { useTableColumns } from "@grit42/core/utils";
-import styles from "./assayModels.module.scss";
 import {
   useAssayModelColumns,
   useInfiniteAssayModels,
 } from "../../../../queries/assay_models";
+import { CenteredColumnLayout } from "@grit42/client-library/layouts";
 
 const DEFAULT_COLUMN_SIZES = {
   name: 200,
@@ -83,21 +83,27 @@ const AssayModelsTable = () => {
   );
 
   return (
-    <Table
-      header="Assay models"
-      tableState={tableState}
-      headerActions={<Button color="secondary" onClick={navigateToNew}>New</Button>}
-      className={styles.modelsTable}
-      data={flatData}
-      onRowClick={(row) => navigate(`${row.original.id}`)}
-      loading={isFetching}
-      noDataMessage={isError ? error : undefined}
-      pagination={{
-        fetchNextPage,
-        isFetchingNextPage,
-        totalRows: data?.pages[0]?.total,
-      }}
-    />
+    <CenteredColumnLayout>
+      <Table
+        header="Assay models"
+        tableState={tableState}
+        headerActions={
+          <Button color="secondary" onClick={navigateToNew}>
+            New
+          </Button>
+        }
+        fitContent
+        data={flatData}
+        onRowClick={(row) => navigate(`${row.original.id}`)}
+        loading={isFetching}
+        noDataMessage={isError ? error : undefined}
+        pagination={{
+          fetchNextPage,
+          isFetchingNextPage,
+          totalRows: data?.pages[0]?.total,
+        }}
+      />
+    </CenteredColumnLayout>
   );
 };
 

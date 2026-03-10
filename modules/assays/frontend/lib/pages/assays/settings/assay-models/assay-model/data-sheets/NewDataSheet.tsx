@@ -17,10 +17,7 @@
  */
 
 import { useMemo } from "react";
-import {
-  useNavigate,
-  useParams,
-} from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   Button,
   ButtonGroup,
@@ -29,13 +26,13 @@ import {
   Surface,
 } from "@grit42/client-library/components";
 import { useQueryClient } from "@grit42/api";
-import {
-  useCreateEntityMutation,
-} from "@grit42/core";
+import { useCreateEntityMutation } from "@grit42/core";
 import {
   Form,
+  FormBanner,
   FormField,
   FormFieldDef,
+  FormFields,
   genericErrorHandler,
   getVisibleFieldData,
   useForm,
@@ -45,8 +42,8 @@ import {
   useAssayDataSheetDefinitionFields,
   useAssayDataSheetDefinitions,
 } from "../../../../../../queries/assay_data_sheet_definitions";
-import styles from "../../assayModels.module.scss";
-import z from "zod";
+import styles from "./dataSheets.module.scss";
+import { z } from "zod";
 
 const AssayDataSheetDefinitionForm = ({
   fields,
@@ -80,7 +77,7 @@ const AssayDataSheetDefinitionForm = ({
       "grit/assays/assay_data_sheet_definitions",
     );
 
-  const form = useForm<Partial<AssayDataSheetDefinitionData>>({
+  const form = useForm({
     defaultValues: sheetDefinition,
     onSubmit: genericErrorHandler(async ({ value: formValue }) => {
       const value = {
@@ -114,41 +111,19 @@ const AssayDataSheetDefinitionForm = ({
   });
 
   return (
-    <Surface style={{ width: "100%" }}>
-      <h2 style={{ alignSelf: "baseline", marginBottom: ".5em" }}>New sheet</h2>
-      <Form<Partial<AssayDataSheetDefinitionData>> form={form}>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr",
-            gridAutoRows: "max-content",
-            gap: "calc(var(--spacing) * 2)",
-            paddingBottom: "calc(var(--spacing) * 2)",
-          }}
-        >
-          {form.state.errorMap.onSubmit && (
-            <div
-              style={{
-                gridColumnStart: 1,
-                gridColumnEnd: -1,
-                color: "var(--palette-error-main)",
-              }}
-            >
-              {form.state.errorMap.onSubmit?.toString()}
-            </div>
-          )}
+    <Surface className={styles.dataSheetFormContainer}>
+      <h2>New sheet</h2>
+      <Form form={form}>
+        <FormFields columns={1}>
+          <FormBanner content={form.state.errorMap.onSubmit} />
           {fields.map((f) => (
             <FormField
-              form={form}
               fieldDef={f}
               key={f.name}
-              validators={{
-                onChange: validators[f.name as "name"],
-                onMount: validators[f.name as "name"],
-              }}
+              validators={validators[f.name as "name"] as any}
             />
           ))}
-        </div>
+        </FormFields>
         <form.Subscribe
           selector={(state) => [
             state.canSubmit,
@@ -199,7 +174,7 @@ const NewDataSheet = ({ assayModelId }: { assayModelId: string }) => {
   }
 
   return (
-    <div className={styles.dataSheet}>
+    <div className={styles.dataSheetContainer}>
       <AssayDataSheetDefinitionForm
         sheetDefinition={{}}
         fields={fields}

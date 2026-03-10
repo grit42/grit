@@ -8,8 +8,8 @@
     "build": "tsc -b && vite build",
     "tsc": "tsc -b",
     "lint": "eslint .",
-    "format:check": "prettier . -c",
-    "format": "prettier . -w",
+    "format:check": "prettier . -c --ignore-path ../../../.prettierignore",
+    "format": "prettier . -w --ignore-path ../../../.prettierignore",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -22,7 +22,6 @@
     "@grit42/table": "workspace:*",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "react-helmet-async": "catalog:",
     "react-router-dom": "catalog:"
   },
   "devDependencies": {

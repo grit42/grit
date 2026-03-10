@@ -22,6 +22,8 @@ module Grit::Assays
 
     belongs_to :assay_metadata_definition
     belongs_to :experiment
+    belongs_to :vocabulary, class_name: "Grit::Core::Vocabulary"
+    belongs_to :vocabulary_item, class_name: "Grit::Core::VocabularyItem"
 
     entity_crud_with read: [],
       create: [ "Administrator", "AssayAdministrator", "AssayUser" ],

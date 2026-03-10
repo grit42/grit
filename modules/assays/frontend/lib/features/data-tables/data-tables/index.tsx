@@ -17,19 +17,10 @@
  */
 
 import { ErrorPage, Spinner } from "@grit42/client-library/components";
-import {
-  useDataTables,
-  useDataTableColumns,
-} from "../queries/data_tables";
+import { useDataTableColumns } from "../queries/data_tables";
 import DataTablesTable from "./DataTablesTable";
 
 const DataTablesPage = () => {
-  const {
-    data: dataTables,
-    isLoading: isDataTablesLoading,
-    isError: isDataTablesError,
-    error: dataTablesError,
-  } = useDataTables();
   const {
     data: dataTableColumns,
     isLoading: isDataTableColumnsLoading,
@@ -37,15 +28,10 @@ const DataTablesPage = () => {
     error: dataTableColumnsError,
   } = useDataTableColumns();
 
-  if (isDataTablesLoading || isDataTableColumnsLoading) return <Spinner />;
+  if (isDataTableColumnsLoading) return <Spinner />;
 
-  if (
-    !dataTables ||
-    isDataTablesError ||
-    !dataTableColumns ||
-    isDataTableColumnsError
-  ) {
-    return <ErrorPage error={dataTablesError ?? dataTableColumnsError} />;
+  if (!dataTableColumns || isDataTableColumnsError) {
+    return <ErrorPage error={dataTableColumnsError} />;
   }
 
   return <DataTablesTable />;

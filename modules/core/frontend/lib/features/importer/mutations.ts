@@ -51,7 +51,11 @@ export const useCreateLoadSetMutation = () => {
 };
 
 export const useSetLoadSetBlockDataMutation = (loadSetBlockId: number) => {
-  return useMutation<LoadSetBlockData, EndpointErrorErrors<LoadSetBlockData>, FormData>({
+  return useMutation<
+    LoadSetBlockData,
+    EndpointErrorErrors<LoadSetBlockData>,
+    FormData
+  >({
     mutationKey: ["setLoadSetBlockData", loadSetBlockId],
     mutationFn: async (data: FormData) => {
       const response = await request<
@@ -76,10 +80,7 @@ export const useSetLoadSetBlockDataMutation = (loadSetBlockId: number) => {
 };
 
 export const useInitializeLoadSetBlockMutation = (loadSetBlockId: number) => {
-  return useMutation<
-    LoadSetBlockData,
-    EndpointErrorErrors<LoadSetBlockData>
-  >({
+  return useMutation<LoadSetBlockData, EndpointErrorErrors<LoadSetBlockData>>({
     mutationKey: ["initializeLoadSetBlock", loadSetBlockId],
     mutationFn: async () => {
       const response = await request<

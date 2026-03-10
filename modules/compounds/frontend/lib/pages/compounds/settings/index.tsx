@@ -16,18 +16,11 @@
  * @grit42/compounds. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import {
-  Navigate,
-  Outlet,
-  Route,
-  Routes,
-  useMatch,
-  useNavigate,
-} from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import CompoundTypeManager from "./compound-type-manager";
 import CompoundBatchLoadSets from "./load-sets/CompoundBatchLoadSets";
-import { useEffect, useState } from "react";
-import { Tabs } from "@grit42/client-library/components";
+import { RoutedTabs } from "@grit42/client-library/components";
+import styles from "./settings.module.scss";
 
 const TABS = [
   {
@@ -39,63 +32,14 @@ const TABS = [
     label: "Load sets",
   },
 ];
+
 const CompoundAdministration = () => {
-  const navigate = useNavigate();
-
-  const match = useMatch("/compounds/settings/:childPath/*");
-  const childPath = match?.params.childPath ?? "metadata";
-  const [selectedTab, setSelectedTab] = useState(
-    TABS.findIndex(({ url }) => childPath === url),
-  );
-
-  useEffect(() => {
-    setSelectedTab(TABS.findIndex(({ url }) => childPath === url));
-  }, [childPath]);
-
-  const handleTabChange = (index: number) => {
-    navigate(TABS[index].url);
-  };
-
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateRows: "min-content min-content 1fr",
-        height: "100%",
-        overflow: "auto",
-      }}
-    >
-      <h2
-        style={{
-          paddingBottom: "var(--spacing)",
-          color: "var(--palette-secondary-main)",
-        }}
-      >
-        Compounds administration
-      </h2>
-      <Tabs
-        onTabChange={handleTabChange}
-        selectedTab={selectedTab}
-        tabs={TABS.map((t) => ({
-          key: t.url,
-          name: t.label,
-          panel: <></>,
-        }))}
-      />
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          width: "100%",
-          height: "100%",
-          maxWidth: "100%",
-          maxHeight: "100%",
-          overflowY: "auto",
-        }}
-      >
-        <Outlet />
-      </div>
-    </div>
+    <RoutedTabs
+      matchPattern="/compounds/settings/:childPath/*"
+      tabs={TABS}
+      heading={<h2 className={styles.header}>Compounds administration</h2>}
+    />
   );
 };
 
@@ -103,9 +47,11 @@ const CompoundAdministrationTab = () => {
   return (
     <Routes>
       <Route element={<CompoundAdministration />}>
-        <Route path="/metadata" element={<CompoundTypeManager />} />
-        <Route path="/load-sets/*" element={<CompoundBatchLoadSets />} />
-        <Route path="*" element={<Navigate to="metadata" />} />
+        <Route path="metadata" element={<CompoundTypeManager />} />
+        <Route path="load-sets">
+          <Route index path="*" element={<CompoundBatchLoadSets />} />
+        </Route>
+        <Route path="*" element={<Navigate to="../metadata" replace />} />
       </Route>
     </Routes>
   );

@@ -35,18 +35,21 @@ const ImportersProvider: React.FC<PropsWithChildren> = ({ children }) => {
   const [importers, setImporters] = useState<Record<string, ImporterDef>>({
     default: DEFAULT_IMPORTER,
   });
-  const register = useCallback((type: string, importer: Partial<ImporterDef>) => {
-    setImporters((prev) => ({
-      ...prev,
-      [type]: { ...DEFAULT_IMPORTER, ...importer },
-    }));
-    return () =>
-      setImporters((prev) => {
-        const next = { ...prev };
-        delete next[type];
-        return next;
-      });
-  }, []);
+  const register = useCallback(
+    (type: string, importer: Partial<ImporterDef>) => {
+      setImporters((prev) => ({
+        ...prev,
+        [type]: { ...DEFAULT_IMPORTER, ...importer },
+      }));
+      return () =>
+        setImporters((prev) => {
+          const next = { ...prev };
+          delete next[type];
+          return next;
+        });
+    },
+    [],
+  );
 
   const value = useMemo(() => ({ importers, register }), [importers, register]);
 

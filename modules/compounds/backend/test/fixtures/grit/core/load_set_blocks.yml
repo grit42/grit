@@ -1,0 +1,36 @@
+# Load set blocks for compound/batch integration testing
+# These use IDs in the 200+ range to avoid conflicts with core fixtures
+# status_id values: 40=Created, 42=Mapping, 45=Validated, 47=Succeeded
+
+compound_loading_validated_block:
+  id: 201
+  name: "compound-loading-validated-block"
+  load_set_id: 201
+  status_id: 45
+  separator: "$$$$"
+  headers: '[{"name": "col_0", "display_name": "molecule"}, {"name": "col_1", "display_name": "SMILES"}]'
+  mappings: '{"name": {"header": "col_1"}, "molecule": {"header": "col_0"}}'
+  has_errors: false
+  has_warnings: false
+
+compound_loading_succeeded_block:
+  id: 202
+  name: "compound-loading-succeeded-block"
+  load_set_id: 202
+  status_id: 47
+  separator: "$$$$"
+  headers: '[{"name": "col_0", "display_name": "molecule"}, {"name": "col_1", "display_name": "SMILES"}]'
+  mappings: '{"name": {"header": "col_1"}, "molecule": {"header": "col_0"}}'
+  has_errors: false
+  has_warnings: false
+
+batch_loading_validated_block:
+  id: 203
+  name: "batch-loading-validated-block"
+  load_set_id: 203
+  status_id: 45
+  separator: ","
+  headers: '[{"name": "col_0", "display_name": "name"}, {"name": "col_1", "display_name": "compound_id"}]'
+  mappings: '{"name": {"header": "col_0"}, "compound_id": {"header": "col_1"}}'
+  has_errors: false
+  has_warnings: false

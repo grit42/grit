@@ -28,8 +28,10 @@ import {
 import { useDestroyEntityMutation, useEditEntityMutation } from "@grit42/core";
 import {
   Form,
+  FormBanner,
   FormField,
   FormFieldDef,
+  FormFields,
   genericErrorHandler,
   getVisibleFieldData,
   useForm,
@@ -39,9 +41,9 @@ import {
   useAssayDataSheetDefinitionFields,
   useAssayDataSheetDefinitions,
 } from "../../../../../../queries/assay_data_sheet_definitions";
-import styles from "../../assayModels.module.scss";
+import styles from "./dataSheets.module.scss";
 import DataSheetColumns from "./data-sheet-columns";
-import z from "zod";
+import { z } from "zod";
 import {
   AssayModelData,
   useAssayModel,
@@ -87,7 +89,7 @@ const AssayDataSheetDefinitionForm = ({
     "grit/assays/assay_data_sheet_definitions",
   );
 
-  const form = useForm<Partial<AssayDataSheetDefinitionData>>({
+  const form = useForm({
     defaultValues: sheetDefinition,
     onSubmit: genericErrorHandler(async ({ value: formValue, formApi }) => {
       const value = {
@@ -118,44 +120,22 @@ const AssayDataSheetDefinitionForm = ({
   };
 
   return (
-    <Surface style={{ width: "100%" }}>
-      <Form<Partial<AssayDataSheetDefinitionData>> form={form}>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr",
-            gridAutoRows: "max-content",
-            gap: "calc(var(--spacing) * 2)",
-            paddingBottom: "calc(var(--spacing) * 2)",
-          }}
-        >
-          {form.state.errorMap.onSubmit && (
-            <div
-              style={{
-                gridColumnStart: 1,
-                gridColumnEnd: -1,
-                color: "var(--palette-error-main)",
-              }}
-            >
-              {form.state.errorMap.onSubmit?.toString()}
-            </div>
-          )}
+    <Surface className={styles.dataSheetFormContainer}>
+      <Form form={form}>
+        <FormFields columns={1}>
+          <FormBanner content={form.state.errorMap.onSubmit} />
           {fields.map((f) => (
             <FormField
-              form={form}
               fieldDef={{
                 ...f,
                 disabled:
                   assayModel?.publication_status_id__name === "Published",
               }}
               key={f.name}
-              validators={{
-                onChange: validators[f.name as "name"],
-                onMount: validators[f.name as "name"],
-              }}
+              validators={validators[f.name as "name"] as any}
             />
           ))}
-        </div>
+        </FormFields>
         <form.Subscribe
           selector={(state) => [
             state.canSubmit,
@@ -254,7 +234,7 @@ const EditDataSheet = ({
   }
 
   return (
-    <div className={styles.dataSheet}>
+    <div className={styles.dataSheetContainer}>
       <AssayDataSheetDefinitionForm
         key={sheet_id}
         sheetDefinition={sheetDefinition ?? {}}

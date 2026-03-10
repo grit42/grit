@@ -17,13 +17,7 @@
  */
 
 import { Link, useNavigate, useParams } from "react-router-dom";
-import {
-  Button,
-  ErrorPage,
-  Spinner,
-  Surface,
-} from "@grit42/client-library/components";
-import styles from "./dataSheet.module.scss";
+import { Button, ErrorPage, Spinner } from "@grit42/client-library/components";
 import {
   ExperimentDataSheetRecordData,
   useExperimentDataSheetRecord,
@@ -36,13 +30,16 @@ import {
 } from "@grit42/core";
 import {
   Form,
+  FormBanner,
   FormControls,
   FormField,
   FormFieldDef,
+  FormFields,
   genericErrorHandler,
   getVisibleFieldData,
   useForm,
 } from "@grit42/form";
+import { CenteredSurface } from "@grit42/client-library/layouts";
 
 const ExperimentDataSheetRecordForm = ({
   experimentDataSheetId,
@@ -58,12 +55,12 @@ const ExperimentDataSheetRecordForm = ({
 
   const createEntityMutation =
     useCreateEntityMutation<ExperimentDataSheetRecordData>(
-    `grit/assays/assay_data_sheet_definitions/${experimentDataSheetId}/experiment_data_sheet_records`,
+      `grit/assays/assay_data_sheet_definitions/${experimentDataSheetId}/experiment_data_sheet_records`,
     );
 
   const editEntityMutation =
     useEditEntityMutation<ExperimentDataSheetRecordData>(
-    `grit/assays/assay_data_sheet_definitions/${experimentDataSheetId}/experiment_data_sheet_records`,
+      `grit/assays/assay_data_sheet_definitions/${experimentDataSheetId}/experiment_data_sheet_records`,
       experimentDataSheetRecord.id ?? -1,
     );
 
@@ -71,7 +68,7 @@ const ExperimentDataSheetRecordForm = ({
     `grit/assays/assay_data_sheet_definitions/${experimentDataSheetId}/experiment_data_sheet_records`,
   );
 
-  const form = useForm<Partial<ExperimentDataSheetRecordData>>({
+  const form = useForm({
     defaultValues: experimentDataSheetRecord,
     onSubmit: genericErrorHandler(async ({ value: formValue }) => {
       const value = {
@@ -108,47 +105,24 @@ const ExperimentDataSheetRecordForm = ({
   };
 
   return (
-    <div className={styles.container}>
-      <Surface className={styles.form}>
-        <h2
-          style={{ alignSelf: "baseline", marginBottom: "1em" }}
-        >{`${experimentDataSheetRecord.id ? "Edit" : "New"} record`}</h2>
-        <Form<Partial<ExperimentDataSheetRecordData>> form={form}>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gridAutoRows: "max-content",
-              gap: "calc(var(--spacing) * 2)",
-              paddingBottom: "calc(var(--spacing) * 2)",
-            }}
-          >
-            {form.state.errorMap.onSubmit && (
-              <div
-                style={{
-                  gridColumnStart: 1,
-                  gridColumnEnd: -1,
-                  color: "var(--palette-error-main)",
-                }}
-              >
-                {form.state.errorMap.onSubmit?.toString()}
-              </div>
-            )}
-            {fields.map((f) => (
-              <FormField form={form} fieldDef={f} key={f.name} />
-            ))}
-          </div>
-          <FormControls
-            form={form}
-            onDelete={onDelete}
-            showDelete={!!experimentDataSheetRecord.id}
-            showCancel
-            cancelLabel={experimentDataSheetRecord.id ? "Back" : "Cancel"}
-            onCancel={() => navigate("..")}
-          />
-        </Form>
-      </Surface>
-    </div>
+    <CenteredSurface>
+      <h2>{`${experimentDataSheetRecord.id ? "Edit" : "New"} record`}</h2>
+      <Form form={form}>
+        <FormFields>
+          <FormBanner content={form.state.errorMap.onSubmit} />
+          {fields.map((f) => (
+            <FormField fieldDef={f} key={f.name} />
+          ))}
+        </FormFields>
+        <FormControls
+          onDelete={onDelete}
+          showDelete={!!experimentDataSheetRecord.id}
+          showCancel
+          cancelLabel={experimentDataSheetRecord.id ? "Back" : "Cancel"}
+          onCancel={() => navigate("..")}
+        />
+      </Form>
+    </CenteredSurface>
   );
 };
 

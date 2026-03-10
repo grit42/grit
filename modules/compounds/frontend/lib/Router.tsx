@@ -18,7 +18,7 @@
 
 import { AuthGuard } from "@grit42/core";
 import { lazy } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Outlet, Route, Routes } from "react-router-dom";
 
 const LazyCompoundsPage = lazy(() => import("./pages/compounds"));
 
@@ -32,7 +32,9 @@ const LazyCompoundBatchesPage = lazy(
 const LazyCompoundSynonymsPage = lazy(
   () => import("./pages/compounds/[id]/synonyms"),
 );
-const LazyCompoundSettingsPage = lazy(() => import("./pages/compounds/settings"));
+const LazyCompoundSettingsPage = lazy(
+  () => import("./pages/compounds/settings"),
+);
 
 const Router = () => {
   return (
@@ -57,17 +59,19 @@ const Router = () => {
         <Route path="details" element={<LazyCompoundDetailsPage />} />
         <Route path="batches" element={<LazyCompoundBatchesPage />} />
         <Route path="synonyms" element={<LazyCompoundSynonymsPage />} />
-        <Route index path="*" element={<Navigate to="details" replace />} />
+        <Route index path="*" element={<Navigate to="../details" replace />} />
       </Route>
 
       <Route
-        path="settings/*"
+        path="settings"
         element={
           <AuthGuard>
-            <LazyCompoundSettingsPage />
+            <Outlet />
           </AuthGuard>
         }
-      />
+      >
+        <Route index path="*" element={<LazyCompoundSettingsPage />} />
+      </Route>
     </Routes>
   );
 };

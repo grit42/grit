@@ -16,64 +16,34 @@
  * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { useEffect, useState } from "react";
-import { Outlet, useMatch, useNavigate } from "react-router-dom";
-import { ErrorPage, Tabs } from "@grit42/client-library/components";
+import { useMemo } from "react";
+import { ErrorPage, RoutedTabs } from "@grit42/client-library/components";
 import { AssayDataSheetDefinitionData } from "../../../../queries/assay_data_sheet_definitions";
-import styles from "./dataSheets.module.scss";
 
 interface Props {
   sheetDefinitions: AssayDataSheetDefinitionData[];
 }
 
 const DataSheetTabs = ({ sheetDefinitions }: Props) => {
-  const navigate = useNavigate();
-
-  const match = useMatch(
-    "/assays/assay-models/:assay_model_id/data-sheets/:sheet_id",
+  const tabs = useMemo(
+    () =>
+      sheetDefinitions.map((sheetDefinition) => ({
+        url: sheetDefinition.id.toString(),
+        label: sheetDefinition.name,
+      })),
+    [sheetDefinitions],
   );
-
-  const sheet_id = match?.params.sheet_id ?? 0;
-
-  const [selectedTab, setSelectedTab] = useState(
-    sheetDefinitions?.findIndex(({ id }) => sheet_id === id.toString()) ?? 0,
-  );
-
-  useEffect(() => {
-    setSelectedTab(
-      sheetDefinitions?.findIndex(({ id }) => sheet_id === id.toString()) ?? 0,
-    );
-  }, [sheet_id, sheetDefinitions]);
-
-  const handleTabChange = (index: number) => {
-    if (
-      selectedTab !== index &&
-      sheetDefinitions?.length &&
-      sheetDefinitions[index]
-    ) {
-      navigate(sheetDefinitions[index].id.toString(), { replace: true });
-    }
-  };
 
   if (sheetDefinitions.length === 0) {
-    return <ErrorPage error="This model does not define any data sheets"/>
+    return <ErrorPage error="This model does not define any data sheets" />;
   }
 
   return (
-    <div className={styles.dataSheets}>
-      <Tabs
-        selectedTab={selectedTab}
-        onTabChange={handleTabChange}
-        tabs={[
-          ...(sheetDefinitions?.map((sheetDefinition) => ({
-            key: sheetDefinition.id.toString(),
-            name: sheetDefinition.name,
-            panel: <></>,
-          })) ?? []),
-        ]}
-      />
-      <Outlet />
-    </div>
+    <RoutedTabs
+      matchPattern="/assays/assay-models/:assay_model_id/data-sheets/:sheet_id"
+      tabs={tabs}
+      replaceNavigation={true}
+    />
   );
 };
 

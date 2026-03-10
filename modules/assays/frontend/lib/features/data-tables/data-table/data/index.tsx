@@ -23,23 +23,15 @@ import {
   Table,
   useSetupTableState,
 } from "@grit42/table";
-import styles from "./dataTableData.module.scss";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useToolbar } from "@grit42/core/Toolbar";
+import { useToolbar, useHasRoles } from "@grit42/core";
 import { Link, useNavigate } from "react-router-dom";
 import { useTableColumns } from "@grit42/core/utils";
 import {
   useDataTableRowColumns,
   useInfiniteDataTableRows,
 } from "../../queries/data_table_rows";
-import {
-  getFilterParams,
-  getSortParams,
-  getURLParams,
-} from "@grit42/api";
-import {
-  useHasRoles,
-} from "@grit42/core";
+import { getFilterParams, getSortParams, getURLParams } from "@grit42/api";
 import { downloadFile } from "@grit42/client-library/utils";
 import {
   Button,
@@ -70,7 +62,7 @@ interface ClickedCellInfo {
   column: string;
 }
 
-export const DataTableData = ({ dataTableId }: Props) => {
+const DataTableData = ({ dataTableId }: Props) => {
   const registerToolbarActions = useToolbar();
   const navigate = useNavigate();
   const canEditDataTable = useHasRoles([
@@ -102,7 +94,9 @@ export const DataTableData = ({ dataTableId }: Props) => {
     tableState.sorting,
     tableState.filters,
     undefined,
-    { enabled: dataTableId !== "new" },
+    {
+      enabled: dataTableId !== "new",
+    },
   );
 
   const flatData = useMemo(
@@ -183,7 +177,7 @@ export const DataTableData = ({ dataTableId }: Props) => {
   }
 
   return (
-    <div className={styles.dataTableContainer}>
+    <>
       <FullPerspectiveDialog
         column={clickedCell?.column}
         id={clickedCell?.id}
@@ -191,24 +185,22 @@ export const DataTableData = ({ dataTableId }: Props) => {
         columns={tableColumns}
         dataTableId={dataTableId}
       />
-      {dataTableId !== "new" && (
-        <Table
-          tableState={tableState}
-          loading={isRowsLoading && !isFetchingNextPage}
-          data={flatData ?? []}
-          onCellClick={[
-            assay_data_sheet_columns,
-            ({ original }, column) =>
-              setClickedCell({ id: original.id, column: column.toString() }),
-          ]}
-          pagination={{
-            fetchNextPage,
-            isFetchingNextPage,
-            totalRows: rows?.pages[0]?.total,
-          }}
-        />
-      )}
-    </div>
+      <Table
+        tableState={tableState}
+        loading={isRowsLoading && !isFetchingNextPage}
+        data={flatData ?? []}
+        onCellClick={[
+          assay_data_sheet_columns,
+          ({ original }, column) =>
+            setClickedCell({ id: original.id, column: column.toString() }),
+        ]}
+        pagination={{
+          fetchNextPage,
+          isFetchingNextPage,
+          totalRows: rows?.pages[0]?.total,
+        }}
+      />
+    </>
   );
 };
 

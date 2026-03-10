@@ -22,7 +22,7 @@ import { Button, ErrorPage, Spinner } from "@grit42/client-library/components";
 import Details from "./details";
 import { useExperiment } from "../../../queries/experiments";
 import ExperimentDataSheet from "./data-sheet";
-import { useToolbar } from "@grit42/core/Toolbar";
+import { useToolbar } from "@grit42/core";
 import { downloadFile } from "@grit42/client-library/utils";
 import ExperimentPlots from "./plots";
 import ExperimentLoadSets from "./load-sets";
@@ -55,7 +55,7 @@ const Experiment = () => {
   if (isError || !data)
     return (
       <ErrorPage error={error}>
-        <Link to="..">
+        <Link to="../..">
           <Button>Back</Button>
         </Link>
       </ErrorPage>
@@ -69,23 +69,26 @@ const Experiment = () => {
     <Routes>
       <Route element={<ExperimentTabs experiment={data} />}>
         <Route path="details" element={<Details />} />
+        <Route path="sheets/:sheet_id">
+          <Route
+            index
+            path="*"
+            element={<ExperimentDataSheet dataSheets={data.data_sheets} />}
+          />
+        </Route>
+        <Route path="plots">
+          <Route
+            index
+            path="*"
+            element={<ExperimentPlots experiment={data} />}
+          />
+        </Route>
         <Route
-          path={`sheets/:sheet_id/*`}
-          element={<ExperimentDataSheet dataSheets={data.data_sheets} />}
-        />
-        <Route
-          path={`plots/*`}
-          element={<ExperimentPlots experiment={data} />}
-        />
-        <Route
-          path={`load-sets`}
+          path="load-sets"
           element={<ExperimentLoadSets experiment={data} />}
         />
-        <Route
-          path={`files`}
-          element={<ExperimentFiles experiment={data} />}
-        />
-        <Route path="*" element={<Navigate to="details" replace />} />
+        <Route path="files" element={<ExperimentFiles experiment={data} />} />
+        <Route path="*" element={<Navigate to="../details" replace />} />
       </Route>
     </Routes>
   );

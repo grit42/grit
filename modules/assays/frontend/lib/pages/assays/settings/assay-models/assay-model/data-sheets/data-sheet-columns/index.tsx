@@ -41,7 +41,12 @@ const DataSheetColumns = ({ assayModel }: { assayModel: AssayModelData }) => {
   if (isError || !data) return <ErrorPage error={error} />;
   return (
     <Routes>
-      <Route index element={<DataSheetColumnsTable sheetId={sheet_id} assayModel={assayModel} />} />
+      <Route
+        index
+        element={
+          <DataSheetColumnsTable sheetId={sheet_id} assayModel={assayModel} />
+        }
+      />
       <Route path=":column_id" element={<EditDataSheetColumn />} />
       {assayModel.publication_status_id__name !== "Published" && (
         <>

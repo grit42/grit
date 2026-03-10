@@ -16,186 +16,57 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import {
-  Button,
-  ButtonGroup,
-  ErrorPage,
-  Spinner,
-} from "@grit42/client-library/components";
-import { useNavigate } from "react-router-dom";
-import { getURLParams, useQueryClient } from "@grit42/api";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  useValidateLoadSetBlockMutation,
-  useConfirmLoadSetBlockMutation,
-  useRollbackLoadSetBlockMutation,
-  useInitializeLoadSetBlockMutation,
-} from "../mutations";
-import { useLoadSetBlockMappingFields } from "../queries";
-import { LoadSetBlockData, LoadSetData, LoadSetMapping } from "../types";
-import { useDestroyEntityMutation } from "../../entities";
-import { useForm } from "@grit42/form";
+import { useMemo, useState } from "react";
+import { Button, ButtonGroup } from "@grit42/client-library/components";
+import { FormFieldDef, useForm } from "@grit42/form";
+import { LoadSetData, LoadSetMapping } from "../types";
 import styles from "./loadSetEditor.module.scss";
 import MappingFields from "./MappingFields";
 import LoadSetInfo from "./LoadSetInfo";
 import UpdateLoadSetDataDialog from "./UpdateLoadSetDataDialog";
-import {
-  getAutoMappings,
-  getLoadSetPropertiesForCancel,
-} from "../utils/mappings";
-import { LoadSetEditorProps } from "../ImportersContext";
+import { formValuesToMappings, mappingsToFormValues } from "../utils/mappings";
+import { useLoadSetEditorActions } from "./useLoadSetEditorActions";
+import { LOAD_SET_BLOCK_STATUS, getBlockStatus } from "../constants";
+
+interface LoadSetEditorComponentProps {
+  loadSet: LoadSetData;
+  mappings: Record<string, LoadSetMapping> | null;
+  fields: FormFieldDef[];
+}
 
 const LoadSetEditor = ({
   loadSet,
   mappings: mappingFromProps,
-}: {
-  loadSet: LoadSetData;
-  mappings: Record<string, LoadSetMapping> | null;
-}) => {
+  fields,
+}: LoadSetEditorComponentProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const [mappings, setMappings] = useState<Record<string, LoadSetMapping>>(
     mappingFromProps ?? {},
   );
 
   const {
-    data: fields,
-    isLoading: isFieldsLoading,
-    isError: isFieldsError,
-    error: fieldsError,
-  } = useLoadSetBlockMappingFields(loadSet.load_set_blocks[0].id);
-
-  const validateLoadSetMutation = useValidateLoadSetBlockMutation(
-    loadSet.load_set_blocks[0].id,
-  );
-  const confirmLoadSetMutation = useConfirmLoadSetBlockMutation(
-    loadSet.load_set_blocks[0].id,
-  );
-  const rollbackLoadSetMutation = useRollbackLoadSetBlockMutation(
-    loadSet.load_set_blocks[0].id,
-  );
-
-  const destroyLoadSetMutation = useDestroyEntityMutation(
-    "grit/core/load_sets",
-  );
-
-  const isValidated =
-    loadSet.load_set_blocks[0].status_id__name === "Validated";
-
-  const handleSubmit = async (mappings: Record<string, LoadSetMapping>) => {
-    if (isValidated) {
-      return handleConfirm();
-    }
-    return handleValidate(mappings);
-  };
-
-  const handleValidate = async (mappings: Record<string, LoadSetMapping>) => {
-    try {
-      await validateLoadSetMutation.mutateAsync(mappings);
-    } finally {
-      setMappings(mappings);
-      await Promise.all([
-        queryClient.invalidateQueries({
-          queryKey: [
-            "entities",
-            "datum",
-            "grit/core/load_sets",
-            loadSet.id.toString(),
-          ],
-          exact: false,
-        }),
-        queryClient.invalidateQueries({
-          queryKey: [
-            "entities",
-            "infiniteData",
-            `grit/core/load_set_blocks/${loadSet.load_set_blocks[0].id}/errored_data`,
-          ],
-          exact: false,
-        }),
-      ]);
-    }
-  };
-
-  const handleConfirm = async () => {
-    await confirmLoadSetMutation.mutateAsync();
-    await queryClient.invalidateQueries({
-      queryKey: [
-        "entities",
-        "datum",
-        "grit/core/load_sets",
-        loadSet.id.toString(),
-      ],
-      exact: false,
-    });
-  };
-
-  const handleRollback = async () => {
-    await rollbackLoadSetMutation.mutateAsync();
-    await queryClient.invalidateQueries({
-      queryKey: [
-        "entities",
-        "datum",
-        "grit/core/load_sets",
-        loadSet.id.toString(),
-      ],
-      exact: false,
-    });
-  };
-
-  const handleCancel = async () => {
-    if (isValidated) {
-      await rollbackLoadSetMutation.mutateAsync();
-    }
-    await destroyLoadSetMutation.mutateAsync(loadSet.id);
-    navigate(
-      `/core/load_sets/new?${getURLParams(
-        getLoadSetPropertiesForCancel({
-          ...loadSet,
-          ...loadSet.load_set_blocks[0],
-        }),
-      )}`,
-    );
-  };
+    handleSubmit,
+    handleRollback,
+    handleCancel,
+    handleConfirm,
+    isValidated,
+    isPending,
+  } = useLoadSetEditorActions({
+    loadSet,
+    onMappingsChange: setMappings,
+  });
 
   const defaultValues = useMemo(() => {
-    if (!fields) return {};
-    return fields.reduce((acc, f) => {
-      return {
-        ...acc,
-        [`${f.name}-header`]: mappings[f.name]?.header ?? "",
-        [`${f.name}-constant`]: mappings[f.name]?.constant ?? false,
-        [`${f.name}-find_by`]: mappings[f.name]?.find_by ?? "",
-        [`${f.name}-value`]: mappings[f.name]?.value ?? null,
-      };
-    }, {});
+    return mappingsToFormValues(fields, mappings);
   }, [mappings, fields]);
 
-  const form = useForm<Record<string, string | number | boolean | null>>({
+  const form = useForm({
     onSubmit: async ({ value }) => {
-      const newMappings: Record<string, LoadSetMapping> = {};
-      for (const key in value) {
-        const sep = key.lastIndexOf("-");
-        const field = key.slice(0, sep);
-        const mappingProp = key.slice(sep + 1);
-        newMappings[field] = {
-          ...(newMappings[field] ?? {}),
-          [mappingProp]: value[key],
-        };
-      }
-
+      const newMappings = formValuesToMappings(value);
       await handleSubmit(newMappings);
     },
     defaultValues,
   });
-
-  if (isFieldsLoading) {
-    return <Spinner />;
-  }
-
-  if (isFieldsError || !fields) {
-    return <p>{fieldsError ?? "An error occurred"}</p>;
-  }
 
   return (
     <>
@@ -215,35 +86,29 @@ const LoadSetEditor = ({
               <ButtonGroup>
                 <Button
                   onClick={handleCancel}
-                  disabled={validateLoadSetMutation.isPending}
-                  loading={
-                    rollbackLoadSetMutation.isPending ||
-                    destroyLoadSetMutation.isPending
-                  }
+                  disabled={isPending.validate}
+                  loading={isPending.rollback || isPending.destroy}
                 >
                   Cancel import
                 </Button>
                 {isValidated && (
-                  <Button
-                    onClick={handleRollback}
-                    loading={rollbackLoadSetMutation.isPending}
-                  >
+                  <Button onClick={handleRollback} loading={isPending.rollback}>
                     Make changes
                   </Button>
                 )}
                 {!isValidated && (
                   <Button
-                    disabled={validateLoadSetMutation.isPending}
+                    disabled={isPending.validate}
                     onClick={() => setIsOpen(true)}
                   >
                     Edit data set
                   </Button>
                 )}
-                {loadSet.load_set_blocks[0].status_id__name ===
-                  "Invalidated" && (
+                {getBlockStatus(loadSet) ===
+                  LOAD_SET_BLOCK_STATUS.INVALIDATED && (
                   <Button
-                    loading={confirmLoadSetMutation.isPending}
-                    disabled={validateLoadSetMutation.isPending}
+                    loading={isPending.confirm}
+                    disabled={isPending.validate}
                     color="danger"
                     onClick={handleConfirm}
                   >
@@ -252,7 +117,7 @@ const LoadSetEditor = ({
                 )}
                 <Button
                   color="secondary"
-                  disabled={!canSubmit || confirmLoadSetMutation.isPending}
+                  disabled={!canSubmit || isPending.confirm}
                   type="submit"
                   loading={isSubmitting}
                 >
@@ -266,7 +131,7 @@ const LoadSetEditor = ({
           <MappingFields
             disabled={isValidated}
             entityFields={fields}
-            form={form}
+            form={form as any}
             headers={loadSet.load_set_blocks[0].headers}
           />
           <LoadSetInfo
@@ -287,148 +152,4 @@ const LoadSetEditor = ({
   );
 };
 
-const LoadSetBlockInitializer = ({
-  load_set_block,
-}: {
-  load_set_block: LoadSetBlockData;
-}) => {
-  const fetchRef = useRef(false);
-  const queryClient = useQueryClient();
-
-  const initializeMutation = useInitializeLoadSetBlockMutation(
-    load_set_block.id,
-  );
-
-  const handleInitialize = useCallback(async () => {
-    try {
-      await initializeMutation.mutateAsync();
-    } finally {
-      await Promise.all([
-        queryClient.invalidateQueries({
-          queryKey: [
-            "entities",
-            "datum",
-            "grit/core/load_sets",
-            load_set_block.load_set_id.toString(),
-          ],
-          exact: false,
-        }),
-        queryClient.invalidateQueries({
-          queryKey: [
-            "entities",
-            "infiniteData",
-            `grit/core/load_set_blocks/${load_set_block.id}/preview_data`,
-          ],
-          exact: false,
-        }),
-        queryClient.invalidateQueries({
-          queryKey: [
-            "entities",
-            "infiniteData",
-            `grit/core/load_set_blocks/${load_set_block.id}/errored_data`,
-          ],
-          exact: false,
-        }),
-      ]);
-    }
-  }, [
-    initializeMutation,
-    load_set_block.id,
-    load_set_block.load_set_id,
-    queryClient,
-  ]);
-
-  useEffect(() => {
-    if (load_set_block.status_id__name === "Created" && !fetchRef.current) {
-      handleInitialize();
-      fetchRef.current = true;
-    }
-  }, [handleInitialize, load_set_block.status_id__name]);
-
-  return (
-    <ErrorPage error="Preparing the upload">
-      <Spinner />
-    </ErrorPage>
-  );
-};
-
-const LoadSetBlockError = ({ load_set }: { load_set: LoadSetData }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const navigate = useNavigate();
-
-  const destroyLoadSetMutation = useDestroyEntityMutation(
-    "grit/core/load_sets",
-  );
-
-  const handleCancel = async () => {
-    await destroyLoadSetMutation.mutateAsync(load_set.id);
-    navigate(
-      `/core/load_sets/new?${getURLParams(
-        getLoadSetPropertiesForCancel(load_set),
-      )}`,
-    );
-  };
-
-  return (
-    <>
-      <ErrorPage error={load_set.load_set_blocks[0].error}>
-        <ButtonGroup>
-          <Button
-            onClick={handleCancel}
-            loading={destroyLoadSetMutation.isPending}
-          >
-            Cancel import
-          </Button>
-          <Button onClick={() => setIsOpen(true)}>Change data set</Button>
-        </ButtonGroup>
-      </ErrorPage>
-      {isOpen && (
-        <UpdateLoadSetDataDialog
-          isOpen
-          loadSet={load_set}
-          onClose={() => setIsOpen(false)}
-        />
-      )}
-    </>
-  );
-};
-
-const LoadSetEditorWrapper = ({ loadSet }: LoadSetEditorProps) => {
-  const {
-    data: fields,
-    isLoading: isFieldsLoading,
-    isError: isFieldsError,
-    error: fieldsError,
-  } = useLoadSetBlockMappingFields(loadSet.load_set_blocks[0].id);
-
-  const mappings = useMemo(
-    () =>
-      loadSet?.load_set_blocks[0].mappings &&
-      Object.keys(loadSet.load_set_blocks[0].mappings).length
-        ? loadSet.load_set_blocks[0].mappings
-        : getAutoMappings(fields, loadSet?.load_set_blocks[0].headers),
-    [fields, loadSet?.load_set_blocks],
-  );
-
-  if (isFieldsLoading) {
-    return <Spinner />;
-  }
-
-  if (isFieldsError || !fields) {
-    return <ErrorPage error={fieldsError} />;
-  }
-
-  if (loadSet.load_set_blocks[0].status_id__name === "Created") {
-    return (
-      <LoadSetBlockInitializer load_set_block={loadSet.load_set_blocks[0]} />
-    );
-  }
-
-  if (loadSet.load_set_blocks[0].status_id__name === "Errored") {
-    return <LoadSetBlockError load_set={loadSet} />;
-  }
-
-  return <LoadSetEditor loadSet={loadSet} mappings={mappings} />;
-};
-
-export default LoadSetEditorWrapper;
+export default LoadSetEditor;

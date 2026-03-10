@@ -16,11 +16,7 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-export {
-  useImportersContext,
-  useImporter,
-  useRegisterImporter,
-} from "./ImportersContext";
+export { useRegisterImporter } from "./ImportersContext";
 
 export type {
   ImporterDef,
@@ -48,6 +44,7 @@ export type {
   LoadSetBlockDataUpdateData,
 } from "./types";
 
+export * from "./constants";
 export * from "./load_set_creator";
 export * from "./load_set_editor";
 export * from "./load_set_viewer";

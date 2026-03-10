@@ -20,7 +20,6 @@ import {
   useEntityColumns,
   EntityPropertyDef,
   EntityData,
-  useEntityData,
   useEntityDatum,
   useEntityFields,
   useInfiniteEntityData,
@@ -83,21 +82,6 @@ export interface ExperimentData extends EntityData {
   plots: Record<string, ExperimentPlotDefinition>;
 }
 
-export const useExperiments = (
-  sort?: SortingState,
-  filter?: Filter[],
-  params: URLParams = {},
-  queryOptions: Partial<UseQueryOptions<ExperimentData[], string>> = {},
-) => {
-  return useEntityData<ExperimentData>(
-    "grit/assays/experiments",
-    sort,
-    filter,
-    params,
-    queryOptions,
-  );
-};
-
 export const useInfiniteExperiments = (
   sort?: SortingState,
   filter?: Filter[],
@@ -143,14 +127,19 @@ export const useExperiment = (
   );
 };
 
-export const usePublishedExperimentsOfModel = (
+export const useInfinitePublishedExperimentsOfModel = (
   assayModelId: string | number,
   sort?: SortingState,
   filter?: Filter[],
   params: URLParams = {},
-  queryOptions: Partial<UseQueryOptions<ExperimentData[], string>> = {},
+  queryOptions: Partial<
+    UndefinedInitialDataInfiniteOptions<
+      PaginatedEndpointSuccess<ExperimentData[]>,
+      string
+    >
+  > = {},
 ) => {
-  return useEntityData<ExperimentData>(
+  return useInfiniteEntityData<ExperimentData>(
     "grit/assays/experiments",
     sort,
     [

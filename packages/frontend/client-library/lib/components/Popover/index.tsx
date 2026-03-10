@@ -38,8 +38,8 @@ import { DialogContext } from "../Dialog";
 interface Props {
   className?: string;
   placement?: Placement;
-  content?: string | JSX.Element;
-  children?: JSX.Element;
+  content?: string | React.ReactElement;
+  children?: React.ReactElement;
   disabled?: boolean;
   zIndex?: number;
   showArrow?: boolean;
@@ -122,6 +122,7 @@ const PopoverRender = ({
         className={classnames(styles.popover, styles[placement], {
           [styles.show as string]: showTransition,
           [styles.fromDialog as string]: fromDialog,
+          [styles.idleTransition as string]: transitionState === "idle",
         })}
         onClick={(e) => {
           if (e.defaultPrevented) setOpen(false);
@@ -139,8 +140,6 @@ const PopoverRender = ({
         style={{
           ...floatingStyles,
           zIndex: zIndex ?? undefined,
-          transition:
-            transitionState === "idle" ? "inset 150ms ease-out" : undefined,
         }}
       >
         {showArrow && (
@@ -190,10 +189,7 @@ const Popover = (props: Props) => {
             e.stopPropagation();
             setOpen(!isOpen);
           }}
-          style={{
-            display: "inline-flex",
-            position: "relative",
-          }}
+          className={styles.trigger}
         >
           {children}
         </span>

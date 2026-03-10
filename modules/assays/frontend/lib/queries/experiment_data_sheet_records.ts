@@ -69,8 +69,7 @@ export interface ExperimentDataSheetRecordData extends EntityData {
   [key: string]: string | number | boolean | null;
 }
 
-export interface AssayDataSheetRecordData
-  extends ExperimentDataSheetRecordData {
+export interface AssayDataSheetRecordData extends ExperimentDataSheetRecordData {
   experiment_id: number;
   experiment_id__name: string;
 }

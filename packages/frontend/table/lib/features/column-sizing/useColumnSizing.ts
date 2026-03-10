@@ -18,16 +18,8 @@
 
 import useLocalOrStoredState from "../../useLocalOrStoredState";
 
-function useColumnSizing(
-  id: string,
-  initialSizing = {},
-  saveState = true,
-) {
-  return useLocalOrStoredState(
-    `${id}_columnsSizing`,
-    initialSizing,
-    saveState,
-  );
+function useColumnSizing(id: string, initialSizing = {}, saveState = true) {
+  return useLocalOrStoredState(`${id}_columnsSizing`, initialSizing, saveState);
 }
 
 export default useColumnSizing;

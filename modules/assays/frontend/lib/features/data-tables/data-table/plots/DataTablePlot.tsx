@@ -17,7 +17,7 @@
  */
 
 import { useNavigate, useParams } from "react-router-dom";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Button,
   ButtonGroup,
@@ -65,9 +65,7 @@ const getPlotData = (data: EntityData[], properties: EntityPropertyDef[]) => {
     for (const prop of propsToConvert) {
       if (!nullish(datum[prop.name])) {
         datum[prop.name] =
-          prop.type === "decimal"
-            ? datum[prop.name]
-            : (datum[prop.name] as any).toString();
+          prop.type === "decimal" ? datum[prop.name] : `${datum[prop.name]}`;
       } else if (prop.type === "boolean") {
         datum[prop.name] = (!!datum[prop.name]).toString();
       }
@@ -100,13 +98,17 @@ const DataTablePlot = ({ dataTable }: Props) => {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
+  const [prevPlotId, setPrevPlotId] = useState(plot_id);
+  const [prevPlots, setPrevPlots] = useState(dataTable.plots);
   const [plot, setPlot] = useState<DataTablePlotDefinition>(
     dataTable.plots[plot_id] ?? NEW_PLOT,
   );
 
-  useEffect(() => {
+  if (prevPlotId !== plot_id || prevPlots !== dataTable.plots) {
+    setPrevPlotId(plot_id);
+    setPrevPlots(dataTable.plots);
     setPlot(dataTable.plots[plot_id] ?? NEW_PLOT);
-  }, [plot_id, dataTable.plots]);
+  }
 
   const editEntityMutation = useEditEntityMutation<DataTableData>(
     "grit/assays/data_tables",
@@ -210,13 +212,9 @@ const DataTablePlot = ({ dataTable }: Props) => {
       {isLoading && <Spinner />}
       {isError && <ErrorPage error={columnsError ?? dataError} />}
       {canDisplayPlot && (
-        <Plot
-          data={plotData}
-          dataProperties={(columns as any) ?? []}
-          def={plot.def}
-        />
+        <Plot data={plotData} dataProperties={columns!} def={plot.def} />
       )}
-      <Surface className={styles.plotSettingsContainer}>
+      <Surface className={styles.plotSidebar}>
         <ButtonGroup>
           {dirty && (
             <Button onClick={onSave} loading={saving} color="secondary">

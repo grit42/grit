@@ -16,8 +16,10 @@
  * @grit42/table. If not, see <https://www.gnu.org/licenses/>.
  */
 
+import type { ComponentType } from "react";
 import { GritTypedColumnDef } from "../../types";
 import { Filter, FilterOperator } from "../filters";
+import type { FilterInputProps } from "../filters";
 
 export interface ColumnTypeDef {
   filter: {
@@ -39,8 +41,11 @@ export interface ColumnTypeDef {
     ) => Filter;
     operators:
       | FilterOperator[]
-      | ((column: GritTypedColumnDef, columnTypeDefs: ColumnTypeDefs) => FilterOperator[]);
-    input: any;
+      | ((
+          column: GritTypedColumnDef,
+          columnTypeDefs: ColumnTypeDefs,
+        ) => FilterOperator[]);
+    input: ComponentType<FilterInputProps>;
   };
   column?: Partial<GritTypedColumnDef>;
 }

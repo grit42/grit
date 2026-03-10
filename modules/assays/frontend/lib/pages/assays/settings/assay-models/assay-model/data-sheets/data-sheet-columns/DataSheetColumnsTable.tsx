@@ -20,9 +20,8 @@ import { useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@grit42/client-library/components";
 import { useQueryClient } from "@grit42/api";
-import { useToolbar } from "@grit42/core/Toolbar";
+import { useToolbar } from "@grit42/core";
 import Circle1NewIcon from "@grit42/client-library/icons/Circle1New";
-import styles from "../../../assayModels.module.scss";
 import {
   useAssayDataSheetColumnColumns,
   useAssayDataSheetColumns,
@@ -58,7 +57,9 @@ const DataSheetColumnsTable = ({
     tableState.sorting,
     tableState.filters,
     undefined,
-    { enabled: sheetId !== "new" },
+    {
+      enabled: sheetId !== "new",
+    },
   );
 
   const canCreateColumn =
@@ -83,41 +84,40 @@ const DataSheetColumnsTable = ({
     });
   }, [registerToolbarActions, navigateToNew, sheetId, canCreateColumn]);
 
+  if (sheetId === "new") {
+    return null;
+  }
+
   return (
-    <>
-      {sheetId !== "new" && (
-        <Table
-          header="Columns"
-          tableState={tableState}
-          loading={isLoading}
-          headerActions={
-            canCreateColumn ? (
-              <Button disabled={sheetId === "new"} onClick={navigateToNew}>
-                New
-              </Button>
-            ) : undefined
-          }
-          className={styles.typesTable}
-          data={data ?? []}
-          onRowClick={
-            disableNavigation
-              ? undefined
-              : (row) => {
-                  queryClient.setQueryData(
-                    [
-                      "entities",
-                      "datum",
-                      "grit/assays/assay_data_sheet_columns",
-                      row.original.id.toString(),
-                    ],
-                    row.original,
-                  );
-                  navigate(row.original.id.toString());
-                }
-          }
-        />
-      )}
-    </>
+    <Table
+      header="Columns"
+      tableState={tableState}
+      loading={isLoading}
+      headerActions={
+        canCreateColumn ? (
+          <Button disabled={sheetId === "new"} onClick={navigateToNew}>
+            New
+          </Button>
+        ) : undefined
+      }
+      data={data ?? []}
+      onRowClick={
+        disableNavigation
+          ? undefined
+          : (row) => {
+              queryClient.setQueryData(
+                [
+                  "entities",
+                  "datum",
+                  "grit/assays/assay_data_sheet_columns",
+                  row.original.id.toString(),
+                ],
+                row.original,
+              );
+              navigate(row.original.id.toString());
+            }
+      }
+    />
   );
 };
 

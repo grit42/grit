@@ -33,8 +33,7 @@ import { Filter } from "./features/filters";
 
 // @ts-expect-error types parameter are needed for compatibility with @tanstack/react-table
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type, @typescript-eslint/no-unused-vars
-export interface GritColumnMeta<TData extends RowData, TValue> {
-}
+export interface GritColumnMeta<TData extends RowData, TValue> {}
 
 export type GritColumnDefBase<
   TData extends RowData,
@@ -56,8 +55,10 @@ export type GritDisplayColumnDef<
   header: StringOrTemplateHeader<TData, TValue>;
 };
 
-export interface GritGroupColumnDef<TData extends RowData, TValue = unknown>
-  extends GritColumnDefBase<TData, TValue> {
+export interface GritGroupColumnDef<
+  TData extends RowData,
+  TValue = unknown,
+> extends GritColumnDefBase<TData, TValue> {
   columns?: GritColumnDef<TData, any>[];
 }
 export interface GritAccessorFnColumnDef<
@@ -81,9 +82,10 @@ export type GritAccessorColumnDef<TData extends RowData, TValue = unknown> =
   | GritAccessorKeyColumnDef<TData, TValue>
   | GritAccessorFnColumnDef<TData, TValue>;
 
-export type GritTypedColumnDef<TData extends RowData = unknown, TValue = unknown> =
-  | GritDisplayColumnDef<TData, TValue>
-  | GritAccessorColumnDef<TData, TValue>;
+export type GritTypedColumnDef<
+  TData extends RowData = unknown,
+  TValue = unknown,
+> = GritDisplayColumnDef<TData, TValue> | GritAccessorColumnDef<TData, TValue>;
 
 export type GritColumnDef<TData extends RowData = unknown, TValue = unknown> =
   | GritDisplayColumnDef<TData, TValue>
@@ -387,6 +389,11 @@ interface DefaultTableProps<T> {
     index: number,
     parent: Row<T> | undefined,
   ) => string;
+
+  /**
+   * Should the table shrink to fit its content
+   */
+  fitContent?: boolean;
 }
 
 export interface StatelessTableProps<T> extends DefaultTableProps<T> {

@@ -4,8 +4,10 @@ import ScatterPlotSettings from "./ScatterPlot/ScatterPlotSettings";
 import BoxPlotSettings from "./BoxPlot/BoxPlotSettings";
 import { getPlotTitle } from "./utils";
 
-
-const PlotSettings = ({plot, ...props}: {
+const PlotSettings = ({
+  plot,
+  ...props
+}: {
   plot: PlotDefinition;
   xAxisProperties: SourceDataProperties;
   yAxisProperties: SourceDataProperties;
@@ -35,7 +37,9 @@ const PlotSettings = ({plot, ...props}: {
           })
         }
       />
-      {plot.type === "scatter" && <ScatterPlotSettings plot={plot} {...props} />}
+      {plot.type === "scatter" && (
+        <ScatterPlotSettings plot={plot} {...props} />
+      )}
       {plot.type === "box" && <BoxPlotSettings plot={plot} {...props} />}
     </>
   );

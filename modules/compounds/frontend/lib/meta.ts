@@ -19,9 +19,11 @@
 import { ModuleMeta } from "@grit42/core";
 
 const Meta: ModuleMeta = {
+  identifier: "COMPOUNDS",
   rootRoute: "/compounds",
   navItems: [
     {
+      identifier: "COMPOUNDS",
       name: "Compounds",
       path: "/compounds",
     },

@@ -1,0 +1,6 @@
+# Batch-specific load set block data
+# Links to grit_core_load_set_blocks via load_set_block_id
+
+batch_loading_validated_block:
+  load_set_block_id: 203
+  compound_type: screening

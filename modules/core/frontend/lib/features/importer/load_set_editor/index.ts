@@ -1,3 +1,2 @@
-export { default as LoadSetEditor } from "./LoadSetEditor";
-export { default as LoadSetInfo } from "./LoadSetInfo";
-
+export { default as LoadSetEditor } from "./LoadSetEditorWrapper";
+export { default as LoadSetEditorStage } from "./LoadSetEditor";

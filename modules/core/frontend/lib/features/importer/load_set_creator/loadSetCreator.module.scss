@@ -7,6 +7,7 @@
   grid-template-rows: min-content 1fr;
   grid-template-columns: max-content 1fr;
   gap: theme.$spacing;
+  max-width: unset;
 }
 
 .header {
@@ -63,4 +64,10 @@
 
 .error {
   color: theme.$palette-error-main;
+}
+
+.dataField {
+  grid-row-start: 2;
+  grid-column-start: 1;
+  grid-column-end: -1;
 }

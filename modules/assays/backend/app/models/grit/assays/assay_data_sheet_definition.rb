@@ -97,23 +97,23 @@ module Grit::Assays
             {
               display_name: "Created at",
               name: "created_at",
-              type: "datetime",
+              type: "datetime"
             },
             {
               display_name: "Created by",
               name: "created_by",
-              type: "string",
+              type: "string"
             },
             {
               display_name: "Updated at",
               name: "updated_at",
-              type: "datetime",
+              type: "datetime"
             },
             {
               display_name: "Updated by",
               name: "updated_by",
-              type: "string",
-            }]
+              type: "string"
+            } ]
 
           if args[:with_experiment_id]
             props.push({
@@ -125,7 +125,7 @@ module Grit::Assays
                 name: "Experiment",
                 path: "grit/assays/experiments",
                 primary_key: "id",
-                primary_key_type: "integer",
+                primary_key_type: "integer"
               }
             })
           end
@@ -213,9 +213,9 @@ module Grit::Assays
       foreign_key_colums = []
       connection = ActiveRecord::Base.connection
       connection.create_table table_name, id: false, if_not_exists: true do |t|
-        t.bigint :id, primary_key: true, default: -> { 'nextval(\'grit_seq\'::regclass)' }
+        t.bigint :id, primary_key: true, default: -> { "nextval('grit_seq'::regclass)" }
         t.string :created_by, limit: 30, null: false, default: "SYSTEM"
-        t.datetime :created_at, null: false, default: -> { 'CURRENT_TIMESTAMP' }
+        t.datetime :created_at, null: false, default: -> { "CURRENT_TIMESTAMP" }
         t.string :updated_by, limit: 30
         t.datetime :updated_at
         t.references :experiment, null: false, foreign_key: { name: "#{table_name}_experiments", to_table: "grit_assays_experiments" }

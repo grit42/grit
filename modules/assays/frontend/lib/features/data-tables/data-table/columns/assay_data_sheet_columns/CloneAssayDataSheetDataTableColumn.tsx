@@ -143,8 +143,7 @@ const CloneAssayDataSheetDataTableColumn = () => {
             assay_data_sheet_definition_id__name:
               data.assay_data_sheet_definition_id__name,
             data_type_id: data.data_type_id,
-            data_type_id__name:
-              data.data_type_id__name,
+            data_type_id__name: data.data_type_id__name,
             aggregation_method: data.aggregation_method,
             sort: data.sort,
             experiment_ids: data.experiment_ids,
@@ -165,8 +164,7 @@ const CloneAssayDataSheetDataTableColumn = () => {
     );
   }
 
-  if (isLoading || isDataTableColumnFieldsLoading)
-    return <Spinner />;
+  if (isLoading || isDataTableColumnFieldsLoading) return <Spinner />;
   if (
     isError ||
     !dataTableColumn ||
@@ -174,9 +172,7 @@ const CloneAssayDataSheetDataTableColumn = () => {
     !dataTableColumnFields
   ) {
     return (
-      <ErrorPage
-        error={error ?? dataTableColumnFieldsError}
-      >
+      <ErrorPage error={error ?? dataTableColumnFieldsError}>
         <Link to="..">
           <Button>Back</Button>
         </Link>

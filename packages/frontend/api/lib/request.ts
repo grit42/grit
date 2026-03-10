@@ -36,8 +36,9 @@ export interface EndpointSuccess<TData = unknown> extends EndpointResponse {
   data: TData;
 }
 
-export interface PaginatedEndpointSuccess<TData = unknown>
-  extends EndpointSuccess<TData> {
+export interface PaginatedEndpointSuccess<
+  TData = unknown,
+> extends EndpointSuccess<TData> {
   cursor: number;
   total: number;
 }
@@ -115,9 +116,7 @@ export const getURLParams = (data: URLParams) => {
         );
       }
 
-      return `${key}=${encodeURIComponent(
-        data[key] as string | number | boolean,
-      )}`;
+      return `${key}=${encodeURIComponent(data[key] as string | number | boolean)}`;
     })
     .filter((v) => !!v)
     .join("&");

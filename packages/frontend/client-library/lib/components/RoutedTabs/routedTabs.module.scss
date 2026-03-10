@@ -1,0 +1,6 @@
+@use "../../scss/mixins.scss";
+
+.routedTabs {
+  @include mixins.page-layout;
+  @include mixins.page-content;
+}

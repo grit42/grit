@@ -15,7 +15,26 @@ import { existsSync, readdirSync } from "fs";
 import { dirname, join } from "path";
 
 // Expected format of the plugin options defined in nx.json
-export interface RubyPluginOptions {}
+export interface RubyPluginOptions {
+  /** Name for the test target (default: "test") */
+  testTargetName?: string;
+  /** Name for the lint target (default: "lint") */
+  lintTargetName?: string;
+  /** Name for the dev target (default: "dev") */
+  devTargetName?: string;
+  /** Name for the rails passthrough target (default: "rails") */
+  railsTargetName?: string;
+  /** Whether to create database targets (default: true) */
+  createDbTargets?: boolean;
+}
+
+const defaultOptions: Required<RubyPluginOptions> = {
+  testTargetName: "test",
+  lintTargetName: "lint",
+  devTargetName: "dev",
+  railsTargetName: "rails",
+  createDbTargets: true,
+};
 
 // File glob to find all the configuration files for this plugin
 const gemfileGlob = "**/{Gemfile,*.gemspec}";
@@ -26,7 +45,7 @@ export const createNodesV2: CreateNodesV2<RubyPluginOptions> = [
   async (configFiles, options, context) => {
     return await createNodesFromFiles(
       (configFile, options, context) =>
-        createNodesInternal(configFile, options, context),
+        createNodesInternal(configFile, options ?? {}, context),
       configFiles,
       options,
       context,
@@ -36,12 +55,13 @@ export const createNodesV2: CreateNodesV2<RubyPluginOptions> = [
 
 async function createNodesInternal(
   configFilePath: string,
-  _options: RubyPluginOptions,
+  options: RubyPluginOptions,
   context: CreateNodesContextV2,
 ): Promise<CreateNodesResult> {
+  const opts = { ...defaultOptions, ...options };
   const projectRoot = dirname(configFilePath);
 
-  // Do not create a project if package.json or project.json isn't there.
+  // Do not create a project if project.json isn't there.
   const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
   if (!siblingFiles.includes("project.json")) {
     return {};
@@ -49,7 +69,7 @@ async function createNodesInternal(
 
   // Bail if the config file is Gemfile and we're in an engine
   const gemspecFile = siblingFiles.find((siblingFile) =>
-    siblingFile.includes(".gemspec"),
+    siblingFile.endsWith(".gemspec"),
   );
 
   if (configFilePath.includes("Gemfile") && gemspecFile) {
@@ -57,47 +77,172 @@ async function createNodesInternal(
   }
 
   const isLibrary = !!gemspecFile;
+  const hasRubocop = siblingFiles.includes(".rubocop.yml");
+  const hasRailsBinstub = existsSync(
+    join(context.workspaceRoot, projectRoot, "bin", "rails"),
+  );
 
-  // Inferred tasks
+  // Build targets object
+  const targets: Record<string, TargetConfiguration> = {};
 
-  const devTarget: TargetConfiguration = {
-    command: `bin/rails server`,
-    continuous: true,
-    options: { cwd: projectRoot },
-  };
+  // ===================
+  // Dev / Serve targets
+  // ===================
+  if (hasRailsBinstub) {
+    const devTarget: TargetConfiguration = {
+      command: `bin/rails server`,
+      continuous: true,
+      options: { cwd: projectRoot },
+    };
 
-  const releasePublishTarget: TargetConfiguration = isLibrary
-    ? {
-        executor: "ruby:release-publish",
-        options: {
-          cwd: projectRoot,
-        },
-        cache: false,
-        inputs: [
-          `{projectRoot}/${gemspecFile}`,
-          `{projectRoot}/Gemfile`,
-          `{projectRoot}/Gemfile.lock`,
-          joinPathFragments("{projectRoot}", "app", "**", "*"),
-          joinPathFragments("{projectRoot}", "lib", "**", "*"),
-        ],
-      }
-    : undefined;
+    targets[opts.devTargetName] = devTarget;
+    targets["serve"] = devTarget;
 
-  const testTarget: TargetConfiguration = {
-    command: `bin/rails test`,
-    options: { cwd: projectRoot },
-    cache: true,
-    inputs: [
-      `{projectRoot}/${gemspecFile}`,
-      `{projectRoot}/Gemfile`,
-      `{projectRoot}/Gemfile.lock`,
+    // Dev/Serve with test environment
+    const devTestTarget: TargetConfiguration = {
+      command: `RAILS_ENV=test bin/rails server`,
+      continuous: true,
+      options: { cwd: projectRoot },
+      dependsOn: [{ target: "db:reset:test" }],
+    };
+
+    targets[`${opts.devTargetName}:test`] = devTestTarget;
+    targets["serve:test"] = devTestTarget;
+  }
+
+  // ===================
+  // Test target
+  // ===================
+  if (hasRailsBinstub) {
+    const testInputs: string[] = [
+      "{projectRoot}/Gemfile",
+      "{projectRoot}/Gemfile.lock",
       joinPathFragments("{projectRoot}", "app", "**", "*"),
       joinPathFragments("{projectRoot}", "lib", "**", "*"),
-    ],
+      joinPathFragments("{projectRoot}", "config", "**", "*"),
+      joinPathFragments("{projectRoot}", "test", "**", "*"),
+    ];
+
+    // Only include gemspec if it exists
+    if (gemspecFile) {
+      testInputs.unshift(joinPathFragments("{projectRoot}", gemspecFile));
+    }
+
+    const testTarget: TargetConfiguration = {
+      command: `bin/rails test`,
+      options: { cwd: projectRoot },
+      cache: true,
+      inputs: testInputs,
+      dependsOn: ["^build"],
+    };
+
+    targets[opts.testTargetName] = testTarget;
+  }
+
+  // ===================
+  // Lint targets (auto-detect Rubocop)
+  // ===================
+  if (hasRubocop) {
+    const lintTarget: TargetConfiguration = {
+      command: `bundle exec rubocop -A`,
+      options: { cwd: projectRoot },
+      cache: false,
+    };
+
+    const lintCheckTarget: TargetConfiguration = {
+      command: `bundle exec rubocop`,
+      options: { cwd: projectRoot },
+      cache: true,
+      inputs: [
+        joinPathFragments("{projectRoot}", "**", "*.rb"),
+        "{projectRoot}/.rubocop.yml",
+        "{projectRoot}/Gemfile.lock",
+      ],
+    };
+
+    targets[opts.lintTargetName] = lintTarget;
+    targets[`${opts.lintTargetName}:check`] = lintCheckTarget;
+  }
+
+  // ===================
+  // Database targets
+  // ===================
+  if (opts.createDbTargets && hasRailsBinstub) {
+    // Development environment
+    targets["db:migrate"] = {
+      command: `bin/rails db:migrate`,
+      options: { cwd: projectRoot },
+    };
+
+    targets["db:reset"] = {
+      command: `bin/rails db:reset`,
+      options: { cwd: projectRoot },
+    };
+
+    targets["db:seed"] = {
+      command: `bin/rails db:seed`,
+      options: { cwd: projectRoot },
+    };
+
+    targets["db:setup"] = {
+      command: `bin/rails db:setup`,
+      options: { cwd: projectRoot },
+    };
+
+    // Test environment
+    targets["db:migrate:test"] = {
+      command: `RAILS_ENV=test bin/rails db:migrate`,
+      options: { cwd: projectRoot },
+    };
+
+    targets["db:reset:test"] = {
+      command: `RAILS_ENV=test bin/rails db:reset`,
+      options: { cwd: projectRoot },
+    };
+  }
+
+  // ===================
+  // Rails passthrough target
+  // ===================
+  if (hasRailsBinstub) {
+    targets[opts.railsTargetName] = {
+      command: "bin/rails {args}",
+      options: { cwd: projectRoot },
+    };
+  }
+
+  // ===================
+  // Bundle target
+  // ===================
+  targets["bundle"] = {
+    command: `bundle install`,
+    options: { cwd: projectRoot },
+    cache: true,
+    inputs: ["{projectRoot}/Gemfile", "{projectRoot}/*.gemspec"],
+    outputs: ["{projectRoot}/Gemfile.lock"],
   };
 
-  // Project configuration to be merged into the rest of the Nx configuration
+  // ===================
+  // Gem package target (gems only)
+  // Named "gem:build" to avoid conflicting with JS "build" targets in the dependency chain
+  // ===================
+  if (isLibrary && gemspecFile) {
+    targets["gem:build"] = {
+      command: "gem build " + gemspecFile,
+      options: { cwd: projectRoot },
+      cache: true,
+      inputs: [
+        joinPathFragments("{projectRoot}", gemspecFile),
+        joinPathFragments("{projectRoot}", "lib", "**", "*"),
+        joinPathFragments("{projectRoot}", "app", "**", "*"),
+        joinPathFragments("{projectRoot}", "config", "**", "*"),
+        joinPathFragments("{projectRoot}", "db", "**", "*"),
+      ],
+      outputs: [joinPathFragments("{projectRoot}", "*.gem")],
+    };
+  }
 
+  // Project configuration to be merged into the rest of the Nx configuration
   return {
     projects: {
       [projectRoot]: {
@@ -107,21 +252,16 @@ async function createNodesInternal(
           },
         },
         projectType: isLibrary ? "library" : "application",
-        targets: {
-          dev: devTarget,
-          serve: devTarget,
-          test: testTarget,
-          "nx-release-publish": releasePublishTarget,
-        },
+        targets,
       },
     },
   };
 }
 
-export const createDependencies: CreateDependencies = (opts, ctx) => {
-  const gemspecProjectMap = new Map();
+export const createDependencies: CreateDependencies = (_opts, ctx) => {
+  const gemspecProjectMap = new Map<string, string>();
   const nxProjects = Object.values(ctx.projects);
-  const results = [];
+  const results: RawProjectGraphDependency[] = [];
   for (const project of nxProjects) {
     const maybeGemspecPath = join(project.root, `${project.name}.gemspec`);
     if (existsSync(maybeGemspecPath)) {
@@ -130,7 +270,7 @@ export const createDependencies: CreateDependencies = (opts, ctx) => {
       )
         .toString()
         .trim();
-      gemspecProjectMap.set(gem_name, project.name);
+      gemspecProjectMap.set(gem_name, project.name!);
     }
   }
 
@@ -147,8 +287,8 @@ export const createDependencies: CreateDependencies = (opts, ctx) => {
         if (gemspecProjectMap.has(dep)) {
           const newDependency: RawProjectGraphDependency = {
             type: DependencyType.static,
-            source: project.name,
-            target: gemspecProjectMap.get(dep),
+            source: project.name!,
+            target: gemspecProjectMap.get(dep)!,
             sourceFile: maybeGemspecPath,
           };
 
@@ -165,8 +305,8 @@ export const createDependencies: CreateDependencies = (opts, ctx) => {
         if (gemspecProjectMap.has(dep)) {
           const newDependency: RawProjectGraphDependency = {
             type: DependencyType.static,
-            source: project.name,
-            target: gemspecProjectMap.get(dep),
+            source: project.name!,
+            target: gemspecProjectMap.get(dep)!,
             sourceFile: maybeGemfilePath,
           };
 

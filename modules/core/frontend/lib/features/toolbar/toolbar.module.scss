@@ -1,0 +1,127 @@
+@use "@grit42/client-library/mixins.scss";
+@use "@grit42/client-library/theme.scss";
+
+.toolbar {
+  background-color: theme.$palette-background-surface;
+  color: theme.$palette-background-contrast-text;
+  padding: theme.$spacing-lg 0;
+  user-select: none;
+  width: 100%;
+  box-shadow: theme.$box-shadow;
+
+  .toolbarContent {
+    align-items: center;
+    justify-content: flex-end;
+    display: flex;
+    width: 100%;
+    margin-inline: auto;
+    padding-inline: theme.$spacing-lg;
+  }
+
+  .blockGroup {
+    display: flex;
+  }
+
+  .block {
+    .blockTitle {
+      margin-bottom: theme.$spacing;
+      font-size: 11px;
+      text-transform: capitalize;
+    }
+
+    &:not(:last-child) {
+      border-right: 1px solid
+        rgb(from theme.$palette-background-contrast-text r g b / 50%);
+      margin-right: calc(theme.$spacing * 2);
+      padding-right: calc(theme.$spacing * 2);
+    }
+
+    .activeIcon {
+      fill: theme.$palette-secondary-main !important;
+    }
+
+    .icon {
+      cursor: pointer;
+
+      svg {
+        height: 20px;
+        fill: theme.$palette-background-contrast-text;
+        circle {
+          stroke: theme.$palette-background-contrast-text;
+        }
+      }
+
+      &:hover {
+        svg {
+          fill: theme.$palette-secondary-main;
+          circle {
+            stroke: theme.$palette-secondary-main;
+          }
+        }
+      }
+
+      &.disabled {
+        cursor: not-allowed;
+
+        p {
+          opacity: 0.5;
+        }
+
+        svg {
+          fill: rgb(from theme.$palette-background-contrast-text r g b / 50%);
+          circle {
+            stroke: rgb(
+              from theme.$palette-background-contrast-text r g b / 50%
+            );
+          }
+
+          &:hover {
+            fill: rgb(from theme.$palette-background-contrast-text r g b / 50%);
+            circle {
+              stroke: rgb(
+                from theme.$palette-background-contrast-text r g b / 50%
+              );
+            }
+          }
+        }
+      }
+    }
+
+    .icons {
+      display: flex;
+      justify-content: center;
+      align-items: baseline;
+      gap: calc(theme.$spacing * 2);
+
+      .icon {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+
+        .label {
+          font-size: 11px;
+          padding-top: calc(theme.$spacing / 2);
+          padding-bottom: 0;
+          margin: 0;
+        }
+      }
+    }
+
+    &.expanderContainer {
+      .icon {
+        margin-right: 0;
+      }
+    }
+  }
+}
+
+.expanderIcon {
+  transform: rotate(0deg);
+  transition: transform 250ms ease-in-out;
+
+  &.expanded {
+    transform: rotate(180deg);
+  }
+}

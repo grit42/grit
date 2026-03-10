@@ -16,7 +16,6 @@
  * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { useEffect, useState } from "react";
 import {
   Link,
   Navigate,
@@ -34,10 +33,12 @@ import {
   Tabs,
 } from "@grit42/client-library/components";
 import { useAssayModel } from "../../../../../queries/assay_models";
+import styles from "./assayModel.module.scss";
 import Details from "./details";
 import Metadata from "./metadata";
 import DataSheets from "./data-sheets";
 import DataSheetLoader from "./data-sheet-loader";
+import { classnames } from "@grit42/client-library/utils";
 
 const TABS = [
   {
@@ -71,31 +72,19 @@ const AssayModelTabs = ({
 
   const tab = match?.params.tab ?? "details";
 
-  const [selectedTab, setSelectedTab] = useState(
-    TABS.findIndex(({ url }) => tab === url),
-  );
-
-  useEffect(() => {
-    setSelectedTab(TABS.findIndex(({ url }) => tab === url));
-  }, [tab]);
+  const selectedTab = TABS.findIndex(({ url }) => tab === url);
 
   const handleTabChange = (index: number) => {
-    navigate(TABS[index].url);
+    navigate(`../${TABS[index].url}`);
   };
 
   return (
     <div
-      style={{
-        display: "grid",
-        gridTemplateRows:
-          tab === "data-sheet-loader"
-            ? "min-content 1fr"
-            : "min-content min-content 1fr",
-        height: "100%",
-        alignSelf: "stretch",
-      }}
+      className={classnames(styles.assayModelContainer, {
+        [styles.dataSheetLoaderContainer]: tab === "data-sheet-loader",
+      })}
     >
-      <div style={{ alignSelf: "baseline", marginBottom: ".5em", display: "flex", alignItems: "baseline", gap: "var(--spacing)" }}>
+      <div className={styles.header}>
         <h2>{name}</h2>
         <em>{publication_status_id__name}</em>
       </div>
@@ -124,7 +113,7 @@ const AssayModel = () => {
   if (isError || !data)
     return (
       <ErrorPage error={error}>
-        <Link to="..">
+        <Link to="../..">
           <Button>Back</Button>
         </Link>
       </ErrorPage>
@@ -136,17 +125,33 @@ const AssayModel = () => {
 
   return (
     <Routes>
-      <Route element={<AssayModelTabs name={data.name} publication_status_id__name={data.publication_status_id__name} />}>
+      <Route
+        element={
+          <AssayModelTabs
+            name={data.name}
+            publication_status_id__name={data.publication_status_id__name}
+          />
+        }
+      >
         {TABS.map(({ url, Tab }) => (
-          <Route key={url} path={`${url}/*`} element={<Tab />} />
+          <Route key={url} path={url}>
+            <Route index path="*" element={<Tab />} />
+          </Route>
         ))}
         {data.publication_status_id__name !== "Published" && (
-          <Route
-            path="data-sheet-loader/*"
-            element={<DataSheetLoader assayModel={data} />}
-          />
+          <Route path="data-sheet-loader">
+            <Route
+              index
+              path="*"
+              element={<DataSheetLoader assayModel={data} />}
+            />
+          </Route>
         )}
-        <Route path="*" element={<Navigate to={TABS[0].url} replace />} />
+        <Route
+          index
+          path="*"
+          element={<Navigate to={`../${TABS[0].url}`} replace />}
+        />
       </Route>
     </Routes>
   );

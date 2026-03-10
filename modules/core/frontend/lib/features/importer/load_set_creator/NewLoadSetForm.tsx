@@ -28,12 +28,12 @@ import {
   FormField,
   genericErrorHandler,
   FormFieldDef,
-  FieldListenerFn,
+  Form,
 } from "@grit42/form";
 import { useCreateLoadSetMutation } from "../mutations";
 import { NewLoadSetData } from "../types";
 import styles from "./loadSetCreator.module.scss";
-import { newLoadSetPayload } from "../utils/payload";
+import { newLoadSetPayload, createDataBlurHandler } from "../utils";
 import { useImporter } from "../ImportersContext";
 import { EditorInput } from "../../../components";
 
@@ -54,12 +54,12 @@ const NewLoadSetForm = ({
   const navigate = useNavigate();
   const createLoadSetMutation = useCreateLoadSetMutation();
 
-  const form = useForm<Partial<NewLoadSetData>>({
+  const form = useForm({
     validators: {
       onMount: () => "Provide either a file or text data",
-      onChange: ({ value }) =>
-        value.load_set_blocks?.[0].data &&
-        value.load_set_blocks[0].data.length > 0
+      onChange: ({ value }: { value: Partial<NewLoadSetData> }) =>
+        (value as NewLoadSetData).load_set_blocks?.[0].data &&
+        (value as NewLoadSetData).load_set_blocks[0].data.length > 0
           ? undefined
           : "Provide either a file or text data",
     },
@@ -75,75 +75,27 @@ const NewLoadSetForm = ({
     }),
     defaultValues: initialValues,
   });
-
-  const handleDataChange: FieldListenerFn<
-    NewLoadSetData,
-    "load_set_blocks[0].data"
-  > = ({ fieldApi }) => {
+  const handleDataChange = async ({ fieldApi }: any) => {
     fieldApi.form.validateField("load_set_blocks[0].data", "submit");
   };
 
-  const handleDataBlur: FieldListenerFn<
-    NewLoadSetData,
-    "load_set_blocks[0].data"
-  > = async ({ value, fieldApi }) => {
-    try {
-      const formUpdates = await guessDataSetValues<NewLoadSetData>(value);
-      Object.keys(formUpdates).forEach((key) => {
-        fieldApi.form.setFieldValue(
-          `load_set_blocks[0].${key}`,
-          formUpdates[key],
-        );
-        fieldApi.form.setFieldMeta(`load_set_blocks[0].${key}`, (meta) => ({
-          ...meta,
-          errorMap: {
-            ...meta.errorMap,
-            onSubmit: undefined,
-          },
-        }));
-      });
-    } catch (e: any) {
-      if (e && typeof e.errors === "object" && e.errors !== null) {
-        Object.keys(e.errors).forEach((key) => {
-          if (typeof e.errors[key] === "string") {
-            fieldApi.form.setFieldMeta(`load_set_blocks[0].${key}`, (meta) => ({
-              ...meta,
-              errorMap: {
-                ...meta.errorMap,
-                onSubmit: e.errors[key],
-              },
-            }));
-          }
-        });
-      }
-    }
-  };
+  const handleDataBlur = createDataBlurHandler(
+    guessDataSetValues,
+    "load_set_blocks[0].",
+  );
 
   const errors = useStore(form.store, ({ errors }) =>
-    Array.from(new Set(errors)).join("\n"),
-  );
-
-  const hasBlocks = useStore(
-    form.baseStore,
-    ({ values }) => !!values.load_set_blocks?.length,
-  );
+    Array.from(new Set(errors as string[])).join("\n"),
+  ) as string;
 
   return (
-    <form
-      className={styles.form}
-      onSubmit={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        form.handleSubmit();
-      }}
-    >
+    <Form className={styles.form} form={form}>
       <div className={styles.header}>
         <h1>Upload data</h1>
         <form.Subscribe
           selector={(state) => [state.canSubmit, state.isSubmitting]}
           children={([canSubmit, isSubmitting]) => (
             <ButtonGroup>
-              <Button onClick={() => navigate(-1)}>Cancel</Button>
               <Button
                 color="secondary"
                 disabled={!canSubmit}
@@ -160,12 +112,11 @@ const NewLoadSetForm = ({
       <Surface className={styles.content}>
         <div className={styles.formFields}>
           {loadSetFields.map((f) => (
-            <FormField key={f.name} form={form} fieldDef={f} />
+            <FormField key={f.name} fieldDef={f} />
           ))}
           {loadSetBlockFields.map((f) => (
             <FormField
               key={f.name}
-              form={form}
               fieldDef={{ ...f, name: `load_set_blocks[0].${f.name}` }}
             />
           ))}
@@ -180,13 +131,7 @@ const NewLoadSetForm = ({
             onBlur: handleDataBlur,
           }}
           children={(field) => (
-            <div
-              style={{
-                gridRowStart: 2,
-                gridColumnStart: 1,
-                gridColumnEnd: -1,
-              }}
-            >
+            <div className={styles.dataField}>
               <EditorInput
                 onChange={field.handleChange}
                 onBlur={field.handleBlur}
@@ -199,12 +144,7 @@ const NewLoadSetForm = ({
           )}
         />
       </Surface>
-      {!hasBlocks && (
-        <div className={styles.noFiles}>
-          <Button color="secondary">Select a file</Button>
-        </div>
-      )}
-    </form>
+    </Form>
   );
 };
 

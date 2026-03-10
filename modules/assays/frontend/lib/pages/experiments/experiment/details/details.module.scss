@@ -11,7 +11,7 @@
   overflow: auto;
 
   &.withMetadataTemplates {
-    grid-template-columns: min-content max-content;
+    grid-template-columns: min-content 1fr;
   }
 }
 
@@ -54,7 +54,7 @@
   button {
     margin: 0 !important;
     height: min-content !important;
-    width: min-content !important;
+    width: max-content !important;
     min-width: unset !important;
     align-self: flex-end;
   }
@@ -63,4 +63,53 @@
 .formFullwidthField {
   grid-column-start: 1;
   grid-column-end: -1;
+}
+
+.detailsContainer {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+.publishSection {
+  display: grid;
+  grid-template-columns: 1fr max-content;
+  align-items: center;
+  gap: theme.$spacing;
+  margin-block: calc(theme.$spacing * 4);
+}
+
+.publishContent {
+  display: flex;
+  flex-direction: column;
+  gap: theme.$spacing;
+}
+
+.draftSection {
+  display: grid;
+  grid-template-columns: 1fr max-content;
+  align-items: center;
+  gap: theme.$spacing;
+  margin-block: calc(theme.$spacing * 4);
+}
+
+.draftContent {
+  display: flex;
+  flex-direction: column;
+  gap: theme.$spacing;
+  max-width: 80ch;
+}
+
+.deleteSection {
+  display: grid;
+  grid-template-columns: 1fr max-content;
+  align-items: center;
+  gap: theme.$spacing;
+  margin-block: calc(theme.$spacing * 4);
+}
+
+.deleteContent {
+  display: flex;
+  flex-direction: column;
+  gap: theme.$spacing;
+  max-width: 80ch;
 }

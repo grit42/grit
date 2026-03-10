@@ -18,19 +18,59 @@
 
 import {
   createSearchParams,
-  Outlet,
   useMatch,
   useNavigate,
   useParams,
 } from "react-router-dom";
 import { useAssayModel } from "../../../queries/assay_models";
-import AssayModelTabs from "./AssayModelTabs";
-import AssayModelHeader from "./AssayModelHeader";
 import { useEffect, useMemo } from "react";
-import { useToolbar } from "@grit42/core/Toolbar";
+import { useToolbar } from "@grit42/core";
 import CogIcon from "@grit42/client-library/icons/Cog";
 import Circle1NewIcon from "@grit42/client-library/icons/Circle1New";
+import { RoutedTabs } from "@grit42/client-library/components";
 import styles from "./assayModel.module.scss";
+
+const TABS = [
+  {
+    url: "experiments",
+    label: "Experiments",
+  },
+  {
+    url: "data",
+    label: "Data",
+  },
+  {
+    url: "data-sheets",
+    label: "Data sheets",
+  },
+  {
+    url: "metadata",
+    label: "Metadata",
+  },
+];
+
+const AssayModelHeader = () => {
+  const { assay_model_id } = useParams() as { assay_model_id: string };
+  const { data: assay_model } = useAssayModel(assay_model_id);
+
+  if (!assay_model) {
+    return null;
+  }
+
+  return (
+    <div className={styles.assayModelHeader}>
+      <div className={styles.nameAndStatus}>
+        <h2>{assay_model.name}</h2>
+        <em>{assay_model.publication_status_id__name}</em>
+      </div>
+      <p>
+        {assay_model.description?.length
+          ? assay_model.description
+          : "No description provided"}
+      </p>
+    </div>
+  );
+};
 
 const AssayModel = () => {
   const navigate = useNavigate();
@@ -38,15 +78,15 @@ const AssayModel = () => {
   const experimentsMatch = useMatch(
     "/assays/assay-models/:assay_model_id/experiments",
   );
-  const match = useMatch("/assays/assay-models/:assay_model_id/*");
+  const match = useMatch("/assays/assay-models/:assay_model_id/:tab/*");
 
   const { data: assay_model } = useAssayModel(assay_model_id);
 
   const registerToolbarActions = useToolbar();
 
   const manageLink = useMemo(() => {
-    if (!experimentsMatch && match?.params["*"]) {
-      return `/assays/assay-models/settings/assay-models/${assay_model_id}/${match.params["*"]}`;
+    if (!experimentsMatch && match?.params.tab) {
+      return `/assays/assay-models/settings/assay-models/${assay_model_id}/${match.params.tab}`;
     }
     return `/assays/assay-models/settings/assay-models/${assay_model_id}/details`;
   }, [assay_model_id, experimentsMatch, match]);
@@ -83,13 +123,11 @@ const AssayModel = () => {
   }
 
   return (
-    <div className={styles.assayModelPage}>
-      <AssayModelHeader />
-      <div className={styles.assayModelBody}>
-        <AssayModelTabs />
-        <Outlet />
-      </div>
-    </div>
+    <RoutedTabs
+      heading={<AssayModelHeader />}
+      matchPattern="/assays/assay-models/:assay_model_id/:tab/*"
+      tabs={TABS}
+    />
   );
 };
 

@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 /**
  * Copyright 2025 grit42 A/S. <https://grit42.com/>
  *
@@ -20,7 +21,7 @@ import {
   useEntityColumns,
   useEntityData,
   useInfiniteEntityData,
-} from "../..";
+} from "../../queries";
 import { classnames } from "@grit42/client-library/utils";
 import {
   forwardRef,
@@ -32,8 +33,17 @@ import {
 import styles from "./entitySelector.module.scss";
 import Circle1Close from "@grit42/client-library/icons/Circle1Close";
 import IconArrowDown from "@grit42/client-library/icons/IconArrowDown";
-import { Row, RowSelectionState } from "@grit42/table";
-import { EntityPropertyDef, EntityData, ForeignEntityPropertyDef } from "../../types";
+import {
+  Row,
+  RowSelectionState,
+  Table,
+  useSetupTableState,
+} from "@grit42/table";
+import {
+  EntityPropertyDef,
+  EntityData,
+  ForeignEntityPropertyDef,
+} from "../../types";
 import {
   Button,
   ButtonGroup,
@@ -42,10 +52,6 @@ import {
   InputLabel,
   Spinner,
 } from "@grit42/client-library/components";
-import {
-  Table,
-  useSetupTableState,
-} from "@grit42/table";
 import { useTableColumns } from "../../../../utils";
 
 interface Props {
@@ -99,7 +105,12 @@ const EntityTable = ({
   );
 
   const { data, isLoading, fetchNextPage, isFetchingNextPage } =
-    useInfiniteEntityData(entity.path, tableState.sorting, [...(tableState.filters ?? []), ...(entity.filters ?? [])], entity.params);
+    useInfiniteEntityData(
+      entity.path,
+      tableState.sorting,
+      [...(tableState.filters ?? []), ...(entity.filters ?? [])],
+      entity.params,
+    );
 
   const flatData = useMemo(
     () => data?.pages.flatMap(({ data }) => data) ?? [],
@@ -274,16 +285,9 @@ const EntitySelector = forwardRef<HTMLInputElement, Props>(
     return (
       <>
         <Dialog isOpen={dialogOpen} onClose={onCancel} isWide withTable>
-          <div
-            style={{
-              height: "100%",
-              display: "grid",
-              gridTemplateRows: "1fr min-content",
-              gap: "var(--spacing)",
-            }}
-          >
+          <div className={styles.dialogContent}>
             {entityColumns && (
-              <div style={{ overflow: "auto" }}>
+              <div className={styles.dialogTableContainer}>
                 <EntityTable
                   onRowClick={onRowClick}
                   columns={entityColumns}
@@ -304,9 +308,8 @@ const EntitySelector = forwardRef<HTMLInputElement, Props>(
           </div>
         </Dialog>
         <div
-          style={{ cursor: "pointer" }}
           ref={ref}
-          className={classnames(styles.select)}
+          className={classnames(styles.select, styles.selectorWrapper)}
         >
           {label && <InputLabel description={description} label={label} />}
 
@@ -353,9 +356,9 @@ const EntitySelector = forwardRef<HTMLInputElement, Props>(
                       <div className={styles.item} key={selectedEntity.id}>
                         <p>
                           {
-                            selectedEntity[
-                              entity.display_column
-                            ] as string | number
+                            selectedEntity[entity.display_column] as
+                              | string
+                              | number
                           }
                         </p>
                         <Circle1Close
@@ -376,14 +379,16 @@ const EntitySelector = forwardRef<HTMLInputElement, Props>(
             {iconContainer}
           </div>
 
-          <InputError
-            error={
-              error ??
-              selectedEntitiesError ??
-              entityColumnsError ??
-              "An error occured"
-            }
-          />
+          {(error || selectedEntitiesError || entityColumnsError) && (
+            <InputError
+              error={
+                error ??
+                selectedEntitiesError ??
+                entityColumnsError ??
+                "An error occured"
+              }
+            />
+          )}
         </div>
       </>
     );

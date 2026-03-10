@@ -60,6 +60,9 @@ export * from "./Popover";
 export { default as Portal } from "./Portal";
 export * from "./Portal";
 
+export { default as RoutedTabs } from "./RoutedTabs";
+export * from "./RoutedTabs";
+
 export { default as Select } from "./Select";
 export * from "./Select";
 

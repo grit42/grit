@@ -16,46 +16,58 @@
  * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Table } from "@grit42/table";
-import { useCallback, useEffect } from "react";
-import { useHasRoles } from "@grit42/core";
+import { Table, useSetupTableState } from "@grit42/table";
+import { useCallback, useEffect, useMemo } from "react";
+import { useHasRoles, useToolbar } from "@grit42/core";
 import Circle1NewIcon from "@grit42/client-library/icons/Circle1New";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Button } from "@grit42/client-library/components";
+import { Button, ErrorPage } from "@grit42/client-library/components";
 import {
-  useDataTables,
+  useInfiniteDataTables,
   useDataTableColumns,
 } from "../queries/data_tables";
-import styles from "./dataTables.module.scss";
-import { useToolbar } from "@grit42/core/Toolbar";
 import { useTableColumns } from "@grit42/core/utils";
-
-const DEFAULT_COLUMN_SIZES = {
-  name: 200,
-  description: 750,
-} as const;
+import { CenteredColumnLayout } from "@grit42/client-library/layouts";
 
 const DataTablesTable = () => {
   const registerToolbarActions = useToolbar();
   const navigate = useNavigate();
-  const canManageDataTable = useHasRoles(["Administrator", "AssayAdministrator", "AssayUser"])
+  const canManageDataTable = useHasRoles([
+    "Administrator",
+    "AssayAdministrator",
+    "AssayUser",
+  ]);
   const { pathname } = useLocation();
-  const { data: dataTables } = useDataTables();
-  const { data: dataTableColumns } = useDataTableColumns(undefined, {
-    select: (data) =>
-      data.map((d) => ({
-        ...d,
-        defaultColumnSize:
-          DEFAULT_COLUMN_SIZES[d.name as keyof typeof DEFAULT_COLUMN_SIZES],
-      })),
-  });
+  const { data: dataTableColumns } = useDataTableColumns();
 
   const dataTableTableColumns = useTableColumns(dataTableColumns);
 
-  const navigateToNew = useCallback(
-    () => navigate("new"),
-    [navigate],
+  const tableState = useSetupTableState(
+    "data-tables-table",
+    dataTableTableColumns,
+    {
+      settings: {
+        disableColumnReorder: true,
+        disableVisibilitySettings: true,
+      },
+      initial: {
+        sizing: {
+          name: 200,
+          description: 750,
+        },
+      },
+    },
   );
+
+  const { data, isLoading, isFetchingNextPage, isError, error, fetchNextPage } =
+    useInfiniteDataTables(tableState.sorting, tableState.filters);
+
+  const flatData = useMemo(
+    () => data?.pages.flatMap(({ data }) => data) ?? [],
+    [data],
+  );
+
+  const navigateToNew = useCallback(() => navigate("new"), [navigate]);
 
   useEffect(() => {
     return registerToolbarActions({
@@ -65,27 +77,37 @@ const DataTablesTable = () => {
           icon: <Circle1NewIcon />,
           label: "New Data Table",
           onClick: navigateToNew,
-          disabled: !canManageDataTable
+          disabled: !canManageDataTable,
         },
       ],
     });
   }, [registerToolbarActions, navigateToNew, pathname, canManageDataTable]);
 
+  if (isError) {
+    return <ErrorPage error={error} />;
+  }
+
   return (
-    <div className={styles.dataTables}>
+    <CenteredColumnLayout>
       <Table
+        tableState={tableState}
         header="Data Tables"
-        settings={{
-          disableColumnReorder: true,
-          disableVisibilitySettings: true,
-        }}
-        headerActions={canManageDataTable ? <Button onClick={navigateToNew}>New</Button> : undefined}
-        className={styles.typesTable}
-        data={dataTables}
-        columns={dataTableTableColumns}
+        headerActions={
+          canManageDataTable ? (
+            <Button onClick={navigateToNew}>New</Button>
+          ) : undefined
+        }
+        fitContent
+        data={flatData}
         onRowClick={(row) => navigate(`${row.original.id}`)}
+        loading={isLoading}
+        pagination={{
+          fetchNextPage,
+          isFetchingNextPage,
+          totalRows: data?.pages[0]?.total,
+        }}
       />
-    </div>
+    </CenteredColumnLayout>
   );
 };
 

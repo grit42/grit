@@ -54,7 +54,11 @@ export const useAttachFilesToExperimentMutation = (
 
 export const useDetachFilesFromExperimentMutation = (
   experimentId: string | number,
-  mutationOptions: UseMutationOptions<void, string, Array<string | number>> = {},
+  mutationOptions: UseMutationOptions<
+    void,
+    string,
+    Array<string | number>
+  > = {},
 ) => {
   return useMutation({
     mutationKey: ["detachFilesToExperiment", experimentId.toString()],
@@ -64,7 +68,7 @@ export const useDetachFilesFromExperimentMutation = (
         {
           method: "DELETE",
           data: {
-            ids
+            ids,
           },
         },
       );

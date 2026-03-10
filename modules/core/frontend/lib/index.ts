@@ -16,21 +16,16 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-export { default as Meta } from "./meta";
-
-export type { ModuleMeta, ModuleNavItem } from "./meta";
-
-export type * from "./Registrant";
-
-export { useRegisterAdministrationTabs } from "./features/administration";
-
 export {
   AuthGuard,
   NoAuthGuard,
   useSession,
+  useUpdateUserSettingsMutation,
   hasRoles,
   useHasRoles,
-} from "./features/session";
+} from "./features/auth";
+
+export type { Session, ServerSettings, UserSettings } from "./features/auth";
 
 export {
   useEntityColumns,
@@ -43,7 +38,7 @@ export {
   useEditEntityMutation,
   useDestroyEntityMutation,
   useRegisterEntityForm,
-  EntitySelector
+  EntitySelector,
 } from "./features/entities";
 
 export type {
@@ -51,36 +46,25 @@ export type {
   EntitiesMeta,
   EntityPropertyDef,
   EntityData,
+  EntityDetailsProps,
+  EntityFormFieldDef,
+  EntityFormFieldEntity,
   EntityInfo,
   EntityProperties,
   EntityStamps,
+  GritColumnDefEntity,
 } from "./features/entities";
 
 export * from "./features/importer";
-export type * from "./features/importer";
+
+export { useToolbar } from "./features/toolbar";
 
 export * from "./features/publication-status";
-export type * from "./features/publication-status";
 
 export * from "./components";
-export type * from "./components";
 
-import React, { lazy } from "react";
-import Registrant from "./Registrant";
-import Provider from "./Provider";
-import Meta, { ModuleMeta } from "./meta";
-const Router = lazy(() => import("./Router"));
+export { App } from "./app";
+export type { GritModule, NavItem, ModuleMeta } from "./app";
 
-export interface GritModule {
-  Meta: ModuleMeta;
-  Router: React.LazyExoticComponent<() => JSX.Element>;
-  Registrant?: React.FunctionComponent;
-  Provider?: React.FunctionComponent;
-}
-
-export default {
-  Meta,
-  Router,
-  Registrant,
-  Provider,
-} as GritModule;
+import CoreModule from "./module";
+export default CoreModule;

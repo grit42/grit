@@ -38,9 +38,7 @@ const clamp = (val: number, min: number, max: number) => {
 
 // see http://stackoverflow.com/a/18473154/3124288 for calculating arc path
 const R = 45;
-const SPINNER_TRACK = `M 50,50 m 0,-${R} a ${R},${R} 0 1 1 0,${
-  R * 2
-} a ${R},${R} 0 1 1 0,-${R * 2}`;
+const SPINNER_TRACK = `M 50,50 m 0,-${R} a ${R},${R} 0 1 1 0,${R * 2} a ${R},${R} 0 1 1 0,-${R * 2}`;
 
 // unitless total length of SVG path, to which stroke-dash* properties are relative.
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/pathLength

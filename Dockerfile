@@ -5,7 +5,7 @@
 # docker run -d -p 80:80 -p 443:443 --name my-app -e RAILS_MASTER_KEY=<value from config/master.key> my-app
 
 # Make sure RUBY_VERSION matches the Ruby version in .ruby-version
-ARG RUBY_VERSION=3.1.4
+ARG RUBY_VERSION=3.4.8
 ARG APP=grit
 FROM docker.io/library/ruby:$RUBY_VERSION-slim AS base
 
@@ -18,7 +18,7 @@ WORKDIR ${APP_WORKDIR}
 
 # Install base packages
 RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y curl libjemalloc2 libvips postgresql-client && \
+    apt-get install --no-install-recommends -y curl libjemalloc2 libvips postgresql-client libyaml-dev && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
 # Set production environment
@@ -44,7 +44,7 @@ RUN apt-get update -qq && \
 
 RUN gem update --system
 
-RUN npm install -g pnpm@10.0.0-alpha.4
+RUN npm install -g pnpm@10.30.1
 
 COPY --parents package.json pnpm-workspace.yaml pnpm-lock.yaml nx.json tsconfig.base.json ./**/package.json ./
 
@@ -61,14 +61,14 @@ COPY --parents ./**/frontend/**/* \
 
 WORKDIR ${APP_WORKDIR}
 
-RUN pnpm exec nx build @grit42/grit
+RUN pnpm exec nx build @grit42/grit --verbose
 
 # Throw-away build stage to reduce size of final image
 FROM node:lts AS docs
 
 WORKDIR /docs
 
-RUN npm install -g pnpm@10.0.0-alpha.4
+RUN npm install -g pnpm@10.30.1
 
 COPY grit-docs/package.json grit-docs/pnpm-lock.yaml ./
 

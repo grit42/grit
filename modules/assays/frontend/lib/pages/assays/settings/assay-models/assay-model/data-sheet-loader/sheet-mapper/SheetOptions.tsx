@@ -1,12 +1,13 @@
 import { Surface } from "@grit42/client-library/components";
+import styles from "./sheetMapper.module.scss";
 import { Sheet } from "@grit42/spreadsheet";
-import { ReactFormExtendedApi, useFormInput, useStore } from "@grit42/form";
+import { FormApi, useFormInput, useStore } from "@grit42/form";
 
 const SheetOptions = ({
   form,
   sheetIndex,
 }: {
-  form: ReactFormExtendedApi<any>;
+  form: FormApi<any>;
   sheetIndex: number;
   sheet: Sheet;
 }) => {
@@ -15,22 +16,13 @@ const SheetOptions = ({
   const StringInput = useFormInput("string");
 
   const included = useStore(
-    form.baseStore,
-    ({ values }) => values.sheets[sheetIndex].include,
+    form.store,
+    ({ values }) => values.sheets[sheetIndex].include as boolean | undefined,
   );
 
   return (
-    <Surface style={{ overflowY: "auto" }}>
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr",
-          gridAutoRows: "max-content",
-          gap: "calc(var(--spacing) * 2)",
-          paddingBottom: "calc(var(--spacing) * 2)",
-          maxWidth: 400,
-        }}
-      >
+    <Surface className={styles.sheetOptionsSurface}>
+      <div className={styles.sheetOptionsContainer}>
         <p>
           Click a cell in the grid to use its row or column for one of the
           parameters

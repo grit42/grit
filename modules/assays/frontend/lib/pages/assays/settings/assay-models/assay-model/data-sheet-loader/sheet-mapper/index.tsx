@@ -19,12 +19,12 @@ import {
   columnDefinitionsFromSheet,
 } from "@grit42/spreadsheet";
 import { useEffect, useRef, useState } from "react";
-import styles from "../dataSheetStructureLoader.module.scss";
+import styles from "./sheetMapper.module.scss";
 import { Form, useForm } from "@grit42/form";
 import SheetPreview from "./SheetPreview";
 import SheetOptions from "./SheetOptions";
 import SheetOptionDropdown from "./SheetOptionDropdown";
-import { SheetWithOptions } from "../FileLoader";
+import { SheetWithOptions } from "../file-loader";
 
 const useDataTypeGuessMutation = () => {
   return useMutation({
@@ -164,7 +164,7 @@ const SheetMapper = ({
   });
 
   const setFieldValue = (field: string, value: string | number) => {
-    form.setFieldValue(`sheets[${selectedTab}].${field}` as any, value);
+    form.setFieldValue(`sheets[${selectedTab}].${field}` as any, value as any);
   };
 
   const handleCellClick = (
@@ -196,14 +196,8 @@ const SheetMapper = ({
         setFieldValue={setFieldValue}
       />
       <Form form={form} className={styles.sheetMapperContainer}>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "baseline",
-          }}
-        >
-          <h3 style={{ alignSelf: "baseline", marginBottom: "1em" }}>
+        <div className={styles.headerRow}>
+          <h3 className={styles.header}>
             Data sheet definitions import: choose sheets to import and provide
             information about their structure
           </h3>
@@ -241,7 +235,7 @@ const SheetMapper = ({
         <Tabs
           selectedTab={selectedTab}
           onTabChange={setSelectedTab}
-          className={styles.tab}
+          className={styles.tabs}
           tabs={
             sheets.map((s, index) => ({
               panelProps: {
@@ -250,17 +244,12 @@ const SheetMapper = ({
               key: s.name,
               name: s.name,
               panel: (
-                <div
-                  style={{
-                    overflow: "auto",
-                    display: "grid",
-                    gridTemplateColumns: "max-content 1fr",
-                    gridTemplateRows: "1fr",
-                    gap: "var(--spacing)",
-                    height: "100%",
-                  }}
-                >
-                  <SheetOptions form={form} sheetIndex={index} sheet={s} />
+                <div className={styles.sheetPanel}>
+                  <SheetOptions
+                    form={form as any}
+                    sheetIndex={index}
+                    sheet={s}
+                  />
                   <SheetPreview sheet={s} onCellClick={handleCellClick} />
                 </div>
               ),

@@ -17,11 +17,15 @@ Gem::Specification.new do |spec|
     Dir["{app,config,db,lib}/**/*", "Rakefile", "README.md", "COPYING"]
   end
 
-  spec.add_dependency "rails", '~> 7.2', '>= 7.2.2'
+  spec.add_dependency "rails", '~> 8.1'
+
+  # Ruby 3.4 bundled gems (no longer default)
+  spec.add_dependency "csv"
+  spec.add_dependency "ostruct"
 
   # Cryptography
-  spec.add_dependency "scrypt", '~> 3.0', '>= 3.0.8'
+  spec.add_dependency "scrypt", '~> 3.1'
 
   # Authentication and session management
-  spec.add_dependency "authlogic", '~> 6.5', '>= 6.5.0'
+  spec.add_dependency "authlogic", '~> 6.6'
 end

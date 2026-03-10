@@ -78,8 +78,8 @@ const FilterItem = ({
   );
 
   const InputComponent = useMemo(
-    () => columnTypeDef.filter?.input,
-    [columnTypeDef.filter?.input],
+    () => columnTypeDef.filter.input,
+    [columnTypeDef.filter.input],
   );
 
   const onSelectColumn = (columnId: string) => {
@@ -111,20 +111,24 @@ const FilterItem = ({
         options={columnOptions}
         value={filter.column}
         onChange={onSelectColumn}
-        disabled={filter.active ? false: true}
+        disabled={filter.active ? false : true}
       />
       <Select
         options={operatorOptions}
         value={filter.operator}
         onChange={onSelectOperator}
-        disabled={filter.active ? false: true}
+        disabled={filter.active ? false : true}
       />
-      <InputComponent
-        key={filter.id + filter.column}
-        filter={filter}
-        column={column}
-        onChange={onChange}
-      />
+      {column ? (
+        <InputComponent
+          key={filter.id + filter.column}
+          filter={filter}
+          column={column}
+          onChange={onChange}
+        />
+      ) : (
+        "No input component for this column type"
+      )}
       {children}
     </div>
   );

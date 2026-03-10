@@ -18,12 +18,7 @@
 
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import {
-  Button,
-  ErrorPage,
-  Spinner,
-  Surface,
-} from "@grit42/client-library/components";
+import { Button, ErrorPage, Spinner } from "@grit42/client-library/components";
 import styles from "./assayMetadataDefinitions.module.scss";
 import {
   AssayMetadataDefinitionData,
@@ -38,15 +33,18 @@ import {
 } from "@grit42/core";
 import {
   Form,
+  FormBanner,
   FormControls,
   FormField,
   FormFieldDef,
+  FormFields,
   genericErrorHandler,
   getVisibleFieldData,
   useForm,
   useStore,
 } from "@grit42/form";
 import { toSafeIdentifier } from "@grit42/core/utils";
+import { CenteredSurface } from "@grit42/client-library/layouts";
 
 const AssayMetadataDefinitionForm = ({
   fields,
@@ -75,7 +73,7 @@ const AssayMetadataDefinitionForm = ({
     "grit/assays/assay_metadata_definitions",
   );
 
-  const form = useForm<Partial<AssayMetadataDefinitionData>>({
+  const form = useForm({
     defaultValues: formData,
     onSubmit: genericErrorHandler(async ({ value: formValue, formApi }) => {
       const value = getVisibleFieldData<Partial<AssayMetadataDefinitionData>>(
@@ -110,7 +108,7 @@ const AssayMetadataDefinitionForm = ({
   });
 
   const { safe_name, proposed_safe_name } = useStore(
-    form.baseStore,
+    form.store,
     ({ values }) => {
       const { name, safe_name } = values;
       const proposed_safe_name = form.getFieldMeta("name")?.isDirty
@@ -133,53 +131,44 @@ const AssayMetadataDefinitionForm = ({
   };
 
   return (
-    <div className={styles.container}>
-      <Surface className={styles.form}>
-        <h2 className={styles.formTitle}>{`${
-          assayMetadataDefinition.id ? "Edit" : "New"
-        } metadata`}</h2>
-        <Form<Partial<AssayMetadataDefinitionData>> form={form}>
-          <div className={styles.formFields}>
-            {form.state.errorMap.onSubmit && (
-              <div className={styles.formError}>
-                {form.state.errorMap.onSubmit?.toString()}
-              </div>
-            )}
-            {fields.map((f) => (
-              <div className={styles.formField} key={f.name}>
-                <FormField form={form} fieldDef={f} />
-                {f.name === "safe_name" &&
-                  safe_name !== proposed_safe_name &&
-                  form.state.isDirty && (
-                    <div className={styles.formFieldSuggestion}>
-                      <em
-                        role="button"
-                        onClick={() => {
-                          form.setFieldValue("safe_name", proposed_safe_name);
-                          form.setFieldMeta("safe_name", (prev) => ({
-                            ...prev,
-                            errorMap: {},
-                          }));
-                        }}
-                      >
-                        Use "{proposed_safe_name}"
-                      </em>
-                    </div>
-                  )}
-              </div>
-            ))}
-          </div>
-          <FormControls
-            form={form}
-            onDelete={onDelete}
-            showDelete={!!assayMetadataDefinition.id}
-            showCancel
-            cancelLabel={assayMetadataDefinition.id ? "Back" : "Cancel"}
-            onCancel={() => navigate("..")}
-          />
-        </Form>
-      </Surface>
-    </div>
+    <CenteredSurface>
+      <h2>{`${assayMetadataDefinition.id ? "Edit" : "New"} metadata`}</h2>
+      <Form form={form}>
+        <FormFields columns={1}>
+          <FormBanner content={form.state.errorMap.onSubmit} />
+          {fields.map((f) => (
+            <div className={styles.formField} key={f.name}>
+              <FormField fieldDef={f} />
+              {f.name === "safe_name" &&
+                safe_name !== proposed_safe_name &&
+                form.state.isDirty && (
+                  <div className={styles.formFieldSuggestion}>
+                    <em
+                      role="button"
+                      onClick={() => {
+                        form.setFieldValue("safe_name", proposed_safe_name);
+                        form.setFieldMeta("safe_name", (prev) => ({
+                          ...prev,
+                          errorMap: {},
+                        }));
+                      }}
+                    >
+                      Use "{proposed_safe_name}"
+                    </em>
+                  </div>
+                )}
+            </div>
+          ))}
+        </FormFields>
+        <FormControls
+          onDelete={onDelete}
+          showDelete={!!assayMetadataDefinition.id}
+          showCancel
+          cancelLabel={assayMetadataDefinition.id ? "Back" : "Cancel"}
+          onCancel={() => navigate("..")}
+        />
+      </Form>
+    </CenteredSurface>
   );
 };
 

@@ -25,7 +25,6 @@ import AssayModelDataSheets from "./data-sheets";
 import AssayModelMetadata from "./metadata";
 import AssayModelData from "./data";
 
-
 const AssayModelPage = () => {
   const { assay_model_id } = useParams() as { assay_model_id: string };
 
@@ -44,11 +43,19 @@ const AssayModelPage = () => {
   return (
     <Routes>
       <Route element={<AssayModel />}>
-        <Route path={"experiments/*"} element={<AssayModelExperiments />} />
-        <Route path={"metadata/*"} element={<AssayModelMetadata />} />
-        <Route path={"data-sheets/*"} element={<AssayModelDataSheets />} />
-        <Route path={"data/*"} element={<AssayModelData />} />
-        <Route path="*" element={<Navigate to="experiments" replace />} />
+        <Route path="experiments" element={<AssayModelExperiments />} />
+        <Route path="metadata" element={<AssayModelMetadata />} />
+        <Route path="data-sheets">
+          <Route index path="*" element={<AssayModelDataSheets />} />
+        </Route>
+        <Route path="data">
+          <Route index path="*" element={<AssayModelData />} />
+        </Route>
+        <Route
+          index
+          path="*"
+          element={<Navigate to="../experiments" replace />}
+        />
       </Route>
     </Routes>
   );

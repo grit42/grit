@@ -10,7 +10,7 @@ import { SetStateAction, useCallback, useEffect, useMemo } from "react";
 import { EntityData } from "@grit42/core";
 import {
   useExperimentColumns,
-  usePublishedExperimentsOfModel,
+  useInfinitePublishedExperimentsOfModel,
 } from "../../../../../queries/experiments";
 import { useAssayMetadataDefinitions } from "../../../../../queries/assay_metadata_definitions";
 
@@ -104,29 +104,37 @@ const ExperimentsTable = ({
     [metadataDefinitions, metadataFilters],
   );
 
-  const { data, isLoading, isError, error } = usePublishedExperimentsOfModel(
-    assayModelId,
-    tableState.sorting,
-    filters,
-    undefined,
-    {
-      enabled: !!metadataDefinitions,
-    },
+  const { data, isLoading, isFetchingNextPage, isError, error, fetchNextPage } =
+    useInfinitePublishedExperimentsOfModel(
+      assayModelId,
+      tableState.sorting,
+      filters,
+      undefined,
+      {
+        enabled: !!metadataDefinitions,
+      },
+    );
+
+  const flatData = useMemo(
+    () => data?.pages.flatMap(({ data }) => data) ?? [],
+    [data],
   );
 
   useEffect(() => {
-    if (!data) return;
+    if (!flatData) return;
     if (
-      data &&
+      flatData &&
       selectedExperiments.every((selectedId) =>
-        data.find(({ id }) => selectedId == id),
+        flatData.find(({ id }) => selectedId == id),
       )
     )
       return;
     setSelectedExperiments((prev) =>
-      prev?.filter((selectedId) => data?.find(({ id }) => selectedId == id)),
+      prev?.filter((selectedId) =>
+        flatData?.find(({ id }) => selectedId == id),
+      ),
     );
-  }, [data, selectedExperiments, setSelectedExperiments]);
+  }, [flatData, selectedExperiments, setSelectedExperiments]);
 
   if (isMetadataDefinitionsError) {
     return <ErrorPage error={metadataDefinitionsError} />;
@@ -145,13 +153,18 @@ const ExperimentsTable = ({
             : [...selectedExperiments, Number(id)],
         )
       }
-      data={data}
+      data={flatData}
       loading={isLoading || isMetadataDefinitionsLoading}
       noDataMessage={
         isError
           ? error
           : "No published experiments matching selected metadata in this assay model"
       }
+      pagination={{
+        fetchNextPage,
+        isFetchingNextPage,
+        totalRows: data?.pages[0]?.total,
+      }}
       disableFooter
     />
   );

@@ -23,3 +23,17 @@ def login(user, password = "password")
   post "/api/grit/core/user_session", params: { user_session: {
     login: user.login, password: password } }
 end
+
+def logout
+  delete "/api/grit/core/user_session"
+end
+
+# Dynamic tables (ds_{id}) are created via DDL and are not rolled back by
+# test transactions. This global teardown drops any that leaked due to a
+# mid-test assertion failure, preventing cascading failures across the suite.
+class ActiveSupport::TestCase
+  teardown do
+    leaked = ActiveRecord::Base.connection.tables.select { |t| t.start_with?("ds_") }
+    leaked.each { |t| ActiveRecord::Base.connection.drop_table(t, force: true) }
+  end
+end

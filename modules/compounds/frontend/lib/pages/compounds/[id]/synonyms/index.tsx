@@ -26,13 +26,12 @@ import {
   useSynonymsColumns,
 } from "../../../../queries/synonyms";
 import { Table, useSetupTableState } from "@grit42/table";
-import { useToolbar } from "@grit42/core/Toolbar";
+import { useToolbar, useHasRoles } from "@grit42/core";
 import { useDestroySynonym } from "../../../../mutations/synonyms";
 import Circle1NewIcon from "@grit42/client-library/icons/Circle1New";
 import { useTableColumns } from "@grit42/core/utils";
 import { downloadFile } from "@grit42/client-library/utils";
 import { getFilterParams, getSortParams, getURLParams } from "@grit42/api";
-import { useHasRoles } from "@grit42/core";
 
 interface Props {
   id: string;

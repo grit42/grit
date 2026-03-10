@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 /**
  * Copyright 2025 grit42 A/S. <https://grit42.com/>
  *

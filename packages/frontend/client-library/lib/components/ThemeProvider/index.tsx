@@ -17,7 +17,6 @@
  */
 
 import { useMemo } from "react";
-import { Helmet } from "react-helmet-async";
 import {
   ColorScheme,
   DisplayDensity,
@@ -44,6 +43,16 @@ function getThemeVariables(
   });
 }
 
+function getSpacingVariables(spacing: number): string[] {
+  return [
+    `--spacing: ${spacing}px;`,
+    `--spacing-sm: ${spacing / 2}px;`,
+    `--spacing-md: ${spacing}px;`,
+    `--spacing-lg: ${spacing * 2}px;`,
+    `--spacing-xl: ${spacing * 4}px;`,
+  ];
+}
+
 const ThemeProvider = ({
   colorScheme = "dark",
   displayDensity = "comfortable",
@@ -59,8 +68,9 @@ const ThemeProvider = ({
   );
 
   const themeStyles = useMemo(() => {
-    const props = getThemeVariables(theme.palette, "--palette");
-    props.push(`--spacing: ${theme.spacing}px;`);
+    const props = getThemeVariables(theme.palette, "--palette").concat(
+      getSpacingVariables(theme.spacing),
+    );
     props.push(`color-scheme: ${colorScheme};`);
     props.push(`--color-scheme: ${colorScheme};`);
     props.push("--border-radius: 6px;");
@@ -72,18 +82,16 @@ const ThemeProvider = ({
 
   return (
     <>
-      <Helmet>
-        <style type="text/css">{`
-            :root {
-              ${themeStyles}
-            }
+      <style type="text/css">{`
+          :root {
+            ${themeStyles}
+          }
 
-            html {
-              background-color: var(--palette-background-default);
-              color: var(--palette-background-contrast-text);
-            }
-         `}</style>
-      </Helmet>
+          html {
+            background-color: var(--palette-background-default);
+            color: var(--palette-background-contrast-text);
+          }
+        `}</style>
       <ThemeContext.Provider value={theme}>{children}</ThemeContext.Provider>
     </>
   );

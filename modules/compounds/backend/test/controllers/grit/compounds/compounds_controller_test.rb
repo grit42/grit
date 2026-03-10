@@ -28,7 +28,7 @@ module Grit::Compounds
       @origin = grit_core_origins(:one)
       @compound_type = grit_compounds_compound_types(:screening)
       assert_difference("Compound.count") do
-        post grit_compounds.compounds_url, params: { name: "three", number: "three", origin_id: @origin.id, compound_type_id: @compound_type.id }, as: :json
+        post grit_compounds.compounds_url, params: { name: "four", number: "four", origin_id: @origin.id, compound_type_id: @compound_type.id }, as: :json
       end
 
       assert_response :created

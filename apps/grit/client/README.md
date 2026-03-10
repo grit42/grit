@@ -14,7 +14,7 @@ If you are developing a production application, we recommend updating the config
 - Configure the top-level `parserOptions` property like this:
 
 ```js
-export default tseslint.config({
+export default defineConfig{
   languageOptions: {
     // other options...
     parserOptions: {
@@ -33,7 +33,7 @@ export default tseslint.config({
 // eslint.config.js
 import react from "eslint-plugin-react";
 
-export default tseslint.config({
+export default defineConfig{
   // Set the react version
   settings: { react: { version: "18.3" } },
   plugins: {

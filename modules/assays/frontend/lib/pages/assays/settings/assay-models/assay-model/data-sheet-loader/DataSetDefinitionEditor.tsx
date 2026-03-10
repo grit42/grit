@@ -16,22 +16,19 @@
  * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import {
-  ErrorPage,
-  Spinner,
-} from "@grit42/client-library/components";
+import { ErrorPage, Spinner } from "@grit42/client-library/components";
 import { toSafeIdentifier } from "@grit42/core/utils";
 import { useMemo } from "react";
 import { useEntityData } from "@grit42/core";
-import {
-  useAssayDataSheetDefinitions,
-} from "../../../../../../queries/assay_data_sheet_definitions";
-import {
-  AssayModelData,
-} from "../../../../../../queries/assay_models";
+import { useAssayDataSheetDefinitions } from "../../../../../../queries/assay_data_sheet_definitions";
+import { AssayModelData } from "../../../../../../queries/assay_models";
 import { SheetWithColumns } from "./sheet-mapper";
 import DataSheetDefinitionEditor from "./data-sheet-definition-editor";
-import { DataSetDefinitionFull, DataSheetColumnDefinition, DataSheetDefinitionFull } from "./data-sheet-definition-editor/dataSheetDefinitionEditorForm";
+import {
+  DataSetDefinitionFull,
+  DataSheetColumnDefinition,
+  DataSheetDefinitionFull,
+} from "./data-sheet-definition-editor/dataSheetDefinitionEditorForm";
 import { Navigate } from "react-router-dom";
 
 const Wrapper = ({

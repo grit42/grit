@@ -18,8 +18,7 @@
 
 import { useNavigate } from "react-router-dom";
 import { useCallback } from "react";
-import { Row } from "@grit42/table";
-import { GritColumnDef, Table, useSetupTableState } from "@grit42/table";
+import { Row, GritColumnDef, Table, useSetupTableState } from "@grit42/table";
 import { EntityInfo } from "../types";
 import { useEntities } from "../queries";
 import { ErrorPage, Spinner } from "@grit42/client-library/components";
@@ -48,7 +47,8 @@ const EntitiesPage = () => {
   const { data, isLoading, isError, error } = useEntities();
 
   const onRowClick = useCallback(
-    (row: Row<EntityInfo>) => navigate(`/core/entities/${row.original.full_name}`),
+    (row: Row<EntityInfo>) =>
+      navigate(`/core/entities/${row.original.full_name}`),
     [navigate],
   );
 

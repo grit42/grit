@@ -26,7 +26,8 @@ export const getDefaultColumnVisibility = <T>(
   return getLeafColumns(columns).reduce(
     (acc, column) => ({
       ...acc,
-      [column.id]: !column.defaultVisibility || column.defaultVisibility === "visible",
+      [column.id]:
+        !column.defaultVisibility || column.defaultVisibility === "visible",
     }),
     {},
   );

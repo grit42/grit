@@ -1,0 +1,73 @@
+/**
+ * Copyright 2025 grit42 A/S. <https://grit42.com/>
+ *
+ * This file is part of @grit42/core.
+ *
+ * @grit42/core is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or  any later version.
+ *
+ * @grit42/core is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+@use "@grit42/client-library/theme.scss";
+
+.container {
+  height: 100%;
+  width: 100%;
+  position: relative;
+}
+
+.overlay {
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 4px solid transparent;
+  border-radius: theme.$border-radius;
+  z-index: 10;
+  background-color: #0005;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: theme.$spacing;
+
+  &.hidden {
+    visibility: hidden;
+  }
+
+  &.dragging {
+    border-color: theme.$palette-secondary-main;
+  }
+}
+
+.surface {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: theme.$spacing;
+}
+
+.filePickerButton {
+  position: absolute;
+  bottom: theme.$spacing;
+  right: theme.$spacing-xl;
+  z-index: 10;
+}
+
+.fileInput {
+  display: none;
+  height: 0;
+  width: 0;
+}

@@ -20,12 +20,16 @@ import {
   useEntityColumns,
   EntityPropertyDef,
   EntityData,
-  useEntityData,
   useEntityDatum,
   useEntityFields,
   useInfiniteEntityData,
 } from "@grit42/core";
-import { UseQueryOptions, URLParams, UndefinedInitialDataInfiniteOptions, PaginatedEndpointSuccess } from "@grit42/api";
+import {
+  UseQueryOptions,
+  URLParams,
+  UndefinedInitialDataInfiniteOptions,
+  PaginatedEndpointSuccess,
+} from "@grit42/api";
 import { Filter, SortingState } from "@grit42/table";
 import { FormFieldDef } from "@grit42/form";
 
@@ -56,27 +60,16 @@ export interface ExperimentMetadataTemplateData extends EntityData {
   description: string | null;
 }
 
-export const useExperimentMetadataTemplates = (
-  sort?: SortingState,
-  filter?: Filter[],
-  params: URLParams = {},
-  queryOptions: Partial<UseQueryOptions<ExperimentMetadataTemplateData[], string>> = {},
-) => {
-  return useEntityData<ExperimentMetadataTemplateData>(
-    "grit/assays/experiment_metadata_templates",
-    sort,
-    filter,
-    params,
-    queryOptions,
-  );
-};
-
-
 export const useInfiniteExperimentMetadataTemplates = (
   sort?: SortingState,
   filter?: Filter[],
   params: URLParams = {},
-  queryOptions: Partial<UndefinedInitialDataInfiniteOptions<PaginatedEndpointSuccess<ExperimentMetadataTemplateData[]>, string>> = {},
+  queryOptions: Partial<
+    UndefinedInitialDataInfiniteOptions<
+      PaginatedEndpointSuccess<ExperimentMetadataTemplateData[]>,
+      string
+    >
+  > = {},
 ) => {
   return useInfiniteEntityData<ExperimentMetadataTemplateData>(
     "grit/assays/experiment_metadata_templates",
@@ -90,7 +83,9 @@ export const useInfiniteExperimentMetadataTemplates = (
 export const useExperimentMetadataTemplate = (
   experimentMetadataTemplateId: string | number,
   params: URLParams = {},
-  queryOptions: Partial<UseQueryOptions<ExperimentMetadataTemplateData | null, string>> = {},
+  queryOptions: Partial<
+    UseQueryOptions<ExperimentMetadataTemplateData | null, string>
+  > = {},
 ) => {
   return useEntityDatum<ExperimentMetadataTemplateData>(
     "grit/assays/experiment_metadata_templates",

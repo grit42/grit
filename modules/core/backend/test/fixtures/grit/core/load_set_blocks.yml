@@ -1,0 +1,51 @@
+# Load set blocks for testing
+# These are associated with load_sets.yml entries
+# status_id values reference load_set_statuses.yml
+
+# Block in mapping status - ready for mapping and validation
+test_entity_mapping_block:
+  id: 100
+  name: "test-entity-mapping-block"
+  load_set_id: <%= ActiveRecord::FixtureSet.identify(:test_entity_mapping) %>
+  status_id: 42
+  separator: ","
+  headers: '[{"name": "col_0", "display_name": "Name"}]'
+  mappings: '{}'
+  has_errors: false
+  has_warnings: false
+
+# Block with missing required data
+test_entity_missing_required_block:
+  id: 101
+  name: "test-entity-missing-required-block"
+  load_set_id: <%= ActiveRecord::FixtureSet.identify(:test_entity_missing_required) %>
+  status_id: 42
+  separator: ","
+  headers: '[{"name": "col_0", "display_name": "Name"}]'
+  mappings: '{}'
+  has_errors: false
+  has_warnings: false
+
+# Block with wrong data types
+test_entity_wrong_data_block:
+  id: 102
+  name: "test-entity-wrong-data-block"
+  load_set_id: <%= ActiveRecord::FixtureSet.identify(:test_entity_wrong_data) %>
+  status_id: 42
+  separator: ","
+  headers: '[{"name": "col_0", "display_name": "Name"}, {"name": "col_1", "display_name": "Data"}]'
+  mappings: '{}'
+  has_errors: false
+  has_warnings: false
+
+# Block in succeeded status - cannot be deleted without rollback
+test_entity_succeeded_block:
+  id: 103
+  name: "test-entity-succeeded-block"
+  load_set_id: 42
+  status_id: 47
+  separator: ","
+  headers: '[{"name": "col_0", "display_name": "Name"}]'
+  mappings: '{"name": {"header": "col_0"}}'
+  has_errors: false
+  has_warnings: false

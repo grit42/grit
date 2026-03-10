@@ -48,7 +48,7 @@ export interface LoadSetBlockData extends EntityData {
   load_set_id: number;
   name: string;
   separator: string;
-  headers: {name: string, display_name: string | null}[];
+  headers: { name: string; display_name: string | null }[];
   status_id: number;
   status_id__name: string;
   mappings?: Record<string, LoadSetMapping>;
@@ -71,7 +71,7 @@ export interface LoadSetData extends EntityData {
 }
 
 export interface LoadSetPreviewData {
-  headers: Array<string| null>;
+  headers: Array<string | null>;
   data: string[][];
 }
 

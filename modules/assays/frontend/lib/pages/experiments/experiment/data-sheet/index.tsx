@@ -35,9 +35,7 @@ import {
 import { useTableColumns } from "@grit42/core/utils";
 import { Table, useSetupTableState } from "@grit42/table";
 import ExperimentDataSheetRecordFormWrapper from "./RecordForm";
-import { useToolbar } from "@grit42/core/Toolbar";
-import styles from "./dataSheet.module.scss";
-import { useHasRoles } from "@grit42/core";
+import { useToolbar, useHasRoles } from "@grit42/core";
 import { ExperimentData, useExperiment } from "../../../../queries/experiments";
 
 const getRowId = (data: ExperimentDataSheetRecordData) => data.id.toString();
@@ -50,11 +48,9 @@ const ExperimentDataSheetRecords = ({
   experiment: ExperimentData;
 }) => {
   const { experiment_id } = useParams() as { experiment_id: string };
-  const canCrudRecord = useHasRoles([
-    "Administrator",
-    "AssayAdministrator",
-    "AssayUser",
-  ]) && experiment.publication_status_id__name !== "Published";
+  const canCrudRecord =
+    useHasRoles(["Administrator", "AssayAdministrator", "AssayUser"]) &&
+    experiment.publication_status_id__name !== "Published";
   const registerToolbarAction = useToolbar();
   const navigate = useNavigate();
   const { data: columns } = useExperimentDataSheetRecordColumns(dataSheet.id);
@@ -81,16 +77,18 @@ const ExperimentDataSheetRecords = ({
   useEffect(
     () =>
       registerToolbarAction({
-        importItems: canCrudRecord ? [
-          {
-            id: "IMPORT_DATA",
-            text: "Import data",
-            onClick: () =>
-              navigate(
-                `/core/load_sets/new?entity=Grit::Assays::ExperimentDataSheetRecord&experiment_id=${experiment_id}&assay_data_sheet_definition_id=${dataSheet.id}`,
-              ),
-          },
-        ] : undefined,
+        importItems: canCrudRecord
+          ? [
+              {
+                id: "IMPORT_DATA",
+                text: "Import data",
+                onClick: () =>
+                  navigate(
+                    `/core/load_sets/new?entity=Grit::Assays::ExperimentDataSheetRecord&experiment_id=${experiment_id}&assay_data_sheet_definition_id=${dataSheet.id}`,
+                  ),
+              },
+            ]
+          : undefined,
         import: {
           requiredRoles: ["Administrator", "AssayAdministrator", "AssayUser"],
         },
@@ -99,41 +97,26 @@ const ExperimentDataSheetRecords = ({
   );
 
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateRows: "1fr 1fr 1fr",
-        gridTemplateColumns: "minmax(25%, 1fr)",
-        gridAutoColumns: "25%",
-        gridAutoFlow: "column",
-        gap: "var(--spacing)",
-        height: "100%",
-        maxHeight: "100%",
-        overflow: "auto",
+    <Table
+      headerActions={
+        canCrudRecord ? (
+          <Button onClick={() => navigate("records/new")}>New</Button>
+        ) : undefined
+      }
+      getRowId={getRowId}
+      tableState={tableState}
+      onRowClick={
+        canCrudRecord ? ({ id }) => navigate(`records/${id}`) : undefined
+      }
+      data={flatData}
+      loading={isLoading}
+      noDataMessage={isError ? error : undefined}
+      pagination={{
+        fetchNextPage,
+        isFetchingNextPage,
+        totalRows: data?.pages[0]?.total,
       }}
-    >
-      <Table
-        className={styles.table}
-        headerActions={
-          canCrudRecord ? (
-            <Button onClick={() => navigate("records/new")}>New</Button>
-          ) : undefined
-        }
-        getRowId={getRowId}
-        tableState={tableState}
-        onRowClick={
-          canCrudRecord ? ({ id }) => navigate(`records/${id}`) : undefined
-        }
-        data={flatData}
-        loading={isLoading}
-        noDataMessage={isError ? error : undefined}
-        pagination={{
-          fetchNextPage,
-          isFetchingNextPage,
-          totalRows: data?.pages[0]?.total,
-        }}
-      />
-    </div>
+    />
   );
 };
 
@@ -176,7 +159,12 @@ const ExperimentDataSheet = ({
     <Routes>
       <Route
         index
-        element={<ExperimentDataSheetRecords dataSheet={dataSheet} experiment={experiment!} />}
+        element={
+          <ExperimentDataSheetRecords
+            dataSheet={dataSheet}
+            experiment={experiment!}
+          />
+        }
       />
       <Route
         path="records/:record_id"

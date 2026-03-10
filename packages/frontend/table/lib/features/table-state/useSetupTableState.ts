@@ -20,7 +20,7 @@ import { useMemo, useState } from "react";
 import { Row, RowSelectionState } from "@tanstack/react-table";
 import { GritColumnDef, GritTableState, TableStateOptions } from "../../types";
 import { useFilters } from "../filters";
-import { useColumnVisiblity } from "../column-visibility";
+import { useColumnVisibility } from "../column-visibility";
 import { useColumnOrder } from "../column-order";
 import { useColumnDescriptionVisibility } from "../column-description";
 import { useSort } from "../sort";
@@ -34,7 +34,7 @@ export default function useSetupTableState<T>(
 ): GritTableState<T> {
   const saveState = options.saveState ?? true;
 
-  const columnVisibilityState = useColumnVisiblity(
+  const columnVisibilityState = useColumnVisibility(
     id,
     columns,
     options.initial?.visibility,

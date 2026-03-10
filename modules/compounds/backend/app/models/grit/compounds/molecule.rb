@@ -21,14 +21,14 @@ module Grit::Compounds
     def self.by_molfile(molfile)
       ActiveRecord::Base.transaction do
         ActiveRecord::Base.connection.execute("SET LOCAL rdkit.do_chiral_sss=true;")
-        return Molecule.unscoped.where(ActiveRecord::Base.sanitize_sql_array([ "grit_compounds_molecules.rdkit_mol @= mol_from_ctab(?::cstring)", molfile ])).first
+        return Molecule.unscoped.where(ActiveRecord::Base.sanitize_sql_array([ "grit_compounds_molecules.rdkit_mol @= mol_from_ctab(?::cstring)", molfile ])).take
       end
     end
 
     def self.by_smiles(smiles)
       ActiveRecord::Base.transaction do
         ActiveRecord::Base.connection.execute("SET LOCAL rdkit.do_chiral_sss=true;")
-        return Molecule.unscoped.where(ActiveRecord::Base.sanitize_sql_array([ "grit_compounds_molecules.rdkit_mol @= mol_from_smiles(?::cstring)", smiles ])).first
+        return Molecule.unscoped.where(ActiveRecord::Base.sanitize_sql_array([ "grit_compounds_molecules.rdkit_mol @= mol_from_smiles(?::cstring)", smiles ])).take
       end
     end
 

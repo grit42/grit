@@ -23,12 +23,24 @@ import {
   Table,
   useSetupTableState,
 } from "@grit42/table";
-import styles from "./dataTableData.module.scss";
+import styles from "./fullPerspectiveDialog.module.scss";
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { URLParams, UseQueryOptions } from "@grit42/api";
-import { EntityData, EntityProperties, useEntityData } from "@grit42/core";
-import { Dialog, DialogProps } from "@grit42/client-library/components";
+import {
+  PaginatedEndpointSuccess,
+  UndefinedInitialDataInfiniteOptions,
+  URLParams,
+} from "@grit42/api";
+import {
+  EntityData,
+  EntityProperties,
+  useInfiniteEntityData,
+} from "@grit42/core";
+import {
+  Dialog,
+  DialogProps,
+  ErrorPage,
+} from "@grit42/client-library/components";
 
 interface FullPerspectiveDialogProps extends Omit<DialogProps, "isOpen"> {
   column?: string;
@@ -37,16 +49,18 @@ interface FullPerspectiveDialogProps extends Omit<DialogProps, "isOpen"> {
   dataTableId: string | number;
 }
 
-const useDataTableRowFullPerspective = (
+const useInfiniteDataTableRowFullPerspective = (
   dataTableRowId: number | string,
   dataTableId: number | string,
   columnSafeName: string,
   sort?: SortingState,
   filter?: Filter[],
   params: URLParams = {},
-  queryOptions: Partial<UseQueryOptions<any[], string>> = {},
+  queryOptions: Partial<
+    UndefinedInitialDataInfiniteOptions<PaginatedEndpointSuccess<any[]>, string>
+  > = {},
 ) => {
-  return useEntityData<any>(
+  return useInfiniteEntityData<any>(
     `grit/assays/data_table_rows/${dataTableRowId}/full_perspective`,
     sort ?? [],
     filter ?? [],
@@ -103,8 +117,8 @@ const FullPerspectiveDialog = ({
 
   const navigate = useNavigate();
 
-  const { data: rows, isLoading: isRowsLoading } =
-    useDataTableRowFullPerspective(
+  const { data, isLoading, isFetchingNextPage, isError, error, fetchNextPage } =
+    useInfiniteDataTableRowFullPerspective(
       id ?? -1,
       dataTableId,
       (columnFromProps?.type === "entity"
@@ -116,6 +130,15 @@ const FullPerspectiveDialog = ({
       { enabled: !!id },
     );
 
+  const flatData = useMemo(
+    () => data?.pages.flatMap(({ data }) => data) ?? [],
+    [data],
+  );
+
+  if (isError) {
+    return <ErrorPage error={error} />;
+  }
+
   return (
     <Dialog
       isOpen={!!id}
@@ -123,16 +146,21 @@ const FullPerspectiveDialog = ({
       className={styles.fullPerspectiveDialog}
       title="Aggregated values"
     >
-      <div style={{ height: 500, overflow: "auto" }}>
+      <div className={styles.dialogContent}>
         <Table
           tableState={tableState}
-          loading={isRowsLoading}
-          data={rows ?? []}
+          loading={isLoading}
+          data={flatData ?? []}
           onRowClick={(row) =>
             navigate(
               `/assays/experiments/${row.original.experiment_id}/sheets/${row.original.assay_data_sheet_definition_id}`,
             )
           }
+          pagination={{
+            fetchNextPage,
+            isFetchingNextPage,
+            totalRows: data?.pages[0]?.total,
+          }}
         />
       </div>
     </Dialog>

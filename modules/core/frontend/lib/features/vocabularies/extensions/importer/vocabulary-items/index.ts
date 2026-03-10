@@ -27,8 +27,7 @@ const useRegisterVocabularyItemImporter = () => {
     const unregisterVocabularyItemImporter = registerImporter(
       "Grit::Core::VocabularyItem",
       {
-        LoadSetViewerExtraActions:
-          VocabularyItemLoadSetViewerExtraActions,
+        LoadSetViewerExtraActions: VocabularyItemLoadSetViewerExtraActions,
       },
     );
 

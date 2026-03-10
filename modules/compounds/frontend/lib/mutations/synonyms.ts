@@ -16,10 +16,7 @@
  * @grit42/compounds. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import {
-  useDestroyEntityMutation,
-  DestroyEntityMutation,
-} from "@grit42/core";
+import { useDestroyEntityMutation, DestroyEntityMutation } from "@grit42/core";
 
 export const useDestroySynonym: DestroyEntityMutation = (mutationOptions) => {
   return useDestroyEntityMutation("grit/compounds/synonyms", mutationOptions);

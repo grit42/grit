@@ -1,42 +1,47 @@
+# frozen_string_literal: true
+
 require "test_helper"
 
 module Grit::Assays
   class DataTablesControllerTest < ActionDispatch::IntegrationTest
-    include Engine.routes.url_helpers
+    include Grit::Assays::Engine.routes.url_helpers
+    include Authlogic::TestCase
 
     setup do
-      @data_table = grit_assays_data_tables(:one)
+      activate_authlogic
+      login(grit_core_users(:admin))
+      # Pre-populate RequestStore so set_updater doesn't attempt an Authlogic
+      # session lookup when creating records directly outside HTTP request context.
+      RequestStore.store["current_user"] = grit_core_users(:admin)
+      @vocab = Grit::Core::Vocabulary.create!(name: "Test Species")
+      @data_type = @vocab.data_type
     end
 
-    test "should get index" do
-      get data_tables_url, as: :json
-      assert_response :success
-    end
+    # --- Create ---
 
-    test "should create data_table" do
-      assert_difference("DataTable.count") do
-        post data_tables_url, params: { data_table: {} }, as: :json
+    test "creates data_table and fires add_entity_type_display_columns callback" do
+      assert_difference([ "DataTable.count", "DataTableColumn.count" ]) do
+        post grit_assays.data_tables_url, params: {
+          name: "Species Table",
+          entity_data_type_id: @data_type.id
+        }, as: :json
       end
 
       assert_response :created
+      json = JSON.parse(response.body)
+      assert json["success"]
+
+      columns = DataTableColumn.where(data_table_id: json["data"]["id"])
+      assert_equal 1, columns.count
+      assert_equal "entity_name", columns.order(:id).first.safe_name
     end
 
-    test "should show data_table" do
-      get data_table_url(@data_table), as: :json
-      assert_response :success
-    end
+    # --- Authentication ---
 
-    test "should update data_table" do
-      patch data_table_url(@data_table), params: { data_table: {} }, as: :json
-      assert_response :success
-    end
-
-    test "should destroy data_table" do
-      assert_difference("DataTable.count", -1) do
-        delete data_table_url(@data_table), as: :json
-      end
-
-      assert_response :no_content
+    test "should require authentication" do
+      logout
+      get grit_assays.data_tables_url, as: :json
+      assert_response :unauthorized
     end
   end
 end

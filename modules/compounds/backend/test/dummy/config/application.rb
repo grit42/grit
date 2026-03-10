@@ -52,5 +52,7 @@ module Dummy
       authentication: "plain",
       enable_starttls_auto: true
     }
+
+    config.active_storage.variant_processor = :disabled
   end
 end

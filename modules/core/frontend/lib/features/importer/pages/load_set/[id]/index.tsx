@@ -21,6 +21,7 @@ import { useImporter } from "../../../ImportersContext";
 import { ErrorPage, Spinner } from "@grit42/client-library/components";
 import { LoadSetData } from "../../../types";
 import { useEntityDatum } from "../../../../entities";
+import { LOAD_SET_BLOCK_STATUS, getBlockStatus } from "../../../constants";
 
 const NewLoadSet = ({ entity }: { entity: string }) => {
   const { LoadSetCreator } = useImporter(entity);
@@ -44,7 +45,7 @@ const LoadSet = ({ id }: { id: string }) => {
     return <ErrorPage error={error} />;
   }
 
-  if (data.load_set_blocks[0].status_id__name === "Succeeded") {
+  if (getBlockStatus(data) === LOAD_SET_BLOCK_STATUS.SUCCEEDED) {
     return <LoadSetViewer loadSet={data} />;
   }
 
@@ -57,10 +58,14 @@ const LoadSetPage = () => {
   const entityParam = searchParams.get("entity");
 
   if (id === "new") {
-    return entityParam ? <NewLoadSet entity={entityParam} /> : <ErrorPage error="Entity not specified"/>
+    return entityParam ? (
+      <NewLoadSet entity={entityParam} />
+    ) : (
+      <ErrorPage error="Entity not specified" />
+    );
   }
 
-  return <LoadSet id={id} />
+  return <LoadSet id={id} />;
 };
 
 export default LoadSetPage;

@@ -21,11 +21,144 @@ import {
   Select,
   ToggleSwitch,
 } from "@grit42/client-library/components";
-import { ReactFormExtendedApi, useStore } from "@grit42/form";
-import { FormFieldDef, requiredValidator, useFormInputs } from "@grit42/form";
+import {
+  FormApi,
+  useStore,
+  FormFieldDef,
+  requiredValidator,
+  useFormInputs,
+} from "@grit42/form";
 import { useEffect } from "react";
 import { useEntityColumns } from "../../entities";
-import { EntityFormFieldDef } from "../../../Registrant";
+import { EntityFormFieldDef } from "../../entities/types";
+import { headerValidator } from "../utils/mappings";
+
+const ConstantValueField = ({
+  disabled,
+  entityField,
+  form,
+}: {
+  disabled: boolean;
+  entityField: FormFieldDef;
+  form: FormApi<any>;
+}) => {
+  const formInputs = useFormInputs();
+
+  return (
+    <form.Field
+      key={`${entityField.name}-value`}
+      name={`${entityField.name}-value`}
+      validators={{
+        onChange: ({ value }) => requiredValidator(entityField, value),
+        onMount: ({ value }) => requiredValidator(entityField, value),
+      }}
+      children={(field) => {
+        const Input = formInputs[entityField.type] ?? formInputs["default"];
+
+        return (
+          <Input
+            field={{
+              ...entityField,
+              name: `${entityField.name}-value`,
+            }}
+            disabled={disabled}
+            handleChange={field.handleChange}
+            handleBlur={field.handleBlur}
+            value={field.state.value}
+            error={Array.from(new Set(field.state.meta.errors)).join("\n")}
+          />
+        );
+      }}
+    />
+  );
+};
+
+const HeaderSelectField = ({
+  disabled,
+  entityField,
+  headerOptions,
+  form,
+}: {
+  disabled: boolean;
+  entityField: FormFieldDef;
+  headerOptions: Option<string>[];
+  form: FormApi<any>;
+}) => (
+  <form.Field
+    key={`${entityField.name}-header`}
+    name={`${entityField.name}-header`}
+    validators={{
+      onChange: ({ value }) =>
+        headerValidator(entityField, value as string | null),
+      onMount: ({ value }) =>
+        headerValidator(entityField, value as string | null),
+    }}
+    children={(field) => (
+      <Select
+        name={`${entityField.name}-header`}
+        disabled={disabled}
+        label={entityField.display_name}
+        placeholder="Column"
+        isClearable
+        isCombobox
+        onChange={(v) => field.handleChange(v)}
+        error={Array.from(new Set(field.state.meta.errors)).join("\n")}
+        value={field.state.value}
+        options={headerOptions}
+      />
+    )}
+  />
+);
+
+const FindBySelectField = ({
+  disabled,
+  entityField,
+  form,
+}: {
+  disabled: boolean;
+  entityField: FormFieldDef;
+  form: FormApi<any>;
+}) => {
+  const entity = (entityField as EntityFormFieldDef).entity.full_name;
+  const { data, isLoading } = useEntityColumns(entity, undefined, {
+    enabled: entity !== "",
+    select: (data) => data.filter(({ unique }) => unique),
+  });
+
+  return (
+    <form.Field
+      key={`${entityField.name}-find_by`}
+      name={`${entityField.name}-find_by`}
+      validators={{
+        onChange: ({ value }) =>
+          headerValidator(entityField, value as string | null),
+        onMount: ({ value }) =>
+          headerValidator(entityField, value as string | null),
+      }}
+      children={(field) => (
+        <Select
+          name={`${entityField.name}-find_by`}
+          disabled={disabled}
+          label="Find by:"
+          isClearable
+          isCombobox
+          onChange={(v) => field.handleChange(v)}
+          error={Array.from(new Set(field.state.meta.errors)).join("\n")}
+          value={field.state.value}
+          isLoading={isLoading}
+          options={
+            data
+              ?.filter(({ default_hidden }) => !default_hidden)
+              .map((d) => ({
+                label: d.display_name,
+                value: d.name,
+              })) ?? []
+          }
+        />
+      )}
+    />
+  );
+};
 
 const MappingFieldGroup = ({
   disabled,
@@ -36,25 +169,12 @@ const MappingFieldGroup = ({
   disabled: boolean;
   entityField: FormFieldDef;
   headerOptions: Option<string>[];
-  form: ReactFormExtendedApi<
-    Record<string, string | number | boolean | null>,
-    undefined
-  >;
+  form: FormApi<any>;
 }) => {
-  const formInputs = useFormInputs();
-  const entity =
-    entityField.type === "entity"
-      ? (entityField as EntityFormFieldDef).entity.full_name
-      : "";
-  const { data, isLoading } = useEntityColumns(entity, undefined, {
-    enabled: entity !== "",
-    select: (data) => data.filter(({ unique }) => unique),
-  });
-
   const constant = useStore(
     form.store,
     (state) => state.values[`${entityField.name}-constant`],
-  );
+  ) as string | boolean | null;
 
   useEffect(() => {
     if (constant) {
@@ -72,111 +192,25 @@ const MappingFieldGroup = ({
         children={([constant]) => (
           <>
             {constant && (
-              <form.Field
-                key={`${entityField.name}-value`}
-                name={`${entityField.name}-value`}
-                validators={{
-                  onChange: ({ value }) =>
-                    requiredValidator(entityField, value),
-                  onMount: ({ value }) => requiredValidator(entityField, value),
-                }}
-                children={(field) => {
-                  const Input =
-                    formInputs[entityField.type] ?? formInputs["default"];
-
-                  return (
-                    <>
-                      <Input
-                        field={{
-                          ...entityField,
-                          name: `${entityField.name}-value`,
-                        }}
-                        disabled={disabled}
-                        handleChange={field.handleChange}
-                        handleBlur={field.handleBlur}
-                        value={field.state.value}
-                        error={Array.from(
-                          new Set(field.state.meta.errors),
-                        ).join("\n")}
-                      />
-                    </>
-                  );
-                }}
+              <ConstantValueField
+                disabled={disabled}
+                entityField={entityField}
+                form={form}
               />
             )}
             {!constant && (
-              <form.Field
-                key={`${entityField.name}-header`}
-                name={`${entityField.name}-header`}
-                validators={{
-                  onChange: ({ value }) =>
-                    !entityField.required || (value as string | null)?.length
-                      ? undefined
-                      : "Required",
-                  onMount: ({ value }) =>
-                    !entityField.required || (value as string | null)?.length
-                      ? undefined
-                      : "Required",
-                }}
-                children={(field) => {
-                  return (
-                    <Select
-                      name={`${entityField.name}-header`}
-                      disabled={disabled}
-                      label={entityField.display_name}
-                      placeholder="Column"
-                      isClearable
-                      isCombobox
-                      onChange={(v) => field.handleChange(v)}
-                      error={Array.from(new Set(field.state.meta.errors)).join(
-                        "\n",
-                      )}
-                      value={field.state.value}
-                      options={headerOptions}
-                    />
-                  );
-                }}
+              <HeaderSelectField
+                disabled={disabled}
+                entityField={entityField}
+                headerOptions={headerOptions}
+                form={form}
               />
             )}
             {!constant && entityField.type === "entity" && (
-              <form.Field
-                key={`${entityField.name}-find_by`}
-                name={`${entityField.name}-find_by`}
-                validators={{
-                  onChange: ({ value }) =>
-                    !entityField.required || (value as string | null)?.length
-                      ? undefined
-                      : "Required",
-                  onMount: ({ value }) =>
-                    !entityField.required || (value as string | null)?.length
-                      ? undefined
-                      : "Required",
-                }}
-                children={(field) => {
-                  return (
-                    <Select
-                      name={`${entityField.name}-find_by`}
-                      disabled={disabled}
-                      label="Find by:"
-                      isClearable
-                      isCombobox
-                      onChange={(v) => field.handleChange(v)}
-                      error={Array.from(new Set(field.state.meta.errors)).join(
-                        "\n",
-                      )}
-                      value={field.state.value}
-                      isLoading={isLoading}
-                      options={
-                        data
-                          ?.filter(({ default_hidden }) => !default_hidden)
-                          .map((d) => ({
-                            label: d.display_name,
-                            value: d.name,
-                          })) ?? []
-                      }
-                    />
-                  );
-                }}
+              <FindBySelectField
+                disabled={disabled}
+                entityField={entityField}
+                form={form}
               />
             )}
           </>

@@ -56,7 +56,12 @@ export interface BinaryFormFieldDef extends FormFieldDef, DropzoneProps {
   placeholder: never;
 }
 
-export type FieldDef = FormFieldDef | StringFormFieldDef | SelectFormFieldDef | BooleanFormFieldDef | BinaryFormFieldDef
+export type FieldDef =
+  | FormFieldDef
+  | StringFormFieldDef
+  | SelectFormFieldDef
+  | BooleanFormFieldDef
+  | BinaryFormFieldDef;
 
 export type NullablePartial<T> = Partial<{ [K in keyof T]: T[K] | null }>;
 

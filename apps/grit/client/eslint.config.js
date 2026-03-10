@@ -1,10 +1,11 @@
 import js from "@eslint/js";
+import { defineConfig } from "eslint/config";
 import globals from "globals";
 import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 
-export default tseslint.config(
+export default defineConfig(
   { ignores: ["**/dist"] },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
@@ -20,6 +21,12 @@ export default tseslint.config(
     rules: {
       ...reactHooks.configs.recommended.rules,
       "@typescript-eslint/no-explicit-any": "warn",
+    },
+    languageOptions: {
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
     },
   },
 );

@@ -18,7 +18,9 @@
 
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useMemo, useState } from "react";
-import { useForm, useStore,
+import {
+  useForm,
+  useStore,
   Form,
   FormControls,
   FormField,
@@ -27,9 +29,17 @@ import { useForm, useStore,
   getVisibleFieldData,
   isFieldVisible,
   requiredValidator,
+  FormFields,
+  FormBanner,
 } from "@grit42/form";
-import { Button, ErrorPage, Spinner, Surface } from "@grit42/client-library/components";
 import {
+  Button,
+  ErrorPage,
+  Spinner,
+  Surface,
+} from "@grit42/client-library/components";
+import {
+  EntityDetailsProps,
   useCreateEntityMutation,
   useDestroyEntityMutation,
   useEditEntityMutation,
@@ -43,11 +53,8 @@ import {
 import { EndpointError, EndpointSuccess, request } from "@grit42/api";
 import MoleculeInput from "../../../components/MoleculeInput";
 import { AsyncMoleculeViewer } from "../../../components/MoleculeViewer";
-
-export interface EntityDetailsProps {
-  entity: string;
-  id: string | number;
-}
+import styles from "./compound.module.scss";
+import { CenteredSurface } from "@grit42/client-library/layouts";
 
 interface ExistingMoleculeInfo {
   molfile: string;
@@ -55,7 +62,7 @@ interface ExistingMoleculeInfo {
   existing_molecule_compounds: CompoundData[];
 }
 
-export const CompoundDetails = ({ id }: EntityDetailsProps) => {
+const CompoundDetails = ({ id }: EntityDetailsProps) => {
   const { initialData } = (useLocation().state ?? {}) as {
     initialData?: CompoundData;
   };
@@ -78,7 +85,7 @@ export const CompoundDetails = ({ id }: EntityDetailsProps) => {
 
   if (!initialData?.compound_type_id) {
     return (
-      <Surface style={{ width: 960 }}>
+      <Surface className={styles.formSurface}>
         <ErrorPage error="No compound type specified">
           <Link to="/compounds">
             <Button color="secondary">Go to compounds</Button>
@@ -141,7 +148,7 @@ const EntityForm = ({
     "grit/compounds/compounds",
   );
 
-  const form = useForm<Partial<CompoundData>>({
+  const form = useForm({
     defaultValues: formData,
     onSubmit: genericErrorHandler(async ({ value: formValue, formApi }) => {
       const value = getVisibleFieldData<Partial<CompoundData>>(
@@ -172,9 +179,9 @@ const EntityForm = ({
     }),
   });
 
-  const [compound_type_id] = useStore(form.baseStore, (state) => [
+  const [compound_type_id] = useStore(form.store, (state) => [
     state.values.compound_type_id,
-  ]);
+  ]) as [number | undefined];
 
   const fieldsForInitialData = useMemo(
     () =>
@@ -205,7 +212,7 @@ const EntityForm = ({
       try {
         if (
           !window.confirm(
-            `Are you sure you want to delete this batch? This action is irreversible`,
+            `Are you sure you want to delete this Compound? This action is irreversible`,
           )
         )
           return;
@@ -224,35 +231,15 @@ const EntityForm = ({
   };
 
   return (
-    <Surface style={{ width: 960 }}>
-      <Form<Partial<CompoundData>> form={form}>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gridAutoRows: "max-content",
-            gap: "calc(var(--spacing) * 2)",
-            paddingBottom: "calc(var(--spacing) * 2)",
-          }}
-        >
-          {form.state.errorMap.onSubmit && (
-            <div style={{ gridColumnStart: 1, gridColumnEnd: -1 }}>
-              {form.state.errorMap.onSubmit?.toString()}
-            </div>
-          )}
+    <CenteredSurface className={styles.formSurface}>
+      <h2>{`${id === "new" ? "Create" : "Edit"} Compound`}</h2>
+      <Form form={form}>
+        <FormFields>
+          <FormBanner content={form.state.errorMap.onSubmit} />
           {fieldsForInitialData.map((f) => {
             if (f.name === "molecule") {
               return (
-                <div
-                  style={{
-                    gridColumnStart: 1,
-                    gridColumnEnd: 3,
-                    display: "grid",
-                    gridTemplateColumns: "1fr",
-                    gridAutoRows: "max-content",
-                  }}
-                  key={f.name}
-                >
+                <div className={styles.moleculeField} key={f.name}>
                   <form.Field
                     name={f.name as any}
                     validators={{
@@ -284,7 +271,7 @@ const EntityForm = ({
                     children={(field) => {
                       if (id !== "new") {
                         return (
-                          <div style={{ height: 300, width: "100%" }}>
+                          <div className={styles.moleculeViewer}>
                             <AsyncMoleculeViewer
                               molfile={data!.molecule as string}
                             />
@@ -311,15 +298,9 @@ const EntityForm = ({
                 </div>
               );
             }
-            return (
-              <FormField<Partial<CompoundData>>
-                form={form}
-                fieldDef={f}
-                key={f.name}
-              />
-            );
+            return <FormField fieldDef={f} key={f.name} />;
           })}
-        </div>
+        </FormFields>
         {existingInfo?.existing_molecule_id &&
           existingInfo.existing_molecule_compounds.length > 0 && (
             <p>
@@ -343,13 +324,9 @@ const EntityForm = ({
               Saving will link the new compound to the existing structure.
             </p>
           )}
-        <FormControls
-          form={form}
-          onDelete={onDelete}
-          showDelete={id !== "new"}
-        />
+        <FormControls onDelete={onDelete} showDelete={id !== "new"} />
       </Form>
-    </Surface>
+    </CenteredSurface>
   );
 };
 

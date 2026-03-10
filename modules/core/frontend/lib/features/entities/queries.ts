@@ -97,10 +97,9 @@ export const useEntityColumns = <
   return useQuery({
     queryKey: ["entities", "columns", entity, params],
     queryFn: async (): Promise<T[]> => {
-      const response = await request<
-        EndpointSuccess<T[]>,
-        EndpointError
-      >(`/grit/core/entities/${entity}/columns?${getURLParams(params)}`);
+      const response = await request<EndpointSuccess<T[]>, EndpointError>(
+        `/grit/core/entities/${entity}/columns?${getURLParams(params)}`,
+      );
 
       if (!response.success) {
         throw response.errors;
@@ -119,12 +118,11 @@ export const useEntityFields = <T extends FormFieldDef = FormFieldDef>(
   queryOptions: Partial<UseQueryOptions<T[], string>> = {},
 ): UseQueryResult<T[], string> => {
   return useQuery({
-    queryKey: ["entites", "fields", entity, params],
+    queryKey: ["entities", "fields", entity, params],
     queryFn: async (): Promise<T[]> => {
-      const response = await request<
-        EndpointSuccess<T[]>,
-        EndpointError
-      >(`/grit/core/entities/${entity}/fields?${getURLParams(params)}`);
+      const response = await request<EndpointSuccess<T[]>, EndpointError>(
+        `/grit/core/entities/${entity}/fields?${getURLParams(params)}`,
+      );
 
       if (!response.success) {
         throw response.errors;

@@ -17,10 +17,10 @@
  */
 
 import { Surface } from "@grit42/client-library/components";
-import { ReactFormExtendedApi } from "@grit42/form";
-import { FormFieldDef } from "@grit42/form";
+import { FormApi, FormFieldDef } from "@grit42/form";
 import { Fragment, useMemo } from "react";
 import MappingFieldGroup from "./MappingFieldGroup";
+import styles from "./loadSetEditor.module.scss";
 
 const MappingFields = ({
   disabled,
@@ -29,10 +29,7 @@ const MappingFields = ({
   headers,
 }: {
   disabled: boolean;
-  form: ReactFormExtendedApi<
-    Record<string, string | number | boolean | null>,
-    undefined
-  >;
+  form: FormApi<any>;
   entityFields: FormFieldDef[];
   headers: { name: string; display_name: string | null }[];
 }) => {
@@ -46,17 +43,7 @@ const MappingFields = ({
   }, [headers]);
 
   return (
-    <Surface
-      style={{
-        width: "100%",
-        display: "flex",
-        flexDirection: "column",
-        gap: "var(--spacing)",
-        overflowY: "auto",
-        paddingInline: "calc(var(--spacing) * 2)",
-        paddingBottom: "200px",
-      }}
-    >
+    <Surface className={styles.mappingFieldsContainer}>
       {entityFields.map((field) => (
         <Fragment key={field.name}>
           <MappingFieldGroup
@@ -65,15 +52,7 @@ const MappingFields = ({
             form={form}
             headerOptions={headerOptions}
           />
-          <div
-            style={{
-              width: "100%",
-              borderBottom: "1px solid",
-              borderColor:
-                "rgb(from var(--palette-primary-contrast-text) r g b / 50%)",
-              marginBlock: "var(--spacing)",
-            }}
-          ></div>
+          <div className={styles.mappingFieldDivider}></div>
         </Fragment>
       ))}
     </Surface>

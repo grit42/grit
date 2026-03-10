@@ -1,14 +1,13 @@
 import { Button } from "@grit42/client-library/components";
 import { Table, useSetupTableState } from "@grit42/table";
 import { useTableColumns } from "@grit42/core/utils";
-import { useHasRoles } from "@grit42/core";
+import { useHasRoles, useToolbar } from "@grit42/core";
 import {
   useExperimentColumns,
-  useExperiments,
+  useInfiniteExperiments,
 } from "../../queries/experiments";
 import { Link, useNavigate } from "react-router-dom";
-import { useEffect } from "react";
-import { useToolbar } from "@grit42/core/Toolbar";
+import { useEffect, useMemo } from "react";
 import Circle1NewIcon from "@grit42/client-library/icons/Circle1New";
 
 const ExperimentsTable = () => {
@@ -25,9 +24,12 @@ const ExperimentsTable = () => {
 
   const tableState = useSetupTableState("experiments-list", tableColumns);
 
-  const { data, isLoading, isError, error } = useExperiments(
-    tableState.sorting,
-    tableState.filters,
+  const { data, isLoading, isFetchingNextPage, isError, error, fetchNextPage } =
+    useInfiniteExperiments(tableState.sorting, tableState.filters);
+
+  const flatData = useMemo(
+    () => data?.pages.flatMap(({ data }) => data) ?? [],
+    [data],
   );
 
   useEffect(() => {
@@ -56,9 +58,14 @@ const ExperimentsTable = () => {
       }
       onRowClick={({ original }) => navigate(`${original.id}/details`)}
       tableState={tableState}
-      data={data}
+      data={flatData}
       loading={isLoading}
       noDataMessage={isError ? error : "No experiments"}
+      pagination={{
+        fetchNextPage,
+        isFetchingNextPage,
+        totalRows: data?.pages[0]?.total,
+      }}
     />
   );
 };

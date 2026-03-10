@@ -23,7 +23,6 @@ import styles from "./dialog.module.scss";
 import useMountTransition, {
   TransitionState,
 } from "../../hooks/useMountTransition";
-import { Helmet } from "react-helmet-async";
 import Cross from "../../icons/Cross";
 
 export const DialogContext = createContext(false);
@@ -148,10 +147,7 @@ const DialogContent = ({
         data-title={title}
         ref={overlayRef}
       >
-        <Helmet>
-          <html style={{ overflow: "hidden" }} />
-        </Helmet>
-
+        <style>{` html { overflow: hidden; } `}</style>
         <div
           className={classnames(styles.backdrop, {
             [styles.show as string]: showTransition,
@@ -188,8 +184,9 @@ const DialogContent = ({
           }}
         >
           <div
-            className={styles.header}
-            style={{ margin: headerMargin ? undefined : "unset" }}
+            className={classnames(styles.header, {
+              [styles.noMargin as string]: !headerMargin,
+            })}
           >
             <div className={styles.icon}>{icon}</div>
 

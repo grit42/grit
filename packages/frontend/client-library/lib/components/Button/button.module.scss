@@ -13,6 +13,7 @@
   font-family: theme.$body-font-family !important;
   font-size: 12px;
   cursor: pointer;
+  position: relative;
 
   &:focus-visible {
     box-shadow: 0 0 0 1px theme.$palette-primary-main;
@@ -23,7 +24,7 @@
   }
 
   &.tiny {
-    min-width: none;
+    min-width: 0;
   }
 
   &.small {
@@ -151,5 +152,16 @@
         fill: theme.$palette-primary-contrast-text !important;
       }
     }
+  }
+
+  .loadingIndicator {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 }

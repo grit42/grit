@@ -1,4 +1,5 @@
 import { Button, ErrorPage, Spinner } from "@grit42/client-library/components";
+import styles from "./metadata.module.scss";
 import {
   EntityPropertyDef,
   EntityData,
@@ -20,6 +21,7 @@ import {
   useAssayModel,
 } from "../../../../../../queries/assay_models";
 import { useQueryClient } from "@grit42/api";
+import { CenteredColumnLayout } from "@grit42/client-library/layouts";
 
 const getRowId = (data: EntityData) => data.id.toString();
 
@@ -28,10 +30,10 @@ const AssayMetadataDefinitionSelector = ({
   assayModelId,
 }: {
   assayModelId: string | number;
-  columns: EntityPropertyDef<AssayMetadataDefinitionData>[];
+  columns: EntityPropertyDef[];
 }) => {
   const queryClient = useQueryClient();
-  const tableColumns = useTableColumns(columns);
+  const tableColumns = useTableColumns<AssayMetadataDefinitionData>(columns);
   const availableTableState = useSetupTableState(
     "assay-model-available-metadata",
     tableColumns,
@@ -46,7 +48,7 @@ const AssayMetadataDefinitionSelector = ({
     },
   );
 
-  const selectedTableState = useSetupTableState(
+  const selectedTableState = useSetupTableState<AssayMetadataDefinitionData>(
     "assay-model-selected-metadata",
     tableColumns,
     {
@@ -118,7 +120,7 @@ const AssayMetadataDefinitionSelector = ({
   const onSelectedRowClick = useCallback(
     async (row: Row<AssayMetadataDefinitionData>) => {
       await destroyEntityMutation.mutateAsync(
-        (row.original as any).assay_model_metadatum_id,
+        row.original.assay_model_metadatum_id,
       );
       await queryClient.invalidateQueries({
         queryKey: [
@@ -132,15 +134,7 @@ const AssayMetadataDefinitionSelector = ({
   );
 
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "1fr 1fr",
-        gap: "calc(var(--spacing) * 2 )",
-        width: "100%",
-        height: "100%",
-      }}
-    >
+    <div className={styles.metadataSelector}>
       <Table
         header="Selected"
         getRowId={getRowId}
@@ -209,26 +203,29 @@ const AssayModelMetadata = ({
   );
 
   return (
-    <Table
-      headerActions={
-        assayModel?.publication_status_id__name !== "Published" ? (
-          <Link to="edit">
-            <Button>Edit</Button>
-          </Link>
-        ) : undefined
-      }
-      getRowId={getRowId}
-      loading={isModelMetadataLoading}
-      tableState={tableState}
-      disableFooter
-      data={modelMetadata}
-      noDataMessage={
-        (isModelMetadataError ? modelMetadataError : undefined) ??
-        assayModel?.publication_status_id__name !== "Published"
-          ? "No metadata selected"
-          : "This assay model does not define any metadata"
-      }
-    />
+    <CenteredColumnLayout>
+      <Table
+        headerActions={
+          assayModel?.publication_status_id__name !== "Published" ? (
+            <Link to="edit">
+              <Button>Edit</Button>
+            </Link>
+          ) : undefined
+        }
+        fitContent
+        getRowId={getRowId}
+        loading={isModelMetadataLoading}
+        tableState={tableState}
+        disableFooter
+        data={modelMetadata}
+        noDataMessage={
+          ((isModelMetadataError ? modelMetadataError : undefined) ??
+          assayModel?.publication_status_id__name !== "Published")
+            ? "No metadata selected"
+            : "This assay model does not define any metadata"
+        }
+      />
+    </CenteredColumnLayout>
   );
 };
 

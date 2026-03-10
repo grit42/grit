@@ -1,6 +1,6 @@
 import { useReducer } from "react";
 import { DataSetDefinitionFull } from "./dataSheetDefinitionEditorForm";
-import z, { ZodError } from "zod";
+import { z, ZodError } from "zod";
 import dataSetDefinitionSchema from "./schema";
 
 interface FormReducerState {

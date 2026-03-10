@@ -40,6 +40,11 @@ module Grit
           mount Grit::Core::Engine => "/api/#{Grit::Core::Engine.name.underscore.gsub(/\/engine/, "")}"
         end
       end
+
+      initializer :ignore_tables do |app|
+        ActiveRecord::SchemaDumper.ignore_tables << /^lsb_.*$/
+        ActiveRecord::SchemaDumper.ignore_tables << /^raw_lsb_.*$/
+      end
     end
   end
 end

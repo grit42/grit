@@ -6,4 +6,9 @@
 
 .button {
   min-width: unset !important;
+  margin: 0;
+}
+
+.buttonGroup {
+  gap: 0;
 }

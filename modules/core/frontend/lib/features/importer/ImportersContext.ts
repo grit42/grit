@@ -35,7 +35,7 @@ export interface ImporterDef {
   LoadSetCreator: React.ComponentType<LoadSetCreatorProps>;
   LoadSetEditor: React.ComponentType<LoadSetEditorProps>;
   LoadSetViewer: React.ComponentType<LoadSetViewerProps>;
-  guessDataSetValues: <T,>(data: string) => Promise<Partial<T>>;
+  guessDataSetValues: <T>(data: string) => Promise<Partial<T>>;
   LoadSetViewerExtraActions: React.ComponentType<LoadSetViewerProps>;
 }
 

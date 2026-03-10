@@ -31,21 +31,39 @@ module Grit::Assays
           return
         end
 
-        permitted_sheets = params.permit(sheets: [ :name, :description, :result, :sort, columns: [ :name, :safe_name, :description, :sort, :required, :data_type_id, :unit_id ] ])
+        render json: { success: true, data: @record }, status: :created, location: @record
+      end
+    rescue StandardError => e
+      render json: { success: false, errors: e.to_s }, status: :internal_server_error
+    end
+
+    def clone
+      AssayModel.transaction do
+        source_model = AssayModel.find(params[:assay_model_id])
+
+        permitted_params = params.permit(self.permitted_params)
+        @record = AssayModel.new(permitted_params)
+        @record.publication_status = Grit::Core::PublicationStatus.find_by(name: "Draft")
+
+        if !@record.save
+          render json: { success: false, errors: @record.errors }, status: :unprocessable_entity
+          return
+        end
+
         errors = []
-        sheets = []
-        permitted_sheets[:sheets]&.each_with_index do |sheet, sheetIndex|
+
+        source_model.assay_data_sheet_definitions.each_with_index do |source_sheet, sheetIndex|
           begin
-            columns = sheet[:columns]
-            sheet.delete(:columns)
-            assay_data_sheet_definition = @record.assay_data_sheet_definitions.create(sheet)
+            sheet_attrs = source_sheet.attributes.slice("name", "description", "result", "sort")
+            assay_data_sheet_definition = @record.assay_data_sheet_definitions.create(sheet_attrs)
             unless assay_data_sheet_definition.errors.blank?
               assay_data_sheet_definition.errors.each do |e|
                 errors.push("Sheet #{sheetIndex} #{e.attribute}: #{e.message}")
               end
             else
-              columns.each_with_index do |column, columnIndex|
-                assay_data_sheet_column = assay_data_sheet_definition.assay_data_sheet_columns.create(column)
+              source_sheet.assay_data_sheet_columns.each_with_index do |source_column, columnIndex|
+                column_attrs = source_column.attributes.slice("name", "safe_name", "description", "sort", "required", "data_type_id", "unit_id")
+                assay_data_sheet_column = assay_data_sheet_definition.assay_data_sheet_columns.create(column_attrs)
                 if assay_data_sheet_column.errors
                   assay_data_sheet_column.errors.each do |e|
                     errors.push("Sheet #{sheetIndex} column #{columnIndex} #{e.attribute}: #{e.message}")
@@ -54,25 +72,26 @@ module Grit::Assays
               end
             end
           rescue StandardError => e
-            logger.warn e.to_s;
-            logger.warn e.backtrace.join("\n");
+            logger.warn e.to_s
+            logger.warn e.backtrace.join("\n")
             errors["form"] ||= []
             errors["form"].push e.to_s
           end
         end
 
-        permitted_metadata = params.permit(metadata: [ :assay_metadata_definition_id ])
-        permitted_metadata[:metadata]&.each_with_index do |metadatum, metadatumIndex|
+        source_model.assay_model_metadata.each_with_index do |source_metadata, metadatumIndex|
           begin
-            assay_model_metadata = @record.assay_model_metadata.create(metadatum)
+            assay_model_metadata = @record.assay_model_metadata.create(
+              assay_metadata_definition_id: source_metadata.assay_metadata_definition_id
+            )
             unless assay_model_metadata.errors.blank?
               assay_model_metadata.errors.each do |e|
                 errors.push("Metadata #{metadatumIndex} #{e.attribute}: #{e.message}")
               end
             end
           rescue StandardError => e
-            logger.warn e.to_s;
-            logger.warn e.backtrace.join("\n");
+            logger.warn e.to_s
+            logger.warn e.backtrace.join("\n")
             errors["form"] ||= []
             errors["form"].push e.to_s
           end
@@ -84,12 +103,16 @@ module Grit::Assays
         end
         render json: { success: true, data: @record }, status: :created, location: @record
       end
+    rescue ActiveRecord::RecordNotFound => e
+      logger.info e.to_s
+      logger.info e.backtrace.join("\n")
+      render json: { success: false, errors: e.to_s }, status: :not_found
     rescue StandardError => e
       render json: { success: false, errors: e.to_s }, status: :internal_server_error
     end
 
     def update_metadata
-      Grit::Assays::AssayModelMetadatum.where(assay_metadata_definition_id: params["removed"]).destroy_all
+      Grit::Assays::AssayModelMetadatum.where(assay_metadata_definition_id: params["removed"], assay_model_id: params["assay_model_id"]).destroy_all
       Grit::Assays::AssayModelMetadatum.create(params["added"].map { |id| { assay_metadata_definition_id: id, assay_model_id: params["assay_model_id"] } })
       render json: { success: true }
     rescue StandardError => e

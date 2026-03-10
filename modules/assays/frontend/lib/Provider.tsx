@@ -16,9 +16,9 @@
  * @grit42/app. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React from "react";
+import type { PropsWithChildren } from "react";
 
-const Provider = ({ children }: React.PropsWithChildren) => {
+const Provider = ({ children }: PropsWithChildren) => {
   return <>{children}</>;
 };
 

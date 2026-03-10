@@ -1,7 +1,5 @@
 import { AssayDataSheetDefinitionData } from "../../../../../../../queries/assay_data_sheet_definitions";
-import {
-  DataSetDefinitionFull,
-} from "./dataSheetDefinitionEditorForm";
+import { DataSetDefinitionFull } from "./dataSheetDefinitionEditorForm";
 import {
   EndpointError,
   EndpointSuccess,

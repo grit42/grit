@@ -28,8 +28,10 @@ import {
 import { useQueryClient } from "@grit42/api";
 import {
   Form,
+  FormBanner,
   FormField,
   FormFieldDef,
+  FormFields,
   genericErrorHandler,
   getVisibleFieldData,
   useForm,
@@ -39,8 +41,8 @@ import {
   useAssayDataSheetDefinitionFields,
   useAssayDataSheetDefinitions,
 } from "../../../../../../queries/assay_data_sheet_definitions";
-import styles from "../../assayModels.module.scss";
-import z from "zod";
+import styles from "./dataSheets.module.scss";
+import { z } from "zod";
 import { useCreateBulkDataSheetDefinitionMutation } from "../data-sheet-loader/data-sheet-definition-editor/mutations";
 import { useAssayDataSheetColumns } from "../../../../../../queries/assay_data_sheet_columns";
 import DataSheetColumnsTable from "./data-sheet-columns/DataSheetColumnsTable";
@@ -80,7 +82,7 @@ const AssayDataSheetDefinitionForm = ({
   const createSheetDefinitionMutation =
     useCreateBulkDataSheetDefinitionMutation();
 
-  const form = useForm<Partial<AssayDataSheetDefinitionData>>({
+  const form = useForm({
     defaultValues: sheetDefinition,
     onSubmit: genericErrorHandler(async ({ value: formValue }) => {
       const value = {
@@ -116,50 +118,26 @@ const AssayDataSheetDefinitionForm = ({
 
   if (isLoading) {
     return (
-      <Surface style={{ width: "100%" }}>
+      <Surface className={styles.dataSheetFormContainer}>
         <Spinner />
       </Surface>
     );
   }
 
   return (
-    <Surface style={{ width: "100%" }}>
-      <h2 style={{ alignSelf: "baseline", marginBottom: ".5em" }}>
-        Clone sheet
-      </h2>
-      <Form<Partial<AssayDataSheetDefinitionData>> form={form}>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr",
-            gridAutoRows: "max-content",
-            gap: "calc(var(--spacing) * 2)",
-            paddingBottom: "calc(var(--spacing) * 2)",
-          }}
-        >
-          {form.state.errorMap.onSubmit && (
-            <div
-              style={{
-                gridColumnStart: 1,
-                gridColumnEnd: -1,
-                color: "var(--palette-error-main)",
-              }}
-            >
-              {form.state.errorMap.onSubmit?.toString()}
-            </div>
-          )}
+    <Surface className={styles.dataSheetFormContainer}>
+      <h2>Clone sheet</h2>
+      <Form form={form}>
+        <FormFields columns={1}>
+          <FormBanner content={form.state.errorMap.onSubmit} />
           {fields.map((f) => (
             <FormField
-              form={form}
               fieldDef={f}
               key={f.name}
-              validators={{
-                onChange: validators[f.name as "name"],
-                onMount: validators[f.name as "name"],
-              }}
+              validators={validators[f.name as "name"] as any}
             />
           ))}
-        </div>
+        </FormFields>
         <form.Subscribe
           selector={(state) => [
             state.canSubmit,
@@ -220,7 +198,7 @@ const CloneDataSheet = ({ assayModelId }: { assayModelId: string }) => {
   }
 
   return (
-    <div className={styles.dataSheet}>
+    <div className={styles.dataSheetContainer}>
       <AssayDataSheetDefinitionForm
         sheetDefinition={sheetDefinition ?? {}}
         fields={fields}

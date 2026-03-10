@@ -63,10 +63,13 @@ const Button = ({
       )}
       {...props}
     >
-      {icon && !loading && icon}
-      {!loading &&
-        (typeof children === "string" ? <span>{children}</span> : children)}
-      {loading && <Spinner size={14} />}
+      {icon && icon}
+      {typeof children === "string" ? <span>{children}</span> : children}
+      {loading && (
+        <div className={styles.loadingIndicator}>
+          <Spinner size={14} />
+        </div>
+      )}
     </button>
   );
 };

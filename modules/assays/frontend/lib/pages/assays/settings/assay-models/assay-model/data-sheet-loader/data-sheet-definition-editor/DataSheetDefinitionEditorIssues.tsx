@@ -10,10 +10,10 @@ import {
 import dataSetDefinitionSchema from "./schema";
 import { FormFieldDef } from "@grit42/form";
 import { z } from "zod";
+import styles from "./dataSheetDefinitionEditor.module.scss";
 import { useMemo } from "react";
 
-interface DataSheetColumnDefinitionWithIssues
-  extends DataSheetColumnDefinition {
+interface DataSheetColumnDefinitionWithIssues extends DataSheetColumnDefinition {
   columnIndex: number;
   issues: [FormFieldDef, string][];
 }
@@ -66,7 +66,12 @@ const DataSheetDefinitionEditorIssues = ({
         ),
       );
       if (issues.length) {
-        issues.forEach((issue) => dataSheetIssues.push([{name: "columns", display_name: "Columns", type: "string"}, issue]));
+        issues.forEach((issue) =>
+          dataSheetIssues.push([
+            { name: "columns", display_name: "Columns", type: "string" },
+            issue,
+          ]),
+        );
       }
       sheet.columns.forEach((column, columnIndex) => {
         const dataSheetColumnIssues: [FormFieldDef, string][] = [];
@@ -107,41 +112,23 @@ const DataSheetDefinitionEditorIssues = ({
   }, [dataSetDefinition.sheets, errorTree]);
 
   return (
-    <div style={{ height: "100%", width: "100%", overflow: "auto" }}>
-      <Surface
-        style={{
-          height: "100%",
-          width: issues.length == 0 ? "max-content" : "100%",
-          maxWidth: "20vw",
-          overflow: "auto",
-          display: "grid",
-          gridTemplateColumns: "1fr",
-          gap: "var(--spacing)",
-          gridAutoRows: "max-content",
-        }}
-      >
+    <div className={styles.issuesContainer}>
+      <Surface className={styles.issuesList}>
         {issues.length == 0 && <h2>No issues!</h2>}
         {issues.length > 0 && <h2>Issues</h2>}
         {issues.map((sheet) => (
           <div key={sheet.id}>
             <h3
-              style={{ cursor: "pointer" }}
+              className={styles.issueItem}
               onClick={() => setFocusedSheetIndex(sheet.sheetIndex)}
             >
               Sheet "{sheet.name}"
             </h3>
-            <ul
-              style={{
-                paddingInlineStart: "var(--spacing)",
-                listStylePosition: "inside",
-                listStyle: "none",
-                marginBlock: "0",
-              }}
-            >
+            <ul className={styles.issueContent}>
               {sheet.issues.map(([field, issue]) => (
                 <li
                   key={`${sheet.id}-${field.name}`}
-                  style={{ cursor: "pointer" }}
+                  className={styles.issueItem}
                   onClick={() => setFocusedSheetIndex(sheet.sheetIndex)}
                 >
                   {field.display_name} {issue}
@@ -150,12 +137,10 @@ const DataSheetDefinitionEditorIssues = ({
               {sheet.columns.map((column) => (
                 <li
                   key={`${sheet.id}-${column.id}`}
-                  style={{
-                    marginBlock: "var(--spacing)",
-                  }}
+                  className={styles.sheetIssue}
                 >
                   <h4
-                    style={{ cursor: "pointer" }}
+                    className={styles.issueItem}
                     onClick={() =>
                       setFocusedColumnIndex(
                         sheet.sheetIndex,
@@ -165,18 +150,10 @@ const DataSheetDefinitionEditorIssues = ({
                   >
                     Column "{column.name}"
                   </h4>
-                  <ul
-                    style={{
-                      paddingInlineStart: "var(--spacing)",
-                      paddingBottom: "var(--spacing)",
-                      listStylePosition: "inside",
-                      listStyle: "none",
-                      marginBlock: "0",
-                    }}
-                  >
+                  <ul className={styles.sheetIssueContent}>
                     {column.issues.map(([field, issue]) => (
                       <li
-                        style={{ cursor: "pointer" }}
+                        className={styles.issueItem}
                         key={`${sheet.id}-${column.id}-${field.name}`}
                         onClick={() =>
                           setFocusedColumnIndex(

@@ -1,2 +1,5 @@
 draft:
-  name: draft
+  name: Draft
+
+published:
+  name: Published

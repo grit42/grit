@@ -36,13 +36,13 @@ export const useUpdateAssayModelMetadata = (
   return useMutation({
     mutationKey: ["updateAssayModelMetadata", id.toString()],
     mutationFn: async (data: { added: string[]; removed: string[] }) => {
-      const response = await request<
-        EndpointSuccess,
-        EndpointError<string>
-      >(`grit/assays/assay_models/${id}/update_metadata`, {
-        method: "POST",
-        data,
-      });
+      const response = await request<EndpointSuccess, EndpointError<string>>(
+        `grit/assays/assay_models/${id}/update_metadata`,
+        {
+          method: "POST",
+          data,
+        },
+      );
 
       if (!response.success) {
         throw response.errors;

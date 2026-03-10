@@ -1,5 +1,5 @@
 import { Button, ButtonGroup } from "@grit42/client-library/components";
-import styles from "../dataSheetStructureLoader.module.scss";
+import styles from "./dataSheetDefinitionEditor.module.scss";
 import { useNavigate } from "react-router-dom";
 
 const DataSheetDefinitionEditorHeader = ({
@@ -14,7 +14,7 @@ const DataSheetDefinitionEditorHeader = ({
   const navigate = useNavigate();
   return (
     <div className={styles.dataSheetsFormHeader}>
-      <h3 style={{ alignSelf: "baseline", marginBottom: "1em" }}>
+      <h3 className={styles.header}>
         Data sheet definitions import: verify column definitions
       </h3>
       <ButtonGroup>

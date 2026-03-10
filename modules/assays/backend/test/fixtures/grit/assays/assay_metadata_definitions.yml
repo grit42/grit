@@ -1,11 +1,14 @@
-# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+# Assay Metadata Definitions - define metadata fields for experiments
+# Each references a vocabulary from core fixtures
 
-# This model initially had no columns defined. If you add columns to the
-# model remove the "{}" from the fixture names and add the columns immediately
-# below each fixture, per the syntax in the comments below
-#
-one: {}
-# column: value
-#
-two: {}
-# column: value
+species:
+  name: Species
+  safe_name: species
+  description: The species used in the experiment
+  vocabulary: one
+
+tissue_type:
+  name: Tissue Type
+  safe_name: tissue_type
+  description: The tissue type used in the experiment
+  vocabulary: one

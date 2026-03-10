@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 /**
  * Copyright 2025 grit42 A/S. <https://grit42.com/>
  *
@@ -28,6 +29,8 @@ import { useAssayModelMetadata } from "../../../../queries/assay_model_metadata"
 import { useAssayMetadataDefinitions } from "../../../../queries/assay_metadata_definitions";
 import Circle1CloseIcon from "@grit42/client-library/icons/Circle1Close";
 import { MetadataDefintionSelector } from "../../../../features/assay-metadata-definitions";
+import styles from "./data.module.scss";
+import { FormBanner } from "@grit42/form";
 
 interface Props {
   assayModelId?: string | number;
@@ -165,23 +168,8 @@ const ExperimentMetadataFilters = ({
   };
 
   return (
-    <Surface
-      style={{
-        display: "grid",
-        gridTemplateColumns: "20vw",
-        gap: "calc(var(--spacing) * 2)",
-        gridAutoRows: "max-content",
-        overflow: "auto",
-        gridRowStart: 1, gridRowEnd: -1
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
+    <Surface className={styles.metadataFilters}>
+      <div className={styles.buttonGroup}>
         <h2>Metadata filters</h2>
         {metadataFilters && Object.keys(metadataFilters).length > 0 && (
           <Button color="primary" onClick={() => setMetadataFilters({})}>
@@ -190,24 +178,21 @@ const ExperimentMetadataFilters = ({
         )}
       </div>
       {isModelMetadataError && (
-        <div
-          style={{
-            color: "var(--palette-error-main)",
-          }}
-        >
-          {modelMetadataError ??
-            "An error occured retrieving the required metadata for the selected assay model"}
-        </div>
+        <FormBanner
+          content={
+            modelMetadataError ??
+            "An error occured retrieving the required metadata for the selected assay model"
+          }
+        />
       )}
       {fields?.map((f) => (
         <div
           key={f.name}
+          className={styles.filterField}
           style={{
-            display: "grid",
             gridTemplateColumns: f.belongsToAssayModel
               ? "1fr"
               : "1fr min-content",
-            gap: "var(--spacing)",
           }}
         >
           <EntitySelector
@@ -235,13 +220,7 @@ const ExperimentMetadataFilters = ({
           />
           {!f.belongsToAssayModel && (
             <Button
-              style={{
-                margin: 0,
-                height: "min-content",
-                width: "min-content",
-                minWidth: "unset",
-                alignSelf: "flex-end",
-              }}
+              className={styles.removeButton}
               onClick={() => {
                 setSelectedMetadataDefinitions((prev) => {
                   const next = new Set(prev ?? []);
@@ -269,7 +248,9 @@ const ExperimentMetadataFilters = ({
         />
       )}
       {selectedMetadataDefinitions?.size !== metadataDefinitions.length && (
-        <Button onClick={() => setSelectorOpen(true)}>Add metadata</Button>
+        <Button onClick={() => setSelectorOpen(true)}>
+          Add metadata filter
+        </Button>
       )}
     </Surface>
   );

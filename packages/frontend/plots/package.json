@@ -7,11 +7,10 @@
   "scripts": {
     "tsc": "tsc -b",
     "build": "tsc -b ./tsconfig.lib.json && vite build",
-    "build:watch": "vite build --watch --emptyOutDir=false",
     "lint": "eslint . --fix",
     "lint:check": "eslint .",
-    "format": "prettier . -w",
-    "format:check": "prettier . -c"
+    "format": "prettier . -w --ignore-path ../../../.prettierignore",
+    "format:check": "prettier . -c --ignore-path ../../../.prettierignore"
   },
   "exports": {
     ".": {
@@ -30,7 +29,7 @@
   "description": "",
   "dependencies": {
     "@grit42/client-library": "workspace:*",
-    "plotly.js": "^3.0.1",
+    "plotly.js": "^3.4.0",
     "react-plotly.js": "^2.6.0"
   },
   "peerDependencies": {
@@ -39,9 +38,9 @@
   "devDependencies": {
     "@eslint/js": "catalog:",
     "@types/node": "catalog:",
-    "@types/plotly.js": "^2.35.4",
+    "@types/plotly.js": "^2.35.14",
     "@types/react": "catalog:",
-    "@types/react-plotly.js": "^2.6.3",
+    "@types/react-plotly.js": "^2.6.4",
     "@vitejs/plugin-react": "catalog:",
     "autoprefixer": "catalog:",
     "eslint": "catalog:",

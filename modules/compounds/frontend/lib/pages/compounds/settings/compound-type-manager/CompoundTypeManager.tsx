@@ -23,9 +23,8 @@ import {
   useCompoundTypes,
 } from "../../../../queries/compounds";
 import styles from "./compoundTypeManager.module.scss";
-import { useEntityColumns } from "@grit42/core";
+import { useEntityColumns, useToolbar } from "@grit42/core";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useToolbar } from "@grit42/core/Toolbar";
 import Circle1NewIcon from "@grit42/client-library/icons/Circle1New";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@grit42/client-library/components";
@@ -52,7 +51,9 @@ const CompoundTypeManager = () => {
 
   const typesTableColumns = useTableColumns(typeColumns);
 
-  const compoundPropertiesTableColumns = useTableColumns(compoundPropertyColumns);
+  const compoundPropertiesTableColumns = useTableColumns(
+    compoundPropertyColumns,
+  );
 
   const batchPropertiesTableColumns = useTableColumns(batchPropertyColumns);
 

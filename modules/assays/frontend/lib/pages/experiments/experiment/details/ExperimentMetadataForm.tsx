@@ -1,26 +1,26 @@
 import { Button, ErrorPage, Spinner } from "@grit42/client-library/components";
-import { FormField, ReactFormExtendedApi, useStore } from "@grit42/form";
+import { FormApi, FormField, useStore } from "@grit42/form";
 import { EntityFormFieldDef } from "@grit42/core";
 import { useMemo, useState } from "react";
-import { ExperimentData } from "../../../../queries/experiments";
 import { useAssayModelMetadata } from "../../../../queries/assay_model_metadata";
 import { useAssayMetadataDefinitions } from "../../../../queries/assay_metadata_definitions";
 import Circle1CloseIcon from "@grit42/client-library/icons/Circle1Close";
 import styles from "./details.module.scss";
+import formStyles from "./experimentMetadataForm.module.scss";
 import { MetadataDefintionSelector } from "../../../../features/assay-metadata-definitions";
 
 const ExperimentMetadataForm = ({
   form,
   disabled,
 }: {
-  form: ReactFormExtendedApi<Partial<ExperimentData>, undefined>;
+  form: FormApi<any>;
   disabled: boolean;
 }) => {
   const [selectorOpen, setSelectorOpen] = useState(false);
   const [selectedMetadataDefinitions, setSelectedMetadataDefinitions] =
     useState<number[]>([]);
-  const { assay_model_id, values } = useStore(form.baseStore, ({ values }) => ({
-    assay_model_id: values.assay_model_id,
+  const { assay_model_id, values } = useStore(form.store, ({ values }) => ({
+    assay_model_id: values.assay_model_id as number | undefined,
     values,
   }));
 
@@ -140,11 +140,11 @@ const ExperimentMetadataForm = ({
         </div>
       )}
       {fields?.map((f) =>
-        (f.belongsToAssayModel || disabled) ? (
-          <FormField key={f.name} form={form} fieldDef={f} />
+        f.belongsToAssayModel || disabled ? (
+          <FormField key={f.name} fieldDef={f} />
         ) : (
           <div key={f.name} className={styles.formExtraMetadataField}>
-            <FormField key={f.name} form={form} fieldDef={f} />
+            <FormField key={f.name} fieldDef={f} />
             <Button
               onClick={() => {
                 setSelectedMetadataDefinitions((prev) =>
@@ -168,14 +168,15 @@ const ExperimentMetadataForm = ({
           )}
         />
       )}
-      {selectedMetadataDefinitions?.length !== metadataDefinitions.length && !disabled && (
-        <Button
-          style={{ gridColumnStart: 1 }}
-          onClick={() => setSelectorOpen(true)}
-        >
-          Add optional metadata
-        </Button>
-      )}
+      {selectedMetadataDefinitions?.length !== metadataDefinitions.length &&
+        !disabled && (
+          <Button
+            className={formStyles.fullWidthField}
+            onClick={() => setSelectorOpen(true)}
+          >
+            Add optional metadata
+          </Button>
+        )}
     </>
   );
 };

@@ -17,24 +17,24 @@
  */
 
 import { Row, Table, useSetupTableState } from "@grit42/table";
-import styles from "../dataTableColumns.module.scss";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTableColumns } from "@grit42/core/utils";
 import { useDestroyEntityMutation, useHasRoles } from "@grit42/core";
 import {
   useDataTableColumnColumns,
   DataTableColumnData,
-  useSelectedAssayDataSheetDataTableColumns,
+  useInfiniteSelectedAssayDataSheetDataTableColumns,
 } from "../../../queries/data_table_columns";
 import { Button } from "@grit42/client-library/components";
 import { useQueryClient } from "@grit42/api";
+import { CenteredColumnLayout } from "@grit42/client-library/layouts";
 
 interface Props {
   dataTableId: string | number;
 }
 
-export const AssayDataSheetDataTableColumnsTable = ({ dataTableId }: Props) => {
+const AssayDataSheetDataTableColumnsTable = ({ dataTableId }: Props) => {
   const navigate = useNavigate();
   const canEditDataTable = useHasRoles([
     "Administrator",
@@ -117,14 +117,19 @@ export const AssayDataSheetDataTableColumnsTable = ({ dataTableId }: Props) => {
     },
   );
 
-  const { data: rows, isLoading: isRowsLoading } =
-    useSelectedAssayDataSheetDataTableColumns(
+  const { data, isLoading, isError, error, isFetchingNextPage, fetchNextPage } =
+    useInfiniteSelectedAssayDataSheetDataTableColumns(
       dataTableId,
       tableState.sorting,
       tableState.filters,
       undefined,
       { enabled: dataTableId !== "new" },
     );
+
+  const flatData = useMemo(
+    () => data?.pages.flatMap(({ data }) => data) ?? [],
+    [data],
+  );
 
   const navigateToSelect = useCallback(() => navigate("select"), [navigate]);
   const navigateToEdit = useCallback(
@@ -133,59 +138,60 @@ export const AssayDataSheetDataTableColumnsTable = ({ dataTableId }: Props) => {
   );
 
   return (
-    <div className={styles.columnsTableContainer}>
-      {dataTableId !== "new" && (
-        <Table
-          tableState={tableState}
-          onRowClick={navigateToEdit}
-          rowActions={canEditDataTable ? ["delete"] : []}
-          onDelete={async (rows) => {
-            if (
-              !window.confirm(
-                `Are you sure you want to remove ${
-                  rows.length > 1 ? `${rows.length} columns` : "this column"
-                }? This action is irreversible`,
-              )
+    <CenteredColumnLayout>
+      <Table
+        tableState={tableState}
+        onRowClick={navigateToEdit}
+        rowActions={canEditDataTable ? ["delete"] : []}
+        onDelete={async (rows) => {
+          if (
+            !window.confirm(
+              `Are you sure you want to remove ${
+                rows.length > 1 ? `${rows.length} columns` : "this column"
+              }? This action is irreversible`,
             )
-              return;
-            await destroyColumnsMutation.mutateAsync(
-              rows.map(({ original }) => original.id),
-            );
-            await Promise.all([
-              queryClient.invalidateQueries({
-                queryKey: ["entities", "columns", "Grit::Assays::DataTableRow"],
-              }),
-              queryClient.invalidateQueries({
-                queryKey: [
-                  "entities",
-                  "data",
-                  `grit/assays/data_tables/${dataTableId}/data_table_columns`,
-                ],
-              }),
-              queryClient.invalidateQueries({
-                queryKey: [
-                  "entities",
-                  "infiniteData",
-                  `grit/assays/data_tables/${dataTableId}/data_table_rows`,
-                ],
-              }),
-            ]);
-          }}
-          loading={isRowsLoading}
-          headerActions={
-            canEditDataTable ? (
-              <Button
-                disabled={dataTableId === "new"}
-                onClick={navigateToSelect}
-              >
-                Add assay column
-              </Button>
-            ) : undefined
-          }
-          data={rows ?? []}
-        />
-      )}
-    </div>
+          )
+            return;
+          await destroyColumnsMutation.mutateAsync(
+            rows.map(({ original }) => original.id),
+          );
+          await Promise.all([
+            queryClient.invalidateQueries({
+              queryKey: ["entities", "columns", "Grit::Assays::DataTableRow"],
+            }),
+            queryClient.invalidateQueries({
+              queryKey: [
+                "entities",
+                "data",
+                `grit/assays/data_tables/${dataTableId}/data_table_columns`,
+              ],
+            }),
+            queryClient.invalidateQueries({
+              queryKey: [
+                "entities",
+                "infiniteData",
+                `grit/assays/data_tables/${dataTableId}/data_table_rows`,
+              ],
+            }),
+          ]);
+        }}
+        loading={isLoading}
+        headerActions={
+          canEditDataTable ? (
+            <Button disabled={dataTableId === "new"} onClick={navigateToSelect}>
+              Add assay column
+            </Button>
+          ) : undefined
+        }
+        data={flatData ?? []}
+        noDataMessage={isError ? error : undefined}
+        pagination={{
+          fetchNextPage,
+          isFetchingNextPage,
+          totalRows: data?.pages[0]?.total,
+        }}
+      />
+    </CenteredColumnLayout>
   );
 };
 

@@ -1,4 +1,4 @@
-import styles from "../dataSheetStructureLoader.module.scss";
+import styles from "./dataSheetDefinitionEditor.module.scss";
 import { useMemo } from "react";
 import dataSetDefinitionSchema, {
   refinedDataSetDefinitionSchema,
@@ -10,7 +10,7 @@ import DataSheetDefinitionEditorTabs from "./DataSheetDefinitionEditorTabs";
 import { useNavigate } from "react-router-dom";
 import { Button, ErrorPage } from "@grit42/client-library/components";
 import DataSheetDefinitionEditorHeader from "./DataSheetDefinitionEditorHeader";
-import z, { ZodError } from "zod";
+import { z, ZodError } from "zod";
 import useFormReducer from "./reducer";
 import DataSheetColumnsTable from "./DataSheetEditorColumnsTable";
 import DataSheetForm from "./DataSheetForm";
@@ -55,12 +55,14 @@ const DataSheetDefinitionEditor = ({
     if (!value) return;
     try {
       const res = await createSheetDefinitionMutation.mutateAsync(value);
-      navigate(`../../data-sheets/${res[0].id}`);
+      navigate(`../../data-sheets/${res[0].id}`, { relative: "path" });
     } catch (errors: any) {
       if (typeof errors === "string") {
         upsert(errors, { type: "error" });
       } else if (typeof errors === "object") {
-        upsert("There are errors in your data sheet definitions", { type: "error" });
+        upsert("There are errors in your data sheet definitions", {
+          type: "error",
+        });
         dispatch({
           type: "set-submit-errors",
           errors: new ZodError(

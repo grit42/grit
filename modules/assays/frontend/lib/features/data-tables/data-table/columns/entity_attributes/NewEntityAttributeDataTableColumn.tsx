@@ -63,7 +63,7 @@ const NewEntityAttributeDataTableColumn = () => {
         safe_name: searchParams.get("entity_attribute_safe_name"),
         entity_attribute_name: searchParams.get("entity_attribute_safe_name"),
         source_type: "entity_attribute",
-      } as Partial<DataTableColumnData>),
+      }) as Partial<DataTableColumnData>,
     [searchParams],
   );
   if (!searchParams.has("entity_attribute_safe_name")) {

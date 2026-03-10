@@ -20,11 +20,16 @@ import {
   useEntityColumns,
   EntityPropertyDef,
   EntityData,
-  useEntityData,
   useEntityFields,
   useEntityDatum,
+  useInfiniteEntityData,
 } from "@grit42/core";
-import { UseQueryOptions, URLParams } from "@grit42/api";
+import {
+  UseQueryOptions,
+  URLParams,
+  PaginatedEndpointSuccess,
+  UndefinedInitialDataInfiniteOptions,
+} from "@grit42/api";
 
 import { Filter, SortingState } from "@grit42/table";
 import { FormFieldDef } from "@grit42/form";
@@ -66,14 +71,19 @@ export interface DataTableColumnData extends EntityData {
   metadata_filters: Record<string, number[]>;
 }
 
-export const useSelectedDataTableColumns = (
+export const useInfiniteSelectedDataTableColumns = (
   dataTableId: number | string,
   sort?: SortingState,
   filter?: Filter[],
   params: URLParams = {},
-  queryOptions: Partial<UseQueryOptions<DataTableColumnData[], string>> = {},
+  queryOptions: Partial<
+    UndefinedInitialDataInfiniteOptions<
+      PaginatedEndpointSuccess<DataTableColumnData[]>,
+      string
+    >
+  > = {},
 ) => {
-  return useEntityData<DataTableColumnData>(
+  return useInfiniteEntityData<DataTableColumnData>(
     `grit/assays/data_tables/${dataTableId}/data_table_columns`,
     sort ?? [],
     filter ?? [],
@@ -82,14 +92,19 @@ export const useSelectedDataTableColumns = (
   );
 };
 
-export const useSelectedAssayDataSheetDataTableColumns = (
+export const useInfiniteSelectedAssayDataSheetDataTableColumns = (
   dataTableId: number | string,
   sort?: SortingState,
   filter?: Filter[],
   params: URLParams = {},
-  queryOptions: Partial<UseQueryOptions<DataTableColumnData[], string>> = {},
+  queryOptions: Partial<
+    UndefinedInitialDataInfiniteOptions<
+      PaginatedEndpointSuccess<DataTableColumnData[]>,
+      string
+    >
+  > = {},
 ) => {
-  return useEntityData<DataTableColumnData>(
+  return useInfiniteEntityData<DataTableColumnData>(
     `grit/assays/data_tables/${dataTableId}/data_table_columns`,
     sort ?? [],
     filter ?? [],
@@ -98,14 +113,19 @@ export const useSelectedAssayDataSheetDataTableColumns = (
   );
 };
 
-export const useSelectedEntityAttributeDataTableColumns = (
+export const useInfiniteSelectedEntityAttributeDataTableColumns = (
   dataTableId: number | string,
   sort?: SortingState,
   filter?: Filter[],
   params: URLParams = {},
-  queryOptions: Partial<UseQueryOptions<DataTableColumnData[], string>> = {},
+  queryOptions: Partial<
+    UndefinedInitialDataInfiniteOptions<
+      PaginatedEndpointSuccess<DataTableColumnData[]>,
+      string
+    >
+  > = {},
 ) => {
-  return useEntityData<DataTableColumnData>(
+  return useInfiniteEntityData<DataTableColumnData>(
     `grit/assays/data_tables/${dataTableId}/data_table_columns`,
     sort ?? [],
     filter ?? [],
@@ -114,16 +134,19 @@ export const useSelectedEntityAttributeDataTableColumns = (
   );
 };
 
-export const useAvailableDataTableColumns = (
+export const useInfiniteAvailableDataTableColumns = (
   dataTableId: number | string,
   sort?: SortingState,
   filter?: Filter[],
   params: URLParams = {},
   queryOptions: Partial<
-    UseQueryOptions<AssayDataSheetColumnData[], string>
+    UndefinedInitialDataInfiniteOptions<
+      PaginatedEndpointSuccess<AssayDataSheetColumnData[]>,
+      string
+    >
   > = {},
 ) => {
-  return useEntityData<AssayDataSheetColumnData>(
+  return useInfiniteEntityData<AssayDataSheetColumnData>(
     `grit/assays/data_tables/${dataTableId}/data_table_columns`,
     sort ?? [],
     filter ?? [],
@@ -132,16 +155,16 @@ export const useAvailableDataTableColumns = (
   );
 };
 
-export const useAvailableEntityAttributes = (
+export const useInfiniteAvailableEntityAttributes = (
   dataTableId: number | string,
   sort?: SortingState,
   filter?: Filter[],
   params: URLParams = {},
   queryOptions: Partial<
-    UseQueryOptions<any[], string>
+    UndefinedInitialDataInfiniteOptions<PaginatedEndpointSuccess<any[]>, string>
   > = {},
 ) => {
-  return useEntityData<any>(
+  return useInfiniteEntityData<any>(
     `grit/assays/data_tables/${dataTableId}/data_table_columns`,
     sort ?? [],
     filter ?? [],

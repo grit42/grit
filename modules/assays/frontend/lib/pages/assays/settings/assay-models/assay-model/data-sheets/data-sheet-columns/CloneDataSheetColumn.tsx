@@ -23,27 +23,29 @@ import {
   ButtonGroup,
   ErrorPage,
   Spinner,
-  Surface,
 } from "@grit42/client-library/components";
 import { useQueryClient } from "@grit42/api";
 import { EntityData, useCreateEntityMutation } from "@grit42/core";
 import {
   Form,
+  FormBanner,
   FormField,
   FormFieldDef,
+  FormFields,
   genericErrorHandler,
   getVisibleFieldData,
   useForm,
   useStore,
 } from "@grit42/form";
-import styles from "../../../assayModels.module.scss";
+import styles from "./dataSheetColumns.module.scss";
 import {
   AssayDataSheetColumnData,
   useAssayDataSheetColumnFields,
   useAssayDataSheetColumns,
 } from "../../../../../../../queries/assay_data_sheet_columns";
-import z from "zod";
+import { z } from "zod";
 import { toSafeIdentifier } from "@grit42/core/utils";
+import { CenteredSurface } from "@grit42/client-library/layouts";
 
 const initializedFormData = <T extends Partial<EntityData>>(
   data: T,
@@ -108,7 +110,7 @@ const AssayDataSheetColumnForm = ({
     [assayDataSheetColumns],
   );
 
-  const form = useForm<Partial<AssayDataSheetColumnData>>({
+  const form = useForm({
     defaultValues: initializedFormData(assayDataSheetColumn, fields),
     onSubmit: genericErrorHandler(async ({ value: formValue }) => {
       const value = {
@@ -135,22 +137,25 @@ const AssayDataSheetColumnForm = ({
   });
 
   const { safe_name, proposed_safe_name } = useStore(
-    form.baseStore,
+    form.store,
     ({ values }) => {
-      const { name, safe_name } = values;
+      const vals = values as { name?: string; safe_name?: string };
+      const { name, safe_name } = vals;
       const proposed_safe_name = form.getFieldMeta("name")?.isDirty
         ? toSafeIdentifier(name as string)
         : safe_name;
       return { safe_name, proposed_safe_name } as {
-        safe_name: string;
-        proposed_safe_name: string;
+        safe_name: string | undefined;
+        proposed_safe_name: string | undefined;
       };
     },
   );
 
   if (assayDataSheetColumns.length >= 250) {
     return (
-      <ErrorPage error={"A Data Sheet Definition cannot have more than 250 columns"}>
+      <ErrorPage
+        error={"A Data Sheet Definition cannot have more than 250 columns"}
+      >
         <Link to=".." relative="path">
           <Button>Back</Button>
         </Link>
@@ -159,46 +164,22 @@ const AssayDataSheetColumnForm = ({
   }
 
   return (
-    <Surface className={styles.modelForm}>
-      <h2 style={{ alignSelf: "baseline", marginBottom: "1em" }}>
-        Clone column
-      </h2>
-      <Form<Partial<AssayDataSheetColumnData>> form={form}>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gridAutoRows: "max-content",
-            gap: "calc(var(--spacing) * 2)",
-            paddingBottom: "calc(var(--spacing) * 2)",
-          }}
-        >
-          {form.state.errorMap.onSubmit && (
-            <div
-              style={{
-                gridColumnStart: 1,
-                gridColumnEnd: -1,
-                color: "var(--palette-error-main)",
-              }}
-            >
-              {form.state.errorMap.onSubmit?.toString()}
-            </div>
-          )}
+    <CenteredSurface>
+      <h2>Clone column</h2>
+      <Form form={form}>
+        <FormFields>
+          <FormBanner content={form.state.errorMap.onSubmit} />
           {fields.map((f) => (
-            <div style={{ width: "100%" }} key={f.name}>
+            <div className={styles.fieldContainer} key={f.name}>
               <FormField
-                form={form}
                 fieldDef={f}
-                validators={{
-                  onChange: validators[f.name as "name" | "safe_name"],
-                  onMount: validators[f.name as "name" | "safe_name"],
-                }}
+                validators={validators[f.name as "name" | "safe_name"] as any}
               />
               {f.name === "safe_name" &&
                 safe_name !== proposed_safe_name &&
-                proposed_safe_name.length &&
+                proposed_safe_name &&
                 form.state.isDirty && (
-                  <div className={styles.columnFormFieldSuggestion}>
+                  <div className={styles.suggestion}>
                     <em
                       role="button"
                       onClick={() => {
@@ -215,7 +196,7 @@ const AssayDataSheetColumnForm = ({
                 )}
             </div>
           ))}
-        </div>
+        </FormFields>
 
         <form.Subscribe
           selector={(state) => [
@@ -244,7 +225,7 @@ const AssayDataSheetColumnForm = ({
           }}
         />
       </Form>
-    </Surface>
+    </CenteredSurface>
   );
 };
 

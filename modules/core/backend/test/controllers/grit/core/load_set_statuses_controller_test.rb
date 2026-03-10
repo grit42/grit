@@ -12,13 +12,13 @@ module Grit::Core
     end
 
     test "should get index" do
-      get countries_url, as: :json
+      get load_set_statuses_url, as: :json
       assert_response :success
     end
 
     test "should not create load_set_status" do
       assert_no_difference("LoadSetStatus.count") do
-        post countries_url, params: { name: "Test", description: "Test status" }, as: :json
+        post load_set_statuses_url, params: { name: "Test", description: "Test status" }, as: :json
       end
 
       assert_response :forbidden

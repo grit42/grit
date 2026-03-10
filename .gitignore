@@ -10,6 +10,7 @@ backend/tmp/
 backend/test/dummy/log/*.log
 backend/test/dummy/storage/
 backend/test/dummy/tmp/
+**/backend/*.gem
 
 # Logs
 logs
@@ -29,6 +30,7 @@ frontend/playwright-report/
 frontend/blob-report/
 frontend/test/playwright/.cache/
 frontend/test/playwright/.auth
+frontend/coverage/
 
 # Editor directories and files
 .vscode/*
@@ -90,6 +92,13 @@ yarn-error.log*
 .nx/workspace-data
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
+
+.auth
+playwright-report
+test-results
+coverage
+
+.plans/**/*.md
 
 # Onlyoffice lock files
 .~lock.*

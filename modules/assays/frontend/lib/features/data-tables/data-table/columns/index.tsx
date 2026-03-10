@@ -58,15 +58,25 @@ const DataTableColumns = ({
   return (
     <Routes>
       <Route element={<DataTableColumnsTabs />}>
-        <Route
-          path="assay/*"
-          element={<AssayDataSheetDataTableColumns dataTableId={dataTableId} />}
-        />
-        <Route
-          path="entity/*"
-          element={<EntityAttributeDataTableColumns dataTableId={dataTableId} />}
-        />
-        <Route path="*" element={<Navigate to="assay" replace />} />
+        <Route path="assay">
+          <Route
+            index
+            path="*"
+            element={
+              <AssayDataSheetDataTableColumns dataTableId={dataTableId} />
+            }
+          />
+        </Route>
+        <Route path="entity">
+          <Route
+            index
+            path="*"
+            element={
+              <EntityAttributeDataTableColumns dataTableId={dataTableId} />
+            }
+          />
+        </Route>
+        <Route path="*" element={<Navigate to="../assay" replace />} />
       </Route>
     </Routes>
   );

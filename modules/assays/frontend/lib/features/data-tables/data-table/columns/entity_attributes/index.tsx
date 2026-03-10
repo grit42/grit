@@ -17,16 +17,10 @@
  */
 
 import { ErrorPage, Spinner } from "@grit42/client-library/components";
-import {
-  Route,
-  Routes,
-  useParams,
-} from "react-router-dom";
+import { Route, Routes, useParams } from "react-router-dom";
 import EntityAttributeDataTableColumnsTable from "./EntityAttributeDataTableColumnsTable";
 import EntityAttributeDataTableColumnSelector from "./EntityAttributeDataTableColumnSelector";
-import {
-  useDataTableColumnColumns,
-} from "../../../queries/data_table_columns";
+import { useDataTableColumnColumns } from "../../../queries/data_table_columns";
 import { useAssayDataSheetColumnColumns } from "../../../../../queries/assay_data_sheet_columns";
 import NewEntityAttributeDataTableColumn from "./NewEntityAttributeDataTableColumn";
 import EditEntityAttributeDataTableColumn from "./EditEntityAttributeDataTableColumn";
@@ -73,11 +67,15 @@ const EntityAttributeDataTableColumns = ({
     <Routes>
       <Route
         index
-        element={<EntityAttributeDataTableColumnsTable dataTableId={dataTableId} />}
+        element={
+          <EntityAttributeDataTableColumnsTable dataTableId={dataTableId} />
+        }
       />
       <Route
         path="select"
-        element={<EntityAttributeDataTableColumnSelector dataTableId={dataTableId} />}
+        element={
+          <EntityAttributeDataTableColumnSelector dataTableId={dataTableId} />
+        }
       />
       <Route
         path=":data_table_column_id"

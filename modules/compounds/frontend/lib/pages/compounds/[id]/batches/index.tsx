@@ -16,12 +16,12 @@
  * @grit42/compounds. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { ErrorPage, Spinner } from "@grit42/client-library/components";
+import { Button, ErrorPage, Spinner } from "@grit42/client-library/components";
 import { useCallback, useEffect, useMemo } from "react";
-import { useLocation, useMatch, useNavigate } from "react-router-dom";
+import { Link, useLocation, useMatch, useNavigate } from "react-router-dom";
 import { useCompound } from "../../../../queries/compounds";
 import { Table, useSetupTableState } from "@grit42/table";
-import { useToolbar } from "@grit42/core/Toolbar";
+import { useToolbar, useHasRoles } from "@grit42/core";
 import Circle1NewIcon from "@grit42/client-library/icons/Circle1New";
 import {
   BatchData,
@@ -32,7 +32,6 @@ import { useDestroyBatch } from "../../../../mutations/batches";
 import { useTableColumns } from "@grit42/core/utils";
 import { downloadFile } from "@grit42/client-library/utils";
 import { getFilterParams, getSortParams, getURLParams } from "@grit42/api";
-import { useHasRoles } from "@grit42/core";
 
 interface Props {
   id: string;
@@ -205,6 +204,23 @@ const CompoundBatches = ({ id }: Props) => {
     <Table<BatchData>
       loading={isFetching && !isFetchingNextPage}
       header="Batches"
+      headerActions={
+        canCrud ? (
+          <Link
+            to="/core/entities/Grit::Compounds::Batch/new"
+            state={{
+              redirect: pathname,
+              initialData: {
+                compound_id: id,
+                compound_type_id: compound?.compound_type_id,
+              },
+              title: `Create Batch of ${compound?.name ?? "compound"}`,
+            }}
+          >
+            <Button>New</Button>
+          </Link>
+        ) : undefined
+      }
       data={flatData}
       tableState={tableState}
       getRowId={getRowId}

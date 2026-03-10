@@ -1,5 +1,5 @@
 const DELIMITERS = [",", "\t", ";", ":", "|"] as const;
-type ValidDelimiter = typeof DELIMITERS[number];
+type ValidDelimiter = (typeof DELIMITERS)[number];
 interface DelimiterGuess {
   separator: ValidDelimiter;
   columnCount: number;
@@ -22,7 +22,10 @@ const MAX_SAMPLE_SIZE = 10000;
  *
  * @throws {Error} Doesn't throw - catches and logs all errors, returning null
  */
-export const guessDelimiter = (str: string, maxSampleSize = MAX_SAMPLE_SIZE): ValidDelimiter | null => {
+export const guessDelimiter = (
+  str: string,
+  maxSampleSize = MAX_SAMPLE_SIZE,
+): ValidDelimiter | null => {
   try {
     // Take a sample of the string to analyze
     const sampleText = str.substring(0, maxSampleSize);
@@ -36,28 +39,28 @@ export const guessDelimiter = (str: string, maxSampleSize = MAX_SAMPLE_SIZE): Va
     const [firstLine, secondLine] = lines;
 
     // Analyze each delimiter
-    const guesses: DelimiterGuess[] = DELIMITERS.map(separator => ({
+    const guesses: DelimiterGuess[] = DELIMITERS.map((separator) => ({
       separator,
       firstLineColumns: firstLine.split(separator).length,
       secondLineColumns: secondLine.split(separator).length,
     }))
-    .filter(({ firstLineColumns, secondLineColumns }) => {
-      const isValidColumnCount = firstLineColumns > 1 && secondLineColumns > 1;
-      const hasConsistentColumns = firstLineColumns === secondLineColumns;
-      return isValidColumnCount && hasConsistentColumns;
-    })
-    .map(({ separator, firstLineColumns }) => ({
-      separator,
-      columnCount: firstLineColumns,
-    }));
+      .filter(({ firstLineColumns, secondLineColumns }) => {
+        const isValidColumnCount =
+          firstLineColumns > 1 && secondLineColumns > 1;
+        const hasConsistentColumns = firstLineColumns === secondLineColumns;
+        return isValidColumnCount && hasConsistentColumns;
+      })
+      .map(({ separator, firstLineColumns }) => ({
+        separator,
+        columnCount: firstLineColumns,
+      }));
 
     // Sort by number of columns (descending) and return just the separators
     return guesses
       .sort((a, b) => b.columnCount - a.columnCount)
-      .map(guess => guess.separator)[0];
-
+      .map((guess) => guess.separator)[0];
   } catch (error) {
-    console.error('Error while guessing delimiter:', error);
+    console.error("Error while guessing delimiter:", error);
     return null;
   }
 };

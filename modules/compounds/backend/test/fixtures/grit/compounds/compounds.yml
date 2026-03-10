@@ -11,3 +11,10 @@ two:
   description: two
   origin_id: 42
   compound_type: screening
+
+three:
+  name: three
+  number: three
+  description: three
+  origin_id: 42
+  compound_type: screening

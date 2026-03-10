@@ -7,7 +7,7 @@ services:
       - POSTGRES_DB=default
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-muchsecurepasswordwow}
     volumes:
-      - ./postgres-data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
     platform: linux/amd64
     restart: unless-stopped
 

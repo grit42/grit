@@ -1,0 +1,20 @@
+# Load sets for compound/batch integration testing
+# These use IDs in the 200+ range to avoid conflicts with core fixtures
+
+compound_loading_validated:
+  id: 201
+  name: "compound-loading-validated"
+  entity: "Grit::Compounds::Compound"
+  origin_id: 1
+
+compound_loading_succeeded:
+  id: 202
+  name: "compound-loading-succeeded"
+  entity: "Grit::Compounds::Compound"
+  origin_id: 1
+
+batch_loading_validated:
+  id: 203
+  name: "batch-loading-validated"
+  entity: "Grit::Compounds::Batch"
+  origin_id: 1

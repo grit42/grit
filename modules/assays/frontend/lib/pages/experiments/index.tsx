@@ -6,8 +6,10 @@ const ExperimentsRouter = () => {
   return (
     <Routes>
       <Route index element={<ExperimentsPage />} />
-      <Route path=":experiment_id/*" element={<Experiment />} />
-      <Route path="*" element={<Navigate to="" />} />
+      <Route path=":experiment_id">
+        <Route index path="*" element={<Experiment />} />
+      </Route>
+      <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );
 };
