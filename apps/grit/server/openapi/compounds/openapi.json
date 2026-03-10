@@ -13,11 +13,6 @@
   ],
   "components": {
     "securitySchemes": {
-      "cookie_auth": {
-        "type": "apiKey",
-        "name": "_grit_session",
-        "in": "cookie"
-      },
       "bearer_auth": {
         "type": "http",
         "scheme": "bearer",
@@ -27,10 +22,726 @@
   },
   "security": [
     {
-      "cookie_auth": []
-    },
-    {
       "bearer_auth": []
     }
-  ]
+  ],
+  "paths": {
+    "/api/grit/compounds/batch_properties": {
+      "get": {
+        "summary": "Lists all batch properties",
+        "tags": [
+          "Compounds - Batch Properties"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "batch properties listed"
+          }
+        }
+      },
+      "post": {
+        "summary": "Creates a batch property",
+        "tags": [
+          "Compounds - Batch Properties"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "batch property created"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/grit/compounds/batch_properties/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Shows a batch property",
+        "tags": [
+          "Compounds - Batch Properties"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "batch property found"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Updates a batch property",
+        "tags": [
+          "Compounds - Batch Properties"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "batch property updated"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Destroys a batch property",
+        "tags": [
+          "Compounds - Batch Properties"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "500": {
+            "description": "cannot delete batch property with values"
+          }
+        }
+      }
+    },
+    "/api/grit/compounds/batches": {
+      "get": {
+        "summary": "Lists all batches",
+        "tags": [
+          "Compounds - Batches"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "batches listed"
+          }
+        }
+      },
+      "post": {
+        "summary": "Creates a batch",
+        "tags": [
+          "Compounds - Batches"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "batch created"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/grit/compounds/batches/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Shows a batch",
+        "tags": [
+          "Compounds - Batches"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "batch found"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Updates a batch",
+        "tags": [
+          "Compounds - Batches"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "batch updated"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Destroys a batch",
+        "tags": [
+          "Compounds - Batches"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "batch destroyed"
+          }
+        }
+      }
+    },
+    "/api/grit/compounds/compound_properties": {
+      "get": {
+        "summary": "Lists all compound properties",
+        "tags": [
+          "Compounds - Compound Properties"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "compound properties listed"
+          }
+        }
+      },
+      "post": {
+        "summary": "Creates a compound property",
+        "tags": [
+          "Compounds - Compound Properties"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "compound property created"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/grit/compounds/compound_properties/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Shows a compound property",
+        "tags": [
+          "Compounds - Compound Properties"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "compound property found"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Updates a compound property",
+        "tags": [
+          "Compounds - Compound Properties"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "compound property updated"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Destroys a compound property",
+        "tags": [
+          "Compounds - Compound Properties"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "500": {
+            "description": "cannot delete compound property with values"
+          }
+        }
+      }
+    },
+    "/api/grit/compounds/compound_types": {
+      "get": {
+        "summary": "Lists all compound types",
+        "tags": [
+          "Compounds - Compound Types"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "compound types listed"
+          }
+        }
+      },
+      "post": {
+        "summary": "Creates a compound type",
+        "tags": [
+          "Compounds - Compound Types"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "compound type created"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/grit/compounds/compound_types/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Shows a compound type",
+        "tags": [
+          "Compounds - Compound Types"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "compound type found"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Updates a compound type",
+        "tags": [
+          "Compounds - Compound Types"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "compound type updated"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Destroys a compound type",
+        "tags": [
+          "Compounds - Compound Types"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "compound type destroyed"
+          }
+        }
+      }
+    },
+    "/api/grit/compounds/compounds": {
+      "get": {
+        "summary": "Lists all compounds",
+        "tags": [
+          "Compounds - Compounds"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "compounds listed"
+          }
+        }
+      },
+      "post": {
+        "summary": "Creates a compound",
+        "tags": [
+          "Compounds - Compounds"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "compound created"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/grit/compounds/compounds/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Shows a compound",
+        "tags": [
+          "Compounds - Compounds"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "compound found"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Updates a compound",
+        "tags": [
+          "Compounds - Compounds"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "compound updated"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Destroys a compound",
+        "tags": [
+          "Compounds - Compounds"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "compound destroyed"
+          }
+        }
+      }
+    },
+    "/api/grit/compounds/molecules/molecule_exists": {
+      "post": {
+        "summary": "Checks if a molecule exists",
+        "tags": [
+          "Compounds - Molecules"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "molecule check result"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "molfile": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/grit/compounds/synonyms": {
+      "get": {
+        "summary": "Lists all synonyms",
+        "tags": [
+          "Compounds - Synonyms"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "synonyms listed"
+          }
+        }
+      },
+      "post": {
+        "summary": "Creates a synonym",
+        "tags": [
+          "Compounds - Synonyms"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "synonym created"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/grit/compounds/synonyms/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Shows a synonym",
+        "tags": [
+          "Compounds - Synonyms"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "synonym found"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Updates a synonym",
+        "tags": [
+          "Compounds - Synonyms"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "synonym updated"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Destroys a synonym",
+        "tags": [
+          "Compounds - Synonyms"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "synonym destroyed"
+          }
+        }
+      }
+    }
+  }
 }

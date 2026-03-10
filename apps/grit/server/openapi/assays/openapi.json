@@ -13,11 +13,6 @@
   ],
   "components": {
     "securitySchemes": {
-      "cookie_auth": {
-        "type": "apiKey",
-        "name": "_grit_session",
-        "in": "cookie"
-      },
       "bearer_auth": {
         "type": "http",
         "scheme": "bearer",
@@ -26,9 +21,6 @@
     }
   },
   "security": [
-    {
-      "cookie_auth": []
-    },
     {
       "bearer_auth": []
     }
@@ -42,7 +34,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -58,7 +50,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "parameters": [],
@@ -66,11 +58,11 @@
           "201": {
             "description": "column created on draft model"
           },
-          "500": {
-            "description": "cannot create column on published model"
-          },
           "422": {
             "description": "cannot create column with invalid safe_name"
+          },
+          "500": {
+            "description": "cannot create column on published model"
           }
         },
         "requestBody": {
@@ -102,7 +94,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -118,7 +110,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "parameters": [],
@@ -147,7 +139,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -165,7 +157,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -193,7 +185,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -211,7 +203,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -227,7 +219,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "parameters": [],
@@ -268,7 +260,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -284,7 +276,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "parameters": [],
@@ -310,7 +302,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -328,7 +320,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -344,7 +336,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "parameters": [],
@@ -385,7 +377,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -401,7 +393,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -419,7 +411,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -435,7 +427,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "parameters": [],
@@ -476,7 +468,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -492,7 +484,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "parameters": [],
@@ -518,7 +510,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -536,7 +528,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -552,7 +544,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "parameters": [],
@@ -593,7 +585,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -609,7 +601,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "parameters": [],
@@ -635,7 +627,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -653,7 +645,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -669,7 +661,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "parameters": [],
@@ -707,7 +699,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -725,7 +717,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -741,7 +733,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "parameters": [],
@@ -769,7 +761,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -797,7 +789,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -815,7 +807,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -831,7 +823,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "parameters": [],
@@ -862,7 +854,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -878,7 +870,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "parameters": [],
@@ -919,7 +911,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -935,7 +927,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "parameters": [],
@@ -961,7 +953,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {

@@ -13,11 +13,6 @@
   ],
   "components": {
     "securitySchemes": {
-      "cookie_auth": {
-        "type": "apiKey",
-        "name": "_grit_session",
-        "in": "cookie"
-      },
       "bearer_auth": {
         "type": "http",
         "scheme": "bearer",
@@ -26,9 +21,6 @@
     }
   },
   "security": [
-    {
-      "cookie_auth": []
-    },
     {
       "bearer_auth": []
     }
@@ -42,7 +34,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -58,7 +50,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "parameters": [],
@@ -104,7 +96,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -120,7 +112,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "parameters": [],
@@ -151,7 +143,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -169,7 +161,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -185,7 +177,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "parameters": [],
@@ -228,7 +220,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -244,7 +236,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "parameters": [],
@@ -275,7 +267,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -293,7 +285,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -309,7 +301,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "parameters": [],
@@ -355,7 +347,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -371,7 +363,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "parameters": [],
@@ -402,7 +394,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -420,7 +412,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -436,7 +428,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -464,7 +456,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -480,7 +472,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -498,7 +490,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -514,7 +506,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "parameters": [],
@@ -569,7 +561,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -585,7 +577,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "parameters": [],
@@ -619,7 +611,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -640,7 +632,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -656,7 +648,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "parameters": [],
@@ -708,7 +700,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -724,7 +716,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "parameters": [],
@@ -758,7 +750,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -779,7 +771,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -795,7 +787,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "parameters": [],
@@ -838,7 +830,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -854,7 +846,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "parameters": [],
@@ -885,7 +877,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -903,7 +895,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -919,7 +911,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "parameters": [],
@@ -965,7 +957,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -981,7 +973,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "parameters": [],
@@ -1012,7 +1004,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -1030,7 +1022,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -1046,7 +1038,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "parameters": [],
@@ -1095,7 +1087,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -1111,7 +1103,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "parameters": [],
@@ -1145,7 +1137,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -1166,7 +1158,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -1182,7 +1174,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "parameters": [],
@@ -1228,7 +1220,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -1244,7 +1236,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "parameters": [],
@@ -1275,7 +1267,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -1293,7 +1285,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -1309,7 +1301,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "parameters": [],
@@ -1373,7 +1365,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -1389,7 +1381,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "parameters": [],
@@ -1423,7 +1415,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -1444,7 +1436,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -1460,7 +1452,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "parameters": [],
@@ -1503,7 +1495,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -1519,7 +1511,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "parameters": [],
@@ -1550,7 +1542,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -1568,7 +1560,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -1584,7 +1576,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "parameters": [],
@@ -1630,7 +1622,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
@@ -1646,7 +1638,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "parameters": [],
@@ -1677,7 +1669,7 @@
         ],
         "security": [
           {
-            "cookie_auth": []
+            "bearer_auth": []
           }
         ],
         "responses": {
