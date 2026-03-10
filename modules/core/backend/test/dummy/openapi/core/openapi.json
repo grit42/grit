@@ -1,0 +1,1683 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Grit Core API",
+    "version": "v1",
+    "description": "Core module API for the grit platform — users, sessions, entities, and data loading."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3001",
+      "description": "Module dev server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearer_auth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "API token (single_access_token). Generate via POST /api/grit/core/user/generate_api_token"
+      }
+    }
+  },
+  "security": [
+    {
+      "bearer_auth": []
+    }
+  ],
+  "paths": {
+    "/api/grit/core/countries": {
+      "get": {
+        "summary": "Lists all countries",
+        "tags": [
+          "Core - Countries"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "countries listed"
+          }
+        }
+      },
+      "post": {
+        "summary": "Attempts to create a country",
+        "tags": [
+          "Core - Countries"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "403": {
+            "description": "creation is forbidden"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "iso": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/grit/core/countries/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Shows a country",
+        "tags": [
+          "Core - Countries"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "country found"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Attempts to update a country",
+        "tags": [
+          "Core - Countries"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "403": {
+            "description": "update is forbidden"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Attempts to destroy a country",
+        "tags": [
+          "Core - Countries"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "403": {
+            "description": "destruction is forbidden"
+          }
+        }
+      }
+    },
+    "/api/grit/core/data_types": {
+      "get": {
+        "summary": "Lists all data types",
+        "tags": [
+          "Core - Data Types"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "anyone can list data types"
+          }
+        }
+      },
+      "post": {
+        "summary": "Attempts to create a data type",
+        "tags": [
+          "Core - Data Types"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "403": {
+            "description": "creation is forbidden"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/grit/core/data_types/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Shows a data type",
+        "tags": [
+          "Core - Data Types"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "anyone can show data type"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Attempts to update a data type",
+        "tags": [
+          "Core - Data Types"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "403": {
+            "description": "update is forbidden"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Attempts to destroy a data type",
+        "tags": [
+          "Core - Data Types"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "403": {
+            "description": "destruction is forbidden"
+          }
+        }
+      }
+    },
+    "/api/grit/core/load_set_statuses": {
+      "get": {
+        "summary": "Lists all load set statuses",
+        "tags": [
+          "Core - Load Set Statuses"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "load set statuses listed"
+          }
+        }
+      },
+      "post": {
+        "summary": "Attempts to create a load set status",
+        "tags": [
+          "Core - Load Set Statuses"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "403": {
+            "description": "creation is forbidden"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/grit/core/load_set_statuses/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Shows a load set status",
+        "tags": [
+          "Core - Load Set Statuses"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "load set status found"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Attempts to update a load set status",
+        "tags": [
+          "Core - Load Set Statuses"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "403": {
+            "description": "update is forbidden"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Attempts to destroy a load set status",
+        "tags": [
+          "Core - Load Set Statuses"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "403": {
+            "description": "destruction is forbidden"
+          }
+        }
+      }
+    },
+    "/api/grit/core/load_sets": {
+      "get": {
+        "summary": "Lists all load sets",
+        "tags": [
+          "Core - Load Sets"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "load sets listed"
+          }
+        }
+      },
+      "post": {
+        "summary": "Creates a load set with load set blocks",
+        "tags": [
+          "Core - Load Sets"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "load set created"
+          }
+        }
+      }
+    },
+    "/api/grit/core/load_sets/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Shows a load set",
+        "tags": [
+          "Core - Load Sets"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "load set found"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Destroys a load set",
+        "tags": [
+          "Core - Load Sets"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "load set destroyed (no succeeded blocks)"
+          }
+        }
+      }
+    },
+    "/api/grit/core/locations": {
+      "get": {
+        "summary": "Lists all locations",
+        "tags": [
+          "Core - Locations"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "locations listed"
+          }
+        }
+      },
+      "post": {
+        "summary": "Creates a location",
+        "tags": [
+          "Core - Locations"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "location created"
+          },
+          "403": {
+            "description": "forbidden for non-admin"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "print_address": {
+                    "type": "string"
+                  },
+                  "country_id": {
+                    "type": "integer"
+                  },
+                  "origin_id": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/grit/core/locations/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Shows a location",
+        "tags": [
+          "Core - Locations"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "location found"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Updates a location",
+        "tags": [
+          "Core - Locations"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "location updated"
+          },
+          "403": {
+            "description": "forbidden for non-admin"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Destroys a location",
+        "tags": [
+          "Core - Locations"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "location destroyed"
+          },
+          "403": {
+            "description": "forbidden for non-admin"
+          }
+        }
+      }
+    },
+    "/api/grit/core/origins": {
+      "get": {
+        "summary": "Lists all origins",
+        "tags": [
+          "Core - Origins"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "origins listed"
+          }
+        }
+      },
+      "post": {
+        "summary": "Creates an origin",
+        "tags": [
+          "Core - Origins"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "origin created"
+          },
+          "403": {
+            "description": "forbidden for non-admin"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "domain": {
+                    "type": "string"
+                  },
+                  "status": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/grit/core/origins/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Shows an origin",
+        "tags": [
+          "Core - Origins"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "origin found"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Updates an origin",
+        "tags": [
+          "Core - Origins"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "origin updated"
+          },
+          "403": {
+            "description": "forbidden for non-admin"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Destroys an origin",
+        "tags": [
+          "Core - Origins"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "origin destroyed"
+          },
+          "403": {
+            "description": "forbidden for non-admin"
+          }
+        }
+      }
+    },
+    "/api/grit/core/publication_statuses": {
+      "get": {
+        "summary": "Lists all publication statuses",
+        "tags": [
+          "Core - Publication Statuses"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "publication statuses listed"
+          }
+        }
+      },
+      "post": {
+        "summary": "Attempts to create a publication status",
+        "tags": [
+          "Core - Publication Statuses"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "403": {
+            "description": "creation is forbidden"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/grit/core/publication_statuses/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Shows a publication status",
+        "tags": [
+          "Core - Publication Statuses"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "publication status found"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Attempts to update a publication status",
+        "tags": [
+          "Core - Publication Statuses"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "403": {
+            "description": "update is forbidden"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Attempts to destroy a publication status",
+        "tags": [
+          "Core - Publication Statuses"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "403": {
+            "description": "destruction is forbidden"
+          }
+        }
+      }
+    },
+    "/api/grit/core/roles": {
+      "get": {
+        "summary": "Lists all roles",
+        "tags": [
+          "Core - Roles"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "roles listed"
+          }
+        }
+      },
+      "post": {
+        "summary": "Attempts to create a role",
+        "tags": [
+          "Core - Roles"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "403": {
+            "description": "creation is forbidden"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/grit/core/roles/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Shows a role",
+        "tags": [
+          "Core - Roles"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "role found"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Attempts to update a role",
+        "tags": [
+          "Core - Roles"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "403": {
+            "description": "update is forbidden"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Attempts to destroy a role",
+        "tags": [
+          "Core - Roles"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "403": {
+            "description": "destruction is forbidden"
+          }
+        }
+      }
+    },
+    "/api/grit/core/units": {
+      "get": {
+        "summary": "Lists all units",
+        "tags": [
+          "Core - Units"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "units listed"
+          }
+        }
+      },
+      "post": {
+        "summary": "Creates a unit",
+        "tags": [
+          "Core - Units"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "unit created"
+          },
+          "403": {
+            "description": "forbidden for non-admin"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "abbreviation": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/grit/core/units/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Shows a unit",
+        "tags": [
+          "Core - Units"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "unit found"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Updates a unit",
+        "tags": [
+          "Core - Units"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "unit updated"
+          },
+          "403": {
+            "description": "forbidden for non-admin"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Destroys a unit",
+        "tags": [
+          "Core - Units"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "unit destroyed"
+          },
+          "403": {
+            "description": "forbidden for non-admin"
+          }
+        }
+      }
+    },
+    "/api/grit/core/user_roles": {
+      "get": {
+        "summary": "Attempts to list user roles",
+        "tags": [
+          "Core - User Roles"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "403": {
+            "description": "listing is forbidden"
+          }
+        }
+      },
+      "post": {
+        "summary": "Attempts to create a user role",
+        "tags": [
+          "Core - User Roles"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "403": {
+            "description": "creation is forbidden"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "user_id": {
+                    "type": "integer"
+                  },
+                  "role_id": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/grit/core/user_roles/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Attempts to show a user role",
+        "tags": [
+          "Core - User Roles"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "403": {
+            "description": "showing is forbidden"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Attempts to update a user role",
+        "tags": [
+          "Core - User Roles"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "403": {
+            "description": "update is forbidden"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "user_id": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Attempts to destroy a user role",
+        "tags": [
+          "Core - User Roles"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "403": {
+            "description": "destruction is forbidden"
+          }
+        }
+      }
+    },
+    "/api/grit/core/users": {
+      "get": {
+        "summary": "Lists all users",
+        "tags": [
+          "Core - Users"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "anyone can list users"
+          }
+        }
+      },
+      "post": {
+        "summary": "Creates a user",
+        "tags": [
+          "Core - Users"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "user created"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "login": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string"
+                  },
+                  "origin_id": {
+                    "type": "integer"
+                  },
+                  "active": {
+                    "type": "boolean"
+                  },
+                  "two_factor": {
+                    "type": "boolean"
+                  },
+                  "role_ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/grit/core/users/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Shows a user",
+        "tags": [
+          "Core - Users"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "anyone can show user"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Updates a user",
+        "tags": [
+          "Core - Users"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "admin updates user"
+          },
+          "403": {
+            "description": "non-admin cannot update other user"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Destroys a user",
+        "tags": [
+          "Core - Users"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "admin destroys user"
+          },
+          "403": {
+            "description": "non-admin cannot destroy user"
+          }
+        }
+      }
+    },
+    "/api/grit/core/vocabularies": {
+      "get": {
+        "summary": "Lists all vocabularies",
+        "tags": [
+          "Core - Vocabularies"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "vocabularies listed"
+          }
+        }
+      },
+      "post": {
+        "summary": "Creates a vocabulary",
+        "tags": [
+          "Core - Vocabularies"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "vocabulary created"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/grit/core/vocabularies/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Shows a vocabulary",
+        "tags": [
+          "Core - Vocabularies"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "vocabulary found"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Updates a vocabulary",
+        "tags": [
+          "Core - Vocabularies"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "vocabulary updated"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Destroys a vocabulary",
+        "tags": [
+          "Core - Vocabularies"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "vocabulary destroyed"
+          }
+        }
+      }
+    },
+    "/api/grit/core/vocabulary_items": {
+      "get": {
+        "summary": "Lists all vocabulary items",
+        "tags": [
+          "Core - Vocabulary Items"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "vocabulary items listed"
+          }
+        }
+      },
+      "post": {
+        "summary": "Creates a vocabulary item",
+        "tags": [
+          "Core - Vocabulary Items"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "vocabulary item created"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "vocabulary_id": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/grit/core/vocabulary_items/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Shows a vocabulary item",
+        "tags": [
+          "Core - Vocabulary Items"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "vocabulary item found"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Updates a vocabulary item",
+        "tags": [
+          "Core - Vocabulary Items"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "vocabulary item updated"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Destroys a vocabulary item",
+        "tags": [
+          "Core - Vocabulary Items"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "vocabulary item destroyed"
+          }
+        }
+      }
+    }
+  }
+}

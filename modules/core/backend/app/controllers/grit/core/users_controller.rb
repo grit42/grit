@@ -315,6 +315,10 @@ module Grit::Core
     private
 
     def single_access_allowed?
+      # Allow Bearer token auth for all actions; legacy query param auth
+      # is restricted to hello_world_api for backwards compatibility.
+      return true if request.headers["Authorization"]&.start_with?("Bearer ")
+
       action_name == "hello_world_api"
     end
   end

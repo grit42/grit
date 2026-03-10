@@ -24,7 +24,16 @@ group :development, :test do
 
   # Omakase Ruby styling [https://github.com/rails/rubocop-rails-omakase/]
   gem "rubocop-rails-omakase", require: false
+
+  # RSpec + Swagger/OpenAPI documentation
+  gem "rspec-rails", "~> 8.0"
+  gem "rswag-specs", "~> 2.17"
+  gem "factory_bot_rails", "~> 6.5"
 end
+
+# Swagger API docs and UI
+gem "rswag-api", "~> 2.17"
+gem "rswag-ui", "~> 2.17"
 
 group :development do
   # Use console on exceptions pages [https://github.com/rails/web-console]

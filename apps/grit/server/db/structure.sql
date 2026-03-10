@@ -1,8 +1,3 @@
-\restrict CaUxW3fkqSBZUxHW4c81hvrR3ofCK7KRAIla5ONgdF1gdNxVlH36zHh2Mykbz08
-
--- Dumped from database version 16.3 (Debian 16.3-1.pgdg120+1)
--- Dumped by pg_dump version 16.11
-
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
@@ -3116,8 +3111,6 @@ ALTER TABLE ONLY public.grit_compounds_compound_property_values
 --
 -- PostgreSQL database dump complete
 --
-
-\unrestrict CaUxW3fkqSBZUxHW4c81hvrR3ofCK7KRAIla5ONgdF1gdNxVlH36zHh2Mykbz08
 
 SET search_path TO "$user", public;
 

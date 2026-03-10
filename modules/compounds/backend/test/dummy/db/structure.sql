@@ -1,8 +1,3 @@
-\restrict b8KD4fZmMyPC7k9bGwBpVAP2BOjmXeuDH0I1fMruToZiadHycXXt4gUyH58uFmQ
-
--- Dumped from database version 16.3 (Debian 16.3-1.pgdg120+1)
--- Dumped by pg_dump version 16.11
-
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
@@ -910,6 +905,196 @@ CREATE TABLE public.grit_core_vocabulary_items (
 
 
 --
+-- Name: lsb_10303; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.lsb_10303 (
+    line bigint NOT NULL,
+    molecule text,
+    name character varying,
+    description text,
+    compound_type_id bigint,
+    origin_id bigint,
+    record_errors jsonb,
+    record_warnings jsonb
+);
+
+
+--
+-- Name: lsb_10303_line_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.lsb_10303_line_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: lsb_10303_line_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.lsb_10303_line_seq OWNED BY public.lsb_10303.line;
+
+
+--
+-- Name: lsb_15817; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.lsb_15817 (
+    line bigint NOT NULL,
+    molecule text,
+    name character varying,
+    description text,
+    compound_type_id bigint,
+    origin_id bigint,
+    record_errors jsonb,
+    record_warnings jsonb
+);
+
+
+--
+-- Name: lsb_15817_line_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.lsb_15817_line_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: lsb_15817_line_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.lsb_15817_line_seq OWNED BY public.lsb_15817.line;
+
+
+--
+-- Name: raw_lsb_10303; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.raw_lsb_10303 (
+    line bigint NOT NULL,
+    col_0 character varying,
+    col_1 character varying,
+    col_2 character varying,
+    col_3 character varying,
+    col_4 character varying,
+    col_5 character varying,
+    col_6 character varying,
+    col_7 character varying,
+    col_8 character varying,
+    col_9 character varying,
+    col_10 character varying,
+    col_11 character varying,
+    col_12 character varying,
+    col_13 character varying,
+    col_14 character varying,
+    col_15 character varying,
+    col_16 character varying,
+    col_17 character varying,
+    col_18 character varying,
+    col_19 character varying,
+    col_20 character varying,
+    col_21 character varying,
+    col_22 character varying,
+    col_23 character varying,
+    col_24 character varying,
+    col_25 character varying,
+    col_26 character varying,
+    col_27 character varying,
+    col_28 character varying,
+    col_29 character varying,
+    col_30 character varying,
+    col_31 character varying,
+    col_32 character varying,
+    col_33 character varying,
+    col_34 character varying,
+    col_35 character varying,
+    col_36 character varying,
+    col_37 character varying,
+    col_38 character varying,
+    col_39 character varying
+);
+
+
+--
+-- Name: raw_lsb_10303_line_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.raw_lsb_10303_line_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: raw_lsb_10303_line_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.raw_lsb_10303_line_seq OWNED BY public.raw_lsb_10303.line;
+
+
+--
+-- Name: raw_lsb_15817; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.raw_lsb_15817 (
+    line bigint NOT NULL,
+    col_0 character varying,
+    col_1 character varying,
+    col_2 character varying,
+    col_3 character varying,
+    col_4 character varying,
+    col_5 character varying,
+    col_6 character varying,
+    col_7 character varying,
+    col_8 character varying,
+    col_9 character varying,
+    col_10 character varying,
+    col_11 character varying,
+    col_12 character varying,
+    col_13 character varying,
+    col_14 character varying,
+    col_15 character varying,
+    col_16 character varying,
+    col_17 character varying,
+    col_18 character varying,
+    col_19 character varying,
+    col_20 character varying,
+    col_21 character varying,
+    col_22 character varying,
+    col_23 character varying
+);
+
+
+--
+-- Name: raw_lsb_15817_line_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.raw_lsb_15817_line_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: raw_lsb_15817_line_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.raw_lsb_15817_line_seq OWNED BY public.raw_lsb_15817.line;
+
+
+--
 -- Name: schema_migrations; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -937,6 +1122,34 @@ ALTER TABLE ONLY public.active_storage_blobs ALTER COLUMN id SET DEFAULT nextval
 --
 
 ALTER TABLE ONLY public.active_storage_variant_records ALTER COLUMN id SET DEFAULT nextval('public.active_storage_variant_records_id_seq'::regclass);
+
+
+--
+-- Name: lsb_10303 line; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.lsb_10303 ALTER COLUMN line SET DEFAULT nextval('public.lsb_10303_line_seq'::regclass);
+
+
+--
+-- Name: lsb_15817 line; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.lsb_15817 ALTER COLUMN line SET DEFAULT nextval('public.lsb_15817_line_seq'::regclass);
+
+
+--
+-- Name: raw_lsb_10303 line; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.raw_lsb_10303 ALTER COLUMN line SET DEFAULT nextval('public.raw_lsb_10303_line_seq'::regclass);
+
+
+--
+-- Name: raw_lsb_15817 line; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.raw_lsb_15817 ALTER COLUMN line SET DEFAULT nextval('public.raw_lsb_15817_line_seq'::regclass);
 
 
 --
@@ -1201,6 +1414,38 @@ ALTER TABLE ONLY public.grit_core_vocabulary_item_load_set_blocks
 
 ALTER TABLE ONLY public.grit_core_vocabulary_items
     ADD CONSTRAINT grit_core_vocabulary_items_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: lsb_10303 lsb_10303_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.lsb_10303
+    ADD CONSTRAINT lsb_10303_pkey PRIMARY KEY (line);
+
+
+--
+-- Name: lsb_15817 lsb_15817_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.lsb_15817
+    ADD CONSTRAINT lsb_15817_pkey PRIMARY KEY (line);
+
+
+--
+-- Name: raw_lsb_10303 raw_lsb_10303_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.raw_lsb_10303
+    ADD CONSTRAINT raw_lsb_10303_pkey PRIMARY KEY (line);
+
+
+--
+-- Name: raw_lsb_15817 raw_lsb_15817_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.raw_lsb_15817
+    ADD CONSTRAINT raw_lsb_15817_pkey PRIMARY KEY (line);
 
 
 --
@@ -2182,8 +2427,6 @@ ALTER TABLE ONLY public.grit_compounds_compound_property_values
 --
 -- PostgreSQL database dump complete
 --
-
-\unrestrict b8KD4fZmMyPC7k9bGwBpVAP2BOjmXeuDH0I1fMruToZiadHycXXt4gUyH58uFmQ
 
 SET search_path TO "$user", public;
 

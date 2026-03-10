@@ -10,6 +10,14 @@ gem "pg"
 # Omakase Ruby styling [https://github.com/rails/rubocop-rails-omakase/]
 gem "rubocop-rails-omakase", require: false
 
+# Swagger/OpenAPI
+gem "rswag-specs", "~> 2.17"
+gem "rswag-api", "~> 2.17"
+gem "rswag-ui", "~> 2.17"
+
+# CORS for API access from Swagger UI
+gem "rack-cors"
+
 # Start debugger with binding.b [https://github.com/ruby/debug]
 # gem "debug", ">= 1.0.0"
 
