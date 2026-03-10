@@ -31,6 +31,57 @@ module Grit::Assays
           return
         end
 
+        permitted_sheets = params.permit(sheets: [ :name, :description, :result, :sort, columns: [ :name, :safe_name, :description, :sort, :required, :data_type_id, :unit_id ] ])
+        errors = []
+        sheets = []
+        permitted_sheets[:sheets]&.each_with_index do |sheet, sheetIndex|
+          begin
+            columns = sheet[:columns]
+            sheet.delete(:columns)
+            assay_data_sheet_definition = @record.assay_data_sheet_definitions.create(sheet)
+            unless assay_data_sheet_definition.errors.blank?
+              assay_data_sheet_definition.errors.each do |e|
+                errors.push("Sheet #{sheetIndex} #{e.attribute}: #{e.message}")
+              end
+            else
+              columns.each_with_index do |column, columnIndex|
+                assay_data_sheet_column = assay_data_sheet_definition.assay_data_sheet_columns.create(column)
+                if assay_data_sheet_column.errors
+                  assay_data_sheet_column.errors.each do |e|
+                    errors.push("Sheet #{sheetIndex} column #{columnIndex} #{e.attribute}: #{e.message}")
+                  end
+                end
+              end
+            end
+          rescue StandardError => e
+            logger.warn e.to_s
+            logger.warn e.backtrace.join("\n")
+            errors["form"] ||= []
+            errors["form"].push e.to_s
+          end
+        end
+
+        permitted_metadata = params.permit(metadata: [ :assay_metadata_definition_id ])
+        permitted_metadata[:metadata]&.each_with_index do |metadatum, metadatumIndex|
+          begin
+            assay_model_metadata = @record.assay_model_metadata.create(metadatum)
+            unless assay_model_metadata.errors.blank?
+              assay_model_metadata.errors.each do |e|
+                errors.push("Metadata #{metadatumIndex} #{e.attribute}: #{e.message}")
+              end
+            end
+          rescue StandardError => e
+            logger.warn e.to_s
+            logger.warn e.backtrace.join("\n")
+            errors["form"] ||= []
+            errors["form"].push e.to_s
+          end
+        end
+
+        unless errors.blank?
+          render json: { success: false, errors: errors.join(". ") }, status: :unprocessable_entity
+          raise ActiveRecord::Rollback
+        end
         render json: { success: true, data: @record }, status: :created, location: @record
       end
     rescue StandardError => e
