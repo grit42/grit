@@ -58,12 +58,12 @@ RSpec.describe Grit::Core::LoadSet, type: :model do
   # by_entity scope tests
   describe "by_entity scope" do
     it "filters load sets by entity name" do
-      create(:grit_core_load_set, entity: "TestEntity")
-      load_sets = described_class.where(entity: "TestEntity")
+      create(:grit_core_load_set, entity: "Grit::TestEntity")
+      load_sets = described_class.where(entity: "Grit::TestEntity")
 
       expect(load_sets.count).to be > 0
       load_sets.each do |ls|
-        expect(ls.entity).to eq("TestEntity")
+        expect(ls.entity).to eq("Grit::TestEntity")
       end
     end
 

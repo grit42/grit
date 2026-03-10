@@ -18,7 +18,7 @@
 
 
 FactoryBot.define do
-  factory :test_entity, class: "TestEntity" do
+  factory :grit_test_entity, class: "Grit::TestEntity" do
     sequence(:name) { |n| "test_entity_#{n}" }
   end
 end

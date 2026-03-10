@@ -20,7 +20,7 @@
 FactoryBot.define do
   factory :grit_core_load_set, class: "Grit::Core::LoadSet" do
     sequence(:name) { |n| "load-set-#{n}" }
-    entity { "TestEntity" }
+    entity { "Grit::TestEntity" }
     origin_id { create(:grit_core_origin).id }
 
     trait :succeeded do

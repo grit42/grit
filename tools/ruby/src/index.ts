@@ -120,7 +120,7 @@ async function createNodesInternal(
       joinPathFragments("{projectRoot}", "app", "**", "*"),
       joinPathFragments("{projectRoot}", "lib", "**", "*"),
       joinPathFragments("{projectRoot}", "config", "**", "*"),
-      joinPathFragments("{projectRoot}", "test", "**", "*"),
+      joinPathFragments("{projectRoot}", "spec", "**", "*"),
     ];
 
     // Only include gemspec if it exists
@@ -129,7 +129,7 @@ async function createNodesInternal(
     }
 
     const testTarget: TargetConfiguration = {
-      command: `bin/rails test`,
+      command: `bundle exec rspec`,
       options: { cwd: projectRoot },
       cache: true,
       inputs: testInputs,

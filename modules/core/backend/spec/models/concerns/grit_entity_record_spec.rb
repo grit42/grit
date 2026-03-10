@@ -19,7 +19,7 @@
 
 require "rails_helper"
 
-# Tests for the GritEntityRecord concern using the TestEntity model from the dummy app
+# Tests for the GritEntityRecord concern using the Grit::TestEntity model from the dummy app
 RSpec.describe "GritEntityRecord concern", type: :model do
   let(:admin) { create(:grit_core_user, :admin, :with_admin_role) }
 
@@ -33,13 +33,13 @@ RSpec.describe "GritEntityRecord concern", type: :model do
 
   describe "auto-validation from database schema" do
     it "generates presence validation for non-null columns" do
-      entity = TestEntity.new
+      entity = Grit::TestEntity.new
       expect(entity).not_to be_valid
       expect(entity.errors[:name]).to include("can't be blank")
     end
 
     it "allows null columns to be blank" do
-      entity = TestEntity.new(name: "Valid Name")
+      entity = Grit::TestEntity.new(name: "Valid Name")
       entity.valid?
       expect(entity.errors[:another_string]).to be_empty
     end
@@ -53,7 +53,7 @@ RSpec.describe "GritEntityRecord concern", type: :model do
 
     it "applies length validation mechanism for string columns with limits" do
       column_names_validated = []
-      TestEntity.columns.each do |column|
+      Grit::TestEntity.columns.each do |column|
         next if %w[id created_at created_by updated_at updated_by].include?(column.name)
         next if column.sql_type_metadata.limit.nil?
         next unless %i[string text].include?(column.sql_type_metadata.type)
@@ -62,8 +62,8 @@ RSpec.describe "GritEntityRecord concern", type: :model do
 
       expect(column_names_validated).to be_a(Array)
 
-      expect(TestEntity._validators[:created_by].to_a).to be_empty
-      expect(TestEntity._validators[:updated_by].to_a).to be_empty
+      expect(Grit::TestEntity._validators[:created_by].to_a).to be_empty
+      expect(Grit::TestEntity._validators[:updated_by].to_a).to be_empty
     end
   end
 
@@ -73,31 +73,31 @@ RSpec.describe "GritEntityRecord concern", type: :model do
 
   describe "numbers_in_range validation" do
     it "allows integers within safe JavaScript range" do
-      entity = TestEntity.new(name: "Test", integer: 2**53 - 1)
+      entity = Grit::TestEntity.new(name: "Test", integer: 2**53 - 1)
       entity.valid?
       expect(entity.errors[:integer]).to be_empty
     end
 
     it "rejects integers exceeding safe JavaScript max" do
-      entity = TestEntity.new(name: "Test", integer: 2**53)
+      entity = Grit::TestEntity.new(name: "Test", integer: 2**53)
       expect(entity).not_to be_valid
       expect(entity.errors[:integer]).to include("is out of range")
     end
 
     it "rejects integers below safe JavaScript min" do
-      entity = TestEntity.new(name: "Test", integer: -(2**53))
+      entity = Grit::TestEntity.new(name: "Test", integer: -(2**53))
       expect(entity).not_to be_valid
       expect(entity.errors[:integer]).to include("is out of range")
     end
 
     it "allows negative integers within safe range" do
-      entity = TestEntity.new(name: "Test", integer: -(2**53 - 1))
+      entity = Grit::TestEntity.new(name: "Test", integer: -(2**53 - 1))
       entity.valid?
       expect(entity.errors[:integer]).to be_empty
     end
 
     it "allows nil values" do
-      entity = TestEntity.new(name: "Test", integer: nil)
+      entity = Grit::TestEntity.new(name: "Test", integer: nil)
       entity.valid?
       expect(entity.errors[:integer]).to be_empty
     end
@@ -109,19 +109,19 @@ RSpec.describe "GritEntityRecord concern", type: :model do
 
   describe "set_updater callback" do
     it "populates created_by on new record" do
-      entity = TestEntity.new(name: "New Entity")
+      entity = Grit::TestEntity.new(name: "New Entity")
       entity.save!
       expect(entity.created_by).to eq("admin")
     end
 
     it "populates updated_by on save" do
-      entity = TestEntity.new(name: "New Entity")
+      entity = Grit::TestEntity.new(name: "New Entity")
       entity.save!
       expect(entity.updated_by).to eq("admin")
     end
 
     it "updates updated_by on subsequent saves" do
-      entity = create(:test_entity)
+      entity = create(:grit_test_entity)
       entity.name = "Updated Name"
       entity.save!
       expect(entity.updated_by).to eq("admin")
@@ -134,7 +134,7 @@ RSpec.describe "GritEntityRecord concern", type: :model do
 
   describe "entity_crud_with configuration" do
     it "returns configured permissions" do
-      crud = TestEntity.entity_crud
+      crud = Grit::TestEntity.entity_crud
       expect(crud[:create]).to eq([])
       expect(crud[:read]).to eq([])
       expect(crud[:update]).to eq([])
@@ -156,7 +156,7 @@ RSpec.describe "GritEntityRecord concern", type: :model do
 
   describe "database introspection methods" do
     it "foreign_keys returns foreign key constraints" do
-      fks = TestEntity.foreign_keys
+      fks = Grit::TestEntity.foreign_keys
       expect(fks).to be_a(Array)
       user_fk = fks.find { |fk| fk.options[:column] == "user_id" }
       expect(user_fk).not_to be_nil
@@ -164,7 +164,7 @@ RSpec.describe "GritEntityRecord concern", type: :model do
     end
 
     it "indexes returns table indexes" do
-      indexes = TestEntity.indexes
+      indexes = Grit::TestEntity.indexes
       expect(indexes).to be_a(Array)
       user_idx = indexes.find { |idx| idx.columns.include?("user_id") }
       expect(user_idx).not_to be_nil
@@ -183,7 +183,7 @@ RSpec.describe "GritEntityRecord concern", type: :model do
     end
 
     it "db_properties returns column metadata" do
-      props = TestEntity.db_properties
+      props = Grit::TestEntity.db_properties
       expect(props).to be_a(Array)
 
       name_prop = props.find { |p| p[:name] == "name" }
@@ -194,7 +194,7 @@ RSpec.describe "GritEntityRecord concern", type: :model do
     end
 
     it "db_properties identifies entity type for foreign keys" do
-      props = TestEntity.db_properties
+      props = Grit::TestEntity.db_properties
       user_prop = props.find { |p| p[:name] == "user_id" }
       expect(user_prop).not_to be_nil
       expect(user_prop[:type]).to eq("entity")
@@ -208,19 +208,19 @@ RSpec.describe "GritEntityRecord concern", type: :model do
 
   describe "entity metadata methods" do
     it "display_properties returns configured display columns" do
-      display_props = TestEntity.display_properties
+      display_props = Grit::TestEntity.display_properties
       expect(display_props.length).to eq(1)
       expect(display_props.first[:name]).to eq("name")
     end
 
     it "entity_properties returns all db_properties by default" do
-      entity_props = TestEntity.entity_properties
-      db_props = TestEntity.db_properties
+      entity_props = Grit::TestEntity.entity_properties
+      db_props = Grit::TestEntity.db_properties
       expect(entity_props.length).to eq(db_props.length)
     end
 
     it "entity_fields excludes audit columns" do
-      fields = TestEntity.entity_fields
+      fields = Grit::TestEntity.entity_fields
       field_names = fields.map { |f| f[:name] }
       expect(field_names).not_to include("id")
       expect(field_names).not_to include("created_at")
@@ -230,7 +230,7 @@ RSpec.describe "GritEntityRecord concern", type: :model do
     end
 
     it "entity_fields enriches entity type with display column info" do
-      fields = TestEntity.entity_fields
+      fields = Grit::TestEntity.entity_fields
       user_field = fields.find { |f| f[:name] == "user_id" }
       expect(user_field).not_to be_nil
       expect(user_field[:type]).to eq("entity")
@@ -239,14 +239,14 @@ RSpec.describe "GritEntityRecord concern", type: :model do
     end
 
     it "entity_columns includes flattened entity display columns" do
-      columns = TestEntity.entity_columns
+      columns = Grit::TestEntity.entity_columns
       user_col = columns.find { |c| c[:name] == "user_id__name" }
       expect(user_col).not_to be_nil
       expect(user_col[:type]).to eq("entity")
     end
 
     it "entity_columns marks audit fields as default_hidden" do
-      columns = TestEntity.entity_columns
+      columns = Grit::TestEntity.entity_columns
       id_col = columns.find { |c| c[:name] == "id" }
       created_at_col = columns.find { |c| c[:name] == "created_at" }
       expect(id_col[:default_hidden]).to eq(true)
@@ -260,15 +260,15 @@ RSpec.describe "GritEntityRecord concern", type: :model do
 
   describe "detailed scope" do
     it "includes base columns" do
-      query = TestEntity.detailed
+      query = Grit::TestEntity.detailed
       expect(query).to be_a(ActiveRecord::Relation)
       expect { query.to_a }.not_to raise_error
     end
 
     it "joins foreign key tables" do
-      entity = TestEntity.create!(name: "With User", user_id: admin.id)
+      entity = Grit::TestEntity.create!(name: "With User", user_id: admin.id)
 
-      result = TestEntity.detailed.find(entity.id)
+      result = Grit::TestEntity.detailed.find(entity.id)
       expect(result).to respond_to(:user_id__name)
       expect(result.user_id__name).to eq("Administrator")
     ensure
@@ -282,14 +282,14 @@ RSpec.describe "GritEntityRecord concern", type: :model do
 
   describe ".loader_find_by!" do
     it "finds record by property" do
-      entity = create(:test_entity, name: "findable")
-      found = TestEntity.loader_find_by!(:name, "findable")
+      entity = create(:grit_test_entity, name: "findable")
+      found = Grit::TestEntity.loader_find_by!(:name, "findable")
       expect(found.id).to eq(entity.id)
     end
 
     it "raises when record not found" do
       expect {
-        TestEntity.loader_find_by!(:name, "nonexistent")
+        Grit::TestEntity.loader_find_by!(:name, "nonexistent")
       }.to raise_error(ActiveRecord::RecordNotFound)
     end
   end

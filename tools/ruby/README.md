@@ -24,7 +24,7 @@ Nx plugin for Ruby/Rails projects in the monorepo. Automatically infers targets 
 
 | Target | Command          | Description                 |
 | ------ | ---------------- | --------------------------- |
-| `test` | `bin/rails test` | Run Minitest tests (cached) |
+| `test` | `bundle exec rspec` | Run RSpec tests (cached) |
 
 ### Linting (when `.rubocop.yml` exists)
 

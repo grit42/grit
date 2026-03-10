@@ -59,7 +59,7 @@ RSpec.describe "Load Sets API", type: :request do
         it "creates a load set and block", rswag: false do
           load_set_params = {
             name: "test-entity-new",
-            entity: "TestEntity",
+            entity: "Grit::TestEntity",
             origin_id: origin.id,
             load_set_blocks: {
               "0" => {
@@ -115,7 +115,7 @@ RSpec.describe "Load Sets API", type: :request do
           Grit::Core::LoadSetStatus.find_or_create_by!(name: "Created") { |s| s.description = "Created" }
           post "/api/grit/core/load_sets", params: {
             name: "test-entity-to-delete",
-            entity: "TestEntity",
+            entity: "Grit::TestEntity",
             origin_id: origin.id,
             load_set_blocks: {
               "0" => {
@@ -151,7 +151,7 @@ RSpec.describe "Load Sets API", type: :request do
       # Create actual loaded records for the rollback to work
       succeeded_load_set.load_set_blocks.each do |lsb|
         2.times do
-          entity = TestEntity.create!(name: "rollback-test-#{SecureRandom.hex(4)}")
+          entity = Grit::TestEntity.create!(name: "rollback-test-#{SecureRandom.hex(4)}")
           Grit::Core::LoadSetBlockLoadedRecord.create!(
             load_set_block_id: lsb.id,
             record_id: entity.id,
@@ -162,7 +162,7 @@ RSpec.describe "Load Sets API", type: :request do
 
       expect {
         post "/api/grit/core/load_sets/#{succeeded_load_set.id}/rollback", as: :json
-      }.to change(TestEntity, :count).by(-2)
+      }.to change(Grit::TestEntity, :count).by(-2)
 
       expect(response).to have_http_status(:success)
 

@@ -34,7 +34,7 @@ RSpec.describe Grit::Core::EntityLoader, type: :model do
 
   describe ".loader" do
     it "resolves a specialized loader class by entity name" do
-      expect(described_class.loader("TestEntity")).to eq(TestEntityLoader)
+      expect(described_class.loader("Grit::TestEntity")).to eq(Grit::TestEntityLoader)
     end
 
     it "falls back to EntityLoader when no specialized loader exists" do
@@ -369,7 +369,7 @@ RSpec.describe Grit::Core::EntityLoader, type: :model do
 
   describe ".mapping_fields" do
     it "returns entity fields for the load set entity" do
-      load_set = create(:grit_core_load_set, entity: "TestEntity")
+      load_set = create(:grit_core_load_set, entity: "Grit::TestEntity")
       fields = described_class.send(:mapping_fields, load_set)
       expect(fields).to be_a(Array)
       expect(fields.any? { |f| f[:name] == "name" }).to be_truthy
@@ -378,7 +378,7 @@ RSpec.describe Grit::Core::EntityLoader, type: :model do
 
   describe ".block_mapping_fields" do
     it "returns entity fields via the load set block" do
-      load_set = create(:grit_core_load_set, entity: "TestEntity")
+      load_set = create(:grit_core_load_set, entity: "Grit::TestEntity")
       load_set_block = create(:grit_core_load_set_block, :mapping, load_set: load_set)
       fields = described_class.send(:block_mapping_fields, load_set_block)
       expect(fields).to be_a(Array)
