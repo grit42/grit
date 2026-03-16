@@ -25,6 +25,8 @@ module Grit::Assays
     belongs_to :unit, class_name: "Grit::Core::Unit", optional: true
     has_many :data_table_columns, dependent: :destroy
 
+    delegate :assay_model, to: :assay_data_sheet_definition
+
     display_column "name"
 
     entity_crud_with read: [],
@@ -38,8 +40,11 @@ module Grit::Assays
     validates :safe_name, format: { with: /\A[a-z0-9_]*\z/, message: "should contain only lowercase letters, numbers and underscores" }
     validate :safe_name_not_conflict
 
-    before_save :check_model_publication_status
+    # before_save :check_model_publication_status
     before_create :check_assay_data_sheet_definition_columns_count
+    after_create :create_column_if_model_is_published
+    after_update :sync_column
+    before_destroy :remove_column
 
     def safe_name_not_conflict
       return unless self.safe_name_changed?
@@ -55,6 +60,47 @@ module Grit::Assays
         .select("grit_assays_assay_models.name as assay_model_id__name")
     end
 
+    def create_column
+      raise "Data Sheet table must be created before columns" unless assay_data_sheet_definition.table_exists?
+      connection = ActiveRecord::Base.connection
+
+      column = self
+      type = (column.data_type.is_entity or column[:type].to_s == "integer") ? :bigint : column.data_type.sql_name
+
+      connection.add_column assay_data_sheet_definition.table_name, column.safe_name, type, null: !column.required
+      connection.add_foreign_key assay_data_sheet_definition.table_name, column.data_type.table_name, column: column.safe_name, name: "#{assay_data_sheet_definition.table_name}_#{column.safe_name}", if_not_exists: true if column.data_type.is_entity
+      ActiveRecord::Base.descendants.find { |m| m.table_name == assay_data_sheet_definition.table_name }.reset_column_information
+    end
+
+    def sync_column
+      refresh_cache = false
+      column = self
+      connection = ActiveRecord::Base.connection
+      if safe_name_previously_changed?
+        connection.rename_column assay_data_sheet_definition.table_name, column.safe_name_previously_was, column.safe_name
+        refresh_cache = true
+      end
+      if required_previously_changed?
+        connection.change_column_null assay_data_sheet_definition.table_name, column.safe_name, column.required
+        refresh_cache = true
+      end
+      if data_type_id_previously_changed?
+        connection.remove_foreign_key assay_data_sheet_definition.table_name, column: column.safe_name, if_exists: true
+
+        type = (column.data_type.is_entity or column[:type].to_s == "integer") ? :bigint : column.data_type.sql_name
+        connection.change_column assay_data_sheet_definition.table_name, column.safe_name, type, using: "#{column.safe_name}::#{type}"
+        connection.add_foreign_key assay_data_sheet_definition.table_name, column.data_type.table_name, column: column.safe_name, name: "#{assay_data_sheet_definition.table_name}_#{column.safe_name}", if_not_exists: true if column.data_type.is_entity
+        refresh_cache = true
+      end
+      ActiveRecord::Base.descendants.find { |m| m.table_name == assay_data_sheet_definition.table_name }.reset_column_information if refresh_cache
+    end
+
+    def remove_column
+      connection = ActiveRecord::Base.connection
+      connection.remove_column assay_data_sheet_definition.table_name, safe_name, if_exists: true
+      ActiveRecord::Base.descendants.find { |m| m.table_name == assay_data_sheet_definition.table_name }.reset_column_information
+    end
+
     private
       def check_model_publication_status
         raise "Cannot modify columns of a published Assay Model" if assay_data_sheet_definition.assay_model.publication_status.name === "Published"
@@ -62,6 +108,10 @@ module Grit::Assays
 
       def check_assay_data_sheet_definition_columns_count
         raise "A Data Sheet Definition cannot have more than 250 columns" if assay_data_sheet_definition.assay_data_sheet_columns.length >= 250
+      end
+
+      def create_column_if_model_is_published
+        create_column if assay_model.published? && assay_data_sheet_definition.table_exists?
       end
   end
 end

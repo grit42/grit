@@ -28,8 +28,10 @@ import CloneDataSheet from "./CloneDataSheet";
 import EditDataSheet from "./EditDataSheet";
 import DataSheetTabs from "./DataSheetTabs";
 import { useAssayModel } from "../../../../../../queries/assay_models";
+import { useAssayModelEditorContext } from "../AssayModelEditorContext";
 
 const DataSheets = () => {
+  const { canEdit } = useAssayModelEditorContext();
   const { assay_model_id } = useParams() as { assay_model_id: string };
 
   const { data, isLoading, isError, error } = useAssayDataSheetDefinitions(
@@ -83,14 +85,14 @@ const DataSheets = () => {
           <DataSheetTabs sheetDefinitions={data} assayModel={assayModel} />
         }
       >
-        {assayModel.publication_status_id__name !== "Published" && (
+        {canEdit && (
           <Route
             path="new"
             element={<NewDataSheet assayModelId={assay_model_id} />}
           />
         )}
         <Route path=":sheet_id">
-          {assayModel.publication_status_id__name !== "Published" && (
+          {canEdit && (
             <Route path="clone">
               <Route
                 index

@@ -44,10 +44,8 @@ import {
 import styles from "./dataSheets.module.scss";
 import DataSheetColumns from "./data-sheet-columns";
 import { z } from "zod";
-import {
-  AssayModelData,
-  useAssayModel,
-} from "../../../../../../queries/assay_models";
+import { AssayModelData } from "../../../../../../queries/assay_models";
+import { useAssayModelEditorContext } from "../AssayModelEditorContext";
 
 const AssayDataSheetDefinitionForm = ({
   fields,
@@ -60,8 +58,8 @@ const AssayDataSheetDefinitionForm = ({
   sheets: AssayDataSheetDefinitionData[];
   onDeleteRedirectId: string;
 }) => {
+  const { canEdit } = useAssayModelEditorContext();
   const { assay_model_id } = useParams() as { assay_model_id: string };
-  const { data: assayModel } = useAssayModel(assay_model_id);
 
   const navigate = useNavigate();
 
@@ -128,8 +126,7 @@ const AssayDataSheetDefinitionForm = ({
             <FormField
               fieldDef={{
                 ...f,
-                disabled:
-                  assayModel?.publication_status_id__name === "Published",
+                disabled: !canEdit,
               }}
               key={f.name}
               validators={validators[f.name as "name"] as any}
@@ -158,17 +155,16 @@ const AssayDataSheetDefinitionForm = ({
                 {isDirty && (
                   <Button onClick={() => form.reset()}>Revert changes</Button>
                 )}
-                {!isDirty &&
-                  assayModel?.publication_status_id__name !== "Published" && (
-                    <Link
-                      to={{
-                        pathname: "clone",
-                      }}
-                    >
-                      <Button>Clone</Button>
-                    </Link>
-                  )}
-                {assayModel?.publication_status_id__name !== "Published" && (
+                {!isDirty && canEdit && (
+                  <Link
+                    to={{
+                      pathname: "clone",
+                    }}
+                  >
+                    <Button>Clone</Button>
+                  </Link>
+                )}
+                {canEdit && (
                   <Button
                     color="danger"
                     onClick={onDelete}

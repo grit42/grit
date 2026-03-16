@@ -31,7 +31,9 @@ module Grit::Assays
       update: [ "Administrator", "AssayAdministrator" ],
       destroy: [ "Administrator", "AssayAdministrator" ]
 
-    before_save :check_model_publication_status
+    # before_save :check_model_publication_status
+    after_create :create_table_if_model_is_published
+    after_destroy :drop_table
 
     def table_name
       "ds_#{id}"
@@ -209,6 +211,10 @@ module Grit::Assays
       klass
     end
 
+    def table_exists?
+      ActiveRecord::Base.connection.table_exists? table_name
+    end
+
     def create_table
       foreign_key_colums = []
       connection = ActiveRecord::Base.connection
@@ -244,6 +250,10 @@ module Grit::Assays
     private
       def check_model_publication_status
         raise "Cannot modify data sheet definitions of a published Assay Model" if assay_model.publication_status.name === "Published"
+      end
+
+      def create_table_if_model_is_published
+        create_table if assay_model.published?
       end
   end
 end

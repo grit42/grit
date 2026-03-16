@@ -16,12 +16,9 @@ import {
 import { Row, Table, useSetupTableState } from "@grit42/table";
 import { useTableColumns } from "@grit42/core/utils";
 import { Link, Route, Routes, useParams } from "react-router-dom";
-import {
-  AssayModelData,
-  useAssayModel,
-} from "../../../../../../queries/assay_models";
 import { useQueryClient } from "@grit42/api";
 import { CenteredColumnLayout } from "@grit42/client-library/layouts";
+import { useAssayModelEditorContext } from "../AssayModelEditorContext";
 
 const getRowId = (data: EntityData) => data.id.toString();
 
@@ -174,12 +171,11 @@ const AssayMetadataDefinitionSelector = ({
 const AssayModelMetadata = ({
   columns,
   assayModelId,
-  assayModel,
 }: {
   assayModelId: string | number;
   columns: EntityPropertyDef[];
-  assayModel: AssayModelData;
 }) => {
+  const { canEdit } = useAssayModelEditorContext();
   const tableColumns = useTableColumns(columns);
   const tableState = useSetupTableState("assay-model-metadat", tableColumns, {
     saveState: {
@@ -206,7 +202,7 @@ const AssayModelMetadata = ({
     <CenteredColumnLayout>
       <Table
         headerActions={
-          assayModel?.publication_status_id__name !== "Published" ? (
+          canEdit ? (
             <Link to="edit">
               <Button>Edit</Button>
             </Link>
@@ -219,8 +215,7 @@ const AssayModelMetadata = ({
         disableFooter
         data={modelMetadata}
         noDataMessage={
-          ((isModelMetadataError ? modelMetadataError : undefined) ??
-          assayModel?.publication_status_id__name !== "Published")
+          ((isModelMetadataError ? modelMetadataError : undefined) ?? canEdit)
             ? "No metadata selected"
             : "This assay model does not define any metadata"
         }
@@ -237,19 +232,13 @@ const Metadata = () => {
     isError,
     error,
   } = useAssayMetadataDefinitionColumns();
-  const {
-    data: assayModel,
-    isLoading: isAssayModelLoading,
-    isError: isAssayModelError,
-    error: assayModelError,
-  } = useAssayModel(assay_model_id);
 
-  if (isLoading || isAssayModelLoading) {
+  if (isLoading) {
     return <Spinner />;
   }
 
-  if (isError || !columns || isAssayModelError || !assayModel) {
-    return <ErrorPage error={error ?? assayModelError} />;
+  if (isError || !columns) {
+    return <ErrorPage error={error} />;
   }
 
   return (
@@ -257,24 +246,18 @@ const Metadata = () => {
       <Route
         index
         element={
-          <AssayModelMetadata
+          <AssayModelMetadata columns={columns} assayModelId={assay_model_id} />
+        }
+      />
+      <Route
+        path="edit"
+        element={
+          <AssayMetadataDefinitionSelector
             columns={columns}
             assayModelId={assay_model_id}
-            assayModel={assayModel}
           />
         }
       />
-      {assayModel?.publication_status_id__name !== "Published" && (
-        <Route
-          path="edit"
-          element={
-            <AssayMetadataDefinitionSelector
-              columns={columns}
-              assayModelId={assay_model_id}
-            />
-          }
-        />
-      )}
     </Routes>
   );
 };

@@ -23,6 +23,7 @@ import { useToolbar } from "@grit42/core";
 import Circle1NewIcon from "@grit42/client-library/icons/Circle1New";
 import { AssayDataSheetDefinitionData } from "../../../../../../queries/assay_data_sheet_definitions";
 import { AssayModelData } from "../../../../../../queries/assay_models";
+import { useAssayModelEditorContext } from "../AssayModelEditorContext";
 
 interface Props {
   sheetDefinitions: AssayDataSheetDefinitionData[];
@@ -30,6 +31,7 @@ interface Props {
 }
 
 const DataSheetTabs = ({ sheetDefinitions, assayModel }: Props) => {
+  const { canEdit } = useAssayModelEditorContext();
   const registerToolbarActions = useToolbar();
   const navigate = useNavigate();
 
@@ -85,7 +87,7 @@ const DataSheetTabs = ({ sheetDefinitions, assayModel }: Props) => {
       label: sheetDefinition.name,
     }));
 
-    if (assayModel.publication_status_id__name !== "Published") {
+    if (canEdit) {
       baseTabs.push({
         url: "new",
         label: "+ New sheet",
@@ -93,12 +95,9 @@ const DataSheetTabs = ({ sheetDefinitions, assayModel }: Props) => {
     }
 
     return baseTabs;
-  }, [sheetDefinitions, assayModel.publication_status_id__name]);
+  }, [sheetDefinitions, canEdit]);
 
-  if (
-    assayModel.publication_status_id__name === "Published" &&
-    sheetDefinitions.length === 0
-  ) {
+  if (!canEdit && sheetDefinitions.length === 0) {
     return <ErrorPage error="This model does not define any data sheets" />;
   }
 

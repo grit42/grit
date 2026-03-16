@@ -27,7 +27,7 @@ module Grit::Assays
     has_many :assay_data_sheet_definitions, dependent: :destroy
     has_many :experiments, dependent: :destroy
 
-    before_save :check_publication_status
+    # before_save :check_publication_status
 
     display_column "name"
 
@@ -46,6 +46,14 @@ module Grit::Assays
 
     def drop_tables
       assay_data_sheet_definitions.each(&:drop_table)
+    end
+
+    def published?
+      publication_status.name === "Published"
+    end
+
+    def draft?
+      publication_status.name === "Draft"
     end
 
     private

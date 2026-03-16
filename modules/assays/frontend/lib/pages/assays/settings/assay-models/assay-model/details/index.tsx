@@ -38,6 +38,7 @@ import {
 import { useState } from "react";
 import styles from "./details.module.scss";
 import { CenteredSurface } from "@grit42/client-library/layouts";
+import { useAssayModelEditorContext } from "../AssayModelEditorContext";
 
 export const usePublishAssayModelMutation = (
   id: string | number,
@@ -160,6 +161,8 @@ const AssayModelActions = ({
 }: {
   assayModel: Partial<AssayModelData>;
 }) => {
+  const { dangerousEditMode, setDangerousEditMode } =
+    useAssayModelEditorContext();
   const navigate = useNavigate();
   const destroyEntityMutation = useDestroyEntityMutation(
     "grit/assays/assay_models",
@@ -199,12 +202,40 @@ const AssayModelActions = ({
     await draftMutation.mutateAsync();
   };
 
+  const onDangerousEditMode = () => {
+    setDangerousEditMode(true);
+  };
+
   if (!assayModel.id) {
     return null;
   }
 
   return (
     <>
+      {assayModel.publication_status_id__name === "Published" &&
+        !dangerousEditMode && (
+          <AssayModelAction
+            title="Enter dangerous edit mode"
+            description={
+              <>
+                The dangerous edit mode enables modifying a published assay
+                model, potentially causing permanent data loss if not used
+                carefully. Use this only if you are absolutely sure of what you
+                are doing.{" "}
+                <b>
+                  The data erased when deleting sheets or columns cannot be
+                  recovered.
+                </b>
+              </>
+            }
+            action={
+              <Button color="danger" onClick={onDangerousEditMode}>
+                Dangerous edit mode
+              </Button>
+            }
+          />
+        )}
+
       {assayModel.publication_status_id__name === "Draft" && (
         <AssayModelAction
           title="Publish this Assay Model"
@@ -271,6 +302,7 @@ const AssayModelForm = ({
   fields: FormFieldDef[];
   assayModel: Partial<AssayModelData>;
 }) => {
+  const { canEdit } = useAssayModelEditorContext();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState<Partial<AssayModelData>>(assayModel);
@@ -286,7 +318,7 @@ const AssayModelForm = ({
 
   const fields = fieldsFromProps.map((f) => ({
     ...f,
-    disabled: assayModel.publication_status_id__name === "Published",
+    disabled: !canEdit,
   }));
 
   const form = useForm({

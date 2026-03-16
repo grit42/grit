@@ -29,16 +29,18 @@ import {
 import { Table, useSetupTableState } from "@grit42/table";
 import { useTableColumns } from "@grit42/core/utils";
 import { AssayModelData } from "../../../../../../../queries/assay_models";
+import { useAssayModelEditorContext } from "../../AssayModelEditorContext";
 
 const DataSheetColumnsTable = ({
   sheetId,
   disableNavigation = false,
-  assayModel,
 }: {
   sheetId: string;
   disableNavigation?: boolean;
   assayModel?: AssayModelData;
 }) => {
+  const { canEdit } = useAssayModelEditorContext();
+
   const registerToolbarActions = useToolbar();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -63,10 +65,7 @@ const DataSheetColumnsTable = ({
   );
 
   const canCreateColumn =
-    sheetId !== "new" &&
-    assayModel?.publication_status_id__name === "Draft" &&
-    data &&
-    data.length < 250;
+    sheetId !== "new" && canEdit && data && data.length < 250;
 
   const navigateToNew = useCallback(() => navigate("new"), [navigate]);
 

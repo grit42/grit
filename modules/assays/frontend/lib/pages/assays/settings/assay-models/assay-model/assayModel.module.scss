@@ -25,9 +25,27 @@
   grid-template-rows: min-content min-content 1fr;
   overflow: auto;
 
+  &.dangerousEditMode {
+    grid-template-rows: min-content min-content min-content 1fr;
+  }
+
   &.dataSheetLoaderContainer {
     grid-template-rows: min-content 1fr;
+    &.dangerousEditMode {
+      grid-template-rows: min-content min-content 1fr;
+    }
   }
+}
+
+.dangerousEditModeBanner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: rgb(from theme.$palette-error-main r g b / 0.25);
+  border: 2px solid theme.$palette-error-main;
+  border-radius: theme.$border-radius;
+  padding: theme.$spacing-lg;
+  margin-bottom: theme.$spacing-lg;
 }
 
 .header {

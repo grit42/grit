@@ -53,8 +53,8 @@ import {
 } from "../../../../../../../queries/assay_data_sheet_columns";
 import { z } from "zod";
 import { toSafeIdentifier } from "@grit42/core/utils";
-import { useAssayModel } from "../../../../../../../queries/assay_models";
 import { CenteredSurface } from "@grit42/client-library/layouts";
+import { useAssayModelEditorContext } from "../../AssayModelEditorContext";
 
 const initializedFormData = <T extends Partial<EntityData>>(
   data: T,
@@ -78,12 +78,10 @@ const AssayDataSheetColumnForm = ({
   assayDataSheetColumn: Partial<AssayDataSheetColumnData>;
   assayDataSheetColumns: AssayDataSheetColumnData[];
 }) => {
-  const { sheet_id, assay_model_id } = useParams() as {
+  const { canEdit } = useAssayModelEditorContext();
+  const { sheet_id } = useParams() as {
     sheet_id: string;
-    assay_model_id: string;
   };
-  const { data: assayModel } = useAssayModel(assay_model_id);
-
   const navigate = useNavigate();
 
   const editEntityMutation = useEditEntityMutation<AssayDataSheetColumnData>(
@@ -169,15 +167,11 @@ const AssayDataSheetColumnForm = ({
     navigate("..");
   };
 
-  const canCreateColumn =
-    assayModel?.publication_status_id__name === "Draft" &&
-    assayDataSheetColumns.length < 249;
+  const canCreateColumn = canEdit && assayDataSheetColumns.length < 249;
 
   return (
     <CenteredSurface>
-      {assayModel?.publication_status_id__name !== "Published" && (
-        <h2>Edit column</h2>
-      )}
+      {canEdit && <h2>Edit column</h2>}
       <Form form={form}>
         <FormFields>
           <FormBanner content={form.state.errorMap.onSubmit} />
@@ -186,8 +180,7 @@ const AssayDataSheetColumnForm = ({
               <FormField
                 fieldDef={{
                   ...f,
-                  disabled:
-                    assayModel?.publication_status_id__name === "Published",
+                  disabled: !canEdit,
                 }}
                 validators={validators[f.name as "name" | "safe_name"] as any}
               />
@@ -243,7 +236,7 @@ const AssayDataSheetColumnForm = ({
                     <Button>Clone</Button>
                   </Link>
                 )}
-                {assayModel?.publication_status_id__name !== "Published" && (
+                {canEdit && (
                   <Button
                     color="danger"
                     onClick={onDelete}

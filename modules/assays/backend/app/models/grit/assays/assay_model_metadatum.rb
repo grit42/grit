@@ -23,7 +23,7 @@ module Grit::Assays
     belongs_to :assay_metadata_definition
     belongs_to :assay_model
 
-    before_save :check_model_publication_status
+    # before_save :check_model_publication_status
 
     entity_crud_with read: [],
       create: [ "Administrator", "AssayAdministrator" ],
