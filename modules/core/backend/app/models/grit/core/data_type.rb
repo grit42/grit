@@ -67,8 +67,9 @@ module Grit::Core
     end
 
     def sql_name
-      raise "no sql name for entity types" if is_entity
-      return "bigint" if name == "integer"
+      return "bigint" if name == "integer" || is_entity
+      return "varchar" if name == "string"
+      return "timestamp without time zone" if name == "datetime"
       name
     end
   end

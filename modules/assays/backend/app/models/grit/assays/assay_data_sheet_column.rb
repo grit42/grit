@@ -61,7 +61,7 @@ module Grit::Assays
     end
 
     def create_column
-      raise "Data Sheet table must be created before columns" unless assay_data_sheet_definition.table_exists?
+      return unless assay_data_sheet_definition.table_exists?
       connection = ActiveRecord::Base.connection
 
       column = self
@@ -73,6 +73,7 @@ module Grit::Assays
     end
 
     def sync_column
+      return unless assay_data_sheet_definition.table_exists?
       refresh_cache = false
       column = self
       connection = ActiveRecord::Base.connection
@@ -81,23 +82,33 @@ module Grit::Assays
         refresh_cache = true
       end
       if required_previously_changed?
-        connection.change_column_null assay_data_sheet_definition.table_name, column.safe_name, column.required
+        raise "Cannot require column with empty values" if column.required && assay_data_sheet_definition.sheet_record_klass.where(safe_name => nil).count().positive?
+        connection.change_column_null assay_data_sheet_definition.table_name, column.safe_name, !column.required
         refresh_cache = true
       end
       if data_type_id_previously_changed?
-        connection.remove_foreign_key assay_data_sheet_definition.table_name, column: column.safe_name, if_exists: true
+        previous_data_type = Grit::Core::DataType.find(data_type_id_previously_was)
+        raise "Failed to convert #{previous_data_type.name} to #{column.data_type.name} because of conflicts in existing rows" if (previous_data_type.is_entity || column.data_type.is_entity) && assay_data_sheet_definition.sheet_record_klass.count(safe_name).positive?
+        begin
+          connection.remove_foreign_key assay_data_sheet_definition.table_name, column: column.safe_name, if_exists: true
 
-        type = (column.data_type.is_entity or column[:type].to_s == "integer") ? :bigint : column.data_type.sql_name
-        connection.change_column assay_data_sheet_definition.table_name, column.safe_name, type, using: "#{column.safe_name}::#{type}"
-        connection.add_foreign_key assay_data_sheet_definition.table_name, column.data_type.table_name, column: column.safe_name, name: "#{assay_data_sheet_definition.table_name}_#{column.safe_name}", if_not_exists: true if column.data_type.is_entity
-        refresh_cache = true
+          connection.change_column assay_data_sheet_definition.table_name, column.safe_name, column.data_type.sql_name, using: "#{column.safe_name}::text::#{column.data_type.sql_name}"
+          connection.add_foreign_key assay_data_sheet_definition.table_name, column.data_type.table_name, column: column.safe_name, name: "#{assay_data_sheet_definition.table_name}_#{column.safe_name}", if_not_exists: true if column.data_type.is_entity
+          refresh_cache = true
+        rescue ActiveRecord::InvalidForeignKey => e
+          raise "Failed to convert #{previous_data_type.name} to #{column.data_type.name} because of conflicts in existing rows"
+        rescue ActiveRecord::StatementInvalid => e
+          raise "Failed to convert #{previous_data_type.name} to #{column.data_type.name} because of conflicts in existing rows" if /invalid input syntax for type/.match?(e.to_s)
+          raise e.to_s
+        end
       end
       ActiveRecord::Base.descendants.find { |m| m.table_name == assay_data_sheet_definition.table_name }&.reset_column_information if refresh_cache
     end
 
     def remove_column
+      return unless assay_data_sheet_definition.table_exists?
       connection = ActiveRecord::Base.connection
-      connection.remove_column assay_data_sheet_definition.table_name, safe_name, if_exists: true if assay_data_sheet_definition.table_exists?
+      connection.remove_column assay_data_sheet_definition.table_name, safe_name, if_exists: true
       ActiveRecord::Base.descendants.find { |m| m.table_name == assay_data_sheet_definition.table_name }&.reset_column_information
     end
 

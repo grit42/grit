@@ -227,11 +227,9 @@ module Grit::Assays
         t.references :experiment, null: false, foreign_key: { name: "#{table_name}_experiments", to_table: "grit_assays_experiments" }
 
         assay_data_sheet_columns.each do |column|
-          if column.data_type.is_entity or column[:type].to_s == "integer"
+          if column.data_type.is_entity
             t.column column.safe_name, :bigint, null: !column.required
             foreign_key_colums.push column
-          elsif column.data_type.name == "decimal"
-            t.column column.safe_name, :decimal, null: !column.required
           else
             t.column column.safe_name, column.data_type.sql_name, null: !column.required
           end

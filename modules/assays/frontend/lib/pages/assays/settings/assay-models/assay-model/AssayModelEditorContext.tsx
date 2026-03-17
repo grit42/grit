@@ -32,7 +32,7 @@ const AssayModelEditorContextProvider = ({
   children,
   assayModel,
 }: PropsWithChildren<{ assayModel: AssayModelData }>) => {
-  const [dangerousEditMode, setDangerousEditMode] = useState(true); // TODO: set to false
+  const [dangerousEditMode, setDangerousEditMode] = useState(false);
   const [prevAssayModel, setPrevAssayModel] = useState(assayModel);
 
   const contextValue = useMemo(
