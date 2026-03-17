@@ -31,6 +31,8 @@ export * from "./CheckboxGroup";
 export { default as CopyableBlock } from "./CopyableBlock";
 export * from "./CopyableBlock";
 
+export * from "./ConfirmDialog";
+
 export { default as Dialog } from "./Dialog";
 export * from "./Dialog";
 

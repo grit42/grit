@@ -3,6 +3,7 @@ import {
   ButtonGroup,
   ErrorPage,
   Spinner,
+  useConfirm,
 } from "@grit42/client-library/components";
 import {
   AssayModelData,
@@ -161,7 +162,8 @@ const AssayModelActions = ({
 }: {
   assayModel: Partial<AssayModelData>;
 }) => {
-  const { dangerousEditMode, setDangerousEditMode } =
+  const confirm = useConfirm();
+  const { dangerousEditMode, setDangerousEditMode, published } =
     useAssayModelEditorContext();
   const navigate = useNavigate();
   const destroyEntityMutation = useDestroyEntityMutation(
@@ -172,13 +174,15 @@ const AssayModelActions = ({
   const draftMutation = useDraftAssayModelMutation(assayModel.id!);
 
   const onDelete = async () => {
-    if (
-      !assayModel.id ||
-      !window.confirm(
-        `Are you sure you want to delete this assay model? This action is irreversible`,
-      )
-    )
+    const confirmed = await confirm({
+      title: `Delete assay model ${assayModel.name}?`,
+      body: `Are you sure you want to delete this assay model? All related experiments and data will be permanently deleted.`,
+      challenge: published ? assayModel.name : undefined,
+      danger: true,
+    });
+    if (!confirmed) {
       return;
+    }
     await destroyEntityMutation.mutateAsync(assayModel.id);
     navigate("../..", { relative: "path" });
   };
@@ -191,18 +195,28 @@ const AssayModelActions = ({
   };
 
   const onDraft = async () => {
-    if (
-      !assayModel.id ||
-      !window.confirm(
-        `Are you sure you want to convert this Assay Model to draft? All related experiments and existing data will be permanently deleted. This action is irreversible.`,
-      )
-    ) {
+    const confirmed = await confirm({
+      title: `Convert assay model ${assayModel.name} to draft?`,
+      body: `Are you sure you want to convert this Assay Model to draft? All related experiments and data will be permanently deleted.`,
+      challenge: assayModel.name,
+      danger: true,
+    });
+    if (!confirmed) {
       return;
     }
     await draftMutation.mutateAsync();
   };
 
-  const onDangerousEditMode = () => {
+  const onDangerousEditMode = async () => {
+    const confirmed = await confirm({
+      title: `Dangerously edit ${assayModel.name}?`,
+      body: `Are you sure you want to enter dangerous edit mode? Changes made in this mode can cause permanent data loss.`,
+      challenge: assayModel.name,
+      danger: true,
+    });
+    if (!confirmed) {
+      return;
+    }
     setDangerousEditMode(true);
   };
 
@@ -223,7 +237,7 @@ const AssayModelActions = ({
                 carefully. Use this only if you are absolutely sure of what you
                 are doing.{" "}
                 <b>
-                  The data erased when deleting sheets or columns cannot be
+                  The data lost when deleting sheets or columns cannot be
                   recovered.
                 </b>
               </>

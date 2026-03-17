@@ -24,6 +24,7 @@ import {
   ErrorPage,
   Spinner,
   Surface,
+  useConfirm,
 } from "@grit42/client-library/components";
 import { useDestroyEntityMutation, useEditEntityMutation } from "@grit42/core";
 import {
@@ -58,7 +59,8 @@ const AssayDataSheetDefinitionForm = ({
   sheets: AssayDataSheetDefinitionData[];
   onDeleteRedirectId: string;
 }) => {
-  const { canEdit } = useAssayModelEditorContext();
+  const confirm = useConfirm();
+  const { canEdit, dangerousEditMode } = useAssayModelEditorContext();
   const { assay_model_id } = useParams() as { assay_model_id: string };
 
   const navigate = useNavigate();
@@ -106,13 +108,18 @@ const AssayDataSheetDefinitionForm = ({
   });
 
   const onDelete = async () => {
-    if (
-      !sheetDefinition.id ||
-      !window.confirm(
-        `Are you sure you want to delete this data sheet? This action is irreversible`,
-      )
-    )
+    if (!sheetDefinition.id) {
       return;
+    }
+    const confirmed = await confirm({
+      title: `Delete data sheet ${sheetDefinition.name}?`,
+      body: `Are you sure you want to delete this data sheet? This action is irreversible`,
+      challenge: dangerousEditMode ? sheetDefinition.name : undefined,
+      danger: true,
+    });
+    if (!confirmed) {
+      return;
+    }
     await destroyEntityMutation.mutateAsync(sheetDefinition.id);
     navigate(`../${onDeleteRedirectId}`, { replace: true });
   };

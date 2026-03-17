@@ -12,6 +12,7 @@ import { AssayModelData } from "../../../../../queries/assay_models";
 interface AssayModelEditorContextValue {
   assayModel: AssayModelData | null;
   dangerousEditMode: boolean;
+  published: boolean;
   canEdit: boolean;
   setDangerousEditMode: Dispatch<SetStateAction<boolean>>;
 }
@@ -19,6 +20,7 @@ interface AssayModelEditorContextValue {
 const defaultValue: AssayModelEditorContextValue = {
   assayModel: null,
   dangerousEditMode: false,
+  published: false,
   canEdit: true,
   setDangerousEditMode: () => void 0,
 };
@@ -30,19 +32,31 @@ const AssayModelEditorContextProvider = ({
   children,
   assayModel,
 }: PropsWithChildren<{ assayModel: AssayModelData }>) => {
-  const [dangerousEditMode, setDangerousEditMode] = useState(false);
+  const [dangerousEditMode, setDangerousEditMode] = useState(true); // TODO: set to false
+  const [prevAssayModel, setPrevAssayModel] = useState(assayModel);
 
   const contextValue = useMemo(
     () => ({
       assayModel,
       setDangerousEditMode,
       dangerousEditMode,
+      published: assayModel.publication_status_id__name === "Published",
       canEdit:
         dangerousEditMode ||
         assayModel.publication_status_id__name !== "Published",
     }),
     [dangerousEditMode, assayModel],
   );
+
+  if (prevAssayModel !== assayModel) {
+    setPrevAssayModel(assayModel);
+    if (
+      prevAssayModel.publication_status_id__name === "Published" &&
+      assayModel.publication_status_id__name !== "Published"
+    ) {
+      setDangerousEditMode(false);
+    }
+  }
 
   return (
     <AssayModelEditorContext.Provider value={contextValue}>

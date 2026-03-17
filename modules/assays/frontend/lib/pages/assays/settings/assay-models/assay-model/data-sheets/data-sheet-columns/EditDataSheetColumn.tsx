@@ -28,6 +28,7 @@ import {
   ButtonGroup,
   ErrorPage,
   Spinner,
+  useConfirm,
 } from "@grit42/client-library/components";
 import {
   EntityData,
@@ -78,7 +79,8 @@ const AssayDataSheetColumnForm = ({
   assayDataSheetColumn: Partial<AssayDataSheetColumnData>;
   assayDataSheetColumns: AssayDataSheetColumnData[];
 }) => {
-  const { canEdit } = useAssayModelEditorContext();
+  const confirm = useConfirm();
+  const { canEdit, dangerousEditMode } = useAssayModelEditorContext();
   const { sheet_id } = useParams() as {
     sheet_id: string;
   };
@@ -135,6 +137,45 @@ const AssayDataSheetColumnForm = ({
         ),
         assay_data_sheet_definition_id: Number(sheet_id),
       };
+
+      if (dangerousEditMode) {
+        const changes = [];
+        if (assayDataSheetColumn.safe_name !== value.safe_name) {
+          changes.push("Changed safe name.");
+        }
+        if (assayDataSheetColumn.data_type_id !== value.data_type_id) {
+          changes.push("Changed data type.");
+        }
+        if (
+          assayDataSheetColumn.required !== value.required &&
+          value.required
+        ) {
+          changes.push("Changed required.");
+        }
+
+        if (changes.length) {
+          if (
+            !(await confirm({
+              title: "Apply changes to the column?",
+              challenge: assayDataSheetColumn.name,
+              danger: true,
+              body: (
+                <>
+                  Are you sure you want to apply these changes?
+                  <ul className={styles.changesList}>
+                    {changes.map((change) => (
+                      <li key={change}>{change}</li>
+                    ))}
+                  </ul>
+                </>
+              ),
+            }))
+          ) {
+            return;
+          }
+        }
+      }
+
       await editEntityMutation.mutateAsync(value as AssayDataSheetColumnData);
       navigate("..");
     }),
@@ -156,13 +197,18 @@ const AssayDataSheetColumnForm = ({
   );
 
   const onDelete = async () => {
-    if (
-      !assayDataSheetColumn.id ||
-      !window.confirm(
-        `Are you sure you want to delete this column? This action is irreversible`,
-      )
-    )
+    if (!assayDataSheetColumn.id) {
       return;
+    }
+    const confirmed = await confirm({
+      title: `Delete column ${assayDataSheetColumn.name}?`,
+      body: `Are you sure you want to delete this column? This action is irreversible.`,
+      challenge: dangerousEditMode ? assayDataSheetColumn.name : undefined,
+      danger: true,
+    });
+    if (!confirmed) {
+      return;
+    }
     await destroyEntityMutation.mutateAsync(assayDataSheetColumn.id);
     navigate("..");
   };

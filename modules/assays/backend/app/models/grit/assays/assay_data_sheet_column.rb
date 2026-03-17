@@ -69,7 +69,7 @@ module Grit::Assays
 
       connection.add_column assay_data_sheet_definition.table_name, column.safe_name, type, null: !column.required
       connection.add_foreign_key assay_data_sheet_definition.table_name, column.data_type.table_name, column: column.safe_name, name: "#{assay_data_sheet_definition.table_name}_#{column.safe_name}", if_not_exists: true if column.data_type.is_entity
-      ActiveRecord::Base.descendants.find { |m| m.table_name == assay_data_sheet_definition.table_name }.reset_column_information
+      ActiveRecord::Base.descendants.find { |m| m.table_name == assay_data_sheet_definition.table_name }&.reset_column_information
     end
 
     def sync_column
@@ -92,13 +92,13 @@ module Grit::Assays
         connection.add_foreign_key assay_data_sheet_definition.table_name, column.data_type.table_name, column: column.safe_name, name: "#{assay_data_sheet_definition.table_name}_#{column.safe_name}", if_not_exists: true if column.data_type.is_entity
         refresh_cache = true
       end
-      ActiveRecord::Base.descendants.find { |m| m.table_name == assay_data_sheet_definition.table_name }.reset_column_information if refresh_cache
+      ActiveRecord::Base.descendants.find { |m| m.table_name == assay_data_sheet_definition.table_name }&.reset_column_information if refresh_cache
     end
 
     def remove_column
       connection = ActiveRecord::Base.connection
-      connection.remove_column assay_data_sheet_definition.table_name, safe_name, if_exists: true
-      ActiveRecord::Base.descendants.find { |m| m.table_name == assay_data_sheet_definition.table_name }.reset_column_information
+      connection.remove_column assay_data_sheet_definition.table_name, safe_name, if_exists: true if assay_data_sheet_definition.table_exists?
+      ActiveRecord::Base.descendants.find { |m| m.table_name == assay_data_sheet_definition.table_name }&.reset_column_information
     end
 
     private

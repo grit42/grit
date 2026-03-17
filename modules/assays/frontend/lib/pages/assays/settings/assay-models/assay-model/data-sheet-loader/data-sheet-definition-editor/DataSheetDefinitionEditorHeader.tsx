@@ -1,4 +1,8 @@
-import { Button, ButtonGroup } from "@grit42/client-library/components";
+import {
+  Button,
+  ButtonGroup,
+  useConfirm,
+} from "@grit42/client-library/components";
 import styles from "./dataSheetDefinitionEditor.module.scss";
 import { useNavigate } from "react-router-dom";
 
@@ -11,6 +15,7 @@ const DataSheetDefinitionEditorHeader = ({
   isDirty: boolean;
   canSubmit: boolean;
 }) => {
+  const confirm = useConfirm();
   const navigate = useNavigate();
   return (
     <div className={styles.dataSheetsFormHeader}>
@@ -19,10 +24,10 @@ const DataSheetDefinitionEditorHeader = ({
       </h3>
       <ButtonGroup>
         <Button
-          onClick={() => {
+          onClick={async () => {
             if (
               !isDirty ||
-              window.confirm("You have unsaved changes. Continue?")
+              (await confirm({ body: "You have unsaved changes. Continue?" }))
             ) {
               navigate("../map");
             }

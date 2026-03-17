@@ -54,6 +54,9 @@ export interface AssayDataSheetColumnData extends EntityData {
   name: string;
   description: string | null;
   assay_data_sheet_definition_id: number;
+  safe_name: string;
+  required: boolean;
+  data_type_id: number;
 }
 
 export const useAssayDataSheetColumns = (
