@@ -117,7 +117,7 @@ module Grit::Assays
     private
       def check_model_publication_status
         return if self.dangerous_edit?
-        raise "Cannot modify columns of a published Assay Model" if assay_data_sheet_definition.assay_model.publication_status.name === "Published"
+        raise "Cannot modify columns of a published Assay Model" if assay_model.published?
       end
 
       def check_assay_data_sheet_definition_columns_count

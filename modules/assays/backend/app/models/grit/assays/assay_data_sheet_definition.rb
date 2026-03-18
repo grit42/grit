@@ -250,7 +250,7 @@ module Grit::Assays
     private
       def check_model_publication_status
         return if dangerous_edit?
-        raise "Cannot modify data sheet definitions of a published Assay Model" if assay_model.publication_status.name === "Published"
+        raise "Cannot modify data sheet definitions of a published Assay Model" if assay_model.published?
       end
 
       def create_table_if_model_is_published
