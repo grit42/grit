@@ -163,7 +163,7 @@ const AssayModelActions = ({
   assayModel: Partial<AssayModelData>;
 }) => {
   const confirm = useConfirm();
-  const { dangerousEditMode, setDangerousEditMode, published } =
+  const { canEdit, dangerousEditMode, setDangerousEditMode, published } =
     useAssayModelEditorContext();
   const navigate = useNavigate();
   const destroyEntityMutation = useDangerousDestroyEntityMutation(
@@ -226,31 +226,29 @@ const AssayModelActions = ({
 
   return (
     <>
-      {assayModel.publication_status_id__name === "Published" &&
-        !dangerousEditMode && (
-          <AssayModelAction
-            title="Enter dangerous edit mode"
-            description={
-              <>
-                The dangerous edit mode enables modifying a published assay
-                model, potentially causing permanent data loss if not used
-                carefully. Use this only if you are absolutely sure of what you
-                are doing.{" "}
-                <b>
-                  The data lost when deleting sheets or columns cannot be
-                  recovered.
-                </b>
-              </>
-            }
-            action={
-              <Button color="danger" onClick={onDangerousEditMode}>
-                Dangerous edit mode
-              </Button>
-            }
-          />
-        )}
+      {published && !dangerousEditMode && (
+        <AssayModelAction
+          title="Enter dangerous edit mode"
+          description={
+            <>
+              The dangerous edit mode enables modifying a published assay model,
+              potentially causing permanent data loss if not used carefully. Use
+              this only if you are absolutely sure of what you are doing.{" "}
+              <b>
+                The data lost when deleting sheets or columns cannot be
+                recovered.
+              </b>
+            </>
+          }
+          action={
+            <Button color="danger" onClick={onDangerousEditMode}>
+              Dangerous edit mode
+            </Button>
+          }
+        />
+      )}
 
-      {assayModel.publication_status_id__name === "Draft" && (
+      {!published && (
         <AssayModelAction
           title="Publish this Assay Model"
           description="Publishing this Assay Model will make it available for creating Experiments and for use in Data Tables."
@@ -265,7 +263,7 @@ const AssayModelActions = ({
           }
         />
       )}
-      {assayModel.publication_status_id__name === "Published" && (
+      {canEdit && published && (
         <AssayModelAction
           title="Convert this Assay Model to Draft"
           description={
@@ -287,24 +285,26 @@ const AssayModelActions = ({
           }
         />
       )}
-      <AssayModelAction
-        title="Delete this Assay Model"
-        description={
-          <>
-            Deleting this Assay Model will permanently remove all related
-            experiments and existing data. <b>This action is irreversible.</b>
-          </>
-        }
-        action={
-          <Button
-            color="danger"
-            onClick={onDelete}
-            loading={destroyEntityMutation.isPending}
-          >
-            Delete
-          </Button>
-        }
-      />
+      {canEdit && (
+        <AssayModelAction
+          title="Delete this Assay Model"
+          description={
+            <>
+              Deleting this Assay Model will permanently remove all related
+              experiments and existing data. <b>This action is irreversible.</b>
+            </>
+          }
+          action={
+            <Button
+              color="danger"
+              onClick={onDelete}
+              loading={destroyEntityMutation.isPending}
+            >
+              Delete
+            </Button>
+          }
+        />
+      )}
     </>
   );
 };

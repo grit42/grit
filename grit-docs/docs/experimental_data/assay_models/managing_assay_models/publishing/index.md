@@ -19,11 +19,11 @@ An **Assay Model** can be cloned at any point to create a new version of it that
 
 1. The current publication status of the Assay Model
 2. The button to clone the Assay Model
-3. The button to publish the Assay Model or convert it to draft
+3. The button to publish the Assay Model
 
 ## Dangerous Edit Mode
 
-**Dangerous Edit Mode** allows modifying a published **Assay Model** without converting it back to draft. This makes it possible to evolve a model while preserving existing **Experiments**, but carries risk of irreversible data loss if not used carefully.
+**Dangerous Edit Mode** allows modifying a published **Assay Model**. This makes it possible to evolve a model, but carries risk of irreversible data loss if not used carefully.
 
 :::danger
 Edits made in Dangerous Edit Mode can permanently destroy experimental data. Always review your changes thoroughly before confirming.
@@ -31,10 +31,17 @@ Edits made in Dangerous Edit Mode can permanently destroy experimental data. Alw
 
 To reduce the risk of accidental data loss, certain operations require a confirmation challenge — for example, typing the name of a column or data sheet before it can be deleted or modified.
 
-![Assay Model dangerous edit mode](./assets/assay_model_dangerous_edit.png)
+![Assay Model dangerous edit](./assets/assay_model_dangerous_edit.png)
 
 1. The current publication status of the Assay Model (_Published_)
 2. The button to enter **Dangerous Edit Mode**
+
+![Assay Model dangerous edit mode](./assets/assay_model_dangerous_edit_mode.png)
+
+1. The current publication status of the Assay Model (_Published_)
+2. The button to exit **Dangerous Edit Mode**
+3. The button to convert the Assay Model to draft
+4. The button to delete the Assay Model
 
 ### Supported Operations
 
