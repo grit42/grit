@@ -44,6 +44,7 @@ import {
 } from "../../../../../../queries/assay_data_sheet_definitions";
 import styles from "./dataSheets.module.scss";
 import { z } from "zod";
+import { useAssayModelEditorContext } from "../AssayModelEditorContext";
 
 const AssayDataSheetDefinitionForm = ({
   fields,
@@ -54,6 +55,7 @@ const AssayDataSheetDefinitionForm = ({
   sheetDefinition: Partial<AssayDataSheetDefinitionData>;
   sheets: AssayDataSheetDefinitionData[];
 }) => {
+  const { dangerousEditMode } = useAssayModelEditorContext();
   const { assay_model_id } = useParams() as { assay_model_id: string };
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -86,6 +88,7 @@ const AssayDataSheetDefinitionForm = ({
           fields,
         ),
         assay_model_id: Number(assay_model_id),
+        dangerous_edit: dangerousEditMode ?? undefined,
       };
       const newEntity = await createEntityMutation.mutateAsync(
         value as AssayDataSheetDefinitionData,

@@ -17,6 +17,7 @@ import DataSheetForm from "./DataSheetForm";
 import DataSheetColumnForm from "./DataSheetEditorColumnForm";
 import { useCreateBulkDataSheetDefinitionMutation } from "./mutations";
 import { upsert } from "@grit42/notifications";
+import { useAssayModelEditorContext } from "../../AssayModelEditorContext";
 
 const DataSheetDefinitionEditor = ({
   dataSetDefinition,
@@ -25,6 +26,7 @@ const DataSheetDefinitionEditor = ({
   dataSetDefinition: DataSetDefinitionFull;
   assayModelDataSheets: AssayDataSheetDefinitionData[];
 }) => {
+  const { dangerousEditMode } = useAssayModelEditorContext();
   const navigate = useNavigate();
   const refinedSchema = useMemo(
     () => refinedDataSetDefinitionSchema(assayModelDataSheets ?? []),
@@ -54,7 +56,10 @@ const DataSheetDefinitionEditor = ({
   const handleSubmit = async () => {
     if (!value) return;
     try {
-      const res = await createSheetDefinitionMutation.mutateAsync(value);
+      const res = await createSheetDefinitionMutation.mutateAsync({
+        ...value,
+        dangerous_edit: dangerousEditMode,
+      });
       navigate(`../../data-sheets/${res[0].id}`, { relative: "path" });
     } catch (errors: any) {
       if (typeof errors === "string") {

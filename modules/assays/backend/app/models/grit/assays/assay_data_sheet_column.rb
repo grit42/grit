@@ -19,6 +19,7 @@
 module Grit::Assays
   class AssayDataSheetColumn < ApplicationRecord
     include Grit::Core::GritEntityRecord
+    include Grit::Core::Model::DangerousEdit
 
     belongs_to :assay_data_sheet_definition
     belongs_to :data_type, class_name: "Grit::Core::DataType"
@@ -40,10 +41,11 @@ module Grit::Assays
     validates :safe_name, format: { with: /\A[a-z0-9_]*\z/, message: "should contain only lowercase letters, numbers and underscores" }
     validate :safe_name_not_conflict
 
-    # before_save :check_model_publication_status
+    before_save :check_model_publication_status
     before_create :check_assay_data_sheet_definition_columns_count
     after_create :create_column_if_model_is_published
     after_update :sync_column
+    before_destroy :check_model_publication_status
     before_destroy :remove_column
 
     def safe_name_not_conflict
@@ -114,6 +116,7 @@ module Grit::Assays
 
     private
       def check_model_publication_status
+        return if self.dangerous_edit?
         raise "Cannot modify columns of a published Assay Model" if assay_data_sheet_definition.assay_model.publication_status.name === "Published"
       end
 

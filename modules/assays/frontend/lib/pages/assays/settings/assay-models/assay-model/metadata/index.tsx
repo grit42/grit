@@ -4,7 +4,7 @@ import {
   EntityPropertyDef,
   EntityData,
   useCreateEntityMutation,
-  useDestroyEntityMutation,
+  useDangerousDestroyEntityMutation,
 } from "@grit42/core";
 import { useCallback, useMemo } from "react";
 import {
@@ -29,6 +29,7 @@ const AssayMetadataDefinitionSelector = ({
   assayModelId: string | number;
   columns: EntityPropertyDef[];
 }) => {
+  const { dangerousEditMode } = useAssayModelEditorContext();
   const queryClient = useQueryClient();
   const tableColumns = useTableColumns<AssayMetadataDefinitionData>(columns);
   const availableTableState = useSetupTableState(
@@ -93,7 +94,7 @@ const AssayMetadataDefinitionSelector = ({
       "grit/assays/assay_model_metadata",
     );
 
-  const destroyEntityMutation = useDestroyEntityMutation(
+  const destroyEntityMutation = useDangerousDestroyEntityMutation(
     "grit/assays/assay_model_metadata",
   );
 
@@ -102,6 +103,7 @@ const AssayMetadataDefinitionSelector = ({
       await createEntityMutation.mutateAsync({
         assay_model_id: assayModelId,
         assay_metadata_definition_id: row.original.id,
+        dangerous_edit: dangerousEditMode ?? undefined,
       });
       await queryClient.invalidateQueries({
         queryKey: [
@@ -111,14 +113,15 @@ const AssayMetadataDefinitionSelector = ({
         ],
       });
     },
-    [assayModelId, createEntityMutation, queryClient],
+    [assayModelId, createEntityMutation, dangerousEditMode, queryClient],
   );
 
   const onSelectedRowClick = useCallback(
     async (row: Row<AssayMetadataDefinitionData>) => {
-      await destroyEntityMutation.mutateAsync(
+      await destroyEntityMutation.mutateAsync([
         row.original.assay_model_metadatum_id,
-      );
+        dangerousEditMode,
+      ]);
       await queryClient.invalidateQueries({
         queryKey: [
           "entities",
@@ -127,7 +130,7 @@ const AssayMetadataDefinitionSelector = ({
         ],
       });
     },
-    [destroyEntityMutation, queryClient],
+    [dangerousEditMode, destroyEntityMutation, queryClient],
   );
 
   return (

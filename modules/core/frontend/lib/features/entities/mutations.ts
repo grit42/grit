@@ -167,3 +167,41 @@ export const useDestroyEntityMutation = <
     ...mutationOptions,
   });
 };
+
+export const useDangerousDestroyEntityMutation = <
+  TPayload extends [string | number, boolean] = [string | number, boolean],
+  TData extends EntityProperties = EntityProperties,
+>(
+  entityPath: string,
+  mutationOptions: UseMutationOptions<EntityData<TData>, string, TPayload> = {},
+) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ["destroyEntity", entityPath],
+    mutationFn: async ([entityId, dangerousEditMode]: TPayload) => {
+      const url = `${entityPath}/${entityId}`;
+      const toastId = toast("Deleting records...", {
+        autoClose: false,
+        closeButton: false,
+        isLoading: true,
+      });
+      const response = await request<
+        EndpointSuccess<EntityData<TData>>,
+        EndpointError
+      >(url, {
+        method: "DELETE",
+        data: {
+          dangerous_edit: dangerousEditMode ?? false,
+        },
+      });
+      toast.dismiss(toastId);
+      if (!response.success) {
+        throw response.errors;
+      }
+      return response.data;
+    },
+    onSuccess: async () => await handleMutationSuccess(queryClient, entityPath),
+    onError: notifyOnError,
+    ...mutationOptions,
+  });
+};

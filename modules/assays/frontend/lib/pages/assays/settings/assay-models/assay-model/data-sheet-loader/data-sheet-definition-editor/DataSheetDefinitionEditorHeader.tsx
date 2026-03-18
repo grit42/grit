@@ -29,7 +29,7 @@ const DataSheetDefinitionEditorHeader = ({
               !isDirty ||
               (await confirm({ body: "You have unsaved changes. Continue?" }))
             ) {
-              navigate("../map");
+              navigate("../../map");
             }
           }}
         >

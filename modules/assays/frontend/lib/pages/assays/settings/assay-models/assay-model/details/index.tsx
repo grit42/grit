@@ -34,7 +34,7 @@ import {
 import {
   useCreateEntityMutation,
   useEditEntityMutation,
-  useDestroyEntityMutation,
+  useDangerousDestroyEntityMutation,
 } from "@grit42/core";
 import { useState } from "react";
 import styles from "./details.module.scss";
@@ -166,7 +166,7 @@ const AssayModelActions = ({
   const { dangerousEditMode, setDangerousEditMode, published } =
     useAssayModelEditorContext();
   const navigate = useNavigate();
-  const destroyEntityMutation = useDestroyEntityMutation(
+  const destroyEntityMutation = useDangerousDestroyEntityMutation(
     "grit/assays/assay_models",
   );
 
@@ -183,7 +183,7 @@ const AssayModelActions = ({
     if (!confirmed) {
       return;
     }
-    await destroyEntityMutation.mutateAsync(assayModel.id);
+    await destroyEntityMutation.mutateAsync([assayModel.id, dangerousEditMode]);
     navigate("../..", { relative: "path" });
   };
 
@@ -316,7 +316,7 @@ const AssayModelForm = ({
   fields: FormFieldDef[];
   assayModel: Partial<AssayModelData>;
 }) => {
-  const { canEdit } = useAssayModelEditorContext();
+  const { canEdit, dangerousEditMode } = useAssayModelEditorContext();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState<Partial<AssayModelData>>(assayModel);
@@ -338,10 +338,10 @@ const AssayModelForm = ({
   const form = useForm({
     defaultValues: formData,
     onSubmit: genericErrorHandler(async ({ value: formValue, formApi }) => {
-      const value = getVisibleFieldData<Partial<AssayModelData>>(
-        formValue,
-        fields,
-      );
+      const value = {
+        ...getVisibleFieldData<Partial<AssayModelData>>(formValue, fields),
+        dangerous_edit: dangerousEditMode ?? undefined,
+      };
       if (!assayModel.id) {
         const newEntity = await createEntityMutation.mutateAsync(
           value as AssayModelData,

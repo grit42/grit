@@ -26,7 +26,10 @@ import {
   Surface,
   useConfirm,
 } from "@grit42/client-library/components";
-import { useDestroyEntityMutation, useEditEntityMutation } from "@grit42/core";
+import {
+  useDangerousDestroyEntityMutation,
+  useEditEntityMutation,
+} from "@grit42/core";
 import {
   Form,
   FormBanner,
@@ -85,7 +88,7 @@ const AssayDataSheetDefinitionForm = ({
       sheetDefinition.id ?? -1,
     );
 
-  const destroyEntityMutation = useDestroyEntityMutation(
+  const destroyEntityMutation = useDangerousDestroyEntityMutation(
     "grit/assays/assay_data_sheet_definitions",
   );
 
@@ -98,6 +101,7 @@ const AssayDataSheetDefinitionForm = ({
           fields,
         ),
         assay_model_id: Number(assay_model_id),
+        dangerous_edit: dangerousEditMode ?? undefined,
       };
       formApi.reset(
         await editEntityMutation.mutateAsync(
@@ -120,7 +124,10 @@ const AssayDataSheetDefinitionForm = ({
     if (!confirmed) {
       return;
     }
-    await destroyEntityMutation.mutateAsync(sheetDefinition.id);
+    await destroyEntityMutation.mutateAsync([
+      sheetDefinition.id,
+      dangerousEditMode,
+    ]);
     navigate(`../${onDeleteRedirectId}`, { replace: true });
   };
 

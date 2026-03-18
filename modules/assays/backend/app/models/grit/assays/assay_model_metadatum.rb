@@ -19,11 +19,13 @@
 module Grit::Assays
   class AssayModelMetadatum < ApplicationRecord
     include Grit::Core::GritEntityRecord
+    include Grit::Core::Model::DangerousEdit
 
     belongs_to :assay_metadata_definition
     belongs_to :assay_model
 
-    # before_save :check_model_publication_status
+    before_save :check_model_publication_status
+    before_destroy :check_model_publication_status
 
     entity_crud_with read: [],
       create: [ "Administrator", "AssayAdministrator" ],
@@ -32,6 +34,7 @@ module Grit::Assays
 
     private
       def check_model_publication_status
+        return if dangerous_edit?
         raise "Cannot modify metadata definitions of a published Assay Model" if assay_model.publication_status.name === "Published"
       end
   end

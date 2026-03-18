@@ -19,6 +19,7 @@
 module Grit::Assays
   class AssayModelsController < ApplicationController
     include Grit::Core::GritEntityController
+    include Grit::Core::Controller::DangerousEdit
 
     def create
       AssayModel.transaction do

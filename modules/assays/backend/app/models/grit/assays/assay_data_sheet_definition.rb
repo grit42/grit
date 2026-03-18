@@ -19,6 +19,7 @@
 module Grit::Assays
   class AssayDataSheetDefinition < ApplicationRecord
     include Grit::Core::GritEntityRecord
+    include Grit::Core::Model::DangerousEdit
 
     belongs_to :assay_model
     has_many :assay_data_sheet_columns, dependent: :destroy
@@ -31,8 +32,9 @@ module Grit::Assays
       update: [ "Administrator", "AssayAdministrator" ],
       destroy: [ "Administrator", "AssayAdministrator" ]
 
-    # before_save :check_model_publication_status
+    before_save :check_model_publication_status
     after_create :create_table_if_model_is_published
+    before_destroy :check_model_publication_status
     after_destroy :drop_table
 
     def table_name
@@ -247,6 +249,7 @@ module Grit::Assays
 
     private
       def check_model_publication_status
+        return if dangerous_edit?
         raise "Cannot modify data sheet definitions of a published Assay Model" if assay_model.publication_status.name === "Published"
       end
 

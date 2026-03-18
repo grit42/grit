@@ -19,6 +19,7 @@
 module Grit::Assays
   class AssayDataSheetDefinitionsController < ApplicationController
     include Grit::Core::GritEntityController
+    include Grit::Core::Controller::DangerousEdit
 
     def create_bulk
       params.permit!

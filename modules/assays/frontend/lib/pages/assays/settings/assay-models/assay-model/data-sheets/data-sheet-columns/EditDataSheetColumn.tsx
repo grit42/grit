@@ -32,7 +32,7 @@ import {
 } from "@grit42/client-library/components";
 import {
   EntityData,
-  useDestroyEntityMutation,
+  useDangerousDestroyEntityMutation,
   useEditEntityMutation,
 } from "@grit42/core";
 import {
@@ -91,7 +91,7 @@ const AssayDataSheetColumnForm = ({
     assayDataSheetColumn.id ?? -1,
   );
 
-  const destroyEntityMutation = useDestroyEntityMutation(
+  const destroyEntityMutation = useDangerousDestroyEntityMutation(
     "grit/assays/assay_data_sheet_columns",
   );
 
@@ -136,6 +136,7 @@ const AssayDataSheetColumnForm = ({
           fields,
         ),
         assay_data_sheet_definition_id: Number(sheet_id),
+        dangerous_edit: dangerousEditMode ?? undefined,
       };
 
       if (dangerousEditMode) {
@@ -209,7 +210,10 @@ const AssayDataSheetColumnForm = ({
     if (!confirmed) {
       return;
     }
-    await destroyEntityMutation.mutateAsync(assayDataSheetColumn.id);
+    await destroyEntityMutation.mutateAsync([
+      assayDataSheetColumn.id,
+      dangerousEditMode,
+    ]);
     navigate("..");
   };
 

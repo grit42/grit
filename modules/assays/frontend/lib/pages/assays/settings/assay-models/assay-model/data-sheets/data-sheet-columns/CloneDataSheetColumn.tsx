@@ -46,6 +46,7 @@ import {
 import { z } from "zod";
 import { toSafeIdentifier } from "@grit42/core/utils";
 import { CenteredSurface } from "@grit42/client-library/layouts";
+import { useAssayModelEditorContext } from "../../AssayModelEditorContext";
 
 const initializedFormData = <T extends Partial<EntityData>>(
   data: T,
@@ -70,6 +71,7 @@ const AssayDataSheetColumnForm = ({
   assayDataSheetColumns: AssayDataSheetColumnData[];
 }) => {
   const { sheet_id } = useParams() as { sheet_id: string };
+  const { dangerousEditMode } = useAssayModelEditorContext();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -119,6 +121,7 @@ const AssayDataSheetColumnForm = ({
           fields,
         ),
         assay_data_sheet_definition_id: Number(sheet_id),
+        dangerous_edit: dangerousEditMode ?? undefined,
       };
       const newEntity = await createEntityMutation.mutateAsync(
         value as AssayDataSheetColumnData,

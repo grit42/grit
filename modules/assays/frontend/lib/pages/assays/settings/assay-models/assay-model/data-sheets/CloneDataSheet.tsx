@@ -46,6 +46,7 @@ import { z } from "zod";
 import { useCreateBulkDataSheetDefinitionMutation } from "../data-sheet-loader/data-sheet-definition-editor/mutations";
 import { useAssayDataSheetColumns } from "../../../../../../queries/assay_data_sheet_columns";
 import DataSheetColumnsTable from "./data-sheet-columns/DataSheetColumnsTable";
+import { useAssayModelEditorContext } from "../AssayModelEditorContext";
 
 const AssayDataSheetDefinitionForm = ({
   fields,
@@ -56,6 +57,7 @@ const AssayDataSheetDefinitionForm = ({
   sheetDefinition: Partial<AssayDataSheetDefinitionData>;
   sheets: AssayDataSheetDefinitionData[];
 }) => {
+  const { dangerousEditMode } = useAssayModelEditorContext();
   const { assay_model_id, sheet_id } = useParams() as {
     assay_model_id: string;
     sheet_id: string;
@@ -92,6 +94,7 @@ const AssayDataSheetDefinitionForm = ({
         ),
         columns: data,
         assay_model_id: Number(assay_model_id),
+        dangerous_edit: dangerousEditMode ?? undefined,
       };
       const newEntity = await createSheetDefinitionMutation.mutateAsync({
         sheets: [value],

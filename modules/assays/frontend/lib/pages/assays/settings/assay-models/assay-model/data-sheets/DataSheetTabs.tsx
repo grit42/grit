@@ -54,24 +54,21 @@ const DataSheetTabs = ({ sheetDefinitions, assayModel }: Props) => {
           icon: <Circle1NewIcon />,
           label: "New sheet",
           onClick: navigateToNew,
-          disabled:
-            sheet_id === "new" ||
-            assayModel.publication_status_id__name === "Published",
+          disabled: sheet_id === "new" || !canEdit,
         },
       ],
-      importItems:
-        assayModel.publication_status_id__name === "Published"
-          ? undefined
-          : [
-              {
-                id: "IMPORT_SHEETS",
-                text: "Import data sheets",
-                onClick: () =>
-                  navigate("../../data-sheet-loader/files", {
-                    relative: "path",
-                  }),
-              },
-            ],
+      importItems: canEdit
+        ? [
+            {
+              id: "IMPORT_SHEETS",
+              text: "Import data sheets",
+              onClick: () =>
+                navigate("../../data-sheet-loader/files", {
+                  relative: "path",
+                }),
+            },
+          ]
+        : undefined,
     });
   }, [
     registerToolbarActions,
@@ -79,6 +76,7 @@ const DataSheetTabs = ({ sheetDefinitions, assayModel }: Props) => {
     sheet_id,
     navigate,
     assayModel.publication_status_id__name,
+    canEdit,
   ]);
 
   const tabs = useMemo(() => {

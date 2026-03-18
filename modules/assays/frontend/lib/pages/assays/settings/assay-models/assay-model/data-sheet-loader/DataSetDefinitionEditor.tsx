@@ -85,7 +85,7 @@ const Wrapper = ({
   }, [assayModel, sheetsWithColumns, dataTypes]);
 
   if (sheetsWithColumns.length < 1) {
-    return <Navigate to="../map" />;
+    return <Navigate to="../../map" />;
   }
 
   if (isDataTypesLoading || isAssayModelDataSheetsLoading) {

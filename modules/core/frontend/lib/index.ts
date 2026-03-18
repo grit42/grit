@@ -37,6 +37,7 @@ export {
   useCreateEntityMutation,
   useEditEntityMutation,
   useDestroyEntityMutation,
+  useDangerousDestroyEntityMutation,
   useRegisterEntityForm,
   EntitySelector,
 } from "./features/entities";
