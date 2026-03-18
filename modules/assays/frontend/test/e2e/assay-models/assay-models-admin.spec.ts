@@ -100,7 +100,7 @@ test.describe("Assay Model administration", () => {
     await page.getByRole("button", { name: "Publish" }).click();
     await expect(page.getByRole("textbox", { name: "Name" })).toBeDisabled();
     await expect(
-      page.getByRole("heading", { name: "Convert this Assay Model to draft" }),
+      page.getByRole("heading", { name: "Enter dangerous edit mode" }),
     ).toBeVisible();
 
     // check data sheets are disabled
@@ -121,14 +121,36 @@ test.describe("Assay Model administration", () => {
     // clean up model
     await page.goto(ASSAY_MODELS_URL);
     await page.getByRole("cell", { name: assayModelName }).click();
-    page.waitForEvent("dialog").then((dialog) => {
-      expect(
-        dialog,
-        "Are you sure you want to delete this assay model? This action is irreversible",
-      );
-      dialog.accept();
-    });
+
+    await page.getByRole("button", { name: "Dangerous edit mode" }).click();
+
+    await expect(page.locator("#dialog")).toContainText(
+      `Dangerously edit ${assayModelName}?`,
+    );
+    await expect(
+      page.getByText(`Type ${assayModelName} to confirm`),
+    ).toBeVisible();
+    await expect(page.getByRole("button", { name: "OK" })).toBeDisabled();
+    await page.locator("#dialog").getByRole("textbox").fill(assayModelName);
+    await expect(page.getByRole("button", { name: "OK" })).toBeEnabled();
+    await page.getByRole("button", { name: "OK" }).click();
+
+    await expect(
+      page.getByRole("heading", { name: "Convert this Assay Model to draft" }),
+    ).toBeVisible();
+
     await page.getByRole("button", { name: "delete" }).click();
+    await expect(page.locator("#dialog")).toContainText(
+      `Delete assay model ${assayModelName}?`,
+    );
+    await expect(
+      page.getByText(`Type ${assayModelName} to confirm`),
+    ).toBeVisible();
+    await expect(page.getByRole("button", { name: "OK" })).toBeDisabled();
+    await page.locator("#dialog").getByRole("textbox").fill(assayModelName);
+    await expect(page.getByRole("button", { name: "OK" })).toBeEnabled();
+    await page.getByRole("button", { name: "OK" }).click();
+
     await expect(page).toHaveURL(ASSAY_MODELS_URL);
     await expect(page.getByRole("cell", { name: assayModelName })).toHaveCount(
       0,
