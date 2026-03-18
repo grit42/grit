@@ -16,15 +16,39 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { FormBanner, genericErrorHandler, useForm } from "@grit42/form";
 import { Button, Input } from "@grit42/client-library/components";
 import { useLoginMutation } from "../../api/mutations";
+import { useServerSettings } from "../../api/queries";
 import AuthenticationPage from "../../components/AuthenticationPage";
+
+const SsoButton = ({
+  ssoProvider,
+  ssoLoginPath,
+}: {
+  ssoProvider: string;
+  ssoLoginPath: string;
+}) => {
+  const label =
+    ssoProvider === "saml" ? "Sign in with SAML" : "Sign in with SSO";
+
+  return (
+    <form method="POST" action={ssoLoginPath} style={{ width: "100%" }}>
+      <Button color="secondary" type="submit" style={{ width: "100%" }}>
+        {label}
+      </Button>
+    </form>
+  );
+};
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const loginMutation = useLoginMutation();
+  const { data: serverSettings } = useServerSettings();
+
+  const ssoError = searchParams.get("sso_error");
 
   const form = useForm({
     defaultValues: {
@@ -42,7 +66,7 @@ const LoginPage = () => {
     }),
   });
 
-  const error = form.state.errorMap.onSubmit;
+  const error = ssoError || form.state.errorMap.onSubmit;
 
   return (
     <AuthenticationPage hasError={!!error}>
@@ -57,6 +81,41 @@ const LoginPage = () => {
           <h1>Sign in</h1>
           <FormBanner content={error?.toString()} />
         </div>
+
+        {serverSettings?.sso_provider && serverSettings.sso_login_path && (
+          <>
+            <SsoButton
+              ssoProvider={serverSettings.sso_provider}
+              ssoLoginPath={serverSettings.sso_login_path}
+            />
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                width: "100%",
+                margin: "4px 0",
+                opacity: 0.5,
+              }}
+            >
+              <hr
+                style={{
+                  flex: 1,
+                  border: "none",
+                  borderTop: "1px solid currentColor",
+                }}
+              />
+              <span style={{ fontSize: "0.85em" }}>or</span>
+              <hr
+                style={{
+                  flex: 1,
+                  border: "none",
+                  borderTop: "1px solid currentColor",
+                }}
+              />
+            </div>
+          </>
+        )}
 
         <form.Field
           name="login"

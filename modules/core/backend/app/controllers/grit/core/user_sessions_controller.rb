@@ -22,6 +22,8 @@ module Grit::Core
   class UserSessionsController < ApplicationController
     before_action :require_no_user, only: %i[create two_factor]
     before_action :require_user, only: %i[show destroy]
+    # server_settings is intentionally unauthenticated so the login page
+    # can discover SSO configuration before the user logs in.
 
     def platform_information
       modules = Rails::Engine.descendants.each_with_object({}) do |engine, memo|
@@ -33,11 +35,11 @@ module Grit::Core
       { modules: modules }
     end
 
+    # GET /api/grit/core/user_session/server_settings (unauthenticated)
+    # Returns server settings including SSO configuration so the login page
+    # can render the SSO button before the user is authenticated.
     def server_settings
-      {
-        two_factor: ENV.fetch("SMTP_SERVER", nil) ? true : false,
-        server_url: ENV.fetch("GRIT_SERVER_URL", nil)
-      }
+      render json: { success: true, data: build_server_settings }
     end
 
     def show(_params = nil)
@@ -49,10 +51,11 @@ module Grit::Core
               name: current_user_session.record.name,
               email: current_user_session.record.email,
               token: current_user_session.record.single_access_token,
+              auth_method: current_user_session.record.auth_method,
               roles: Grit::Core::User.current.roles.select(:name).all.map(&:name),
               settings: current_user_session.record.settings,
               platform_information: platform_information,
-              server_settings: server_settings
+              server_settings: build_server_settings
             }
           }
     rescue StandardError => e
@@ -69,6 +72,7 @@ module Grit::Core
       end
       raise "User #{params[:user_session][:login]} not found" if @user.nil?
       raise "User #{params[:user_session][:login]} is inactive" if @user.active? == false
+      raise "This account uses SSO authentication. Please use the SSO login button." if @user.auth_method != "local"
 
       if !@user.valid_password?(params[:user_session][:password]) then
         @user.failed_login_count ||= 0
@@ -135,6 +139,25 @@ module Grit::Core
     end
 
     private
+
+      def sso_provider_name
+        ENV.fetch("SSO_PROVIDER", "none").downcase
+      end
+
+      def build_server_settings
+        settings = {
+          two_factor: ENV.fetch("SMTP_SERVER", nil) ? true : false,
+          server_url: ENV.fetch("GRIT_SERVER_URL", nil)
+        }
+
+        provider = sso_provider_name
+        if %w[saml oidc].include?(provider)
+          settings[:sso_provider] = provider
+          settings[:sso_login_path] = "/api/grit/core/auth/#{provider}"
+        end
+
+        settings
+      end
 
       def user_session_params
         params.require(:user_session).permit(:login, :password)
