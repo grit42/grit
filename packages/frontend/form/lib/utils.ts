@@ -43,7 +43,7 @@ export function getVisibleFieldData<T>(
     ) {
       data[name] = formValues[name];
       if (field.type === "boolean") {
-        data[name] = formValues[name] ?? false as T[keyof T];
+        data[name] = formValues[name] ?? (false as T[keyof T]);
       }
     } else {
       data[name] = null;

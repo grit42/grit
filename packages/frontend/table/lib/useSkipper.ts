@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/refs */
 /**
  * Copyright 2025 grit42 A/S. <https://grit42.com/>
  *

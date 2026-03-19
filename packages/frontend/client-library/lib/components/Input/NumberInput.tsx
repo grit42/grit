@@ -89,7 +89,7 @@ const NumericInput = forwardRef<HTMLInputElement, NumericInputProps>(
               inputProps.onKeyDown(e);
             }
           }}
-          value={value !== undefined ? stringNumberInputValue : value ?? ""}
+          value={value !== undefined ? stringNumberInputValue : (value ?? "")}
           pattern="^(?!\.+$).+$" // Only allow numbers
           lang={"en-US"}
           inputMode={type === "integer" ? "numeric" : "decimal"}

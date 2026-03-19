@@ -1,4 +1,3 @@
-// @use "./variables.scss";
 @use "./theme.scss";
 
 @mixin input-field {
@@ -36,30 +35,65 @@
   }
 }
 
-$breakpoint-large: 60em; // 960px
-$breakpoint-xl: 90em; // 1440px
+// --- Layout primitives ---
 
-@mixin responsive-inline-padding {
-  padding-inline: 1em;
-
-  @media only screen and (min-width: $breakpoint-large) {
-    padding-inline: 2em;
-  }
-
-  @media only screen and (min-width: $breakpoint-xl) {
-    padding: 0 2em;
-  }
+@mixin page-layout {
+  display: grid;
+  grid-template-rows: min-content 1fr;
+  height: 100%;
 }
 
-@mixin fadeIn {
-  animation: fadeIn 0.25s ease-in-out;
+@mixin scroll-container {
+  height: 100%;
+  width: 100%;
+  overflow: auto;
 }
 
-@keyframes fadeIn {
-  0% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 1;
-  }
+@mixin fill-bounded {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+// --- Composites ---
+
+// Fill parent, clamp to bounds, scroll internally
+@mixin page-content {
+  @include fill-bounded;
+  overflow: auto;
+}
+
+// --- Form layout ---
+
+@mixin form-width {
+  width: 100%;
+  max-width: 960px;
+}
+
+@mixin form-width-centered {
+  @include form-width;
+  margin-inline: auto;
+}
+
+@mixin form-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: calc(theme.$spacing * 2);
+}
+
+@mixin sidebar-layout($sidebar-width: 480px) {
+  display: grid;
+  grid-template-columns: $sidebar-width 1fr;
+  gap: theme.$spacing;
+  overflow: auto;
+}
+
+// --- Flex utilities ---
+
+@mixin flex-col-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }

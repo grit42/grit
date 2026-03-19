@@ -32,40 +32,30 @@ import {
   useInfiniteCompounds,
 } from "../../queries/compounds";
 import { useNavigate } from "react-router-dom";
-import styles from "./compounds.module.scss";
-import { classnames, downloadFile } from "@grit42/client-library/utils";
+import { downloadFile } from "@grit42/client-library/utils";
 import { useLocalStorage } from "@grit42/client-library/hooks";
 import CompoundTypesSelector from "../../components/CompoundTypesSelector";
-import { useEntityData, useDestroyEntityMutation } from "@grit42/core";
+import {
+  useEntityData,
+  useDestroyEntityMutation,
+  useHasRoles,
+  useToolbar,
+} from "@grit42/core";
 import {
   getFilterParams,
   getSortParams,
   getURLParams,
   useQueryClient,
 } from "@grit42/api";
-import { useToolbar } from "@grit42/core/Toolbar";
 import MoleculePlusIcon from "@grit42/client-library/icons/MoleculePlus";
 import CogIcon from "@grit42/client-library/icons/Cog";
 import { getTableColumns } from "@grit42/core/utils";
-import { ErrorPage, Spinner } from "@grit42/client-library/components";
-
-const useTableColumns = <T,>(columns: GritColumnDef<T>[]) => {
-  const columnTypeDefs = useColumnTypeDefs();
-
-  return useMemo(
-    () =>
-      columns.map((c) => {
-        if (c.type && columnTypeDefs[c.type]?.column) {
-          return {
-            ...c,
-            ...columnTypeDefs[c.type].column,
-          } as GritColumnDef;
-        }
-        return c;
-      }),
-    [columns, columnTypeDefs],
-  );
-};
+import {
+  Button,
+  Dropdown,
+  ErrorPage,
+  Spinner,
+} from "@grit42/client-library/components";
 
 const getExportFileUrl = (
   path: string,
@@ -81,7 +71,14 @@ const getExportFileUrl = (
 };
 
 const CompoundsTable = () => {
+  const canCrud = useHasRoles([
+    "Administrator",
+    "CompoundAdministrator",
+    "CompoundUser",
+  ]);
   const navigate = useNavigate();
+  const columnTypeDefs = useColumnTypeDefs();
+
   const registerToolbarAction = useToolbar();
   const queryClient = useQueryClient();
   const destroyEntityMutation = useDestroyEntityMutation(
@@ -99,16 +96,26 @@ const CompoundsTable = () => {
 
   const { data: columnData } = useCompoundGridMeta();
 
-  const columns = useMemo(() => columnData?.filter((d) => {
-    if (!selectedCompoundTypes.length) return true;
-    const has_structure = compoundTypes?.filter(({id}) => selectedCompoundTypes.includes(id)).some(
-      ({ has_structure }) => has_structure,
-    );
-    if (["molecule","molweight","molformula","logp"].includes(d.name as string)) return has_structure;
-    else if (d.compound_type_id === null) return true
-    else if (selectedCompoundTypes?.includes(d.compound_type_id ?? -1)) return true;
-    return false;
-  }),[selectedCompoundTypes, columnData, compoundTypes])
+  const columns = useMemo(
+    () =>
+      columnData?.filter((d) => {
+        if (!selectedCompoundTypes.length) return true;
+        const has_structure = compoundTypes
+          ?.filter(({ id }) => selectedCompoundTypes.includes(id))
+          .some(({ has_structure }) => has_structure);
+        if (
+          ["molecule", "molweight", "molformula", "logp"].includes(
+            d.name as string,
+          )
+        )
+          return has_structure;
+        else if (d.compound_type_id === null) return true;
+        else if (selectedCompoundTypes?.includes(d.compound_type_id ?? -1))
+          return true;
+        return false;
+      }),
+    [selectedCompoundTypes, columnData, compoundTypes],
+  );
 
   const tableColumns = useMemo(() => {
     const columnsByCompoundType = columns?.reduce(
@@ -132,29 +139,28 @@ const CompoundsTable = () => {
     for (const key in columnsByCompoundType) {
       if (key === "base") {
         groupedColumns.push(
-          ...getTableColumns<CompoundData>(columnsByCompoundType[key]),
+          ...getTableColumns<CompoundData>(
+            columnsByCompoundType[key],
+            columnTypeDefs,
+          ),
         );
       } else {
         groupedColumns.push({
           header: columnsByCompoundType[key][0].compound_type_id__name,
-          columns: getTableColumns(columnsByCompoundType[key]),
+          columns: getTableColumns(columnsByCompoundType[key], columnTypeDefs),
         } as GritGroupColumnDef<CompoundData, unknown>);
       }
     }
     return groupedColumns;
-  }, [columns, selectedCompoundTypes]);
+  }, [columnTypeDefs, columns, selectedCompoundTypes]);
 
-  const tableState = useSetupTableState<any>(
-    "compounds-list",
-    useTableColumns(tableColumns),
-    {
-      saveState: true,
-      settings: {
-        enableColumnDescription: true,
-        enableColumnOrderReset: true,
-      },
+  const tableState = useSetupTableState<any>("compounds-list", tableColumns, {
+    saveState: true,
+    settings: {
+      enableColumnDescription: true,
+      enableColumnOrderReset: true,
     },
-  );
+  });
 
   const exportUrl = useMemo(() => {
     const columnIds = tableState.columnOrder.filter(
@@ -193,6 +199,22 @@ const CompoundsTable = () => {
     tableState.columnVisibility,
     selectedCompoundTypes,
   ]);
+
+  const newDropdownItems = useMemo(
+    () =>
+      compoundTypes?.map((t) => ({
+        id: t.name,
+        text: t.name,
+        onClick: () =>
+          navigate("/core/entities/Grit::Compounds::Compound/new", {
+            state: {
+              initialData: { compound_type_id: t.id },
+              redirectWithId: "/compounds",
+            },
+          }),
+      })) ?? [],
+    [compoundTypes, navigate],
+  );
 
   useEffect(() => {
     return registerToolbarAction({
@@ -241,33 +263,38 @@ const CompoundsTable = () => {
             "CompoundAdministrator",
             "CompoundUser",
           ],
-          items:
-            compoundTypes?.map((t) => ({
-              id: t.name,
-              text: t.name,
-              onClick: () =>
-                navigate("/core/entities/Grit::Compounds::Compound/new", {
-                  state: {
-                    initialData: { compound_type_id: t.id },
-                    redirectWithId: "/compounds",
-                  },
-                }),
-            })) ?? [],
+          items: newDropdownItems,
         },
         {
           id: "COMPOUND_SETTINGS",
           icon: <CogIcon />,
           label: "Compound settings",
-          requiredRoles: [
-            "Administrator",
-            "CompoundAdministrator",
-          ],
-          onClick: () =>
-                navigate("/compounds/settings")
+          requiredRoles: ["Administrator", "CompoundAdministrator"],
+          onClick: () => navigate("/compounds/settings"),
         },
       ],
     });
-  }, [navigate, compoundTypes, registerToolbarAction, exportUrl]);
+  }, [
+    navigate,
+    compoundTypes,
+    registerToolbarAction,
+    exportUrl,
+    newDropdownItems,
+  ]);
+
+  const NewButton = useMemo(
+    () =>
+      canCrud ? (
+        newDropdownItems.length === 1 ? (
+          <Button onClick={newDropdownItems[0].onClick}>New</Button>
+        ) : (
+          <Dropdown menuItems={newDropdownItems}>
+            <Button>New</Button>
+          </Dropdown>
+        )
+      ) : undefined,
+    [canCrud, newDropdownItems],
+  );
 
   const {
     data,
@@ -303,13 +330,9 @@ const CompoundsTable = () => {
 
   return (
     <Table<CompoundData>
-      className={classnames({
-        [styles.withMolColumn]: !!columns?.find(
-          (c) => (c.type as any) === "mol",
-        ),
-      })}
       loading={isFetching && !isFetchingNextPage}
       header="Compounds"
+      headerActions={NewButton}
       leftHeaderActions={
         <CompoundTypesSelector
           options={

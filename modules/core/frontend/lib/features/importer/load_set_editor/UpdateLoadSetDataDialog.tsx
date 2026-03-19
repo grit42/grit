@@ -27,10 +27,10 @@ import { useQueryClient } from "@grit42/api";
 import { useEffect } from "react";
 import { useSetLoadSetBlockDataMutation } from "../mutations";
 import { useLoadSetBlockData, useLoadSetBlockSetDataFields } from "../queries";
-import { LoadSetBlockDataUpdateData, LoadSetData } from "../types";
+import { LoadSetData } from "../types";
 import {
   AddFormControl,
-  FieldListenerFn,
+  Form,
   FormField,
   genericErrorHandler,
   useForm,
@@ -38,7 +38,12 @@ import {
 import styles from "./loadSetEditor.module.scss";
 import EditorInput from "../../../components/EditorInput";
 import { useImporter } from "../ImportersContext";
-import { updateLoadSetBlockDataPayload } from "../utils";
+import { updateLoadSetBlockDataPayload, createDataBlurHandler } from "../utils";
+import {
+  invalidateLoadSet,
+  invalidatePreviewData,
+  invalidateBlockData,
+} from "../invalidation";
 
 const UpdateLoadSetDataDialog = (
   props: DialogProps & {
@@ -67,31 +72,15 @@ const UpdateLoadSetDataDialog = (
   );
   const queryClient = useQueryClient();
 
-  const form = useForm<LoadSetBlockDataUpdateData>({
+  const form = useForm({
     onSubmit: genericErrorHandler(async ({ value }) => {
       const loadSetBlock = await setLoadSetDataMutation.mutateAsync(
         updateLoadSetBlockDataPayload(value, loadSetBlockFields ?? []),
       );
       await Promise.all([
-        queryClient.invalidateQueries({
-          queryKey: [
-            "entities",
-            "infiniteData",
-            `grit/core/load_set_blocks/${loadSetBlock.id}/preview_data`,
-          ],
-        }),
-        queryClient.invalidateQueries({
-          queryKey: ["loadSetBlockData", loadSetBlock.id],
-        }),
-        queryClient.invalidateQueries({
-          queryKey: [
-            "entities",
-            "datum",
-            "grit/core/load_sets",
-            loadSetBlock.load_set_id!.toString(),
-          ],
-          exact: false,
-        }),
+        invalidatePreviewData(queryClient, loadSetBlock.id),
+        invalidateBlockData(queryClient, loadSetBlock.id),
+        invalidateLoadSet(queryClient, loadSetBlock.load_set_id!),
       ]);
       props.onClose();
     }),
@@ -107,45 +96,11 @@ const UpdateLoadSetDataDialog = (
     }
   }, [loadSetBlockData, form]);
 
-  const handleDataChange: FieldListenerFn<
-    LoadSetBlockDataUpdateData,
-    "data"
-  > = ({ fieldApi }) => {
+  const handleDataChange = async ({ fieldApi }: any) => {
     fieldApi.form.validateField("data", "submit");
   };
 
-  const handleDataBlur: FieldListenerFn<
-    LoadSetBlockDataUpdateData,
-    "data"
-  > = async ({ value, fieldApi }) => {
-    try {
-      const formUpdates = await guessDataSetValues<LoadSetBlockDataUpdateData>(
-        value,
-      );
-      Object.keys(formUpdates).forEach((key) => {
-        fieldApi.form.setFieldValue(key, formUpdates[key]);
-        fieldApi.form.setFieldMeta(key, (meta) => ({
-          ...meta,
-          errorMap: {
-            ...meta.errorMap,
-            onSubmit: undefined,
-          },
-        }));
-      });
-    } catch (e: any) {
-      if (typeof e.errors === "object") {
-        Object.keys(e.errors).forEach((key) => {
-          fieldApi.form.setFieldMeta(key, (meta) => ({
-            ...meta,
-            errorMap: {
-              ...meta.errorMap,
-              onSubmit: e.errors[key],
-            },
-          }));
-        });
-      }
-    }
-  };
+  const handleDataBlur = createDataBlurHandler(guessDataSetValues, "");
 
   if (isLoadSetBlockFieldsLoading || isLoadSetBlockDataLoading) {
     return <Spinner />;
@@ -164,13 +119,7 @@ const UpdateLoadSetDataDialog = (
 
   return (
     <Dialog {...props} className={styles.updateDataSetDialog}>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          form.handleSubmit();
-        }}
-      >
+      <Form form={form}>
         <Surface className={styles.fieldsContainer}>
           <form.Field
             name="data"
@@ -190,11 +139,11 @@ const UpdateLoadSetDataDialog = (
             )}
           />
           {loadSetBlockFields.map((f) => (
-            <FormField form={form} fieldDef={f} key={f.name} />
+            <FormField fieldDef={f} key={f.name} />
           ))}
         </Surface>
-        <AddFormControl form={form} label="Update data set" />
-      </form>
+        <AddFormControl label="Update data set" />
+      </Form>
     </Dialog>
   );
 };

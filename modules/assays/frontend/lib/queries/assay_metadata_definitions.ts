@@ -25,7 +25,12 @@ import {
   useEntityFields,
   useInfiniteEntityData,
 } from "@grit42/core";
-import { UseQueryOptions, URLParams, UndefinedInitialDataInfiniteOptions, PaginatedEndpointSuccess } from "@grit42/api";
+import {
+  UseQueryOptions,
+  URLParams,
+  UndefinedInitialDataInfiniteOptions,
+  PaginatedEndpointSuccess,
+} from "@grit42/api";
 import { Filter, SortingState } from "@grit42/table";
 import { FormFieldDef } from "@grit42/form";
 

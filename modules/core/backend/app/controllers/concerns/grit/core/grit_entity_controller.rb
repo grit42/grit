@@ -31,6 +31,7 @@ module Grit::Core::GritEntityController
     helper_method :current_user_session, :current_user
 
     before_action :set_csrf_token
+    before_action :set_bearer_token
     before_action :require_user
     before_action :check_read, only: %i[ index show ]
     before_action :check_create, only: :create
@@ -39,6 +40,17 @@ module Grit::Core::GritEntityController
 
     def set_csrf_token
       cookies["csrf-token"] = form_authenticity_token
+    end
+
+    # Extract a Bearer token from the Authorization header and inject it
+    # into params[:user_credentials] so that Authlogic's built-in
+    # single_access_token lookup (via UserSession.params_key) can find it.
+    def set_bearer_token
+      header = request.headers["Authorization"]
+      return unless header&.start_with?("Bearer ")
+
+      token = header.sub("Bearer ", "")
+      params[:user_credentials] = token unless token.blank?
     end
 
     def filter_and_sort_raw_sql(scope, filter, sort)
@@ -165,11 +177,15 @@ module Grit::Core::GritEntityController
 
     def show
       @record = show_entity(params)
+      return if performed?
+
       if @record.nil?
-        render json: { success: false, errors: "Not found" } unless @record.nil?
+        render json: { success: false, errors: "Not found" }
       else
-        render json: { success: true, data: @record } unless @record.nil?
+        render json: { success: true, data: @record }
       end
+    rescue ActiveRecord::RecordNotFound => e
+      render json: { success: false, errors: "Not found" }
     rescue StandardError => e
       logger.info e.to_s
       logger.info e.backtrace.join("\n")
@@ -223,6 +239,15 @@ module Grit::Core::GritEntityController
     end
 
     private
+
+    # Allow Authlogic single_access_token authentication for any request
+    # type when a Bearer token or user_credentials param is present.
+    # Without this, Authlogic only permits single access for RSS/Atom
+    # content types by default.
+    def single_access_allowed?
+      request.headers["Authorization"]&.start_with?("Bearer ") ||
+        params[:user_credentials].present?
+    end
 
     def check_read
       klass = controller_path.classify.constantize

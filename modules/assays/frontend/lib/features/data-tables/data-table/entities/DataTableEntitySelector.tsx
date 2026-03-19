@@ -19,15 +19,15 @@
 import { Button } from "@grit42/client-library/components";
 import { Link, useNavigate } from "react-router-dom";
 import {
-  useAvailableDataTableEntities,
+  useInfiniteAvailableDataTableEntities,
   useDataTableEntityColumns,
 } from "../../queries/data_table_entities";
 import { useTableColumns } from "@grit42/core/utils";
 import { Row, Table, useSetupTableState } from "@grit42/table";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { EntityData, useCreateEntityMutation } from "@grit42/core";
 import { useQueryClient } from "@grit42/api";
-import styles from "./dataTableEntities.module.scss";
+import { CenteredColumnLayout } from "@grit42/client-library/layouts";
 
 const getRowId = (data: EntityData) => data.id.toString();
 
@@ -51,16 +51,12 @@ const DataTableEntitySelector = ({
     },
   );
 
-  const {
-    data: availableDataTableEntities,
-    isLoading: isAvailableDataTableEntitiesLoading,
-    isError: isAvailableDataTableEntitiesError,
-    error: availableDataTableEntitiesError,
-  } = useAvailableDataTableEntities(
-    dataTableId,
-    tableState.sorting,
-    tableState.filters,
-  );
+  const { data, isLoading, isError, error, fetchNextPage, isFetchingNextPage } =
+    useInfiniteAvailableDataTableEntities(
+      dataTableId,
+      tableState.sorting,
+      tableState.filters,
+    );
 
   const createEntityMutation = useCreateEntityMutation<EntityData>(
     "grit/assays/data_table_entities/create_bulk",
@@ -75,6 +71,11 @@ const DataTableEntitySelector = ({
       return { ...prev, [row.id]: true };
     });
   };
+
+  const flatData = useMemo(
+    () => data?.pages.flatMap(({ data }) => data) ?? [],
+    [data],
+  );
 
   const onAdd = useCallback(
     async (selectedIds: string[]) => {
@@ -106,15 +107,18 @@ const DataTableEntitySelector = ({
   );
 
   return (
-    <div className={styles.entitiesTableContainer}>
+    <CenteredColumnLayout>
       <Table<EntityData>
+        fitContent
         header="Select entities to add"
         getRowId={getRowId}
         onRowClick={onRowClick}
         headerActions={[
           <Button
             key="add"
-            onClick={() => {onAdd(Object.keys(tableState.rowSelection))}}
+            onClick={() => {
+              onAdd(Object.keys(tableState.rowSelection));
+            }}
             disabled={createEntityMutation.isPending}
             loading={createEntityMutation.isPending}
             color="secondary"
@@ -122,22 +126,23 @@ const DataTableEntitySelector = ({
             Add selected
           </Button>,
           <Link to=".." key="cancel">
-            <Button color="primary">
-              Cancel
-            </Button>
+            <Button color="primary">Cancel</Button>
           </Link>,
         ]}
-        loading={isAvailableDataTableEntitiesLoading}
+        loading={isLoading}
         tableState={tableState}
         disableFooter
-        data={availableDataTableEntities}
+        data={flatData}
         noDataMessage={
-          (isAvailableDataTableEntitiesError
-            ? availableDataTableEntitiesError
-            : undefined) ?? "No more entities available"
+          (isError ? error : undefined) ?? "No more entities available"
         }
+        pagination={{
+          fetchNextPage,
+          isFetchingNextPage,
+          totalRows: data?.pages[0]?.total,
+        }}
       />
-    </div>
+    </CenteredColumnLayout>
   );
 };
 

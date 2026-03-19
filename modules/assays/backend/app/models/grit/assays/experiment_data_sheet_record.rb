@@ -18,12 +18,11 @@
 
 module Grit::Assays
   class ExperimentDataSheetRecord < ApplicationRecord # TODO: fix not use activerecord
-    include Grit::Core::GritEntityRecord
-
-    entity_crud_with create: [ "Administrator", "AssayAdministrator", "AssayUser" ],
+    @entity_crud = { create: [ "Administrator", "AssayAdministrator", "AssayUser" ],
       read: [],
       update: [ "Administrator", "AssayAdministrator", "AssayUser" ],
       destroy: [ "Administrator", "AssayAdministrator", "AssayUser" ]
+    }
 
     def self.sheet_record_klass(assay_data_sheet_definition_id)
       sheet = Grit::Assays::AssayDataSheetDefinition.includes(assay_data_sheet_columns: [ :data_type ]).find(assay_data_sheet_definition_id)
@@ -87,23 +86,23 @@ module Grit::Assays
             {
               display_name: "Created at",
               name: "created_at",
-              type: "datetime",
+              type: "datetime"
             },
             {
               display_name: "Created by",
               name: "created_by",
-              type: "string",
+              type: "string"
             },
             {
               display_name: "Updated at",
               name: "updated_at",
-              type: "datetime",
+              type: "datetime"
             },
             {
               display_name: "Updated by",
               name: "updated_by",
-              type: "string",
-            }]
+              type: "string"
+            } ]
 
           if args[:with_experiment_id]
             props.push({
@@ -115,7 +114,7 @@ module Grit::Assays
                 name: "Experiment",
                 path: "grit/assays/experiments",
                 primary_key: "id",
-                primary_key_type: "integer",
+                primary_key_type: "integer"
               }
             })
           end
@@ -284,5 +283,9 @@ module Grit::Assays
         assay_data_sheet_definition = Grit::Assays::ExperimentDataSheetRecordLoadSetBlock.find_by(load_set_block_id: params[:load_set_block_id]).assay_data_sheet_definition
         assay_data_sheet_definition.sheet_record_klass.detailed.where("#{assay_data_sheet_definition.table_name}.id IN (SELECT record_id FROM grit_core_load_set_block_loaded_records WHERE grit_core_load_set_block_loaded_records.load_set_block_id = ?)", params[:load_set_block_id].to_i).order(:created_at)
       end
-    end
+
+      def self.entity_crud
+        @entity_crud
+      end
+  end
 end

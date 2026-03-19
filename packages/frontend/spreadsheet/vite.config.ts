@@ -1,22 +1,17 @@
-/// <reference types="vitest/config" />
-
 import { defineConfig } from "vite";
 import dts from "vite-plugin-dts";
 import { extname, relative, resolve } from "path";
 import { glob } from "glob";
 import { fileURLToPath } from "node:url";
-import { externalizeDeps } from 'vite-plugin-externalize-deps'
+import { externalizeDeps } from "vite-plugin-externalize-deps";
 
-export default defineConfig(({mode}) => ({
+export default defineConfig({
   plugins: [
     dts({
       tsconfigPath: resolve(__dirname, "tsconfig.lib.json"),
     }),
     externalizeDeps(),
   ],
-  test: {
-    dir: "test"
-  },
   build: {
     minify: false,
     copyPublicDir: false,
@@ -33,7 +28,7 @@ export default defineConfig(({mode}) => ({
             // The absolute path to the entry file
             // lib/nested/foo.ts becomes /project/lib/nested/foo.ts
             fileURLToPath(new URL(file, import.meta.url)),
-          ])
+          ]),
       ),
       output: {
         assetFileNames: "assets/[name][extname]",
@@ -41,26 +36,8 @@ export default defineConfig(({mode}) => ({
       },
     },
     lib: {
-      entry: resolve(__dirname, "lib/main.tsx"),
+      entry: resolve(__dirname, "lib/index.ts"),
       formats: ["es"],
     },
   },
-  css: {
-    modules: {
-      localsConvention: "camelCase",
-      generateScopedName:
-        mode === "production"
-          ? "[hash:base64:16]"
-          : (name: string, filePath: string) => {
-              const fileName = filePath.split("/").pop()?.split(".")[0];
-
-              return `grit-${fileName}__${name}`;
-            },
-    },
-    preprocessorOptions: {
-      scss: {
-        api: "modern-compiler",
-      },
-    },
-  },
-}));
+});

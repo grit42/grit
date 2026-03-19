@@ -25,8 +25,10 @@ const AssayModelsAdministrationPage = () => {
   return (
     <Routes>
       <Route index element={<AssayModelsTable />} />
-      <Route path="/:assay_model_id/clone" element={<CloneAssayModel />} />
-      <Route path="/:assay_model_id/*" element={<AssayModel />} />
+      <Route path=":assay_model_id">
+        <Route path="clone" element={<CloneAssayModel />} />
+        <Route index path="*" element={<AssayModel />} />
+      </Route>
     </Routes>
   );
 };

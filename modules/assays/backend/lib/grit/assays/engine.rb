@@ -4,6 +4,10 @@ module Grit
       isolate_namespace Grit::Assays
       config.generators.api_only = true
 
+      def self.openapi_root
+        root.join("openapi").to_s
+      end
+
       def self.seeds
         { auto_seed: true, prerequisites: [ Grit::Core::Engine ] }
       end

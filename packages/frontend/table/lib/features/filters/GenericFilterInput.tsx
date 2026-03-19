@@ -30,7 +30,7 @@ const GenericFilterInput = ({ filter, onChange }: FilterInputProps) => {
       ...args: [string | boolean | null] & unknown[]
     ): Promise<void>;
     cancel: (reason?: unknown) => void;
-  }>();
+  }>(null);
   const [filterValue, setFilterValue] = useState(filter.value);
   const [loading, setLoading] = useState(false);
 

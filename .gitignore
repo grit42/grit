@@ -1,15 +1,8 @@
+# Dependencies
 node_modules
-dist
-# log
 
-backend/.bundle/
-backend/doc/
-backend/log/*.log
-backend/pkg/
-backend/tmp/
-backend/test/dummy/log/*.log
-backend/test/dummy/storage/
-backend/test/dummy/tmp/
+# Build output
+dist
 
 # Logs
 logs
@@ -20,17 +13,53 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-dist
+# Environment
+.env
 *.local
 
-# Playwright
-frontend/test-results/
-frontend/playwright-report/
-frontend/blob-report/
-frontend/test/playwright/.cache/
-frontend/test/playwright/.auth
+# Ruby/Rails
+backend/.bundle/
+backend/doc/
+backend/pkg/
+**/backend/*.gem
 
-# Editor directories and files
+# Rails runtime
+**/tmp/*
+!**/tmp/.keep
+**/log/*
+!**/log/.keep
+**/backend/test/dummy/public/*
+!**/backend/test/dummy/public/.keep
+**/backend/test/dummy/storage/*
+apps/**/server/public/*
+!apps/**/server/public/.keep
+apps/**/server/log/*
+!apps/**/server/log/.keep
+apps/**/server/tmp/*
+!apps/**/server/tmp/.keep
+
+# Frontend test artifacts
+**/test-results/
+**/playwright-report/
+**/blob-report/
+**/test/playwright/.cache/
+**/test/playwright/.auth
+**/coverage/
+.auth
+
+# Nx
+.nx/cache
+.nx/workspace-data
+.cursor/rules/nx-rules.mdc
+.github/instructions/nx.instructions.md
+
+# Docs
+grit-docs/node_modules
+grit-docs/build
+.docusaurus
+.cache-loader
+
+# Editor
 .vscode/*
 !.vscode/extensions.json
 .idea
@@ -41,55 +70,17 @@ frontend/test/playwright/.auth
 *.sln
 *.sw?
 
+# Database
 postgres-data
 postgres-data-prod
 postgres-data-backup
 
-.env
-
-**/tmp/*
-!**/tmp/.keep
-**/log/*
-!**/log/.keep
-node_modules
-dist
-**/backend/test/dummy/public/*
-**/backend/test/dummy/storage/*
-!**/backend/test/dummy/public/.keep
-apps/**/server/public/*
-!apps/**/server/public/.keep
-apps/**/server/log/*
-!apps/**/server/log/.keep
-apps/**/server/tmp/*
-!apps/**/server/tmp/.keep
-
-# Dependencies
-grit-docs/node_modules
-
-# Production
-grit-docs/build
-
-# Generated files
-.docusaurus
-.cache-loader
-
-# Misc
-.DS_Store
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-
-
-.nx/cache
-.nx/workspace-data
-.cursor/rules/nx-rules.mdc
-.github/instructions/nx.instructions.md
+# Agents
+.plans
+.claude
+CLAUDE.md
 
 # Onlyoffice lock files
 .~lock.*
+
+

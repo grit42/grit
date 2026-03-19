@@ -19,6 +19,7 @@
 module Grit::Assays
   class AssayDataSheetDefinition < ApplicationRecord
     include Grit::Core::GritEntityRecord
+    include Grit::Core::Model::DangerousEdit
 
     belongs_to :assay_model
     has_many :assay_data_sheet_columns, dependent: :destroy
@@ -32,6 +33,9 @@ module Grit::Assays
       destroy: [ "Administrator", "AssayAdministrator" ]
 
     before_save :check_model_publication_status
+    after_create :create_table_if_model_is_published
+    before_destroy :check_model_publication_status
+    after_destroy :drop_table
 
     def table_name
       "ds_#{id}"
@@ -97,23 +101,23 @@ module Grit::Assays
             {
               display_name: "Created at",
               name: "created_at",
-              type: "datetime",
+              type: "datetime"
             },
             {
               display_name: "Created by",
               name: "created_by",
-              type: "string",
+              type: "string"
             },
             {
               display_name: "Updated at",
               name: "updated_at",
-              type: "datetime",
+              type: "datetime"
             },
             {
               display_name: "Updated by",
               name: "updated_by",
-              type: "string",
-            }]
+              type: "string"
+            } ]
 
           if args[:with_experiment_id]
             props.push({
@@ -125,7 +129,7 @@ module Grit::Assays
                 name: "Experiment",
                 path: "grit/assays/experiments",
                 primary_key: "id",
-                primary_key_type: "integer",
+                primary_key_type: "integer"
               }
             })
           end
@@ -209,23 +213,25 @@ module Grit::Assays
       klass
     end
 
+    def table_exists?
+      ActiveRecord::Base.connection.table_exists? table_name
+    end
+
     def create_table
       foreign_key_colums = []
       connection = ActiveRecord::Base.connection
       connection.create_table table_name, id: false, if_not_exists: true do |t|
-        t.bigint :id, primary_key: true, default: -> { 'nextval(\'grit_seq\'::regclass)' }
+        t.bigint :id, primary_key: true, default: -> { "nextval('grit_seq'::regclass)" }
         t.string :created_by, limit: 30, null: false, default: "SYSTEM"
-        t.datetime :created_at, null: false, default: -> { 'CURRENT_TIMESTAMP' }
+        t.datetime :created_at, null: false, default: -> { "CURRENT_TIMESTAMP" }
         t.string :updated_by, limit: 30
         t.datetime :updated_at
         t.references :experiment, null: false, foreign_key: { name: "#{table_name}_experiments", to_table: "grit_assays_experiments" }
 
         assay_data_sheet_columns.each do |column|
-          if column.data_type.is_entity or column[:type].to_s == "integer"
+          if column.data_type.is_entity
             t.column column.safe_name, :bigint, null: !column.required
             foreign_key_colums.push column
-          elsif column.data_type.name == "decimal"
-            t.column column.safe_name, :decimal, null: !column.required
           else
             t.column column.safe_name, column.data_type.sql_name, null: !column.required
           end
@@ -243,7 +249,12 @@ module Grit::Assays
 
     private
       def check_model_publication_status
-        raise "Cannot modify data sheet definitions of a published Assay Model" if assay_model.publication_status.name === "Published"
+        return if dangerous_edit?
+        raise "Cannot modify data sheet definitions of a published Assay Model" if assay_model.published?
+      end
+
+      def create_table_if_model_is_published
+        create_table if assay_model.published?
       end
   end
 end

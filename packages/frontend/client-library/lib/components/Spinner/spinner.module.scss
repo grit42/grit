@@ -1,11 +1,10 @@
-@use "../../scss/colors.scss";
 @use "../../scss/theme.scss";
 
 $transition-ease: cubic-bezier(0.4, 1, 0.75, 0.9) !default;
 $transition-ease-bounce: cubic-bezier(0.54, 1.12, 0.38, 1.11) !default;
 $transition-duration: 100ms;
-$progress-track-color: rgba(colors.$steel-666, 0.2) !default;
-$progress-head-color: rgba(colors.$steel-666, 0.8) !default;
+$progress-track-color: rgba(#696d78, 0.2) !default;
+$progress-head-color: rgba(#696d78, 0.8) !default;
 
 @keyframes spinner-animation {
   from {

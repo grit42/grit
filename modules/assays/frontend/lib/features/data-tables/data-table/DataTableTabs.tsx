@@ -16,72 +16,37 @@
  * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { useEffect, useState } from "react";
-import { Tabs } from "@grit42/client-library/components";
-import styles from "./dataTable.module.scss";
-import { Outlet, useMatch, useNavigate } from "react-router-dom";
+import { RoutedTabs } from "@grit42/client-library/components";
 
 const TABS = [
   {
-    key: "details",
-    name: "Details",
     url: "details",
-    panel: <></>,
+    label: "Details",
   },
   {
-    key: "data",
-    name: "Data",
     url: "data",
-    panel: <></>,
+    label: "Data",
   },
   {
-    key: "plots",
-    name: "Plots",
     url: "plots",
-    panel: <></>,
+    label: "Plots",
   },
   {
-    key: "entities",
-    name: "Entities",
     url: "entities",
-    panel: <></>,
+    label: "Entities",
   },
   {
-    key: "columns",
-    name: "Columns",
     url: "columns",
-    panel: <></>,
+    label: "Columns",
   },
 ];
 
 const DataTableTabs = () => {
-  const navigate = useNavigate();
-  const match = useMatch("/assays/data_tables/:data_table_id/:tab/*");
-
-  const tab = match?.params.tab ?? "data";
-
-  const [selectedTab, setSelectedTab] = useState(
-    TABS.findIndex(({ url }) => tab === url),
-  );
-
-  useEffect(() => {
-    setSelectedTab(TABS.findIndex(({ url }) => tab === url));
-  }, [tab]);
-
-  const handleTabChange = (index: number) => {
-    navigate(`${TABS[index].url}`);
-  };
-
   return (
-    <div className={styles.dataTableContainer}>
-      <Tabs
-        selectedTab={selectedTab}
-        onTabChange={handleTabChange}
-        className={styles.dataTableTabs}
-        tabs={TABS}
-      />
-      <Outlet />
-    </div>
+    <RoutedTabs
+      matchPattern="/assays/data_tables/:data_table_id/:tab/*"
+      tabs={TABS}
+    />
   );
 };
 

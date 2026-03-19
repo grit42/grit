@@ -7,6 +7,7 @@
   grid-template-rows: min-content 1fr;
   gap: theme.$spacing;
 }
+
 .header {
   display: flex;
   justify-content: space-between;
@@ -77,6 +78,7 @@
     width: 90vw;
     min-height: 80vh;
     display: grid;
+    max-width: unset;
   }
 
   .fieldsContainer {
@@ -87,4 +89,21 @@
     gap: theme.$spacing;
     margin-bottom: theme.$spacing;
   }
+}
+
+.mappingFieldsContainer {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: theme.$spacing-md;
+  overflow-y: auto;
+  padding-inline: theme.$spacing-lg;
+  padding-bottom: 200px;
+}
+
+.mappingFieldDivider {
+  width: 100%;
+  border-bottom: 1px solid;
+  border-color: rgb(from theme.$palette-primary-contrast-text r g b / 50%);
+  margin-block: theme.$spacing-md;
 }

@@ -20,11 +20,16 @@ import {
   useEntityColumns,
   EntityPropertyDef,
   EntityData,
-  useEntityData,
   useEntityDatum,
   useEntityFields,
+  useInfiniteEntityData,
 } from "@grit42/core";
-import { UseQueryOptions, URLParams } from "@grit42/api";
+import {
+  UseQueryOptions,
+  URLParams,
+  UndefinedInitialDataInfiniteOptions,
+  PaginatedEndpointSuccess,
+} from "@grit42/api";
 import { Filter, SortingState } from "@grit42/table";
 import { FormFieldDef } from "@grit42/form";
 import { PlotDefinition } from "@grit42/plots";
@@ -64,13 +69,18 @@ export interface DataTableData extends EntityData {
   plots: Record<string, DataTablePlotDefinition>;
 }
 
-export const useDataTables = (
+export const useInfiniteDataTables = (
   sort?: SortingState,
   filter?: Filter[],
   params: URLParams = {},
-  queryOptions: Partial<UseQueryOptions<DataTableData[], string>> = {},
+  queryOptions: Partial<
+    UndefinedInitialDataInfiniteOptions<
+      PaginatedEndpointSuccess<DataTableData[]>,
+      string
+    >
+  > = {},
 ) => {
-  return useEntityData<DataTableData>(
+  return useInfiniteEntityData<DataTableData>(
     "grit/assays/data_tables",
     sort,
     filter,

@@ -3,7 +3,7 @@ import {
   ButtonGroup,
   ErrorPage,
   Spinner,
-  Surface,
+  useConfirm,
 } from "@grit42/client-library/components";
 import {
   AssayModelData,
@@ -13,8 +13,10 @@ import {
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   Form,
+  FormBanner,
   FormField,
   FormFieldDef,
+  FormFields,
   genericErrorHandler,
   getVisibleFieldData,
   useForm,
@@ -32,10 +34,12 @@ import {
 import {
   useCreateEntityMutation,
   useEditEntityMutation,
-  useDestroyEntityMutation,
+  useDangerousDestroyEntityMutation,
 } from "@grit42/core";
 import { useState } from "react";
-import styles from "../../assayModels.module.scss";
+import styles from "./details.module.scss";
+import { CenteredSurface } from "@grit42/client-library/layouts";
+import { useAssayModelEditorContext } from "../AssayModelEditorContext";
 
 export const usePublishAssayModelMutation = (
   id: string | number,
@@ -135,13 +139,34 @@ export const useDraftAssayModelMutation = (
   });
 };
 
+const AssayModelAction = ({
+  title,
+  description,
+  action,
+}: {
+  title: string;
+  description: React.ReactNode;
+  action: React.ReactNode;
+}) => (
+  <div className={styles.actionSection}>
+    <div className={styles.actionContent}>
+      <h3>{title}</h3>
+      <p>{description}</p>
+    </div>
+    {action}
+  </div>
+);
+
 const AssayModelActions = ({
   assayModel,
 }: {
   assayModel: Partial<AssayModelData>;
 }) => {
+  const confirm = useConfirm();
+  const { canEdit, dangerousEditMode, setDangerousEditMode, published } =
+    useAssayModelEditorContext();
   const navigate = useNavigate();
-  const destroyEntityMutation = useDestroyEntityMutation(
+  const destroyEntityMutation = useDangerousDestroyEntityMutation(
     "grit/assays/assay_models",
   );
 
@@ -149,15 +174,17 @@ const AssayModelActions = ({
   const draftMutation = useDraftAssayModelMutation(assayModel.id!);
 
   const onDelete = async () => {
-    if (
-      !assayModel.id ||
-      !window.confirm(
-        `Are you sure you want to delete this assay model? This action is irreversible`,
-      )
-    )
+    const confirmed = await confirm({
+      title: `Delete assay model ${assayModel.name}?`,
+      body: `Are you sure you want to delete this assay model? All related experiments and data will be permanently deleted.`,
+      challenge: published ? assayModel.name : undefined,
+      danger: true,
+    });
+    if (!confirmed) {
       return;
-    await destroyEntityMutation.mutateAsync(assayModel.id);
-    navigate("../..");
+    }
+    await destroyEntityMutation.mutateAsync([assayModel.id, dangerousEditMode]);
+    navigate("../..", { relative: "path" });
   };
 
   const onPublish = async () => {
@@ -168,15 +195,29 @@ const AssayModelActions = ({
   };
 
   const onDraft = async () => {
-    if (
-      !assayModel.id ||
-      !window.confirm(
-        `Are you sure you want to convert this Assay Model to draft? All related experiments and existing data will be permanently deleted. This action is irreversible.`,
-      )
-    ) {
+    const confirmed = await confirm({
+      title: `Convert assay model ${assayModel.name} to draft?`,
+      body: `Are you sure you want to convert this Assay Model to draft? All related experiments and data will be permanently deleted.`,
+      challenge: assayModel.name,
+      danger: true,
+    });
+    if (!confirmed) {
       return;
     }
     await draftMutation.mutateAsync();
+  };
+
+  const onDangerousEditMode = async () => {
+    const confirmed = await confirm({
+      title: `Dangerously edit ${assayModel.name}?`,
+      body: `Are you sure you want to enter dangerous edit mode? Changes made in this mode can cause permanent data loss.`,
+      challenge: assayModel.name,
+      danger: true,
+    });
+    if (!confirmed) {
+      return;
+    }
+    setDangerousEditMode(true);
   };
 
   if (!assayModel.id) {
@@ -184,111 +225,87 @@ const AssayModelActions = ({
   }
 
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "1fr",
-      }}
-    >
-      {assayModel.publication_status_id__name === "Draft" && (
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: "var(--spacing)",
-            marginBlock: "calc(var(--spacing)*4)",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "var(--spacing)",
-            }}
-          >
-            <h3>Publish this Assay Model</h3>
-            <p>
-              Publishing this Assay Model will make it available for creating
-              Experiments and for use in Data Tables.
-            </p>
-          </div>
-          <Button
-            color="secondary"
-            onClick={onPublish}
-            loading={publishMutation.isPending}
-          >
-            Publish
-          </Button>
-        </div>
+    <>
+      {published && !dangerousEditMode && (
+        <AssayModelAction
+          title="Enter dangerous edit mode"
+          description={
+            <>
+              The dangerous edit mode enables modifying a published assay model,
+              potentially causing permanent data loss if not used carefully. Use
+              this only if you are absolutely sure of what you are doing.{" "}
+              <b>
+                The data lost when deleting sheets or columns cannot be
+                recovered.
+              </b>
+            </>
+          }
+          action={
+            <Button color="danger" onClick={onDangerousEditMode}>
+              Dangerous edit mode
+            </Button>
+          }
+        />
       )}
-      {assayModel.publication_status_id__name === "Published" && (
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr max-content",
-            alignItems: "center",
-            gap: "var(--spacing)",
-            marginBlock: "calc(var(--spacing)*4)",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "var(--spacing)",
-              width: "80ch",
-            }}
-          >
-            <h3>Convert this Assay Model to Draft</h3>
-            <p>
+
+      {!published && (
+        <AssayModelAction
+          title="Publish this Assay Model"
+          description="Publishing this Assay Model will make it available for creating Experiments and for use in Data Tables."
+          action={
+            <Button
+              color="secondary"
+              onClick={onPublish}
+              loading={publishMutation.isPending}
+            >
+              Publish
+            </Button>
+          }
+        />
+      )}
+      {canEdit && published && (
+        <AssayModelAction
+          title="Convert this Assay Model to Draft"
+          description={
+            <>
               Converting this Assay Model to draft will allow you to make
               changes to its Metadata and Data Sheets. However, all related
               experiments and existing data will be permanently deleted.{" "}
               <b>This data cannot be recovered.</b>
-            </p>
-          </div>
-          <Button
-            color="danger"
-            onClick={onDraft}
-            loading={draftMutation.isPending}
-          >
-            Convert to Draft
-          </Button>
-        </div>
+            </>
+          }
+          action={
+            <Button
+              color="danger"
+              onClick={onDraft}
+              loading={draftMutation.isPending}
+            >
+              Convert to Draft
+            </Button>
+          }
+        />
       )}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr max-content",
-          alignItems: "center",
-          gap: "var(--spacing)",
-          marginBlock: "calc(var(--spacing)*4)",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "var(--spacing)",
-            width: "80ch",
-          }}
-        >
-          <h3>Delete this Assay Model</h3>
-          <p>
-            Deleting this Assay Model will permanently remove all related
-            experiments and existing data. <b>This action is irreversible.</b>
-          </p>
-        </div>
-        <Button
-          color="danger"
-          onClick={onDelete}
-          loading={destroyEntityMutation.isPending}
-        >
-          Delete
-        </Button>
-      </div>
-    </div>
+      {canEdit && (
+        <AssayModelAction
+          title="Delete this Assay Model"
+          description={
+            <>
+              Deleting this Assay Model will permanently remove all related
+              experiments and existing data. <b>This action is irreversible.</b>
+            </>
+          }
+          action={
+            <Button
+              color="danger"
+              onClick={onDelete}
+              loading={destroyEntityMutation.isPending}
+            >
+              Delete
+            </Button>
+          }
+        />
+      )}
+    </>
   );
 };
 
@@ -299,6 +316,7 @@ const AssayModelForm = ({
   fields: FormFieldDef[];
   assayModel: Partial<AssayModelData>;
 }) => {
+  const { canEdit, dangerousEditMode } = useAssayModelEditorContext();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState<Partial<AssayModelData>>(assayModel);
@@ -314,16 +332,16 @@ const AssayModelForm = ({
 
   const fields = fieldsFromProps.map((f) => ({
     ...f,
-    disabled: assayModel.publication_status_id__name === "Published",
+    disabled: !canEdit,
   }));
 
-  const form = useForm<Partial<AssayModelData>>({
+  const form = useForm({
     defaultValues: formData,
     onSubmit: genericErrorHandler(async ({ value: formValue, formApi }) => {
-      const value = getVisibleFieldData<Partial<AssayModelData>>(
-        formValue,
-        fields,
-      );
+      const value = {
+        ...getVisibleFieldData<Partial<AssayModelData>>(formValue, fields),
+        dangerous_edit: dangerousEditMode ?? undefined,
+      };
       if (!assayModel.id) {
         const newEntity = await createEntityMutation.mutateAsync(
           value as AssayModelData,
@@ -353,84 +371,60 @@ const AssayModelForm = ({
   });
 
   return (
-    <div className={styles.model}>
-      <Surface className={styles.modelForm}>
-        {!assayModel.id && (
-          <h2 style={{ alignSelf: "baseline", marginBottom: ".5em" }}>
-            New assay model
-          </h2>
-        )}
-        <Form<Partial<AssayModelData>> form={form}>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr",
-              gridAutoRows: "max-content",
-              gap: "calc(var(--spacing) * 2)",
-              paddingBottom: "calc(var(--spacing) * 2)",
-            }}
-          >
-            {form.state.errorMap.onSubmit && (
-              <div
-                style={{
-                  gridColumnStart: 1,
-                  gridColumnEnd: -1,
-                  color: "var(--palette-error-main)",
-                }}
-              >
-                {form.state.errorMap.onSubmit?.toString()}
-              </div>
-            )}
-            {fields.map((f) => (
-              <FormField form={form} fieldDef={f} key={f.name} />
-            ))}
-          </div>
-          <form.Subscribe
-            selector={(state) => [
-              state.canSubmit,
-              state.isSubmitting,
-              state.isDirty,
-            ]}
-            children={([canSubmit, isSubmitting, isDirty]) => {
-              return (
-                <ButtonGroup>
-                  {isDirty && (
-                    <Button
-                      color="secondary"
-                      disabled={!canSubmit}
-                      type="submit"
-                      loading={isSubmitting}
-                    >
-                      Save
-                    </Button>
-                  )}
-                  {isDirty && (
-                    <Button onClick={() => form.reset()}>Revert changes</Button>
-                  )}
-                  {!isDirty && (
-                    <Button
-                      onClick={() => navigate(assayModel.id ? "../.." : "..")}
-                    >
-                      {assayModel.id ? "Back" : "Cancel"}
-                    </Button>
-                  )}
-                  {!isDirty && !!assayModel.id && (
-                    <Link
-                      to={{
-                        pathname: "../clone",
-                      }}
-                    >
-                      <Button>Clone</Button>
-                    </Link>
-                  )}
-                </ButtonGroup>
-              );
-            }}
-          />
-        </Form>
-        {assayModel.id && <AssayModelActions assayModel={assayModel} />}
-      </Surface>
-    </div>
+    <CenteredSurface>
+      {!assayModel.id && <h2>New assay model</h2>}
+      <Form form={form}>
+        <FormFields columns={1}>
+          <FormBanner content={form.state.errorMap.onSubmit} />
+          {fields.map((f) => (
+            <FormField fieldDef={f} key={f.name} />
+          ))}
+        </FormFields>
+        <form.Subscribe
+          selector={(state) => [
+            state.canSubmit,
+            state.isSubmitting,
+            state.isDirty,
+          ]}
+          children={([canSubmit, isSubmitting, isDirty]) => {
+            return (
+              <ButtonGroup>
+                {isDirty && (
+                  <Button
+                    color="secondary"
+                    disabled={!canSubmit}
+                    type="submit"
+                    loading={isSubmitting}
+                  >
+                    Save
+                  </Button>
+                )}
+                {isDirty && (
+                  <Button onClick={() => form.reset()}>Revert changes</Button>
+                )}
+                {!isDirty && (
+                  <Button
+                    onClick={() =>
+                      navigate(assayModel.id ? "../../.." : "../..", {
+                        relative: "path",
+                      })
+                    }
+                  >
+                    {assayModel.id ? "Back" : "Cancel"}
+                  </Button>
+                )}
+                {!isDirty && !!assayModel.id && (
+                  <Link to="../clone" relative="path">
+                    <Button>Clone</Button>
+                  </Link>
+                )}
+              </ButtonGroup>
+            );
+          }}
+        />
+      </Form>
+      {assayModel.id && <AssayModelActions assayModel={assayModel} />}
+    </CenteredSurface>
   );
 };
 

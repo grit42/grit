@@ -1,7 +1,5 @@
 import { ErrorPage, Spinner } from "@grit42/client-library/components";
-import {
-  EntityPropertyDef,
-} from "@grit42/core";
+import { EntityPropertyDef } from "@grit42/core";
 import {
   useAssayMetadataDefinitionColumns,
   useAssayMetadataDefinitionsByAssayModel,
@@ -9,7 +7,7 @@ import {
 import { Table, useSetupTableState } from "@grit42/table";
 import { useTableColumns } from "@grit42/core/utils";
 import { useParams } from "react-router-dom";
-
+import { CenteredColumnLayout } from "@grit42/client-library/layouts";
 
 const AssayModelMetadataTable = ({
   columns,
@@ -42,16 +40,19 @@ const AssayModelMetadataTable = ({
   );
 
   return (
-    <Table
-      loading={isModelMetadataLoading}
-      tableState={tableState}
-      disableFooter
-      data={modelMetadata}
-      noDataMessage={
-        (isModelMetadataError ? modelMetadataError : undefined) ??
-        "This assay model does not define any metadata"
-      }
-    />
+    <CenteredColumnLayout>
+      <Table
+        loading={isModelMetadataLoading}
+        tableState={tableState}
+        fitContent
+        disableFooter
+        data={modelMetadata}
+        noDataMessage={
+          (isModelMetadataError ? modelMetadataError : undefined) ??
+          "This assay model does not define any metadata"
+        }
+      />
+    </CenteredColumnLayout>
   );
 };
 

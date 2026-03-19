@@ -6,7 +6,9 @@ const AssayModelsSection = () => {
   return (
     <Routes>
       <Route index element={<AssayModelsPage />} />
-      <Route path=":assay_model_id/*" element={<AssayModelPage />} />
+      <Route path=":assay_model_id">
+        <Route index path="*" element={<AssayModelPage />} />
+      </Route>
     </Routes>
   );
 };

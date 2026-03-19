@@ -122,13 +122,28 @@ const DataTablePage = () => {
           path="data"
           element={<DataTableData dataTableId={data_table_id} />}
         />
-        <Route
-          path="plots/*"
-          element={<DataTablePlots dataTableId={data_table_id} />}
-        />
-        <Route path="entities/*" element={<DataTableEntities dataTableId={data_table_id} />} />
-        <Route path="columns/*" element={<DataTableColumns dataTableId={data_table_id} />} />
-        <Route index element={<Navigate to="data" replace />} />
+        <Route path="plots">
+          <Route
+            index
+            path="*"
+            element={<DataTablePlots dataTableId={data_table_id} />}
+          />
+        </Route>
+        <Route path="entities">
+          <Route
+            index
+            path="*"
+            element={<DataTableEntities dataTableId={data_table_id} />}
+          />
+        </Route>
+        <Route path="columns">
+          <Route
+            index
+            path="*"
+            element={<DataTableColumns dataTableId={data_table_id} />}
+          />
+        </Route>
+        <Route index path="*" element={<Navigate to="../data" replace />} />
       </Route>
     </Routes>
   );

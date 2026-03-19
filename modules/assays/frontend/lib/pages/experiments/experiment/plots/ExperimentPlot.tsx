@@ -3,7 +3,7 @@ import {
   ExperimentData,
   ExperimentPlotDefinition,
 } from "../../../../queries/experiments";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Button,
   ButtonGroup,
@@ -31,6 +31,7 @@ import {
   useHasRoles,
 } from "@grit42/core";
 import { generateUniqueID } from "@grit42/client-library/utils";
+import styles from "./plots.module.scss";
 
 interface Props {
   experiment: ExperimentData;
@@ -46,9 +47,7 @@ const getPlotData = (data: EntityData[], properties: EntityPropertyDef[]) => {
     for (const prop of propsToConvert) {
       if (!nullish(datum[prop.name])) {
         datum[prop.name] =
-          prop.type === "decimal"
-            ? datum[prop.name]
-            : (datum[prop.name] as any).toString();
+          prop.type === "decimal" ? datum[prop.name] : `${datum[prop.name]}`;
       } else if (prop.type === "boolean") {
         datum[prop.name] = (!!datum[prop.name]).toString();
       }
@@ -76,20 +75,34 @@ const ExperimentPlot = ({ experiment }: Props) => {
     "AssayAdministrator",
     "AssayUser",
   ]);
-  const { experiment_id, plot_id } = useParams() as { experiment_id: string; plot_id: string };
+  const { experiment_id, plot_id } = useParams() as {
+    experiment_id: string;
+    plot_id: string;
+  };
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  const [plot, setPlot] = useState<ExperimentPlotDefinition>(
-    experiment.plots[plot_id] ?? NEW_PLOT(experiment.data_sheets[0]?.id),
-  );
-
-  useEffect(() => {
-    setPlot(
-      experiment.plots[plot_id] ?? NEW_PLOT(experiment.data_sheets[0]?.id),
-    );
-  }, [plot_id, experiment.plots, experiment.data_sheets]);
+  const defaultPlot =
+    experiment.plots[plot_id] ?? NEW_PLOT(experiment.data_sheets[0]?.id);
+  const [plot, setPlot] = useState<ExperimentPlotDefinition>(defaultPlot);
+  const [prevDeps, setPrevDeps] = useState({
+    plot_id,
+    plots: experiment.plots,
+    data_sheets: experiment.data_sheets,
+  });
+  if (
+    prevDeps.plot_id !== plot_id ||
+    prevDeps.plots !== experiment.plots ||
+    prevDeps.data_sheets !== experiment.data_sheets
+  ) {
+    setPrevDeps({
+      plot_id,
+      plots: experiment.plots,
+      data_sheets: experiment.data_sheets,
+    });
+    setPlot(defaultPlot);
+  }
 
   const editEntityMutation = useEditEntityMutation<ExperimentData>(
     "grit/assays/experiments",
@@ -181,37 +194,17 @@ const ExperimentPlot = ({ experiment }: Props) => {
   );
 
   if (!canCrudPlots && plot_id === "new") {
-    return <ErrorPage error="Nothing to see here..."/>
+    return <ErrorPage error="Nothing to see here..." />;
   }
 
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "8fr 2fr",
-        gap: "var(--spacing)",
-        height: "100%",
-        overflow: "auto",
-      }}
-    >
+    <div className={styles.plotContainer}>
       {isLoading && <Spinner />}
       {isError && <ErrorPage error={columnsError ?? dataError} />}
       {canDisplayPlot && (
-        <Plot
-          data={plotData}
-          dataProperties={(columns as any) ?? []}
-          def={plot.def}
-        />
+        <Plot data={plotData} dataProperties={columns ?? []} def={plot.def} />
       )}
-      <Surface
-        style={{
-          width: "auto",
-          display: "grid",
-          gap: "calc(var(--spacing) * 2)",
-          gridAutoRows: "min-content",
-          overflowY: "auto",
-        }}
-      >
+      <Surface className={styles.plotSidebar}>
         <ButtonGroup>
           {dirty && (
             <Button onClick={onSave} loading={saving} color="secondary">
@@ -227,12 +220,10 @@ const ExperimentPlot = ({ experiment }: Props) => {
         </ButtonGroup>
         <Select
           label="Data sheet"
-          options={experiment.data_sheets.map(
-            ({ name, id }) => ({
-              label: name,
-              value: id,
-            }),
-          )}
+          options={experiment.data_sheets.map(({ name, id }) => ({
+            label: name,
+            value: id,
+          }))}
           value={plot.data_sheet_id}
           onChange={(data_sheet_id) => {
             setPlot((prev) => ({ ...prev, data_sheet_id }));

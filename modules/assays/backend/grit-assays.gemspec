@@ -14,10 +14,16 @@ Gem::Specification.new do |spec|
   spec.metadata["github_repo"] = "ssh://github.com/grit42/grit"
 
   spec.files = Dir.chdir(File.expand_path(__dir__)) do
-    Dir["{app,config,db,lib}/**/*", "Rakefile", "README.md", "COPYING"]
+    Dir["{app,config,db,lib,openapi}/**/*", "Rakefile", "README.md", "COPYING"]
   end
 
-  spec.add_dependency "rails", '~> 7.2', '>= 7.2.2'
-  spec.add_dependency "rubyzip", "~> 2.3", ">= 2.3.2"
+  spec.add_dependency "rails", '~> 8.1'
+  spec.add_dependency "rubyzip", "~> 3.2"
+  spec.add_dependency "csv", '~> 3', '>= 3.3.5'
   spec.add_dependency "grit-core", "~> #{Grit::Core::VERSION}"
+
+  # Testing
+  spec.add_development_dependency "rspec-rails", "~> 8.0"
+  spec.add_development_dependency "rswag-specs", "~> 2.17"
+  spec.add_development_dependency "factory_bot_rails", "~> 6.5"
 end

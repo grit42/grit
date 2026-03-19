@@ -16,7 +16,7 @@
  * @grit42/compounds. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState, useMemo } from "react";
 import styles from "./moleculeInput.module.scss";
 import { RefMoleculeViewer } from "../MoleculeViewer";
 import MoleculeEditor from "../MoleculeEditor";
@@ -86,18 +86,15 @@ const MoleculeInput = ({
 }: StandardProps) => {
   const fieldRef = useRef<HTMLDivElement>(null);
   const [toggled, setToggled] = useState(false);
-  const moleculeRef = useRef<Molecule>(
-    getMoleculeFromValue(substructure, filter, value),
+  const molecule = useMemo(
+    () => getMoleculeFromValue(substructure, filter, value),
+    [substructure, filter, value],
   );
 
   const onClear = () => {
     if (!isClearable) return;
     if (onChange) onChange(null);
   };
-
-  useEffect(() => {
-    moleculeRef.current = getMoleculeFromValue(substructure, filter, value);
-  }, [substructure, filter, value]);
 
   const iconContainer = (
     <div className={styles.iconContainer}>
@@ -173,7 +170,7 @@ const MoleculeInput = ({
           <RefMoleculeViewer
             width={100}
             height={height}
-            molecule={moleculeRef.current}
+            molecule={molecule}
             moleculeToSvgOptions={{ autoCrop: true }}
             moleculeContainerClassname={styles.molecule}
           />
@@ -194,7 +191,7 @@ const MoleculeInput = ({
         <div className={styles.dialog}>
           <MoleculeEditor
             fragment={substructure}
-            molecule={moleculeRef.current}
+            molecule={molecule}
             onDone={(molecule) => {
               if (molecule.getMolweight() > 0) {
                 onChange(

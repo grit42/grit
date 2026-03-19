@@ -23,7 +23,7 @@ declare module "@grit42/table" {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   interface GritColumnMeta<TData extends RowData, TValue> {
     data_table?: {
-      source_type: "assay_data_sheet_column" | "entity_attribute"
+      source_type: "assay_data_sheet_column" | "entity_attribute";
     };
   }
 }

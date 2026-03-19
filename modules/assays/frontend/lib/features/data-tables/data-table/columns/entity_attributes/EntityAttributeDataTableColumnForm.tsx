@@ -17,13 +17,15 @@
  */
 
 import { Link, useNavigate } from "react-router-dom";
-import { Button, Surface } from "@grit42/client-library/components";
+import { Button } from "@grit42/client-library/components";
 import {
   AddFormControl,
   Form,
+  FormBanner,
   FormControls,
   FormField,
   FormFieldDef,
+  FormFields,
   genericErrorHandler,
   getVisibleFieldData,
   useForm,
@@ -36,9 +38,9 @@ import {
 } from "@grit42/core";
 import { DataTableColumnData } from "../../../queries/data_table_columns";
 import { useQueryClient } from "@grit42/api";
-import styles from "../dataTableColumns.module.scss";
-import { classnames } from "@grit42/client-library/utils";
+import styles from "./entityAttributes.module.scss";
 import { toSafeIdentifier } from "@grit42/core/utils";
+import { CenteredSurface } from "@grit42/client-library/layouts";
 
 const EntityAttributeDataTableColumnForm = ({
   fields,
@@ -68,7 +70,7 @@ const EntityAttributeDataTableColumnForm = ({
     "grit/assays/data_table_columns",
   );
 
-  const form = useForm<Partial<DataTableColumnData>>({
+  const form = useForm({
     defaultValues: dataTableColumn,
     onSubmit: genericErrorHandler(async ({ value: formValue }) => {
       const value = {
@@ -134,7 +136,7 @@ const EntityAttributeDataTableColumnForm = ({
   };
 
   const { safe_name, proposed_safe_name } = useStore(
-    form.baseStore,
+    form.store,
     ({ values }) => {
       const { name, safe_name } = values;
       const proposed_safe_name = form.getFieldMeta("name")?.isDirty
@@ -145,72 +147,53 @@ const EntityAttributeDataTableColumnForm = ({
   );
 
   return (
-    <div
-      className={classnames(
-        styles.columnFormContainer,
-        styles.entityAttributeColumnFormContainer,
-      )}
-    >
-      <h1>Edit column</h1>
-      <Surface className={styles.columnFormSurface}>
-        <Form<Partial<DataTableColumnData>> form={form}>
-          <div
-            className={classnames(
-              styles.columnForm,
-              styles.entityAttributeColumnForm,
-            )}
-          >
-            {form.state.errorMap.onSubmit && (
-              <div className={styles.columnFormError}>
-                {form.state.errorMap.onSubmit?.toString()}
-              </div>
-            )}
-            <div className={styles.columnFormFields}>
-              {fields.map((f) => (
-                <div className={styles.columnFormField} key={f.name}>
-                  <FormField form={form} fieldDef={f} />
-                  {f.name === "safe_name" &&
-                    safe_name !== proposed_safe_name &&
-                    form.state.isDirty && (
-                      <div className={styles.columnFormFieldSuggestion}>
-                        <em
-                          role="button"
-                          onClick={() => {
-                            form.setFieldValue("safe_name", proposed_safe_name);
-                            form.setFieldMeta("safe_name", (prev) => ({
-                              ...prev,
-                              errorMap: {},
-                            }));
-                          }}
-                        >
-                          Use "{proposed_safe_name}"
-                        </em>
-                      </div>
-                    )}
-                </div>
-              ))}
+    <CenteredSurface>
+      <h2>{dataTableColumnId === "new" ? "Add" : "Edit"} column</h2>
+      <Form form={form}>
+        <FormFields columns={1}>
+          <FormBanner content={form.state.errorMap.onSubmit} />
+          {fields.map((f) => (
+            <div className={styles.columnFormField} key={f.name}>
+              <FormField fieldDef={f} />
+              {f.name === "safe_name" &&
+                safe_name !== proposed_safe_name &&
+                form.state.isDirty && (
+                  <div className={styles.columnFormFieldSuggestion}>
+                    <em
+                      role="button"
+                      onClick={() => {
+                        form.setFieldValue("safe_name", proposed_safe_name);
+                        form.setFieldMeta("safe_name", (prev) => ({
+                          ...prev,
+                          errorMap: {},
+                        }));
+                      }}
+                    >
+                      Use "{proposed_safe_name}"
+                    </em>
+                  </div>
+                )}
             </div>
-          </div>
-          {dataTableColumnId === "new" && (
-            <AddFormControl form={form} label="Save">
-              <Link to="..">
-                <Button>Cancel</Button>
-              </Link>
-            </AddFormControl>
-          )}
-          {dataTableColumnId !== "new" && (
-            <FormControls
-              form={form}
-              onDelete={onDelete}
-              showDelete={dataTableColumnId !== "new"}
-              showCancel
-              cancelLabel={dataTableColumnId === "new" ? "Cancel" : "Back"}
-              onCancel={() => navigate("..")}
-            />
-          )}
-        </Form>
-      </Surface>
-    </div>
+          ))}
+        </FormFields>
+        {dataTableColumnId === "new" && (
+          <AddFormControl label="Save">
+            <Link to="..">
+              <Button>Cancel</Button>
+            </Link>
+          </AddFormControl>
+        )}
+        {dataTableColumnId !== "new" && (
+          <FormControls
+            onDelete={onDelete}
+            showDelete={dataTableColumnId !== "new"}
+            showCancel
+            cancelLabel={dataTableColumnId === "new" ? "Cancel" : "Back"}
+            onCancel={() => navigate("..")}
+          />
+        )}
+      </Form>
+    </CenteredSurface>
   );
 };
 

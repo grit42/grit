@@ -18,9 +18,19 @@
 
 import styles from "./table.module.scss";
 
-const TableFooter = ({ loadedRecords, totalRecords }: { loadedRecords?: number, totalRecords?: number }) => {
+const TableFooter = ({
+  loadedRecords,
+  totalRecords,
+}: {
+  loadedRecords?: number;
+  totalRecords?: number;
+}) => {
   let message = "";
-  if (totalRecords !== undefined && loadedRecords !== undefined && totalRecords !== loadedRecords) {
+  if (
+    totalRecords !== undefined &&
+    loadedRecords !== undefined &&
+    totalRecords !== loadedRecords
+  ) {
     message = `Showing ${loadedRecords} out of ${totalRecords} records`;
   } else if (loadedRecords !== undefined) {
     message = `${loadedRecords} records`;

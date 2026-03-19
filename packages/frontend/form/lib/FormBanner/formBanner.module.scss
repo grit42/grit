@@ -1,0 +1,9 @@
+@use "@grit42/client-library/theme.scss";
+
+.banner {
+  grid-column: 1 / -1;
+
+  &.error {
+    color: theme.$palette-error-main;
+  }
+}

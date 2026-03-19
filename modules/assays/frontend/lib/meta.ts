@@ -19,17 +19,21 @@
 import { ModuleMeta } from "@grit42/core";
 
 const Meta: ModuleMeta = {
+  identifier: "ASSAYS",
   rootRoute: "/assays",
   navItems: [
     {
+      identifier: "EXPERIMENTS",
       name: "Experiments",
       path: "/assays/experiments",
     },
     {
+      identifier: "DATA_TABLES",
       name: "Data Tables",
       path: "/assays/data_tables",
     },
     {
+      identifier: "ASSAY_MODELS",
       name: "Assay Models",
       path: "/assays/assay-models",
     },

@@ -3,6 +3,11 @@
 $arrow-size: 8px;
 $tooltip-calculation: calc(100% - 1px);
 
+.trigger {
+  display: inline-flex;
+  position: relative;
+}
+
 .tooltip {
   opacity: 0;
   border-radius: theme.$border-radius;

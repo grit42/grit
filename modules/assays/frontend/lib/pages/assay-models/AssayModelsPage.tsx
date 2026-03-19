@@ -19,7 +19,7 @@
 import { useAssayModelColumns } from "../../queries/assay_models";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useToolbar } from "@grit42/core/Toolbar";
+import { useToolbar } from "@grit42/core";
 import CogIcon from "@grit42/client-library/icons/Cog";
 import { ErrorPage, Spinner } from "@grit42/client-library/components";
 import AssayModelsTable from "./AssayModelsTable";

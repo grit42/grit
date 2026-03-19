@@ -1,0 +1,4 @@
+.claude/
+.opencode/
+postgres-data/
+postgres-data-prod/

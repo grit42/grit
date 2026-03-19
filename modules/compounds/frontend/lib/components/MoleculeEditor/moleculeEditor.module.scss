@@ -8,6 +8,7 @@
   display: grid;
   grid-template-columns: 7fr 3fr;
   grid-template-rows: 7fr 2fr min-content;
+  gap: theme.$spacing-lg;
   grid-template-areas:
     "a b"
     "a c"
@@ -26,13 +27,11 @@
 }
 
 .inputContainer {
-  display: flex;
-
-  padding-left: 1rem;
+  display: grid;
+  width: 100%;
 
   &.molfile {
     grid-area: b;
-    padding-bottom: 1rem;
   }
 
   &.smiles {
@@ -48,7 +47,6 @@
 
 .buttonContainer {
   grid-area: d;
-  padding-top: 1rem;
 }
 
 .input {

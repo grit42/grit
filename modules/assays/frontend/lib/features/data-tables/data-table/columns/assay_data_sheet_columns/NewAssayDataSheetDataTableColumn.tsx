@@ -147,7 +147,7 @@ const NewAssayDataSheetDataTableColumn = () => {
               data?.data_type_id__name as string | undefined,
             )[0]?.value,
             experiment_ids: [],
-            metadata_filters: {}
+            metadata_filters: {},
           } as Partial<DataTableColumnData>)
         : null,
     [data],
@@ -163,8 +163,7 @@ const NewAssayDataSheetDataTableColumn = () => {
     );
   }
 
-  if (isLoading || isDataTableColumnFieldsLoading)
-    return <Spinner />;
+  if (isLoading || isDataTableColumnFieldsLoading) return <Spinner />;
   if (
     isError ||
     !dataTableColumn ||
@@ -172,9 +171,7 @@ const NewAssayDataSheetDataTableColumn = () => {
     !dataTableColumnFields
   ) {
     return (
-      <ErrorPage
-        error={error ?? dataTableColumnFieldsError}
-      >
+      <ErrorPage error={error ?? dataTableColumnFieldsError}>
         <Link to="..">
           <Button>Back</Button>
         </Link>

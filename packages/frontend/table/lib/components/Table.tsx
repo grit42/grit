@@ -189,9 +189,7 @@ const Table = <T,>({
                 <Tooltip
                   content={
                     table.getSelectedRowModel().rows.length > 1
-                      ? `Delete ${
-                          table.getSelectedRowModel().rows.length
-                        } selected rows`
+                      ? `Delete ${table.getSelectedRowModel().rows.length} selected rows`
                       : "Delete"
                   }
                   disabled={
@@ -351,6 +349,7 @@ const Table = <T,>({
         <div
           className={classnames(styles.container, className, {
             [styles.noFooter]: !!props.disableFooter,
+            [styles.fitContent]: !!props.fitContent,
           })}
         >
           <TableHeader

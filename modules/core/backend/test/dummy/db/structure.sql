@@ -1,8 +1,3 @@
-\restrict 99LeM90HJMQaUZonyZPqL6FKtyUq6mFtA6agvdFdmscVpzqXawqpujU5tyZzN2w
-
--- Dumped from database version 16.3 (Debian 16.3-1.pgdg120+1)
--- Dumped by pg_dump version 16.11
-
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
@@ -569,7 +564,10 @@ CREATE TABLE public.grit_core_users (
     two_factor_expiry timestamp(6) without time zone,
     settings jsonb DEFAULT '{}'::jsonb,
     origin_id bigint NOT NULL,
-    location_id bigint
+    location_id bigint,
+    forgot_token_expires_at timestamp(6) without time zone,
+    two_factor_attempts integer DEFAULT 0 NOT NULL,
+    two_factor_locked_until timestamp(6) without time zone
 );
 
 
@@ -642,7 +640,6 @@ CREATE TABLE public.test_entities (
     another_string character varying,
     "integer" integer,
     "decimal" numeric,
-    "float" double precision,
     text text,
     datetime timestamp(6) without time zone,
     date date,
@@ -1088,6 +1085,13 @@ CREATE INDEX index_grit_core_vocabulary_items_on_vocabulary_id ON public.grit_co
 
 
 --
+-- Name: index_test_entities_on_name; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_test_entities_on_name ON public.test_entities USING btree (name);
+
+
+--
 -- Name: index_test_entities_on_user_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1345,12 +1349,12 @@ ALTER TABLE ONLY public.test_entities
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 99LeM90HJMQaUZonyZPqL6FKtyUq6mFtA6agvdFdmscVpzqXawqpujU5tyZzN2w
-
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
 ('20260130123817'),
+('20250627000000'),
+('20250626000000'),
 ('20250625074209'),
 ('20250624081122'),
 ('20250624080646'),

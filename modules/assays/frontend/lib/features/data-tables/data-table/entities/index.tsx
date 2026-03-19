@@ -19,13 +19,14 @@
 import { ErrorPage, Spinner } from "@grit42/client-library/components";
 import { Route, Routes } from "react-router-dom";
 import DataTableEntitiesTable from "./DataTableEntitiesTable";
-import {
-  useDataTableEntityColumns,
-} from "../../queries/data_table_entities";
+import { useDataTableEntityColumns } from "../../queries/data_table_entities";
 import DataTableEntitySelector from "./DataTableEntitySelector";
 
-
-const DataTableEntities = ({ dataTableId }: { dataTableId: string | number }) => {
+const DataTableEntities = ({
+  dataTableId,
+}: {
+  dataTableId: string | number;
+}) => {
   const {
     data: columns,
     isLoading,
@@ -49,11 +50,7 @@ const DataTableEntities = ({ dataTableId }: { dataTableId: string | number }) =>
       />
       <Route
         path="edit"
-        element={
-          <DataTableEntitySelector
-            dataTableId={dataTableId}
-          />
-        }
+        element={<DataTableEntitySelector dataTableId={dataTableId} />}
       />
     </Routes>
   );

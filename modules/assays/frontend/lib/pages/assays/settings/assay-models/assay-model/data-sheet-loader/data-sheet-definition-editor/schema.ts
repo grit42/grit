@@ -1,4 +1,4 @@
-import z from "zod";
+import { z } from "zod";
 import { AssayDataSheetDefinitionData } from "../../../../../../../queries/assay_data_sheet_definitions";
 
 export const dataSheetColumnDefinitionSchema = z.object({

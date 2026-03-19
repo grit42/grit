@@ -83,12 +83,12 @@ const ColumnVisibilityControl = <T,>({
     }
 
     return (
-      <div key={column.id} style={{ marginBlock: "1em" }}>
+      <div key={column.id} className={styles.columnGroupWrapper}>
         <div className={styles.columnGroup}>
           <h4>{column.header as string}</h4>
         </div>
 
-        <div className={styles.groupColumnList} style={{ paddingLeft: ".5em" }}>
+        <div className={styles.groupColumnList}>
           {(column as GritGroupColumnDef<T>).columns!.map((subColumn) => {
             if (!columnSearch(subColumn, searchValue)) {
               return null;
@@ -138,7 +138,10 @@ const ColumnVisibility = () => {
     [columnVisibility],
   );
 
-  const flatColumns = useMemo(() => getLeafColumnsWithGroupLabels(columns), [columns])
+  const flatColumns = useMemo(
+    () => getLeafColumnsWithGroupLabels(columns),
+    [columns],
+  );
 
   const popoverContent = (
     <div className={classnames(styles.columnPopover)}>
@@ -179,7 +182,7 @@ const ColumnVisibility = () => {
           disabled={flatColumns.length <= hiddenColumns.length}
           variant="filled"
           color="primary"
-          style={{ height: "2em", flex: 1 }}
+          className={styles.toggleAllButton}
           onClick={() => {
             setColumnVisibility((columns: typeof columnVisibility) => {
               return Object.fromEntries(
@@ -195,7 +198,7 @@ const ColumnVisibility = () => {
           disabled={hiddenColumns.length <= 0}
           variant="filled"
           color="primary"
-          style={{ height: "2em", flex: 1 }}
+          className={styles.toggleAllButton}
           onClick={() => {
             setColumnVisibility((columns: typeof columnVisibility) => {
               return Object.fromEntries(

@@ -22,7 +22,10 @@ export const useExperimentDataSheetFromLoadSet = (
   );
 
   return useMemo(
-    () => ({ ...queryResult, data: queryResult.data ? (queryResult.data[0] ?? {}) : queryResult.data }),
+    () => ({
+      ...queryResult,
+      data: queryResult.data ? (queryResult.data[0] ?? {}) : queryResult.data,
+    }),
     [queryResult],
   );
 };

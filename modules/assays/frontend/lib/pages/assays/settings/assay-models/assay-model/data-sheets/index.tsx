@@ -28,8 +28,10 @@ import CloneDataSheet from "./CloneDataSheet";
 import EditDataSheet from "./EditDataSheet";
 import DataSheetTabs from "./DataSheetTabs";
 import { useAssayModel } from "../../../../../../queries/assay_models";
+import { useAssayModelEditorContext } from "../AssayModelEditorContext";
 
 const DataSheets = () => {
+  const { canEdit } = useAssayModelEditorContext();
   const { assay_model_id } = useParams() as { assay_model_id: string };
 
   const { data, isLoading, isError, error } = useAssayDataSheetDefinitions(
@@ -78,26 +80,44 @@ const DataSheets = () => {
 
   return (
     <Routes>
-      <Route element={<DataSheetTabs sheetDefinitions={data} assayModel={assayModel} />}>
-        {assayModel.publication_status_id__name !== "Published" && (
-          <>
-            <Route
-              path="new"
-              element={<NewDataSheet assayModelId={assay_model_id} />}
-            />
-            <Route
-              path=":sheet_id/clone/*"
-              element={<CloneDataSheet assayModelId={assay_model_id} />}
-            />
-          </>
+      <Route
+        element={
+          <DataSheetTabs sheetDefinitions={data} assayModel={assayModel} />
+        }
+      >
+        {canEdit && (
+          <Route
+            path="new"
+            element={<NewDataSheet assayModelId={assay_model_id} />}
+          />
         )}
+        <Route path=":sheet_id">
+          {canEdit && (
+            <Route path="clone">
+              <Route
+                index
+                path="*"
+                element={<CloneDataSheet assayModelId={assay_model_id} />}
+              />
+            </Route>
+          )}
+          <Route
+            index
+            path="*"
+            element={
+              <EditDataSheet
+                assayModelId={assay_model_id}
+                assayModel={assayModel}
+              />
+            }
+          />
+        </Route>
         <Route
-          path=":sheet_id/*"
-          element={<EditDataSheet assayModelId={assay_model_id} assayModel={assayModel} />}
-        />
-        <Route
+          index
           path="*"
-          element={<Navigate to={data[0]?.id.toString() ?? "new"} replace />}
+          element={
+            <Navigate to={`../${data[0]?.id.toString() ?? "new"}`} replace />
+          }
         />
       </Route>
     </Routes>

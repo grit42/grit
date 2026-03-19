@@ -1,4 +1,4 @@
-import styles from "../dataSheetStructureLoader.module.scss";
+import styles from "./dataSheetDefinitionEditor.module.scss";
 import { useMemo } from "react";
 import dataSetDefinitionSchema, {
   refinedDataSetDefinitionSchema,
@@ -10,13 +10,14 @@ import DataSheetDefinitionEditorTabs from "./DataSheetDefinitionEditorTabs";
 import { useNavigate } from "react-router-dom";
 import { Button, ErrorPage } from "@grit42/client-library/components";
 import DataSheetDefinitionEditorHeader from "./DataSheetDefinitionEditorHeader";
-import z, { ZodError } from "zod";
+import { z, ZodError } from "zod";
 import useFormReducer from "./reducer";
 import DataSheetColumnsTable from "./DataSheetEditorColumnsTable";
 import DataSheetForm from "./DataSheetForm";
 import DataSheetColumnForm from "./DataSheetEditorColumnForm";
 import { useCreateBulkDataSheetDefinitionMutation } from "./mutations";
 import { upsert } from "@grit42/notifications";
+import { useAssayModelEditorContext } from "../../AssayModelEditorContext";
 
 const DataSheetDefinitionEditor = ({
   dataSetDefinition,
@@ -25,6 +26,7 @@ const DataSheetDefinitionEditor = ({
   dataSetDefinition: DataSetDefinitionFull;
   assayModelDataSheets: AssayDataSheetDefinitionData[];
 }) => {
+  const { dangerousEditMode } = useAssayModelEditorContext();
   const navigate = useNavigate();
   const refinedSchema = useMemo(
     () => refinedDataSetDefinitionSchema(assayModelDataSheets ?? []),
@@ -54,13 +56,18 @@ const DataSheetDefinitionEditor = ({
   const handleSubmit = async () => {
     if (!value) return;
     try {
-      const res = await createSheetDefinitionMutation.mutateAsync(value);
-      navigate(`../../data-sheets/${res[0].id}`);
+      const res = await createSheetDefinitionMutation.mutateAsync({
+        ...value,
+        dangerous_edit: dangerousEditMode,
+      });
+      navigate(`../../data-sheets/${res[0].id}`, { relative: "path" });
     } catch (errors: any) {
       if (typeof errors === "string") {
         upsert(errors, { type: "error" });
       } else if (typeof errors === "object") {
-        upsert("There are errors in your data sheet definitions", { type: "error" });
+        upsert("There are errors in your data sheet definitions", {
+          type: "error",
+        });
         dispatch({
           type: "set-submit-errors",
           errors: new ZodError(

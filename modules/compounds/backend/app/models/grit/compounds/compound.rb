@@ -79,7 +79,6 @@ module Grit::Compounds
             })
             molecule_record.save!
             molecule_id = molecule_record.id
-            molecule_id = molecule_record.id
           end
           molecule_compound_record = Grit::Compounds::MoleculesCompound.new({
             molecule_id: molecule_id,

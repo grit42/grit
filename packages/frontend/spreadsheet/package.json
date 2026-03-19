@@ -7,12 +7,12 @@
   "scripts": {
     "tsc": "tsc -b",
     "build": "tsc -b ./tsconfig.lib.json && vite build",
-    "build:watch": "vite build --watch --emptyOutDir=false",
     "lint": "eslint . --fix",
     "lint:check": "eslint .",
-    "format": "prettier . -w",
-    "format:check": "prettier . -c",
-    "test": "vitest"
+    "format": "prettier . -w --ignore-path ../../../.prettierignore",
+    "format:check": "prettier . -c --ignore-path ../../../.prettierignore",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "exports": {
     ".": {

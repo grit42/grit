@@ -1,6 +1,7 @@
+/* eslint-disable react-hooks/refs */
 import { Menu, Portal, TooltipRender } from "@grit42/client-library/components";
-import { MutableRefObject, useEffect } from "react";
-import styles from "../dataSheetStructureLoader.module.scss";
+import { RefObject, useEffect } from "react";
+import styles from "./sheetMapper.module.scss";
 
 const SheetOptionDropdown = ({
   setFieldValue,
@@ -9,7 +10,7 @@ const SheetOptionDropdown = ({
   setFocusedCellInfo,
 }: {
   setFieldValue: (field: string, value: string | number) => void;
-  focusedCellRef: MutableRefObject<HTMLTableCellElement | null>;
+  focusedCellRef: RefObject<HTMLTableCellElement | null>;
   focusedCellInfo: { row: number; column: string } | null;
   setFocusedCellInfo: (info: { row: number; column: string } | null) => void;
 }) => {
@@ -62,7 +63,7 @@ const SheetOptionDropdown = ({
         className={styles.tooltip}
         content={
           <>
-            <div style={{ textAlign: "center", padding: "var(--spacing)" }}>
+            <div className={styles.cellInfo}>
               {focusedCellInfo.column}:{focusedCellInfo.row}
             </div>
             <Menu

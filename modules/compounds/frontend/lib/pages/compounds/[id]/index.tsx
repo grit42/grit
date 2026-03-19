@@ -16,15 +16,13 @@
  * @grit42/compounds. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { ErrorPage, Spinner, Tabs } from "@grit42/client-library/components";
-import { Suspense, useEffect, useState } from "react";
 import {
-  Navigate,
-  Outlet,
-  useMatch,
-  useNavigate,
-  useParams,
-} from "react-router-dom";
+  ErrorPage,
+  Spinner,
+  RoutedTabs,
+} from "@grit42/client-library/components";
+import { Suspense } from "react";
+import { Navigate, useParams } from "react-router-dom";
 import { useCompound } from "../../../queries/compounds";
 
 const TABS = [
@@ -43,7 +41,6 @@ const TABS = [
 ];
 
 const CompoundPage = () => {
-  const navigate = useNavigate();
   const { id } = useParams() as { id: string };
 
   const {
@@ -53,50 +50,23 @@ const CompoundPage = () => {
     error: compoundError,
   } = useCompound(id);
 
-  const match = useMatch("/compounds/:id/:childPath/*");
-  const childPath = match?.params.childPath ?? "details";
-
-  const [selectedTab, setSelectedTab] = useState(
-    TABS.findIndex(({ url }) => childPath === url),
-  );
-
-  useEffect(() => {
-    setSelectedTab(TABS.findIndex(({ url }) => childPath === url));
-  }, [childPath]);
-
-  const handleTabChange = (index: number) => {
-    navigate(TABS[index].url);
-  };
-
   if (!isCompoundLoading && !compound) {
     return <Navigate to="/compounds" />;
   }
 
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateRows: "min-content 1fr",
-        height: "100%",
-      }}
-    >
-      <Tabs
-        onTabChange={handleTabChange}
-        selectedTab={selectedTab}
-        tabs={TABS.map((t) => ({
-          key: t.url,
-          name: t.label,
-          panel: <></>,
-        }))}
-      />
-      <Suspense fallback={<Spinner />}>
-        {isCompoundLoading && <Spinner />}
-        {isCompoundError && (
-          <ErrorPage error={compoundError} />
-        )}
-        {compound && <Outlet />}
-      </Suspense>
-    </div>
+    <RoutedTabs
+      matchPattern="/compounds/:id/:childPath/*"
+      tabs={TABS}
+      navigationPattern="relative-sibling"
+      outletWrapper={(outlet) => (
+        <Suspense fallback={<Spinner />}>
+          {isCompoundLoading && <Spinner />}
+          {isCompoundError && <ErrorPage error={compoundError} />}
+          {compound && outlet}
+        </Suspense>
+      )}
+    />
   );
 };
 

@@ -136,17 +136,17 @@ module Grit::Assays
     end
 
     def self.entity_fields(**args)
-      self.entity_fields_from_properties([*self.entity_properties(**args), *self.metadata_properties(**args)])
+      self.entity_fields_from_properties([ *self.entity_properties(**args), *self.metadata_properties(**args) ])
     end
 
     def self.entity_columns(**args)
-      self.entity_columns_from_properties([*self.entity_properties(**args), *self.metadata_properties(**args)])
+      self.entity_columns_from_properties([ *self.entity_properties(**args), *self.metadata_properties(**args) ])
     end
 
     def delete_records
       assay_model.assay_data_sheet_definitions.each do |ds|
         klass = ds.sheet_record_klass
-        klass.destroy_by(experiment_id: id) if klass.table_exists?
+        klass.delete_by(experiment_id: id) if klass.table_exists?
       end
     end
 

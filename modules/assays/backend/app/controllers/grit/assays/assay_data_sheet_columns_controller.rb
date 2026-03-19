@@ -19,6 +19,7 @@
 module Grit::Assays
   class AssayDataSheetColumnsController < ApplicationController
     include Grit::Core::GritEntityController
+    include Grit::Core::Controller::DangerousEdit
 
     private
 

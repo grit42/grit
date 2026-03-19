@@ -6,5 +6,9 @@
 
   .controls {
     padding-top: calc(theme.$spacing * 2);
+
+    &.hidden {
+      display: none;
+    }
   }
 }

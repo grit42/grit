@@ -37,4 +37,13 @@ $arrow-size: 16px;
     position: absolute;
     fill: theme.$palette-background-surface;
   }
+
+  &.idleTransition {
+    transition: inset 150ms ease-out;
+  }
+}
+
+.trigger {
+  display: inline-flex;
+  position: relative;
 }

@@ -18,6 +18,7 @@
 
 import { InputLabel } from "@grit42/client-library/components";
 import Editor from "../Editor";
+import styles from "./editorInput.module.scss";
 
 interface EditorInputProps {
   onChange: (value: string) => void;
@@ -30,15 +31,15 @@ interface EditorInputProps {
 
 const EditorInput = (props: EditorInputProps) => {
   return (
-    <div
-      style={{
-        display: "grid",
-        height: "100%",
-        gridTemplateRows: "min-content minmax(0px, 1fr)",
-      }}
-    >
-      {props.label && <InputLabel label={props.label} description="Max. 100 MB" />}
-      <Editor {...props} showFilePicker={props.showFilePicker ?? true} showInitialOverlay={props.showInitialOverlay ?? false} />
+    <div className={styles.container}>
+      {props.label && (
+        <InputLabel label={props.label} description="Max. 100 MB" />
+      )}
+      <Editor
+        {...props}
+        showFilePicker={props.showFilePicker ?? true}
+        showInitialOverlay={props.showInitialOverlay ?? false}
+      />
     </div>
   );
 };

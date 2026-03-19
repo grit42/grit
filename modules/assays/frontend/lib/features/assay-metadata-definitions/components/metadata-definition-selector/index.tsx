@@ -17,6 +17,7 @@
  */
 
 import { Dialog } from "@grit42/client-library/components";
+import styles from "./metadataDefinitionSelector.module.scss";
 import { Table, useSetupTableState } from "@grit42/table";
 import {
   AssayMetadataDefinitionData,
@@ -66,7 +67,7 @@ const MetadataDefintionSelector = ({
 
   return (
     <Dialog isOpen onClose={onClose} title="Select a Metadata Definition">
-      <div style={{ width: "100%", height: "80vh", overflow: "auto" }}>
+      <div className={styles.container}>
         <Table
           data={metadataDefinitions}
           tableState={tableState}

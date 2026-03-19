@@ -20,7 +20,6 @@ import {
   useEntityColumns,
   EntityPropertyDef,
   EntityData,
-  useEntityData,
   useEntityDatum,
   useEntityFields,
   useInfiniteEntityData,
@@ -65,36 +64,6 @@ export interface AssayModelData extends EntityData {
   publication_status_id: number;
   publication_status_id__name: string;
 }
-
-export const useAssayModels = (
-  sort?: SortingState,
-  filter?: Filter[],
-  params: URLParams = {},
-  queryOptions: Partial<UseQueryOptions<AssayModelData[], string>> = {},
-) => {
-  return useEntityData<AssayModelData>(
-    "grit/assays/assay_models",
-    sort,
-    filter,
-    params,
-    queryOptions,
-  );
-};
-
-export const usePublishedAssayModels = (
-  sort?: SortingState,
-  filter?: Filter[],
-  params: URLParams = {},
-  queryOptions: Partial<UseQueryOptions<AssayModelData[], string>> = {},
-) => {
-  return useEntityData<AssayModelData>(
-    "grit/assays/assay_models",
-    sort,
-    filter,
-    { ...params, scope: "published" },
-    queryOptions,
-  );
-};
 
 export const useInfiniteAssayModels = (
   sort?: SortingState,

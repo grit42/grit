@@ -1,12 +1,5 @@
 @use "@grit42/client-library/theme.scss";
 
-.container {
-  display: grid;
-  grid-template-rows: min-content min-content 1fr;
-  height: 100%;
-  overflow: auto;
-}
-
 .nameAndStatus {
   display: flex;
   gap: theme.$spacing;

@@ -25,8 +25,7 @@ import {
   useExperimentMetadataTemplateColumns,
   useInfiniteExperimentMetadataTemplates,
 } from "../../../../queries/experiment_metadata_templates";
-import { ReactFormExtendedApi } from "@grit42/form";
-import { ExperimentData } from "../../../../queries/experiments";
+import { FormApi } from "@grit42/form";
 import { useAssayMetadataDefinitions } from "../../../../queries/assay_metadata_definitions";
 import { useMemo } from "react";
 
@@ -35,11 +34,7 @@ const DEFAULT_COLUMN_SIZES = {
   description: 750,
 } as const;
 
-const ExperimentMetadataTemplatesTable = ({
-  form,
-}: {
-  form: ReactFormExtendedApi<Partial<ExperimentData>, undefined>;
-}) => {
+const ExperimentMetadataTemplatesTable = ({ form }: { form: FormApi<any> }) => {
   const { data: metadataDefinitions } = useAssayMetadataDefinitions();
 
   const { data: experimentMetadataTemplateColumns } =
@@ -114,11 +109,7 @@ const ExperimentMetadataTemplatesTable = ({
   );
 };
 
-const ExperimentMetadataTemplates = ({
-  form,
-}: {
-  form: ReactFormExtendedApi<Partial<ExperimentData>, undefined>;
-}) => {
+const ExperimentMetadataTemplates = ({ form }: { form: FormApi<any> }) => {
   const {
     isLoading: isExperimentMetadataTemplateColumnsLoading,
     isError: isExperimentMetadataTemplateColumnsError,

@@ -20,9 +20,14 @@ import {
   useEntityColumns,
   EntityPropertyDef,
   EntityData,
-  useEntityData,
+  useInfiniteEntityData,
 } from "@grit42/core";
-import { UseQueryOptions, URLParams } from "@grit42/api";
+import {
+  UseQueryOptions,
+  URLParams,
+  UndefinedInitialDataInfiniteOptions,
+  PaginatedEndpointSuccess,
+} from "@grit42/api";
 
 import { Filter, SortingState } from "@grit42/table";
 
@@ -43,14 +48,19 @@ export interface DataTableEntityData extends EntityData {
   data_table_entity_id: number;
 }
 
-export const useDataTableEntities = (
+export const useInfiniteDataTableEntities = (
   dataTableId: number | string,
   sort?: SortingState,
   filter?: Filter[],
   params: URLParams = {},
-  queryOptions: Partial<UseQueryOptions<DataTableEntityData[], string>> = {},
+  queryOptions: Partial<
+    UndefinedInitialDataInfiniteOptions<
+      PaginatedEndpointSuccess<DataTableEntityData[]>,
+      string
+    >
+  > = {},
 ) => {
-  return useEntityData<DataTableEntityData>(
+  return useInfiniteEntityData<DataTableEntityData>(
     `grit/assays/data_tables/${dataTableId}/data_table_entities`,
     sort ?? [],
     filter ?? [],
@@ -59,14 +69,19 @@ export const useDataTableEntities = (
   );
 };
 
-export const useAvailableDataTableEntities = (
+export const useInfiniteAvailableDataTableEntities = (
   dataTableId: number | string,
   sort?: SortingState,
   filter?: Filter[],
   params: URLParams = {},
-  queryOptions: Partial<UseQueryOptions<EntityData[], string>> = {},
+  queryOptions: Partial<
+    UndefinedInitialDataInfiniteOptions<
+      PaginatedEndpointSuccess<EntityData[]>,
+      string
+    >
+  > = {},
 ) => {
-  return useEntityData<EntityData>(
+  return useInfiniteEntityData<EntityData>(
     `grit/assays/data_tables/${dataTableId}/data_table_entities`,
     sort ?? [],
     filter ?? [],

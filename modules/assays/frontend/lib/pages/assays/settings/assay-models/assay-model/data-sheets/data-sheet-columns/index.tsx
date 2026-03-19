@@ -24,8 +24,10 @@ import NewDataSheetColumn from "./NewDataSheetColumn";
 import EditDataSheetColumn from "./EditDataSheetColumn";
 import CloneDataSheetColumn from "./CloneDataSheetColumn";
 import { AssayModelData } from "../../../../../../../queries/assay_models";
+import { useAssayModelEditorContext } from "../../AssayModelEditorContext";
 
 const DataSheetColumns = ({ assayModel }: { assayModel: AssayModelData }) => {
+  const { canEdit } = useAssayModelEditorContext();
   const { sheet_id } = useParams() as { sheet_id: string };
   const { data, isLoading, isError, error } = useAssayDataSheetColumnColumns();
 
@@ -41,9 +43,14 @@ const DataSheetColumns = ({ assayModel }: { assayModel: AssayModelData }) => {
   if (isError || !data) return <ErrorPage error={error} />;
   return (
     <Routes>
-      <Route index element={<DataSheetColumnsTable sheetId={sheet_id} assayModel={assayModel} />} />
+      <Route
+        index
+        element={
+          <DataSheetColumnsTable sheetId={sheet_id} assayModel={assayModel} />
+        }
+      />
       <Route path=":column_id" element={<EditDataSheetColumn />} />
-      {assayModel.publication_status_id__name !== "Published" && (
+      {canEdit && (
         <>
           <Route path="new" element={<NewDataSheetColumn />} />
           <Route path=":column_id/clone" element={<CloneDataSheetColumn />} />

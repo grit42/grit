@@ -16,28 +16,31 @@
  * @grit42/form. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { ReactFormExtendedApi } from "@tanstack/react-form";
+import { AnyFormApi } from "@tanstack/react-form";
 import { classnames } from "@grit42/client-library/utils";
+import { formContext } from "./gritFormContext";
 import styles from "./form.module.scss";
 
-interface Props<T> {
-  form: ReactFormExtendedApi<T>;
+interface Props {
+  form: AnyFormApi;
   children: React.ReactNode;
   className?: string;
 }
 
-const Form = <T,>(props: Props<T>) => {
+const Form = ({ form, children, className }: Props) => {
   return (
-    <form
-      className={classnames(styles.form, props.className)}
-      onSubmit={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        props.form.handleSubmit();
-      }}
-    >
-      {props.children}
-    </form>
+    <formContext.Provider value={form}>
+      <form
+        className={classnames(styles.form, className)}
+        onSubmit={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          form.handleSubmit();
+        }}
+      >
+        {children}
+      </form>
+    </formContext.Provider>
   );
 };
 

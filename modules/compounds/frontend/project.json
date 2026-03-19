@@ -12,6 +12,34 @@
           "target": "serve"
         }
       ]
+    },
+    "serve:test": {
+      "command": "pnpm vite --port 3001",
+      "continuous": true,
+      "options": {
+        "cwd": "modules/compounds/frontend"
+      },
+      "dependsOn": [
+        {
+          "dependencies": true,
+          "target": "build"
+        },
+        {
+          "projects": ["grit-compounds"],
+          "target": "serve:test"
+        }
+      ]
+    },
+    "test:e2e": {
+      "command": "pnpm playwright test",
+      "options": {
+        "cwd": "modules/compounds/frontend"
+      },
+      "dependsOn": [
+        {
+          "target": "serve:test"
+        }
+      ]
     }
   }
 }

@@ -23,12 +23,10 @@ import {
   useForm,
   useFormInput,
   genericErrorHandler,
+  FormFields,
+  FormBanner,
 } from "@grit42/form";
-import {
-  Button,
-  ButtonGroup,
-  Surface,
-} from "@grit42/client-library/components";
+import { Button, ButtonGroup } from "@grit42/client-library/components";
 import { useQueryClient } from "@grit42/api";
 import {
   useAttachFilesToExperimentMutation,
@@ -40,12 +38,16 @@ import {
   useExperimentAttachedFiles,
 } from "../../../../queries/experiments";
 import { GritColumnDef, Table, useSetupTableState } from "@grit42/table";
-import z from "zod";
+import { z } from "zod";
 import styles from "./files.module.scss";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { downloadFile } from "@grit42/client-library/utils";
 import { useHasRoles } from "@grit42/core";
 import { toast } from "@grit42/notifications";
+import {
+  CenteredColumnLayout,
+  CenteredSurface,
+} from "@grit42/client-library/layouts";
 
 const COLUMNS: GritColumnDef<ExperimentAttachedFile>[] = [
   {
@@ -81,20 +83,22 @@ const ExperimentFiles = ({ experiment }: { experiment: ExperimentData }) => {
     },
   });
 
-  const form = useForm<{ files: File[] }>({
-    defaultValues: { files: [] },
+  const form = useForm({
+    defaultValues: { files: [] as File[] },
     validators: {
       onMount: z.object({ files: z.array(z.file()).min(1) }),
       onChange: z.object({ files: z.array(z.file()).min(1) }),
     },
     onSubmit: genericErrorHandler(async ({ value, formApi }) => {
       const formData = new FormData();
-      value.files.forEach((file) => formData.append("files[]", file));
+      (value.files as File[]).forEach((file) =>
+        formData.append("files[]", file),
+      );
       await attachMutation.mutateAsync(formData);
       await queryClient.invalidateQueries({
         queryKey: ["experiment_attached_files", experiment.id],
       });
-      formApi.setFieldValue("files", []);
+      formApi.setFieldValue("files", [] as any);
       setIsAdding(false);
     }),
   });
@@ -111,25 +115,21 @@ const ExperimentFiles = ({ experiment }: { experiment: ExperimentData }) => {
     const ids = id === null ? Object.keys(tableState.rowSelection) : [id];
     try {
       downloadFile(
-        `/api/grit/assays/experiments/${
-          experiment.id
-        }/experiment_attachments/export?ids=${ids.join(",")}`,
+        `/api/grit/assays/experiments/${experiment.id}/experiment_attachments/export?ids=${ids.join(",")}`,
       );
     } catch (e: any) {
       toast.error(e);
     }
   };
 
-  useEffect(() => {
-    if (!canCrudExperiment) {
-      setIsAdding(false);
-    }
-  }, [canCrudExperiment]);
+  if (!canCrudExperiment && isAdding) {
+    setIsAdding(false);
+  }
 
   const handleCancel = () => {
     setIsAdding(false);
-    form.reset({files: []});
-    form.validate("mount")
+    form.reset({ files: [] });
+    form.validate("mount");
   };
 
   const hasSelected = Object.keys(tableState.rowSelection).length > 0;
@@ -137,76 +137,53 @@ const ExperimentFiles = ({ experiment }: { experiment: ExperimentData }) => {
   const BinaryInput = useFormInput("binary");
 
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "1fr",
-        gap: "var(--spacing)",
-        gridTemplateRows: "1fr min-content",
-        marginInline: "auto",
-      }}
-    >
+    <>
       {!isAdding && (
-        <Table<ExperimentAttachedFile>
-          getRowId={getRowId}
-          tableState={tableState}
-          data={data}
-          loading={isLoading}
-          header="Attached files"
-          noDataMessage={isError ? error : "No attached files"}
-          rowActions={canCrudExperiment ? ["delete"] : undefined}
-          onDelete={(rows) =>
-            handleDetach(rows.map(({ original }) => original.id))
-          }
-          onRowClick={({ id }) => handleDownload(id)}
-          headerActions={
-            <ButtonGroup>
-              {!hasSelected && (
-                <Button onClick={() => handleDownload()}>
-                  Download all files
-                </Button>
-              )}
-              {hasSelected && (
-                <Button
-                  onClick={() => handleDownload()}
-                  disabled={!hasSelected}
-                >
-                  Download selected files
-                </Button>
-              )}
-              {canCrudExperiment && (
-                <Button onClick={() => setIsAdding(true)}>Attach files</Button>
-              )}
-            </ButtonGroup>
-          }
-        />
+        <CenteredColumnLayout>
+          <Table<ExperimentAttachedFile>
+            getRowId={getRowId}
+            tableState={tableState}
+            fitContent
+            data={data}
+            loading={isLoading}
+            header="Attached files"
+            noDataMessage={isError ? error : "No attached files"}
+            rowActions={canCrudExperiment ? ["delete"] : undefined}
+            onDelete={(rows) =>
+              handleDetach(rows.map(({ original }) => original.id))
+            }
+            onRowClick={({ id }) => handleDownload(id)}
+            headerActions={
+              <ButtonGroup>
+                {!hasSelected && (
+                  <Button onClick={() => handleDownload()}>
+                    Download all files
+                  </Button>
+                )}
+                {hasSelected && (
+                  <Button
+                    onClick={() => handleDownload()}
+                    disabled={!hasSelected}
+                  >
+                    Download selected files
+                  </Button>
+                )}
+                {canCrudExperiment && (
+                  <Button onClick={() => setIsAdding(true)}>
+                    Attach files
+                  </Button>
+                )}
+              </ButtonGroup>
+            }
+          />
+        </CenteredColumnLayout>
       )}
       {isAdding && (
-        <Surface style={{ width: 720 }}>
-          <h3 style={{ alignSelf: "baseline", marginBottom: "1em" }}>
-            Attach new files
-          </h3>
-          <Form<{ files: File[] }> form={form}>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr",
-                gridAutoRows: "max-content",
-                gap: "calc(var(--spacing) * 2)",
-                paddingBottom: "calc(var(--spacing) * 2)",
-              }}
-            >
-              {form.state.errorMap.onSubmit && (
-                <div
-                  style={{
-                    gridColumnStart: 1,
-                    gridColumnEnd: -1,
-                    color: "var(--palette-error-main)",
-                  }}
-                >
-                  {form.state.errorMap.onSubmit?.toString()}
-                </div>
-              )}
+        <CenteredSurface>
+          <h3>Attach new files</h3>
+          <Form form={form}>
+            <FormFields columns={1}>
+              <FormBanner content={form.state.errorMap.onSubmit} />
               <form.Field name="files">
                 {(field) => (
                   <BinaryInput
@@ -228,14 +205,14 @@ const ExperimentFiles = ({ experiment }: { experiment: ExperimentData }) => {
                   />
                 )}
               </form.Field>
-            </div>
-            <AddFormControl form={form} label="Attach files">
+            </FormFields>
+            <AddFormControl label="Attach files">
               <Button onClick={handleCancel}>Cancel</Button>
             </AddFormControl>
           </Form>
-        </Surface>
+        </CenteredSurface>
       )}
-    </div>
+    </>
   );
 };
 

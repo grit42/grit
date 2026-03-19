@@ -17,18 +17,65 @@
  */
 
 import { URLParams } from "@grit42/api";
-import { EntityFormFieldDef } from "../../../Registrant";
 import { LoadSetData, LoadSetMapping } from "../types";
 import { FormFieldDef } from "@grit42/form";
+import { EntityFormFieldDef } from "../../entities/types";
+
+export type MappingFormValues = Record<
+  string,
+  string | boolean | number | null
+>;
+
+/**
+ * Converts field definitions and mappings into form values for the mapping form.
+ * Each field produces 4 form values: `{field}-header`, `{field}-constant`, `{field}-find_by`, `{field}-value`
+ */
+export const mappingsToFormValues = (
+  fields: FormFieldDef[],
+  mappings: Record<string, LoadSetMapping>,
+): MappingFormValues => {
+  return fields.reduce<MappingFormValues>((acc, f) => {
+    return {
+      ...acc,
+      [`${f.name}-header`]: mappings[f.name]?.header ?? "",
+      [`${f.name}-constant`]: mappings[f.name]?.constant ?? false,
+      [`${f.name}-find_by`]: mappings[f.name]?.find_by ?? "",
+      [`${f.name}-value`]: mappings[f.name]?.value ?? null,
+    };
+  }, {});
+};
+
+/**
+ * Converts form values back into mappings structure.
+ * Parses form keys like `{field}-{prop}` where prop is one of: header, constant, find_by, value
+ */
+export const formValuesToMappings = (
+  formValues: MappingFormValues,
+): Record<string, LoadSetMapping> => {
+  const mappings: Record<string, LoadSetMapping> = {};
+  for (const key in formValues) {
+    const sep = key.lastIndexOf("-");
+    const field = key.slice(0, sep);
+    const mappingProp = key.slice(sep + 1) as keyof LoadSetMapping;
+    mappings[field] = {
+      ...(mappings[field] ?? {}),
+      [mappingProp]: formValues[key],
+    } as LoadSetMapping;
+  }
+  return mappings;
+};
 
 export const getAutoMappings = (
   fields?: FormFieldDef[],
-  headers?: Array<{display_name: string | null, name: string}>,
+  headers?: Array<{ display_name: string | null; name: string }>,
 ) => {
   if (!fields || !headers) return null;
   const lowerCaseHeaders = headers
-    .filter(({display_name}) => display_name !== null)
-    .map(({display_name, name}) => ({name, display_name:display_name!.toLowerCase()}));
+    .filter(({ display_name }) => display_name !== null)
+    .map(({ display_name, name }) => ({
+      name,
+      display_name: display_name!.toLowerCase(),
+    }));
   const mappings: Record<string, LoadSetMapping> = {};
   for (const field of fields) {
     const header = lowerCaseHeaders.find(
@@ -49,6 +96,12 @@ export const getAutoMappings = (
   }
   return mappings;
 };
+
+export const headerValidator = (
+  field: FormFieldDef,
+  value: string | null,
+): string | undefined =>
+  !field.required || (value as string | null)?.length ? undefined : "Required";
 
 export const getLoadSetPropertiesForCancel = (loadSet: LoadSetData) => {
   const data: URLParams = {};

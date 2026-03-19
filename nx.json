@@ -1,35 +1,84 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "namedInputs": {
+    "source": [
+      "{projectRoot}/src/**/*",
+      "{projectRoot}/lib/**/*",
+      "{projectRoot}/app/**/*",
+      "{projectRoot}/config/**/*",
+      "{projectRoot}/db/**/*"
+    ],
+    "testSource": ["{projectRoot}/test/**/*"],
+    "lintable": [
+      "{projectRoot}/**/*.{ts,tsx,js,jsx,rb}",
+      "{projectRoot}/eslint.config.*",
+      "{projectRoot}/.rubocop.yml"
+    ],
+    "formattable": [
+      "{projectRoot}/**/*.{ts,tsx,js,jsx,json,scss,css,md}",
+      "{workspaceRoot}/.prettierrc.json"
+    ],
+    "rubySource": [
+      "{projectRoot}/app/**/*",
+      "{projectRoot}/lib/**/*",
+      "{projectRoot}/config/**/*",
+      "{projectRoot}/db/**/*"
+    ],
+    "rubyTest": ["{projectRoot}/test/**/*", "{projectRoot}/spec/**/*"],
+    "rubyLintable": ["{projectRoot}/**/*.rb", "{projectRoot}/.rubocop.yml"]
+  },
   "targetDefaults": {
     "dev": {
       "continuous": true
     },
     "build": {
       "dependsOn": ["^build"],
-      "inputs": ["{projectRoot}/src/**/*", "{projectRoot}/lib/**/*"],
+      "inputs": ["source"],
       "outputs": ["{projectRoot}/dist"],
       "cache": true
     },
-    "build:watch": {
-      "dependsOn": ["^build"],
-      "inputs": ["{projectRoot}/src/**/*", "{projectRoot}/lib/**/*"],
-      "outputs": ["{projectRoot}/dist"],
-      "continuous": true
-    },
     "format:check": {
+      "inputs": ["formattable"],
       "cache": true
     },
     "format": {
+      "inputs": ["formattable"]
+    },
+    "typecheck": {
+      "inputs": ["source"],
       "cache": true
     },
     "lint:check": {
+      "inputs": ["lintable"],
       "cache": true
     },
     "lint": {
+      "inputs": ["lintable"]
+    },
+    "test": {
+      "inputs": ["source", "testSource"],
       "cache": true
     }
   },
-  "plugins": ["./tools/ruby/src/index.ts"],
+  "plugins": [
+    "./tools/ruby/src/index.ts",
+    {
+      "plugin": "@nx/vite/plugin",
+      "options": {
+        "buildTargetName": "vite:build",
+        "devTargetName": "vite:dev",
+        "previewTargetName": "preview",
+        "serveStaticTargetName": "serve-static",
+        "typecheckTargetName": "typecheck"
+      }
+    },
+    {
+      "plugin": "@nx/eslint/plugin",
+      "options": {
+        "targetName": "eslint"
+      }
+    }
+  ],
   "release": {
     "versionPlans": true,
     "changelog": {

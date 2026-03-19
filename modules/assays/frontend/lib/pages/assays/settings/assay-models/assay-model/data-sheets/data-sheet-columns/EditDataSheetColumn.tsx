@@ -28,31 +28,34 @@ import {
   ButtonGroup,
   ErrorPage,
   Spinner,
-  Surface,
+  useConfirm,
 } from "@grit42/client-library/components";
 import {
   EntityData,
-  useDestroyEntityMutation,
+  useDangerousDestroyEntityMutation,
   useEditEntityMutation,
 } from "@grit42/core";
 import {
   Form,
+  FormBanner,
   FormField,
   FormFieldDef,
+  FormFields,
   genericErrorHandler,
   getVisibleFieldData,
   useForm,
   useStore,
 } from "@grit42/form";
-import styles from "../../../assayModels.module.scss";
+import styles from "./dataSheetColumns.module.scss";
 import {
   AssayDataSheetColumnData,
   useAssayDataSheetColumnFields,
   useAssayDataSheetColumns,
 } from "../../../../../../../queries/assay_data_sheet_columns";
-import z from "zod";
+import { z } from "zod";
 import { toSafeIdentifier } from "@grit42/core/utils";
-import { useAssayModel } from "../../../../../../../queries/assay_models";
+import { CenteredSurface } from "@grit42/client-library/layouts";
+import { useAssayModelEditorContext } from "../../AssayModelEditorContext";
 
 const initializedFormData = <T extends Partial<EntityData>>(
   data: T,
@@ -76,12 +79,11 @@ const AssayDataSheetColumnForm = ({
   assayDataSheetColumn: Partial<AssayDataSheetColumnData>;
   assayDataSheetColumns: AssayDataSheetColumnData[];
 }) => {
-  const { sheet_id, assay_model_id } = useParams() as {
+  const confirm = useConfirm();
+  const { canEdit, dangerousEditMode } = useAssayModelEditorContext();
+  const { sheet_id } = useParams() as {
     sheet_id: string;
-    assay_model_id: string;
   };
-  const { data: assayModel } = useAssayModel(assay_model_id);
-
   const navigate = useNavigate();
 
   const editEntityMutation = useEditEntityMutation<AssayDataSheetColumnData>(
@@ -89,7 +91,7 @@ const AssayDataSheetColumnForm = ({
     assayDataSheetColumn.id ?? -1,
   );
 
-  const destroyEntityMutation = useDestroyEntityMutation(
+  const destroyEntityMutation = useDangerousDestroyEntityMutation(
     "grit/assays/assay_data_sheet_columns",
   );
 
@@ -125,7 +127,7 @@ const AssayDataSheetColumnForm = ({
     [assayDataSheetColumns],
   );
 
-  const form = useForm<Partial<AssayDataSheetColumnData>>({
+  const form = useForm({
     defaultValues: initializedFormData(assayDataSheetColumn, fields),
     onSubmit: genericErrorHandler(async ({ value: formValue }) => {
       const value = {
@@ -134,89 +136,109 @@ const AssayDataSheetColumnForm = ({
           fields,
         ),
         assay_data_sheet_definition_id: Number(sheet_id),
+        dangerous_edit: dangerousEditMode ?? undefined,
       };
+
+      if (dangerousEditMode) {
+        const changes = [];
+        if (assayDataSheetColumn.safe_name !== value.safe_name) {
+          changes.push("Changed safe name.");
+        }
+        if (assayDataSheetColumn.data_type_id !== value.data_type_id) {
+          changes.push("Changed data type.");
+        }
+        if (
+          assayDataSheetColumn.required !== value.required &&
+          value.required
+        ) {
+          changes.push("Changed required.");
+        }
+
+        if (changes.length) {
+          if (
+            !(await confirm({
+              title: "Apply changes to the column?",
+              challenge: assayDataSheetColumn.name,
+              danger: true,
+              body: (
+                <>
+                  Are you sure you want to apply these changes?
+                  <ul className={styles.changesList}>
+                    {changes.map((change) => (
+                      <li key={change}>{change}</li>
+                    ))}
+                  </ul>
+                </>
+              ),
+            }))
+          ) {
+            return;
+          }
+        }
+      }
+
       await editEntityMutation.mutateAsync(value as AssayDataSheetColumnData);
       navigate("..");
     }),
   });
 
   const { safe_name, proposed_safe_name } = useStore(
-    form.baseStore,
+    form.store,
     ({ values }) => {
-      const { name, safe_name } = values;
+      const vals = values as { name?: string; safe_name?: string };
+      const { name, safe_name } = vals;
       const proposed_safe_name = form.getFieldMeta("name")?.isDirty
         ? toSafeIdentifier(name as string)
         : safe_name;
       return { safe_name, proposed_safe_name } as {
-        safe_name: string;
-        proposed_safe_name: string;
+        safe_name: string | undefined;
+        proposed_safe_name: string | undefined;
       };
     },
   );
 
   const onDelete = async () => {
-    if (
-      !assayDataSheetColumn.id ||
-      !window.confirm(
-        `Are you sure you want to delete this column? This action is irreversible`,
-      )
-    )
+    if (!assayDataSheetColumn.id) {
       return;
-    await destroyEntityMutation.mutateAsync(assayDataSheetColumn.id);
+    }
+    const confirmed = await confirm({
+      title: `Delete column ${assayDataSheetColumn.name}?`,
+      body: `Are you sure you want to delete this column? This action is irreversible.`,
+      challenge: dangerousEditMode ? assayDataSheetColumn.name : undefined,
+      danger: true,
+    });
+    if (!confirmed) {
+      return;
+    }
+    await destroyEntityMutation.mutateAsync([
+      assayDataSheetColumn.id,
+      dangerousEditMode,
+    ]);
     navigate("..");
   };
 
-  const canCreateColumn =
-    assayModel?.publication_status_id__name === "Draft" &&
-    assayDataSheetColumns.length < 249;
+  const canCreateColumn = canEdit && assayDataSheetColumns.length < 249;
 
   return (
-    <Surface className={styles.modelForm}>
-      {assayModel?.publication_status_id__name !== "Published" && (
-        <h2 style={{ alignSelf: "baseline", marginBottom: "1em" }}>
-          Edit column
-        </h2>
-      )}
-      <Form<Partial<AssayDataSheetColumnData>> form={form}>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gridAutoRows: "max-content",
-            gap: "calc(var(--spacing) * 2)",
-            paddingBottom: "calc(var(--spacing) * 2)",
-          }}
-        >
-          {form.state.errorMap.onSubmit && (
-            <div
-              style={{
-                gridColumnStart: 1,
-                gridColumnEnd: -1,
-                color: "var(--palette-error-main)",
-              }}
-            >
-              {form.state.errorMap.onSubmit?.toString()}
-            </div>
-          )}
+    <CenteredSurface>
+      {canEdit && <h2>Edit column</h2>}
+      <Form form={form}>
+        <FormFields>
+          <FormBanner content={form.state.errorMap.onSubmit} />
           {fields.map((f) => (
-            <div style={{ width: "100%" }} key={f.name}>
+            <div className={styles.fieldContainer} key={f.name}>
               <FormField
-                form={form}
                 fieldDef={{
                   ...f,
-                  disabled:
-                    assayModel?.publication_status_id__name === "Published",
+                  disabled: !canEdit,
                 }}
-                validators={{
-                  onChange: validators[f.name as "name" | "safe_name"],
-                  onMount: validators[f.name as "name" | "safe_name"],
-                }}
+                validators={validators[f.name as "name" | "safe_name"] as any}
               />
               {f.name === "safe_name" &&
                 safe_name !== proposed_safe_name &&
-                proposed_safe_name.length &&
+                proposed_safe_name &&
                 form.state.isDirty && (
-                  <div className={styles.columnFormFieldSuggestion}>
+                  <div className={styles.suggestion}>
                     <em
                       role="button"
                       onClick={() => {
@@ -233,7 +255,7 @@ const AssayDataSheetColumnForm = ({
                 )}
             </div>
           ))}
-        </div>
+        </FormFields>
         <form.Subscribe
           selector={(state) => [
             state.canSubmit,
@@ -264,7 +286,7 @@ const AssayDataSheetColumnForm = ({
                     <Button>Clone</Button>
                   </Link>
                 )}
-                {assayModel?.publication_status_id__name !== "Published" && (
+                {canEdit && (
                   <Button
                     color="danger"
                     onClick={onDelete}
@@ -278,7 +300,7 @@ const AssayDataSheetColumnForm = ({
           }}
         />
       </Form>
-    </Surface>
+    </CenteredSurface>
   );
 };
 

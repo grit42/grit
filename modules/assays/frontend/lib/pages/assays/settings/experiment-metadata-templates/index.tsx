@@ -24,7 +24,10 @@ const ExperimentMetadataTemplatesAdministrationPage = () => {
   return (
     <Routes>
       <Route index element={<ExperimentMetadataTemplatesTable />} />
-      <Route path="/:experiment_metadata_template_id" element={<ExperimentMetadataTemplateForm />} />
+      <Route
+        path="/:experiment_metadata_template_id"
+        element={<ExperimentMetadataTemplateForm />}
+      />
     </Routes>
   );
 };

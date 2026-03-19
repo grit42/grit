@@ -22,11 +22,9 @@ import {
   ErrorPage,
   Spinner,
 } from "@grit42/client-library/components";
-import { useQueryClient } from "@grit42/api";
 import { EntityData, useInfiniteEntityData } from "../../entities";
 import { Table, useSetupTableState } from "@grit42/table";
 import { useMemo } from "react";
-import { useRollbackLoadSetBlockMutation } from "../mutations";
 import { LoadSetData } from "../types";
 import { useTableColumns } from "../../../utils";
 import styles from "./loadSetViewer.module.scss";
@@ -35,30 +33,22 @@ import {
   useLoadSetBlockLoadedDataColumns,
 } from "../queries";
 import { useImporter } from "../ImportersContext";
-import { toast } from "@grit42/notifications";
+import { useLoadSetViewerActions } from "./useLoadSetViewerActions";
+import { EntityInfo, EntityPropertyDef } from "../../entities/types";
 
 interface Props {
   loadSet: LoadSetData;
+  info: EntityInfo;
+  columns: EntityPropertyDef[];
 }
 
-const LoadSetViewer = ({ loadSet }: Props) => {
+const LoadSetViewer = ({ loadSet, info, columns }: Props) => {
   const { LoadSetViewerExtraActions } = useImporter(loadSet.entity);
-  const queryClient = useQueryClient();
-  const rollbackLoadSetMutation = useRollbackLoadSetBlockMutation(
-    loadSet.load_set_blocks[0].id,
-  );
 
-  const {
-    data: info,
-    isError: isInfoError,
-    error: infoError,
-  } = useLoadSetBlockEntity(loadSet.load_set_blocks[0].id);
-
-  const {
-    data: columns,
-    isError: isColumnsError,
-    error: columnsError,
-  } = useLoadSetBlockLoadedDataColumns(loadSet.load_set_blocks[0].id);
+  const { handleRollback, isPending } = useLoadSetViewerActions({
+    loadSet,
+    entityPath: info.path,
+  });
 
   const tableColumns = useTableColumns(columns);
 
@@ -77,52 +67,18 @@ const LoadSetViewer = ({ loadSet }: Props) => {
     isError,
     error,
     fetchNextPage,
-  } = useInfiniteEntityData(
-    info?.path ?? "",
-    tableState.sorting,
-    tableState.filters,
-    {
-      scope: "by_load_set_block",
-      load_set_block_id: loadSet.load_set_blocks[0].id,
-    },
-    { enabled: !!info?.path },
-  );
+  } = useInfiniteEntityData(info.path, tableState.sorting, tableState.filters, {
+    scope: "by_load_set_block",
+    load_set_block_id: loadSet.load_set_blocks[0].id,
+  });
 
   const flatData = useMemo(
     () => data?.pages.flatMap(({ data }) => data) ?? [],
     [data],
   );
 
-  const onRollback = async () => {
-    if (
-      !window.confirm(
-        `Are you sure you want to rollback this data load? Irreversible data loss may occur`,
-      )
-    ) {
-      return;
-    }
-    try {
-      await rollbackLoadSetMutation.mutateAsync();
-      await queryClient.invalidateQueries({
-        queryKey: [
-          "entities",
-          "datum",
-          "grit/core/load_sets",
-          loadSet.id.toString(),
-        ],
-        exact: false,
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["entities", "data", info?.path ?? ""],
-        exact: false,
-      });
-    } catch (e) {
-      toast.error(e as string);
-    }
-  };
-
-  if (isError || isColumnsError || isInfoError) {
-    return <ErrorPage error={error ?? columnsError ?? infoError} />;
+  if (isError) {
+    return <ErrorPage error={error} />;
   }
 
   return (
@@ -136,8 +92,8 @@ const LoadSetViewer = ({ loadSet }: Props) => {
           <ButtonGroup>
             <Button
               color="secondary"
-              onClick={onRollback}
-              loading={rollbackLoadSetMutation.isPending}
+              onClick={handleRollback}
+              loading={isPending.rollback}
             >
               Undo import
             </Button>
@@ -154,20 +110,30 @@ const LoadSetViewer = ({ loadSet }: Props) => {
   );
 };
 
-const LoadSetViewerWrapper = ({ loadSet }: Props) => {
-  const { isLoading: isInfoLoading } = useLoadSetBlockEntity(
-    loadSet.load_set_blocks[0].id,
-  );
+const LoadSetViewerWrapper = ({ loadSet }: { loadSet: LoadSetData }) => {
+  const {
+    data: info,
+    isLoading: isInfoLoading,
+    isError: isInfoError,
+    error: infoError,
+  } = useLoadSetBlockEntity(loadSet.load_set_blocks[0].id);
 
-  const { isLoading: isColumnsLoading } = useLoadSetBlockLoadedDataColumns(
-    loadSet.load_set_blocks[0].id,
-  );
+  const {
+    data: columns,
+    isLoading: isColumnsLoading,
+    isError: isColumnsError,
+    error: columnsError,
+  } = useLoadSetBlockLoadedDataColumns(loadSet.load_set_blocks[0].id);
 
   if (isColumnsLoading || isInfoLoading) {
     return <Spinner />;
   }
 
-  return <LoadSetViewer loadSet={loadSet} />;
+  if (isInfoError || isColumnsError || !info || !columns) {
+    return <ErrorPage error={infoError ?? columnsError} />;
+  }
+
+  return <LoadSetViewer loadSet={loadSet} info={info} columns={columns} />;
 };
 
 export default LoadSetViewerWrapper;

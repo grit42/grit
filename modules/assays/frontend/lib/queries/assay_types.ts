@@ -20,12 +20,16 @@ import {
   useEntityColumns,
   EntityPropertyDef,
   EntityData,
-  useEntityData,
   useEntityDatum,
   useEntityFields,
   useInfiniteEntityData,
 } from "@grit42/core";
-import { UseQueryOptions, URLParams, UndefinedInitialDataInfiniteOptions, PaginatedEndpointSuccess } from "@grit42/api";
+import {
+  UseQueryOptions,
+  URLParams,
+  UndefinedInitialDataInfiniteOptions,
+  PaginatedEndpointSuccess,
+} from "@grit42/api";
 import { Filter, SortingState } from "@grit42/table";
 import { FormFieldDef } from "@grit42/form";
 
@@ -56,27 +60,16 @@ export interface AssayTypeData extends EntityData {
   description: string | null;
 }
 
-export const useAssayTypes = (
-  sort?: SortingState,
-  filter?: Filter[],
-  params: URLParams = {},
-  queryOptions: Partial<UseQueryOptions<AssayTypeData[], string>> = {},
-) => {
-  return useEntityData<AssayTypeData>(
-    "grit/assays/assay_types",
-    sort,
-    filter,
-    params,
-    queryOptions,
-  );
-};
-
-
 export const useInfiniteAssayTypes = (
   sort?: SortingState,
   filter?: Filter[],
   params: URLParams = {},
-  queryOptions: Partial<UndefinedInitialDataInfiniteOptions<PaginatedEndpointSuccess<AssayTypeData[]>, string>> = {},
+  queryOptions: Partial<
+    UndefinedInitialDataInfiniteOptions<
+      PaginatedEndpointSuccess<AssayTypeData[]>,
+      string
+    >
+  > = {},
 ) => {
   return useInfiniteEntityData<AssayTypeData>(
     "grit/assays/assay_types",

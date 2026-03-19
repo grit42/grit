@@ -19,7 +19,7 @@ Grit::Assays::Engine.routes.draw do
   end
 
   resources :experiments do
-    resources :experiment_attachments, only: [:index, :create, :destroy] do
+    resources :experiment_attachments, only: [ :index, :create, :destroy ] do
       collection do
         get :export
       end
@@ -40,6 +40,7 @@ Grit::Assays::Engine.routes.draw do
   resources :assay_metadata_definitions
   resources :assay_model_metadata
   resources :assay_models do
+    post :clone
     post :update_metadata
     post :publish
     post :draft

@@ -73,10 +73,5 @@ export default defineConfig(({ mode }) => ({
               return `grit-${fileName}__${name}`;
             },
     },
-    preprocessorOptions: {
-      scss: {
-        api: "modern-compiler",
-      },
-    },
   },
 }));

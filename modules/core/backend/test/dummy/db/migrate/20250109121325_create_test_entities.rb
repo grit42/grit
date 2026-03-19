@@ -6,11 +6,10 @@ class CreateTestEntities < ActiveRecord::Migration[7.2]
       t.datetime :created_at, null: false, default: -> { "CURRENT_TIMESTAMP" }
       t.string :updated_by, limit: 30
       t.datetime :updated_at
-      t.string :name, null: false
+      t.string :name, null: false, index: { unique: true }
       t.string :another_string
       t.integer :integer
       t.decimal :decimal
-      t.float :float
       t.text :text
       t.datetime :datetime
       t.date :date

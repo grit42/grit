@@ -1,0 +1,122 @@
+# frozen_string_literal: true
+
+# Copyright 2025 grit42 A/S. <https://grit42.com/>
+#
+# This file is part of @grit42/assays.
+#
+# @grit42/assays is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 3 of the License, or  any later version.
+#
+# @grit42/assays is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+# or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+# more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
+
+
+ENV["RAILS_ENV"] ||= "test"
+
+# Boot the existing dummy app (loads Rails + ActiveSupport)
+require_relative "../test/dummy/config/environment"
+
+# Dev dependencies declared in gemspec are not auto-required by Bundler.require;
+# load them explicitly after Rails boots (they depend on ActiveSupport).
+require "authlogic/test_case"
+require "rswag/specs"
+require "rspec/rails"
+
+# Configure migration paths
+ActiveRecord::Migrator.migrations_paths = [
+  File.expand_path("../test/dummy/db/migrate", __dir__),
+  File.expand_path("../db/migrate", __dir__)
+]
+
+# Load support files
+Dir[File.expand_path("support/**/*.rb", __dir__)].each { |f| require f }
+
+# File fixtures path
+FILE_FIXTURE_PATH = File.expand_path("../test/fixtures/files", __dir__)
+
+# Reduce SCrypt cost to the minimum for tests. The default max_time of 0.2s
+# causes SCrypt to auto-calibrate to ~200ms per hash. Since every user creation
+# triggers multiple hash/verify cycles (factory create, password set, session
+# creation), this dominates test runtime. Setting max_time to the lowest
+# practical value makes hashing near-instant while still exercising the real
+# code path.
+Authlogic::CryptoProviders::SCrypt.max_time = 0.01
+
+RSpec.configure do |config|
+  config.use_transactional_fixtures = true
+  config.infer_spec_type_from_file_location!
+  config.filter_rails_from_backtrace!
+
+  # Clean up data before each test suite run.
+  config.before(:suite) do
+    ActiveRecord::Base.connection.execute("SET session_replication_role = 'replica'")
+    %w[
+      grit_assays_experiment_metadata_template_metadata
+      grit_assays_experiment_metadata_templates
+      grit_assays_experiment_metadata
+      grit_assays_experiment_data_sheet_record_load_set_blocks
+      grit_assays_data_table_columns grit_assays_data_table_entities
+      grit_assays_data_tables grit_assays_experiments
+      grit_assays_assay_data_sheet_columns
+      grit_assays_assay_data_sheet_definitions
+      grit_assays_assay_model_metadata grit_assays_assay_models
+      grit_assays_assay_metadata_definitions grit_assays_assay_types
+      grit_core_user_roles grit_core_users grit_core_roles
+      grit_core_origins grit_core_locations grit_core_countries
+      grit_core_data_types grit_core_units grit_core_publication_statuses
+      grit_core_load_set_block_loaded_records grit_core_load_set_blocks
+      grit_core_load_set_statuses grit_core_load_sets
+      grit_core_vocabulary_items grit_core_vocabularies
+    ].each do |table|
+      ActiveRecord::Base.connection.execute("DELETE FROM #{table}")
+    rescue ActiveRecord::StatementInvalid
+      # Table may not exist yet
+    end
+    ActiveRecord::Base.connection.execute("SET session_replication_role = 'origin'")
+  end
+
+  # Include Authlogic test helpers
+  config.include Authlogic::TestCase
+
+  # Include engine routes in request specs
+  config.include Grit::Core::Engine.routes.url_helpers, type: :request
+
+  # Activate authlogic and seed a bootstrap user so that factory_bot can
+  # create records without hitting the set_updater "no session" error.
+  # IMPORTANT: Always reset RequestStore — transactional fixtures rollback the
+  # DB but do NOT clear RequestStore, so stale User objects from the previous
+  # test would bypass the bootstrap and cause NoMethodError on role lookups.
+  config.before(:each) do
+    # Clear BEFORE activate_authlogic because authlogic stores its controller
+    # in RequestStore.store[:authlogic_controller].
+    RequestStore.store.clear
+    activate_authlogic
+    bootstrap = Struct.new(:login, :id) do
+      def role?(_name = nil)
+        true
+      end
+
+      def active?
+        true
+      end
+    end.new("factory_bootstrap", 0)
+    RequestStore.store["current_user"] = bootstrap
+
+    # Seed PublicationStatus records needed by controllers (find_by name).
+    Grit::Core::PublicationStatus.find_or_create_by!(name: "Draft")
+    Grit::Core::PublicationStatus.find_or_create_by!(name: "Published")
+  end
+
+  # Dynamic tables (ds_{id}) are created via DDL and are not rolled back by
+  # test transactions. Drop any that leaked after each test.
+  config.after(:each) do
+    leaked = ActiveRecord::Base.connection.tables.select { |t| t.start_with?("ds_") }
+    leaked.each { |t| ActiveRecord::Base.connection.drop_table(t, force: true) }
+  end
+end

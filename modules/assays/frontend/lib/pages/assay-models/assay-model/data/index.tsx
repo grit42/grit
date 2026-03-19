@@ -30,11 +30,13 @@ import { useLocalStorage } from "@grit42/client-library/hooks";
 const AssayModelDataSheets = () => {
   const { assay_model_id } = useParams() as { assay_model_id: string };
 
-  const { data, isLoading, isError, error } = useAssayDataSheetDefinitions(
-    assay_model_id,
-  );
+  const { data, isLoading, isError, error } =
+    useAssayDataSheetDefinitions(assay_model_id);
 
-  const [mf, smf] = useLocalStorage(`assay-model-data-metadata-${assay_model_id}`, {})
+  const [mf, smf] = useLocalStorage(
+    `assay-model-data-metadata-${assay_model_id}`,
+    {},
+  );
 
   const {
     data: fields,
@@ -42,22 +44,40 @@ const AssayModelDataSheets = () => {
     isError: isAssayDataSheetDefinitionFieldsError,
     error: assayDataSheetDefinitionFieldsError,
   } = useAssayDataSheetDefinitionFields();
-  const { isLoading: isDataSheetColumnColumnsLoading } = useAssayDataSheetColumnColumns();
+  const { isLoading: isDataSheetColumnColumnsLoading } =
+    useAssayDataSheetColumnColumns();
 
-  if (isAssayDataSheetDefinitionFieldsLoading || isLoading || isDataSheetColumnColumnsLoading) return <Spinner />;
+  if (
+    isAssayDataSheetDefinitionFieldsLoading ||
+    isLoading ||
+    isDataSheetColumnColumnsLoading
+  )
+    return <Spinner />;
   if (isAssayDataSheetDefinitionFieldsError || isError || !fields || !data)
     return <ErrorPage error={assayDataSheetDefinitionFieldsError ?? error} />;
 
   return (
     <Routes>
-      <Route element={<DataSheetTabs sheetDefinitions={data} metadataFilters={mf} setMetadataFilters={smf} />}>
+      <Route
+        element={
+          <DataSheetTabs
+            sheetDefinitions={data}
+            metadataFilters={mf}
+            setMetadataFilters={smf}
+          />
+        }
+      >
+        <Route path=":sheet_id">
+          <Route
+            index
+            path="*"
+            element={<DataSheet dataSheets={data} metadataFilters={mf} />}
+          />
+        </Route>
         <Route
-          path=":sheet_id/*"
-          element={<DataSheet dataSheets={data} metadataFilters={mf} />}
-        />
-        <Route
+          index
           path="*"
-          element={<Navigate to={data[0]?.id.toString()} replace/>}
+          element={<Navigate to={`../${data[0]?.id.toString()}`} replace />}
         />
       </Route>
     </Routes>

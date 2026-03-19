@@ -28,17 +28,20 @@ const getScatterPlotData = (
   def: ScatterPlotDefinition,
 ): GritScatterData[] => {
   return Object.values(
-    data.reduce((acc, d) => {
-      if (nullish(d[def.x.key]) || nullish(d[def.y.key])) return acc;
-      const groupByValues = def.groupBy?.map((k) => d[k]);
-      const key = groupByValues?.length ? groupByValues.join("-") : "all";
-      if (!acc[key]) {
-        acc[key] = { ...DEFAULT_SCATTER, x: [], y: [], name: key };
-      }
-      acc[key].x.push(d[def.x.key]);
-      acc[key].y.push(d[def.y.key]);
-      return acc;
-    }, {} as Record<string, GritScatterData>),
+    data.reduce(
+      (acc, d) => {
+        if (nullish(d[def.x.key]) || nullish(d[def.y.key])) return acc;
+        const groupByValues = def.groupBy?.map((k) => d[k]);
+        const key = groupByValues?.length ? groupByValues.join("-") : "all";
+        if (!acc[key]) {
+          acc[key] = { ...DEFAULT_SCATTER, x: [], y: [], name: key };
+        }
+        acc[key].x.push(d[def.x.key]);
+        acc[key].y.push(d[def.y.key]);
+        return acc;
+      },
+      {} as Record<string, GritScatterData>,
+    ),
   );
 };
 

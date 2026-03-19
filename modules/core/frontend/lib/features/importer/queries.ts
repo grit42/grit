@@ -53,7 +53,7 @@ export const useLoadSetBlockFields = (
 
       return response.data;
     },
-    ...queryOptions
+    ...queryOptions,
   });
 };
 
@@ -120,18 +120,22 @@ export const useInfiniteLoadSetBlockPreviewData = (
       filter ?? [],
       JSON.stringify(params),
     ],
-    queryFn: async ({ pageParam }): Promise<PaginatedEndpointSuccess<LoadSetBlockPreviewData[]>> => {
+    queryFn: async ({
+      pageParam,
+    }): Promise<PaginatedEndpointSuccess<LoadSetBlockPreviewData[]>> => {
       const response = await request<
         PaginatedEndpointSuccess<LoadSetBlockPreviewData[]>,
         EndpointError
       >(
-        `/grit/core/load_set_blocks/${loadSetBlockId}/preview_data?${getURLParams({
-          ...getSortParams(sort ?? []),
-          ...getFilterParams(filter ?? []),
-          offset: pageParam as number,
-          limit: 500,
-          ...params,
-        })}`,
+        `/grit/core/load_set_blocks/${loadSetBlockId}/preview_data?${getURLParams(
+          {
+            ...getSortParams(sort ?? []),
+            ...getFilterParams(filter ?? []),
+            offset: pageParam as number,
+            limit: 500,
+            ...params,
+          },
+        )}`,
       );
 
       if (!response.success) {
@@ -150,7 +154,7 @@ export const useInfiniteLoadSetBlockPreviewData = (
 export interface LoadSetBlockErroredData {
   line: number;
   datum: any;
-  record_errors: Record<string, string>
+  record_errors: Record<string, string>;
 }
 
 export const useInfiniteLoadSetBlockErroredData = (
@@ -174,18 +178,22 @@ export const useInfiniteLoadSetBlockErroredData = (
       filter ?? [],
       JSON.stringify(params),
     ],
-    queryFn: async ({ pageParam }): Promise<PaginatedEndpointSuccess<LoadSetBlockErroredData[]>> => {
+    queryFn: async ({
+      pageParam,
+    }): Promise<PaginatedEndpointSuccess<LoadSetBlockErroredData[]>> => {
       const response = await request<
         PaginatedEndpointSuccess<LoadSetBlockErroredData[]>,
         EndpointError
       >(
-        `/grit/core/load_set_blocks/${loadSetBlockId}/errored_data?${getURLParams({
-          ...getSortParams(sort ?? []),
-          ...getFilterParams(filter ?? []),
-          offset: pageParam as number,
-          limit: 500,
-          ...params,
-        })}`,
+        `/grit/core/load_set_blocks/${loadSetBlockId}/errored_data?${getURLParams(
+          {
+            ...getSortParams(sort ?? []),
+            ...getFilterParams(filter ?? []),
+            offset: pageParam as number,
+            limit: 500,
+            ...params,
+          },
+        )}`,
       );
 
       if (!response.success) {
@@ -204,7 +212,7 @@ export const useInfiniteLoadSetBlockErroredData = (
 export interface LoadSetBlockWarningData {
   line: number;
   datum: any;
-  record_warnings: Record<string, string>
+  record_warnings: Record<string, string>;
 }
 
 export const useInfiniteLoadSetBlockWarningData = (
@@ -228,18 +236,22 @@ export const useInfiniteLoadSetBlockWarningData = (
       filter ?? [],
       JSON.stringify(params),
     ],
-    queryFn: async ({ pageParam }): Promise<PaginatedEndpointSuccess<LoadSetBlockWarningData[]>> => {
+    queryFn: async ({
+      pageParam,
+    }): Promise<PaginatedEndpointSuccess<LoadSetBlockWarningData[]>> => {
       const response = await request<
         PaginatedEndpointSuccess<LoadSetBlockWarningData[]>,
         EndpointError
       >(
-        `/grit/core/load_set_blocks/${loadSetBlockId}/warning_data?${getURLParams({
-          ...getSortParams(sort ?? []),
-          ...getFilterParams(filter ?? []),
-          offset: pageParam as number,
-          limit: 500,
-          ...params,
-        })}`,
+        `/grit/core/load_set_blocks/${loadSetBlockId}/warning_data?${getURLParams(
+          {
+            ...getSortParams(sort ?? []),
+            ...getFilterParams(filter ?? []),
+            offset: pageParam as number,
+            limit: 500,
+            ...params,
+          },
+        )}`,
       );
 
       if (!response.success) {
@@ -254,7 +266,6 @@ export const useInfiniteLoadSetBlockWarningData = (
     ...queryOptions,
   });
 };
-
 
 export const useLoadSetBlockData = (
   loadSetBlockId: number,

@@ -25,7 +25,7 @@ module Grit::Assays
       [
         *super(params),
         *Grit::Assays::ExperimentDataSheetRecordLoadSetBlock.entity_fields
-          .map { |f| ({**f, disabled: f[:disabled] || f[:name] == "experiment_id" }) } ]
+          .map { |f| ({ **f, disabled: f[:disabled] || f[:name] == "experiment_id" }) } ]
     end
 
     def self.create(params)
@@ -34,7 +34,7 @@ module Grit::Assays
       Grit::Assays::ExperimentDataSheetRecordLoadSetBlock.create!({
         load_set_block_id: load_set.load_set_blocks[0].id,
         experiment_id: params[:load_set_blocks]["0"]["experiment_id"],
-        assay_data_sheet_definition_id: params[:load_set_blocks]["0"]["assay_data_sheet_definition_id"],
+        assay_data_sheet_definition_id: params[:load_set_blocks]["0"]["assay_data_sheet_definition_id"]
       })
 
       load_set

@@ -16,18 +16,11 @@
  * @grit42/compounds. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useInfiniteEntityData, EntityData } from "@grit42/core";
-import {
-  Navigate,
-  Outlet,
-  Route,
-  Routes,
-  useMatch,
-  useNavigate,
-} from "react-router-dom";
+import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
 import { GritColumnDef, Table, useSetupTableState } from "@grit42/table";
-import { ErrorPage, Tabs } from "@grit42/client-library/components";
+import { ErrorPage, RoutedTabs } from "@grit42/client-library/components";
 
 const TABS = [
   {
@@ -41,58 +34,11 @@ const TABS = [
 ];
 
 const CompoundBatchLoadSets = () => {
-  const navigate = useNavigate();
-
-  const match = useMatch(
-    "/compounds/settings/load-sets/:childPath/*",
-  );
-  const childPath = match?.params.childPath ?? "metadata";
-
-  const [selectedTab, setSelectedTab] = useState(
-    TABS.findIndex(({ url }) => childPath === url),
-  );
-
-  useEffect(() => {
-    setSelectedTab(TABS.findIndex(({ url }) => childPath === url));
-  }, [childPath]);
-
-  const handleTabChange = (index: number) => {
-    navigate(TABS[index].url);
-  };
-
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateRows: "min-content 1fr",
-        height: "100%",
-        overflow: "auto",
-      }}
-    >
-      <Tabs
-        onTabChange={handleTabChange}
-        selectedTab={selectedTab}
-        tabs={TABS.map((t) => ({
-          key: t.url,
-          name: t.label,
-          panel: <></>,
-        }))}
-      />
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "stretch",
-          width: "100%",
-          height: "100%",
-          maxWidth: "100%",
-          maxHeight: "100%",
-          overflowY: "auto",
-        }}
-      >
-        <Outlet />
-      </div>
-    </div>
+    <RoutedTabs
+      matchPattern="/compounds/settings/load-sets/:childPath/*"
+      tabs={TABS}
+    />
   );
 };
 
@@ -101,7 +47,7 @@ const CompoundBatchLoadSetsPage = () => {
     <Routes>
       <Route element={<CompoundBatchLoadSets />}>
         <Route
-          path="/compound"
+          path="compound"
           element={
             <LoadSetTable
               name="Compound"
@@ -110,12 +56,12 @@ const CompoundBatchLoadSetsPage = () => {
           }
         />
         <Route
-          path="/batch"
+          path="batch"
           element={
             <LoadSetTable name="Batch" full_name="Grit::Compounds::Batch" />
           }
         />
-        <Route path="*" element={<Navigate to="compound" />} />
+        <Route path="*" element={<Navigate to="../compound" replace />} />
       </Route>
     </Routes>
   );

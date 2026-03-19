@@ -19,6 +19,7 @@
 module Grit::Assays
   class AssayModel < ApplicationRecord
     include Grit::Core::GritEntityRecord
+    include Grit::Core::Model::DangerousEdit
 
     before_destroy :drop_tables
     belongs_to :assay_type
@@ -48,10 +49,19 @@ module Grit::Assays
       assay_data_sheet_definitions.each(&:drop_table)
     end
 
+    def published?
+      publication_status.name === "Published"
+    end
+
+    def draft?
+      publication_status.name === "Draft"
+    end
+
     private
       def check_publication_status
         return if publication_status_changed?
-        raise "Cannot modify a published Assay Model" if publication_status.name === "Published"
+        return if dangerous_edit?
+        raise "Cannot modify a published Assay Model" if published?
       end
   end
 end

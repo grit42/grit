@@ -20,11 +20,16 @@ import {
   useEntityColumns,
   EntityPropertyDef,
   EntityData,
-  useEntityData,
   useEntityDatum,
   useEntityFields,
+  useInfiniteEntityData,
 } from "../../entities";
-import { UseQueryOptions, URLParams } from "@grit42/api";
+import {
+  UseQueryOptions,
+  URLParams,
+  UndefinedInitialDataInfiniteOptions,
+  PaginatedEndpointSuccess,
+} from "@grit42/api";
 
 import { Filter, SortingState } from "@grit42/table";
 import { FormFieldDef } from "@grit42/form";
@@ -59,14 +64,19 @@ export interface VocabularyItemData extends EntityData {
   vocabulary_id__name: string;
 }
 
-export const useVocabularyItems = (
+export const useInfiniteVocabularyItems = (
   vocabulary_id: number | string,
   sort?: SortingState,
   filter?: Filter[],
   params: URLParams = {},
-  queryOptions: Partial<UseQueryOptions<VocabularyItemData[], string>> = {},
+  queryOptions: Partial<
+    UndefinedInitialDataInfiniteOptions<
+      PaginatedEndpointSuccess<VocabularyItemData[]>,
+      string
+    >
+  > = {},
 ) => {
-  return useEntityData<VocabularyItemData>(
+  return useInfiniteEntityData<VocabularyItemData>(
     "grit/core/vocabulary_items",
     sort ?? [],
     [

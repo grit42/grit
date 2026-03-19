@@ -56,7 +56,12 @@ const ScatterPlotSettings = ({
         key,
         label: axisProperty?.display_name ?? axisProperty?.name ?? key,
       },
-      title: getScatterPlotTitle(key, plot.y.key, xAxisProperties, yAxisProperties),
+      title: getScatterPlotTitle(
+        key,
+        plot.y.key,
+        xAxisProperties,
+        yAxisProperties,
+      ),
     });
   };
 
@@ -69,14 +74,18 @@ const ScatterPlotSettings = ({
         key,
         label: axisProperty?.display_name ?? axisProperty?.name ?? key,
       },
-      title: getScatterPlotTitle(plot.x.key, key, xAxisProperties, yAxisProperties),
+      title: getScatterPlotTitle(
+        plot.x.key,
+        key,
+        xAxisProperties,
+        yAxisProperties,
+      ),
     });
   };
 
-  const onAxisTypeChange =
-    (axis: "x" | "y") => (axisType: AxisType) => {
-      onChange({ ...plot, [axis]: { ...plot[axis], axisType } });
-    };
+  const onAxisTypeChange = (axis: "x" | "y") => (axisType: AxisType) => {
+    onChange({ ...plot, [axis]: { ...plot[axis], axisType } });
+  };
 
   const onGroupByChange = (groupBy: string[]) => {
     onChange({ ...plot, groupBy });

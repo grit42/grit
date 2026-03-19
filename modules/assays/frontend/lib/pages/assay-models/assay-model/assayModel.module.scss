@@ -1,28 +1,10 @@
 @use "@grit42/client-library/theme.scss";
 
-.assayModelPage {
-  width: 100%;
-  height: 100%;
-  display: grid;
-  gap: calc(theme.$spacing * 4);
-  grid-template-rows: min-content 1fr;
-  grid-template-columns: 1fr;
-  overflow: auto;
-}
-
-.assayModelBody {
-  width: 100%;
-  height: 100%;
-  display: grid;
-  grid-template-rows: min-content 1fr;
-  grid-template-columns: 1fr;
-  overflow: auto;
-}
-
 .assayModelHeader {
   display: flex;
   flex-direction: column;
   gap: theme.$spacing;
+  margin-bottom: theme.$spacing;
 
   .nameAndStatus {
     display: flex;
@@ -32,6 +14,7 @@
 
     h2 {
       color: theme.$palette-secondary-main;
+      margin-bottom: 0;
     }
   }
 }

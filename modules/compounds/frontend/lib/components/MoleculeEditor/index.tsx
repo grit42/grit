@@ -78,7 +78,7 @@ const MoleculeEditor = ({ molecule, onDone, fragment = false }: Props) => {
   }, 200);
 
   useResizeObserver({
-    ref: containerRef,
+    ref: containerRef as React.RefObject<HTMLElement>,
     onResize,
     box: "border-box",
   });
@@ -113,65 +113,59 @@ const MoleculeEditor = ({ molecule, onDone, fragment = false }: Props) => {
           />
         )}
       </div>
-      <div className={classnames(styles.inputContainer, styles.molfile)}>
-        <Surface style={{ display: "flex", flex: 1 }}>
-          <Input
-            type="textarea"
-            label="Molfile"
-            value={molfile}
-            wrapperClassName={styles.input}
-            className={styles.input}
-            fieldClassName={styles.input}
-            onFocus={(e: any) => e.target.select()}
-            onChange={(e: any) => {
-              let molecule = new Molecule(256, 256);
-              if (e.target.value && e.target.value !== "") {
-                molecule = Molecule.fromMolfile(e.target.value);
-              }
-              molecule.setFragment(fragment);
-              moleculeRef.current = molecule;
-              setInitialMolfile(e.target.value);
-              setMolfile(e.target.value);
-              setSmiles(
-                fragment
-                  ? moleculeRef.current.toSmarts()
-                  : moleculeRef.current.toSmiles(),
-              );
-            }}
-          />
-        </Surface>
-      </div>
-      <div className={classnames(styles.inputContainer, styles.smiles)}>
-        <Surface style={{ display: "flex", flex: 1 }}>
-          <Input
-            type="textarea"
-            wrapperClassName={styles.input}
-            className={styles.input}
-            fieldClassName={styles.input}
-            label={fragment ? "SMARTS" : "SMILES"}
-            value={smiles}
-            onFocus={(e: any) => e.target.select()}
-            onChange={(e: any) => {
-              const molecule = new Molecule(256, 256);
-              molecule.setFragment(fragment);
-              if (e.target.value && e.target.value !== "") {
-                const smilesParser = new SmilesParser({
-                  smartsMode: fragment ? "smarts" : "smiles",
-                });
-                smilesParser.parseMolecule(e.target.value, {
-                  molecule,
-                });
-              }
-              moleculeRef.current = molecule;
-              setInitialMolfile(molecule.toMolfile());
-              setMolfile(
-                molecule.getMolweight() > 0 ? molecule.toMolfile() : "",
-              );
-              setSmiles(e.target.value);
-            }}
-          />
-        </Surface>
-      </div>
+      <Surface className={classnames(styles.inputContainer, styles.molfile)}>
+        <Input
+          type="textarea"
+          label="Molfile"
+          value={molfile}
+          wrapperClassName={styles.input}
+          className={styles.input}
+          fieldClassName={styles.input}
+          onFocus={(e: any) => e.target.select()}
+          onChange={(e: any) => {
+            let molecule = new Molecule(256, 256);
+            if (e.target.value && e.target.value !== "") {
+              molecule = Molecule.fromMolfile(e.target.value);
+            }
+            molecule.setFragment(fragment);
+            moleculeRef.current = molecule;
+            setInitialMolfile(e.target.value);
+            setMolfile(e.target.value);
+            setSmiles(
+              fragment
+                ? moleculeRef.current.toSmarts()
+                : moleculeRef.current.toSmiles(),
+            );
+          }}
+        />
+      </Surface>
+      <Surface className={classnames(styles.inputContainer, styles.smiles)}>
+        <Input
+          type="textarea"
+          wrapperClassName={styles.input}
+          className={styles.input}
+          fieldClassName={styles.input}
+          label={fragment ? "SMARTS" : "SMILES"}
+          value={smiles}
+          onFocus={(e: any) => e.target.select()}
+          onChange={(e: any) => {
+            const molecule = new Molecule(256, 256);
+            molecule.setFragment(fragment);
+            if (e.target.value && e.target.value !== "") {
+              const smilesParser = new SmilesParser({
+                smartsMode: fragment ? "smarts" : "smiles",
+              });
+              smilesParser.parseMolecule(e.target.value, {
+                molecule,
+              });
+            }
+            moleculeRef.current = molecule;
+            setInitialMolfile(molecule.toMolfile());
+            setMolfile(molecule.getMolweight() > 0 ? molecule.toMolfile() : "");
+            setSmiles(e.target.value);
+          }}
+        />
+      </Surface>
       <div ref={buttonContainerRef} className={styles.buttonContainer}>
         <Button
           onClick={() => {

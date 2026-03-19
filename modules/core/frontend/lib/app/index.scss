@@ -1,0 +1,108 @@
+/* Modern CSS Reset
+   ========================================================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  line-height: inherit;
+}
+
+img,
+picture,
+video,
+canvas {
+  display: block;
+  max-width: 100%;
+}
+
+svg {
+  display: block;
+}
+
+input,
+button,
+textarea,
+select {
+  font: inherit;
+}
+
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  overflow-wrap: break-word;
+}
+
+[hidden] {
+  display: none;
+}
+
+@font-face {
+  font-family: "Guardian";
+  font-weight: bold;
+  src: url("../assets/fonts/GuardianEgyp-Bold.woff") format("woff");
+}
+
+@font-face {
+  font-family: "Guardian-Light";
+  src: url("../assets/fonts/GuardianEgyp-Light.woff") format("woff");
+}
+
+@font-face {
+  font-family: "Sintony";
+  font-weight: bold;
+  src: url("../assets/fonts/Sintony-Bold.woff") format("woff");
+}
+
+@font-face {
+  font-family: "Sintony";
+  src: url("../assets/fonts/Sintony-Regular.woff") format("woff");
+}
+
+:focus {
+  outline: none !important;
+  outline-offset: 2px;
+  -moz-outline-radius: 6px;
+}
+
+body {
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.2858142857;
+  text-transform: none;
+  font-family: sintony, sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+button,
+a {
+  font-family: guardian, georgia, serif !important;
+}
+
+a {
+  text-decoration: none;
+}

@@ -18,13 +18,7 @@
 
 import { useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import {
-  Button,
-  ErrorPage,
-  Spinner,
-  Surface,
-} from "@grit42/client-library/components";
-import styles from "./experimentMetadataTemplates.module.scss";
+import { Button, ErrorPage, Spinner } from "@grit42/client-library/components";
 import {
   ExperimentMetadataTemplateData,
   useExperimentMetadataTemplate,
@@ -39,14 +33,17 @@ import {
 } from "@grit42/core";
 import {
   Form,
+  FormBanner,
   FormControls,
   FormField,
   FormFieldDef,
+  FormFields,
   genericErrorHandler,
   getVisibleFieldData,
   useForm,
 } from "@grit42/form";
 import { useAssayMetadataDefinitions } from "../../../../queries/assay_metadata_definitions";
+import { CenteredSurface } from "@grit42/client-library/layouts";
 
 const ExperimentMetadataTemplateForm = ({
   fields,
@@ -78,7 +75,7 @@ const ExperimentMetadataTemplateForm = ({
     "grit/assays/experiment_metadata_templates",
   );
 
-  const form = useForm<Partial<ExperimentMetadataTemplateData>>({
+  const form = useForm({
     defaultValues: formData,
     onSubmit: genericErrorHandler(async ({ value: formValue, formApi }) => {
       const value = getVisibleFieldData<
@@ -99,10 +96,7 @@ const ExperimentMetadataTemplateForm = ({
         );
         setFormData(newEntity);
         formApi.reset();
-        navigate(`../${newEntity.id}`, {
-          relative: "path",
-          replace: true,
-        });
+        navigate("..");
       } else {
         setFormData(
           await editEntityMutation.mutateAsync(
@@ -127,38 +121,29 @@ const ExperimentMetadataTemplateForm = ({
   };
 
   return (
-    <div className={styles.container}>
-      <Surface className={styles.form}>
-        <h2 className={styles.formTitle}>{`${
-          experimentMetadataTemplate.id ? "Edit" : "New"
-        } template`}</h2>
-        <Form<Partial<ExperimentMetadataTemplateData>> form={form}>
-          <div className={styles.formFields}>
-            {form.state.errorMap.onSubmit && (
-              <div className={styles.formError}>
-                {form.state.errorMap.onSubmit?.toString()}
-              </div>
-            )}
-            {fields.map((f) => (
-              <div key={f.name} className={styles.formFullwidthField}>
-                <FormField form={form} fieldDef={f} />
-              </div>
-            ))}
-            {metadataFields.map((f) => (
-              <FormField form={form} fieldDef={f} key={f.name} />
-            ))}
-          </div>
-          <FormControls
-            form={form}
-            onDelete={onDelete}
-            showDelete={!!experimentMetadataTemplate.id}
-            showCancel
-            cancelLabel={experimentMetadataTemplate.id ? "Back" : "Cancel"}
-            onCancel={() => navigate("..")}
-          />
-        </Form>
-      </Surface>
-    </div>
+    <CenteredSurface>
+      <h2>{`${experimentMetadataTemplate.id ? "Edit" : "New"} template`}</h2>
+      <Form form={form}>
+        <FormFields columns={3}>
+          <FormBanner content={form.state.errorMap.onSubmit} />
+          {fields.map((f) => (
+            <div key={f.name} style={{ gridColumn: "1 / -1" }}>
+              <FormField fieldDef={f} />
+            </div>
+          ))}
+          {metadataFields.map((f) => (
+            <FormField fieldDef={f} key={f.name} />
+          ))}
+        </FormFields>
+        <FormControls
+          onDelete={onDelete}
+          showDelete={!!experimentMetadataTemplate.id}
+          showCancel
+          cancelLabel={experimentMetadataTemplate.id ? "Back" : "Cancel"}
+          onCancel={() => navigate("..")}
+        />
+      </Form>
+    </CenteredSurface>
   );
 };
 

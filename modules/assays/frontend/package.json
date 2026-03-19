@@ -8,22 +8,6 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
-    },
-    "./meta": {
-      "types": "./dist/meta.d.ts",
-      "import": "./dist/meta.js"
-    },
-    "./router": {
-      "types": "./dist/Router.d.ts",
-      "import": "./dist/Router.js"
-    },
-    "./provider": {
-      "types": "./dist/Provider.d.ts",
-      "import": "./dist/Provider.js"
-    },
-    "./registrant": {
-      "types": "./dist/Registrant.d.ts",
-      "import": "./dist/Registrant.js"
     }
   },
   "files": [
@@ -38,14 +22,13 @@
   },
   "repository": "https://github.com/grit42/grit.git",
   "scripts": {
-    "dev": "vite test/dummy --port 3001",
+    "dev": "vite --port 3001",
     "tsc": "tsc -b",
     "build": "tsc -b ./tsconfig.lib.json && vite build",
-    "build:watch": "vite build --watch --emptyOutDir=false",
     "lint": "eslint . --fix",
     "lint:check": "eslint .",
-    "format": "prettier . -w",
-    "format:check": "prettier . -c"
+    "format": "prettier . -w --ignore-path ../../../.prettierignore",
+    "format:check": "prettier . -c --ignore-path ../../../.prettierignore"
   },
   "dependencies": {
     "@grit42/api": "workspace:*",
@@ -58,7 +41,6 @@
     "@grit42/table": "workspace:*",
     "openchemlib": "8.18.1",
     "react-ocl": "7.0.2",
-    "usehooks-ts": "3",
     "zod": "catalog:"
   },
   "peerDependencies": {
@@ -68,12 +50,15 @@
   },
   "devDependencies": {
     "@eslint/js": "catalog:",
+    "@playwright/test": "catalog:",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "catalog:",
     "autoprefixer": "catalog:",
     "eslint": "catalog:",
+    "eslint-import-resolver-typescript": "catalog:",
+    "eslint-plugin-import-x": "catalog:",
     "eslint-plugin-react-hooks": "catalog:",
     "eslint-plugin-react-refresh": "catalog:",
     "glob": "catalog:",
@@ -81,14 +66,12 @@
     "path": "^0.12.7",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "react-helmet-async": "catalog:",
     "react-router-dom": "catalog:",
     "typescript": "catalog:",
     "typescript-eslint": "catalog:",
     "vite": "catalog:",
     "vite-plugin-dts": "catalog:",
     "vite-plugin-externalize-deps": "catalog:",
-    "vite-plugin-lib-inject-css": "catalog:",
-    "vite-plugin-prevent-overwrite": "workspace:*"
+    "vite-plugin-lib-inject-css": "catalog:"
   }
 }

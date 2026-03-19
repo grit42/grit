@@ -16,7 +16,7 @@
  * @grit42/client-library. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React from "react";
+import React, { useState } from "react";
 import {
   Tabs as ReactTabs,
   TabList as ReactTabList,
@@ -42,8 +42,8 @@ export interface Tab {
 interface Props {
   tabs: Tab[];
   handleDelete?: (tab: Tab, index: number) => void;
-  selectedTab: number;
-  onTabChange: (index: number) => void;
+  selectedTab?: number;
+  onTabChange?: (index: number) => void;
   className?: string;
 }
 
@@ -54,6 +54,8 @@ const Tabs = ({
   selectedTab,
   onTabChange,
 }: Props) => {
+  const [internalSelectedTab, setInternalSelectedTab] = useState(0);
+
   const onDeleteClick =
     (tab: Tab, index: number) =>
     (e: React.MouseEvent | React.KeyboardEvent) => {
@@ -65,8 +67,8 @@ const Tabs = ({
 
   return (
     <ReactTabs
-      selectedIndex={selectedTab}
-      onSelect={onTabChange}
+      selectedIndex={selectedTab ?? internalSelectedTab}
+      onSelect={onTabChange ?? setInternalSelectedTab}
       className={classnames(styles.tabs, className)}
       selectedTabClassName={styles.selectedTab}
     >

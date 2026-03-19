@@ -1,9 +1,0 @@
-one:
-  table: test_entities
-  record_id: 42
-  load_set_id: 42
-
-two:
-  table: test_entities
-  record_id: 43
-  load_set_id: 42

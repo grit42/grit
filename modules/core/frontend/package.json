@@ -9,33 +9,9 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
-    "./meta": {
-      "types": "./dist/meta.d.ts",
-      "import": "./dist/meta.js"
-    },
-    "./router": {
-      "types": "./dist/Router.d.ts",
-      "import": "./dist/Router.js"
-    },
-    "./provider": {
-      "types": "./dist/Provider.d.ts",
-      "import": "./dist/Provider.js"
-    },
-    "./registrant": {
-      "types": "./dist/Registrant.d.ts",
-      "import": "./dist/Registrant.js"
-    },
     "./utils": {
       "types": "./dist/utils/index.d.ts",
       "import": "./dist/utils/index.js"
-    },
-    "./Header": {
-      "types": "./dist/components/Header/index.d.ts",
-      "import": "./dist/components/Header/index.js"
-    },
-    "./Toolbar": {
-      "types": "./dist/Toolbar/index.d.ts",
-      "import": "./dist/Toolbar/index.js"
     }
   },
   "files": [
@@ -50,14 +26,15 @@
   },
   "repository": "https://github.com/grit42/grit.git",
   "scripts": {
-    "dev": "vite test/dummy --port 3001",
+    "dev": "vite --port 3001",
     "tsc": "tsc -b",
     "build": "tsc -b ./tsconfig.lib.json && vite build",
-    "build:watch": "vite build --watch --emptyOutDir=false",
     "lint": "eslint . --fix",
     "lint:check": "eslint .",
-    "format": "prettier . -w",
-    "format:check": "prettier . -c"
+    "format": "prettier . -w --ignore-path ../../../.prettierignore",
+    "format:check": "prettier . -c --ignore-path ../../../.prettierignore",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@grit42/api": "workspace:*",
@@ -67,7 +44,7 @@
     "@grit42/table": "workspace:*",
     "@monaco-editor/react": "^4.7.0",
     "axios": "catalog:",
-    "dayjs": "^1.11.13",
+    "dayjs": "^1.11.19",
     "monaco-editor": "^0.52.2"
   },
   "peerDependencies": {
@@ -77,21 +54,27 @@
   },
   "devDependencies": {
     "@eslint/js": "catalog:",
-    "@playwright/test": "^1.50.0",
+    "@playwright/test": "catalog:",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "catalog:",
+    "@vitest/coverage-v8": "^4.0.18",
     "autoprefixer": "catalog:",
     "eslint": "catalog:",
+    "eslint-import-resolver-typescript": "catalog:",
+    "eslint-plugin-import-x": "catalog:",
     "eslint-plugin-react-hooks": "catalog:",
     "eslint-plugin-react-refresh": "catalog:",
     "glob": "catalog:",
     "globals": "catalog:",
+    "happy-dom": "^20.8.3",
     "path": "^0.12.7",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "react-helmet-async": "catalog:",
     "react-router-dom": "catalog:",
     "typescript": "catalog:",
     "typescript-eslint": "catalog:",
@@ -99,6 +82,6 @@
     "vite-plugin-dts": "catalog:",
     "vite-plugin-externalize-deps": "catalog:",
     "vite-plugin-lib-inject-css": "catalog:",
-    "vite-plugin-prevent-overwrite": "workspace:*"
+    "vitest": "catalog:"
   }
 }

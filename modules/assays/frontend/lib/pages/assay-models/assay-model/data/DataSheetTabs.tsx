@@ -16,14 +16,11 @@
  * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { useEffect, useState } from "react";
-import { Outlet, useMatch, useNavigate } from "react-router-dom";
-import { ErrorPage, Tabs } from "@grit42/client-library/components";
+import { useMatch } from "react-router-dom";
+import { ErrorPage, RoutedTabs } from "@grit42/client-library/components";
 import { AssayDataSheetDefinitionData } from "../../../../queries/assay_data_sheet_definitions";
-import styles from "./dataSheets.module.scss";
 import ExperimentMetadataFilters from "./ExperimentMetadataFilters";
-import { useAssayMetadataDefinitions } from "../../../../queries/assay_metadata_definitions";
-import { classnames } from "@grit42/client-library/utils";
+import { SidebarLayout } from "@grit42/client-library/layouts";
 
 interface Props {
   sheetDefinitions: AssayDataSheetDefinitionData[];
@@ -42,63 +39,33 @@ const DataSheetTabs = ({
   metadataFilters,
   setMetadataFilters,
 }: Props) => {
-  const navigate = useNavigate();
-
   const match = useMatch("/assays/assay-models/:assay_model_id/data/:sheet_id");
 
   const assay_model_id = match?.params.assay_model_id ?? 0;
-  const sheet_id = match?.params.sheet_id ?? 0;
-
-  const [selectedTab, setSelectedTab] = useState(
-    sheetDefinitions?.findIndex(({ id }) => sheet_id === id.toString()) ?? 0,
-  );
-
-  const { data: metadataDefinitions } = useAssayMetadataDefinitions();
-
-  useEffect(() => {
-    setSelectedTab(
-      sheetDefinitions?.findIndex(({ id }) => sheet_id === id.toString()) ?? 0,
-    );
-  }, [sheet_id, sheetDefinitions]);
-
-  const handleTabChange = (index: number) => {
-    if (
-      selectedTab !== index &&
-      sheetDefinitions?.length &&
-      sheetDefinitions[index]
-    ) {
-      navigate(sheetDefinitions[index].id.toString(), { replace: true });
-    }
-  };
 
   if (sheetDefinitions.length === 0) {
     return <ErrorPage error="This model does not define any data sheets" />;
   }
 
   return (
-    <div
-      className={classnames(styles.dataSheets, {
-        [styles.withMetadataDefinitions]: !!metadataDefinitions?.length,
-      })}
+    <SidebarLayout
+      sidebar={
+        <ExperimentMetadataFilters
+          assayModelId={assay_model_id}
+          metadataFilters={metadataFilters}
+          setMetadataFilters={setMetadataFilters}
+        />
+      }
     >
-      <ExperimentMetadataFilters
-        assayModelId={assay_model_id}
-        metadataFilters={metadataFilters}
-        setMetadataFilters={setMetadataFilters}
+      <RoutedTabs
+        matchPattern="/assays/assay-models/:assay_model_id/data/:sheet_id"
+        tabs={sheetDefinitions.map((sheetDefinition) => ({
+          url: sheetDefinition.id.toString(),
+          label: sheetDefinition.name,
+        }))}
+        replaceNavigation={true}
       />
-      <Tabs
-        selectedTab={selectedTab}
-        onTabChange={handleTabChange}
-        tabs={[
-          ...(sheetDefinitions?.map((sheetDefinition) => ({
-            key: sheetDefinition.id.toString(),
-            name: sheetDefinition.name,
-            panel: <></>,
-          })) ?? []),
-        ]}
-      />
-      <Outlet />
-    </div>
+    </SidebarLayout>
   );
 };
 

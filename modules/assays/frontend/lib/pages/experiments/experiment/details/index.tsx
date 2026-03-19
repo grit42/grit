@@ -12,6 +12,7 @@ import {
 } from "react-router-dom";
 import {
   Form,
+  FormBanner,
   FormControls,
   FormField,
   FormFieldDef,
@@ -173,7 +174,7 @@ const ExperimentActions = ({
     )
       return;
     await destroyEntityMutation.mutateAsync(experiment.id);
-    navigate("../..");
+    navigate("../../..");
   };
 
   const onPublish = async () => {
@@ -200,29 +201,10 @@ const ExperimentActions = ({
   }
 
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "1fr",
-      }}
-    >
+    <div className={styles.detailsContainer}>
       {experiment.publication_status_id__name === "Draft" && (
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: "var(--spacing)",
-            marginBlock: "calc(var(--spacing)*4)",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "var(--spacing)",
-            }}
-          >
+        <div className={styles.publishSection}>
+          <div className={styles.publishContent}>
             <h3>Publish this Experiment</h3>
             <p>
               Publishing this Experiment will make it available in Data Tables.
@@ -238,28 +220,13 @@ const ExperimentActions = ({
         </div>
       )}
       {experiment.publication_status_id__name === "Published" && (
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr max-content",
-            alignItems: "center",
-            gap: "var(--spacing)",
-            marginBlock: "calc(var(--spacing)*4)",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "var(--spacing)",
-              maxWidth: "80ch",
-            }}
-          >
+        <div className={styles.draftSection}>
+          <div className={styles.draftContent}>
             <h3>Convert this Experiment to Draft</h3>
             <p>
               Converting this Experiment to draft will allow you to make changes
-              to its Metadata and Data Sheets Records. It will not be available in Data
-              Tables until it is published again.
+              to its Metadata and Data Sheets Records. It will not be available
+              in Data Tables until it is published again.
             </p>
           </div>
           <Button
@@ -271,23 +238,8 @@ const ExperimentActions = ({
           </Button>
         </div>
       )}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr max-content",
-          alignItems: "center",
-          gap: "var(--spacing)",
-          marginBlock: "calc(var(--spacing)*4)",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "var(--spacing)",
-            maxWidth: "80ch",
-          }}
-        >
+      <div className={styles.deleteSection}>
+        <div className={styles.deleteContent}>
           <h3>Delete this Experiment</h3>
           <p>
             Deleting this Experiment will permanently remove it from the
@@ -337,7 +289,7 @@ const ExperimentForm = ({
     experiment.id ?? -1,
   );
 
-  const form = useForm<Partial<ExperimentData>>({
+  const form = useForm({
     defaultValues: formData,
     onSubmit: genericErrorHandler(async ({ value: formValue, formApi }) => {
       const value = getVisibleFieldData<Partial<ExperimentData>>(
@@ -400,7 +352,7 @@ const ExperimentForm = ({
   if (!assay_model_id_field || !name_field || !description_field) {
     return (
       <ErrorPage>
-        <Link to="..">
+        <Link to="../..">
           <Button>Back</Button>
         </Link>
       </ErrorPage>
@@ -408,7 +360,7 @@ const ExperimentForm = ({
   }
 
   return (
-    <Form<Partial<ExperimentData>>
+    <Form
       form={form}
       className={classnames(styles.container, {
         [styles.withMetadataTemplates]: !experiment.assay_id,
@@ -417,31 +369,29 @@ const ExperimentForm = ({
       <Surface className={styles.form}>
         {!experiment.id && <h2 className={styles.formTitle}>New experiment</h2>}
         <div className={styles.formFields}>
-          {form.state.errorMap.onSubmit && (
-            <div className={styles.formError}>
-              {form.state.errorMap.onSubmit?.toString()}
-            </div>
-          )}
+          <FormBanner content={form.state.errorMap.onSubmit} />
           <div className={styles.formFullwidthField}>
-            <FormField form={form} fieldDef={assay_model_id_field} />
+            <FormField fieldDef={assay_model_id_field} />
           </div>
           <div className={styles.formFullwidthField}>
-            <FormField form={form} fieldDef={name_field} />
+            <FormField fieldDef={name_field} />
           </div>
           <div className={styles.formFullwidthField}>
-            <FormField form={form} fieldDef={description_field} />
+            <FormField fieldDef={description_field} />
           </div>
-          <ExperimentMetadataForm form={form} disabled={!canCrudExperiment} />
+          <ExperimentMetadataForm
+            form={form as any}
+            disabled={!canCrudExperiment}
+          />
         </div>
         <FormControls
-          form={form}
           showCancel
           cancelLabel={experiment.id ? "Back" : "Cancel"}
-          onCancel={() => navigate(experiment.id ? "../.." : "..")}
+          onCancel={() => navigate(experiment.id ? "../../.." : "../..")}
         />
         {experiment.id && <ExperimentActions experiment={experiment} />}
       </Surface>
-      {!experiment.id && <ExperimentMetadataTemplates form={form} />}
+      {!experiment.id && <ExperimentMetadataTemplates form={form as any} />}
     </Form>
   );
 };
