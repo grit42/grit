@@ -133,12 +133,17 @@ OIDC_ISSUER=https://idp.example.com
 # OAuth2 client credentials (required)
 OIDC_CLIENT_ID=your-client-id
 OIDC_CLIENT_SECRET=your-client-secret
+
+# Explicit callback URL (optional — derived from GRIT_SERVER_URL by default).
+# Use this if you need to override the auto-derived value.
+# OIDC_REDIRECT_URI=https://grit.example.com/api/grit/core/auth/oidc/callback
 ```
 
-When configuring the IdP, use the following callback URL:
+`GRIT_SERVER_URL` (or `OIDC_REDIRECT_URI`) must be set so the OIDC callback
+URL matches what is registered in your Identity Provider. The callback URL is:
 
 ```
-https://<your-grit-url>/api/grit/core/auth/oidc/callback
+{GRIT_SERVER_URL}/api/grit/core/auth/oidc/callback
 ```
 
 For SAML, the Assertion Consumer Service (ACS) URL is:
