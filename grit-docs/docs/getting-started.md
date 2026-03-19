@@ -90,22 +90,35 @@ SSO_PROVIDER=none
 
 #### SAML 2.0
 
+The recommended approach is to point grit at the IdP metadata URL. grit
+will automatically discover the SSO endpoint and signing certificate:
+
 ```sh
 SSO_PROVIDER=saml
 
-# URL of the IdP's SSO endpoint (required)
+# IdP metadata URL — grit fetches the SSO URL and certificate from here
+SAML_IDP_METADATA_URL=https://idp.example.com/saml/metadata
+
+# Entity ID for grit as the Service Provider (optional, defaults to "grit")
+# SAML_SP_ENTITY_ID=grit
+
+# Name ID format (optional, defaults to unspecified)
+# SAML_NAME_ID_FORMAT=urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified
+```
+
+Alternatively, you can configure the IdP SSO URL and certificate manually.
+When both the metadata URL and explicit values are set, the explicit values
+take precedence:
+
+```sh
+SSO_PROVIDER=saml
+
+# URL of the IdP's SSO endpoint
 SAML_IDP_SSO_URL=https://idp.example.com/saml/sso
 
-# IdP signing certificate, PEM-encoded (required)
+# IdP signing certificate, PEM-encoded
 # Can be a single-line string with literal \n for newlines
 SAML_IDP_CERT="-----BEGIN CERTIFICATE-----\nMIIC...\n-----END CERTIFICATE-----"
-
-# Entity ID for grit as the Service Provider (required)
-# Typically the URL where grit is running
-SAML_SP_ENTITY_ID=https://grit.example.com
-
-# Name ID format (optional, defaults to email)
-# SAML_NAME_ID_FORMAT=urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress
 ```
 
 #### OpenID Connect (OIDC)
