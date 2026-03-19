@@ -89,6 +89,18 @@ function FIELDS(
       },
     } as EntityFormFieldDef,
     {
+      name: "auth_method",
+      display_name: "Auth method",
+      type: "string",
+      disabled: true,
+    },
+    {
+      name: "sso_uid",
+      display_name: "SSO UID",
+      type: "string",
+      disabled: true,
+    },
+    {
       name: "active",
       display_name: "Active",
       type: "boolean",

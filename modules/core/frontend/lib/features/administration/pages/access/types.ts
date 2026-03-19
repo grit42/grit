@@ -24,6 +24,7 @@ export interface User extends EntityData {
   email: string;
   active: boolean;
   two_factor: boolean;
+  auth_method: string;
   origin_id: number;
   origin_id__name: string;
   location_id: number;
