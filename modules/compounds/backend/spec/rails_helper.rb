@@ -38,7 +38,7 @@ ActiveRecord::Migrator.migrations_paths = [
 Dir[File.expand_path("support/**/*.rb", __dir__)].each { |f| require f }
 
 # File fixtures path (shared with minitest)
-FILE_FIXTURE_PATH = File.expand_path("../test/fixtures/files", __dir__)
+FILE_FIXTURE_PATH = "#{__dir__}/fixtures/files"
 
 # PostgreSQL adapter monkey-patch to register custom RDKit mol type decoder.
 # The mol column type (OID 31783) is not recognized by the PG gem by default.
