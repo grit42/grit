@@ -196,6 +196,7 @@ module Grit::Core
         ) as user_roles__
       ) as role_ids")
       .select("grit_core_users.active")
+      .select("grit_core_users.sso_uid")
       .select("grit_core_users.forgot_token")
       .select("grit_core_users.activation_token")
       .select("grit_core_users.single_access_token")

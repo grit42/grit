@@ -64,6 +64,12 @@ const USER_TABLE_COLUMNS: GritColumnDef<EntityData>[] = [
     },
   },
   {
+    accessorKey: "auth_method",
+    header: "Auth method",
+    id: "auth_method",
+    type: "string",
+  },
+  {
     accessorKey: "active",
     header: "Active",
     id: "active",
