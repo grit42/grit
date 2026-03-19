@@ -33,12 +33,37 @@ const SsoButton = ({
   const label =
     ssoProvider === "saml" ? "Sign in with SAML" : "Sign in with SSO";
 
+  const handleSsoClick = () => {
+    // OmniAuth 2.x requires POST with a valid CSRF token to initiate auth.
+    // We create and submit a hidden form with the token from the cookie
+    // set by ApplicationController#set_csrf_token.
+    const csrfToken = document.cookie
+      .split("; ")
+      .find((c) => c.startsWith("csrf-token="))
+      ?.split("=")
+      .slice(1)
+      .join("=");
+
+    const f = document.createElement("form");
+    f.method = "POST";
+    f.action = ssoLoginPath;
+
+    if (csrfToken) {
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = "authenticity_token";
+      input.value = decodeURIComponent(csrfToken);
+      f.appendChild(input);
+    }
+
+    document.body.appendChild(f);
+    f.submit();
+  };
+
   return (
-    <form method="POST" action={ssoLoginPath} style={{ width: "100%" }}>
-      <Button color="secondary" type="submit" style={{ width: "100%" }}>
-        {label}
-      </Button>
-    </form>
+    <Button color="secondary" type="button" onClick={handleSsoClick}>
+      {label}
+    </Button>
   );
 };
 
@@ -83,7 +108,14 @@ const LoginPage = () => {
         </div>
 
         {serverSettings?.sso_provider && serverSettings.sso_login_path && (
-          <>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: "0.75em",
+            }}
+          >
             <SsoButton
               ssoProvider={serverSettings.sso_provider}
               ssoLoginPath={serverSettings.sso_login_path}
@@ -94,7 +126,6 @@ const LoginPage = () => {
                 alignItems: "center",
                 gap: "8px",
                 width: "100%",
-                margin: "4px 0",
                 opacity: 0.5,
               }}
             >
@@ -114,7 +145,7 @@ const LoginPage = () => {
                 }}
               />
             </div>
-          </>
+          </div>
         )}
 
         <form.Field

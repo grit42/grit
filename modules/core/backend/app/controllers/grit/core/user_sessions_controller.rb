@@ -72,7 +72,7 @@ module Grit::Core
       end
       raise "User #{params[:user_session][:login]} not found" if @user.nil?
       raise "User #{params[:user_session][:login]} is inactive" if @user.active? == false
-      raise "This account uses SSO authentication. Please use the SSO login button." if @user.auth_method != "local"
+      raise "Please use SSO to sign in" if @user.auth_method != "local"
 
       if !@user.valid_password?(params[:user_session][:password]) then
         @user.failed_login_count ||= 0

@@ -25,17 +25,24 @@ module Grit::Core
     # session, and redirects to the SPA.
     def create
       auth = request.env["omniauth.auth"]
+
       provider = auth["provider"].to_s
       uid      = auth["uid"].to_s
       info     = auth["info"] || {}
 
       email = info["email"].to_s.downcase.presence
-      name  = info["name"].to_s.presence
-      # Try login from IdP attributes, fall back to email prefix
-      login = (info["login"] || info["nickname"]).to_s.presence || email&.split("@")&.first
+      name  = info["name"].to_s.presence || [ info["first_name"], info["last_name"] ].compact.join(" ").presence
+      # Try login from IdP attributes, fall back to email prefix, then uid
+      login = (info["login"] || info["nickname"]).to_s.presence || email&.split("@")&.first || uid
 
-      raise "SSO authentication did not return an email address" if email.blank?
-      raise "SSO authentication did not return a usable login" if login.blank?
+      raise "SSO authentication did not return a usable identifier" if login.blank?
+
+      # Generate a placeholder email if the IdP didn't provide one.
+      # The user or an admin can update it later.
+      if email.blank?
+        email = "#{login}@sso.placeholder"
+        Rails.logger.warn "[SSO] IdP did not return an email for uid=#{uid}, using placeholder: #{email}"
+      end
 
       user = find_or_create_sso_user!(provider: provider, uid: uid, email: email, name: name, login: login)
 
@@ -48,7 +55,7 @@ module Grit::Core
       redirect_to "/app", allow_other_host: false
     rescue StandardError => e
       Rails.logger.error "[SSO] Callback error: #{e.message}"
-      Rails.logger.debug e.backtrace.join("\n")
+      Rails.logger.error e.backtrace.first(5).join("\n")
       redirect_to "/app/core/login?sso_error=#{ERB::Util.url_encode(e.message)}", allow_other_host: false
     end
 
@@ -85,6 +92,12 @@ module Grit::Core
           login = "#{base_login}_#{counter}"
         end
 
+        # The GritEntityRecord concern auto-generates presence validations for
+        # every NOT NULL column, so origin_id is required. Use the first
+        # available origin (seeded as "ADMIN", id=1).
+        default_origin = Grit::Core::Origin.first
+        raise "No origins exist — run seeds first" unless default_origin
+
         user = Grit::Core::User.new(
           login: login,
           name: name || login,
@@ -92,7 +105,8 @@ module Grit::Core
           auth_method: provider,
           sso_uid: uid,
           active: true,
-          created_by: "sso"
+          created_by: "sso",
+          origin_id: default_origin.id
         )
         user.save!
         user
