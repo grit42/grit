@@ -1,3 +1,13 @@
+## 0.7.0
+
+### 🚀 Features
+
+- dependencies upgrade
+
+### 🧱 Updated Dependencies
+
+- Updated @grit42/client-library to 0.8.0
+
 ## 0.6.2
 
 ### 🩹 Fixes

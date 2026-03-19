@@ -1,3 +1,9 @@
+## 0.7.0
+
+### 🚀 Features
+
+- dependencies upgrade
+
 ## 0.6.2
 
 ### 🩹 Fixes

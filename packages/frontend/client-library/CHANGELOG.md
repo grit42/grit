@@ -1,3 +1,9 @@
+## 0.8.0
+
+### 🚀 Features
+
+- dependencies upgrade
+
 ## 0.7.3
 
 ### 🩹 Fixes

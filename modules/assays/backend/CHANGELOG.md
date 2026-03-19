@@ -1,3 +1,14 @@
+## 0.10.0
+
+### 🚀 Features
+
+- dependencies upgrade
+- edit published assay models
+
+### 🧱 Updated Dependencies
+
+- Updated grit-core to 0.10.0
+
 ## 0.9.0
 
 ### 🚀 Features

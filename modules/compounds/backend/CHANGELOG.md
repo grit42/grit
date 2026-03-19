@@ -1,3 +1,13 @@
+## 0.10.0
+
+### 🚀 Features
+
+- dependencies upgrade
+
+### 🧱 Updated Dependencies
+
+- Updated grit-core to 0.10.0
+
 ## 0.9.1
 
 ### 🩹 Fixes

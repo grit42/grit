@@ -1,3 +1,9 @@
+## 0.10.0
+
+### 🚀 Features
+
+- dependencies upgrade
+
 ## 0.9.0
 
 ### 🚀 Features

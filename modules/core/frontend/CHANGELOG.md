@@ -1,3 +1,17 @@
+## 0.10.0
+
+### 🚀 Features
+
+- dependencies upgrade
+
+### 🧱 Updated Dependencies
+
+- Updated @grit42/notifications to 0.7.0
+- Updated @grit42/client-library to 0.8.0
+- Updated @grit42/form to 0.7.0
+- Updated @grit42/api to 0.7.0
+- Updated @grit42/table to 0.7.0
+
 ## 0.9.0
 
 ### 🚀 Features
