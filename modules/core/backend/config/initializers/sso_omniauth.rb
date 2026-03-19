@@ -97,16 +97,46 @@ Rails.application.configure do
 
   when "oidc"
     require "omniauth_openid_connect"
+
+    oidc_issuer = ENV.fetch("OIDC_ISSUER")
+    issuer_uri  = URI.parse(oidc_issuer)
+
+    # The SWD gem (used by openid_connect for discovery) defaults to HTTPS.
+    # Override to HTTP when the issuer URL uses plain HTTP (e.g. local dev).
+    if issuer_uri.scheme == "http"
+      require "swd"
+      SWD.url_builder = URI::HTTP
+    end
+
+    # Build the OIDC callback URL. OIDC_REDIRECT_URI takes precedence if set
+    # explicitly; otherwise we derive it from GRIT_SERVER_URL (the app's
+    # public origin). The callback path must match OmniAuth's path_prefix +
+    # provider name + "/callback".
+    oidc_callback_path = "/api/grit/core/auth/oidc/callback"
+    oidc_redirect_uri  = ENV.fetch("OIDC_REDIRECT_URI") {
+      server_url = ENV.fetch("GRIT_SERVER_URL", nil)
+      server_url ? "#{server_url.chomp('/')}#{oidc_callback_path}" : nil
+    }
+
+    unless oidc_redirect_uri
+      raise <<~MSG
+        OIDC redirect_uri cannot be determined. Set either OIDC_REDIRECT_URI
+        or GRIT_SERVER_URL so the app knows its own public URL.
+        Example: GRIT_SERVER_URL=http://localhost:3001
+                 (callback will be http://localhost:3001#{oidc_callback_path})
+      MSG
+    end
+
     config.middleware.use OmniAuth::Builder do
       provider :openid_connect,
         name: :oidc,
         scope: [ :openid, :email, :profile ],
         response_type: :code,
-        issuer: ENV.fetch("OIDC_ISSUER"),
+        issuer: oidc_issuer,
         client_options: {
           identifier: ENV.fetch("OIDC_CLIENT_ID"),
           secret:     ENV.fetch("OIDC_CLIENT_SECRET"),
-          redirect_uri: nil  # auto-derived from path_prefix + /oidc/callback
+          redirect_uri: oidc_redirect_uri
         },
         discovery: true
     end
