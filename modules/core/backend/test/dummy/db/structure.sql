@@ -566,8 +566,6 @@ CREATE TABLE public.grit_core_users (
     origin_id bigint NOT NULL,
     location_id bigint,
     forgot_token_expires_at timestamp(6) without time zone,
-    two_factor_attempts integer DEFAULT 0 NOT NULL,
-    two_factor_locked_until timestamp(6) without time zone,
     auth_method character varying DEFAULT 'local'::character varying NOT NULL,
     sso_uid character varying
 );
