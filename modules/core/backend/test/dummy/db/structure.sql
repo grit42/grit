@@ -566,8 +566,8 @@ CREATE TABLE public.grit_core_users (
     origin_id bigint NOT NULL,
     location_id bigint,
     forgot_token_expires_at timestamp(6) without time zone,
-    two_factor_attempts integer DEFAULT 0 NOT NULL,
-    two_factor_locked_until timestamp(6) without time zone
+    auth_method character varying DEFAULT 'local'::character varying NOT NULL,
+    sso_uid character varying
 );
 
 
@@ -1015,6 +1015,13 @@ CREATE INDEX index_grit_core_user_roles_on_user_id ON public.grit_core_user_role
 
 
 --
+-- Name: index_grit_core_users_on_auth_method_and_sso_uid; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_grit_core_users_on_auth_method_and_sso_uid ON public.grit_core_users USING btree (auth_method, sso_uid) WHERE (sso_uid IS NOT NULL);
+
+
+--
 -- Name: index_grit_core_users_on_email; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1352,6 +1359,7 @@ ALTER TABLE ONLY public.test_entities
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20260317095910'),
 ('20260130123817'),
 ('20250627000000'),
 ('20250626000000'),

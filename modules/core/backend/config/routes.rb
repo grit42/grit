@@ -91,7 +91,14 @@ Grit::Core::Engine.routes.draw do
 
   resource :user_session, only: %i[show create destroy] do
     post :two_factor
+    get :server_settings, on: :collection
   end
+
+  # OmniAuth SSO callbacks — OmniAuth middleware intercepts the initiation
+  # request (POST /api/grit/core/auth/:provider) at the Rack level, then
+  # redirects to these callback routes after IdP authentication.
+  match "auth/:provider/callback", to: "sso_sessions#create", via: %i[get post]
+  get "auth/failure", to: "sso_sessions#failure"
 
   resources :entities, only: [ :index, :show ] do
     get :columns

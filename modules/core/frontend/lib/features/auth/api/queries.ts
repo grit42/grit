@@ -23,7 +23,26 @@ import {
   keepPreviousData,
   useQuery,
 } from "@grit42/api";
-import { Session } from "../types";
+import { ServerSettings, Session } from "../types";
+
+export const useServerSettings = () => {
+  return useQuery<ServerSettings>({
+    queryKey: ["server_settings"],
+    queryFn: async (): Promise<ServerSettings> => {
+      const response = await request<
+        EndpointSuccess<ServerSettings>,
+        EndpointError
+      >("/grit/core/user_session/server_settings");
+
+      if (!response.success) {
+        throw response.errors;
+      }
+
+      return response.data;
+    },
+    staleTime: Infinity,
+  });
+};
 
 export const useSession = () => {
   return useQuery<Session | null, string>({

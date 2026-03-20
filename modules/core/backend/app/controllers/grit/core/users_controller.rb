@@ -110,6 +110,8 @@ module Grit::Core
         return
       end
 
+      raise "Password reset is not available for SSO accounts" unless @user.auth_method == "local"
+
       if @user
         @user.forgot_token = SecureRandom.urlsafe_base64(20)
         @user.save_without_session_maintenance
@@ -185,6 +187,7 @@ module Grit::Core
 
     def update_password
       user = Grit::Core::User.current
+      raise "Password changes are not available for SSO accounts" unless user.auth_method == "local"
       unless user.valid_password?(params[:old_password])
         render json: { success: false, errors: { old_password: [ "Wrong password" ] } }, status: :unauthorized
         return

@@ -16,15 +16,64 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { FormBanner, genericErrorHandler, useForm } from "@grit42/form";
 import { Button, Input } from "@grit42/client-library/components";
 import { useLoginMutation } from "../../api/mutations";
+import { useServerSettings } from "../../api/queries";
 import AuthenticationPage from "../../components/AuthenticationPage";
+
+const SsoButton = ({
+  ssoProvider,
+  ssoLoginPath,
+}: {
+  ssoProvider: string;
+  ssoLoginPath: string;
+}) => {
+  const label =
+    ssoProvider === "saml" ? "Sign in with SAML" : "Sign in with SSO";
+
+  const handleSsoClick = () => {
+    // OmniAuth 2.x requires POST with a valid CSRF token to initiate auth.
+    // We create and submit a hidden form with the token from the cookie
+    // set by ApplicationController#set_csrf_token.
+    const csrfToken = document.cookie
+      .split("; ")
+      .find((c) => c.startsWith("csrf-token="))
+      ?.split("=")
+      .slice(1)
+      .join("=");
+
+    const f = document.createElement("form");
+    f.method = "POST";
+    f.action = ssoLoginPath;
+
+    if (csrfToken) {
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = "authenticity_token";
+      input.value = decodeURIComponent(csrfToken);
+      f.appendChild(input);
+    }
+
+    document.body.appendChild(f);
+    f.submit();
+  };
+
+  return (
+    <Button color="secondary" type="button" onClick={handleSsoClick}>
+      {label}
+    </Button>
+  );
+};
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const loginMutation = useLoginMutation();
+  const { data: serverSettings } = useServerSettings();
+
+  const ssoError = searchParams.get("sso_error");
 
   const form = useForm({
     defaultValues: {
@@ -42,7 +91,7 @@ const LoginPage = () => {
     }),
   });
 
-  const error = form.state.errorMap.onSubmit;
+  const error = ssoError || form.state.errorMap.onSubmit;
 
   return (
     <AuthenticationPage hasError={!!error}>
@@ -57,6 +106,47 @@ const LoginPage = () => {
           <h1>Sign in</h1>
           <FormBanner content={error?.toString()} />
         </div>
+
+        {serverSettings?.sso_provider && serverSettings.sso_login_path && (
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: "0.75em",
+            }}
+          >
+            <SsoButton
+              ssoProvider={serverSettings.sso_provider}
+              ssoLoginPath={serverSettings.sso_login_path}
+            />
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                width: "100%",
+                opacity: 0.5,
+              }}
+            >
+              <hr
+                style={{
+                  flex: 1,
+                  border: "none",
+                  borderTop: "1px solid currentColor",
+                }}
+              />
+              <span style={{ fontSize: "0.85em" }}>or</span>
+              <hr
+                style={{
+                  flex: 1,
+                  border: "none",
+                  borderTop: "1px solid currentColor",
+                }}
+              />
+            </div>
+          </div>
+        )}
 
         <form.Field
           name="login"
