@@ -41,7 +41,7 @@ module Grit::Core::GritEntityRecord
 
     begin
       ActiveRecord::Base.connection.indexes(self.table_name).each do |index|
-        validates index.columns[0], uniqueness: index.columns.length > 1 ? { scope: index.columns[1..] } : true, allow_nil: !index.nulls_not_distinct if index.unique
+        validates index.columns[0], uniqueness: index.columns.length > 1 ? { scope: index.columns[1..] } : true, allow_nil: !index.nulls_not_distinct, if: index.where if index.unique
       end
 
       self.columns.each do |column|
