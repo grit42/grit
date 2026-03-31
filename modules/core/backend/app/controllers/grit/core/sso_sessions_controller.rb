@@ -103,7 +103,7 @@ module Grit::Core
           auth_method: provider,
           sso_uid: uid,
           active: true,
-          created_by: "SYSTEM",
+          created_by: "sso",
           origin_id: default_origin.id
         )
         user.save!
