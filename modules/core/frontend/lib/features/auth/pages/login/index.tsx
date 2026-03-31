@@ -23,16 +23,7 @@ import { useLoginMutation } from "../../api/mutations";
 import { useServerSettings } from "../../api/queries";
 import AuthenticationPage from "../../components/AuthenticationPage";
 
-const SsoButton = ({
-  ssoProvider,
-  ssoLoginPath,
-}: {
-  ssoProvider: string;
-  ssoLoginPath: string;
-}) => {
-  const label =
-    ssoProvider === "saml" ? "Sign in with SAML" : "Sign in with SSO";
-
+const SsoButton = ({ ssoLoginPath }: { ssoLoginPath: string }) => {
   const handleSsoClick = () => {
     // OmniAuth 2.x requires POST with a valid CSRF token to initiate auth.
     // We create and submit a hidden form with the token from the cookie
@@ -62,7 +53,7 @@ const SsoButton = ({
 
   return (
     <Button color="secondary" type="button" onClick={handleSsoClick}>
-      {label}
+      Sign in with SSO
     </Button>
   );
 };
@@ -116,10 +107,7 @@ const LoginPage = () => {
               gap: "0.75em",
             }}
           >
-            <SsoButton
-              ssoProvider={serverSettings.sso_provider}
-              ssoLoginPath={serverSettings.sso_login_path}
-            />
+            <SsoButton ssoLoginPath={serverSettings.sso_login_path} />
             <div
               style={{
                 display: "flex",
