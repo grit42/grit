@@ -56,7 +56,7 @@ module Grit::Core
     rescue StandardError => e
       Rails.logger.error "[SSO] Callback error: #{e.message}"
       Rails.logger.error e.backtrace.first(5).join("\n")
-      redirect_to "/app/core/login?sso_error=#{ERB::Util.url_encode(e.message)}", allow_other_host: false
+      redirect_to "/app/core/authenticate?sso_error=#{ERB::Util.url_encode(e.message)}", allow_other_host: false
     end
 
     # OmniAuth failure — called when the IdP returns an error or
@@ -64,7 +64,7 @@ module Grit::Core
     def failure
       message = params[:message] || "Unknown SSO error"
       Rails.logger.warn "[SSO] Authentication failure: #{message}"
-      redirect_to "/app/core/login?sso_error=#{ERB::Util.url_encode(message)}", allow_other_host: false
+      redirect_to "/app/core/authenticate?sso_error=#{ERB::Util.url_encode(message)}", allow_other_host: false
     end
 
     private
@@ -74,9 +74,7 @@ module Grit::Core
         user = Grit::Core::User.find_by(auth_method: provider, sso_uid: uid)
         return user if user
 
-        # Second, try to find by email (existing local user being linked — don't auto-link,
-        # only match SSO users). If an existing local user has the same email, JIT provisioning
-        # will create a new SSO user with a suffixed login.
+        # Second, try to find by email and SSO providers.
         user = Grit::Core::User.find_by(email: email, auth_method: provider)
         if user
           user.update!(sso_uid: uid)
@@ -105,7 +103,7 @@ module Grit::Core
           auth_method: provider,
           sso_uid: uid,
           active: true,
-          created_by: "sso",
+          created_by: "SYSTEM",
           origin_id: default_origin.id
         )
         user.save!
