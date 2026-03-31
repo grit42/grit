@@ -41,6 +41,8 @@ export default function UserDetails() {
     },
   );
 
+  const isLocalUser = data?.auth_method === "local";
+
   if (isLoading) {
     return <Spinner />;
   }
@@ -55,16 +57,20 @@ export default function UserDetails() {
         <Surface className={styles.surface}>
           <div className={styles.formsContainer}>
             <UserForm user={data} id={id} />
-            <ActivationToken
-              email={data.email}
-              activationToken={data.activation_token}
-              serverUrl={serverUrl}
-            />
-            <ResetPasswordToken
-              email={data.email}
-              forgotToken={data.forgot_token}
-              serverUrl={serverUrl}
-            />
+            {isLocalUser && (
+              <ActivationToken
+                email={data.email}
+                activationToken={data.activation_token}
+                serverUrl={serverUrl}
+              />
+            )}
+            {isLocalUser && (
+              <ResetPasswordToken
+                email={data.email}
+                forgotToken={data.forgot_token}
+                serverUrl={serverUrl}
+              />
+            )}
             <ApiToken email={data.email} apiToken={data.single_access_token} />
           </div>
         </Surface>
