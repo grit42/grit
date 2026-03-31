@@ -147,8 +147,7 @@ module Grit::Core
     end
 
     def self.permitted_params
-      %i[login name email origin_id location_id password password_confirmation settings status_id
-         auth_method two_factor profile_picture active]
+      %i[login name email origin_id location_id password password_confirmation settings status_id two_factor profile_picture active]
     end
 
     acts_as_authentic do |c|

@@ -103,14 +103,17 @@ module Grit::Core
       end
 
       @user = Grit::Core::User.find_by(login: params[:user]&.downcase)
-      @user = Grit::Core::User.find_by(email: params[:user]&.downcase)
+      @user = Grit::Core::User.find_by(email: params[:user]&.downcase) if @user.nil?
 
       if @user.nil?
         render json: { success: false, errors: "No user found" }, status: :not_found
         return
       end
 
-      raise "Password reset is not available for SSO accounts" unless @user.auth_method == "local"
+      unless @user.auth_method == "local"
+        render json: { success: false, errors: "Password reset is not available for SSO accounts" }, status: :bad_request
+        return
+      end
 
       if @user
         @user.forgot_token = SecureRandom.urlsafe_base64(20)
@@ -131,6 +134,7 @@ module Grit::Core
       @user = Grit::Core::User.find_by(forgot_token: params[:forgot_token])
 
       raise "This password recovery token does not exist" unless @user
+      raise "Password reset is not available for SSO accounts" unless @user.auth_method == "local"
       raise "Password and password confirmation do not match" if params[:password] != params[:password_confirmation]
 
       params[:login] = @user.login unless params[:login]
@@ -161,7 +165,7 @@ module Grit::Core
         return
       end
       @user = Grit::Core::User.find_by(login: params[:user]&.downcase)
-      @user = Grit::Core::User.find_by(email: params[:user]&.downcase)
+      @user = Grit::Core::User.find_by(email: params[:user]&.downcase) if @user.nil?
 
       if @user.nil?
         render json: { success: false, errors: "No user found" }, status: :not_found
@@ -170,6 +174,11 @@ module Grit::Core
 
       if !@user.active
         render json: { success: false, errors: "Not allowed to make reset password token for inactive user" }, status: :not_found
+        return
+      end
+
+      unless @user.auth_method == "local"
+        render json: { success: false, errors: "Password reset is not available for SSO accounts" }, status: :bad_request
         return
       end
 
