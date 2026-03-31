@@ -151,7 +151,7 @@ module Grit::Core
         }
 
         provider = sso_provider_name
-        if %w[saml oidc].include?(provider)
+        if %w[oidc].include?(provider)
           settings[:sso_provider] = provider
           settings[:sso_login_path] = "/api/grit/core/auth/#{provider}"
         end

@@ -26,7 +26,7 @@ export interface UserSettings {
 export interface ServerSettings {
   server_url?: string;
   two_factor: boolean;
-  sso_provider?: "saml" | "oidc";
+  sso_provider?: "oidc";
   sso_login_path?: string;
 }
 

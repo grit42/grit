@@ -5,7 +5,6 @@ PATH
       authlogic (~> 6.6)
       csv
       omniauth (~> 2.1)
-      omniauth-saml (~> 2.2)
       omniauth_openid_connect (~> 0.8)
       ostruct
       rails (~> 8.1)
@@ -188,9 +187,6 @@ GEM
       logger
       rack (>= 2.2.3)
       rack-protection
-    omniauth-saml (2.2.5)
-      omniauth (~> 2.1)
-      ruby-saml (~> 1.18)
     omniauth_openid_connect (0.8.0)
       omniauth (>= 1.9, < 3)
       openid_connect (~> 2.2)
@@ -287,7 +283,6 @@ GEM
       io-console (~> 0.5)
     request_store (1.7.0)
       rack (>= 1.4)
-    rexml (3.4.4)
     rspec-core (3.13.6)
       rspec-support (~> 3.13.0)
     rspec-expectations (3.13.5)
@@ -345,9 +340,6 @@ GEM
       rubocop-performance (>= 1.24)
       rubocop-rails (>= 2.30)
     ruby-progressbar (1.13.0)
-    ruby-saml (1.18.1)
-      nokogiri (>= 1.13.10)
-      rexml
     scrypt (3.1.0)
       ffi-compiler (>= 1.0, < 2.0)
       rake (~> 13)

@@ -77,48 +77,15 @@ GRIT_SERVER_URL=https://grit.example.com
 
 ### Single Sign-On (SSO)
 
-grit supports enterprise Single Sign-On via **SAML 2.0** or **OpenID Connect (OIDC)**. When enabled, a "Sign in with SSO" button appears on the login page. Users who authenticate through the Identity Provider (IdP) are automatically created in grit on first login.
+grit supports enterprise Single Sign-On via **OpenID Connect (OIDC)**. When enabled, a "Sign in with SSO" button appears on the login page. Users who authenticate through the Identity Provider (IdP) are automatically created in grit on first login.
 
 Local login (username/password) always remains available alongside SSO, ensuring admin access if the IdP is unavailable.
 
 SSO is configured through environment variables in the `.env` file. Set `SSO_PROVIDER` to enable it:
 
 ```sh
-# SSO provider: "none" (default), "saml", or "oidc"
+# SSO provider: "none" (default), or "oidc"
 SSO_PROVIDER=none
-```
-
-#### SAML 2.0
-
-The recommended approach is to point grit at the IdP metadata URL. grit
-will automatically discover the SSO endpoint and signing certificate:
-
-```sh
-SSO_PROVIDER=saml
-
-# IdP metadata URL — grit fetches the SSO URL and certificate from here
-SAML_IDP_METADATA_URL=https://idp.example.com/saml/metadata
-
-# Entity ID for grit as the Service Provider (optional, defaults to "grit")
-# SAML_SP_ENTITY_ID=grit
-
-# Name ID format (optional, defaults to unspecified)
-# SAML_NAME_ID_FORMAT=urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified
-```
-
-Alternatively, you can configure the IdP SSO URL and certificate manually.
-When both the metadata URL and explicit values are set, the explicit values
-take precedence:
-
-```sh
-SSO_PROVIDER=saml
-
-# URL of the IdP's SSO endpoint
-SAML_IDP_SSO_URL=https://idp.example.com/saml/sso
-
-# IdP signing certificate, PEM-encoded
-# Can be a single-line string with literal \n for newlines
-SAML_IDP_CERT="-----BEGIN CERTIFICATE-----\nMIIC...\n-----END CERTIFICATE-----"
 ```
 
 #### OpenID Connect (OIDC)
@@ -144,12 +111,6 @@ URL matches what is registered in your Identity Provider. The callback URL is:
 
 ```
 {GRIT_SERVER_URL}/api/grit/core/auth/oidc/callback
-```
-
-For SAML, the Assertion Consumer Service (ACS) URL is:
-
-```
-https://<your-grit-url>/api/grit/core/auth/saml/callback
 ```
 
 ## Maintaining the app
