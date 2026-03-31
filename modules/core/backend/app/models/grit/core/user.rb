@@ -18,6 +18,8 @@
 
 module Grit::Core
   class User < ApplicationRecord
+    cattr_accessor :infer_rails_validation_from_db
+    self.infer_rails_validation_from_db = false
     include Grit::Core::GritEntityRecord
 
     self.table_name = "grit_core_users"
