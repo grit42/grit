@@ -40,10 +40,12 @@ Rails.application.configure do
 
   # Assume all access to the app is happening through a SSL-terminating reverse proxy.
   # Can be used together with config.force_ssl for Strict-Transport-Security and secure cookies.
-  config.assume_ssl = true
+  # Derive SSL enforcement from GRIT_SERVER_URL so that local HTTP deployments work without SSL.
+  _ssl = URI.parse(ENV.fetch("GRIT_SERVER_URL", "https://localhost")).scheme == "https"
+  config.assume_ssl = _ssl
 
   # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
-  config.force_ssl = true
+  config.force_ssl = _ssl
 
   # Skip http-to-https redirect for the default health check endpoint.
   # config.ssl_options = { redirect: { exclude: ->(request) { request.path == "/up" } } }
