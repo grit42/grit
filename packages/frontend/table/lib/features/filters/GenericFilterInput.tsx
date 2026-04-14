@@ -19,9 +19,14 @@
 import { classnames } from "@grit42/client-library/utils";
 import styles from "./filters.module.scss";
 import { debounce } from "ts-debounce";
-import { Checkbox, Input } from "@grit42/client-library/components";
+import { Input, Select } from "@grit42/client-library/components";
 import { FilterInputProps } from "./types";
 import { useCallback, useRef, useState } from "react";
+
+const BOOLEAN_FILTER_OPTIONS = [
+  { label: "True", value: true },
+  { label: "False", value: false },
+];
 
 const GenericFilterInput = ({ filter, onChange }: FilterInputProps) => {
   const filterValueDebounceRef = useRef<{
@@ -56,16 +61,7 @@ const GenericFilterInput = ({ filter, onChange }: FilterInputProps) => {
     [filter, onChange],
   );
 
-  const onInputChange: React.ChangeEventHandler<HTMLInputElement> = async (
-    e,
-  ) => {
-    const value =
-      filter.type === "boolean"
-        ? e.target.checked
-        : e.target.value.trim() === ""
-          ? null
-          : e.target.value;
-
+  const handleValueChange = async (value: any) => {
     setFilterValue(value);
 
     if (
@@ -87,6 +83,18 @@ const GenericFilterInput = ({ filter, onChange }: FilterInputProps) => {
     } catch (err) {
       /* empty */
     }
+  };
+
+  const onInputChange: React.ChangeEventHandler<HTMLInputElement> = async (
+    e,
+  ) => {
+    const value =
+      filter.type === "boolean"
+        ? e.target.checked
+        : e.target.value.trim() === ""
+          ? null
+          : e.target.value;
+    await handleValueChange(value);
   };
 
   const disabled =
@@ -157,11 +165,12 @@ const GenericFilterInput = ({ filter, onChange }: FilterInputProps) => {
           )}
         >
           <div className={styles.filterValue}>
-            <Checkbox
-              type="checkbox"
-              onChange={onInputChange}
-              checked={filterValue === true}
+            <Select
+              options={BOOLEAN_FILTER_OPTIONS}
+              value={filterValue}
+              onChange={handleValueChange}
               disabled={disabled}
+              isClearable
             />
           </div>
         </div>
