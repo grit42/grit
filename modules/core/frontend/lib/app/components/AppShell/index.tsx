@@ -34,9 +34,12 @@ const AppShell = ({ navItems }: React.PropsWithChildren<AppShellProps>) => {
 
   if (isLoading && !session) {
     return (
-      <div className={classnames(styles.appContainer, styles.loading)}>
+      <main
+        id="app-shell"
+        className={classnames(styles.appContainer, styles.loading)}
+      >
         <Spinner />
-      </div>
+      </main>
     );
   }
 
@@ -48,13 +51,14 @@ const AppShell = ({ navItems }: React.PropsWithChildren<AppShellProps>) => {
     >
       <Header navItems={navItems} />
       {session && <Toolbar />}
-      <div
+      <main
+        id="app-shell"
         className={classnames(styles.appBodyContainer, {
           [styles.withPadding]: !!session,
         })}
       >
         <Outlet />
-      </div>
+      </main>
     </div>
   );
 };

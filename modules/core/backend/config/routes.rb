@@ -2,6 +2,9 @@ Grit::Core::Engine.routes.draw do
   resources_with_export :vocabulary_items
   resources :vocabularies do
     resources_with_export :vocabulary_items
+    collection do
+      post :vocabulary_ids_from_names
+    end
   end
   resources :publication_statuses
   resources_with_export :units
@@ -13,43 +16,32 @@ Grit::Core::Engine.routes.draw do
   resources :load_set_loaded_records
   resources :load_sets do
     collection do
-      get :fields
+      get :entity_info
     end
 
-    get :data_set_fields
-    get :mapping_fields
-    get :preview_data
-    get :data
-    get :loaded_data_columns
-    post :set_mappings
-    post :set_data
-    post :validate
-    post :confirm
-    post :rollback
-    get :entity_info
+    get :load_set_blocks
+    post :initialize_blocks
+    post :cancel
   end
   resources :load_set_blocks do
     collection do
       get :fields
     end
 
-    get :data_set_fields
     get :mapping_fields
     get :preview_data
     get :validated_data
     get :errored_data
     get :warning_data
-    get :data
     get :loaded_data_columns
     get :export_errored_rows
     get :export_errors
-    post :set_mappings
-    post :set_data
-    post :initialize_data
     post :validate
     post :confirm
+    post :undo_validation
     post :rollback
     get :entity_info
+    get :validation_progress
   end
 
   resources :load_set_statuses

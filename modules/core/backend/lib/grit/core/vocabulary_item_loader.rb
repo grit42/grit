@@ -25,15 +25,11 @@ module Grit::Core
       [ *super(params), *Grit::Core::VocabularyItemLoadSetBlock.entity_fields ]
     end
 
-    def self.create(params)
-      load_set = super
-
+    def self.create_entity_block(block, params)
       Grit::Core::VocabularyItemLoadSetBlock.create!({
-        load_set_block_id: load_set.load_set_blocks[0].id,
-        vocabulary_id: params[:load_set_blocks]["0"]["vocabulary_id"]
+        load_set_block_id: block.id,
+        vocabulary_id: params["vocabulary_id"]
       })
-
-      load_set
     end
 
     def self.show(load_set)
@@ -44,6 +40,14 @@ module Grit::Core
         .where(load_set_id: load_set.id)
       return load_set.as_json if load_set_blocks.empty?
       { **load_set.as_json, load_set_blocks: load_set_blocks }
+    end
+
+    def self.index_blocks(load_set)
+      Grit::Core::LoadSetBlock
+        .detailed
+        .select("grit_core_vocabulary_item_load_set_blocks.vocabulary_id")
+        .joins("JOIN grit_core_vocabulary_item_load_set_blocks on grit_core_vocabulary_item_load_set_blocks.load_set_block_id = grit_core_load_set_blocks.id")
+        .where(load_set_id: load_set.id)
     end
 
     def self.destroy(load_set)

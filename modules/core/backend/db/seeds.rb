@@ -289,6 +289,7 @@ Grit::Core::LoadSetStatus.insert({ name: 'Mapped', description: 'The columns hav
 Grit::Core::LoadSetStatus.insert({ name: 'Validating', description: 'The dataset is being validated' }) if Grit::Core::LoadSetStatus.find_by(name: 'Validating').nil?
 Grit::Core::LoadSetStatus.insert({ name: 'Validated', description: 'The dataset has been validated and the import can be confirmed' }) if Grit::Core::LoadSetStatus.find_by(name: 'Validated').nil?
 Grit::Core::LoadSetStatus.insert({ name: 'Invalidated', description: 'The dataset has not been validated, mappings must be changed or the upload cancelled' }) if Grit::Core::LoadSetStatus.find_by(name: 'Invalidated').nil?
+Grit::Core::LoadSetStatus.insert({ name: 'Confirming', description: 'The data is being written to the database' }) if Grit::Core::LoadSetStatus.find_by(name: 'Confirming').nil?
 Grit::Core::LoadSetStatus.insert({ name: 'Succeeded', description: 'The upload succeded' }) if Grit::Core::LoadSetStatus.find_by(name: 'Succeeded').nil?
 
 Grit::Core::DataType.upsert({ name: "string", description: "Best for short text. Displayed as a single line input" }, unique_by: :name)

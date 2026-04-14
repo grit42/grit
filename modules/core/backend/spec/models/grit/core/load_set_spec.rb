@@ -31,7 +31,7 @@ RSpec.describe Grit::Core::LoadSet, type: :model do
     it "cannot delete load set when any block has succeeded" do
       load_set = create(:grit_core_load_set, :with_succeeded_block)
 
-      expect(load_set.load_set_blocks.any? { |lsb| lsb.status.name == "Succeeded" }).to be_truthy
+      expect(load_set.succeeded_blocks?).to be_truthy
 
       result = load_set.destroy
       expect(result).to be_falsy
@@ -41,7 +41,7 @@ RSpec.describe Grit::Core::LoadSet, type: :model do
     it "can delete load set when no blocks have succeeded" do
       load_set = create(:grit_core_load_set, :with_mapping_block)
 
-      expect(load_set.load_set_blocks.any? { |lsb| lsb.status.name == "Succeeded" }).to be_falsy
+      expect(load_set.succeeded_blocks?).to be_falsy
 
       expect(load_set.destroy).to be_truthy
       expect(described_class.exists?(load_set.id)).to be_falsy
@@ -50,6 +50,7 @@ RSpec.describe Grit::Core::LoadSet, type: :model do
     it "can delete load set with no blocks" do
       load_set = create(:grit_core_load_set)
 
+      expect(load_set.succeeded_blocks?).to be_falsy
       expect(load_set.destroy).to be_truthy
       expect(described_class.exists?(load_set.id)).to be_falsy
     end
@@ -59,39 +60,36 @@ RSpec.describe Grit::Core::LoadSet, type: :model do
   describe "by_entity scope" do
     it "filters load sets by entity name" do
       create(:grit_core_load_set, entity: "Grit::TestEntity")
-      load_sets = described_class.where(entity: "Grit::TestEntity")
+      load_sets = described_class.by_entity({ entity: "Grit::TestEntity" })
 
-      expect(load_sets.count).to be > 0
+      expect(load_sets.count(:all)).to be > 0
       load_sets.each do |ls|
         expect(ls.entity).to eq("Grit::TestEntity")
       end
     end
 
     it "returns empty when no matching entity" do
-      load_sets = described_class.where(entity: "NonExistentEntity")
-      expect(load_sets.count).to eq(0)
+      load_sets = described_class.by_entity({ entity: "NonExistentEntity" })
+      expect(load_sets.count(:all)).to eq(0)
     end
   end
 
   # rollback method tests
   describe "rollback" do
-    it "sets all blocks to errored status" do
+    it "sets all blocks to Created status" do
       load_set = create(:grit_core_load_set, :with_mapping_block)
 
       expect(load_set.load_set_blocks.count).to be > 0
 
-      errored_status = Grit::Core::LoadSetStatus.find_or_create_by!(name: "Errored") do |s|
-        s.description = "Errored"
+      created_status = Grit::Core::LoadSetStatus.find_or_create_by!(name: "Created") do |s|
+        s.description = "Created"
       end
 
-      load_set.load_set_blocks.each do |lsb|
-        lsb.status = errored_status
-        lsb.save!
-      end
+      load_set.rollback
 
       load_set.reload
       load_set.load_set_blocks.each do |lsb|
-        expect(lsb.status.name).to eq("Errored")
+        expect(lsb.status.name).to eq("Created")
       end
     end
   end
@@ -104,9 +102,8 @@ RSpec.describe Grit::Core::LoadSet, type: :model do
     end
 
     it "destroys associated blocks on destroy" do
-      load_set = create(:grit_core_load_set)
-      block = create(:grit_core_load_set_block, :mapping, load_set: load_set)
-      block_id = block.id
+      load_set = create(:grit_core_load_set, :with_mapping_block)
+      block_id = load_set.load_set_blocks[0].id
 
       load_set.destroy
       expect(Grit::Core::LoadSetBlock.exists?(block_id)).to be_falsy

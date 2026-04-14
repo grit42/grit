@@ -188,6 +188,15 @@ const EntitySelector = forwardRef<HTMLInputElement, Props>(
       undefined,
     );
 
+    if (selectedEntities && selectedEntities.length !== selectedIds.length) {
+      const existingSelectedEntityIds = selectedEntities.map(({ id }) => id);
+      onChange(
+        multiple
+          ? existingSelectedEntityIds
+          : (existingSelectedEntityIds[0] ?? null),
+      );
+    }
+
     const {
       data: entityColumns,
       isLoading: entityColumnsLoading,

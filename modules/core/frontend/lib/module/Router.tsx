@@ -151,7 +151,7 @@ const Router = () => {
         }
       />
       <Route
-        path="/load_sets/:id"
+        path="/load_sets/:id/*"
         element={
           <AuthGuard>
             <LazyLoadSetPage />

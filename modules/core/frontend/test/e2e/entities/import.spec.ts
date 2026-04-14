@@ -17,7 +17,7 @@ test.describe("Generic Entities", () => {
   test("Can import entities", async ({ page }) => {
     // Navigate to the Test entity importer URL
     await page.goto(IMPORT_URL);
-    await expect(page.getByText("Upload data")).toBeVisible();
+    await expect(page.getByText("Import Test entities")).toBeVisible();
 
     await page
       .getByRole("textbox", { name: "Name" })
@@ -34,12 +34,18 @@ test.describe("Generic Entities", () => {
 
     // Click the 'Pick a file' button and upload the Test entities CSV file
     const fileChooserPromise1 = page.waitForEvent("filechooser");
-    await page.getByRole("button", { name: "Pick a file" }).click();
+    await page.getByText("Drag and drop, or click to").click();
     const fileChooser1 = await fileChooserPromise1;
     await fileChooser1.setFiles(TEST_ENTITIES_FILE);
 
     // Click the 'Start import' button to begin the first import
-    await page.getByRole("button", { name: "Start import" }).click();
+    await page.getByRole("button", { name: "Start" }).click();
+
+    // Configure the block
+    await expect(
+      page.getByRole("heading", { name: "Configure blocks" }),
+    ).toBeVisible();
+    await page.getByRole("button", { name: "Continue" }).click();
 
     // Configure required field mappings - click on the country mapping field and select 'ADMIN'
     await page
@@ -51,14 +57,12 @@ test.describe("Generic Entities", () => {
     await page.getByRole("row", { name: "Administrator" }).click();
 
     // Click the 'Validate data set' button
-    await page.getByRole("button", { name: "Validate data set" }).click();
-    await expect(
-      page.getByRole("button", { name: "Confirm import" }),
-    ).toBeVisible();
+    await page.getByRole("button", { name: "Validate" }).click();
+    await expect(page.getByRole("button", { name: "Confirm" })).toBeVisible();
 
     // Click the 'Confirm import' button to complete the first import
-    await page.getByRole("button", { name: "Confirm import" }).click();
-    await expect(page.getByText("Import succeeded")).toBeVisible();
+    await page.getByRole("button", { name: "Confirm" }).click();
+    await expect(page.getByText("succe")).toBeVisible();
 
     // Verify the import result shows 10 records
     await expect(page.getByText(/10 records/)).toBeVisible();
@@ -74,7 +78,7 @@ test.describe("Generic Entities", () => {
 
     // Navigate to the Test entity importer URL
     await page.goto(IMPORT_URL);
-    await expect(page.getByText("Upload data")).toBeVisible();
+    await expect(page.getByText("Import Test entities")).toBeVisible();
 
     await page
       .getByRole("textbox", { name: "Name" })
@@ -90,12 +94,18 @@ test.describe("Generic Entities", () => {
 
     // Click the 'Pick a file' button and upload the Test entities CSV file
     const fileChooserPromise2 = page.waitForEvent("filechooser");
-    await page.getByRole("button", { name: "Pick a file" }).click();
+    await page.getByText("Drag and drop, or click to").click();
     const fileChooser2 = await fileChooserPromise2;
     await fileChooser2.setFiles(TEST_ENTITIES_FILE);
 
     // Click the 'Start import' button to begin the first import
-    await page.getByRole("button", { name: "Start import" }).click();
+    await page.getByRole("button", { name: "Start" }).click();
+
+    // configure the blocks
+    await expect(
+      page.getByRole("heading", { name: "Configure blocks" }),
+    ).toBeVisible();
+    await page.getByRole("button", { name: "Continue" }).click();
 
     // Configure required field mappings - click on the country mapping field and select 'ADMIN'
     await page
@@ -107,12 +117,12 @@ test.describe("Generic Entities", () => {
     await page.getByRole("row", { name: "Administrator" }).click();
 
     // Click the 'Validate data set' button
-    await page.getByRole("button", { name: "Validate data set" }).click();
+    await page.getByRole("button", { name: "Validate" }).click();
     await expect(page.getByRole("tab", { name: "Errors" })).toBeVisible();
     await expect(page.getByRole("tab", { name: "Warnings" })).toBeVisible();
     await expect(page.getByRole("tab", { name: "Errored rows" })).toBeVisible();
     await expect(
-      page.getByRole("button", { name: "Ignore errors and confirm import" }),
+      page.getByRole("button", { name: "Ignore errors and confirm" }),
     ).toBeVisible();
 
     await expect(
@@ -145,7 +155,7 @@ test.describe("Generic Entities", () => {
     ).toBeVisible();
     await expect(page.getByText("has an error").first()).toBeVisible();
 
-    await page.getByRole("button", { name: "Cancel import" }).click();
+    await page.getByRole("button", { name: "Cancel" }).click();
 
     // Navigate to the Test entity page to find the load set for cleanup
     await page.goto(BASE_URL);
@@ -163,19 +173,13 @@ test.describe("Generic Entities", () => {
 
     // Click 'Undo import' button and confirm the dialog to clean up the first import
     page.on("dialog", (dialog) => dialog.accept());
-    await page.getByRole("button", { name: "Undo import" }).click();
-
-    // Wait to for redirect to load set creation
-    await page
-      .getByText("Map columns to properties")
-      .first()
-      .waitFor({ state: "visible" });
-
-    // Click 'Cancel import' to cancel the undone import
     await page.getByRole("button", { name: "Cancel import" }).click();
 
     // Wait to for redirect to load set creation
-    await page.getByText("Upload data").first().waitFor({ state: "visible" });
+    await page
+      .getByText("Import Test entities")
+      .first()
+      .waitFor({ state: "visible" });
 
     // Navigate to Test entity page to verify data was removed
     await page.goto(BASE_URL);

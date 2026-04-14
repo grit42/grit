@@ -21,6 +21,7 @@ import { ErrorPage, RoutedTabs } from "@grit42/client-library/components";
 import { AssayDataSheetDefinitionData } from "../../../../queries/assay_data_sheet_definitions";
 import ExperimentMetadataFilters from "./ExperimentMetadataFilters";
 import { SidebarLayout } from "@grit42/client-library/layouts";
+import { useAssayMetadataDefinitions } from "../../../../queries/assay_metadata_definitions";
 
 interface Props {
   sheetDefinitions: AssayDataSheetDefinitionData[];
@@ -41,6 +42,9 @@ const DataSheetTabs = ({
 }: Props) => {
   const match = useMatch("/assays/assay-models/:assay_model_id/data/:sheet_id");
 
+  const { data: metadataDefinitions, isLoading: isMetadataDefinitionsLoading } =
+    useAssayMetadataDefinitions();
+
   const assay_model_id = match?.params.assay_model_id ?? 0;
 
   if (sheetDefinitions.length === 0) {
@@ -49,6 +53,9 @@ const DataSheetTabs = ({
 
   return (
     <SidebarLayout
+      collapsed={
+        isMetadataDefinitionsLoading || metadataDefinitions?.length === 0
+      }
       sidebar={
         <ExperimentMetadataFilters
           assayModelId={assay_model_id}

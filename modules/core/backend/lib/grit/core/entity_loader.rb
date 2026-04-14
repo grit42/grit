@@ -48,20 +48,28 @@ module Grit::Core
       loader(params[:entity]).create(params)
     end
 
-    def self.load_set_block_set_data_fields(load_set_block)
-      loader(load_set_block.load_set.entity).block_set_data_fields(load_set_block)
+    def self.load_set_entity_info(params)
+      loader(params[:entity]).entity_info(params[:entity])
     end
 
-    def self.load_set_data_fields(load_set)
-      loader(load_set.entity).data_set_fields(load_set)
+    def self.create_load_set_block(load_set, params)
+      loader(load_set.entity).create_block(load_set, params)
+    end
+
+    def self.create_load_set_blocks(load_set, params)
+      loader(load_set.entity).create_blocks(load_set, params)
+    end
+
+    def self.load_set_block_set_data_fields(load_set_block)
+      loader(load_set_block.load_set.entity).block_set_data_fields(load_set_block)
     end
 
     def self.show_load_set(load_set)
       loader(load_set.entity).show(load_set)
     end
 
-    def self.destroy_load_set(load_set)
-      loader(load_set.entity).destroy(load_set)
+    def self.index_load_set_blocks(load_set)
+      loader(load_set.entity).index_blocks(load_set)
     end
 
     def self.load_set_mapping_fields(load_set)
@@ -74,10 +82,6 @@ module Grit::Core
 
     def self.load_set_block_loading_fields(load_set_block)
       loader(load_set_block.load_set.entity).block_loading_fields(load_set_block)
-    end
-
-    def self.load_set_entity_info(load_set)
-      loader(load_set.entity).entity_info(load_set)
     end
 
     def self.load_set_block_entity_info(load_set_block)
@@ -116,10 +120,6 @@ module Grit::Core
       loader(load_set_block.load_set.entity).rollback_block(load_set_block)
     end
 
-    def self.set_load_set_data(load_set, data, **args)
-      loader(load_set.entity).set_data(load_set, data, **args)
-    end
-
     def self.set_load_set_block_data(load_set_block, data, **args)
       loader(load_set_block.load_set.entity).set_block_data(load_set_block, data, **args)
     end
@@ -150,33 +150,40 @@ module Grit::Core
       self.block_fields(params).filter { |f| f[:name] == "separator" }
     end
 
-    def self.data_set_fields(params)
-      self.fields(params).filter { |f| f[:name] == "separator" }
+    def self.create_block(load_set, value)
+      block = Grit::Core::LoadSetBlock.create!({
+        load_set_id: load_set.id,
+        name: value["name"],
+        separator: value["separator"],
+        data: value["data"],
+        status_id: Grit::Core::LoadSetStatus.find_by(name: "Created").id
+      })
+
+      self.create_entity_block(block, value) if self.respond_to? :create_entity_block
+      block
+    end
+
+    def self.create_blocks(load_set, params)
+      params[:load_set_blocks]&.each_value { |value| self.create_block(load_set, value) }
     end
 
     def self.create(params)
-      load_set = Grit::Core::LoadSet.new({
+      load_set = Grit::Core::LoadSet.create!({
         name: params[:name],
         entity: params[:entity],
         origin_id: params[:origin_id]
       })
-
-      load_set.save!
-
-      block = Grit::Core::LoadSetBlock.new({
-        load_set_id: load_set.id,
-        name: params[:load_set_blocks]["0"]["name"],
-        separator: params[:load_set_blocks]["0"]["separator"],
-        data: params[:load_set_blocks]["0"]["data"],
-        status_id: Grit::Core::LoadSetStatus.find_by(name: "Created").id
-      })
-      block.save!
+      self.create_blocks(load_set, params)
       load_set
     end
 
     def self.show(load_set)
       load_set_blocks = Grit::Core::LoadSetBlock.detailed.where(load_set_id: load_set.id)
       { **load_set.as_json, load_set_blocks: load_set_blocks.as_json }
+    end
+
+    def self.index_blocks(load_set)
+      Grit::Core::LoadSetBlock.detailed.where(load_set_id: load_set.id)
     end
 
     def self.destroy(load_set)
@@ -270,12 +277,12 @@ module Grit::Core
           record_props[entity_property_name] = nil
           record[:record_errors] ||= {}
           record[:record_errors][entity_property_name] = [ "can't be blank" ]
-        elsif entity_property[:type].to_s == "decimal" and value.present? and !/^[+\-]?(\d+\.\d*|\d*\.\d+|\d+)([eE][+\-]?\d+)?$/.match?(value.to_s)
+        elsif entity_property[:type].to_s == "decimal" and value.present? and !/\A[+\-]?(\d+\.\d*|\d*\.\d+|\d+)([eE][+\-]?\d+)?\z/.match?(value.to_s)
           record_props[entity_property_name] = nil
           value = nil
           record[:record_errors] ||= {}
           record[:record_errors][entity_property_name] = [ "is not a number" ]
-        elsif entity_property[:type].to_s == "integer" and value.present? and !/^[+\-]?\d+([eE][+]?\d+)?$/.match?(value.to_s)
+        elsif entity_property[:type].to_s == "integer" and value.present? and !/\A[+\-]?\d+([eE][+]?\d+)?\z/.match?(value.to_s)
           record_props[entity_property_name] = nil
           value = nil
           record[:record_errors] ||= {}
@@ -327,26 +334,27 @@ module Grit::Core
     def self.confirm_block(load_set_block)
       load_set_entity = block_entity(load_set_block)
       load_set_entity_properties = block_loading_fields(load_set_block)
+      conn = ActiveRecord::Base.connection
 
-      insert = "WITH inserted_records as (INSERT INTO #{load_set_entity.table_name}(created_by"
+      insert = "WITH inserted_records as (INSERT INTO #{conn.quote_table_name(load_set_entity.table_name)}(created_by"
       load_set_entity_properties.each do |column|
-        insert += ",\"#{column[:name]}\""
+        insert += ",#{conn.quote_column_name(column[:name])}"
       end
       insert += ") "
 
       load_set_block_record_klass = load_set_block.loading_record_klass
       insert += load_set_block_record_klass.for_confirm.where(record_errors: nil).to_sql
-      insert += " RETURNING id) INSERT INTO grit_core_load_set_block_loaded_records(\"record_id\",\"load_set_block_id\",\"table\") SELECT inserted_records.id,#{load_set_block.id}, '#{load_set_entity.table_name}' from inserted_records"
+      insert += " RETURNING id) INSERT INTO grit_core_load_set_block_loaded_records(\"record_id\",\"load_set_block_id\",\"table\") SELECT inserted_records.id,#{conn.quote(load_set_block.id)}, #{conn.quote(load_set_entity.table_name)} from inserted_records"
 
       ActiveRecord::Base.transaction do
-        ActiveRecord::Base.connection.execute(insert)
+        conn.execute(insert)
       end
     end
 
     def self.rollback_block(load_set_block)
       load_set_entity = load_set_block.load_set.entity.constantize
 
-      load_set_entity.delete_by("id IN (SELECT record_id FROM grit_core_load_set_block_loaded_records WHERE grit_core_load_set_block_loaded_records.load_set_block_id = #{load_set_block.id})")
+      load_set_entity.where("id IN (SELECT record_id FROM grit_core_load_set_block_loaded_records WHERE grit_core_load_set_block_loaded_records.load_set_block_id = ?)", load_set_block.id).delete_all
       Grit::Core::LoadSetBlockLoadedRecord.delete_by(load_set_block_id: load_set_block.id)
     end
 
@@ -380,13 +388,12 @@ module Grit::Core
       load_set_block
     end
 
-    def self.entity_info(load_set)
-      model = load_set.entity.constantize
+    def self.entity_info(entity)
       {
-        full_name: model.name,
-        name: model.name.demodulize.underscore.humanize,
-        plural: model.name.demodulize.underscore.humanize.pluralize,
-        path: model.name.underscore.pluralize,
+        full_name: entity,
+        name: entity.demodulize.underscore.humanize,
+        plural: entity.demodulize.underscore.humanize.pluralize,
+        path: entity.underscore.pluralize,
         dictionary: true
       }
     end
@@ -404,9 +411,9 @@ module Grit::Core
 
     def self.columns_from_csv(load_set_block)
       load_set_block.data.open do |io|
-        line = io.gets
-        CSV.parse_line(line, col_sep: load_set_block.separator, liberal_parsing: true, encoding: "utf-8")
-          .each_with_index.map { |h, index| { name: "col_#{index}", display_name: h.strip } }
+        csv = CSV.new(io, col_sep: load_set_block.separator, liberal_parsing: true, encoding: "utf-8")
+        row = csv.shift
+        row.each_with_index.map { |h, index| { name: "col_#{index}", display_name: h.strip } }
       end
     end
 
@@ -417,12 +424,14 @@ module Grit::Core
     def self.records_from_csv(load_set_block)
       strip_converter = proc { |field| field.respond_to?(:strip) ? field.strip : field }
       load_set_block.data.open do |file|
-        file.each_line(chomp: true).with_index do |line, index|
-          next if index == 0
-          next if line.nil? || line.blank?
-          line_with_line_number = "#{index+1}#{load_set_block.separator}#{line}"
-          row = CSV.parse_line(line_with_line_number, col_sep: load_set_block.separator, converters: strip_converter)
-          yield CSV.generate_line(row, col_sep: ",")
+        csv = CSV.new(file, col_sep: load_set_block.separator, liberal_parsing: true)
+        csv.shift # skip header row
+        record_number = 0
+        csv.each do |row|
+          record_number += 1
+          next if row.all? { |field| field.nil? || field.strip.empty? }
+          stripped_row = row.map { |field| field.respond_to?(:strip) ? field.strip : field }
+          yield CSV.generate_line([ record_number, *stripped_row ], col_sep: ",")
         end
       end
     end

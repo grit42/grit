@@ -145,6 +145,17 @@ module Grit::Assays
       end
     end
 
+    def assay_data_sheet_definitions
+      experiment = Experiment.find(params[:experiment_id])
+      render json: { success: true, data: experiment.assay_data_sheet_definitions }
+    rescue ActiveRecord::RecordNotFound => e
+      render json: { success: false, errors: e.to_s }, status: :not_found
+    rescue StandardError => e
+      logger.info e.to_s
+      logger.info e.backtrace.join("\n")
+      render json: { success: false, errors: e.to_s }, status: :internal_server_error
+    end
+
     private
 
     def permitted_params

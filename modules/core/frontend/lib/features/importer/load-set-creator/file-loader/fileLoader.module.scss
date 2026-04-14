@@ -1,0 +1,12 @@
+@use "@grit42/client-library/theme.scss";
+
+.container {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-auto-rows: min-content;
+  gap: theme.$spacing-md;
+}
+
+.fileInput {
+  height: 300px;
+}

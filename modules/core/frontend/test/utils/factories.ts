@@ -22,7 +22,11 @@ import type {
   EntityData,
   EntityProperties,
 } from "../../lib/features/entities/types";
-import type { LoadSetData } from "../../lib/features/importer/types";
+import type { LoadSetData } from "../../lib/features/importer/types/load_sets";
+import type {
+  LoadSetBlockData,
+  LoadSetBlockMapping,
+} from "../../lib/features/importer/types/load_set_blocks";
 
 /**
  * Creates a test session object
@@ -91,6 +95,7 @@ export function createEntityData<T extends EntityProperties = EntityProperties>(
 export function createLoadSet(overrides?: Partial<LoadSetData>): LoadSetData {
   return {
     id: 1,
+    name: "test-load-set",
     entity: "compounds",
     origin_id: 1,
     origin_id__name: "Test Origin",
@@ -101,6 +106,50 @@ export function createLoadSet(overrides?: Partial<LoadSetData>): LoadSetData {
     created_at: new Date().toISOString(),
     updated_by: null,
     updated_at: null,
+    ...overrides,
+  };
+}
+
+/**
+ * Creates a test load set block
+ */
+export function createLoadSetBlock(
+  overrides?: Partial<LoadSetBlockData>,
+): LoadSetBlockData {
+  return {
+    id: 1,
+    load_set_id: 1,
+    name: "data.csv",
+    separator: ",",
+    headers: [
+      { name: "col_0", display_name: "Name" },
+      { name: "col_1", display_name: "Integer" },
+    ],
+    status_id: 6,
+    status_id__name: "Mapping",
+    mappings: undefined,
+    error: null,
+    has_errors: false,
+    has_warnings: false,
+    created_by: "testuser",
+    created_at: new Date().toISOString(),
+    updated_by: null,
+    updated_at: null,
+    ...overrides,
+  };
+}
+
+/**
+ * Creates a test load set block mapping
+ */
+export function createLoadSetBlockMapping(
+  overrides?: Partial<LoadSetBlockMapping>,
+): LoadSetBlockMapping {
+  return {
+    header: null,
+    find_by: null,
+    constant: false,
+    value: null,
     ...overrides,
   };
 }

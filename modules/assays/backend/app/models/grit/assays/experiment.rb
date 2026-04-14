@@ -27,6 +27,7 @@ module Grit::Assays
     belongs_to :publication_status, class_name: "Grit::Core::PublicationStatus"
     has_many :experiment_metadata, dependent: :destroy
     has_many :experiment_data_sheet_record_load_set_blocks
+    has_many :assay_data_sheet_definitions, through: :assay_model
 
     has_many_attached :attached_files
 

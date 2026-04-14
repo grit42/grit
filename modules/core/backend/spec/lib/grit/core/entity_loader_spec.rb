@@ -385,4 +385,38 @@ RSpec.describe Grit::Core::EntityLoader, type: :model do
       expect(fields.any? { |f| f[:name] == "name" }).to be_truthy
     end
   end
+
+  # =========================================================================
+  # CSV parsing with newlines in quoted fields
+  # =========================================================================
+
+  describe "CSV parsing with newlines in quoted fields" do
+    let(:fixture_path) { File.join(FILE_FIXTURE_PATH, "test_entity_with_newlines.csv") }
+    let(:load_set_block) do
+      lsb = create(:grit_core_load_set_block, separator: ",")
+      lsb.data.attach(io: File.open(fixture_path), filename: "test_entity_with_newlines.csv")
+      lsb
+    end
+
+    it "columns_from_csv handles newlines in quoted header fields" do
+      columns = described_class.send(:columns_from_csv, load_set_block)
+
+      expect(columns.length).to eq(2)
+      expect(columns[0][:display_name]).to eq("Name")
+      expect(columns[1][:display_name]).to eq("descri\nption")
+    end
+
+    it "records_from_csv handles newlines in quoted data fields" do
+      records = []
+      described_class.send(:records_from_csv, load_set_block) do |record|
+        records << record
+      end
+
+      expect(records.length).to eq(1)
+      parsed = CSV.parse_line(records[0])
+      expect(parsed[0]).to eq("1")
+      expect(parsed[1]).to eq("Micheal")
+      expect(parsed[2]).to eq("descri\nption")
+    end
+  end
 end

@@ -41,11 +41,14 @@
     "@grit42/client-library": "workspace:*",
     "@grit42/form": "workspace:*",
     "@grit42/notifications": "workspace:*",
+    "@grit42/spreadsheet": "workspace:*",
     "@grit42/table": "workspace:*",
     "@monaco-editor/react": "^4.7.0",
     "axios": "catalog:",
     "dayjs": "^1.11.19",
-    "monaco-editor": "^0.52.2"
+    "monaco-editor": "^0.52.2",
+    "papaparse": "^5.5.3",
+    "zod": "catalog:"
   },
   "peerDependencies": {
     "react": "catalog:",
@@ -59,6 +62,7 @@
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
     "@types/node": "catalog:",
+    "@types/papaparse": "^5.5.2",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "catalog:",

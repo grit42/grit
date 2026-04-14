@@ -17,9 +17,13 @@
  */
 
 import { URLParams } from "@grit42/api";
-import { LoadSetData, LoadSetMapping } from "../types";
 import { FormFieldDef } from "@grit42/form";
 import { EntityFormFieldDef } from "../../entities/types";
+import {
+  LoadSetBlockMapping,
+  LoadSetBlockMappings,
+} from "../types/load_set_blocks";
+import { LoadSetData } from "../types/load_sets";
 
 export type MappingFormValues = Record<
   string,
@@ -32,7 +36,7 @@ export type MappingFormValues = Record<
  */
 export const mappingsToFormValues = (
   fields: FormFieldDef[],
-  mappings: Record<string, LoadSetMapping>,
+  mappings: LoadSetBlockMappings,
 ): MappingFormValues => {
   return fields.reduce<MappingFormValues>((acc, f) => {
     return {
@@ -51,16 +55,16 @@ export const mappingsToFormValues = (
  */
 export const formValuesToMappings = (
   formValues: MappingFormValues,
-): Record<string, LoadSetMapping> => {
-  const mappings: Record<string, LoadSetMapping> = {};
+): LoadSetBlockMappings => {
+  const mappings: LoadSetBlockMappings = {};
   for (const key in formValues) {
     const sep = key.lastIndexOf("-");
     const field = key.slice(0, sep);
-    const mappingProp = key.slice(sep + 1) as keyof LoadSetMapping;
+    const mappingProp = key.slice(sep + 1) as keyof LoadSetBlockMapping;
     mappings[field] = {
       ...(mappings[field] ?? {}),
       [mappingProp]: formValues[key],
-    } as LoadSetMapping;
+    } as LoadSetBlockMapping;
   }
   return mappings;
 };
@@ -76,7 +80,7 @@ export const getAutoMappings = (
       name,
       display_name: display_name!.toLowerCase(),
     }));
-  const mappings: Record<string, LoadSetMapping> = {};
+  const mappings: LoadSetBlockMappings = {};
   for (const field of fields) {
     const header = lowerCaseHeaders.find(
       (h) =>

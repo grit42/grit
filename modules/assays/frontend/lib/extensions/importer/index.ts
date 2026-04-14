@@ -17,8 +17,108 @@
  */
 
 import { useEffect } from "react";
-import { useRegisterImporter } from "@grit42/core";
+import {
+  EntityFormFieldDef,
+  LoadSetBlockData,
+  LoadSetData,
+  PendingLoadSetBlock,
+  useRegisterImporter,
+} from "@grit42/core";
 import ExperimentDataSheetRecordLoadSetViewerExtraActions from "./experiment-data-sheet-record/ExperimentDataSheetRecordLoadSetViewerExtraActions";
+import {
+  EndpointError,
+  EndpointSuccess,
+  notifyOnError,
+  request,
+} from "@grit42/api";
+import { AssayDataSheetDefinitionData } from "../../queries/assay_data_sheet_definitions";
+import { FormFieldDef } from "@grit42/form";
+
+interface PendingExperimentDataSheetRecordLoadSetBlock extends PendingLoadSetBlock {
+  experiment_id?: number;
+  assay_data_sheet_definition_id?: number;
+}
+
+interface ExperimentDataSheetRecordLoadSetBlockData extends LoadSetBlockData {
+  experiment_id?: number;
+  assay_data_sheet_definition_id?: number;
+}
+
+const refineExperimentDataSheetRecordLoadSetBlocks = async (
+  blocks: PendingLoadSetBlock[],
+): Promise<PendingExperimentDataSheetRecordLoadSetBlock[]> => {
+  if (
+    blocks.length === 0 ||
+    (blocks[0] as PendingExperimentDataSheetRecordLoadSetBlock)
+      .experiment_id === undefined
+  ) {
+    return blocks;
+  }
+  const experimentDataSheetRecordBlocks =
+    blocks as PendingExperimentDataSheetRecordLoadSetBlock[];
+  const experimentId = experimentDataSheetRecordBlocks[0].experiment_id;
+  const response = await request<
+    EndpointSuccess<AssayDataSheetDefinitionData[]>,
+    EndpointError
+  >(`/grit/assays/experiments/${experimentId}/assay_data_sheet_definitions`, {
+    method: "GET",
+  });
+
+  if (!response.success) {
+    notifyOnError(response.errors);
+    return experimentDataSheetRecordBlocks;
+  }
+
+  const assayDataSheetDefinitionIdsByName: Record<string, number> =
+    response.data.reduce((acc, { id, name }) => ({ ...acc, [name]: id }), {});
+
+  for (const block of experimentDataSheetRecordBlocks) {
+    if (assayDataSheetDefinitionIdsByName[block.name]) {
+      block.assay_data_sheet_definition_id =
+        assayDataSheetDefinitionIdsByName[block.name];
+    }
+  }
+
+  return experimentDataSheetRecordBlocks;
+};
+
+const refineExperimentDataSheetRecordLoadSetBlockFields = (
+  block: PendingLoadSetBlock | null | undefined,
+  fields: FormFieldDef[],
+) => {
+  const refinedFields = fields;
+  const experiment_id = (
+    block as PendingExperimentDataSheetRecordLoadSetBlock | null | undefined
+  )?.experiment_id;
+  const assayDataSheetDefinitionFieldIdx = fields.findIndex(({ name }) =>
+    name.endsWith("assay_data_sheet_definition_id"),
+  );
+
+  if (experiment_id && assayDataSheetDefinitionFieldIdx > -1) {
+    fields[assayDataSheetDefinitionFieldIdx] = {
+      ...fields[assayDataSheetDefinitionFieldIdx],
+      entity: {
+        ...(fields[assayDataSheetDefinitionFieldIdx] as EntityFormFieldDef)
+          .entity,
+        params: {
+          ...((fields[assayDataSheetDefinitionFieldIdx] as EntityFormFieldDef)
+            .entity.params ?? {}),
+          scope: "by_experiment",
+          experiment_id: experiment_id.toString(),
+        },
+      },
+    } as EntityFormFieldDef;
+  }
+  return refinedFields;
+};
+
+const refineExperimentDataSheetRecordLoadSetBlockCancelUrlParams = (
+  _loadSet: LoadSetData,
+  blocks: ExperimentDataSheetRecordLoadSetBlockData[],
+): Record<string, string> => {
+  if (blocks.length === 0 || !blocks[0].experiment_id) return {};
+  return { experiment_id: blocks[0].experiment_id.toString() };
+};
 
 const useRegisterExperimentDataSheetRecordImporter = () => {
   const registerImporter = useRegisterImporter();
@@ -27,7 +127,11 @@ const useRegisterExperimentDataSheetRecordImporter = () => {
     const unregisterExperimentDataSheetRecordImporter = registerImporter(
       "Grit::Assays::ExperimentDataSheetRecord",
       {
-        LoadSetViewerExtraActions:
+        refineBlocks: refineExperimentDataSheetRecordLoadSetBlocks,
+        refineBlockFields: refineExperimentDataSheetRecordLoadSetBlockFields,
+        refineCancelUrlParams:
+          refineExperimentDataSheetRecordLoadSetBlockCancelUrlParams,
+        LoadSetBlockViewerExtraActions:
           ExperimentDataSheetRecordLoadSetViewerExtraActions,
       },
     );

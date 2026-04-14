@@ -25,25 +25,26 @@ module Grit::Compounds
       [ *super(params), *Grit::Compounds::BatchLoadSetBlock.entity_fields ]
     end
 
-    def self.create(params)
-      load_set = super
-
+    def self.create_entity_block(block, params)
       Grit::Compounds::BatchLoadSetBlock.create!({
-        load_set_block_id: load_set.load_set_blocks[0].id,
-        compound_type_id: params[:load_set_blocks]["0"]["compound_type_id"]
+        load_set_block_id: block.id,
+        compound_type_id: params["compound_type_id"]
       })
-
-      load_set
     end
 
+
     def self.show(load_set)
-      load_set_blocks = Grit::Core::LoadSetBlock
+      load_set_blocks = index_blocks(load_set)
+      return load_set.as_json if load_set_blocks.empty?
+      { **load_set.as_json, load_set_blocks: load_set_blocks }
+    end
+
+    def self.index_blocks(load_set)
+      Grit::Core::LoadSetBlock
         .detailed
         .select("grit_compounds_batch_load_set_blocks.compound_type_id")
         .joins("LEFT OUTER JOIN grit_compounds_batch_load_set_blocks on grit_compounds_batch_load_set_blocks.load_set_block_id = grit_core_load_set_blocks.id")
         .where(load_set_id: load_set.id)
-      return load_set.as_json if load_set_blocks.empty?
-      { **load_set.as_json, load_set_blocks: load_set_blocks }
     end
 
     def self.destroy(load_set)
@@ -92,9 +93,6 @@ module Grit::Compounds
       compound_type_id = batch_load_set_block.compound_type_id
       batch_properties = Grit::Compounds::BatchProperty.where(compound_type_id: [ compound_type_id, nil ])
 
-      entity_klass = load_set_block.load_set.entity.constantize
-      fields = load_set_block.load_set.entity.constantize.entity_fields
-
       load_set_block_record_klass = load_set_block.loading_record_klass
       ActiveRecord::Base.transaction do
         load_set_block_record_klass.for_confirm.where(record_errors: nil).each do |record|
@@ -118,8 +116,9 @@ module Grit::Compounds
     end
 
     def self.rollback_block(load_set_block)
-      Grit::Compounds::BatchPropertyValue.delete_by("id IN (SELECT record_id FROM grit_core_load_set_block_loaded_records WHERE grit_core_load_set_block_loaded_records.load_set_block_id = #{load_set_block.id})")
-      Grit::Compounds::Batch.delete_by("id IN (SELECT record_id FROM grit_core_load_set_block_loaded_records WHERE grit_core_load_set_block_loaded_records.load_set_block_id = #{load_set_block.id})")
+      loaded_ids_sql = "SELECT record_id FROM grit_core_load_set_block_loaded_records WHERE grit_core_load_set_block_loaded_records.load_set_block_id = ?"
+      Grit::Compounds::BatchPropertyValue.where("id IN (#{loaded_ids_sql})", load_set_block.id).delete_all
+      Grit::Compounds::Batch.where("id IN (#{loaded_ids_sql})", load_set_block.id).delete_all
       Grit::Core::LoadSetBlockLoadedRecord.delete_by(load_set_block_id: load_set_block.id)
     end
 
