@@ -55,10 +55,19 @@ export const useValidateLoadSetBlockMutation = (loadSetBlockId: number) => {
 
       return response.data;
     },
-    onSuccess: async () =>
+    onSuccess: async () => {
       queryClient.invalidateQueries({
         queryKey: ["importer", "loadSetBlocks"],
-      }),
+      });
+      queryClient.invalidateQueries({
+        queryKey: [
+          "importer",
+          "loadSetBlockValidationProgress",
+          loadSetBlockId,
+        ],
+        refetchType: "none",
+      });
+    },
     onError: async (error) => {
       notifyOnError(error);
       return queryClient.invalidateQueries({
