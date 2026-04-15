@@ -1,5 +1,6 @@
 module Grit::Core
   class InitializeLoadSetBlockJob < ApplicationJob
+    self.enqueue_after_transaction_commit = :always
     queue_as :default
 
     def perform(load_set_block_id, current_user_id)

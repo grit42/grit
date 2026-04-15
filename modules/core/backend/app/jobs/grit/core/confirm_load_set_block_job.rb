@@ -1,6 +1,8 @@
 module Grit::Core
   class ConfirmLoadSetBlockJob < ApplicationJob
+    self.enqueue_after_transaction_commit = :always
     queue_as :default
+
 
     def perform(load_set_block_id, current_user_id)
       RequestStore.store["current_user"] = Grit::Core::User.find(current_user_id)
