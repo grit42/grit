@@ -18,6 +18,7 @@ import styles from "./fileLoader.module.scss";
 import { LoadSetData } from "../../types/load_sets";
 import { Button } from "@grit42/client-library/components";
 import { Link } from "react-router-dom";
+import FileCreator from "../file-creator";
 
 const MAX_SPREADSHEET_SIZE_MB = 10;
 
@@ -81,59 +82,64 @@ const FilesLoader = () => {
   const BinaryInput = useFormInput("binary");
 
   return (
-    <CenteredSurface className={styles.container}>
-      <h2>Import {entityInfo.plural}</h2>
-      <p>
-        Select text files (.csv, .tsv, .txt, ...), or one spreadsheet file
-        (.xlsx, .xls, .ods)
-      </p>
-      <Form form={form}>
-        <FormFields columns={1}>
-          {loadSetFields
-            .filter((f) => f.name !== "entity")
-            .map((f) => (
-              <FormField fieldDef={f} key={f.name} />
-            ))}
-          <form.Field name="files">
-            {(field) => (
-              <BinaryInput
-                disabled={false}
-                error=""
-                field={
-                  {
-                    display_name: "Files",
-                    name: "files",
-                    type: "binary",
-                    required: true,
-                    multiple: true,
-                    className: styles.fileInput,
-                  } as BinaryFormFieldDef
-                }
-                handleBlur={field.handleBlur}
-                handleChange={field.handleChange}
-                value={field.state.value}
-              />
-            )}
-          </form.Field>
-          <form.Subscribe selector={(state) => state.errorMap.onChange?.files}>
-            {(errors) =>
-              errors && (
-                <FormBanner
-                  content={errors
-                    .map(({ message }: { message: string }) => message)
-                    .join("\n")}
+    <div className={styles.containerContainer}>
+      <CenteredSurface className={styles.container}>
+        <h2>Import {entityInfo.plural}</h2>
+        <p>
+          Select text files (.csv, .tsv, .txt, ...), or one spreadsheet file
+          (.xlsx, .xls, .ods)
+        </p>
+        <Form form={form}>
+          <FormFields columns={1}>
+            {loadSetFields
+              .filter((f) => f.name !== "entity")
+              .map((f) => (
+                <FormField fieldDef={f} key={f.name} />
+              ))}
+            <form.Field name="files">
+              {(field) => (
+                <BinaryInput
+                  disabled={false}
+                  error=""
+                  field={
+                    {
+                      display_name: "Files",
+                      name: "files",
+                      type: "binary",
+                      required: true,
+                      multiple: true,
+                      className: styles.fileInput,
+                    } as BinaryFormFieldDef
+                  }
+                  handleBlur={field.handleBlur}
+                  handleChange={field.handleChange}
+                  value={field.state.value}
                 />
-              )
-            }
-          </form.Subscribe>
-        </FormFields>
-        <AddFormControl label="Start">
-          <Link to="/">
-            <Button>Cancel</Button>
-          </Link>
-        </AddFormControl>
-      </Form>
-    </CenteredSurface>
+              )}
+            </form.Field>
+            <form.Subscribe
+              selector={(state) => state.errorMap.onChange?.files}
+            >
+              {(errors) =>
+                errors && (
+                  <FormBanner
+                    content={errors
+                      .map(({ message }: { message: string }) => message)
+                      .join("\n")}
+                  />
+                )
+              }
+            </form.Subscribe>
+          </FormFields>
+          <AddFormControl label="Start">
+            <Link to="/">
+              <Button>Cancel</Button>
+            </Link>
+          </AddFormControl>
+        </Form>
+      </CenteredSurface>
+      <FileCreator onSubmit={(file) => form.pushFieldValue("files", file)} />
+    </div>
   );
 };
 

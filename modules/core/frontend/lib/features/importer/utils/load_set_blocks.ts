@@ -25,14 +25,20 @@ export const blockFromFile = async (
 ): Promise<PendingLoadSetBlock> => {
   const guessedValues = await guessLoadSetBlockValues(file);
 
+  const fileExtensionIndex = file.name.lastIndexOf(".");
+  const blockName = file.name
+    .slice(
+      file.name.lastIndexOf("/") + 1,
+      fileExtensionIndex === -1 ? undefined : fileExtensionIndex,
+    )
+    .trim();
+
   return {
     format: "dsv",
     ...presets,
     ...guessedValues,
     id: generateUniqueID(),
     file,
-    name: file.name
-      .slice(file.name.lastIndexOf("/") + 1, file.name.lastIndexOf("."))
-      .trim(),
+    name: blockName,
   };
 };

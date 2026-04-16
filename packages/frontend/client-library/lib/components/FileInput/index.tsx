@@ -91,7 +91,13 @@ const FileInput = ({
 
   const removeFile = useCallback(
     (file: FileWithPath) => {
-      const newFileList = files.filter((x) => x.path !== file.path);
+      const newFileList = files.filter(
+        (x) =>
+          (x.path && file.path && x.path !== file.path) ||
+          x.name !== file.name ||
+          x.lastModified !== file.lastModified ||
+          x.size !== file.size,
+      );
 
       setFiles(newFileList);
       if (onDrop) onDrop(newFileList);
@@ -124,7 +130,12 @@ const FileInput = ({
       <div className={styles.files}>
         {files.map((file) => {
           return (
-            <div key={file.path ?? file.name} className={styles.file}>
+            <div
+              key={
+                file.path ?? `${file.name}-${file.lastModified}-${file.size}`
+              }
+              className={styles.file}
+            >
               <p>{file.name}</p>
               <DeleteIcon
                 className={styles.icon}

@@ -1,5 +1,13 @@
 @use "@grit42/client-library/theme.scss";
 
+.containerContainer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr;
+  height: 100%;
+  gap: theme.$spacing-md;
+}
+
 .container {
   display: grid;
   grid-template-columns: 1fr;
