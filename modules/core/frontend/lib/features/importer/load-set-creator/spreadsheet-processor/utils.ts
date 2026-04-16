@@ -38,6 +38,7 @@ export const sheetsFromFile = async (file: File): Promise<WorkbookSheet[]> => {
     const sheetFile = new File(
       [
         utils.sheet_to_csv(sheet, {
+          blankrows: true,
           FS: "\t",
         }),
       ],

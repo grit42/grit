@@ -27,6 +27,7 @@ export const useSheetSampleData = (
       const sampleData = utils
         .sheet_to_json<Record<string, any>>(ws, {
           header: "A",
+          blankrows: true,
         })
         .map((d, i) => ({ ...d, rowIndex: i + 1 }));
 
