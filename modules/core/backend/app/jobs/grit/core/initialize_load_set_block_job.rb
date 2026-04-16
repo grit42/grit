@@ -3,6 +3,9 @@ module Grit::Core
     self.enqueue_after_transaction_commit = :always
     queue_as :default
 
+    SEMAPHORE = Concurrent::Semaphore.new(1)
+    LOCK_TIMEOUT = 300
+
     def perform(load_set_block_id, current_user_id)
       RequestStore.store["current_user"] = Grit::Core::User.find(current_user_id)
 
@@ -12,7 +15,13 @@ module Grit::Core
       load_set_block.status_id = Grit::Core::LoadSetStatus.find_by_name("Initializing").id
       load_set_block.save!
 
-      load_set_block.create_tables
+      Rails.logger.info { "Waiting for semaphore to initialize load set block #{load_set_block_id}" }
+      executed = SEMAPHORE.try_acquire(1, LOCK_TIMEOUT) do
+        load_set_block.create_tables
+        true
+      end
+
+      raise "Timed out: Could not acquire lock for load set block #{load_set_block_id} within 5 minutes" unless executed
 
       load_set_block.status_id = Grit::Core::LoadSetStatus.find_by_name("Mapping").id
       load_set_block.save!
