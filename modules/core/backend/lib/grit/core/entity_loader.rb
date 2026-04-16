@@ -413,7 +413,7 @@ module Grit::Core
       load_set_block.data.open do |io|
         csv = CSV.new(io, col_sep: load_set_block.separator, liberal_parsing: true, encoding: "utf-8")
         row = csv.shift
-        row.each_with_index.map { |h, index| { name: "col_#{index}", display_name: h.strip } }
+        row.each_with_index.map { |h, index| { name: "col_#{index}", display_name: h.nil? ? "col_#{index}" : h.strip } }
       end
     end
 

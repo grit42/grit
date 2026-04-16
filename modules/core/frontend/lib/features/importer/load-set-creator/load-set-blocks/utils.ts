@@ -52,6 +52,9 @@ export const newLoadSetPayload = (
   return formData;
 };
 
+const transformBlankHeader = (header: string, index: number) =>
+  header.length > 0 ? header : `col_${index}`;
+
 export const dsvSampleData = (
   block: PendingLoadSetBlock,
 ): Promise<PendingLoadSetBlockPreview> => {
@@ -62,6 +65,7 @@ export const dsvSampleData = (
         delimiter: block.separator ?? "",
         header: true,
         preview: 100,
+        transformHeader: transformBlankHeader,
         skipEmptyLines: true,
         complete: (result) => {
           const sampleData = result.data;
