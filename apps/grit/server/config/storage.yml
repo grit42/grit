@@ -13,3 +13,12 @@ aws:
   secret_access_key: <%= ENV['AWS_SECRET_ACCESS_KEY'] %>
   region: <%= ENV['AWS_REGION'] %>
   force_path_style: true
+
+minio:
+  service: S3
+  bucket: <%= ENV['MINIO_BUCKET'] %>
+  endpoint: <%= ENV['MINIO_ENDPOINT'] %>
+  access_key_id: <%= ENV['MINIO_ACCESS_KEY_ID'] %>
+  secret_access_key: <%= ENV['MINIO_SECRET_ACCESS_KEY'] %>
+  region: dummy
+  force_path_style: true
