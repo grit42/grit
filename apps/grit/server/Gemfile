@@ -54,3 +54,5 @@ group :local do
   gem "grit-compounds", path: "../../../modules/compounds/backend"
   gem "grit-assays", path: "../../../modules/assays/backend"
 end
+
+gem "aws-sdk-s3", require: false
