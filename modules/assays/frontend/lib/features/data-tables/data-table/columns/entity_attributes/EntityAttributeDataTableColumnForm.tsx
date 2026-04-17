@@ -87,7 +87,7 @@ const EntityAttributeDataTableColumnForm = ({
         queryClient.invalidateQueries({
           queryKey: [
             "entities",
-            "data",
+            "infiniteData",
             `grit/assays/data_tables/${dataTableId}/data_table_columns`,
           ],
         }),
@@ -120,14 +120,14 @@ const EntityAttributeDataTableColumnForm = ({
       queryClient.invalidateQueries({
         queryKey: [
           "entities",
-          "data",
+          "infiniteData",
           `grit/assays/data_tables/${dataTableId}/data_table_columns`,
         ],
       }),
       queryClient.invalidateQueries({
         queryKey: [
           "entities",
-          "data",
+          "infiniteData",
           `grit/assays/data_tables/${dataTableId}/data_table_rows`,
         ],
       }),

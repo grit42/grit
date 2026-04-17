@@ -28,6 +28,7 @@ Grit::Assays::Engine.routes.draw do
     get :export
     post :publish
     post :draft
+    get :assay_data_sheet_definitions
   end
 
   resources :assay_data_sheet_columns

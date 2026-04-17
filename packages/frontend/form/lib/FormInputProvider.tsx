@@ -46,6 +46,7 @@ const DefaultInput = (props: FormInputProps) => (
     onBlur={props.handleBlur}
     value={props.value as string | number | null}
     error={props.error}
+    className={props.className}
   />
 );
 
@@ -60,6 +61,7 @@ const SelectInput = (props: FormInputProps) => (
     error={props.error}
     value={props.value}
     options={(props.field as SelectFormFieldDef<unknown>).select.options}
+    className={props.className}
   />
 );
 
@@ -86,6 +88,7 @@ const BooleanInput = (props: FormInputProps) => (
     onBlur={props.handleBlur}
     value={(props.value ?? false) as boolean | undefined}
     error={props.error}
+    className={props.className}
   />
 );
 const TextInput = (props: FormInputProps) => (
@@ -101,6 +104,7 @@ const TextInput = (props: FormInputProps) => (
     onBlur={props.handleBlur}
     value={props.value as string | null}
     error={props.error}
+    className={props.className}
   />
 );
 

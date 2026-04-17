@@ -1,25 +1,9 @@
-import { guessDelimiter } from "./csv";
-import type { LoadSetMapping } from "../types";
-import type {
-  LoadSetBlockErroredData,
-  LoadSetBlockWarningData,
-} from "../queries";
 import type { PaginatedEndpointSuccess } from "@grit42/api";
-
-export const guessGenericDataSetValues = async <T = { separator: string }>(
-  content: string,
-) => {
-  const guess = guessDelimiter(content);
-  if (guess) {
-    return {
-      separator: guess,
-    } as T;
-  } else {
-    throw {
-      errors: { separator: "Could not be guessed, please select manually" },
-    };
-  }
-};
+import {
+  LoadSetBlockErroredData,
+  LoadSetBlockMapping,
+  LoadSetBlockWarningData,
+} from "../types/load_set_blocks";
 
 export interface FlattenedError {
   line: number;
@@ -28,13 +12,9 @@ export interface FlattenedError {
   error: string;
 }
 
-/**
- * Flattens paginated errored data into a flat array of error rows.
- * Each error in record_errors becomes a separate row with line, column, value, and error.
- */
 export const flattenErroredData = (
   pages: PaginatedEndpointSuccess<LoadSetBlockErroredData[]>[] | undefined,
-  mappings: Record<string, LoadSetMapping> | undefined,
+  mappings: Record<string, LoadSetBlockMapping> | undefined,
   columns: { name: string; display_name: string | null }[],
 ): FlattenedError[] => {
   if (!pages) return [];
@@ -67,10 +47,6 @@ export interface FlattenedWarning {
   warning: string;
 }
 
-/**
- * Flattens paginated warning data into a flat array of warning rows.
- * Each warning in record_warnings becomes a separate row with line, column, and warning.
- */
 export const flattenWarningData = (
   pages: PaginatedEndpointSuccess<LoadSetBlockWarningData[]>[] | undefined,
 ): FlattenedWarning[] => {

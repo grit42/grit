@@ -247,6 +247,14 @@ module Grit::Assays
       ActiveRecord::Base.connection.drop_table table_name, if_exists: true
     end
 
+    def self.by_experiment(params = {})
+      experiment_id = params["experiment_id"]
+      raise "No experiment id specified" if experiment_id.nil? or experiment_id.blank?
+      detailed
+        .joins("JOIN grit_assays_experiments grit_assays_experiments__ on grit_assays_experiments__.assay_model_id = grit_assays_assay_data_sheet_definitions.assay_model_id")
+        .where("grit_assays_experiments__.id = ?", experiment_id)
+    end
+
     private
       def check_model_publication_status
         return if dangerous_edit?

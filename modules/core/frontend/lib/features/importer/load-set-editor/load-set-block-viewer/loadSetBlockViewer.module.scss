@@ -1,0 +1,27 @@
+.container {
+  height: 100%;
+  width: 100%;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: min-content 1fr;
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+}
+
+.tabs {
+  display: grid;
+  grid-template-rows: min-content 1fr;
+  height: 100%;
+  max-height: 100%;
+  width: 100%;
+  overflow: auto;
+
+  .panel {
+    overflow: auto;
+  }
+}

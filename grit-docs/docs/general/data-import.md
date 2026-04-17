@@ -5,50 +5,89 @@ sidebar_position: 3
 
 # Importing data
 
-grit offers a consistent data upload experience across most parts of the system. The import process follows a standardised sequence of steps, typically requiring the same user inputs regardless of context. Uploaded data is expected to be in a delimiter-separated format (such as CSV or TSV) with headers or in supported specialised formats, where applicable. In some cases, additional information may be required, but these requirements are clearly indicated and often pre-filled to ensure a smooth and transparent experience.
+grit offers a consistent data upload experience across most parts of the system. The import process follows a standardised sequence of steps, typically requiring the same user inputs regardless of context. Uploaded data is expected to be in a delimiter-separated format (such as CSV or TSV) with headers, or in a supported spreadsheet format (such as XLSX or ODS). Multiple text files can be uploaded at once, and each sheet in a spreadsheet is treated as a separate data source. In some cases, additional information may be required, but these requirements are clearly indicated and often pre-filled to ensure a smooth and transparent experience.
 
-Imported data sets are referred to as **Load Sets**. A Load Set can be undone to remove all associated data from the system, provided the data is not linked to other entities.
+Imported data sets are referred to as **Load Sets**. A Load Set contains one or more **blocks**, where each block corresponds to an uploaded file or a sheet extracted from a spreadsheet. Each block is processed independently through its own mapping, validation, and confirmation workflow. A Load Set can be cancelled to remove all associated data from the system, provided the data is not linked to other entities.
 
 When a view supports data import, the _Import_ toolbar action will be enabled. The import flow is started by clicking the _Import_ toolbar action. Some views may support importing different kind of data, requiring choosing the appropriate data type in a menu before continuing.
 
 ![Toolbar with Import action highlighted](./assets/toolbar_with_import_highlighted.png)
 
-## Uploading a Data Set
+## Loading Files
 
-The first step in the import process prompts to provide a text-based data set along with metadata describing the content to be imported.
+The first step in the import process prompts to select one or more files along with metadata describing the content to be imported.
 
-![Load set creation form](./assets/import_form.png)
+<!-- TODO: update screenshot to show the new file loader form -->
 
 1.  The name of the Load Set. This is pre-filled based on the data type and the current date, but it is recommended to provide a more meaningful name for future reference.
 2.  The _Origin_ of the data. This helps track where the source of the data set.
-3.  The separator used in the data set. When a file is added, the system attempts to detect the delimiter based on the file's contents.
-4.  A field specific to the kind of data being uploaded. Here, the format of the molecular structures in the file.
-5.  A field specific to the kind of data being uploaded. Here, the compound type.
-6.  The data set itself. A data set can be added by:
-  -  dropping a file in the dark upload area
-  -  opening the file explorer and selecting a file
-  -  clicking the dark area and manually typing or pasting a selection from a spreadsheet or another text editor
-
-:::tip
-In most spreadsheet applications, selecting an area of the spreadsheet and copying it will result in delimiter-separated text which can be pasted directly into the input area.
-:::
+3.  Additional fields specific to the kind of data being uploaded may appear here.
+4.  The file input. One or more text files (.csv, .tsv, .txt, ...) or one spreadsheet file (.xlsx, .xls, .ods) can be added by dropping files into the input area or by opening the file explorer.
 
 :::note
-The file size is limited to 100 MB.
+Spreadsheet import is limited to one file at a time, with a maximum size of 10 MB. For larger data sets, export individual sheets as CSV files.
 :::
 
-When all fields have been filled and a data set has been added, click on the **Start import** above the data set to continue.
+When all fields have been filled and files have been added, click **Start** to continue.
 
-![Load set creation form filled](./assets/import_form_filled.png)
+### Processing Spreadsheets
 
-## Mapping the Data Set
+When a spreadsheet file is uploaded, an additional step allows configuring how each sheet is processed. Each sheet in the workbook is shown as a separate tab. For each sheet, the following options are available:
 
-The second step in the import process consists of mapping columns from the data set to properties in the system.
+<!-- TODO: insert screenshot to show the process spreadsheet step -->
 
-![Mapping columns to properties](../compounds/assets/compound_reg_import_mapping.png)
+1.  **Include this sheet** — a toggle to include or exclude the sheet from the import
+2.  **Index of the row containing column identifiers** — the row number containing headers (default: 1)
+3.  **Index of the first row containing data** — the row number where data starts (default: 2)
+4.  **Index of the first column containing data** — the column letter where data starts (default: A)
 
-1.  A preview of the data set
-2.  The form to map data set column to properties in grit
+A preview of the sheet's contents is shown alongside the options. Click **Continue** to proceed.
+
+:::tip
+Sheets that are not relevant to the import can be excluded using the toggle. Only included sheets will be created as blocks.
+:::
+
+### Configuring Blocks
+
+After files are loaded (and spreadsheets optionally processed), each file or sheet becomes a **block**. All blocks are shown as tabs, each displaying a preview of the block's data along with block-specific fields:
+
+1.  The separator used in the block's data. When a file is added, the system attempts to detect the delimiter based on the file's contents.
+2.  Additional fields specific to the kind of data being uploaded, such as the format of molecular structures or the compound type.
+
+<!-- TODO: update screenshot to show the configure blocks step -->
+
+Review all blocks and click **Continue** to create the Load Set and begin processing.
+
+## Navigating Blocks
+
+After the Load Set is created, blocks are initialised and the import editor is shown. When a Load Set contains multiple blocks, a sidebar appears on the left showing all blocks grouped by their current status:
+
+-   **Created** — newly created blocks
+-   **Initializing** — blocks being prepared
+-   **Errored** — blocks with file or parsing errors
+-   **Invalidated** — blocks with data validation errors
+-   **Mapping** — blocks ready for field mapping
+-   **Validating** — blocks currently being validated
+-   **Validated** — blocks successfully validated
+-   **Confirming** — blocks currently being confirmed
+-   **Succeeded** — blocks successfully imported
+
+Click a block name in the sidebar to switch between blocks. The header shows the Load Set name and entity type, along with a **Cancel import** button that applies to the entire Load Set.
+
+:::info
+For single-block imports (e.g., a single CSV file), the sidebar is hidden and the experience is streamlined to a single-block workflow.
+:::
+
+## Mapping a Block
+
+The next step consists of mapping columns from the block's data to properties in the system. Each block has its own set of columns and is mapped independently.
+
+<!-- TODO: update screenshot to show the block mapping view -->
+
+1.  A preview of the block's data
+2.  The form to map data set columns to properties in grit
+
+For multi-block imports, the heading shows the block name followed by the mapping title (e.g., _Block name > Map columns to properties_).
 
 There are two categories of properties: **simple properties** and **entity properties**.
 
@@ -80,19 +119,19 @@ Only unique properties show up in the _Find by_ menu to ensure the correct recor
 
 ### Using a constant value
 
-To use a constant value, enable the switch labelled _Use a constant value_ located below the property’s dropdown menu. This will replace the dropdown with an input field where a default value can be entered.
+To use a constant value, enable the switch labelled _Use a constant value_ located below the property's dropdown menu. This will replace the dropdown with an input field where a default value can be entered.
 
 ![Mapping form with constant value switch highlighted](./assets/mapping_property_constant_value.png)
 
 1.  A property mapped to a data set column
 2.  A property set to a constant value
 
-## Validating the Data Set
+## Validating a Block
 
-The third step in the import process is validation. Once all required properties have been configured, the data set can be validated by clicking the **Validate data set** button.
+Once all required properties have been configured, the block can be validated by clicking the **Validate data set** button.
 
 :::info
-Depending on system load and the size of the data set, the validation process may take some time.
+Depending on the size of the data set, the validation process may take some time. A progress indicator will show the number of validated records out of the total.
 :::
 
 ![Mapped data set with validate button highlighted](./assets/validate_data_set.png)
@@ -109,34 +148,39 @@ These lists can be exported as CSV files for further processing by clicking the 
 
 There are three ways to address errors in a data set:
 
-1. Edit the data set
-    * Clicking this button will reveal a text editor where you can manually edit the data or replace the file
-2. Cancel the import and start over with a clean data set
-3. Ignore records with errors and proceed with the valid ones
+1. Click **Make changes** to undo the validation and return to the mapping step, where you can adjust the mappings or update the data
+2. Cancel the import entirely using the **Cancel import** button in the header
+3. Click **Ignore errors and confirm import** to proceed with only the valid records
 
-![Validation failed with actions highlighted](./assets/import_validation_failed_actions.png)
+<!-- TODO: update screenshot to show the new validation failed actions -->
 
-If the data set is free of errors, the property mapping form will be locked, allowing you to review the mappings before confirming.
+If the data set is free of errors, the property mapping form will be locked, allowing you to review the mappings before confirming by clicking **Confirm data set**.
 
-## Reviewing the Loaded Data
+## Reviewing Loaded Data
 
-The final step in the import process is reviewing the imported records.
-After confirming a valid Load Set or choosing to proceed with only valid records from an invalid one, the imported data will be displayed in a grid that can be filtered and sorted for inspection.
+After confirming a block, the imported records are displayed in a grid that can be sorted for inspection. The heading shows _Data loaded successfully_.
 
 Specific actions may be available in this view depending on the type of data imported.
 
-![Successful import with actions highlighted](./assets/successful_import_actions.png)
+<!-- TODO: update screenshot to show the block review view -->
 
-## Deleting all records created by a Load Set
+## Cancelling or Reverting an Import
 
-All records from a **Load Set** can be deleted by clicking **Undo Import** in the final step of the import process, provided none of the records are in use elsewhere in the system. Undoing an import resumes the process at the mapping step, including any previously ignored rows, allowing mappings and data to be modified as needed. The data set will undergo validation again even if no modifications were made.
+### Cancelling an Import
 
-![Successful import with undo highlighted](./assets/successful_import_actions.png)
+The **Cancel import** button in the header is available at any point during the import process. Clicking it deletes the entire Load Set and rolls back all associated blocks.
+
+### Reverting a Block
+
+For blocks that have been successfully imported, clicking **Revert data set** in the block's review view will roll back only that block's imported records, returning the block to the mapping step where the data can be remapped or the block can be validated again.
+
+For blocks that have been validated, clicking **Make changes** undoes the validation and returns to the mapping step for that block only.
+
+<!-- TODO: update screenshot to show the revert data set action -->
 
 ### Finding Load Sets
 
-A list of **Load Sets** for a given type of data can usually be found close to the view where the import process was started. Click a Load Set in the list to open the importer and continue mapping, edit the data set or undo the import.<br />
+A list of **Load Sets** for a given type of data can usually be found close to the view where the import process was started. Click a Load Set in the list to open the importer and continue mapping or cancel the import.<br />
 The management of _Locations_ in the system is done in the **Administration** section. All related **Load Sets** can be found in the tab next to the list of _Locations_.
 
 ![Locations load sets](./assets/locations_load_sets.png)
-

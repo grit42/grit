@@ -17,55 +17,24 @@
  */
 
 import { useParams, useSearchParams } from "react-router-dom";
-import { useImporter } from "../../../ImportersContext";
-import { ErrorPage, Spinner } from "@grit42/client-library/components";
-import { LoadSetData } from "../../../types";
-import { useEntityDatum } from "../../../../entities";
-import { LOAD_SET_BLOCK_STATUS, getBlockStatus } from "../../../constants";
-
-const NewLoadSet = ({ entity }: { entity: string }) => {
-  const { LoadSetCreator } = useImporter(entity);
-
-  return <LoadSetCreator entity={entity} />;
-};
-
-const LoadSet = ({ id }: { id: string }) => {
-  const { data, isLoading, isError, error } = useEntityDatum<LoadSetData>(
-    "grit/core/load_sets",
-    id.toString(),
-  );
-
-  const { LoadSetEditor, LoadSetViewer } = useImporter(data?.entity);
-
-  if (isLoading) {
-    return <Spinner />;
-  }
-
-  if (!data || isError) {
-    return <ErrorPage error={error} />;
-  }
-
-  if (getBlockStatus(data) === LOAD_SET_BLOCK_STATUS.SUCCEEDED) {
-    return <LoadSetViewer loadSet={data} />;
-  }
-
-  return <LoadSetEditor loadSet={data} />;
-};
+import { ErrorPage } from "@grit42/client-library/components";
+import LoadSetCreator from "../../../load-set-creator";
+import LoadSetEditor from "../../../load-set-editor";
 
 const LoadSetPage = () => {
   const { id } = useParams() as { id: string };
   const [searchParams] = useSearchParams();
   const entityParam = searchParams.get("entity");
 
-  if (id === "new") {
-    return entityParam ? (
-      <NewLoadSet entity={entityParam} />
-    ) : (
-      <ErrorPage error="Entity not specified" />
-    );
+  if (id === "new" && !entityParam) {
+    return <ErrorPage error="Entity not specified" />;
   }
 
-  return <LoadSet id={id} />;
+  if (id === "new" && entityParam) {
+    return <LoadSetCreator entity={entityParam} />;
+  }
+
+  return <LoadSetEditor loadSetId={id} />;
 };
 
 export default LoadSetPage;

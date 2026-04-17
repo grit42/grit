@@ -70,9 +70,7 @@ test.describe("Compound Import", () => {
 
     // --- Upload data form ---
     await page.goto(IMPORT_URL);
-    await expect(
-      page.getByRole("heading", { name: "Upload data" }),
-    ).toBeVisible();
+    await expect(page.getByText("Import Compounds")).toBeVisible();
 
     await page.getByRole("textbox", { name: "Name" }).fill(loadSetName);
 
@@ -80,23 +78,26 @@ test.describe("Compound Import", () => {
     await page.getByText("(none selected)").first().click();
     await page.getByRole("cell", { name: "ADMIN" }).click();
 
+    // Upload the SDF file
+    const fileChooserPromise = page.waitForEvent("filechooser");
+    await page.getByText("Drag and drop, or click to").click();
+    const fileChooser = await fileChooserPromise;
+    await fileChooser.setFiles(sdfPath);
+
+    await page.getByRole("button", { name: "Start" }).click();
+
+    // Configure the block
+    await expect(
+      page.getByRole("heading", { name: "Configure blocks" }),
+    ).toBeVisible();
+
     // Select compound type
     await page.getByText("(none selected)").first().click();
     await page
       .getByRole("cell", { name: "Small molecule", exact: true })
       .click();
 
-    // Wait for Monaco to initialize then upload the SDF
-    await page.locator(".monaco-editor").waitFor();
-    const fileChooserPromise = page.waitForEvent("filechooser");
-    await page.getByRole("button", { name: "Pick a file" }).click();
-    const fileChooser = await fileChooserPromise;
-    await fileChooser.setFiles(sdfPath);
-
-    await expect(
-      page.getByRole("button", { name: "Start import" }),
-    ).toBeEnabled();
-    await page.getByRole("button", { name: "Start import" }).click();
+    await page.getByRole("button", { name: "Continue" }).click();
 
     // --- Mapping form ---
     await expect(page).toHaveURL(/\/app\/core\/load_sets\/\d+/);
@@ -126,16 +127,14 @@ test.describe("Compound Import", () => {
       .click();
 
     // --- Validate then confirm ---
-    await page.getByRole("button", { name: "Validate data set" }).click();
-    await expect(
-      page.getByRole("button", { name: "Confirm import" }),
-    ).toBeVisible();
-    await page.getByRole("button", { name: "Confirm import" }).click();
+    await page.getByRole("button", { name: "Validate" }).click();
+    await page.getByRole("button", { name: "Confirm" }).click();
 
-    await expect(page.getByText("Import succeeded")).toBeVisible();
+    await expect(page.getByText("succe")).toBeVisible();
 
     // --- Cleanup: undo import, delete origin, delete compound property ---
-    await page.getByRole("button", { name: "Undo import" }).click();
+    await page.getByRole("button", { name: "Revert" }).click();
+    await page.getByRole("button", { name: "Cancel" }).click();
 
     await page.goto(originUrl);
     page.waitForEvent("dialog").then((dialog) => dialog.accept());

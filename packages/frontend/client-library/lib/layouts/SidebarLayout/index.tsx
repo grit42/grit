@@ -10,12 +10,14 @@ import { classnames } from "../../utils";
 export type SidebarLayoutProps = PropsWithChildren<
   DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement> & {
     sidebar?: ReactNode;
+    collapsed?: boolean;
   }
 >;
 
 const SidebarLayout = ({
   children,
   sidebar,
+  collapsed,
   className,
   ...props
 }: SidebarLayoutProps) => {
@@ -24,13 +26,13 @@ const SidebarLayout = ({
       className={classnames(
         styles.sidebarLayout,
         {
-          [styles.sidebar]: !!sidebar,
+          [styles.sidebar]: !collapsed && !!sidebar,
         },
         className,
       )}
       {...props}
     >
-      {sidebar}
+      {!collapsed && sidebar}
       {children}
     </div>
   );

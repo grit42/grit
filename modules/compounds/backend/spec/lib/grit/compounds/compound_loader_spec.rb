@@ -292,26 +292,29 @@ RSpec.describe Grit::Compounds::CompoundLoader do
         s.description = "The load set has been created"
       end
 
-      load_set_block = Grit::Core::LoadSetBlock.create!(
-        name: "csv-test-block",
-        load_set_id: load_set.id,
-        status_id: created_status.id,
-        separator: ",",
-        has_errors: false,
-        has_warnings: false
-      )
+      load_set_block = nil
+      ActiveRecord::Base.transaction do
+        load_set_block = Grit::Core::LoadSetBlock.create!(
+          name: "csv-test-block",
+          load_set_id: load_set.id,
+          status_id: created_status.id,
+          separator: ",",
+          has_errors: false,
+          has_warnings: false
+        )
 
-      load_set_block.data.attach(
-        io: File.open(File.join(FILE_FIXTURE_PATH, "compounds.csv")),
-        filename: "compounds.csv",
-        content_type: "text/csv"
-      )
+        load_set_block.data.attach(
+          io: File.open(File.join(FILE_FIXTURE_PATH, "compounds.csv")),
+          filename: "compounds.csv",
+          content_type: "text/csv"
+        )
 
-      Grit::Compounds::CompoundLoadSetBlock.create!(
-        load_set_block_id: load_set_block.id,
-        compound_type_id: compound_type.id,
-        structure_format: "smiles"
-      )
+        Grit::Compounds::CompoundLoadSetBlock.create!(
+          load_set_block_id: load_set_block.id,
+          compound_type_id: compound_type.id,
+          structure_format: "smiles"
+        )
+      end
 
       columns = described_class.send(:columns_from_file, load_set_block)
 
@@ -357,27 +360,30 @@ RSpec.describe Grit::Compounds::CompoundLoader do
         s.description = "The load set has been created"
       end
 
-      load_set_block = Grit::Core::LoadSetBlock.create!(
-        name: "csv-records-block",
-        load_set_id: load_set.id,
-        status_id: created_status.id,
-        separator: ",",
-        headers: '[{"name": "col_0", "display_name": "SMILES"}, {"name": "col_1", "display_name": "Name"}, {"name": "col_2", "display_name": "Description"}]',
-        has_errors: false,
-        has_warnings: false
-      )
+      load_set_block = nil
+      ActiveRecord::Base.transaction do
+        load_set_block = Grit::Core::LoadSetBlock.create!(
+          name: "csv-records-block",
+          load_set_id: load_set.id,
+          status_id: created_status.id,
+          separator: ",",
+          headers: '[{"name": "col_0", "display_name": "SMILES"}, {"name": "col_1", "display_name": "Name"}, {"name": "col_2", "display_name": "Description"}]',
+          has_errors: false,
+          has_warnings: false
+        )
 
-      load_set_block.data.attach(
-        io: File.open(File.join(FILE_FIXTURE_PATH, "compounds.csv")),
-        filename: "compounds.csv",
-        content_type: "text/csv"
-      )
+        load_set_block.data.attach(
+          io: File.open(File.join(FILE_FIXTURE_PATH, "compounds.csv")),
+          filename: "compounds.csv",
+          content_type: "text/csv"
+        )
 
-      Grit::Compounds::CompoundLoadSetBlock.create!(
-        load_set_block_id: load_set_block.id,
-        compound_type_id: compound_type.id,
-        structure_format: "smiles"
-      )
+        Grit::Compounds::CompoundLoadSetBlock.create!(
+          load_set_block_id: load_set_block.id,
+          compound_type_id: compound_type.id,
+          structure_format: "smiles"
+        )
+      end
 
       records = []
       described_class.send(:records_from_file, load_set_block) do |record|

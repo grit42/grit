@@ -120,7 +120,7 @@ const EntityAttributeDataTableColumnsTable = ({ dataTableId }: Props) => {
             queryClient.invalidateQueries({
               queryKey: [
                 "entities",
-                "data",
+                "infiniteData",
                 `grit/assays/data_tables/${dataTableId}/data_table_columns`,
               ],
             }),

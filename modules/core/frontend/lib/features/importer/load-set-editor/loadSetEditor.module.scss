@@ -1,0 +1,74 @@
+@use "@grit42/client-library/theme.scss";
+
+.layout {
+  overflow: auto;
+  padding: theme.$spacing-md;
+  gap: 0;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding: theme.$spacing-md;
+  background-color: theme.$palette-background-surface;
+
+  h1 {
+    color: theme.$palette-background-contrast-text;
+    margin: 0;
+  }
+}
+
+.sidebar {
+  height: 100%;
+  max-height: 100%;
+  overflow: auto;
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  border-radius: 0;
+  padding: theme.$spacing-lg;
+  gap: theme.$spacing-lg;
+  background-color: theme.$palette-background-default;
+
+  h4 {
+    align-self: flex-start;
+  }
+}
+
+.nav {
+  padding: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  border-radius: 0;
+  gap: theme.$spacing-sm;
+
+  .navLink {
+    .navLinkButton {
+      border-radius: theme.$spacing-sm;
+      padding: theme.$spacing-md;
+      border-inline-start: 15px inset solid theme.$palette-primary-main;
+      width: 100%;
+      max-width: 100%;
+      justify-content: flex-start;
+
+      &:hover {
+        background-color: theme.$palette-background-surface;
+      }
+
+      &.active {
+        background-color: rgb(from theme.$palette-secondary-main r g b);
+        color: theme.$palette-secondary-contrast-text;
+      }
+
+      .navLinkContent {
+        flex: 1;
+        display: flex;
+        gap: theme.$spacing-md;
+      }
+    }
+  }
+}

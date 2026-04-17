@@ -53,6 +53,26 @@ RSpec.describe "Load Sets API", type: :request do
       produces "application/json"
       security [ { bearer_auth: [] } ]
 
+      # Block fields are flattened using Rails' bracketed-name convention
+      # (load_set_blocks[<index>][<field>]) so Swagger UI can render a file
+      # picker for the binary `data` field — nested binary properties are
+      # not supported by Swagger UI's multipart rendering.
+      parameter name: :load_set_params, in: :body, schema: {
+        type: :object,
+        required: [
+          "name", "entity", "origin_id",
+          "load_set_blocks[0][name]", "load_set_blocks[0][data]"
+        ],
+        properties: {
+          name: { type: :string, description: "Load set name" },
+          entity: { type: :string, description: "Fully-qualified entity class (e.g. Grit::TestEntity)" },
+          origin_id: { type: :integer, description: "Origin record id" },
+          "load_set_blocks[0][name]": { type: :string, description: "Block name" },
+          "load_set_blocks[0][separator]": { type: :string, description: "CSV separator (e.g. \",\")" },
+          "load_set_blocks[0][data]": { type: :string, format: :binary, description: "CSV file contents" }
+        }
+      }
+
       # rswag submit_request does not handle multipart file uploads well,
       # so we test load set creation with explicit POST calls below.
       response "201", "load set created" do
@@ -101,13 +121,18 @@ RSpec.describe "Load Sets API", type: :request do
         end
       end
     end
+  end
 
-    delete "Destroys a load set" do
+
+  path "/api/grit/core/load_sets/{id}/cancel" do
+    parameter name: :id, in: :path, type: :integer
+
+    post "Cancel a load set" do
       tags "Core - Load Sets"
       produces "application/json"
       security [ { bearer_auth: [] } ]
 
-      response "200", "load set destroyed (no succeeded blocks)" do
+      response "200", "load set canceled" do
         let(:id) do
           # Create a load set via the API so we can delete it.
           # Need to ensure origin and "Created" status exist first.
@@ -135,19 +160,63 @@ RSpec.describe "Load Sets API", type: :request do
     end
   end
 
+  path "/api/grit/core/load_sets/{id}/initialize_blocks" do
+    parameter name: :id, in: :path, type: :integer
+
+    post "Initializes blocks for a load set" do
+      tags "Core - Load Sets"
+      produces "application/json"
+      security [ { bearer_auth: [] } ]
+
+      response "200", "blocks initialized" do
+        let(:id) { load_set.id }
+
+        around(:each) do |example|
+          original_adapter = ActiveJob::Base.queue_adapter
+          ActiveJob::Base.queue_adapter = :test
+          example.run
+          ActiveJob::Base.queue_adapter = original_adapter
+        end
+
+        it "enqueues an initialization job for each block", rswag: false do
+          expect {
+            post "/api/grit/core/load_sets/#{load_set.id}/initialize_blocks", as: :json
+          }.to have_enqueued_job(Grit::Core::InitializeLoadSetBlockJob)
+            .exactly(load_set.load_set_blocks.count).times
+
+          expect(response).to have_http_status(:success)
+          expect(JSON.parse(response.body)["success"]).to be true
+        end
+      end
+
+      response "500", "load set not found" do
+        let(:id) { 0 }
+
+        it "returns an error", rswag: false do
+          post "/api/grit/core/load_sets/0/initialize_blocks", as: :json
+
+          expect(response).to have_http_status(:internal_server_error)
+          body = JSON.parse(response.body)
+          expect(body["success"]).to be false
+          expect(body["errors"]).to be_present
+        end
+      end
+    end
+  end
+
   describe "succeeded load set" do
     let!(:succeeded_load_set) { create(:grit_core_load_set, :with_succeeded_block, origin_id: origin.id) }
 
-    it "should not destroy succeeded load set" do
+    it "should not destroy load set" do
       expect {
         delete "/api/grit/core/load_sets/#{succeeded_load_set.id}", as: :json
       }.not_to change(Grit::Core::LoadSet, :count)
 
       expect(response).to have_http_status(:forbidden)
-      expect(JSON.parse(response.body)["errors"]).to include("it must be undone first")
+      expect(JSON.parse(response.body)["errors"]).to include("must be cancelled")
     end
 
-    it "should rollback load set and then destroy" do
+    it "should cancel load set" do
       # Create actual loaded records for the rollback to work
       succeeded_load_set.load_set_blocks.each do |lsb|
         2.times do
@@ -161,14 +230,9 @@ RSpec.describe "Load Sets API", type: :request do
       end
 
       expect {
-        post "/api/grit/core/load_sets/#{succeeded_load_set.id}/rollback", as: :json
+        post "/api/grit/core/load_sets/#{succeeded_load_set.id}/cancel", as: :json
       }.to change(Grit::TestEntity, :count).by(-2)
-
-      expect(response).to have_http_status(:success)
-
-      expect {
-        delete "/api/grit/core/load_sets/#{succeeded_load_set.id}", as: :json
-      }.to change(Grit::Core::LoadSet, :count).by(-1)
+       .and change(Grit::Core::LoadSet, :count).by(-1)
 
       expect(response).to have_http_status(:success)
     end

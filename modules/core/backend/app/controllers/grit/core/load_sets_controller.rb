@@ -30,20 +30,20 @@ module Grit::Core
           render json: { success: true, data: record }, status: :created, location: record
           return
         rescue EntityLoader::MaxFileSizeExceededError => e
-          logger.info e.to_s
-          logger.info e.backtrace.join("\n")
+          logger.error e.to_s
+          logger.error e.backtrace.join("\n")
           render json: { success: false, errors: { data: [ e.to_s ] } }, status: :unprocessable_entity
         rescue EntityLoader::ParseException => e
-          logger.info e.to_s
-          logger.info e.backtrace.join("\n")
+          logger.error e.to_s
+          logger.error e.backtrace.join("\n")
           render json: { success: false, errors: { data: [ e.to_s ] } }, status: :unprocessable_entity
         rescue ActiveRecord::RecordInvalid => e
-          logger.info e.to_s
-          logger.info e.backtrace.join("\n")
+          logger.error e.to_s
+          logger.error e.backtrace.join("\n")
           render json: { success: false, errors: e.record.errors }, status: :unprocessable_entity
         rescue ActiveRecord::RecordNotSaved => e
-          logger.info e.to_s
-          logger.info e.backtrace.join("\n")
+          logger.error e.to_s
+          logger.error e.backtrace.join("\n")
           render json: { success: false, errors: e.to_s }, status: :unprocessable_entity
         end
         raise ActiveRecord::Rollback
@@ -58,44 +58,52 @@ module Grit::Core
     rescue ActiveRecord::RecordNotFound
       render json: { success: false, errors: "Load set not found" }, status: :not_found
     rescue StandardError => e
-      logger.info e.to_s
-      logger.info e.backtrace.join("\n")
+      logger.error e.to_s
+      logger.error e.backtrace.join("\n")
+      render json: { success: false, errors: e.to_s }, status: :internal_server_error
+    end
+
+    def cancel
+      ActiveRecord::Base.transaction do
+        Grit::Core::LoadSet.find(params[:load_set_id]).cancel
+      end
+      render json: { success: true }
+    rescue StandardError => e
+      logger.error e.to_s
+      logger.error e.backtrace.join("\n")
       render json: { success: false, errors: e.to_s }, status: :internal_server_error
     end
 
     def destroy
-      id = params[:id] if params[:id] != "destroy"
-      id = params[:ids] if params[:id] == "destroy"
+      render json: { success: false, errors: "Load sets must be cancelled" }, status: :forbidden
+    end
 
-      load_set = Grit::Core::LoadSet.find(id)
-
-      if load_set.load_set_blocks.any? { |lsb| lsb.status.name == "Succeeded" }
-        render json: { success: false, errors: "Cannot delete succeeded load set, it must be undone first." }, status: :forbidden
-        return
-      end
-
-      Grit::Core::EntityLoader.destroy_load_set(load_set)
-
-      render json: { success: true }
+    def entity_info
+      render json: { success: true, data: Grit::Core::EntityLoader.load_set_entity_info(params) }
     rescue StandardError => e
-      logger.info e.to_s
-      logger.info e.backtrace.join("\n")
+      logger.error e.to_s
+      logger.error e.backtrace.join("\n")
       render json: { success: false, errors: e.to_s }, status: :internal_server_error
     end
 
-    def rollback
-      ActiveRecord::Base.transaction do
-        begin
-          load_set = Grit::Core::LoadSet.find(params[:load_set_id])
-          load_set.rollback
-          render json: { success: true, data: load_set }
-        rescue StandardError => e
-          logger.info e.to_s
-          logger.info e.backtrace.join("\n")
-          render json: { success: false, errors: e.to_s }, status: :internal_server_error
-          raise ActiveRecord::Rollback
-        end
-      end
+    def load_set_blocks
+      load_set = Grit::Core::LoadSet.find(params[:load_set_id])
+      load_set_blocks = Grit::Core::EntityLoader.index_load_set_blocks(load_set).order("grit_core_load_set_blocks.id ASC")
+      render json: { success: true, data: load_set_blocks }
+    rescue StandardError => e
+      logger.error e.to_s
+      logger.error e.backtrace.join("\n")
+      render json: { success: false, errors: e.to_s }, status: :internal_server_error
+    end
+
+    def initialize_blocks
+      load_set = Grit::Core::LoadSet.find(params[:load_set_id])
+      load_set.initialize_blocks
+      render json: { success: true }
+    rescue StandardError => e
+      logger.error e.to_s
+      logger.error e.backtrace.join("\n")
+      render json: { success: false, errors: e.to_s }, status: :internal_server_error
     end
 
     private

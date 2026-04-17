@@ -72,4 +72,5 @@ export interface FormInputProps<T extends FormFieldDef = FormFieldDef> {
   handleChange: (updater: any) => void;
   handleBlur: () => void;
   field: T;
+  className?: string;
 }

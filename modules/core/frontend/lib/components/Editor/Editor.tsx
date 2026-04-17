@@ -16,38 +16,24 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Button, Surface } from "@grit42/client-library/components";
 import { Editor as MonacoEditor } from "@monaco-editor/react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useTheme } from "@grit42/client-library/hooks";
 import * as monaco from "monaco-editor";
-import { toast } from "@grit42/notifications";
 import styles from "./editor.module.scss";
-
-const MAX_FILE_SIZE = 100 * 1024 * 1024;
-const MAX_FILE_SIZE_ERROR = "This file is too large (over 100 MB).";
 
 const Editor = ({
   value,
   onChange,
   onBlur,
-  showInitialOverlay,
-  showFilePicker,
 }: {
   value: string;
   onChange: (value: string) => void;
   onBlur?: () => void;
-  showInitialOverlay?: boolean;
-  showFilePicker?: boolean;
 }) => {
   const theme = useTheme();
-  const [overlayVisible, setOverlayVisible] = useState(
-    showInitialOverlay ?? value === "",
-  );
-  const [isDragging, setIsDragging] = useState(false);
   const editorRef = useRef<any>(null);
   const listenersRef = useRef<monaco.IDisposable[]>([]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const handleEditorMount = useCallback(
     (editor: monaco.editor.IStandaloneCodeEditor) => {
       editorRef.current = editor;
@@ -64,18 +50,18 @@ const Editor = ({
   );
 
   useEffect(() => {
+    if (editorRef.current && editorRef.current.getValue() !== value) {
+      editorRef.current.setValue(value);
+    }
+  }, [value]);
+
+  useEffect(() => {
     return () =>
       listenersRef.current?.forEach((listener) => listener.dispose());
   }, []);
 
   return (
-    <div
-      className={styles.container}
-      onDragEnter={(e) => {
-        e.preventDefault();
-        setIsDragging(true);
-      }}
-    >
+    <div className={styles.container}>
       <MonacoEditor
         height="100%"
         width="100%"
@@ -92,122 +78,6 @@ const Editor = ({
         onMount={handleEditorMount}
         onChange={(v) => {
           onChange(v ?? "");
-          setOverlayVisible(v === "");
-        }}
-      />
-      {(isDragging || overlayVisible) && (
-        <div
-          className={`${styles.overlay} ${!overlayVisible ? styles.hidden : ""} ${isDragging ? styles.dragging : ""}`}
-          onDragEnter={(e) => {
-            e.preventDefault();
-            setIsDragging(true);
-          }}
-          onDragOver={(e) => {
-            e.preventDefault();
-          }}
-          onDragLeave={() => setIsDragging(false)}
-          onDrop={(event) => {
-            setIsDragging(false);
-            event.preventDefault();
-            event.stopPropagation();
-
-            const file = event.dataTransfer.files[0];
-            if (file && file.size > MAX_FILE_SIZE) {
-              toast.error(MAX_FILE_SIZE_ERROR);
-            } else if (file) {
-              const reader = new FileReader();
-
-              reader.onload = (event) => {
-                const raw = event.target?.result;
-                const fileContent =
-                  typeof raw === "string"
-                    ? raw
-                    : new TextDecoder().decode(raw as ArrayBuffer);
-                editorRef.current?.setValue(fileContent);
-                if (onBlur) {
-                  onBlur();
-                }
-              };
-
-              reader.onerror = () => {
-                toast.error("Could not read the dropped file.");
-              };
-
-              reader.readAsText(file);
-            } else {
-              toast.error("Could not read the dropped file.");
-            }
-          }}
-          onClick={() => {
-            setOverlayVisible(false);
-            editorRef.current?.focus();
-          }}
-        >
-          <Surface className={styles.surface}>
-            <p>Drop or pick a file, or click anywhere to start typing</p>
-            <Button
-              key="file-picker-button"
-              color="secondary"
-              onClick={(e) => {
-                e.stopPropagation();
-                fileInputRef.current?.click();
-              }}
-            >
-              Pick a file
-            </Button>
-          </Surface>
-        </div>
-      )}
-      {!overlayVisible && showFilePicker && (
-        <Button
-          key="file-picker-button"
-          color="secondary"
-          className={styles.filePickerButton}
-          onClick={(e) => {
-            e.stopPropagation();
-            fileInputRef.current?.click();
-          }}
-        >
-          Pick a file
-        </Button>
-      )}
-      <input
-        ref={fileInputRef}
-        type="file"
-        className={styles.fileInput}
-        onClick={(e) => e.stopPropagation()}
-        onChange={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
-
-          const file = event.target.files?.[0];
-          if (file && file.size > MAX_FILE_SIZE) {
-            toast.error(MAX_FILE_SIZE_ERROR);
-          } else if (file) {
-            const reader = new FileReader();
-
-            reader.onload = (event) => {
-              const raw = event.target?.result;
-              const fileContent =
-                typeof raw === "string"
-                  ? raw
-                  : new TextDecoder().decode(raw as ArrayBuffer);
-              setOverlayVisible(false);
-              editorRef.current?.setValue(fileContent);
-              editorRef.current?.focus();
-              if (onBlur) {
-                onBlur();
-              }
-            };
-
-            reader.onerror = () => {
-              toast.error("Could not read the selected file.");
-            };
-
-            reader.readAsText(file);
-          } else {
-            toast.error("Could not read the selected file.");
-          }
         }}
       />
     </div>

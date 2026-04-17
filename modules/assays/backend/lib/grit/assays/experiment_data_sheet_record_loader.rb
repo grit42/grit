@@ -28,16 +28,12 @@ module Grit::Assays
           .map { |f| ({ **f, disabled: f[:disabled] || f[:name] == "experiment_id" }) } ]
     end
 
-    def self.create(params)
-      load_set = super
-
+    def self.create_entity_block(block, params)
       Grit::Assays::ExperimentDataSheetRecordLoadSetBlock.create!({
-        load_set_block_id: load_set.load_set_blocks[0].id,
-        experiment_id: params[:load_set_blocks]["0"]["experiment_id"],
-        assay_data_sheet_definition_id: params[:load_set_blocks]["0"]["assay_data_sheet_definition_id"]
+        load_set_block_id: block.id,
+        experiment_id: params["experiment_id"],
+        assay_data_sheet_definition_id: params["assay_data_sheet_definition_id"]
       })
-
-      load_set
     end
 
     def self.show(load_set)
@@ -64,7 +60,9 @@ module Grit::Assays
     def self.rollback_block(load_set_block)
       experiment_data_sheet_record_load_set_block = Grit::Assays::ExperimentDataSheetRecordLoadSetBlock.find_by(load_set_block_id: load_set_block.id)
       experiment_data_sheet_record_klass = experiment_data_sheet_record_load_set_block.assay_data_sheet_definition.sheet_record_klass
-      experiment_data_sheet_record_klass.delete_by("id IN (SELECT record_id FROM grit_core_load_set_block_loaded_records WHERE grit_core_load_set_block_loaded_records.load_set_block_id = #{load_set_block.id})") if experiment_data_sheet_record_klass.table_exists?
+      if experiment_data_sheet_record_klass.table_exists?
+        experiment_data_sheet_record_klass.where("id IN (SELECT record_id FROM grit_core_load_set_block_loaded_records WHERE grit_core_load_set_block_loaded_records.load_set_block_id = ?)", load_set_block.id).delete_all
+      end
       Grit::Core::LoadSetBlockLoadedRecord.delete_by(load_set_block_id: load_set_block.id)
     end
 
@@ -82,7 +80,7 @@ module Grit::Assays
 
     def self.loaded_data_columns(load_set)
       record_load_set = Grit::Assays::ExperimentDataSheetRecordLoadSet.find_by(load_set_id: load_set.id)
-      ExperimentDataSheetRecord.sheet_record_klass(record_load_set.assay_data_sheet_definition_id).entity_columns.filter { |f| f[:name] != "experiment_id" }
+      Grit::Assays::ExperimentDataSheetRecord.sheet_record_klass(record_load_set.assay_data_sheet_definition_id).entity_columns.filter { |f| f[:name] != "experiment_id" }
     end
 
     def self.block_entity(load_set_block)
@@ -106,6 +104,14 @@ module Grit::Assays
         path: "grit/assays/assay_data_sheet_definitions/#{record_load_set_block.assay_data_sheet_definition_id}/experiment_data_sheet_records",
         dictionary: false
       }
+    end
+
+    def self.index_blocks(load_set)
+      Grit::Core::LoadSetBlock
+        .detailed
+        .select("grit_assays_experiment_data_sheet_record_load_set_blocks.experiment_id", "grit_assays_experiment_data_sheet_record_load_set_blocks.assay_data_sheet_definition_id")
+        .joins("JOIN grit_assays_experiment_data_sheet_record_load_set_blocks on grit_assays_experiment_data_sheet_record_load_set_blocks.load_set_block_id = grit_core_load_set_blocks.id")
+        .where(load_set_id: load_set.id)
     end
   end
 end

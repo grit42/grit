@@ -23,6 +23,7 @@ module Grit::Core
     belongs_to :status, class_name: "Grit::Core::LoadSetStatus"
     belongs_to :load_set
     has_one_attached :data
+    has_one :vocabulary_item_load_set_block, dependent: :destroy
 
     before_destroy :check_status
     before_destroy :drop_tables
@@ -101,12 +102,13 @@ module Grit::Core
       load_set_block = self
       load_set_block_id =  self.id
 
+      quote = ActiveRecord::Base.connection.method(:quote)
       property_column_mapping_values = load_set_block.mappings.map do |key, mapping|
         if mapping["constant"]
-          "('#{key}','Constant value',NULL)"
+          "(#{quote.call(key)},#{quote.call('Constant value')},NULL)"
         else
           header = load_set_block.headers.find { |h| h["name"] == mapping["header"] }
-          header.nil? ? nil : "('#{key}','#{header["display_name"]}','#{mapping["header"]}')"
+          header.nil? ? nil : "(#{quote.call(key)},#{quote.call(header["display_name"])},#{quote.call(mapping["header"])})"
         end
       end
       .select { |v| !v.nil? }
@@ -166,16 +168,6 @@ module Grit::Core
       connection.drop_table raw_data_table_name, if_exists: true
     end
 
-    def self.records_from_file(load_set_block)
-      load_set_block.data.open do |file|
-        file.each_line(chomp: true).with_index do |line, index|
-          next if index == 0
-          line_with_line_number = "#{index+1},#{line}"
-          row = CSV.parse_line(line_with_line_number.strip, col_sep: load_set_block.separator)
-          yield CSV.generate_line(row, col_sep: load_set_block.separator) if block_given?
-        end
-      end
-    end
 
     def drop_raw_data_table
       ActiveRecord::Base.connection.drop_table raw_data_table_name, if_exists: true
@@ -271,8 +263,7 @@ module Grit::Core
     end
 
     def initialize_data
-      create_tables
-      update_column(:status_id, Grit::Core::LoadSetStatus.find_by(name: "Mapping").id)
+      Grit::Core::InitializeLoadSetBlockJob.perform_later(id, Grit::Core::User.current.id)
     end
 
     def drop_tables_if_succeeded
@@ -297,7 +288,9 @@ module Grit::Core
         @fields = fields
 
         def self.for_confirm
-          query = self.unscoped.select("'#{Grit::Core::User.current.login}' as created_by")
+          query = self.unscoped.select(
+            Arel.sql(sanitize_sql_array([ "? as created_by", Grit::Core::User.current.login ]))
+          )
           @fields.each do |column|
             query = query.select("#{self.table_name}.#{column[:name]}")
           end

@@ -19,5 +19,9 @@
 .container {
   display: grid;
   height: 100%;
-  grid-template-rows: min-content minmax(0px, 1fr);
+  grid-template-rows: minmax(0px, 1fr);
+
+  &.withLabel {
+    grid-template-rows: min-content minmax(0px, 1fr);
+  }
 }
