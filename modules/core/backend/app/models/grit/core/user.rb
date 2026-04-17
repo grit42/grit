@@ -18,6 +18,8 @@
 
 module Grit::Core
   class User < ApplicationRecord
+    cattr_accessor :infer_rails_validation_from_db
+    self.infer_rails_validation_from_db = false
     include Grit::Core::GritEntityRecord
 
     self.table_name = "grit_core_users"
@@ -112,7 +114,8 @@ module Grit::Core
     "activation_token",
     "single_access_token",
     "two_factor_token",
-    "two_factor_expiry"
+    "two_factor_expiry",
+    "sso_uid"
   ]
 
     def self.entity_properties(**args)
@@ -146,13 +149,18 @@ module Grit::Core
     end
 
     def self.permitted_params
-      %i[login name email origin_id location_id password password_confirmation settings status_id
-         auth_method two_factor profile_picture active]
+      %i[login name email origin_id location_id password password_confirmation settings status_id two_factor profile_picture active]
     end
 
     acts_as_authentic do |c|
       c.crypto_provider = Authlogic::CryptoProviders::SCrypt
       c.log_in_after_create = false
+    end
+
+    # SSO users don't have passwords — skip all password validations
+    def require_password?
+      return false unless auth_method == "local"
+      super
     end
 
     def active?
@@ -189,6 +197,7 @@ module Grit::Core
         ) as user_roles__
       ) as role_ids")
       .select("grit_core_users.active")
+      .select("grit_core_users.sso_uid")
       .select("grit_core_users.forgot_token")
       .select("grit_core_users.activation_token")
       .select("grit_core_users.single_access_token")
@@ -204,6 +213,7 @@ module Grit::Core
 
       def check_user
         return if created_by == "admin"
+        return if created_by == "sso"
 
         check_role
       end
@@ -261,6 +271,7 @@ module Grit::Core
       end
 
       def random_password
+        return if auth_method != "local"
         @rand_password = SecureRandom.urlsafe_base64(8)
         self.password = @rand_password
         self.password_confirmation = @rand_password

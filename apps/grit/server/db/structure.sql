@@ -1103,7 +1103,9 @@ CREATE TABLE public.grit_core_users (
     two_factor_expiry timestamp(6) without time zone,
     settings jsonb DEFAULT '{}'::jsonb,
     origin_id bigint NOT NULL,
-    location_id bigint
+    location_id bigint,
+    auth_method character varying DEFAULT 'local'::character varying NOT NULL,
+    sso_uid character varying
 );
 
 
@@ -2185,6 +2187,13 @@ CREATE INDEX index_grit_core_user_roles_on_user_id ON public.grit_core_user_role
 
 
 --
+-- Name: index_grit_core_users_on_auth_method_and_sso_uid; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_grit_core_users_on_auth_method_and_sso_uid ON public.grit_core_users USING btree (auth_method, sso_uid) WHERE (sso_uid IS NOT NULL);
+
+
+--
 -- Name: index_grit_core_users_on_email; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -3115,6 +3124,7 @@ ALTER TABLE ONLY public.grit_compounds_compound_property_values
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20260317095910'),
 ('20260204123909'),
 ('20250627000012'),
 ('20250627000011'),

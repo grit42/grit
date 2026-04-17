@@ -29,6 +29,10 @@ Gem::Specification.new do |spec|
   # Authentication and session management
   spec.add_dependency "authlogic", '~> 6.6'
 
+  # SSO: OmniAuth + OpenID Connect strategies
+  spec.add_dependency "omniauth", '~> 2.1'
+  spec.add_dependency "omniauth_openid_connect", '~> 0.8'
+
   # Testing
   spec.add_development_dependency "rspec-rails", "~> 8.0"
   spec.add_development_dependency "rswag-specs", "~> 2.17"

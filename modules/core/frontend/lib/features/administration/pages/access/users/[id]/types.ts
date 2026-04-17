@@ -19,6 +19,7 @@
 import { User } from "../../types";
 
 export interface UserWithTokens extends User {
+  sso_uid?: string;
   activation_token?: string;
   forgot_token?: string;
   single_access_token?: string;

@@ -39,24 +39,28 @@ module Grit::Core::GritEntityRecord
     @entity_columns = nil
     @display_properties = nil
 
-    begin
-      ActiveRecord::Base.connection.indexes(self.table_name).each do |index|
-        validates index.columns[0], uniqueness: index.columns.length > 1 ? { scope: index.columns[1..] } : true, allow_nil: !index.nulls_not_distinct if index.unique
+    cattr_accessor :infer_rails_validation_from_db
+
+    unless self.infer_rails_validation_from_db == false
+      begin
+        ActiveRecord::Base.connection.indexes(self.table_name).each do |index|
+          validates index.columns[0], uniqueness: index.columns.length > 1 ? { scope: index.columns[1..] } : true, allow_nil: !index.nulls_not_distinct if index.unique
+        end
+
+        self.columns.each do |column|
+          next if [ "id", "created_at", "created_by", "updated_at", "updated_by" ].include?(column.name)
+          validates column.name, presence: true unless column.null || column.sql_type_metadata.type == :boolean
+          validates column.name, inclusion: { in: [ true, false ] } if column.sql_type_metadata.type == :boolean && !column.null
+          validates column.name, length: { maximum: column.sql_type_metadata.limit } unless column.sql_type_metadata.limit.nil? or ![ :string, :text ].include?(column.sql_type_metadata.type)
+        end
+      rescue StandardError => e
+        logger.info e.to_s
+        logger.info e.backtrace.join("\n")
       end
 
-      self.columns.each do |column|
-        next if [ "id", "created_at", "created_by", "updated_at", "updated_by" ].include?(column.name)
-        validates column.name, presence: true unless column.null || column.sql_type_metadata.type == :boolean
-        validates column.name, inclusion: { in: [ true, false ] } if column.sql_type_metadata.type == :boolean && !column.null
-        validates column.name, length: { maximum: column.sql_type_metadata.limit } unless column.sql_type_metadata.limit.nil? or ![ :string, :text ].include?(column.sql_type_metadata.type)
-      end
-    rescue StandardError => e
-      logger.info e.to_s
-      logger.info e.backtrace.join("\n")
+      validate :numbers_in_range
+      before_save :set_updater
     end
-
-    validate :numbers_in_range
-    before_save :set_updater
   end
 
   # ==========================================================================

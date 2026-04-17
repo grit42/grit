@@ -19,17 +19,25 @@ import { Surface } from "@grit42/client-library/components";
 import InfoForm from "./InfoForm";
 import ChangePasswordForm from "./ChangePasswordForm";
 import AuthTokenForm from "./AuthTokenForm";
+import { useSession } from "../../api/queries";
 import styles from "./account-settings.module.scss";
 
 export default function AccountSettingsPage() {
+  const { data: session } = useSession();
+  const isLocalAuth = !session || session.auth_method === "local";
+
   return (
     <div className={styles.account}>
       <h1>Account settings</h1>
       <Surface className={styles.surface}>
         <div className={styles.formsContainer}>
           <InfoForm />
-          <div className={styles.divider} />
-          <ChangePasswordForm />
+          {isLocalAuth && (
+            <>
+              <div className={styles.divider} />
+              <ChangePasswordForm />
+            </>
+          )}
           <div className={styles.divider} />
           <AuthTokenForm />
         </div>

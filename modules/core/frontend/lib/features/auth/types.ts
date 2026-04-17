@@ -26,6 +26,8 @@ export interface UserSettings {
 export interface ServerSettings {
   server_url?: string;
   two_factor: boolean;
+  sso_provider?: "oidc";
+  sso_login_path?: string;
 }
 
 export interface AuthToken {
@@ -42,6 +44,7 @@ export interface Session {
   login: string;
   name: string;
   email: string;
+  auth_method: string;
   roles: string[];
   settings: UserSettings;
   platform_information: { modules: Record<string, string> };
