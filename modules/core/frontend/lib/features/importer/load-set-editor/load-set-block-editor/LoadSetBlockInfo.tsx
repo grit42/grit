@@ -25,6 +25,7 @@ import ErroredRowsTable from "./ErroredRowsTable";
 import { LoadSetBlockData } from "../../types/load_set_blocks";
 import PreviewDataTable from "./PreviewDataTable";
 import { FormApi, FormFieldDef, useStore } from "@grit42/form";
+import LoadSetBlockInfoHints from "./LoadSetBlockInfoHints";
 
 const LoadSetBlockInfo = ({
   loadSetBlock,
@@ -81,30 +82,10 @@ const LoadSetBlockInfo = ({
 
   return (
     <div className={styles.loadSetBlockInfo}>
-      {(unusedHeaders.length > 0 || unsetFields.length > 0) && (
-        <div className={styles.loadSetBlockInfoSummary}>
-          {unsetFields.length > 0 && (
-            <div className={styles.loadSetBlockInfoSummarySection}>
-              <span className={styles.loadSetBlockInfoSummaryLabel}>
-                Unset fields
-              </span>
-              <span>{unsetFields.map((f) => f.display_name).join(", ")}</span>
-            </div>
-          )}
-          {unusedHeaders.length > 0 && (
-            <div className={styles.loadSetBlockInfoSummarySection}>
-              <span className={styles.loadSetBlockInfoSummaryLabel}>
-                Unused headers
-              </span>
-              <span>
-                {unusedHeaders
-                  .map(({ name, display_name }) => display_name ?? name)
-                  .join(", ")}
-              </span>
-            </div>
-          )}
-        </div>
-      )}
+      <LoadSetBlockInfoHints
+        unsetFields={unsetFields}
+        unusedHeaders={unusedHeaders}
+      />
       <Tabs
         selectedTab={selectedTab}
         onTabChange={setSelectedTab}
