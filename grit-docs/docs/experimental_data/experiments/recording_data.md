@@ -24,7 +24,7 @@ To create or edit a record manually, either click the **New** button above the t
 
 ## Loading from a file
 
-To load records from a file, start the import process by clicking the **Import** button in the toolbar and follow the instruction in [Importing data](/docs/general/data-import). When the import is completed, you can come back to the **Experiment** by clicking the **Go to experiment** button above the table showing loaded records.
+To load records from a file, start the import process by clicking the **Import** button in the toolbar and follow the instruction in [Importing data](../../general/data-import). When the import is completed, you can come back to the **Experiment** by clicking the **Go to experiment** button above the table showing loaded records.
 
 
 
