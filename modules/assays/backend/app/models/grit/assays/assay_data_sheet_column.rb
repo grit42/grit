@@ -94,7 +94,7 @@ module Grit::Assays
         begin
           connection.remove_foreign_key assay_data_sheet_definition.table_name, column: column.safe_name, if_exists: true
 
-          connection.change_column assay_data_sheet_definition.table_name, column.safe_name, column.data_type.sql_name, using: "#{column.safe_name}::text::#{column.data_type.sql_name}"
+          connection.change_column assay_data_sheet_definition.table_name, column.safe_name, column.data_type.sql_name, using: "#{connection.quote_column_name(column.safe_name)}::text::#{column.data_type.sql_name}"
           connection.add_foreign_key assay_data_sheet_definition.table_name, column.data_type.table_name, column: column.safe_name, name: "#{assay_data_sheet_definition.table_name}_#{column.safe_name}", if_not_exists: true if column.data_type.is_entity
           refresh_cache = true
         rescue ActiveRecord::InvalidForeignKey => e
