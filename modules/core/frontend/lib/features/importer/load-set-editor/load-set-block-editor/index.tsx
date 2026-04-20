@@ -191,6 +191,8 @@ const LoadSetBlockEditor = ({
           <LoadSetBlockInfo
             loadSetBlock={loadSetBlock}
             columns={loadSetBlock.headers}
+            fields={fields}
+            form={form as any}
           />
         </div>
         {loadSetBlock.status_id__name === LOAD_SET_STATUS.VALIDATING && (

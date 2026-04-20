@@ -69,6 +69,30 @@
   max-height: 100%;
   overflow: auto;
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: theme.$spacing;
+}
+
+.loadSetBlockInfoSummary {
+  display: flex;
+  flex-direction: column;
+  gap: theme.$spacing-sm;
+  padding-bottom: theme.$spacing-sm;
+  border-bottom: 1px solid
+    rgb(from theme.$palette-primary-contrast-text r g b / 25%);
+}
+
+.loadSetBlockInfoSummarySection {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: theme.$spacing-sm;
+}
+
+.loadSetBlockInfoSummaryLabel {
+  font-weight: bold;
+  color: rgb(from theme.$palette-primary-contrast-text r g b / 70%);
 }
 
 .loadSetBlockInfoTabs {
