@@ -24,13 +24,18 @@ import WarningsTable from "./WarningsTable";
 import ErroredRowsTable from "./ErroredRowsTable";
 import { LoadSetBlockData } from "../../types/load_set_blocks";
 import PreviewDataTable from "./PreviewDataTable";
+import { FormApi, FormFieldDef, useStore } from "@grit42/form";
 
 const LoadSetBlockInfo = ({
   loadSetBlock,
   columns,
+  fields,
+  form,
 }: {
   loadSetBlock: LoadSetBlockData;
   columns: { name: string; display_name: string | null }[];
+  fields: FormFieldDef[];
+  form: FormApi<any>;
 }) => {
   const [prevLoadSetBlock, setPrevLoadSetBlock] = useState(loadSetBlock);
   const [selectedTab, setSelectedTab] = useState(0);
@@ -42,8 +47,63 @@ const LoadSetBlockInfo = ({
     );
   }
 
+  const [unsetFields, unusedHeaders] = useStore(
+    form.baseStore,
+    ({ values }) => {
+      const unsetFields: FormFieldDef[] = [];
+      const headerValues = new Set<unknown>();
+      for (const f of fields) {
+        const headerValue = values[`${f.name}-header`];
+        if (
+          headerValue != null &&
+          headerValue != undefined &&
+          headerValue !== ""
+        ) {
+          headerValues.add(headerValue);
+        }
+        if (
+          headerValue === "" ||
+          (values[`${f.name}-constant`] &&
+            (values[`${f.name}-value`] === null ||
+              values[`${f.name}-value`] === undefined))
+        ) {
+          unsetFields.push(f);
+        }
+      }
+
+      const unusedHeaders = loadSetBlock.headers.filter(
+        ({ name }) => !headerValues.has(name),
+      );
+      return [unsetFields, unusedHeaders] as const;
+    },
+  );
+
   return (
     <div className={styles.loadSetBlockInfo}>
+      {(unusedHeaders.length > 0 || unsetFields.length > 0) && (
+        <div className={styles.loadSetBlockInfoSummary}>
+          {unusedHeaders.length > 0 && (
+            <div className={styles.loadSetBlockInfoSummarySection}>
+              <span className={styles.loadSetBlockInfoSummaryLabel}>
+                Unused headers
+              </span>
+              <span>
+                {unusedHeaders
+                  .map(({ name, display_name }) => display_name ?? name)
+                  .join(", ")}
+              </span>
+            </div>
+          )}
+          {unsetFields.length > 0 && (
+            <div className={styles.loadSetBlockInfoSummarySection}>
+              <span className={styles.loadSetBlockInfoSummaryLabel}>
+                Unset fields
+              </span>
+              <span>{unsetFields.map((f) => f.display_name).join(", ")}</span>
+            </div>
+          )}
+        </div>
+      )}
       <Tabs
         selectedTab={selectedTab}
         onTabChange={setSelectedTab}
