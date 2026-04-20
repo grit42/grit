@@ -63,6 +63,7 @@ const LoadSetBlockInfo = ({
         }
         if (
           headerValue === "" ||
+          headerValue === null ||
           (values[`${f.name}-constant`] &&
             (values[`${f.name}-value`] === null ||
               values[`${f.name}-value`] === undefined))
@@ -82,6 +83,14 @@ const LoadSetBlockInfo = ({
     <div className={styles.loadSetBlockInfo}>
       {(unusedHeaders.length > 0 || unsetFields.length > 0) && (
         <div className={styles.loadSetBlockInfoSummary}>
+          {unsetFields.length > 0 && (
+            <div className={styles.loadSetBlockInfoSummarySection}>
+              <span className={styles.loadSetBlockInfoSummaryLabel}>
+                Unset fields
+              </span>
+              <span>{unsetFields.map((f) => f.display_name).join(", ")}</span>
+            </div>
+          )}
           {unusedHeaders.length > 0 && (
             <div className={styles.loadSetBlockInfoSummarySection}>
               <span className={styles.loadSetBlockInfoSummaryLabel}>
@@ -92,14 +101,6 @@ const LoadSetBlockInfo = ({
                   .map(({ name, display_name }) => display_name ?? name)
                   .join(", ")}
               </span>
-            </div>
-          )}
-          {unsetFields.length > 0 && (
-            <div className={styles.loadSetBlockInfoSummarySection}>
-              <span className={styles.loadSetBlockInfoSummaryLabel}>
-                Unset fields
-              </span>
-              <span>{unsetFields.map((f) => f.display_name).join(", ")}</span>
             </div>
           )}
         </div>
