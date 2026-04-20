@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.0] - 2026-03-19
+
+Load data from multiple files
+
+### Added
+- (core,assays,compounds) enable loading data from multiple files
+- (core) asynchronous processing and validation of load set blocks
+- (core) OIDC single sign-on support
+
+
+## [0.10.0] - 2026-03-19
+
+Dangerous Assay Model edit
+
+### Added
+- (assays) enable editing published Assay Models
+
+
 ## [0.9.1] - 2026-02-20
 
 SDF parser

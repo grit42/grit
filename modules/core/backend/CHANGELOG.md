@@ -1,3 +1,10 @@
+## 0.11.0
+
+### 🚀 Features
+
+- import multiple files
+- OIDC single sign on support
+
 ## 0.10.0
 
 ### 🚀 Features

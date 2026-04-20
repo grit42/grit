@@ -1,3 +1,11 @@
+## 0.8.1
+
+### 🩹 Fixes
+
+- add `collapsible` to `SidebarLayout` component
+- fix FileInput file removal
+- `LoadingPage` component
+
 ## 0.8.0
 
 ### 🚀 Features

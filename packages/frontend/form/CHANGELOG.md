@@ -1,3 +1,13 @@
+## 0.7.1
+
+### 🩹 Fixes
+
+- add `className` to `FormInputProps`
+
+### 🧱 Updated Dependencies
+
+- Updated @grit42/client-library to 0.8.1
+
 ## 0.7.0
 
 ### 🚀 Features

@@ -1,3 +1,13 @@
+## 0.11.0
+
+### 🚀 Features
+
+- import multiple files
+
+### 🧱 Updated Dependencies
+
+- Updated grit-core to 0.11.0
+
 ## 0.10.0
 
 ### 🚀 Features

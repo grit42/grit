@@ -1,3 +1,9 @@
+## 0.7.1
+
+### 🩹 Fixes
+
+- expose `mergeRanges` utility
+
 ## 0.7.0
 
 ### 🚀 Features

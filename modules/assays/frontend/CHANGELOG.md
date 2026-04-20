@@ -1,3 +1,17 @@
+## 0.11.0
+
+### 🚀 Features
+
+- import multiple files
+
+### 🧱 Updated Dependencies
+
+- Updated @grit42/client-library to 0.8.1
+- Updated @grit42/form to 0.7.1
+- Updated @grit42/table to 0.7.1
+- Updated @grit42/spreadsheet to 0.7.1
+- Updated @grit42/core to 0.11.0
+
 ## 0.10.0
 
 ### 🚀 Features

@@ -1,23 +1,23 @@
 PATH
   remote: ../../../modules/assays/backend
   specs:
-    grit-assays (0.10.0)
+    grit-assays (0.11.0)
       csv (~> 3, >= 3.3.5)
-      grit-core (~> 0.10.0)
+      grit-core (~> 0.11.0)
       rails (~> 8.1)
       rubyzip (~> 3.2)
 
 PATH
   remote: ../../../modules/compounds/backend
   specs:
-    grit-compounds (0.10.0)
-      grit-core (~> 0.10.0)
+    grit-compounds (0.11.0)
+      grit-core (~> 0.11.0)
       rails (~> 8.1)
 
 PATH
   remote: ../../../modules/core/backend
   specs:
-    grit-core (0.10.0)
+    grit-core (0.11.0)
       authlogic (~> 6.6)
       csv
       omniauth (~> 2.1)
