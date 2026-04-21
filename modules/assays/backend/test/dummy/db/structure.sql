@@ -1,8 +1,3 @@
-\restrict uqNuMqKSCFooFkenkTVzelLjiD4W2Z6fO78Drn0DLFXkip0yvFnrzckhlZcKMS4
-
--- Dumped from database version 16.3 (Debian 16.3-1.pgdg120+1)
--- Dumped by pg_dump version 16.11
-
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
@@ -818,7 +813,9 @@ CREATE TABLE public.grit_core_users (
     two_factor_expiry timestamp(6) without time zone,
     settings jsonb DEFAULT '{}'::jsonb,
     origin_id bigint NOT NULL,
-    location_id bigint
+    location_id bigint,
+    auth_method character varying DEFAULT 'local'::character varying NOT NULL,
+    sso_uid character varying
 );
 
 
@@ -1587,6 +1584,13 @@ CREATE INDEX index_grit_core_user_roles_on_user_id ON public.grit_core_user_role
 
 
 --
+-- Name: index_grit_core_users_on_auth_method_and_sso_uid; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_grit_core_users_on_auth_method_and_sso_uid ON public.grit_core_users USING btree (auth_method, sso_uid) WHERE (sso_uid IS NOT NULL);
+
+
+--
 -- Name: index_grit_core_users_on_email; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -2233,11 +2237,10 @@ ALTER TABLE ONLY public.active_storage_attachments
 -- PostgreSQL database dump complete
 --
 
-\unrestrict uqNuMqKSCFooFkenkTVzelLjiD4W2Z6fO78Drn0DLFXkip0yvFnrzckhlZcKMS4
-
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20260317095910'),
 ('20260203101724'),
 ('20250626000014'),
 ('20250626000013'),
