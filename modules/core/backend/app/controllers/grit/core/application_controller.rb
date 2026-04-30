@@ -79,7 +79,9 @@ module Grit
 
         def token_user
           token = request.headers["Authorization"].sub("Bearer ", "")
-          Grit::Core::User.find_by(single_access_token: token)
+          user = Grit::Core::User.find_by(single_access_token: token)
+          return nil if user&.single_access_token_expired?
+          user
         end
 
         def require_user

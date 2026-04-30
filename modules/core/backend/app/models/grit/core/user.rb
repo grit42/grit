@@ -87,6 +87,7 @@ module Grit::Core
     TWO_FACTOR_MAX_ATTEMPTS = 5
     TWO_FACTOR_LOCKOUT_MINUTES = 15
     TWO_FACTOR_EXPIRY_MINUTES = 10
+    API_TOKEN_EXPIRY_DAYS = ENV.fetch("API_TOKEN_EXPIRY_DAYS", 90).to_i
 
     before_validation :random_password, on: :create
     before_create :set_default_values
@@ -209,6 +210,10 @@ module Grit::Core
       .select("grit_core_users.forgot_token")
       .select("grit_core_users.activation_token")
       .select("grit_core_users.single_access_token")
+    end
+
+    def single_access_token_expired?
+      single_access_token_expires_at.nil? || single_access_token_expires_at < Time.current
     end
 
     def two_factor_locked?
