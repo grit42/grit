@@ -20,6 +20,8 @@
 
 module Grit::Core
   class UserSession < Authlogic::Session::Base
+    consecutive_failed_logins_limit ENV.fetch("MAX_FAILED_LOGINS", 50).to_i
+
     def cookie_key
       "grit_core_user_credentials"
     end

@@ -70,8 +70,8 @@ module Grit::Core
         @user = Grit::Core::User.find_by(email: params[:user_session][:login].downcase)
         params[:user_session][:login] = @user.login unless @user.nil?
       end
-      raise "User #{params[:user_session][:login]} not found" if @user.nil?
-      raise "User #{params[:user_session][:login]} is inactive" if @user.active? == false
+      raise "Invalid login or password" if @user.nil?
+      raise "Invalid login or password" if @user.active? == false
       raise "Please use SSO to sign in" if @user.auth_method != "local"
 
       if !@user.valid_password?(params[:user_session][:password]) then
