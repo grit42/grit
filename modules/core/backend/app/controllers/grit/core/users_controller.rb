@@ -75,7 +75,7 @@ module Grit::Core
     def activate
       @user = Grit::Core::User.find_by(activation_token: params[:activation_token])
 
-      raise "This activation token does not exist" unless @user
+      raise "Invalid or expired activation link" unless @user
       raise "Password and password confirmation do not match" if params[:password] != params[:password_confirmation]
 
       params[:login] = @user.login unless params[:login]
@@ -110,26 +110,14 @@ module Grit::Core
         return
       end
 
-      if @user
-        if @user.valid_forgot_token?
-          render json: { success: true }
-          return
-        end
-
-      if @user && !@user.valid_forgot_token?
-        @user.forgot_token = nil
-        @user.forgot_token_expires_at = nil
-        @user.forgot_token = SecureRandom.urlsafe_base64(20)
-        @user.forgot_token_expires_at = Grit::Core::User::FORGOT_TOKEN_EXPIRY_HOURS.hours.from_now
-        @user.save_without_session_maintenance
-
-        Grit::Core::Mailer.deliver_password_reset(@user).deliver_now
+      if @user.valid_forgot_token?
+        render json: { success: true }
+        return
       end
 
-      if @user
-        @user.forgot_token = SecureRandom.urlsafe_base64(20)
-        @user.save_without_session_maintenance
-      end
+      @user.forgot_token = SecureRandom.urlsafe_base64(20)
+      @user.forgot_token_expires_at = Grit::Core::User::FORGOT_TOKEN_EXPIRY_HOURS.hours.from_now
+      @user.save_without_session_maintenance
 
       Grit::Core::Mailer.deliver_password_reset(@user).deliver_now
       render json: { success: true }
@@ -256,7 +244,6 @@ module Grit::Core
       @user = Grit::Core::User.current
 
       @user.reset_single_access_token
-      @user.single_access_token_expires_at = Grit::Core::User::API_TOKEN_EXPIRY_DAYS.days.from_now
       @user.save!
 
       render json: { success: true, data: { token: @user.single_access_token, expires_at: @user.single_access_token_expires_at } }
@@ -283,7 +270,6 @@ module Grit::Core
       @user = Grit::Core::User.find_by(email: params[:user]&.downcase) if @user.nil?
 
       @user.reset_single_access_token
-      @user.single_access_token_expires_at = Grit::Core::User::API_TOKEN_EXPIRY_DAYS.days.from_now
       @user.save!
 
       render json: { success: true, data: { token: @user.single_access_token, expires_at: @user.single_access_token_expires_at } }

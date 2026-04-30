@@ -1,9 +1,3 @@
-\restrict WCBdL1QWj6K7MzLUd8KFFgeemAew2EMkdonAesvgaG73cTAt1AxnPcStckcihye
-
--- Dumped from database version 16.3 (Debian 16.3-1.pgdg120+1)
--- Dumped by pg_dump version 16.11 (Ubuntu 16.11-0ubuntu0.24.04.1)
-
-
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
@@ -573,7 +567,8 @@ CREATE TABLE public.grit_core_users (
     location_id bigint,
     forgot_token_expires_at timestamp(6) without time zone,
     auth_method character varying DEFAULT 'local'::character varying NOT NULL,
-    sso_uid character varying
+    sso_uid character varying,
+    single_access_token_expires_at timestamp(6) without time zone,
     two_factor_attempts integer DEFAULT 0 NOT NULL,
     two_factor_locked_until timestamp(6) without time zone
 );
@@ -1364,11 +1359,10 @@ ALTER TABLE ONLY public.test_entities
 -- PostgreSQL database dump complete
 --
 
-\unrestrict WCBdL1QWj6K7MzLUd8KFFgeemAew2EMkdonAesvgaG73cTAt1AxnPcStckcihye
-
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20260430000000'),
 ('20260317095910'),
 ('20260130123817'),
 ('20250627000000'),

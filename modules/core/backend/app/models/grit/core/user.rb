@@ -121,7 +121,7 @@ module Grit::Core
     "single_access_token",
     "two_factor_token",
     "two_factor_expiry",
-    "sso_uid"
+    "sso_uid",
     "two_factor_attempts",
     "two_factor_locked_until"
   ]
@@ -165,6 +165,8 @@ module Grit::Core
       c.crypto_provider = Authlogic::CryptoProviders::SCrypt
       c.log_in_after_create = false
     end
+
+    before_save :set_single_access_token_expiry, if: :will_save_change_to_single_access_token?
 
     # SSO users don't have passwords — skip all password validations
     def require_password?
@@ -309,6 +311,10 @@ module Grit::Core
         return unless login == "admin"
 
         raise "Not allowed"
+      end
+
+      def set_single_access_token_expiry
+        self.single_access_token_expires_at = API_TOKEN_EXPIRY_DAYS.days.from_now
       end
 
       def random_password
