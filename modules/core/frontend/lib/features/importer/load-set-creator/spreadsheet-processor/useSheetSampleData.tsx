@@ -14,7 +14,7 @@ export const useSheetSampleData = (
       const ab = await file.arrayBuffer();
       const wb = read(ab, {
         dense: true,
-        cellDates: true,
+        raw: false,
         sheetRows: 100,
         FS: separator,
         nodim: true,
@@ -27,6 +27,7 @@ export const useSheetSampleData = (
       const sampleData = utils
         .sheet_to_json<Record<string, any>>(ws, {
           header: "A",
+          raw: false,
           blankrows: true,
         })
         .map((d, i) => ({ ...d, rowIndex: i + 1 }));
