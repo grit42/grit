@@ -110,7 +110,7 @@ const Tabs = ({
           <ReactTabPanel
             {...panelProps}
             key={tab.key}
-            selectedClassName={classnames(className, styles.selectedPanel)}
+            selectedClassName={classnames(styles.selectedPanel, className)}
             className={classnames(styles.panel)}
           >
             {tab.panel}
