@@ -79,11 +79,13 @@ module Grit::Core::GritEntityController
         end
       end
 
+
+      default_order_values = scope.order_values
+      scope = scope.unscope(:order)
       sort.each do |sort_item|
-        default_order_values = scope.order_values
-        scope = scope.reorder(ActiveRecord::Base.send(:sanitize_sql_array, [ "#{select_values_map[sort_item["property"]]} #{sort_item["direction"]} NULLS LAST" ]))
-        scope.order_values = [ *scope.order_values, *default_order_values ]
+        scope = scope.order(ActiveRecord::Base.send(:sanitize_sql_array, [ "#{select_values_map[sort_item["property"]]} #{sort_item["direction"]} NULLS LAST" ]))
       end
+      scope.order_values = [ *scope.order_values, *default_order_values ]
 
       filter.each do |filter_item|
         scope = scope.where(Grit::Core::FilterProvider.execute(filter_item["type"], filter_item["operator"], select_values_map[filter_item["property"]], filter_item["value"]))
