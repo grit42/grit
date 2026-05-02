@@ -74,21 +74,30 @@ module Grit::Core
       raise "Invalid login or password" if @user.active? == false
       raise "Please use SSO to sign in" if @user.auth_method != "local"
 
-      if !@user.valid_password?(params[:user_session][:password]) then
+      if !@user.valid_password?(params[:user_session][:password])
         @user.failed_login_count ||= 0
         @user.failed_login_count += 1
         @user.save!
-        if @user.failed_login_count > Grit::Core::UserSession.consecutive_failed_logins_limit then
+
+        lockout_limit = if ENV.fetch("PASSWORD_LOCKOUT_ENABLED", "false") == "true"
+          ENV.fetch("PASSWORD_LOCKOUT_ATTEMPTS", 5).to_i
+        else
+          Grit::Core::UserSession.consecutive_failed_logins_limit
+        end
+
+        if @user.failed_login_count >= lockout_limit
           @user.active = false
           @user.failed_login_count = 0
           @user.activation_token = SecureRandom.urlsafe_base64(20)
           @user.save!
           Grit::Core::Mailer.deliver_reactivation_instructions(@user).deliver_now
-          raise "Invalid password. Number of failed login attempts exceed limit, account have been disabled"
+          raise "Invalid login or password. Account has been locked, please check your email."
         else
-          raise "Invalid password"
+          raise "Invalid login or password"
         end
       end
+
+      raise "Your password has expired. Please use the forgot password function to set a new one." if @user.password_expired?
 
       two_factor = false
       if @user.two_factor == true
