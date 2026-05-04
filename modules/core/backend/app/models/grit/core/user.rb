@@ -87,7 +87,6 @@ module Grit::Core
     TWO_FACTOR_MAX_ATTEMPTS = 5
     TWO_FACTOR_LOCKOUT_MINUTES = 15
     TWO_FACTOR_EXPIRY_MINUTES = 10
-    API_TOKEN_EXPIRY_DAYS = ENV.fetch("API_TOKEN_EXPIRY_DAYS", 90).to_i
     PASSWORD_EXPIRY_DAYS = ENV.fetch("PASSWORD_EXPIRY_DAYS", 90).to_i
 
     before_validation :random_password, on: :create
@@ -167,7 +166,6 @@ module Grit::Core
       c.log_in_after_create = false
     end
 
-    before_save :set_single_access_token_expiry, if: :will_save_change_to_single_access_token?
     before_save :set_password_changed_at, if: :will_save_change_to_crypted_password?
 
     # SSO users don't have passwords — skip all password validations
@@ -219,10 +217,6 @@ module Grit::Core
     def password_expired?
       return false unless ENV.fetch("PASSWORD_EXPIRY_ENABLED", "false") == "true"
       password_changed_at.nil? || password_changed_at < PASSWORD_EXPIRY_DAYS.days.ago
-    end
-
-    def single_access_token_expired?
-      single_access_token_expires_at.nil? || single_access_token_expires_at < Time.current
     end
 
     def two_factor_locked?
@@ -322,10 +316,6 @@ module Grit::Core
 
       def set_password_changed_at
         self.password_changed_at = Time.current
-      end
-
-      def set_single_access_token_expiry
-        self.single_access_token_expires_at = API_TOKEN_EXPIRY_DAYS.days.from_now
       end
 
       def random_password

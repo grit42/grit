@@ -246,7 +246,7 @@ module Grit::Core
       @user.reset_single_access_token
       @user.save!
 
-      render json: { success: true, data: { token: @user.single_access_token, expires_at: @user.single_access_token_expires_at } }
+      render json: { success: true, data: { token: @user.single_access_token } }
     rescue StandardError => e
       logger.warn e.to_s
       logger.warn e.backtrace.join("\n")
@@ -272,7 +272,7 @@ module Grit::Core
       @user.reset_single_access_token
       @user.save!
 
-      render json: { success: true, data: { token: @user.single_access_token, expires_at: @user.single_access_token_expires_at } }
+      render json: { success: true, data: { token: @user.single_access_token } }
     rescue StandardError => e
       logger.warn e.to_s
       logger.warn e.backtrace.join("\n")

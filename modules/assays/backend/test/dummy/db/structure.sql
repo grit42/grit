@@ -814,8 +814,12 @@ CREATE TABLE public.grit_core_users (
     settings jsonb DEFAULT '{}'::jsonb,
     origin_id bigint NOT NULL,
     location_id bigint,
+    forgot_token_expires_at timestamp(6) without time zone,
     auth_method character varying DEFAULT 'local'::character varying NOT NULL,
-    sso_uid character varying
+    sso_uid character varying,
+    single_access_token_expires_at timestamp(6) without time zone,
+    two_factor_attempts integer DEFAULT 0 NOT NULL,
+    two_factor_locked_until timestamp(6) without time zone
 );
 
 
@@ -871,6 +875,28 @@ CREATE TABLE public.grit_core_vocabulary_items (
 
 CREATE TABLE public.schema_migrations (
     version character varying NOT NULL
+);
+
+
+--
+-- Name: test_entities; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.test_entities (
+    id bigint DEFAULT nextval('public.grit_seq'::regclass) NOT NULL,
+    created_by character varying(30) DEFAULT 'SYSTEM'::character varying NOT NULL,
+    created_at timestamp(6) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_by character varying(30),
+    updated_at timestamp(6) without time zone,
+    name character varying NOT NULL,
+    another_string character varying,
+    "integer" integer,
+    "decimal" numeric,
+    text text,
+    datetime timestamp(6) without time zone,
+    date date,
+    "boolean" boolean,
+    user_id bigint
 );
 
 
@@ -1181,6 +1207,14 @@ ALTER TABLE ONLY public.grit_core_vocabulary_items
 
 ALTER TABLE ONLY public.schema_migrations
     ADD CONSTRAINT schema_migrations_pkey PRIMARY KEY (version);
+
+
+--
+-- Name: test_entities test_entities_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.test_entities
+    ADD CONSTRAINT test_entities_pkey PRIMARY KEY (id);
 
 
 --
@@ -1658,6 +1692,20 @@ CREATE INDEX index_grit_core_vocabulary_items_on_name ON public.grit_core_vocabu
 --
 
 CREATE INDEX index_grit_core_vocabulary_items_on_vocabulary_id ON public.grit_core_vocabulary_items USING btree (vocabulary_id);
+
+
+--
+-- Name: index_test_entities_on_name; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_test_entities_on_name ON public.test_entities USING btree (name);
+
+
+--
+-- Name: index_test_entities_on_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_test_entities_on_user_id ON public.test_entities USING btree (user_id);
 
 
 --
@@ -2234,14 +2282,24 @@ ALTER TABLE ONLY public.active_storage_attachments
 
 
 --
+-- Name: test_entities test; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.test_entities
+    ADD CONSTRAINT test FOREIGN KEY (user_id) REFERENCES public.grit_core_users(id);
+
+
+--
 -- PostgreSQL database dump complete
 --
 
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20260430000000'),
 ('20260317095910'),
-('20260203101724'),
+('20260130123817'),
+('20250627000000'),
 ('20250626000014'),
 ('20250626000013'),
 ('20250626000012'),
@@ -2256,12 +2314,14 @@ INSERT INTO "schema_migrations" (version) VALUES
 ('20250626000003'),
 ('20250626000002'),
 ('20250626000001'),
+('20250626000000'),
 ('20250625074209'),
 ('20250624081122'),
 ('20250624080646'),
 ('20250408050849'),
 ('20250205130307'),
 ('20250205093246'),
+('20250109121325'),
 ('20241212062610'),
 ('20241212062001'),
 ('20241212062000'),

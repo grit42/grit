@@ -568,7 +568,6 @@ CREATE TABLE public.grit_core_users (
     forgot_token_expires_at timestamp(6) without time zone,
     auth_method character varying DEFAULT 'local'::character varying NOT NULL,
     sso_uid character varying,
-    single_access_token_expires_at timestamp(6) without time zone,
     two_factor_attempts integer DEFAULT 0 NOT NULL,
     two_factor_locked_until timestamp(6) without time zone,
     password_changed_at timestamp(6) without time zone
@@ -1364,7 +1363,6 @@ SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
 ('20260502000000'),
-('20260430000000'),
 ('20260317095910'),
 ('20260130123817'),
 ('20250627000000'),
