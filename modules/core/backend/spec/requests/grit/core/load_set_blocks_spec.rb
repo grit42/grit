@@ -454,10 +454,13 @@ RSpec.describe "Load Set Blocks API", type: :request do
         let(:load_set_block_id) { block.id }
 
         around(:each) do |example|
-          original_adapter = ActiveJob::Base.queue_adapter
+          original_base  = ActiveJob::Base.queue_adapter
+          original_class = Grit::Core::ConfirmLoadSetBlockJob.queue_adapter
           ActiveJob::Base.queue_adapter = :test
+          Grit::Core::ConfirmLoadSetBlockJob.queue_adapter = ActiveJob::Base.queue_adapter
           example.run
-          ActiveJob::Base.queue_adapter = original_adapter
+          Grit::Core::ConfirmLoadSetBlockJob.queue_adapter = original_class
+          ActiveJob::Base.queue_adapter = original_base
         end
 
         it "enqueues a confirmation job and moves the block to Confirming", rswag: false do
