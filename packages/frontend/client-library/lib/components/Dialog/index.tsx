@@ -161,12 +161,16 @@ const DialogContent = ({
         <div
           ref={ref}
           onKeyDown={handleKeyDown}
-          className={classnames(styles.dialog, className, {
-            [styles.show as string]: showTransition,
-            [styles.withTable as string]: withTable === true,
-            [styles.wide as string]: isWide === true,
-            [styles.fullscreen as string]: isFullscreen === true,
-          })}
+          className={classnames(
+            styles.dialog,
+            {
+              [styles.show as string]: showTransition,
+              [styles.withTable as string]: withTable === true,
+              [styles.wide as string]: isWide === true,
+              [styles.fullscreen as string]: isFullscreen === true,
+            },
+            className,
+          )}
           onTransitionEnd={() => {
             if (transitionState === "out") {
               if (
