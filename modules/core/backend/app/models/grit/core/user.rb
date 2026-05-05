@@ -164,6 +164,7 @@ module Grit::Core
     acts_as_authentic do |c|
       c.crypto_provider = Authlogic::CryptoProviders::SCrypt
       c.log_in_after_create = false
+      c.logged_in_timeout = ENV.fetch("SESSION_EXPIRY_MINUTES", 60).to_i.minutes
     end
 
     before_save :set_password_changed_at, if: :will_save_change_to_crypted_password?
