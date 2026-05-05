@@ -83,6 +83,12 @@ module Grit::Core
                 if: :require_password?
               }
 
+    FORGOT_TOKEN_EXPIRY_HOURS = 1
+    TWO_FACTOR_MAX_ATTEMPTS = 5
+    TWO_FACTOR_LOCKOUT_MINUTES = 15
+    TWO_FACTOR_EXPIRY_MINUTES = 10
+    PASSWORD_EXPIRY_DAYS = ENV.fetch("PASSWORD_EXPIRY_DAYS", 90).to_i
+
     before_validation :random_password, on: :create
     before_create :set_default_values
     before_create :check_user
@@ -115,7 +121,9 @@ module Grit::Core
     "single_access_token",
     "two_factor_token",
     "two_factor_expiry",
-    "sso_uid"
+    "sso_uid",
+    "two_factor_attempts",
+    "two_factor_locked_until"
   ]
 
     def self.entity_properties(**args)
@@ -149,13 +157,17 @@ module Grit::Core
     end
 
     def self.permitted_params
-      %i[login name email origin_id location_id password password_confirmation settings status_id two_factor profile_picture active]
+     %i[login name email origin_id location_id password password_confirmation settings status_id
+         auth_method two_factor profile_picture active]
     end
 
     acts_as_authentic do |c|
       c.crypto_provider = Authlogic::CryptoProviders::SCrypt
       c.log_in_after_create = false
+      c.logged_in_timeout = ENV.fetch("SESSION_EXPIRY_MINUTES", 60).to_i.minutes
     end
+
+    before_save :set_password_changed_at, if: :will_save_change_to_crypted_password?
 
     # SSO users don't have passwords — skip all password validations
     def require_password?
@@ -201,6 +213,39 @@ module Grit::Core
       .select("grit_core_users.forgot_token")
       .select("grit_core_users.activation_token")
       .select("grit_core_users.single_access_token")
+    end
+
+    def password_expired?
+      return false unless ENV.fetch("PASSWORD_EXPIRY_ENABLED", "false") == "true"
+      password_changed_at.nil? || password_changed_at < PASSWORD_EXPIRY_DAYS.days.ago
+    end
+
+    def two_factor_locked?
+      two_factor_locked_until.present? && two_factor_locked_until > Time.current
+    end
+
+    def two_factor_token_expired?
+      two_factor_expiry.nil? || two_factor_expiry < Time.current
+    end
+
+    def record_failed_two_factor_attempt!
+      increment!(:two_factor_attempts)
+      if two_factor_attempts >= TWO_FACTOR_MAX_ATTEMPTS
+        update!(
+          two_factor_locked_until: TWO_FACTOR_LOCKOUT_MINUTES.minutes.from_now,
+          two_factor_attempts: 0,
+          two_factor_token: nil
+        )
+      end
+    end
+
+    def reset_two_factor_state!
+      update!(
+        two_factor_token: nil,
+        two_factor_attempts: 0,
+        two_factor_locked_until: nil,
+        two_factor_expiry: nil
+      )
     end
 
     private
@@ -268,6 +313,10 @@ module Grit::Core
         return unless login == "admin"
 
         raise "Not allowed"
+      end
+
+      def set_password_changed_at
+        self.password_changed_at = Time.current
       end
 
       def random_password

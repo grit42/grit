@@ -70,30 +70,38 @@ module Grit::Core
         @user = Grit::Core::User.find_by(email: params[:user_session][:login].downcase)
         params[:user_session][:login] = @user.login unless @user.nil?
       end
-      raise "User #{params[:user_session][:login]} not found" if @user.nil?
-      raise "User #{params[:user_session][:login]} is inactive" if @user.active? == false
+      raise "Invalid login or password" if @user.nil?
+      raise "Invalid login or password" if @user.active? == false
       raise "Please use SSO to sign in" if @user.auth_method != "local"
 
-      if !@user.valid_password?(params[:user_session][:password]) then
-        @user.failed_login_count ||= 0
-        @user.failed_login_count += 1
-        @user.save!
-        if @user.failed_login_count > Grit::Core::UserSession.consecutive_failed_logins_limit then
-          @user.active = false
-          @user.failed_login_count = 0
-          @user.activation_token = SecureRandom.urlsafe_base64(20)
-          @user.save!
-          Grit::Core::Mailer.deliver_reactivation_instructions(@user).deliver_now
-          raise "Invalid password. Number of failed login attempts exceed limit, account have been disabled"
+      if !@user.valid_password?(params[:user_session][:password])
+        new_count = (@user.failed_login_count || 0) + 1
+
+        lockout_limit = if ENV.fetch("PASSWORD_LOCKOUT_ENABLED", "false") == "true"
+          ENV.fetch("PASSWORD_LOCKOUT_ATTEMPTS", 5).to_i
         else
-          raise "Invalid password"
+          Grit::Core::UserSession.consecutive_failed_logins_limit
+        end
+
+        if new_count >= lockout_limit && @user.login != "admin"
+          token = SecureRandom.urlsafe_base64(20)
+          @user.update_columns(active: false, failed_login_count: 0, activation_token: token)
+          Grit::Core::Mailer.deliver_reactivation_instructions(@user).deliver_now
+          raise "Invalid login or password. Account has been locked, please check your email."
+        else
+          @user.update_columns(failed_login_count: new_count)
+          raise "Invalid login or password"
         end
       end
 
+      raise "Your password has expired. Please use the forgot password function to set a new one." if @user.password_expired?
+
       two_factor = false
       if @user.two_factor == true
-        da_token = (0...8).map { rand(65..90).chr }.join
+        da_token = SecureRandom.alphanumeric(8).upcase
         @user.two_factor_token = da_token
+        @user.two_factor_expiry = Grit::Core::User::TWO_FACTOR_EXPIRY_MINUTES.minutes.from_now
+        @user.two_factor_attempts = 0
         @user.save!
         two_factor = true
         Grit::Core::Mailer.deliver_two_factor_instructions(@user).deliver_now
@@ -122,11 +130,18 @@ module Grit::Core
 
       @user = Grit::Core::User.find_by(login: params[:user].downcase)
       @user = Grit::Core::User.find_by(email: params[:user].downcase) if @user.nil?
+      raise "Invalid request" if @user.nil?
 
-      raise "Invalid token" if @user.two_factor_token != params[:token].upcase
+      raise "Account temporarily locked due to too many failed attempts. Try again later." if @user.two_factor_locked?
+      raise "Token has expired. Please log in again." if @user.two_factor_token_expired?
 
-      @user.update(
-        two_factor_token: nil,
+      unless ActiveSupport::SecurityUtils.secure_compare(@user.two_factor_token.to_s, params[:token].upcase)
+        @user.record_failed_two_factor_attempt!
+        raise "Invalid token"
+      end
+
+      @user.reset_two_factor_state!
+      @user.update!(
         forgot_token: nil,
       )
 

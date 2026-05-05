@@ -16,19 +16,14 @@
 # grit-core. If not, see <https://www.gnu.org/licenses/>.
 #++
 
-# frozen_string_literal: true
+class AddTwoFactorRateLimiting < ActiveRecord::Migration[7.2]
+  def up
+    add_column :grit_core_users, :two_factor_attempts, :integer, default: 0, null: false
+    add_column :grit_core_users, :two_factor_locked_until, :datetime
+  end
 
-module Grit::Core
-  class UserSession < Authlogic::Session::Base
-    consecutive_failed_logins_limit ENV.fetch("MAX_FAILED_LOGINS", 50).to_i
-    logout_on_timeout ENV.fetch("SESSION_EXPIRY_ENABLED", "false") == "true"
-
-    def cookie_key
-      "grit_core_user_credentials"
-    end
-
-    def params_key
-      "user_credentials"
-    end
+  def down
+    remove_column :grit_core_users, :two_factor_attempts
+    remove_column :grit_core_users, :two_factor_locked_until
   end
 end
