@@ -172,10 +172,13 @@ RSpec.describe "Load Sets API", type: :request do
         let(:id) { load_set.id }
 
         around(:each) do |example|
-          original_adapter = ActiveJob::Base.queue_adapter
+          original_base  = ActiveJob::Base.queue_adapter
+          original_class = Grit::Core::InitializeLoadSetBlockJob.queue_adapter
           ActiveJob::Base.queue_adapter = :test
+          Grit::Core::InitializeLoadSetBlockJob.queue_adapter = ActiveJob::Base.queue_adapter
           example.run
-          ActiveJob::Base.queue_adapter = original_adapter
+          Grit::Core::InitializeLoadSetBlockJob.queue_adapter = original_class
+          ActiveJob::Base.queue_adapter = original_base
         end
 
         it "enqueues an initialization job for each block", rswag: false do
