@@ -87,7 +87,7 @@ module Grit::Core
           token = SecureRandom.urlsafe_base64(20)
           @user.update_columns(active: false, failed_login_count: 0, activation_token: token)
           Grit::Core::Mailer.deliver_reactivation_instructions(@user).deliver_now
-          raise "Invalid login or password. Account has been locked, please check your email."
+          raise "Invalid login or password. Account has been locked."
         else
           @user.update_columns(failed_login_count: new_count)
           raise "Invalid login or password"
@@ -98,8 +98,7 @@ module Grit::Core
 
       two_factor = false
       if @user.two_factor == true
-        da_token = SecureRandom.alphanumeric(8).upcase
-        @user.two_factor_token = da_token
+        @user.two_factor_token = SecureRandom.alphanumeric(8).upcase
         @user.two_factor_expiry = Grit::Core::User::TWO_FACTOR_EXPIRY_MINUTES.minutes.from_now
         @user.two_factor_attempts = 0
         @user.save!
