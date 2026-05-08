@@ -16,14 +16,21 @@
 # grit-core. If not, see <https://www.gnu.org/licenses/>.
 #++
 
-module Grit::Core::GritApplicationController
+module Grit::Core::Controller::Base
   extend ActiveSupport::Concern
+  include ActionController::Cookies
+  include ActionController::RequestForgeryProtection
 
   included do
-    include ActionView::Rendering
+    protect_from_forgery with: :null_session, prepend: true,
+    if: proc { |c| c.request.format =~ %r{application/json} }
 
-    def fallback_index_html
-      render file: Rails.public_path.join("index.html"), layout: false
+    before_action :set_csrf_token
+
+    private
+
+    def set_csrf_token
+      cookies["csrf-token"] = form_authenticity_token
     end
   end
 end

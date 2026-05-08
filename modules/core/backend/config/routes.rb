@@ -78,7 +78,6 @@ Grit::Core::Engine.routes.draw do
     post :generate_api_token_for_user
     post :revoke_activation_token_for_user
     post :revoke_forgot_token_for_user
-    get :hello_world_api
   end
 
   resource :user_session, only: %i[show create destroy] do

@@ -20,7 +20,6 @@ module Grit::Core
   class Role < ApplicationRecord
     include Grit::Core::GritEntityRecord
 
-
     entity_crud_with read: []
 
     has_many :user_roles, dependent: :destroy
@@ -30,6 +29,32 @@ module Grit::Core
       RequestStore.store["Grit::Core::Role.access?#{params[:role_name]}#{Grit::Core::User.current.id}"] ||= find_by(name: params[:role_name]).users.where(id: Grit::Core::User.current.id).count
       count = RequestStore.store["Grit::Core::Role.access?#{params[:role_name]}#{Grit::Core::User.current.id}"]
       count == 1
+    end
+
+    def user_role_permissions
+      [
+        { name: "read:users" },
+        { name: "read:collections" }
+      ]
+    end
+
+    def manager_role_permissions
+      [
+        *user_role_permissions,
+        { name: "admin:collections" },
+        { name: "write:collections" }
+      ]
+    end
+
+    def administrator_role_permissions
+      [
+        *manager_role_permissions,
+        { name: "admin:users" }
+      ]
+    end
+
+    def role_permissions
+      self.send("#{self.name.downcase}_role_permissions")
     end
   end
 end

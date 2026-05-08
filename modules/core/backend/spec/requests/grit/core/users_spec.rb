@@ -273,7 +273,7 @@ RSpec.describe "Users API", type: :request do
 
     it "user should authenticate with valid token" do
       logout
-      get "/api/grit/core/user/hello_world_api", params: { user_credentials: notadmin.single_access_token }
+      get "/api/grit/test_entities", params: { user_credentials: notadmin.single_access_token }
       expect(response).to have_http_status(:success)
     end
 
@@ -283,13 +283,13 @@ RSpec.describe "Users API", type: :request do
       post "/api/grit/core/user/generate_api_token"
       logout
 
-      get "/api/grit/core/user/hello_world_api", params: { user_credentials: old_token }
+      get "/api/grit/test_entities", params: { user_credentials: old_token }
       expect(response).to have_http_status(:unauthorized)
     end
 
     it "user should not authenticate with an invalid token" do
       logout
-      get "/api/grit/core/user/hello_world_api", params: { user_credentials: "not a valid token" }
+      get "/api/grit/test_entities", params: { user_credentials: "not a valid token" }
       expect(response).to have_http_status(:unauthorized)
     end
   end

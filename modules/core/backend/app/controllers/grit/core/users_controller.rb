@@ -22,7 +22,7 @@ module Grit::Core
 
     before_action :require_administrator, only: %i[create update destroy]
     before_action :require_no_user, only: %i[activate request_password_reset password_reset]
-    before_action :require_user, only: %i[index show update_password generate_api_token hello_world_api]
+    before_action :require_user, only: %i[index show update_password generate_api_token]
 
     def create
       user = params.require(:user).permit(:origin_id, :location_id, :login, :name, :active, :email, :two_factor, role_ids: [])
@@ -254,10 +254,6 @@ module Grit::Core
       render json: { success: false, msg: e.to_s }, status: :internal_server_error
     end
 
-    def hello_world_api
-      render json: { success: true, msg: "Hello" }
-    end
-
     def generate_api_token_for_user
       if  !Grit::Core::User.current.role?("Administrator")
         render json: { success: false, errors: "Not allowed" }, status: :unauthorized
@@ -326,12 +322,16 @@ module Grit::Core
 
     private
 
-    def single_access_allowed?
-      # Allow Bearer token auth for all actions; legacy query param auth
-      # is restricted to hello_world_api for backwards compatibility.
-      return true if request.headers["Authorization"]&.start_with?("Bearer ")
-
-      action_name == "hello_world_api"
-    end
+      def require_no_user
+        return unless current_user
+      
+        false
+      end
+    
+      def require_administrator
+        return true if Grit::Core::User.current.role?("Administrator")
+      
+        render json: { success: false, errors: "Insufficient roles" }, status: :unauthorized
+      end
   end
 end

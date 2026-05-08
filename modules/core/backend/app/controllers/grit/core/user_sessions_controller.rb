@@ -20,6 +20,8 @@
 
 module Grit::Core
   class UserSessionsController < ApplicationController
+    include Grit::Core::Controller::Base
+    include Grit::Core::Controller::Authenticated
     before_action :require_no_user, only: %i[create two_factor]
     before_action :require_user, only: %i[show destroy]
     # server_settings is intentionally unauthenticated so the login page
@@ -35,9 +37,6 @@ module Grit::Core
       { modules: modules }
     end
 
-    # GET /api/grit/core/user_session/server_settings (unauthenticated)
-    # Returns server settings including SSO configuration so the login page
-    # can render the SSO button before the user is authenticated.
     def server_settings
       render json: { success: true, data: build_server_settings }
     end
@@ -161,6 +160,12 @@ module Grit::Core
 
       def user_session_params
         params.require(:user_session).permit(:login, :password)
+      end
+
+      def require_no_user
+        return unless current_user
+
+        false
       end
   end
 end
