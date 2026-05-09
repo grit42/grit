@@ -31,7 +31,7 @@ import { Button, ErrorPage, Spinner } from "@grit42/client-library/components";
 import { useToolbar } from "../../../toolbar";
 import { useTableColumns } from "../../../../utils";
 import { downloadFile } from "@grit42/client-library/utils";
-import { useHasRoles } from "../../../auth";
+import { useHasPermission } from "../../../auth";
 import { CenteredColumnLayout } from "@grit42/client-library/layouts";
 
 const getExportFileUrl = (
@@ -58,7 +58,7 @@ export const EntityTableWrapper = (props: EntityInfo) => {
 };
 
 const EntityTable = ({ full_name, path, name, plural }: EntityInfo) => {
-  const canCrud = useHasRoles(["Administrator"]);
+  const canCrud = useHasPermission("write:collections");
   const pathname = useLocation().pathname;
 
   const navigate = useNavigate();

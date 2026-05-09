@@ -18,7 +18,14 @@
 
 export { useSession } from "./api/queries";
 export { useUpdateUserSettingsMutation } from "./api/mutations";
-export { hasRoles, useHasRoles } from "./utils";
+export {
+  hasRoles,
+  useHasRoles,
+  hasPermission,
+  useHasPermission,
+  hasOneOfPermissions,
+  useHasOnOfPermissions,
+} from "./utils";
 export { default as AuthGuard } from "./components/AuthGuard";
 export { default as NoAuthGuard } from "./components/NoAuthGuard";
 export type {

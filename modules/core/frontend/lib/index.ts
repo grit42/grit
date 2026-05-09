@@ -23,6 +23,8 @@ export {
   useUpdateUserSettingsMutation,
   hasRoles,
   useHasRoles,
+  hasPermission,
+  useHasPermission,
 } from "./features/auth";
 
 export type { Session, ServerSettings, UserSettings } from "./features/auth";

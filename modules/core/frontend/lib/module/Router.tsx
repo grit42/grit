@@ -101,7 +101,7 @@ const Router = () => {
       <Route
         path="/entities"
         element={
-          <AuthGuard>
+          <AuthGuard permission="read:collections">
             <LazyEntitiesPage />
           </AuthGuard>
         }
@@ -109,7 +109,7 @@ const Router = () => {
       <Route
         path="/entities/:entity"
         element={
-          <AuthGuard>
+          <AuthGuard permission="read:collections">
             <LazyEntityPage />
           </AuthGuard>
         }
@@ -117,7 +117,7 @@ const Router = () => {
       <Route
         path="/entities/:entity/:id"
         element={
-          <AuthGuard>
+          <AuthGuard permission="read:collections">
             <LazyEntityDetailsPage />
           </AuthGuard>
         }
@@ -125,7 +125,7 @@ const Router = () => {
       <Route
         path="/vocabularies"
         element={
-          <AuthGuard>
+          <AuthGuard permission="read:collections">
             <Outlet />
           </AuthGuard>
         }
@@ -135,7 +135,7 @@ const Router = () => {
       <Route
         path="/administration"
         element={
-          <AuthGuard roles={["Administrator"]}>
+          <AuthGuard permissions={["admin:collections", "admin:users"]}>
             <Outlet />
           </AuthGuard>
         }
@@ -153,7 +153,7 @@ const Router = () => {
       <Route
         path="/load_sets/:id/*"
         element={
-          <AuthGuard>
+          <AuthGuard permission="read:collections">
             <LazyLoadSetPage />
           </AuthGuard>
         }

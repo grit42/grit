@@ -28,15 +28,12 @@ import {
   useVocabularyColumns,
 } from "../../queries/vocabularies";
 import styles from "./vocabularies.module.scss";
-import { useHasRoles } from "../../../auth";
+import { useHasPermission } from "../../../auth";
 
 const VocabulariesTable = () => {
   const registerToolbarActions = useToolbar();
   const navigate = useNavigate();
-  const canEditVocabularies = useHasRoles([
-    "Administrator",
-    "VocabularyAdministrator",
-  ]);
+  const canEditVocabularies = useHasPermission("admin:collections");
   const { pathname } = useLocation();
   const { data: vocabularyColumns } = useVocabularyColumns();
 

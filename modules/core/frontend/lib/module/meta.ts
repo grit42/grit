@@ -26,12 +26,13 @@ const Meta: ModuleMeta = {
       identifier: "VOCABULARIES",
       name: "Vocabularies",
       path: "/core/vocabularies",
+      permissions: ["read:collections"],
     },
     {
       identifier: "ADMIN",
       name: "Administration",
       path: "/core/administration",
-      roles: ["Administrator"],
+      permissions: ["admin:collections", "write:collections", "admin:users"],
     },
   ],
 };

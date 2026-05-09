@@ -50,6 +50,7 @@ module Grit::Core
               token: current_user_session.record.single_access_token,
               auth_method: current_user_session.record.auth_method,
               roles: Grit::Core::User.current.roles.select(:name).all.map(&:name),
+              permissions: Grit::Core::User.current.permissions,
               settings: current_user_session.record.settings,
               platform_information: platform_information,
               server_settings: build_server_settings

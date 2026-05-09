@@ -45,7 +45,11 @@ export interface Session {
   name: string;
   email: string;
   auth_method: string;
+  /**
+   * @deprecated
+   */
   roles: string[];
+  permissions: string[];
   settings: UserSettings;
   platform_information: { modules: Record<string, string> };
   token: string;

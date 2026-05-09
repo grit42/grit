@@ -18,7 +18,7 @@
 
 module Grit::Core
   class EntitiesController < ApplicationController
-    before_action :require_user
+    include Grit::Core::Controller::Authenticated
     @entities = nil
 
     def entities

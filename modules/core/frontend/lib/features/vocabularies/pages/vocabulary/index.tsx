@@ -22,16 +22,13 @@ import { Route, Routes, useParams } from "react-router-dom";
 import Vocabulary from "./Vocabulary";
 import { useVocabulary, useVocabularyFields } from "../../queries/vocabularies";
 import VocabularyTabs from "./VocabularyItems";
-import { useHasRoles } from "../../../auth";
+import { useHasPermission } from "../../../auth";
 import VocabularyItem from "./VocabularyItem";
 import VocabularyItemsTable from "./VocabularyItemsTable";
 
 const VocabularyPage = () => {
   const { vocabulary_id } = useParams() as { vocabulary_id: string };
-  const canEditVocabularies = useHasRoles([
-    "Administrator",
-    "VocabularyAdministrator",
-  ]);
+  const canWrite = useHasPermission("write:collections");
 
   const {
     isLoading: isVocabularyLoading,
@@ -67,7 +64,7 @@ const VocabularyPage = () => {
         <Route
           index
           element={
-            canEditVocabularies ? (
+            canWrite ? (
               <VocabularyTabs vocabularyId={vocabulary_id} />
             ) : (
               <VocabularyItemsTable vocabularyId={vocabulary_id} />
