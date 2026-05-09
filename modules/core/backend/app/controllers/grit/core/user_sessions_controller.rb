@@ -20,12 +20,10 @@
 
 module Grit::Core
   class UserSessionsController < ApplicationController
-    include Grit::Core::Controller::Base
+    include Grit::Core::Controller::Unforgeable
     include Grit::Core::Controller::Authenticated
     before_action :require_no_user, only: %i[create two_factor]
     before_action :require_user, only: %i[show destroy]
-    # server_settings is intentionally unauthenticated so the login page
-    # can discover SSO configuration before the user logs in.
 
     def platform_information
       modules = Rails::Engine.descendants.each_with_object({}) do |engine, memo|

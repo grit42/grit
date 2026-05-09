@@ -44,7 +44,7 @@ Grit::Core::Engine.routes.draw do
     get :validation_progress
   end
 
-  resources :load_set_statuses
+  resources :load_set_statuses, only: [ :index, :show ]
 
   resources_with_export :origins do
     collection do

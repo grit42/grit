@@ -71,6 +71,15 @@ FactoryBot.define do
       end
     end
 
+    trait :with_user_role do
+      after(:create) do |user|
+        user_role = Grit::Core::Role.find_or_create_by!(name: "User") do |role|
+          role.description = "User"
+        end
+        Grit::Core::UserRole.find_or_create_by!(user: user, role: user_role)
+      end
+    end
+
     trait :with_location do
       association :location, factory: :grit_core_location
     end

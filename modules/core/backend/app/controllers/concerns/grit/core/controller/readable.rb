@@ -18,10 +18,13 @@
 
 require "grit/core/filter_provider"
 
-module Grit::Core::Controller::Resources
+module Grit::Core::Controller::Readable
   extend ActiveSupport::Concern
+  include Grit::Core::Controller::Authenticated
 
   included do
+    before_action :check_read, only: %i[ index show export ] if self.include? Grit::Core::Controller::Authorized
+
     def filter_and_sort_raw_sql(scope, filter, sort)
       klass = controller_path.classify.constantize
 
@@ -149,52 +152,6 @@ module Grit::Core::Controller::Resources
       end
     rescue ActiveRecord::RecordNotFound => e
       render json: { success: false, errors: "Not found" }
-    rescue StandardError => e
-      logger.info e.to_s
-      logger.info e.backtrace.join("\n")
-      render json: { success: false, errors: e.to_s }, status: :internal_server_error
-    end
-
-    def create
-      klass = controller_path.classify.constantize
-      permitted_params = params.permit(self.permitted_params)
-      @record = klass.new(permitted_params)
-
-      if @record.save
-        render json: { success: true, data: @record }, status: :created, location: @record
-      else
-        render json: { success: false, errors: @record.errors }, status: :unprocessable_entity
-      end
-    rescue StandardError => e
-      logger.info e.to_s
-      logger.info e.backtrace.join("\n")
-      render json: { success: false, errors: e.to_s }, status: :internal_server_error
-    end
-
-    def update
-      klass = controller_path.classify.constantize
-      @record = klass.find(params[:id])
-      permitted_params = params.permit(self.permitted_params)
-
-      if @record.update(permitted_params)
-        scope = get_scope(params[:scope] || "detailed", params)
-        @record = scope.find(params[:id])
-        render json: { success: true, data: @record }
-      else
-        render json: { success: false, errors: @record.errors }, status: :unprocessable_entity
-      end
-    rescue StandardError => e
-      logger.info e.to_s
-      logger.info e.backtrace.join("\n")
-      render json: { success: false, errors: e.to_s }, status: :internal_server_error
-    end
-
-    def destroy
-      klass = controller_path.classify.constantize
-      ids = params[:id] if params[:id] != "destroy"
-      ids = params[:ids].split(",") if params[:id] == "destroy"
-      klass.where(id: ids).destroy_all
-      render json: { success: true }
     rescue StandardError => e
       logger.info e.to_s
       logger.info e.backtrace.join("\n")

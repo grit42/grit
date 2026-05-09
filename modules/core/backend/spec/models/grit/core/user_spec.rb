@@ -21,7 +21,7 @@ require "rails_helper"
 
 RSpec.describe Grit::Core::User, type: :model do
   let(:admin) { create(:grit_core_user, :admin, :with_admin_role) }
-  let(:notadmin) { create(:grit_core_user) }
+  let(:notadmin) { create(:grit_core_user, :with_user_role) }
   let(:origin) { create(:grit_core_origin) }
 
   before(:each) do

@@ -23,9 +23,6 @@ module Grit::Core
     display_column "abbreviation"
 
 
-    entity_crud_with read: [],
-      create: [ "Administrator" ],
-      update: [ "Administrator" ],
-      destroy: [ "Administrator" ]
+    entity_crud_with read: ["read:collections"], write: ["write:collections"]
   end
 end

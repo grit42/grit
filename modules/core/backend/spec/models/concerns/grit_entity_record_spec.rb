@@ -135,18 +135,8 @@ RSpec.describe "GritEntityRecord concern", type: :model do
   describe "entity_crud_with configuration" do
     it "returns configured permissions" do
       crud = Grit::TestEntity.entity_crud
-      expect(crud[:create]).to eq([])
-      expect(crud[:read]).to eq([])
-      expect(crud[:update]).to eq([])
-      expect(crud[:destroy]).to eq([])
-    end
-
-    it "returns nil for unconfigured operations" do
-      crud = Grit::Core::Country.entity_crud
-      expect(crud[:create]).to be_nil
-      expect(crud[:read]).to eq([])
-      expect(crud[:update]).to be_nil
-      expect(crud[:destroy]).to be_nil
+      expect(crud[:read]).to eq(["read:collections"])
+      expect(crud[:write]).to eq(["write:collections"])
     end
   end
 

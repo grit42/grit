@@ -46,7 +46,7 @@ module Grit::Core
       errors.add(:separator, "cannot be blank") if separator.nil? || separator.blank?
     end
 
-    entity_crud_with create: [], read: [], update: [], destroy: []
+    entity_crud_with read: [], write: []
 
     def self.entity_fields(params = nil)
       @entity_fields ||= self.entity_fields_from_properties(

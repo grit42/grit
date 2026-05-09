@@ -5,10 +5,7 @@ module Grit::Core
     belongs_to :load_set_block
     belongs_to :vocabulary
 
-    entity_crud_with read: [],
-      create: [ "Administrator", "VocabularyAdministrator" ],
-      update: [ "Administrator", "VocabularyAdministrator" ],
-      destroy: [ "Administrator", "VocabularyAdministrator" ]
+    entity_crud_with read: ["read:collections"], write: ["write:collections"]
 
     def self.entity_fields
       @entity_fields ||= self.entity_fields_from_properties(self.entity_properties.select { |p| [ "vocabulary_id" ].include?(p[:name]) })

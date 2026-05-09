@@ -21,20 +21,12 @@ require "swagger_helper"
 
 RSpec.describe "Roles API", type: :request do
   let(:admin) { create(:grit_core_user, :admin, :with_admin_role) }
+  let(:notadmin) { create(:grit_core_user, :with_user_role) }
   let(:role) { Grit::Core::Role.find_by!(name: "Administrator") }
 
   before(:each) do
     login_as(admin)
   end
-
-  it_behaves_like "a read-only entity",
-    model_class: Grit::Core::Role,
-    index_url: "/api/grit/core/roles",
-    show_url: -> { "/api/grit/core/roles/#{role.id}" },
-    create_params: { name: "Test", description: "Test role" },
-    update_url: -> { "/api/grit/core/roles/#{role.id}" },
-    update_params: { name: "Updated role" },
-    destroy_url: -> { "/api/grit/core/roles/#{role.id}" }
 
   path "/api/grit/core/roles" do
     get "Lists all roles" do
@@ -48,7 +40,7 @@ RSpec.describe "Roles API", type: :request do
       end
     end
 
-    post "Attempts to create a role" do
+    post "Creates a role" do
       tags "Core - Roles"
       consumes "application/json"
       produces "application/json"
@@ -61,7 +53,7 @@ RSpec.describe "Roles API", type: :request do
         }
       }
 
-      response "403", "creation is forbidden" do
+      response "201", "role created" do
         let(:role_params) { { name: "Test", description: "Test role" } }
         before { login_as(admin) }
         run_test!
@@ -84,7 +76,7 @@ RSpec.describe "Roles API", type: :request do
       end
     end
 
-    patch "Attempts to update a role" do
+    patch "Updates a role" do
       tags "Core - Roles"
       consumes "application/json"
       produces "application/json"
@@ -96,7 +88,7 @@ RSpec.describe "Roles API", type: :request do
         }
       }
 
-      response "403", "update is forbidden" do
+      response "200", "role updated" do
         let(:id) { role.id }
         let(:role_params) { { name: "Updated role" } }
         before { login_as(admin) }
@@ -104,16 +96,70 @@ RSpec.describe "Roles API", type: :request do
       end
     end
 
-    delete "Attempts to destroy a role" do
+    delete "Deletes a role" do
       tags "Core - Roles"
       produces "application/json"
       security [ { bearer_auth: [] } ]
 
-      response "403", "destruction is forbidden" do
+      response "200", "role deleted" do
         let(:id) { role.id }
         before { login_as(admin) }
         run_test!
       end
     end
+  end
+
+
+  it "allows index with 'read:users'" do
+    login_as(notadmin)
+    get "/api/grit/core/roles", as: :json
+    expect(response).to have_http_status(:success)
+  end
+
+  it "allows show with 'read:users'" do
+    login_as(notadmin)
+    get "/api/grit/core/roles/#{role.id}", as: :json
+    expect(response).to have_http_status(:success)
+  end
+
+  it "allows create with 'admin:users'" do
+    expect {
+      post "/api/grit/core/roles", params: { name: "Test1", description: "Test role" }, as: :json
+  }.to change(Grit::Core::Role, :count)
+    expect(response).to have_http_status(:created)
+  end
+
+  it "allows update with 'admin:users'" do
+    patch "/api/grit/core/roles/#{role.id}", params: { name: "Testtest1" }, as: :json
+    expect(response).to have_http_status(:success)
+  end
+
+  it "allows destroy with 'admin:users'" do
+    expect {
+      delete "/api/grit/core/roles/#{role.id}", as: :json
+  }.to change(Grit::Core::Role, :count)
+    expect(response).to have_http_status(:success)
+  end
+
+  it "forbids create without 'admin:users'" do
+    login_as(notadmin)
+    expect {
+      post "/api/grit/core/roles", params: { name: "Test2", description: "Test role" }, as: :json
+    }.not_to change(Grit::Core::Role, :count)
+    expect(response).to have_http_status(:forbidden)
+  end
+
+  it "forbids update without 'admin:users'" do
+    login_as(notadmin)
+    patch "/api/grit/core/roles/#{role.id}", params: { name: "Testtest2" }, as: :json
+    expect(response).to have_http_status(:forbidden)
+  end
+
+  it "forbids destroy without 'admin:users'" do
+    login_as(notadmin)
+    expect {
+      delete "/api/grit/core/roles/#{role.id}", as: :json
+    }.not_to change(Grit::Core::Role, :count)
+    expect(response).to have_http_status(:forbidden)
   end
 end

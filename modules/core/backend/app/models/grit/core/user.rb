@@ -27,7 +27,7 @@ module Grit::Core
 
 
     display_columns [ "name", "login" ]
-    entity_crud_with read: [], create: [ "Administrator" ], update: [ "Administrator" ], destroy: [ "Administrator" ]
+    entity_crud_with read: ["read:users"], write: ["admin:users"]
 
     EMAIL = /
     \A
@@ -175,6 +175,18 @@ module Grit::Core
         RequestStore.store["current_user"] = find(user_session.record.id)
       end
       RequestStore.store["current_user"]
+    end
+
+    def permissions
+      roles
+        .flat_map(&:role_permissions)
+        .map { |rp| rp.dig(:name) }
+        .uniq
+    end
+
+    def permission?(requested_permissions)
+      requested_permissions = [requested_permissions] unless requested_permissions.is_a? Array
+      (permissions & requested_permissions).present?
     end
 
     def role?(role_name = nil)

@@ -324,13 +324,13 @@ module Grit::Core
 
       def require_no_user
         return unless current_user
-      
+
         false
       end
-    
+
       def require_administrator
         return true if Grit::Core::User.current.role?("Administrator")
-      
+
         render json: { success: false, errors: "Insufficient roles" }, status: :unauthorized
       end
   end

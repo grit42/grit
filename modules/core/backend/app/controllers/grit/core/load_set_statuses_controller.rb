@@ -18,6 +18,8 @@
 
 module Grit::Core
   class LoadSetStatusesController < ApplicationController
-    include Grit::Core::GritEntityController
+    include Grit::Core::Controller::Unforgeable
+    include Grit::Core::Controller::Authenticated
+    include Grit::Core::Controller::Readable
   end
 end

@@ -21,7 +21,7 @@ require "swagger_helper"
 
 RSpec.describe "Units API", type: :request do
   let(:admin) { create(:grit_core_user, :admin, :with_admin_role) }
-  let(:notadmin) { create(:grit_core_user) }
+  let(:notadmin) { create(:grit_core_user, :with_user_role) }
   let!(:unit) { create(:grit_core_unit, :meter) }
 
   it_behaves_like "an admin-only CRUD entity",

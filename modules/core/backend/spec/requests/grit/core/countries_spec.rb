@@ -21,20 +21,12 @@ require "swagger_helper"
 
 RSpec.describe "Countries API", type: :request do
   let(:admin) { create(:grit_core_user, :admin, :with_admin_role) }
+  let(:notadmin) { create(:grit_core_user, :with_user_role) }
   let!(:country) { create(:grit_core_country, :test) }
 
   before(:each) do
     login_as(admin)
   end
-
-  it_behaves_like "a read-only entity",
-    model_class: Grit::Core::Country,
-    index_url: "/api/grit/core/countries",
-    show_url: -> { "/api/grit/core/countries/#{country.id}" },
-    create_params: { name: "Yop", iso: "YP" },
-    update_url: -> { "/api/grit/core/countries/#{country.id}" },
-    update_params: { name: "Testtest" },
-    destroy_url: -> { "/api/grit/core/countries/#{country.id}" }
 
   path "/api/grit/core/countries" do
     get "Lists all countries" do
@@ -48,7 +40,7 @@ RSpec.describe "Countries API", type: :request do
       end
     end
 
-    post "Attempts to create a country" do
+    post "Create a country" do
       tags "Core - Countries"
       consumes "application/json"
       produces "application/json"
@@ -61,7 +53,7 @@ RSpec.describe "Countries API", type: :request do
         }
       }
 
-      response "403", "creation is forbidden" do
+      response "201", "country created" do
         let(:country_params) { { name: "Yop", iso: "YP" } }
         before { login_as(admin) }
         run_test!
@@ -84,7 +76,7 @@ RSpec.describe "Countries API", type: :request do
       end
     end
 
-    patch "Attempts to update a country" do
+    patch "Update a country" do
       tags "Core - Countries"
       consumes "application/json"
       produces "application/json"
@@ -96,7 +88,7 @@ RSpec.describe "Countries API", type: :request do
         }
       }
 
-      response "403", "update is forbidden" do
+      response "200", "country updated" do
         let(:id) { country.id }
         let(:country_params) { { name: "Testtest" } }
         before { login_as(admin) }
@@ -104,16 +96,69 @@ RSpec.describe "Countries API", type: :request do
       end
     end
 
-    delete "Attempts to destroy a country" do
+    delete "Delete a country" do
       tags "Core - Countries"
       produces "application/json"
       security [ { bearer_auth: [] } ]
 
-      response "403", "destruction is forbidden" do
+      response "200", "country is deleted" do
         let(:id) { country.id }
         before { login_as(admin) }
         run_test!
       end
     end
+  end
+
+  it "allows index with 'read:collections'" do
+    login_as(notadmin)
+    get "/api/grit/core/countries", as: :json
+    expect(response).to have_http_status(:success)
+  end
+
+  it "allows show with 'read:collections'" do
+    login_as(notadmin)
+    get "/api/grit/core/countries/#{country.id}", as: :json
+    expect(response).to have_http_status(:success)
+  end
+
+  it "allows create with 'write:collections'" do
+    expect {
+      post "/api/grit/core/countries", params: { name: "Test1", iso: "YP" }, as: :json
+  }.to change(Grit::Core::Country, :count)
+    expect(response).to have_http_status(:created)
+  end
+
+  it "allows update with 'write:collections'" do
+    patch "/api/grit/core/countries/#{country.id}", params: { name: "Testtest1" }, as: :json
+    expect(response).to have_http_status(:success)
+  end
+
+  it "allows destroy with 'write:collections'" do
+    expect {
+      delete "/api/grit/core/countries/#{country.id}", as: :json
+  }.to change(Grit::Core::Country, :count)
+    expect(response).to have_http_status(:success)
+  end
+
+  it "forbids create without 'write:collections'" do
+    login_as(notadmin)
+    expect {
+      post "/api/grit/core/countries", params: { name: "Test2", iso: "TT" }, as: :json
+    }.not_to change(Grit::Core::Country, :count)
+    expect(response).to have_http_status(:forbidden)
+  end
+
+  it "forbids update without 'write:collections'" do
+    login_as(notadmin)
+    patch "/api/grit/core/countries/#{country.id}", params: { name: "Testtest2" }, as: :json
+    expect(response).to have_http_status(:forbidden)
+  end
+
+  it "forbids destroy without 'write:collections'" do
+    login_as(notadmin)
+    expect {
+      delete "/api/grit/core/countries/#{country.id}", as: :json
+    }.not_to change(Grit::Core::Country, :count)
+    expect(response).to have_http_status(:forbidden)
   end
 end

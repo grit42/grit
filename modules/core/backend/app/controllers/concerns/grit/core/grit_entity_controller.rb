@@ -20,8 +20,9 @@ require "grit/core/filter_provider"
 
 module Grit::Core::GritEntityController
   extend ActiveSupport::Concern
-  include Grit::Core::Controller::Base
+  include Grit::Core::Controller::Unforgeable
   include Grit::Core::Controller::Authenticated
   include Grit::Core::Controller::Authorized
-  include Grit::Core::Controller::Resources
+  include Grit::Core::Controller::Readable
+  include Grit::Core::Controller::Writable
 end

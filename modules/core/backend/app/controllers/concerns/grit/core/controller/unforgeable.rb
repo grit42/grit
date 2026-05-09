@@ -16,7 +16,7 @@
 # grit-core. If not, see <https://www.gnu.org/licenses/>.
 #++
 
-module Grit::Core::Controller::Base
+module Grit::Core::Controller::Unforgeable
   extend ActiveSupport::Concern
   include ActionController::Cookies
   include ActionController::RequestForgeryProtection

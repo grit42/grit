@@ -24,7 +24,7 @@ module Grit::Core
 
     before_destroy :check_status
 
-    entity_crud_with create: [], read: [], update: [], destroy: []
+    entity_crud_with read: ["read:collections"], write: ["write:collections"]
 
     def self.by_entity(params)
       self.detailed.where([ "grit_core_load_sets.entity = ?", params[:entity] ])

@@ -338,3 +338,5 @@ Grit::Core::PublicationStatus.insert({ name: "Draft", description: "Actively wor
 Grit::Core::PublicationStatus.insert({ name: "Published", description: "Available for use" }) if Grit::Core::PublicationStatus.find_by(name: "Published").nil?
 
 Grit::Core::Role.upsert({ name: "VocabularyAdministrator", description: "Can create and modify controlled vocabularies" }) if Grit::Core::Role.find_by(name: "VocabularyAdministrator").nil?
+
+Grit::Core::Role.upsert({ name: "User", description: "Can read users and collections" }) if Grit::Core::Role.find_by(name: "User").nil? # TODO

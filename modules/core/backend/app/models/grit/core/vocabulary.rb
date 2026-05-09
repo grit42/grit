@@ -27,10 +27,7 @@ module Grit::Core
 
     display_column "name"
 
-    entity_crud_with read: [],
-      create: [ "Administrator",  "VocabularyAdministrator" ],
-      update: [ "Administrator",  "VocabularyAdministrator" ],
-      destroy: [ "Administrator",  "VocabularyAdministrator" ]
+    entity_crud_with read: ["read:collections"], write: ["admin:collections"]
 
     def data_type
       @data_type ||= Grit::Core::DataType.unscoped.find_by("meta->'vocabulary_id' = ?", self.id)

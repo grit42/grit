@@ -21,31 +21,16 @@ module Grit::Core::Controller::Authorized
   include Grit::Core::Controller::Authenticated
 
   included do
-    before_action :check_read, only: %i[ index show ]
-    before_action :check_create, only: :create
-    before_action :check_update, only: :update
-    before_action :check_destroy, only: :destroy
-
     private
 
     def check_read
       klass = controller_path.classify.constantize
-      render json: { success: false, errors: "You do not have the permissions required to read #{controller_path.classify}" }, status: :forbidden if klass.entity_crud[:read].nil? or (!klass.entity_crud[:read].length.zero? and !current_user.one_of_these_roles?(klass.entity_crud[:read]))
+      render json: { success: false, errors: "You do not have the permissions required to read #{controller_path.classify}" }, status: :forbidden if klass.entity_crud[:read].nil? or !current_user.permission?(klass.entity_crud[:read])
     end
 
-    def check_create
+    def check_write
       klass = controller_path.classify.constantize
-      render json: { success: false, errors: "You do not have the permissions required to create #{controller_path.classify}" }, status: :forbidden if klass.entity_crud[:create].nil? or (!klass.entity_crud[:create].length.zero? and !current_user.one_of_these_roles?(klass.entity_crud[:create]))
-    end
-
-    def check_update
-      klass = controller_path.classify.constantize
-      render json: { success: false, errors: "You do not have the permissions required to update #{controller_path.classify}" }, status: :forbidden  if klass.entity_crud[:update].nil? or (!klass.entity_crud[:update].length.zero? and !current_user.one_of_these_roles?(klass.entity_crud[:update]))
-    end
-
-    def check_destroy
-      klass = controller_path.classify.constantize
-      render json: { success: false, errors: "You do not have the permissions required to delete #{controller_path.classify}" }, status: :forbidden if klass.entity_crud[:destroy].nil? or (!klass.entity_crud[:destroy].length.zero? and !current_user.one_of_these_roles?(klass.entity_crud[:destroy]))
+      render json: { success: false, errors: "You do not have the permissions required to write #{controller_path.classify}" }, status: :forbidden if klass.entity_crud[:write].nil? or !current_user.permission?(klass.entity_crud[:write])
     end
   end
 end

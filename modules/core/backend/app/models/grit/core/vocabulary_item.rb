@@ -24,10 +24,7 @@ module Grit::Core
 
     display_column "name"
 
-    entity_crud_with read: [],
-      create: [ "Administrator",  "VocabularyAdministrator" ],
-      update: [ "Administrator",  "VocabularyAdministrator" ],
-      destroy: [ "Administrator",  "VocabularyAdministrator" ]
+    entity_crud_with read: ["read:collections"], write: ["write:collections"]
 
     def self.loader_find_by(prop, value, **args)
       find_by_props = { prop => value }

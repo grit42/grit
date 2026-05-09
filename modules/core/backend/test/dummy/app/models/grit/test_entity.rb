@@ -2,10 +2,6 @@ class Grit::TestEntity < ApplicationRecord
   include Grit::Core::GritEntityRecord
 
   display_column "name"
-  entity_crud_with read: [
-      # "Administrator"
-    ],
-    create: [],
-    update: [],
-    destroy: []
+  entity_crud_with read: ["read:collections"],
+    write: ["write:collections"]
 end
