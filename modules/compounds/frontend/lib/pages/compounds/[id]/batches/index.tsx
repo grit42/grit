@@ -136,7 +136,7 @@ const CompoundBatches = ({ id }: Props) => {
         requiredPermissions: ["write:compounds"],
       },
       export: {
-        requiredPermissions: ["read:compounds"],
+        requiredPermissions: ["read:system"],
       },
       exportItems: [
         {

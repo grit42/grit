@@ -48,7 +48,7 @@ const VocabularyForm = ({
   vocabulary: Partial<VocabularyData>;
 }) => {
   const navigate = useNavigate();
-  const canWrite = useHasPermission("write:collections");
+  const canWrite = useHasPermission("admin:vocabularies");
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState<Partial<VocabularyData>>(vocabulary);
 

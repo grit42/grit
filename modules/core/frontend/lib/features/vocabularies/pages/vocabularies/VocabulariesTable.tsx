@@ -33,7 +33,7 @@ import { useHasPermission } from "../../../auth";
 const VocabulariesTable = () => {
   const registerToolbarActions = useToolbar();
   const navigate = useNavigate();
-  const canEditVocabularies = useHasPermission("admin:collections");
+  const canEditVocabularies = useHasPermission("admin:vocabularies");
   const { pathname } = useLocation();
   const { data: vocabularyColumns } = useVocabularyColumns();
 

@@ -1747,6 +1747,13 @@ CREATE UNIQUE INDEX uniq_compound_property_value_per_compound ON public.grit_com
 
 
 --
+-- Name: uniq_permission_per_role; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX uniq_permission_per_role ON public.grit_core_role_permissions USING btree (role_id, permission_id);
+
+
+--
 -- Name: uniq_vocabulary_item_name_per_vocabulary; Type: INDEX; Schema: public; Owner: -
 --
 

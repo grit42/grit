@@ -20,7 +20,7 @@ module Grit::Core
   class Role < ApplicationRecord
     include Grit::Core::GritEntityRecord
 
-    entity_crud_with read: [ "read:users" ], write: [ "admin:users" ]
+    entity_crud_with read: [ "admin:users" ], write: [ "admin:users" ]
 
     has_many :user_roles, dependent: :destroy
     has_many :users, through: :user_roles

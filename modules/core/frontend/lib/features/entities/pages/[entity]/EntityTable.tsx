@@ -58,7 +58,7 @@ export const EntityTableWrapper = (props: EntityInfo) => {
 };
 
 const EntityTable = ({ full_name, path, name, plural }: EntityInfo) => {
-  const canCrud = useHasPermission("write:collections");
+  const canCrud = useHasPermission("admin:system");
   const pathname = useLocation().pathname;
 
   const navigate = useNavigate();
@@ -136,7 +136,7 @@ const EntityTable = ({ full_name, path, name, plural }: EntityInfo) => {
                 redirect: pathname,
               },
             }),
-          requiredPermissions: ["admin:collections"],
+          requiredPermissions: ["admin:system"],
         },
       ],
     });

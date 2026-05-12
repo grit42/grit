@@ -22,6 +22,6 @@ module Grit::Compounds
 
     belongs_to :compound
 
-    entity_crud_with read: [ "read:compounds" ], write: [ "write:compounds" ]
+    entity_crud_with read: [ "read:system" ], write: [ "write:compounds" ]
   end
 end

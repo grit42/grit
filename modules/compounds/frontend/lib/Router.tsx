@@ -41,7 +41,7 @@ const Router = () => {
     <Routes>
       <Route
         element={
-          <AuthGuard permission="read:compounds">
+          <AuthGuard permission="read:system">
             <Outlet />
           </AuthGuard>
         }

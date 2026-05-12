@@ -149,7 +149,7 @@ const CompoundSynonyms = ({ id }: Props) => {
         },
       ],
       export: {
-        requiredPermissions: ["read:compounds"],
+        requiredPermissions: ["read:system"],
       },
       exportItems: [
         {

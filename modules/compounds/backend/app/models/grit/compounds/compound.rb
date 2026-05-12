@@ -30,7 +30,7 @@ module Grit::Compounds
 
     display_columns [ "number", "name" ]
 
-    entity_crud_with read: [ "read:compounds" ], write: [ "write:compounds" ]
+    entity_crud_with read: [ "read:system" ], write: [ "write:compounds" ]
 
     validate :no_synonyms_with_name
 

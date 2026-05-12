@@ -22,7 +22,7 @@ module Grit::Compounds
 
     display_column "name"
 
-    entity_crud_with read: [ "read:compounds" ], write: [ "admin:compounds" ]
+    entity_crud_with read: [ "read:system" ], write: [ "admin:compounds" ]
 
     before_destroy :check_compounds
     before_destroy :delete_dependents

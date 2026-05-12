@@ -59,7 +59,7 @@ const VocabularyItemsTable = ({ vocabularyId }: Props) => {
   const registerToolbarActions = useToolbar();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const canWrite = useHasPermission("write:collections");
+  const canWrite = useHasPermission("admin:vocabularies");
 
   const { data: columns } = useVocabularyItemColumns();
 

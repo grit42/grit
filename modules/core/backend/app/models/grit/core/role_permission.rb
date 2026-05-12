@@ -5,7 +5,7 @@ module Grit::Core
     belongs_to :permission
     belongs_to :role
 
-    entity_crud_with read: [ "read:users" ], write: [ "admin:users" ]
+    entity_crud_with read: [ "admin:users" ], write: [ "admin:users" ]
 
     def self.detailed(params = {})
       query = self.detailed_scope(params)

@@ -21,6 +21,8 @@ class CreateGritCorePermissions < ActiveRecord::Migration[8.1]
       t.datetime :updated_at
       t.references :role, null: false, foreign_key: { name: "core_role_permissions_core_role_id_fkey", to_table: "grit_core_roles" }
       t.references :permission, null: false, foreign_key: { name: "core_role_permissions_core_permission_id_fkey", to_table: "grit_core_permissions" }
+
+      t.index [ :role_id, :permission_id ], unique: true, name: "uniq_permission_per_role"
     end
 
     add_column :grit_core_roles, :system, :boolean, default: false

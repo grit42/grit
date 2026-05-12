@@ -28,7 +28,7 @@ import VocabularyItemsTable from "./VocabularyItemsTable";
 
 const VocabularyPage = () => {
   const { vocabulary_id } = useParams() as { vocabulary_id: string };
-  const canWrite = useHasPermission("write:collections");
+  const canWrite = useHasPermission("admin:vocabularies");
 
   const {
     isLoading: isVocabularyLoading,

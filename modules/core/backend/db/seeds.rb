@@ -337,45 +337,33 @@ Grit::Core::PublicationStatus.insert({ name: "Published", description: "Availabl
 # Access control
 
 ## Roles
-user_role_id = Grit::Core::Role.find_by(name: "User")&.id || Grit::Core::Role.insert({ name: "User", description: "Can read data", system: true })[0]["id"]
-manager_role_id = Grit::Core::Role.find_by(name: "Manager")&.id || Grit::Core::Role.insert({ name: "Manager", description: "Can read and write data", system: true })[0]["id"]
-admin_role_id = Grit::Core::Role.find_by(name: "Administrator")&.id || Grit::Core::Role.insert({ name: "Administrator", description: "Can read and write data, and manage users", system: true })[0]["id"]
+read_role_id = Grit::Core::Role.find_by(name: "Read")&.id || Grit::Core::Role.insert({ name: "Read", description: "Read data", system: true })[0]["id"]
+analyse_role_id = Grit::Core::Role.find_by(name: "Analyse")&.id || Grit::Core::Role.insert({ name: "Analyse", description: "'Read' and use analysis features", system: true })[0]["id"]
+write_role_id = Grit::Core::Role.find_by(name: "Write")&.id || Grit::Core::Role.insert({ name: "Write", description: "'Analyse' and write data", system: true })[0]["id"]
+manage_role_id = Grit::Core::Role.find_by(name: "Manage")&.id || Grit::Core::Role.insert({ name: "Manage", description: "'Write' and manage models and controlled terminology", system: true })[0]["id"]
+admin_role_id = Grit::Core::Role.find_by(name: "Administrator")&.id || Grit::Core::Role.insert({ name: "Administrator", description: "System administrator", system: true })[0]["id"]
 
 ## Permissions
-read_users_permission_id = Grit::Core::Permission.find_by(name: "read:users")&.id || Grit::Core::Permission.insert({ name: "read:users", description: "Can read user profiles" })[0]["id"]
-admin_users_permission_id = Grit::Core::Permission.find_by(name: "admin:users")&.id || Grit::Core::Permission.insert({ name: "admin:users", description: "Can admin user profiles", provides_permissions: [ read_users_permission_id ] })[0]["id"]
-read_collections_permission_id = Grit::Core::Permission.find_by(name: "read:collections")&.id || Grit::Core::Permission.insert({ name: "read:collections", description: "Can read collections (Vocabularies, Origins, Locations, Units, ...)" })[0]["id"]
-write_collections_permission_id = Grit::Core::Permission.find_by(name: "write:collections")&.id || Grit::Core::Permission.insert({ name: "write:collections", description: "Can write collections (Vocabularies items, Origins, Locations, Units, ...)", provides_permissions: [ read_collections_permission_id ] })[0]["id"]
-admin_collections_permission_id = Grit::Core::Permission.find_by(name: "admin:collections")&.id || Grit::Core::Permission.insert({ name: "admin:collections", description: "Can admin collections (Create and update Vocabularies)", provides_permissions: [ read_collections_permission_id, write_collections_permission_id ] })[0]["id"]
+read_system_permission_id = Grit::Core::Permission.find_by(name: "read:system")&.id || Grit::Core::Permission.insert({ name: "read:system", description: "Read data" })[0]["id"]
+write_analysis_permission_id = Grit::Core::Permission.find_by(name: "write:analysis")&.id || Grit::Core::Permission.insert({ name: "write:analysis", description: "Use analysis features", provides_permissions: [ read_system_permission_id ] })[0]["id"]
+admin_system_permission_id = Grit::Core::Permission.find_by(name: "admin:system")&.id || Grit::Core::Permission.insert({ name: "admin:system", description: "Manage system", provides_permissions: [ read_system_permission_id ] })[0]["id"]
+admin_users_permission_id = Grit::Core::Permission.find_by(name: "admin:users")&.id || Grit::Core::Permission.insert({ name: "admin:users", description: "Manage users", provides_permissions: [ read_system_permission_id ] })[0]["id"]
+admin_vocabularies_permission_id = Grit::Core::Permission.find_by(name: "admin:vocabularies")&.id || Grit::Core::Permission.insert({ name: "admin:vocabularies", description: "Manage vocabularies", provides_permissions: [ read_system_permission_id ] })[0]["id"]
 
 ## Role Permissions
+Grit::Core::RolePermission.upsert({ role_id: read_role_id, permission_id: read_system_permission_id }, unique_by: [:role_id, :permission_id])
 
-user_permissions = [
-  read_users_permission_id,
-  read_collections_permission_id
-]
+Grit::Core::RolePermission.upsert({ role_id: analyse_role_id, permission_id: write_analysis_permission_id }, unique_by: [:role_id, :permission_id])
 
-user_permissions.each do |p|
-  Grit::Core::RolePermission.insert({ role_id: user_role_id, permission_id: p }) if Grit::Core::RolePermission.find_by(role_id: user_role_id, permission_id: p).nil?
-end
+Grit::Core::RolePermission.upsert({ role_id: write_role_id, permission_id: write_analysis_permission_id }, unique_by: [:role_id, :permission_id])
 
-manager_permissions = [
-  read_users_permission_id,
-  admin_collections_permission_id
-]
+Grit::Core::RolePermission.upsert({ role_id: manage_role_id, permission_id: write_analysis_permission_id }, unique_by: [:role_id, :permission_id])
+Grit::Core::RolePermission.upsert({ role_id: manage_role_id, permission_id: admin_vocabularies_permission_id }, unique_by: [:role_id, :permission_id])
 
-manager_permissions.each do |p|
-  Grit::Core::RolePermission.insert({ role_id: manager_role_id, permission_id: p }) if Grit::Core::RolePermission.find_by(role_id: manager_role_id, permission_id: p).nil?
-end
-
-admin_permissions = [
-  admin_collections_permission_id,
-  admin_users_permission_id
-]
-
-admin_permissions.each do |p|
-  Grit::Core::RolePermission.insert({ role_id: admin_role_id, permission_id: p }) if Grit::Core::RolePermission.find_by(role_id: admin_role_id, permission_id: p).nil?
-end
+Grit::Core::RolePermission.upsert({ role_id: manage_role_id, permission_id: write_analysis_permission_id }, unique_by: [:role_id, :permission_id])
+Grit::Core::RolePermission.upsert({ role_id: admin_role_id, permission_id: admin_vocabularies_permission_id }, unique_by: [:role_id, :permission_id])
+Grit::Core::RolePermission.upsert({ role_id: admin_role_id, permission_id: admin_system_permission_id }, unique_by: [:role_id, :permission_id])
+Grit::Core::RolePermission.upsert({ role_id: admin_role_id, permission_id: admin_users_permission_id }, unique_by: [:role_id, :permission_id])
 
 ## User roles
 

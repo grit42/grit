@@ -23,7 +23,7 @@ module Grit::Compounds
     belongs_to :load_set_block, class_name: "Grit::Core::LoadSetBlock"
     belongs_to :compound_type, class_name: "Grit::Compounds::CompoundType"
 
-    entity_crud_with read: [ "read:compounds" ], write: [ "write:compounds" ]
+    entity_crud_with read: [ "read:system" ], write: [ "write:compounds" ]
 
     def self.entity_fields
       @entity_fields ||= self.entity_fields_from_properties(self.entity_properties.select { |p| [ "compound_type_id" ].include?(p[:name]) })

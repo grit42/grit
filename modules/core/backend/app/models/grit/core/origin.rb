@@ -23,6 +23,6 @@ module Grit::Core
 
     has_many :locations
 
-    entity_crud_with read: [ "read:collections" ], write: [ "write:collections" ]
+    entity_crud_with read: [ "read:system" ], write: [ "admin:system" ]
   end
 end

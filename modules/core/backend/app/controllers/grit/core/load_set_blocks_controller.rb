@@ -21,7 +21,34 @@ require "grit/core/entity_loader"
 
 module Grit::Core
   class LoadSetBlocksController < ApplicationController
-    include Grit::Core::GritEntityController
+    include Grit::Core::Controller::Unforgeable
+    include Grit::Core::Controller::Authenticated
+    include Grit::Core::Controller::Readable
+    include Grit::Core::Controller::Writable
+
+    before_action :check_read, only: [
+      :index,
+      :show,
+      :fields,
+      :mapping_fields,
+      :loaded_data_columns,
+      :entity_info,
+      :preview_data,
+      :errored_data,
+      :warning_data,
+      :export_errored_rows,
+      :export_errors,
+      :validation_progress
+    ]
+    before_action :check_write, only: [
+      :create,
+      :update,
+      :destroy,
+      :validate,
+      :confirm,
+      :undo_validation,
+      :rollback
+    ]
 
     def fields
       render json: { success: true, data: Grit::Core::EntityLoader.load_set_block_fields(params) }
@@ -32,7 +59,7 @@ module Grit::Core
     end
 
     def mapping_fields
-      load_set_block = Grit::Core::LoadSetBlock.find(params[:load_set_block_id])
+      load_set_block = Grit::Core::LoadSetBlock.find(params[:id])
 
       render json: { success: true, data: Grit::Core::EntityLoader.load_set_block_mapping_fields(load_set_block) }
     rescue StandardError => e
@@ -42,7 +69,7 @@ module Grit::Core
     end
 
     def loaded_data_columns
-      load_set_block = Grit::Core::LoadSetBlock.find(params[:load_set_block_id])
+      load_set_block = Grit::Core::LoadSetBlock.find(params[:id])
 
       render json: { success: true, data: Grit::Core::EntityLoader.load_set_block_loaded_data_columns(load_set_block) }
     rescue StandardError => e
@@ -52,7 +79,7 @@ module Grit::Core
     end
 
     def entity_info
-      load_set_block = Grit::Core::LoadSetBlock.find(params[:load_set_block_id])
+      load_set_block = Grit::Core::LoadSetBlock.find(params[:id])
 
       render json: { success: true, data: Grit::Core::EntityLoader.load_set_block_entity_info(load_set_block) }
     rescue StandardError => e
@@ -77,8 +104,8 @@ module Grit::Core
     end
 
     def export_errored_rows
-      raise "No load set block id provided" if params[:load_set_block_id].nil?
-      load_set_block = Grit::Core::LoadSetBlock.find(params[:load_set_block_id])
+      raise "No load set block id provided" if params[:id].nil?
+      load_set_block = Grit::Core::LoadSetBlock.find(params[:id])
       columns = load_set_block.headers
       scope = load_set_block.errored_rows
 
@@ -92,8 +119,8 @@ module Grit::Core
     end
 
     def export_errors
-      raise "No load set block id provided" if params[:load_set_block_id].nil?
-      load_set_block = Grit::Core::LoadSetBlock.find(params[:load_set_block_id])
+      raise "No load set block id provided" if params[:id].nil?
+      load_set_block = Grit::Core::LoadSetBlock.find(params[:id])
       columns = [ { "name" => "line", "display_name" => "Line" }, { "name" => "column_name", "display_name" => "Column" }, { "name" => "value", "display_name" => "Value" }, { "name" => "error", "display_name" => "Error" } ]
       scope = load_set_block.flattened_errors
 
@@ -107,7 +134,7 @@ module Grit::Core
     end
 
     def validate
-      load_set_block = Grit::Core::LoadSetBlock.find(params[:load_set_block_id])
+      load_set_block = Grit::Core::LoadSetBlock.find(params[:id])
 
       unless [ "Mapping", "Invalidated" ].include?(load_set_block.status.name)
         render json: { success: false, errors: 'Only load set with "Mapping" or "Invalidated" status can be validated' }, status: :forbidden
@@ -139,7 +166,7 @@ module Grit::Core
     end
 
     def confirm
-      load_set_block = Grit::Core::LoadSetBlock.find(params[:load_set_block_id])
+      load_set_block = Grit::Core::LoadSetBlock.find(params[:id])
 
       unless [ "Validated", "Invalidated" ].include?(load_set_block.status.name)
         render json: { success: false, errors: 'Only load set with "Validated" or "Invalidated" status can be confirmed' }, status: :forbidden
@@ -164,7 +191,7 @@ module Grit::Core
     def undo_validation
       load_set_block = nil
       ActiveRecord::Base.transaction do
-        load_set_block = Grit::Core::LoadSetBlock.find(params[:load_set_block_id])
+        load_set_block = Grit::Core::LoadSetBlock.find(params[:id])
 
         load_set_block.status_id = Grit::Core::LoadSetStatus.find_by_name("Mapping").id
         load_set_block.has_errors = false
@@ -182,7 +209,7 @@ module Grit::Core
     def rollback
       load_set_block = nil
       ActiveRecord::Base.transaction do
-        load_set_block = Grit::Core::LoadSetBlock.find(params[:load_set_block_id])
+        load_set_block = Grit::Core::LoadSetBlock.find(params[:id])
 
         Grit::Core::EntityLoader.rollback_load_set_block(load_set_block)
 
@@ -200,7 +227,7 @@ module Grit::Core
     end
 
     def validation_progress
-      load_set_block = Grit::Core::LoadSetBlock.find(params[:load_set_block_id])
+      load_set_block = Grit::Core::LoadSetBlock.find(params[:id])
       total = load_set_block.raw_data_klass.count(:all)
       validated = load_set_block.loading_record_klass.count(:all)
       render json: { success: true, data: { total: total, validated: validated } }
@@ -213,6 +240,34 @@ module Grit::Core
     private
       def permitted_params
         [ "name", "origin_id", "data", "mappings", "separator" ]
+      end
+
+      def check_read
+        render json: { success: false }, status: :bad_request if params[:id].blank? && params[:load_set_id].blank? && params[:entity].blank?
+        entity = params[:entity]
+        if entity.blank? && params[:id].present?
+          entity = Grit::Core::LoadSetBlock.find(params[:id]).load_set.entity
+        elsif entity.blank? && params[:load_set_id].present?
+          Grit::Core::LoadSet.find(params[:load_set_id]).entity
+        end
+        klass = entity.constantize
+        render json: { success: false, errors: "You do not have the permissions required to read Grit::Core::LoadSetBlock for entity #{entity}" }, status: :forbidden  if klass.entity_crud[:read].nil? or !current_user.permission?(klass.entity_crud[:read])
+      rescue ActiveRecord::RecordNotFound
+        render json: { success: false, errors: "Not found" }, status: :not_found
+      end
+
+      def check_write
+        render json: { success: false }, status: :bad_request if params[:id].blank? && params[:load_set_id].blank? && params[:entity].blank?
+        entity = params[:entity]
+        if entity.blank? && params[:id].present?
+          entity = Grit::Core::LoadSetBlock.find(params[:id]).load_set.entity
+        elsif entity.blank? && params[:load_set_id].present?
+          Grit::Core::LoadSet.find(params[:load_set_id]).entity
+        end
+        klass = entity.constantize
+        render json: { success: false, errors: "You do not have the permissions required to write Grit::Core::LoadSetBlock for entity #{entity}" }, status: :forbidden  if klass.entity_crud[:write].nil? or !current_user.permission?(klass.entity_crud[:write])
+      rescue ActiveRecord::RecordNotFound
+        render json: { success: false, errors: "Not found" }, status: :not_found
       end
   end
 end

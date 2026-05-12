@@ -27,7 +27,7 @@ interface Props {
 }
 
 const Vocabulary = ({ vocabularyId }: Props) => {
-  const canAdmin = useHasPermission("admin:collections");
+  const canAdmin = useHasPermission("admin:vocabularies");
 
   const { data: vocabulary } = useVocabulary(vocabularyId);
   const { data: vocabularyFields } = useVocabularyFields(undefined, {

@@ -26,7 +26,7 @@ const Meta: ModuleMeta = {
       identifier: "COMPOUNDS",
       name: "Compounds",
       path: "/compounds",
-      permissions: ["read:compounds"],
+      permissions: ["read:system"],
     },
   ],
 };

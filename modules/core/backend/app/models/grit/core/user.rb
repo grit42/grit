@@ -27,7 +27,7 @@ module Grit::Core
 
 
     display_columns [ "name", "login" ]
-    entity_crud_with read: [ "read:users" ], write: [ "admin:users" ]
+    entity_crud_with read: [ "read:system" ], write: [ "admin:users" ]
 
     EMAIL = /
     \A

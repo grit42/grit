@@ -18,7 +18,10 @@
 
 module Grit::Core
   class DataTypesController < ApplicationController
-    include GritEntityController
+    include Grit::Core::Controller::Unforgeable
+    include Grit::Core::Controller::Authenticated
+    include Grit::Core::Controller::Authorized
+    include Grit::Core::Controller::Readable
 
     def guess_data_type_for_columns
       columns = params[:columns]

@@ -3,6 +3,6 @@ module Grit::Core
     include Grit::Core::GritEntityRecord
 
     display_column "name"
-    entity_crud_with read: [ "read:collections" ]
+    entity_crud_with read: [ "read:system" ]
   end
 end
