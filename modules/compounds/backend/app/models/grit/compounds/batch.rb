@@ -27,10 +27,7 @@ module Grit::Compounds
 
     display_columns [ "number", "name" ]
 
-    entity_crud_with read: [],
-      create: [ "Administrator", "CompoundAdministrator", "CompoundUser" ],
-      update: [ "Administrator", "CompoundAdministrator", "CompoundUser" ],
-      destroy: [ "Administrator", "CompoundAdministrator", "CompoundUser" ]
+    entity_crud_with read: [ "read:compounds" ], write: [ "write:compounds" ]
 
     class_eval do
       _validators.delete("number")

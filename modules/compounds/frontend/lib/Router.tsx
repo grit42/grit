@@ -40,37 +40,49 @@ const Router = () => {
   return (
     <Routes>
       <Route
-        index
         element={
-          <AuthGuard>
-            <LazyCompoundsPage />
-          </AuthGuard>
-        }
-      />
-
-      <Route
-        path=":id"
-        element={
-          <AuthGuard>
-            <LazyCompoundPage />
-          </AuthGuard>
-        }
-      >
-        <Route path="details" element={<LazyCompoundDetailsPage />} />
-        <Route path="batches" element={<LazyCompoundBatchesPage />} />
-        <Route path="synonyms" element={<LazyCompoundSynonymsPage />} />
-        <Route index path="*" element={<Navigate to="../details" replace />} />
-      </Route>
-
-      <Route
-        path="settings"
-        element={
-          <AuthGuard>
+          <AuthGuard permission="read:compounds">
             <Outlet />
           </AuthGuard>
         }
       >
-        <Route index path="*" element={<LazyCompoundSettingsPage />} />
+        <Route
+          index
+          element={
+            <AuthGuard>
+              <LazyCompoundsPage />
+            </AuthGuard>
+          }
+        />
+
+        <Route
+          path=":id"
+          element={
+            <AuthGuard>
+              <LazyCompoundPage />
+            </AuthGuard>
+          }
+        >
+          <Route path="details" element={<LazyCompoundDetailsPage />} />
+          <Route path="batches" element={<LazyCompoundBatchesPage />} />
+          <Route path="synonyms" element={<LazyCompoundSynonymsPage />} />
+          <Route
+            index
+            path="*"
+            element={<Navigate to="../details" replace />}
+          />
+        </Route>
+
+        <Route
+          path="settings"
+          element={
+            <AuthGuard permission="admin:compounds">
+              <Outlet />
+            </AuthGuard>
+          }
+        >
+          <Route index path="*" element={<LazyCompoundSettingsPage />} />
+        </Route>
       </Route>
     </Routes>
   );

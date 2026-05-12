@@ -26,7 +26,7 @@ import {
   useSynonymsColumns,
 } from "../../../../queries/synonyms";
 import { Table, useSetupTableState } from "@grit42/table";
-import { useToolbar, useHasRoles } from "@grit42/core";
+import { useToolbar, useHasPermission } from "@grit42/core";
 import { useDestroySynonym } from "../../../../mutations/synonyms";
 import Circle1NewIcon from "@grit42/client-library/icons/Circle1New";
 import { useTableColumns } from "@grit42/core/utils";
@@ -51,11 +51,7 @@ const getExportFileUrl = (
 };
 
 const CompoundSynonyms = ({ id }: Props) => {
-  const canCrud = useHasRoles([
-    "Administrator",
-    "CompoundAdministrator",
-    "CompoundUser",
-  ]);
+  const canCrud = useHasPermission("write:compounds");
 
   const { data: columns } = useSynonymsColumns();
   const navigate = useNavigate();
@@ -132,22 +128,14 @@ const CompoundSynonyms = ({ id }: Props) => {
         },
       ],
       import: {
-        requiredRoles: [
-          "Administrator",
-          "CompoundAdministrator",
-          "CompoundUser",
-        ],
+        requiredPermissions: ["write:compounds"],
       },
       actions: [
         {
           icon: <Circle1NewIcon />,
           id: "ADD_SYNONYM",
           label: "New synonym",
-          requiredRoles: [
-            "Administrator",
-            "CompoundAdministrator",
-            "CompoundUser",
-          ],
+          requiredPermissions: ["write:compounds"],
           onClick: () =>
             navigate("/core/entities/Grit::Compounds::Synonym/new", {
               state: {
@@ -161,11 +149,7 @@ const CompoundSynonyms = ({ id }: Props) => {
         },
       ],
       export: {
-        requiredRoles: [
-          "Administrator",
-          "CompoundAdministrator",
-          "CompoundUser",
-        ],
+        requiredPermissions: ["read:compounds"],
       },
       exportItems: [
         {

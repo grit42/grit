@@ -27,10 +27,7 @@ module Grit::Compounds
 
     display_column "name"
 
-    entity_crud_with read: [],
-      create: [ "Administrator", "CompoundAdministrator" ],
-      update: [ "Administrator", "CompoundAdministrator" ],
-      destroy: [ "Administrator", "CompoundAdministrator" ]
+    entity_crud_with read: [ "read:compounds" ], write: [ "admin:compounds" ]
 
     validates :safe_name, uniqueness: true, length: { minimum: 3, maximum: 30 }
     validates :safe_name, format: { with: /\A[a-z_]{2}/, message: "should start with two lowercase letters or underscores" }

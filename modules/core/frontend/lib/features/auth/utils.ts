@@ -23,12 +23,12 @@ import { Session } from "./types";
  * @deprecated
  * Checks if session has one of these roles
  * @param session
- * @param requiredRoles
+ * @param requiredPermissions
  * @returns
  */
-export const hasRoles = (session: Session | null, requiredRoles: string[]) => {
+export const hasRoles = (session: Session | null, requiredPermissions: string[]) => {
   if (!session) return false;
-  for (const role of requiredRoles) {
+  for (const role of requiredPermissions) {
     if (session.roles.includes(role)) {
       return true;
     }
@@ -38,12 +38,12 @@ export const hasRoles = (session: Session | null, requiredRoles: string[]) => {
 /**
  * @deprecated
  * Checks if current user has one of these roles
- * @param requiredRoles
+ * @param requiredPermissions
  * @returns
  */
-export const useHasRoles = (requiredRoles: string[]) => {
+export const useHasRoles = (requiredPermissions: string[]) => {
   const session = useSession().data;
-  return hasRoles(session ?? null, requiredRoles);
+  return hasRoles(session ?? null, requiredPermissions);
 };
 
 export const hasPermission = (session: Session | null, permission: string) => {

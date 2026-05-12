@@ -18,16 +18,10 @@ class SetGritCoreRolePermissions < ActiveRecord::Migration[8.1]
       write_collections_permission_id = Grit::Core::Permission.find_by(name: "write:collections")&.id || Grit::Core::Permission.insert({ name: "write:collections", description: "Can write collections (Vocabularies items, Origins, Locations, Units, ...)", provides_permissions: [ read_collections_permission_id ] })[0]["id"]
       admin_collections_permission_id = Grit::Core::Permission.find_by(name: "admin:collections")&.id || Grit::Core::Permission.insert({ name: "admin:collections", description: "Can admin collections (Create and update Vocabularies)", provides_permissions: [ read_collections_permission_id, write_collections_permission_id ] })[0]["id"]
 
-      Grit::Core::RolePermission.insert_all([ {
-        role_id: vocabulary_administrator_role.id,
-        permission_id: read_collections_permission_id
-      }, {
-        role_id: vocabulary_administrator_role.id,
-        permission_id: write_collections_permission_id
-      }, {
+      Grit::Core::RolePermission.insert({
         role_id: vocabulary_administrator_role.id,
         permission_id: admin_collections_permission_id
-      } ])
+      })
     end
   end
 

@@ -136,7 +136,7 @@ const EntityTable = ({ full_name, path, name, plural }: EntityInfo) => {
                 redirect: pathname,
               },
             }),
-          requiredRoles: ["Administrator"],
+          requiredPermissions: ["admin:collections"],
         },
       ],
     });

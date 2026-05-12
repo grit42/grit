@@ -28,7 +28,7 @@ export interface ToolbarAction {
   id: string;
   label: string;
   icon: React.ReactNode;
-  requiredRoles?: string[];
+  requiredPermissions?: string[];
   disabled?: boolean;
   disabledMessage?: string;
   items?: ToolbarActionItem[];
@@ -39,10 +39,10 @@ export interface ToolbarActions {
   exportItems: ToolbarActionItem[];
   importItems: ToolbarActionItem[];
   import: {
-    requiredRoles?: string[];
+    requiredPermissions?: string[];
   };
   export: {
-    requiredRoles?: string[];
+    requiredPermissions?: string[];
   };
   actions: ToolbarAction[];
 }

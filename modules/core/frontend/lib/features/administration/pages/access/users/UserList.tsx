@@ -100,7 +100,7 @@ export default function UsersList() {
           icon: <Circle1New />,
           label: "New",
           onClick: () => navigate("new"),
-          requiredRoles: ["Administrator"],
+          requiredPermissions: ["admin:users"],
         },
       ],
     });

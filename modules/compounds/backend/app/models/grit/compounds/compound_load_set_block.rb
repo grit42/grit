@@ -23,10 +23,7 @@ module Grit::Compounds
     belongs_to :load_set_block, class_name: "Grit::Core::LoadSetBlock"
     belongs_to :compound_type, class_name: "Grit::Compounds::CompoundType"
 
-    entity_crud_with read: [],
-      create: [ "Administrator", "CompoundAdministrator", "CompoundUser" ],
-      update: [ "Administrator", "CompoundAdministrator", "CompoundUser" ],
-      destroy: [ "Administrator", "CompoundAdministrator", "CompoundUser" ]
+    entity_crud_with read: [ "read:compounds" ], write: [ "write:compounds" ]
 
     def self.entity_fields
       if @entity_fields.nil?
