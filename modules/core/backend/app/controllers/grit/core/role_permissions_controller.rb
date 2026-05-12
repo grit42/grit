@@ -17,12 +17,18 @@
 #++
 
 module Grit::Core
-  class Origin < ApplicationRecord
-    include Grit::Core::GritEntityRecord
-    display_column "name"
+  class RolePermissionsController < ApplicationController
+    include Grit::Core::GritEntityController
 
-    has_many :locations
+    before_action :check_system_role, only: [ :update, :destroy ]
 
-    entity_crud_with read: [ "read:collections" ], write: [ "write:collections" ]
+    def check_system_role
+      role = Grit::Core::RolePermission.find(params[:id]).role
+      render json: { success: false, errors: "#{role.name} is a system role and cannot be modified" }, status: :forbidden if role.system?
+    end
+
+    def permitted_params
+      [ :role_id, :permission_id ]
+    end
   end
 end

@@ -135,8 +135,8 @@ RSpec.describe "GritEntityRecord concern", type: :model do
   describe "entity_crud_with configuration" do
     it "returns configured permissions" do
       crud = Grit::TestEntity.entity_crud
-      expect(crud[:read]).to eq(["read:collections"])
-      expect(crud[:write]).to eq(["write:collections"])
+      expect(crud[:read]).to eq([ "read:collections" ])
+      expect(crud[:write]).to eq([ "write:collections" ])
     end
   end
 

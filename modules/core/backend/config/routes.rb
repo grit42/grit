@@ -1,4 +1,5 @@
 Grit::Core::Engine.routes.draw do
+  resources :permissions
   resources_with_export :vocabulary_items
   resources :vocabularies do
     resources_with_export :vocabulary_items
@@ -62,7 +63,14 @@ Grit::Core::Engine.routes.draw do
   resources :user_roles
   resources :users
   resources :user_statuses
-  resources :roles
+  resources :permissions
+  resources :role_permissions
+  resources :roles do
+    member do
+      post :set_permissions
+    end
+    resources :role_permissions
+  end
 
   resource :user, only: [] do
     post :activate

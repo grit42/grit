@@ -18,25 +18,8 @@
 
 
 FactoryBot.define do
-  factory :grit_core_user_role, class: "Grit::Core::UserRole" do
-    association :user, factory: :grit_core_user
+  factory :grit_core_role_permission, class: "Grit::Core::RolePermission" do
     association :role, factory: :grit_core_role
-
-    trait :user do
-      association :role, factory: [ :grit_core_role, :user ]
-    end
-
-    trait :manager do
-      association :role, factory: [ :grit_core_role, :manager ]
-    end
-
-    trait :administrator do
-      association :role, factory: [ :grit_core_role, :administrator ]
-    end
-
-    trait :admin do
-      association :user, factory: [ :grit_core_user, :admin ]
-      association :role, factory: [ :grit_core_role, :administrator ]
-    end
+    association :permission, factory: :grit_core_permission
   end
 end

@@ -21,15 +21,25 @@ FactoryBot.define do
   factory :grit_core_role, class: "Grit::Core::Role" do
     sequence(:name) { |n| "Role_#{n}" }
     sequence(:description) { |n| "Description for role #{n}" }
+    system { false }
 
-    trait :administrator do
-      name { "Administrator" }
-      description { "Administrator" }
+    # Idempotent traits for the system roles defined in db/seeds.rb. Each
+    # trait yields the existing record (with its seed permissions attached)
+    # when present, so multiple specs can ask for the same role without
+    # violating the uniqueness constraint on `name`.
+    trait :user do
+      to_create { |instance| instance.save! unless instance.persisted? }
+      initialize_with { AccessControlSeeder.seed![:roles][:user] }
     end
 
-    trait :vocabulary_administrator do
-      name { "VocabularyAdministrator" }
-      description { "Vocabulary Administrator" }
+    trait :manager do
+      to_create { |instance| instance.save! unless instance.persisted? }
+      initialize_with { AccessControlSeeder.seed![:roles][:manager] }
+    end
+
+    trait :administrator do
+      to_create { |instance| instance.save! unless instance.persisted? }
+      initialize_with { AccessControlSeeder.seed![:roles][:administrator] }
     end
   end
 end

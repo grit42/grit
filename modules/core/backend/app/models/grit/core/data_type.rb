@@ -22,7 +22,7 @@ module Grit::Core
 
     display_column "name"
 
-    entity_crud_with read: ["read:collections"]
+    entity_crud_with read: [ "read:collections" ]
 
     def self.entity_columns(**args)
       @entity_columns ||= self.entity_columns_from_properties(self.db_properties, [ "id", "created_at", "updated_at", "created_by", "updated_by", "meta", "table_name", "is_entity" ])

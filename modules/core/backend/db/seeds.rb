@@ -267,8 +267,6 @@ end
 
 Grit::Core::Origin.insert({ id: 1, name: "ADMIN" }) if Grit::Core::Origin.find_by(name: "ADMIN").nil?
 
-Grit::Core::Role.insert({ id: 1, name: "Administrator", description: "Platform administrator" }) if Grit::Core::Role.find_by(name: "Administrator").nil?
-
 Grit::Core::User.insert({
   id: 1,
   origin_id: 1,
@@ -279,7 +277,6 @@ Grit::Core::User.insert({
   activation_token: "admin"
 }) if Grit::Core::User.find_by(login: "admin").nil?
 
-Grit::Core::UserRole.insert({ user_id: 1, role_id: 1 }) if Grit::Core::UserRole.find_by(user_id: 1, role_id: 1).nil?
 
 Grit::Core::LoadSetStatus.insert({ name: 'Created', description: 'Created' }) if Grit::Core::LoadSetStatus.find_by(name: 'Created').nil?
 Grit::Core::LoadSetStatus.insert({ name: 'Initializing', description: 'Initializing' }) if Grit::Core::LoadSetStatus.find_by(name: 'Initializing').nil?
@@ -337,6 +334,49 @@ Grit::Core::Unit.insert({ unit_type: 'flow dynamics', name: 'milliliter per minu
 Grit::Core::PublicationStatus.insert({ name: "Draft", description: "Actively worked on" }) if Grit::Core::PublicationStatus.find_by(name: "Draft").nil?
 Grit::Core::PublicationStatus.insert({ name: "Published", description: "Available for use" }) if Grit::Core::PublicationStatus.find_by(name: "Published").nil?
 
-Grit::Core::Role.upsert({ name: "VocabularyAdministrator", description: "Can create and modify controlled vocabularies" }) if Grit::Core::Role.find_by(name: "VocabularyAdministrator").nil?
+# Access control
 
-Grit::Core::Role.upsert({ name: "User", description: "Can read users and collections" }) if Grit::Core::Role.find_by(name: "User").nil? # TODO
+## Roles
+user_role_id = Grit::Core::Role.find_by(name: "User")&.id || Grit::Core::Role.insert({ name: "User", description: "Can read data", system: true })[0]["id"]
+manager_role_id = Grit::Core::Role.find_by(name: "Manager")&.id || Grit::Core::Role.insert({ name: "Manager", description: "Can read and write data", system: true })[0]["id"]
+admin_role_id = Grit::Core::Role.find_by(name: "Administrator")&.id || Grit::Core::Role.insert({ name: "Administrator", description: "Can read and write data, and manage users", system: true })[0]["id"]
+
+## Permissions
+read_users_permission_id = Grit::Core::Permission.find_by(name: "read:users")&.id || Grit::Core::Permission.insert({ name: "read:users", description: "Can read user profiles" })[0]["id"]
+admin_users_permission_id = Grit::Core::Permission.find_by(name: "admin:users")&.id || Grit::Core::Permission.insert({ name: "admin:users", description: "Can admin user profiles", provides_permissions: [ read_users_permission_id ] })[0]["id"]
+read_collections_permission_id = Grit::Core::Permission.find_by(name: "read:collections")&.id || Grit::Core::Permission.insert({ name: "read:collections", description: "Can read collections (Vocabularies, Origins, Locations, Units, ...)" })[0]["id"]
+write_collections_permission_id = Grit::Core::Permission.find_by(name: "write:collections")&.id || Grit::Core::Permission.insert({ name: "write:collections", description: "Can write collections (Vocabularies items, Origins, Locations, Units, ...)", provides_permissions: [ read_collections_permission_id ] })[0]["id"]
+admin_collections_permission_id = Grit::Core::Permission.find_by(name: "admin:collections")&.id || Grit::Core::Permission.insert({ name: "admin:collections", description: "Can admin collections (Create and update Vocabularies)", provides_permissions: [ read_collections_permission_id, write_collections_permission_id ] })[0]["id"]
+
+## Role Permissions
+
+user_permissions = [
+  read_users_permission_id,
+  read_collections_permission_id
+]
+
+user_permissions.each do |p|
+  Grit::Core::RolePermission.insert({ role_id: user_role_id, permission_id: p }) if Grit::Core::RolePermission.find_by(role_id: user_role_id, permission_id: p).nil?
+end
+
+manager_permissions = [
+  read_users_permission_id,
+  admin_collections_permission_id
+]
+
+manager_permissions.each do |p|
+  Grit::Core::RolePermission.insert({ role_id: manager_role_id, permission_id: p }) if Grit::Core::RolePermission.find_by(role_id: manager_role_id, permission_id: p).nil?
+end
+
+admin_permissions = [
+  admin_collections_permission_id,
+  admin_users_permission_id
+]
+
+admin_permissions.each do |p|
+  Grit::Core::RolePermission.insert({ role_id: admin_role_id, permission_id: p }) if Grit::Core::RolePermission.find_by(role_id: admin_role_id, permission_id: p).nil?
+end
+
+## User roles
+
+Grit::Core::UserRole.insert({ user_id: 1, role_id: admin_role_id }) if Grit::Core::UserRole.find_by(user_id: 1, role_id: admin_role_id).nil?

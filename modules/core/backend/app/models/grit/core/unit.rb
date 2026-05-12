@@ -23,6 +23,6 @@ module Grit::Core
     display_column "abbreviation"
 
 
-    entity_crud_with read: ["read:collections"], write: ["write:collections"]
+    entity_crud_with read: [ "read:collections" ], write: [ "write:collections" ]
   end
 end

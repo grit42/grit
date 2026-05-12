@@ -156,7 +156,7 @@ module Grit::Core
     end
 
     def request_password_reset_for_user
-      if  !Grit::Core::User.current.role?("Administrator")
+      if  !Grit::Core::User.current.permission?("admin:users")
         render json: { success: false, errors: "Not allowed" }, status: :unauthorized
         return
       end
@@ -255,7 +255,7 @@ module Grit::Core
     end
 
     def generate_api_token_for_user
-      if  !Grit::Core::User.current.role?("Administrator")
+      if  !Grit::Core::User.current.permission?("admin:users")
         render json: { success: false, errors: "Not allowed" }, status: :unauthorized
         return
       end
@@ -277,7 +277,7 @@ module Grit::Core
     end
 
     def revoke_activation_token_for_user
-      if  !Grit::Core::User.current.role?("Administrator")
+      if  !Grit::Core::User.current.permission?("admin:users")
         render json: { success: false, errors: "Not allowed" }, status: :unauthorized
         return
       end
@@ -299,7 +299,7 @@ module Grit::Core
     end
 
     def revoke_forgot_token_for_user
-      if  !Grit::Core::User.current.role?("Administrator")
+      if  !Grit::Core::User.current.permission?("admin:users")
         render json: { success: false, errors: "Not allowed" }, status: :unauthorized
         return
       end
@@ -329,7 +329,7 @@ module Grit::Core
       end
 
       def require_administrator
-        return true if Grit::Core::User.current.role?("Administrator")
+        return true if Grit::Core::User.current.permission?("admin:users")
 
         render json: { success: false, errors: "Insufficient roles" }, status: :unauthorized
       end

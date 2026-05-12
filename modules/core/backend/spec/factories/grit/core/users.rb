@@ -64,19 +64,22 @@ FactoryBot.define do
 
     trait :with_admin_role do
       after(:create) do |user|
-        admin_role = Grit::Core::Role.find_or_create_by!(name: "Administrator") do |role|
-          role.description = "Administrator"
-        end
-        Grit::Core::UserRole.find_or_create_by!(user: user, role: admin_role)
+        roles = AccessControlSeeder.seed![:roles]
+        Grit::Core::UserRole.find_or_create_by!(user: user, role: roles[:administrator])
+      end
+    end
+
+    trait :with_manager_role do
+      after(:create) do |user|
+        roles = AccessControlSeeder.seed![:roles]
+        Grit::Core::UserRole.find_or_create_by!(user: user, role: roles[:manager])
       end
     end
 
     trait :with_user_role do
       after(:create) do |user|
-        user_role = Grit::Core::Role.find_or_create_by!(name: "User") do |role|
-          role.description = "User"
-        end
-        Grit::Core::UserRole.find_or_create_by!(user: user, role: user_role)
+        roles = AccessControlSeeder.seed![:roles]
+        Grit::Core::UserRole.find_or_create_by!(user: user, role: roles[:user])
       end
     end
 

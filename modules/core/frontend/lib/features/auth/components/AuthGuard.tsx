@@ -31,7 +31,12 @@ interface Props {
   children: React.ReactNode;
 }
 
-export default function AuthGuard({ children, roles, permission, permissions }: Props) {
+export default function AuthGuard({
+  children,
+  roles,
+  permission,
+  permissions,
+}: Props) {
   const { isLoading, data } = useSession();
 
   if (isLoading) return <Spinner />;

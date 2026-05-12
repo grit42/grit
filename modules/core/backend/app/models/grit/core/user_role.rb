@@ -31,7 +31,7 @@ module Grit::Core
     private
 
       def check_role
-        return if Grit::Core::User.current.role?("Administrator")
+        return if Grit::Core::User.current.permission?("admin:users")
 
         raise "Administrator role required to manage user roles"
       end

@@ -18,6 +18,7 @@
 
 module Grit::Core
   class EntitiesController < ApplicationController
+    include Grit::Core::Controller::Unforgeable
     include Grit::Core::Controller::Authenticated
     @entities = nil
 

@@ -19,7 +19,6 @@
 module Grit::Core::Controller::Authenticated
   extend ActiveSupport::Concern
   included do
-
     helper_method :current_user_session, :current_user
 
     before_action :set_bearer_token

@@ -60,7 +60,7 @@ module AuthHelpers
     # creates (triggered by lazy `let` blocks) have a valid
     # User.current for set_updater callbacks.
     RequestStore.store["current_user"] = Struct.new(:login, :id) do
-      def role?(_name = nil)
+      def permission?(_name = nil)
         true
       end
       def active?

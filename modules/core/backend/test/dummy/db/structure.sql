@@ -470,6 +470,22 @@ CREATE TABLE public.grit_core_origins (
 
 
 --
+-- Name: grit_core_permissions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.grit_core_permissions (
+    id bigint DEFAULT nextval('public.grit_seq'::regclass) NOT NULL,
+    created_by character varying(30) DEFAULT 'SYSTEM'::character varying NOT NULL,
+    created_at timestamp(6) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_by character varying(30),
+    updated_at timestamp(6) without time zone,
+    name character varying NOT NULL,
+    provides_permissions bigint[] DEFAULT '{}'::bigint[],
+    description text
+);
+
+
+--
 -- Name: grit_core_publication_statuses; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -485,6 +501,21 @@ CREATE TABLE public.grit_core_publication_statuses (
 
 
 --
+-- Name: grit_core_role_permissions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.grit_core_role_permissions (
+    id bigint DEFAULT nextval('public.grit_seq'::regclass) NOT NULL,
+    created_by character varying(30) DEFAULT 'SYSTEM'::character varying NOT NULL,
+    created_at timestamp(6) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_by character varying(30),
+    updated_at timestamp(6) without time zone,
+    role_id bigint NOT NULL,
+    permission_id bigint NOT NULL
+);
+
+
+--
 -- Name: grit_core_roles; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -495,7 +526,8 @@ CREATE TABLE public.grit_core_roles (
     updated_by character varying(30),
     updated_at timestamp(6) without time zone,
     name character varying NOT NULL,
-    description text
+    description text,
+    system boolean DEFAULT false
 );
 
 
@@ -566,6 +598,8 @@ CREATE TABLE public.grit_core_users (
     origin_id bigint NOT NULL,
     location_id bigint,
     forgot_token_expires_at timestamp(6) without time zone,
+    two_factor_attempts integer DEFAULT 0 NOT NULL,
+    two_factor_locked_until timestamp(6) without time zone,
     auth_method character varying DEFAULT 'local'::character varying NOT NULL,
     sso_uid character varying
 );
@@ -774,11 +808,27 @@ ALTER TABLE ONLY public.grit_core_origins
 
 
 --
+-- Name: grit_core_permissions grit_core_permissions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.grit_core_permissions
+    ADD CONSTRAINT grit_core_permissions_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: grit_core_publication_statuses grit_core_publication_statuses_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.grit_core_publication_statuses
     ADD CONSTRAINT grit_core_publication_statuses_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: grit_core_role_permissions grit_core_role_permissions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.grit_core_role_permissions
+    ADD CONSTRAINT grit_core_role_permissions_pkey PRIMARY KEY (id);
 
 
 --
@@ -1001,6 +1051,27 @@ CREATE INDEX index_grit_core_locations_on_origin_id ON public.grit_core_location
 
 
 --
+-- Name: index_grit_core_permissions_on_name; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_grit_core_permissions_on_name ON public.grit_core_permissions USING btree (name);
+
+
+--
+-- Name: index_grit_core_role_permissions_on_permission_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_grit_core_role_permissions_on_permission_id ON public.grit_core_role_permissions USING btree (permission_id);
+
+
+--
+-- Name: index_grit_core_role_permissions_on_role_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_grit_core_role_permissions_on_role_id ON public.grit_core_role_permissions USING btree (role_id);
+
+
+--
 -- Name: index_grit_core_user_roles_on_role_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1169,10 +1240,24 @@ CREATE TRIGGER manage_stamps_grit_core_origins BEFORE INSERT OR UPDATE ON public
 
 
 --
+-- Name: grit_core_permissions manage_stamps_grit_core_permissions; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER manage_stamps_grit_core_permissions BEFORE INSERT OR UPDATE ON public.grit_core_permissions FOR EACH ROW EXECUTE FUNCTION public.manage_stamps();
+
+
+--
 -- Name: grit_core_publication_statuses manage_stamps_grit_core_publication_statuses; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER manage_stamps_grit_core_publication_statuses BEFORE INSERT OR UPDATE ON public.grit_core_publication_statuses FOR EACH ROW EXECUTE FUNCTION public.manage_stamps();
+
+
+--
+-- Name: grit_core_role_permissions manage_stamps_grit_core_role_permissions; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER manage_stamps_grit_core_role_permissions BEFORE INSERT OR UPDATE ON public.grit_core_role_permissions FOR EACH ROW EXECUTE FUNCTION public.manage_stamps();
 
 
 --
@@ -1273,6 +1358,22 @@ ALTER TABLE ONLY public.grit_core_locations
 
 
 --
+-- Name: grit_core_role_permissions core_role_permissions_core_permission_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.grit_core_role_permissions
+    ADD CONSTRAINT core_role_permissions_core_permission_id_fkey FOREIGN KEY (permission_id) REFERENCES public.grit_core_permissions(id);
+
+
+--
+-- Name: grit_core_role_permissions core_role_permissions_core_role_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.grit_core_role_permissions
+    ADD CONSTRAINT core_role_permissions_core_role_id_fkey FOREIGN KEY (role_id) REFERENCES public.grit_core_roles(id);
+
+
+--
 -- Name: grit_core_user_roles core_user_roles_core_role_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1359,6 +1460,8 @@ ALTER TABLE ONLY public.test_entities
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20260510051017'),
+('20260510051016'),
 ('20260317095910'),
 ('20260130123817'),
 ('20250627000000'),

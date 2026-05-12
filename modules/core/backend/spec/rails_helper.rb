@@ -64,7 +64,8 @@ RSpec.configure do |config|
   config.before(:suite) do
     ActiveRecord::Base.connection.execute("SET session_replication_role = 'replica'")
     %w[
-      grit_core_user_roles grit_core_users grit_core_roles
+      grit_core_user_roles grit_core_role_permissions grit_core_permissions
+      grit_core_users grit_core_roles
       grit_core_origins grit_core_locations grit_core_countries
       grit_core_data_types grit_core_units grit_core_publication_statuses
       grit_core_vocabulary_items grit_core_vocabularies
@@ -107,7 +108,7 @@ RSpec.configure do |config|
     # Specs that call set_current_user(admin) or login_as(admin) will clear
     # the stub so User.current re-fetches the real user from the session.
     RequestStore.store["current_user"] = Struct.new(:login, :id) do
-      def role?(_name = nil)
+      def permission?(_name = nil)
         true
       end
 

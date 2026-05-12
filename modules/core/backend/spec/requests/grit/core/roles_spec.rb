@@ -23,6 +23,7 @@ RSpec.describe "Roles API", type: :request do
   let(:admin) { create(:grit_core_user, :admin, :with_admin_role) }
   let(:notadmin) { create(:grit_core_user, :with_user_role) }
   let(:role) { Grit::Core::Role.find_by!(name: "Administrator") }
+  let(:custom_role) { create(:grit_core_role) }
 
   before(:each) do
     login_as(admin)
@@ -89,7 +90,7 @@ RSpec.describe "Roles API", type: :request do
       }
 
       response "200", "role updated" do
-        let(:id) { role.id }
+        let(:id) { custom_role.id }
         let(:role_params) { { name: "Updated role" } }
         before { login_as(admin) }
         run_test!
@@ -102,7 +103,7 @@ RSpec.describe "Roles API", type: :request do
       security [ { bearer_auth: [] } ]
 
       response "200", "role deleted" do
-        let(:id) { role.id }
+        let(:id) { custom_role.id }
         before { login_as(admin) }
         run_test!
       end
@@ -130,15 +131,28 @@ RSpec.describe "Roles API", type: :request do
   end
 
   it "allows update with 'admin:users'" do
-    patch "/api/grit/core/roles/#{role.id}", params: { name: "Testtest1" }, as: :json
+    patch "/api/grit/core/roles/#{custom_role.id}", params: { name: "Testtest1" }, as: :json
     expect(response).to have_http_status(:success)
   end
 
   it "allows destroy with 'admin:users'" do
+    custom_role
     expect {
-      delete "/api/grit/core/roles/#{role.id}", as: :json
+      delete "/api/grit/core/roles/#{custom_role.id}", as: :json
   }.to change(Grit::Core::Role, :count)
     expect(response).to have_http_status(:success)
+  end
+
+  it "forbids update of a system role" do
+    patch "/api/grit/core/roles/#{role.id}", params: { name: "Hacked" }, as: :json
+    expect(response).to have_http_status(:forbidden)
+  end
+
+  it "forbids destroy of a system role" do
+    expect {
+      delete "/api/grit/core/roles/#{role.id}", as: :json
+    }.not_to change(Grit::Core::Role, :count)
+    expect(response).to have_http_status(:forbidden)
   end
 
   it "forbids create without 'admin:users'" do
