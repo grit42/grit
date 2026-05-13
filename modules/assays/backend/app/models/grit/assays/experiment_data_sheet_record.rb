@@ -18,10 +18,9 @@
 
 module Grit::Assays
   class ExperimentDataSheetRecord < ApplicationRecord # TODO: fix not use activerecord
-    @entity_crud = { create: [ "Administrator", "AssayAdministrator", "AssayUser" ],
-      read: [],
-      update: [ "Administrator", "AssayAdministrator", "AssayUser" ],
-      destroy: [ "Administrator", "AssayAdministrator", "AssayUser" ]
+    @entity_crud = {
+      read: ["read:system"],
+      write: [ "write:assays" ]
     }
 
     def self.sheet_record_klass(assay_data_sheet_definition_id)

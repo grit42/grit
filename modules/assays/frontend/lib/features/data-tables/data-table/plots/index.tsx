@@ -27,7 +27,7 @@ import {
 import { useMemo } from "react";
 import { Tabs } from "@grit42/client-library/components";
 import DataTablePlot from "./DataTablePlot";
-import { useHasRoles } from "@grit42/core";
+import { useHasPermission } from "@grit42/core";
 import { DataTableData, useDataTable } from "../../queries/data_tables";
 import { TabbedLayout } from "@grit42/client-library/layouts";
 
@@ -36,11 +36,7 @@ interface Props {
 }
 
 const DataTablePlotTabs = ({ dataTable }: Props) => {
-  const canCrudPlots = useHasRoles([
-    "Administrator",
-    "AssayAdministrator",
-    "AssayUser",
-  ]);
+  const canCrudPlots = useHasPermission("write:analysis");
 
   const navigate = useNavigate();
   const { plot_id } = useParams() as { plot_id: string };

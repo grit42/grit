@@ -98,7 +98,7 @@ const AssayModel = () => {
           id: "NEW",
           icon: <Circle1NewIcon />,
           label: "New experiment",
-          requiredRoles: ["Administrator", "AssayAdministrator", "AssayUser"],
+          requiredPermissions: ["write:assays"],
           onClick: () =>
             navigate({
               pathname: "/assays/experiments/new",
@@ -111,7 +111,7 @@ const AssayModel = () => {
           id: "ASSAY_MODEL_SETTINGS",
           icon: <CogIcon />,
           label: "Manage assay model",
-          requiredRoles: ["Administrator", "AssayAdministrator"],
+          requiredPermissions: ["admin:assays"],
           onClick: () => navigate(manageLink),
         },
       ],

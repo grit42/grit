@@ -35,7 +35,7 @@ import {
 import { useTableColumns } from "@grit42/core/utils";
 import { Table, useSetupTableState } from "@grit42/table";
 import ExperimentDataSheetRecordFormWrapper from "./RecordForm";
-import { useToolbar, useHasRoles } from "@grit42/core";
+import { useToolbar, useHasPermission } from "@grit42/core";
 import { ExperimentData, useExperiment } from "../../../../queries/experiments";
 
 const getRowId = (data: ExperimentDataSheetRecordData) => data.id.toString();
@@ -49,7 +49,7 @@ const ExperimentDataSheetRecords = ({
 }) => {
   const { experiment_id } = useParams() as { experiment_id: string };
   const canCrudRecord =
-    useHasRoles(["Administrator", "AssayAdministrator", "AssayUser"]) &&
+    useHasPermission("write:assays") &&
     experiment.publication_status_id__name !== "Published";
   const registerToolbarAction = useToolbar();
   const navigate = useNavigate();
@@ -90,7 +90,7 @@ const ExperimentDataSheetRecords = ({
             ]
           : undefined,
         import: {
-          requiredRoles: ["Administrator", "AssayAdministrator", "AssayUser"],
+          requiredPermissions: ["write:assays"],
         },
       }),
     [canCrudRecord, dataSheet, experiment_id, navigate, registerToolbarAction],

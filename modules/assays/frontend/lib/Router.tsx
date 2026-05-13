@@ -31,7 +31,7 @@ const Router = () => {
         <Route
           path="settings"
           element={
-            <AuthGuard roles={["Administrator", "AssayAdministrator"]}>
+            <AuthGuard permission="admin:assays">
               <Outlet />
             </AuthGuard>
           }
@@ -42,7 +42,7 @@ const Router = () => {
           index
           path="*"
           element={
-            <AuthGuard>
+            <AuthGuard permission="read:system">
               <LazyAssayModelsPage />
             </AuthGuard>
           }
@@ -51,7 +51,7 @@ const Router = () => {
       <Route
         path="experiments"
         element={
-          <AuthGuard>
+          <AuthGuard permission="read:system">
             <Outlet />
           </AuthGuard>
         }
@@ -61,7 +61,7 @@ const Router = () => {
       <Route
         path="data_tables"
         element={
-          <AuthGuard>
+          <AuthGuard permission="read:system">
             <Outlet />
           </AuthGuard>
         }

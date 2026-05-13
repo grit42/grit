@@ -23,10 +23,7 @@ module Grit::Assays
     belongs_to :load_set_block, class_name: "Grit::Core::LoadSetBlock"
     belongs_to :assay_data_sheet_definition
 
-    entity_crud_with create: [ "Administrator", "AssayAdministrator", "AssayUser" ],
-      read: [],
-      update: [ "Administrator", "AssayAdministrator", "AssayUser" ],
-      destroy: [ "Administrator", "AssayAdministrator", "AssayUser" ]
+    entity_crud_with read: ["read:system"], write: ["write:assays"]
 
     def self.entity_fields(**args)
       @entity_fields ||= self.entity_fields_from_properties(

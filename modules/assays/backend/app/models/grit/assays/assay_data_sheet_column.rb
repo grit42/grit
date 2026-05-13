@@ -30,10 +30,7 @@ module Grit::Assays
 
     display_column "name"
 
-    entity_crud_with read: [],
-    create: [ "Administrator", "AssayAdministrator" ],
-    update: [ "Administrator", "AssayAdministrator" ],
-    destroy: [ "Administrator", "AssayAdministrator" ]
+    entity_crud_with read: ["read:system"], write: ["admin:assays"]
 
     validates :name, uniqueness: { scope: :assay_data_sheet_definition_id, message: "has already been taken in this data sheet" }, length: { minimum: 1 }
     validates :safe_name, uniqueness: { scope: :assay_data_sheet_definition_id, message: "has already been taken in this data sheet" }, length: { minimum: 3, maximum: 30 }

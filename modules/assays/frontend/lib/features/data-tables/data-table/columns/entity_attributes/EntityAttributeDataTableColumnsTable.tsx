@@ -20,7 +20,7 @@ import { Row, Table, useSetupTableState } from "@grit42/table";
 import { useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTableColumns } from "@grit42/core/utils";
-import { useDestroyEntityMutation, useHasRoles } from "@grit42/core";
+import { useDestroyEntityMutation, useHasPermission } from "@grit42/core";
 import {
   useDataTableColumnColumns,
   DataTableColumnData,
@@ -36,11 +36,7 @@ interface Props {
 
 const EntityAttributeDataTableColumnsTable = ({ dataTableId }: Props) => {
   const navigate = useNavigate();
-  const canEditDataTable = useHasRoles([
-    "Administrator",
-    "AssayAdministrator",
-    "AssayUser",
-  ]);
+  const canEditDataTable = useHasPermission("write:analysis");
 
   const queryClient = useQueryClient();
   const destroyColumnsMutation = useDestroyEntityMutation(

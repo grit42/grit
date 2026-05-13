@@ -196,21 +196,5 @@ module Grit::Assays
         expect(result).to respond_to(:assay_model_id__name)
       end
     end
-
-    # --- CRUD Permissions ---
-
-    describe "CRUD permissions" do
-      it "entity_crud_with is configured correctly" do
-        crud = AssayDataSheetColumn.entity_crud
-
-        expect(crud[:create]).to include("Administrator")
-        expect(crud[:create]).to include("AssayAdministrator")
-        expect(crud[:update]).to include("Administrator")
-        expect(crud[:update]).to include("AssayAdministrator")
-        expect(crud[:destroy]).to include("Administrator")
-        expect(crud[:destroy]).to include("AssayAdministrator")
-        expect(crud[:read]).to be_empty
-      end
-    end
   end
 end

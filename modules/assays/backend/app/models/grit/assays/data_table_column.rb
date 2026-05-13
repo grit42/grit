@@ -22,10 +22,7 @@ module Grit::Assays
     belongs_to :assay_data_sheet_column, optional: true
     belongs_to :data_table
 
-    entity_crud_with read: [],
-      create: [ "Administrator", "AssayAdministrator", "AssayUser" ],
-      update: [ "Administrator", "AssayAdministrator", "AssayUser" ],
-      destroy: [ "Administrator", "AssayAdministrator", "AssayUser" ]
+    entity_crud_with read: ["read:system"], write: ["write:analysis"]
 
     validates :name, uniqueness: { scope: :data_table_id, message: "has already been taken in this data table" }, length: { minimum: 1 }
     validates :safe_name, uniqueness: { scope: :data_table_id, message: "has already been taken in this data table" }, length: { minimum: 3, maximum: 30 }

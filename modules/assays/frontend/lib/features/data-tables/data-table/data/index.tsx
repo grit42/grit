@@ -24,7 +24,7 @@ import {
   useSetupTableState,
 } from "@grit42/table";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useToolbar, useHasRoles } from "@grit42/core";
+import { useToolbar, useHasPermission } from "@grit42/core";
 import { Link, useNavigate } from "react-router-dom";
 import { useTableColumns } from "@grit42/core/utils";
 import {
@@ -65,11 +65,7 @@ interface ClickedCellInfo {
 const DataTableData = ({ dataTableId }: Props) => {
   const registerToolbarActions = useToolbar();
   const navigate = useNavigate();
-  const canEditDataTable = useHasRoles([
-    "Administrator",
-    "AssayAdministrator",
-    "AssayUser",
-  ]);
+  const canEditDataTable = useHasPermission("write:analysis");
 
   const [clickedCell, setClickedCell] = useState<ClickedCellInfo | null>(null);
 

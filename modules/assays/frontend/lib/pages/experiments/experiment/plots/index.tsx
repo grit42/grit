@@ -3,7 +3,7 @@ import { ExperimentData } from "../../../../queries/experiments";
 import { useMemo } from "react";
 import { ErrorPage, RoutedTabs } from "@grit42/client-library/components";
 import ExperimentPlot from "./ExperimentPlot";
-import { useHasRoles } from "@grit42/core";
+import { useHasPermission } from "@grit42/core";
 
 interface Props {
   experiment: ExperimentData;
@@ -11,7 +11,7 @@ interface Props {
 
 const ExperimentPlotTabs = ({ experiment }: Props) => {
   const canCrudPlots =
-    useHasRoles(["Administrator", "AssayAdministrator", "AssayUser"]) &&
+    useHasPermission("write:assays") &&
     experiment.publication_status_id__name !== "Published";
 
   const tabs = useMemo(

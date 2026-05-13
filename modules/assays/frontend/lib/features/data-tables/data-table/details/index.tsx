@@ -38,7 +38,7 @@ import {
   useCreateEntityMutation,
   useDestroyEntityMutation,
   useEditEntityMutation,
-  useHasRoles,
+  useHasPermission,
 } from "@grit42/core";
 import { useQueryClient } from "@grit42/api";
 import { CenteredSurface } from "@grit42/client-library/layouts";
@@ -48,11 +48,7 @@ interface Props {
 
 const DataTableDetails = ({ dataTableId }: Props) => {
   const navigate = useNavigate();
-  const canEditDataTable = useHasRoles([
-    "Administrator",
-    "AssayAdministrator",
-    "AssayUser",
-  ]);
+  const canEditDataTable = useHasPermission("write:analysis");
 
   const { data: dataTable } = useDataTable(dataTableId) as {
     data: DataTableData;

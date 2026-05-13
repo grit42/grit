@@ -25,10 +25,7 @@ module Grit::Assays
     belongs_to :vocabulary, class_name: "Grit::Core::Vocabulary"
     belongs_to :vocabulary_item, class_name: "Grit::Core::VocabularyItem"
 
-    entity_crud_with read: [],
-      create: [ "Administrator", "AssayAdministrator" ],
-      update: [ "Administrator", "AssayAdministrator" ],
-      destroy: [ "Administrator", "AssayAdministrator" ]
+    entity_crud_with read: ["read:system"], write: ["admin:assays"]
 
     after_destroy :destroy_template_if_empty
 

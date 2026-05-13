@@ -37,7 +37,7 @@ import {
   EntityData,
   EntityPropertyDef,
   useEditEntityMutation,
-  useHasRoles,
+  useHasPermission,
 } from "@grit42/core";
 import { generateUniqueID } from "@grit42/client-library/utils";
 import {
@@ -88,11 +88,7 @@ const NEW_PLOT = {
 const DataTablePlot = ({ dataTable }: Props) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const canCrudPlots = useHasRoles([
-    "Administrator",
-    "AssayAdministrator",
-    "AssayUser",
-  ]);
+  const canCrudPlots = useHasPermission("write:analysis");
   const { plot_id } = useParams() as { plot_id: string };
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);

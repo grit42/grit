@@ -28,7 +28,7 @@ import {
   EntityData,
   EntityPropertyDef,
   useEditEntityMutation,
-  useHasRoles,
+  useHasPermission,
 } from "@grit42/core";
 import { generateUniqueID } from "@grit42/client-library/utils";
 import styles from "./plots.module.scss";
@@ -70,11 +70,9 @@ const NEW_PLOT = (data_sheet_id?: number) => ({
 
 const ExperimentPlot = ({ experiment }: Props) => {
   const navigate = useNavigate();
-  const canCrudPlots = useHasRoles([
-    "Administrator",
-    "AssayAdministrator",
-    "AssayUser",
-  ]);
+  const canCrudPlots =
+    useHasPermission("write:assays") &&
+    experiment.publication_status_id__name !== "Published";
   const { experiment_id, plot_id } = useParams() as {
     experiment_id: string;
     plot_id: string;

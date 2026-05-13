@@ -30,14 +30,10 @@ import {
   useParams,
 } from "react-router-dom";
 import { useMemo } from "react";
-import { useHasRoles } from "@grit42/core";
+import { useHasPermission } from "@grit42/core";
 
 const ExperimentsTable = () => {
-  const canCreateExperiment = useHasRoles([
-    "Administrator",
-    "AssayAdministrator",
-    "AssayUser",
-  ]);
+  const canCreateExperiment = useHasPermission("write:assays")
   const navigate = useNavigate();
   const { assay_model_id } = useParams() as { assay_model_id: string };
 
