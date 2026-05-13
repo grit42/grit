@@ -22,7 +22,7 @@ require "csv"
 module Grit::Assays
   class ExperimentAttachmentsController < ApplicationController
     before_action :check_read, only: [ :index, :export ]
-    before_action :check_write, only: [:create, :destroy]
+    before_action :check_write, only: [ :create, :destroy ]
 
     def export
       params[:ids] ||= ""

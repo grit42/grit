@@ -157,7 +157,7 @@ const ExperimentActions = ({
 }: {
   experiment: Partial<ExperimentData>;
 }) => {
-    const canCrudExperiment =
+  const canCrudExperiment =
     useHasPermission("write:assays") &&
     experiment.publication_status_id__name !== "Published";
   const navigate = useNavigate();

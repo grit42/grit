@@ -11,7 +11,7 @@ import { useEffect, useMemo } from "react";
 import Circle1NewIcon from "@grit42/client-library/icons/Circle1New";
 
 const ExperimentsTable = () => {
-  const canCreateExperiment = useHasPermission("write:assays")
+  const canCreateExperiment = useHasPermission("write:assays");
 
   const registerToolbarActions = useToolbar();
   const navigate = useNavigate();

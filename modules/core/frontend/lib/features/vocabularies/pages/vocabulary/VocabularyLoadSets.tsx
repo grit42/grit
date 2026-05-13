@@ -160,7 +160,7 @@ const VocabularyLoadSets = ({
     {
       scope: "by_vocabulary",
       vocabulary_id: vocabularyId,
-      entity: "Grit::Core::VocabularyItem"
+      entity: "Grit::Core::VocabularyItem",
     },
   );
 

@@ -32,7 +32,7 @@ module Grit::Assays
 
     display_column "name"
 
-    entity_crud_with read: ["read:system"], write: ["admin:assays"]
+    entity_crud_with read: [ "read:system" ], write: [ "admin:assays" ]
 
     def self.published(params)
       self.detailed(params).where("grit_core_publication_statuses__.name = 'Published'")

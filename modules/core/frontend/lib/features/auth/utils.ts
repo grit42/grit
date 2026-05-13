@@ -26,7 +26,10 @@ import { Session } from "./types";
  * @param requiredPermissions
  * @returns
  */
-export const hasRoles = (session: Session | null, requiredPermissions: string[]) => {
+export const hasRoles = (
+  session: Session | null,
+  requiredPermissions: string[],
+) => {
   if (!session) return false;
   for (const role of requiredPermissions) {
     if (session.roles.includes(role)) {

@@ -35,7 +35,7 @@ module Grit::Assays
 
     display_column "name"
 
-    entity_crud_with read: ["read:system"], write: ["write:assays"]
+    entity_crud_with read: [ "read:system" ], write: [ "write:assays" ]
 
     def set_metadata_values(params)
       success = true

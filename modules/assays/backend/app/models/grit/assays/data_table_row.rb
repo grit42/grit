@@ -21,7 +21,7 @@ module Grit::Assays
     self.table_name = "grit_assays_data_table_entities"
     include Grit::Core::GritEntityRecord
 
-    entity_crud_with read: ["read:system"]
+    entity_crud_with read: [ "read:system" ]
 
     def self.entity_properties(**args)
       data_table_id = args[:data_table_id]

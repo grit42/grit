@@ -49,7 +49,7 @@ module Grit::Assays
       .select("grit_assays_assay_model_metadata__.id as assay_model_metadatum_id")
     end
 
-    entity_crud_with read: ["read:system"], write: ["admin:assays"]
+    entity_crud_with read: [ "read:system" ], write: [ "admin:assays" ]
 
     private
 

@@ -55,7 +55,8 @@ const ToolbarIcon = ({
   const { data: session } = useSession();
 
   const hasRequiredPermissions =
-    !requiredPermissions || (session && hasOneOfPermissions(session, requiredPermissions));
+    !requiredPermissions ||
+    (session && hasOneOfPermissions(session, requiredPermissions));
   const isDisabled = disabled || !hasRequiredPermissions;
 
   const clickHandler = useCallback(() => {

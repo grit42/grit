@@ -39,7 +39,6 @@ RSpec.describe "Data Types API", type: :request do
         run_test!
       end
     end
-
   end
 
   path "/api/grit/core/data_types/{id}" do
@@ -56,6 +55,5 @@ RSpec.describe "Data Types API", type: :request do
         run_test!
       end
     end
-
   end
 end

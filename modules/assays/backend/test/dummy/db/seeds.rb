@@ -46,7 +46,7 @@ def insert_user(login, role_id)
       password_salt: salt,
       crypted_password: Grit::Core::User.crypto_provider.encrypt("password" + salt),
       persistence_token: Authlogic::Random.hex_token,
-      single_access_token: Authlogic::Random.friendly_token,
+      single_access_token: Authlogic::Random.friendly_token
     })[0]["id"]
     Grit::Core::UserRole.insert({ user_id: id, role_id: role_id })
   end

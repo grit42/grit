@@ -27,7 +27,7 @@ module Grit::Assays
     before_save :check_model_publication_status
     before_destroy :check_model_publication_status
 
-    entity_crud_with read: ["read:system"], write: ["admin:assays"]
+    entity_crud_with read: [ "read:system" ], write: [ "admin:assays" ]
 
     private
       def check_model_publication_status

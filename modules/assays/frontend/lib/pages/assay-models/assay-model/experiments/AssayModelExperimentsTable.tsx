@@ -33,7 +33,7 @@ import { useMemo } from "react";
 import { useHasPermission } from "@grit42/core";
 
 const ExperimentsTable = () => {
-  const canCreateExperiment = useHasPermission("write:assays")
+  const canCreateExperiment = useHasPermission("write:assays");
   const navigate = useNavigate();
   const { assay_model_id } = useParams() as { assay_model_id: string };
 

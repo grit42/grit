@@ -158,7 +158,7 @@ const ExperimentLoadSets = ({ experiment }: { experiment: ExperimentData }) => {
     {
       scope: "by_experiment",
       experiment_id: experiment.id,
-      entity: "Grit::Assays::ExperimentDataSheetRecord"
+      entity: "Grit::Assays::ExperimentDataSheetRecord",
     },
   );
 

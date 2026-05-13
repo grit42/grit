@@ -351,19 +351,19 @@ admin_users_permission_id = Grit::Core::Permission.find_by(name: "admin:users")&
 admin_vocabularies_permission_id = Grit::Core::Permission.find_by(name: "admin:vocabularies")&.id || Grit::Core::Permission.insert({ name: "admin:vocabularies", description: "Manage vocabularies", provides_permissions: [ read_system_permission_id ] })[0]["id"]
 
 ## Role Permissions
-Grit::Core::RolePermission.upsert({ role_id: read_role_id, permission_id: read_system_permission_id }, unique_by: [:role_id, :permission_id])
+Grit::Core::RolePermission.upsert({ role_id: read_role_id, permission_id: read_system_permission_id }, unique_by: [ :role_id, :permission_id ])
 
-Grit::Core::RolePermission.upsert({ role_id: analyse_role_id, permission_id: write_analysis_permission_id }, unique_by: [:role_id, :permission_id])
+Grit::Core::RolePermission.upsert({ role_id: analyse_role_id, permission_id: write_analysis_permission_id }, unique_by: [ :role_id, :permission_id ])
 
-Grit::Core::RolePermission.upsert({ role_id: write_role_id, permission_id: write_analysis_permission_id }, unique_by: [:role_id, :permission_id])
+Grit::Core::RolePermission.upsert({ role_id: write_role_id, permission_id: write_analysis_permission_id }, unique_by: [ :role_id, :permission_id ])
 
-Grit::Core::RolePermission.upsert({ role_id: manage_role_id, permission_id: write_analysis_permission_id }, unique_by: [:role_id, :permission_id])
-Grit::Core::RolePermission.upsert({ role_id: manage_role_id, permission_id: admin_vocabularies_permission_id }, unique_by: [:role_id, :permission_id])
+Grit::Core::RolePermission.upsert({ role_id: manage_role_id, permission_id: write_analysis_permission_id }, unique_by: [ :role_id, :permission_id ])
+Grit::Core::RolePermission.upsert({ role_id: manage_role_id, permission_id: admin_vocabularies_permission_id }, unique_by: [ :role_id, :permission_id ])
 
-Grit::Core::RolePermission.upsert({ role_id: manage_role_id, permission_id: write_analysis_permission_id }, unique_by: [:role_id, :permission_id])
-Grit::Core::RolePermission.upsert({ role_id: admin_role_id, permission_id: admin_vocabularies_permission_id }, unique_by: [:role_id, :permission_id])
-Grit::Core::RolePermission.upsert({ role_id: admin_role_id, permission_id: admin_system_permission_id }, unique_by: [:role_id, :permission_id])
-Grit::Core::RolePermission.upsert({ role_id: admin_role_id, permission_id: admin_users_permission_id }, unique_by: [:role_id, :permission_id])
+Grit::Core::RolePermission.upsert({ role_id: manage_role_id, permission_id: write_analysis_permission_id }, unique_by: [ :role_id, :permission_id ])
+Grit::Core::RolePermission.upsert({ role_id: admin_role_id, permission_id: admin_vocabularies_permission_id }, unique_by: [ :role_id, :permission_id ])
+Grit::Core::RolePermission.upsert({ role_id: admin_role_id, permission_id: admin_system_permission_id }, unique_by: [ :role_id, :permission_id ])
+Grit::Core::RolePermission.upsert({ role_id: admin_role_id, permission_id: admin_users_permission_id }, unique_by: [ :role_id, :permission_id ])
 
 ## User roles
 

@@ -26,7 +26,7 @@ module Grit::Assays
 
     display_column "name"
 
-    entity_crud_with read: ["read:system"], write: ["write:analysis"]
+    entity_crud_with read: [ "read:system" ], write: [ "write:analysis" ]
 
     def self.entity_properties(**args)
       @entity_properties ||= self.db_properties.filter { |p| p[:name] != "plots" }.map { |p| p[:name] == "entity_data_type_id" ? {

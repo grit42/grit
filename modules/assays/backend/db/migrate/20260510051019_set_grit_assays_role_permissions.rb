@@ -26,7 +26,7 @@ class SetGritAssaysRolePermissions < ActiveRecord::Migration[8.1]
       })
     end
 
-    Grit::Core::RolePermission.insert_all(role_permissions, unique_by: [:role_id, :permission_id]) unless role_permissions.blank?
+    Grit::Core::RolePermission.insert_all(role_permissions, unique_by: [ :role_id, :permission_id ]) unless role_permissions.blank?
   end
 
   def down

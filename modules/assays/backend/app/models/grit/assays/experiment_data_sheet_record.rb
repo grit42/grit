@@ -19,7 +19,7 @@
 module Grit::Assays
   class ExperimentDataSheetRecord < ApplicationRecord # TODO: fix not use activerecord
     @entity_crud = {
-      read: ["read:system"],
+      read: [ "read:system" ],
       write: [ "write:assays" ]
     }
 
