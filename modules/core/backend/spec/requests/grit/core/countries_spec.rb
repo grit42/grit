@@ -20,8 +20,8 @@
 require "swagger_helper"
 
 RSpec.describe "Countries API", type: :request do
-  let(:admin) { create(:grit_core_user, :admin, :with_admin_role) }
-  let(:notadmin) { create(:grit_core_user, :with_user_role) }
+  let(:admin) { create(:grit_core_user, :admin, :with_administrator_role) }
+  let(:notadmin) { create(:grit_core_user, :with_read_role) }
   let!(:country) { create(:grit_core_country, :test) }
 
   before(:each) do
@@ -109,38 +109,38 @@ RSpec.describe "Countries API", type: :request do
     end
   end
 
-  it "allows index with 'read:collections'" do
+  it "allows index with 'read:system'" do
     login_as(notadmin)
     get "/api/grit/core/countries", as: :json
     expect(response).to have_http_status(:success)
   end
 
-  it "allows show with 'read:collections'" do
+  it "allows show with 'read:system'" do
     login_as(notadmin)
     get "/api/grit/core/countries/#{country.id}", as: :json
     expect(response).to have_http_status(:success)
   end
 
-  it "allows create with 'write:collections'" do
+  it "allows create with 'admin:system'" do
     expect {
       post "/api/grit/core/countries", params: { name: "Test1", iso: "YP" }, as: :json
   }.to change(Grit::Core::Country, :count)
     expect(response).to have_http_status(:created)
   end
 
-  it "allows update with 'write:collections'" do
+  it "allows update with 'admin:system'" do
     patch "/api/grit/core/countries/#{country.id}", params: { name: "Testtest1" }, as: :json
     expect(response).to have_http_status(:success)
   end
 
-  it "allows destroy with 'write:collections'" do
+  it "allows destroy with 'admin:system'" do
     expect {
       delete "/api/grit/core/countries/#{country.id}", as: :json
   }.to change(Grit::Core::Country, :count)
     expect(response).to have_http_status(:success)
   end
 
-  it "forbids create without 'write:collections'" do
+  it "forbids create without 'admin:system'" do
     login_as(notadmin)
     expect {
       post "/api/grit/core/countries", params: { name: "Test2", iso: "TT" }, as: :json
@@ -148,13 +148,13 @@ RSpec.describe "Countries API", type: :request do
     expect(response).to have_http_status(:forbidden)
   end
 
-  it "forbids update without 'write:collections'" do
+  it "forbids update without 'admin:system'" do
     login_as(notadmin)
     patch "/api/grit/core/countries/#{country.id}", params: { name: "Testtest2" }, as: :json
     expect(response).to have_http_status(:forbidden)
   end
 
-  it "forbids destroy without 'write:collections'" do
+  it "forbids destroy without 'admin:system'" do
     login_as(notadmin)
     expect {
       delete "/api/grit/core/countries/#{country.id}", as: :json

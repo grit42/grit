@@ -20,8 +20,8 @@
 require "swagger_helper"
 
 RSpec.describe "Locations API", type: :request do
-  let(:admin) { create(:grit_core_user, :admin, :with_admin_role) }
-  let(:notadmin) { create(:grit_core_user, :with_user_role) }
+  let(:admin) { create(:grit_core_user, :admin, :with_administrator_role) }
+  let(:notadmin) { create(:grit_core_user, :with_read_role) }
   let(:country) { create(:grit_core_country) }
   let(:origin) { create(:grit_core_origin) }
   let!(:location) { create(:grit_core_location, country: country, origin: origin) }

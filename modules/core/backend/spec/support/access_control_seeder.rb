@@ -18,52 +18,62 @@
 
 # Idempotently seeds the system roles and permissions defined in db/seeds.rb so
 # specs can rely on them without depending on whether the seed file has run.
-# Used by factory traits like :with_user_role / :with_manager_role /
-# :with_admin_role on the user factory.
+# Used by factory traits like :with_read_role / :with_manage_role /
+# :with_administrator_role on the user factory.
 module AccessControlSeeder
   PERMISSIONS = {
-    read_users: {
-      name: "read:users",
-      description: "Can read user profiles",
+    read_system: {
+      name: "read:system",
+      description: "Read data",
       requires: []
+    },
+    write_analysis: {
+      name: "write:analysis",
+      description: "Use analysis features",
+      requires: [ :read_system ]
+    },
+    admin_system: {
+      name: "admin:system",
+      description: "Manage system",
+      requires: [ :read_system ]
     },
     admin_users: {
       name: "admin:users",
-      description: "Can admin user profiles",
-      requires: [ :read_users ]
+      description: "Manage users",
+      requires: [ :read_system ]
     },
-    read_collections: {
-      name: "read:collections",
-      description: "Can read collections (Vocabularies, Origins, Locations, Units, ...)",
-      requires: []
-    },
-    write_collections: {
-      name: "write:collections",
-      description: "Can write collections (Vocabularies items, Origins, Locations, Units, ...)",
-      requires: [ :read_collections ]
-    },
-    admin_collections: {
-      name: "admin:collections",
-      description: "Can admin collections (Create and update Vocabularies)",
-      requires: [ :read_collections, :write_collections ]
+    admin_vocabularies: {
+      name: "admin:vocabularies",
+      description: "Manage vocabularies",
+      requires: [ :read_system ]
     }
   }.freeze
 
   ROLES = {
-    user: {
-      name: "User",
-      description: "Can read data",
-      permissions: [ :read_users, :read_collections ]
+    read: {
+      name: "Read",
+      description: "Read data",
+      permissions: [ :read_system ]
     },
-    manager: {
-      name: "Manager",
-      description: "Can read and write data",
-      permissions: [ :read_users, :read_collections, :write_collections, :admin_collections ]
+    analyse: {
+      name: "Analyse",
+      description: "'Read' and use analysis features",
+      permissions: [ :write_analysis ]
+    },
+    write: {
+      name: "Write",
+      description: "'Analyse' and write data",
+      permissions: [ :write_analysis ]
+    },
+    manage: {
+      name: "Manage",
+      description: "'Write' and manage models and controlled terminology",
+      permissions: [ :write_analysis, :admin_vocabularies ]
     },
     administrator: {
       name: "Administrator",
-      description: "Can read and write data, and manage users",
-      permissions: [ :read_users, :read_collections, :write_collections, :admin_collections, :admin_users ]
+      description: "System administrator",
+      permissions: [ :admin_vocabularies, :admin_system, :admin_users ]
     }
   }.freeze
 

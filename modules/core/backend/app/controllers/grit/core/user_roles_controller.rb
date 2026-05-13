@@ -19,5 +19,9 @@
 module Grit::Core
   class UserRolesController < ApplicationController
     include Grit::Core::GritEntityController
+
+    def permitted_params
+      [:user_id, :role_id]
+    end
   end
 end

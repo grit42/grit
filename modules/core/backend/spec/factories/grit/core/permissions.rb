@@ -27,9 +27,19 @@ FactoryBot.define do
     # Each trait yields the existing record when present so that factories
     # using these traits can be invoked from multiple specs without violating
     # the uniqueness constraint on `name`.
-    trait :read_users do
+    trait :read_system do
       to_create { |instance| instance.save! unless instance.persisted? }
-      initialize_with { AccessControlSeeder.permission(:read_users) }
+      initialize_with { AccessControlSeeder.permission(:read_system) }
+    end
+
+    trait :write_analysis do
+      to_create { |instance| instance.save! unless instance.persisted? }
+      initialize_with { AccessControlSeeder.permission(:write_analysis) }
+    end
+
+    trait :admin_system do
+      to_create { |instance| instance.save! unless instance.persisted? }
+      initialize_with { AccessControlSeeder.permission(:admin_system) }
     end
 
     trait :admin_users do
@@ -37,19 +47,9 @@ FactoryBot.define do
       initialize_with { AccessControlSeeder.permission(:admin_users) }
     end
 
-    trait :read_collections do
+    trait :admin_vocabularies do
       to_create { |instance| instance.save! unless instance.persisted? }
-      initialize_with { AccessControlSeeder.permission(:read_collections) }
-    end
-
-    trait :write_collections do
-      to_create { |instance| instance.save! unless instance.persisted? }
-      initialize_with { AccessControlSeeder.permission(:write_collections) }
-    end
-
-    trait :admin_collections do
-      to_create { |instance| instance.save! unless instance.persisted? }
-      initialize_with { AccessControlSeeder.permission(:admin_collections) }
+      initialize_with { AccessControlSeeder.permission(:admin_vocabularies) }
     end
   end
 end

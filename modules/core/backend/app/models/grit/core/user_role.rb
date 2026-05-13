@@ -33,14 +33,17 @@ module Grit::Core
     private
 
       def check_role
+        Rails.logger.info "check role"
         return if Grit::Core::User.current.permission?("admin:users")
-
+        Rails.logger.info "check role failed"
         raise "Administrator role required to manage user roles"
       end
 
       def check_dependencies
+        Rails.logger.info "check deps"
         check_role
         return unless user.login == "admin" && role.name == "Administrator"
+        Rails.logger.info "check role failed"
 
         raise "Not allowed"
       end

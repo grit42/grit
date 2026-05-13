@@ -20,8 +20,8 @@
 require "swagger_helper"
 
 RSpec.describe "Origins API", type: :request do
-  let(:admin) { create(:grit_core_user, :admin, :with_admin_role) }
-  let(:notadmin) { create(:grit_core_user, :with_user_role) }
+  let(:admin) { create(:grit_core_user, :admin, :with_administrator_role) }
+  let(:notadmin) { create(:grit_core_user, :with_read_role) }
   let!(:origin) { create(:grit_core_origin, name: "TEST_ORIGIN", domain: "Test domain", status: "Test status") }
 
   it_behaves_like "an admin-only CRUD entity",

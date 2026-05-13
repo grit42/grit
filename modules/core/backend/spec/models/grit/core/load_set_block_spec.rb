@@ -20,7 +20,7 @@
 require "rails_helper"
 
 RSpec.describe Grit::Core::LoadSetBlock, type: :model do
-  let(:admin) { create(:grit_core_user, :admin, :with_admin_role) }
+  let(:admin) { create(:grit_core_user, :admin, :with_administrator_role) }
   let(:mapping_status) { create(:grit_core_load_set_status, :mapping) }
   let(:succeeded_status) { create(:grit_core_load_set_status, :succeeded) }
   let(:errored_status) { create(:grit_core_load_set_status, :errored) }

@@ -20,7 +20,7 @@
 require "swagger_helper"
 
 RSpec.describe "Vocabulary Items API", type: :request do
-  let(:admin) { create(:grit_core_user, :admin, :with_admin_role) }
+  let(:admin) { create(:grit_core_user, :admin, :with_administrator_role) }
   let(:vocabulary) { create(:grit_core_vocabulary, name: "test_vocab") }
   let!(:vocabulary_item) { create(:grit_core_vocabulary_item, name: "item_one", vocabulary: vocabulary) }
 

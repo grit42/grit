@@ -27,14 +27,24 @@ FactoryBot.define do
     # trait yields the existing record (with its seed permissions attached)
     # when present, so multiple specs can ask for the same role without
     # violating the uniqueness constraint on `name`.
-    trait :user do
+    trait :read do
       to_create { |instance| instance.save! unless instance.persisted? }
-      initialize_with { AccessControlSeeder.seed![:roles][:user] }
+      initialize_with { AccessControlSeeder.seed![:roles][:read] }
     end
 
-    trait :manager do
+    trait :analyse do
       to_create { |instance| instance.save! unless instance.persisted? }
-      initialize_with { AccessControlSeeder.seed![:roles][:manager] }
+      initialize_with { AccessControlSeeder.seed![:roles][:analyse] }
+    end
+
+    trait :write do
+      to_create { |instance| instance.save! unless instance.persisted? }
+      initialize_with { AccessControlSeeder.seed![:roles][:write] }
+    end
+
+    trait :manage do
+      to_create { |instance| instance.save! unless instance.persisted? }
+      initialize_with { AccessControlSeeder.seed![:roles][:manage] }
     end
 
     trait :administrator do

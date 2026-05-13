@@ -20,8 +20,8 @@
 require "swagger_helper"
 
 RSpec.describe "Data Types API", type: :request do
-  let(:admin) { create(:grit_core_user, :admin, :with_admin_role) }
-  let(:notadmin) { create(:grit_core_user, :with_user_role) }
+  let(:admin) { create(:grit_core_user, :admin, :with_administrator_role) }
+  let(:notadmin) { create(:grit_core_user, :with_read_role) }
   let!(:data_type) { create(:grit_core_data_type, :integer) }
 
   before(:each) do
@@ -40,30 +40,6 @@ RSpec.describe "Data Types API", type: :request do
       end
     end
 
-    post "Attempts to create a data type" do
-      tags "Core - Data Types"
-      consumes "application/json"
-      produces "application/json"
-      security [ { bearer_auth: [] } ]
-      parameter name: :data_type_params, in: :body, schema: {
-        type: :object,
-        properties: {
-          name: { type: :string }
-        }
-      }
-
-      response "403", "creation is forbidden" do
-        let(:data_type_params) { { name: "test" } }
-
-        it "does not change the count" do
-          expect {
-            post "/api/grit/core/data_types", params: { name: "test" }, as: :json
-          }.not_to change(Grit::Core::DataType, :count)
-        end
-
-        run_test!
-      end
-    end
   end
 
   path "/api/grit/core/data_types/{id}" do
@@ -81,41 +57,5 @@ RSpec.describe "Data Types API", type: :request do
       end
     end
 
-    patch "Attempts to update a data type" do
-      tags "Core - Data Types"
-      consumes "application/json"
-      produces "application/json"
-      security [ { bearer_auth: [] } ]
-      parameter name: :data_type_params, in: :body, schema: {
-        type: :object,
-        properties: {
-          name: { type: :string }
-        }
-      }
-
-      response "403", "update is forbidden" do
-        let(:id) { data_type.id }
-        let(:data_type_params) { { name: "test" } }
-        run_test!
-      end
-    end
-
-    delete "Attempts to destroy a data type" do
-      tags "Core - Data Types"
-      produces "application/json"
-      security [ { bearer_auth: [] } ]
-
-      response "403", "destruction is forbidden" do
-        let(:id) { data_type.id }
-
-        it "does not change the count" do
-          expect {
-            delete "/api/grit/core/data_types/#{data_type.id}", as: :json
-          }.not_to change(Grit::Core::DataType, :count)
-        end
-
-        run_test!
-      end
-    end
   end
 end

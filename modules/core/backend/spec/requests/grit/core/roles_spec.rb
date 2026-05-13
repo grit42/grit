@@ -20,8 +20,8 @@
 require "swagger_helper"
 
 RSpec.describe "Roles API", type: :request do
-  let(:admin) { create(:grit_core_user, :admin, :with_admin_role) }
-  let(:notadmin) { create(:grit_core_user, :with_user_role) }
+  let(:admin) { create(:grit_core_user, :admin, :with_administrator_role) }
+  let(:notadmin) { create(:grit_core_user, :with_read_role) }
   let(:role) { Grit::Core::Role.find_by!(name: "Administrator") }
   let(:custom_role) { create(:grit_core_role) }
 
@@ -111,16 +111,16 @@ RSpec.describe "Roles API", type: :request do
   end
 
 
-  it "allows index with 'read:users'" do
+  it "forbids index without 'admin:users'" do
     login_as(notadmin)
     get "/api/grit/core/roles", as: :json
-    expect(response).to have_http_status(:success)
+    expect(response).to have_http_status(:forbidden)
   end
 
-  it "allows show with 'read:users'" do
+  it "forbids show without 'admin:users'" do
     login_as(notadmin)
     get "/api/grit/core/roles/#{role.id}", as: :json
-    expect(response).to have_http_status(:success)
+    expect(response).to have_http_status(:forbidden)
   end
 
   it "allows create with 'admin:users'" do

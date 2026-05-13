@@ -20,7 +20,7 @@
 require "rails_helper"
 
 RSpec.describe Grit::Core::DataType, type: :model do
-  let(:admin) { create(:grit_core_user, :admin, :with_admin_role) }
+  let(:admin) { create(:grit_core_user, :admin, :with_administrator_role) }
 
   before(:each) do
     set_current_user(admin)

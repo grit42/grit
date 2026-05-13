@@ -21,7 +21,7 @@ require "rails_helper"
 require "ostruct"
 
 RSpec.describe Grit::Core::EntityLoader, type: :model do
-  let(:admin) { create(:grit_core_user, :admin, :with_admin_role) }
+  let(:admin) { create(:grit_core_user, :admin, :with_administrator_role) }
   let(:origin) { create(:grit_core_origin) }
 
   before(:each) do

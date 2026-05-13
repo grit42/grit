@@ -20,8 +20,8 @@
 require "swagger_helper"
 
 RSpec.describe "Users API", type: :request do
-  let(:admin) { create(:grit_core_user, :admin, :with_admin_role) }
-  let(:notadmin) { create(:grit_core_user, :with_user_role) }
+  let(:admin) { create(:grit_core_user, :admin, :with_administrator_role) }
+  let(:notadmin) { create(:grit_core_user, :with_read_role) }
   let(:norole) { create(:grit_core_user) }
   let(:origin) { create(:grit_core_origin) }
 
@@ -35,7 +35,7 @@ RSpec.describe "Users API", type: :request do
       produces "application/json"
       security [ { bearer_auth: [] } ]
 
-      response "200", "users with 'read:users' can list users" do
+      response "200", "users with 'read:system' can list users" do
         before { login_as(notadmin) }
         run_test!
       end
@@ -54,7 +54,7 @@ RSpec.describe "Users API", type: :request do
       expect(response).to have_http_status(:bad_request)
     end
 
-    it "users without 'read:users' should not get index" do
+    it "users without 'read:system' should not get index" do
       login_as(norole)
       get "/api/grit/core/users"
       expect(response).to have_http_status(:forbidden)
@@ -145,7 +145,7 @@ RSpec.describe "Users API", type: :request do
       produces "application/json"
       security [ { bearer_auth: [] } ]
 
-      response "200", "users with 'read:users' can show user" do
+      response "200", "users with 'read:system' can show user" do
         let(:id) { notadmin.id }
         before { login_as(notadmin) }
         run_test!
@@ -214,7 +214,7 @@ RSpec.describe "Users API", type: :request do
       expect(response).to have_http_status(:bad_request)
     end
 
-    it "users without 'read:users' should not show user" do
+    it "users without 'read:system' should not show user" do
       notadmin_id = notadmin.id
       login_as(norole)
       get "/api/grit/core/users/#{notadmin_id}"

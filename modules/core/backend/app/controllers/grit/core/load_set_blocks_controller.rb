@@ -248,7 +248,7 @@ module Grit::Core
         if entity.blank? && params[:id].present?
           entity = Grit::Core::LoadSetBlock.find(params[:id]).load_set.entity
         elsif entity.blank? && params[:load_set_id].present?
-          Grit::Core::LoadSet.find(params[:load_set_id]).entity
+          entity = Grit::Core::LoadSet.find(params[:load_set_id]).entity
         end
         klass = entity.constantize
         render json: { success: false, errors: "You do not have the permissions required to read Grit::Core::LoadSetBlock for entity #{entity}" }, status: :forbidden  if klass.entity_crud[:read].nil? or !current_user.permission?(klass.entity_crud[:read])

@@ -63,6 +63,7 @@ module Grit::Core::Controller::Writable
       klass = controller_path.classify.constantize
       ids = params[:id] if params[:id] != "destroy"
       ids = params[:ids].split(",") if params[:id] == "destroy"
+      Rails.logger.info klass.where(id: ids)
       klass.where(id: ids).destroy_all
       render json: { success: true }
     rescue StandardError => e

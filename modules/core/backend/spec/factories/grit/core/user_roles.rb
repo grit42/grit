@@ -22,12 +22,20 @@ FactoryBot.define do
     association :user, factory: :grit_core_user
     association :role, factory: :grit_core_role
 
-    trait :user do
-      association :role, factory: [ :grit_core_role, :user ]
+    trait :read do
+      association :role, factory: [ :grit_core_role, :read ]
     end
 
-    trait :manager do
-      association :role, factory: [ :grit_core_role, :manager ]
+    trait :analyse do
+      association :role, factory: [ :grit_core_role, :analyse ]
+    end
+
+    trait :write do
+      association :role, factory: [ :grit_core_role, :write ]
+    end
+
+    trait :manage do
+      association :role, factory: [ :grit_core_role, :manage ]
     end
 
     trait :administrator do

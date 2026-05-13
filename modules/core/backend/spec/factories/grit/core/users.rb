@@ -62,24 +62,38 @@ FactoryBot.define do
       active { false }
     end
 
-    trait :with_admin_role do
+    trait :with_read_role do
+      after(:create) do |user|
+        roles = AccessControlSeeder.seed![:roles]
+        Grit::Core::UserRole.find_or_create_by!(user: user, role: roles[:read])
+      end
+    end
+
+    trait :with_analyse_role do
+      after(:create) do |user|
+        roles = AccessControlSeeder.seed![:roles]
+        Grit::Core::UserRole.find_or_create_by!(user: user, role: roles[:analyse])
+      end
+    end
+
+    trait :with_write_role do
+      after(:create) do |user|
+        roles = AccessControlSeeder.seed![:roles]
+        Grit::Core::UserRole.find_or_create_by!(user: user, role: roles[:write])
+      end
+    end
+
+    trait :with_manage_role do
+      after(:create) do |user|
+        roles = AccessControlSeeder.seed![:roles]
+        Grit::Core::UserRole.find_or_create_by!(user: user, role: roles[:manage])
+      end
+    end
+
+    trait :with_administrator_role do
       after(:create) do |user|
         roles = AccessControlSeeder.seed![:roles]
         Grit::Core::UserRole.find_or_create_by!(user: user, role: roles[:administrator])
-      end
-    end
-
-    trait :with_manager_role do
-      after(:create) do |user|
-        roles = AccessControlSeeder.seed![:roles]
-        Grit::Core::UserRole.find_or_create_by!(user: user, role: roles[:manager])
-      end
-    end
-
-    trait :with_user_role do
-      after(:create) do |user|
-        roles = AccessControlSeeder.seed![:roles]
-        Grit::Core::UserRole.find_or_create_by!(user: user, role: roles[:user])
       end
     end
 

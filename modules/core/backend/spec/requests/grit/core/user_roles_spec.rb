@@ -20,26 +20,30 @@
 require "swagger_helper"
 
 RSpec.describe "User Roles API", type: :request do
-  let(:admin) { create(:grit_core_user, :admin, :with_admin_role) }
+  let(:admin) { create(:grit_core_user, :admin, :with_administrator_role) }
+  let(:notadmin) { create(:grit_core_user, :with_read_role) }
   let(:admin_role) { Grit::Core::Role.find_by!(name: "Administrator") }
-  let(:user_role) { Grit::Core::UserRole.find_by!(user: admin, role: admin_role) }
+  let(:read_role) { Grit::Core::Role.find_by!(name: "Read") }
+  let(:admin_user_role) { Grit::Core::UserRole.find_by!(user: admin, role: admin_role) }
+  let(:target_user) { create(:grit_core_user) }
+  let(:target_user_role) { create(:grit_core_user_role, user: target_user, role: read_role) }
 
   before(:each) do
     login_as(admin)
   end
 
   path "/api/grit/core/user_roles" do
-    get "Attempts to list user roles" do
+    get "Lists user roles" do
       tags "Core - User Roles"
       produces "application/json"
       security [ { bearer_auth: [] } ]
 
-      response "403", "listing is forbidden" do
+      response "200", "listing is allowed with 'admin:users'" do
         run_test!
       end
     end
 
-    post "Attempts to create a user role" do
+    post "Creates a user role" do
       tags "Core - User Roles"
       consumes "application/json"
       produces "application/json"
@@ -52,15 +56,8 @@ RSpec.describe "User Roles API", type: :request do
         }
       }
 
-      response "403", "creation is forbidden" do
-        let(:user_role_params) { { user_id: 1, role_id: 43 } }
-
-        it "does not change the count" do
-          expect {
-            post "/api/grit/core/user_roles", params: { user_id: 1, role_id: 43 }, as: :json
-          }.not_to change(Grit::Core::UserRole, :count)
-        end
-
+      response "201", "creation is allowed with 'admin:users'" do
+        let(:user_role_params) { { user_id: target_user.id, role_id: read_role.id } }
         run_test!
       end
     end
@@ -69,18 +66,18 @@ RSpec.describe "User Roles API", type: :request do
   path "/api/grit/core/user_roles/{id}" do
     parameter name: :id, in: :path, type: :integer
 
-    get "Attempts to show a user role" do
+    get "Shows a user role" do
       tags "Core - User Roles"
       produces "application/json"
       security [ { bearer_auth: [] } ]
 
-      response "403", "showing is forbidden" do
-        let(:id) { user_role.id }
+      response "200", "showing is allowed with 'admin:users'" do
+        let(:id) { admin_user_role.id }
         run_test!
       end
     end
 
-    patch "Attempts to update a user role" do
+    patch "Updates a user role" do
       tags "Core - User Roles"
       consumes "application/json"
       produces "application/json"
@@ -92,29 +89,66 @@ RSpec.describe "User Roles API", type: :request do
         }
       }
 
-      response "403", "update is forbidden" do
-        let(:id) { user_role.id }
-        let(:user_role_params) { { user_id: 42 } }
+      response "200", "update is allowed with 'admin:users'" do
+        let(:id) { target_user_role.id }
+        let(:user_role_params) { { user_id: notadmin.id } }
         run_test!
       end
     end
 
-    delete "Attempts to destroy a user role" do
+    delete "Destroys a user role" do
       tags "Core - User Roles"
       produces "application/json"
       security [ { bearer_auth: [] } ]
 
-      response "403", "destruction is forbidden" do
-        let(:id) { user_role.id }
-
-        it "does not change the count" do
-          expect {
-            delete "/api/grit/core/user_roles/#{user_role.id}", as: :json
-          }.not_to change(Grit::Core::UserRole, :count)
-        end
-
+      response "200", "destruction is allowed with 'admin:users'" do
+        let(:id) { target_user_role.id }
         run_test!
       end
     end
+  end
+
+  it "destruction changes the count" do
+    target_user_role
+    expect {
+      delete "/api/grit/core/user_roles/#{target_user_role.id}", as: :json
+    }.to change(Grit::Core::UserRole, :count).by(-1)
+  end
+
+  it "forbids listing without 'admin:users'" do
+    login_as(notadmin)
+    get "/api/grit/core/user_roles", as: :json
+    expect(response).to have_http_status(:forbidden)
+  end
+
+  it "forbids showing without 'admin:users'" do
+    login_as(notadmin)
+    get "/api/grit/core/user_roles/#{admin_user_role.id}", as: :json
+    expect(response).to have_http_status(:forbidden)
+  end
+
+  it "forbids creation without 'admin:users'" do
+    target_user
+    login_as(notadmin)
+    expect {
+      post "/api/grit/core/user_roles", params: { user_id: target_user.id, role_id: read_role.id }, as: :json
+    }.not_to change(Grit::Core::UserRole, :count)
+    expect(response).to have_http_status(:forbidden)
+  end
+
+  it "forbids update without 'admin:users'" do
+    target_user_role
+    login_as(notadmin)
+    patch "/api/grit/core/user_roles/#{target_user_role.id}", params: { user_id: notadmin.id }, as: :json
+    expect(response).to have_http_status(:forbidden)
+  end
+
+  it "forbids destruction without 'admin:users'" do
+    target_user_role
+    login_as(notadmin)
+    expect {
+      delete "/api/grit/core/user_roles/#{target_user_role.id}", as: :json
+    }.not_to change(Grit::Core::UserRole, :count)
+    expect(response).to have_http_status(:forbidden)
   end
 end

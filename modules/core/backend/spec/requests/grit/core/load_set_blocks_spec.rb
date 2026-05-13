@@ -20,7 +20,7 @@
 require "swagger_helper"
 
 RSpec.describe "Load Set Blocks API", type: :request do
-  let(:admin) { create(:grit_core_user, :admin, :with_admin_role) }
+  let(:admin) { create(:grit_core_user, :admin, :with_administrator_role) }
   let(:origin) { create(:grit_core_origin) }
   let(:load_set) { create(:grit_core_load_set, origin_id: origin.id) }
 
@@ -47,8 +47,11 @@ RSpec.describe "Load Set Blocks API", type: :request do
       tags "Core - Load Set Blocks"
       produces "application/json"
       security [ { bearer_auth: [] } ]
+      parameter name: :entity, in: :query, type: :string
 
       response "200", "fields listed" do
+        let(:entity) { "Grit::TestEntity" }
+
         run_test! do
           body = JSON.parse(response.body)
           expect(body["success"]).to be true
@@ -81,7 +84,7 @@ RSpec.describe "Load Set Blocks API", type: :request do
         end
       end
 
-      response "500", "load set block not found" do
+      response "404", "load set block not found" do
         let(:load_set_block_id) { 0 }
 
         run_test! do
@@ -256,7 +259,7 @@ RSpec.describe "Load Set Blocks API", type: :request do
         end
       end
 
-      response "500", "load set block id missing returns error" do
+      response "404", "load set block id missing returns error" do
         let(:load_set_block_id) { 0 }
 
         run_test! do
@@ -432,7 +435,7 @@ RSpec.describe "Load Set Blocks API", type: :request do
         run_test! do
           body = JSON.parse(response.body)
           expect(body["success"]).to be false
-          expect(body["errors"]).to eq("Load set block not found")
+          expect(body["errors"]).to eq("Not found")
         end
       end
     end
@@ -491,7 +494,7 @@ RSpec.describe "Load Set Blocks API", type: :request do
         run_test! do
           body = JSON.parse(response.body)
           expect(body["success"]).to be false
-          expect(body["errors"]).to eq("Load set block not found")
+          expect(body["errors"]).to eq("Not found")
         end
       end
     end

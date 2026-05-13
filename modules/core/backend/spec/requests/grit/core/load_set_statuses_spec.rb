@@ -20,7 +20,7 @@
 require "swagger_helper"
 
 RSpec.describe "Load Set Statuses API", type: :request do
-  let(:admin) { create(:grit_core_user, :admin, :with_admin_role) }
+  let(:admin) { create(:grit_core_user, :admin, :with_administrator_role) }
   let!(:load_set_status) { create(:grit_core_load_set_status, :mapping) }
 
   before(:each) do

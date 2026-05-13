@@ -20,7 +20,7 @@
 require "swagger_helper"
 
 RSpec.describe "Publication Statuses API", type: :request do
-  let(:admin) { create(:grit_core_user, :admin, :with_admin_role) }
+  let(:admin) { create(:grit_core_user, :admin, :with_administrator_role) }
   let!(:publication_status) { create(:grit_core_publication_status, :draft) }
 
   before(:each) do

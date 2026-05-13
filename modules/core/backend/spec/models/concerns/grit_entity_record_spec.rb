@@ -21,7 +21,7 @@ require "rails_helper"
 
 # Tests for the GritEntityRecord concern using the Grit::TestEntity model from the dummy app
 RSpec.describe "GritEntityRecord concern", type: :model do
-  let(:admin) { create(:grit_core_user, :admin, :with_admin_role) }
+  let(:admin) { create(:grit_core_user, :admin, :with_administrator_role) }
 
   before(:each) do
     set_current_user(admin)
@@ -135,8 +135,8 @@ RSpec.describe "GritEntityRecord concern", type: :model do
   describe "entity_crud_with configuration" do
     it "returns configured permissions" do
       crud = Grit::TestEntity.entity_crud
-      expect(crud[:read]).to eq([ "read:collections" ])
-      expect(crud[:write]).to eq([ "write:collections" ])
+      expect(crud[:read]).to eq([ "read:system" ])
+      expect(crud[:write]).to eq([ "admin:system" ])
     end
   end
 
