@@ -25,7 +25,7 @@ RSpec.describe Grit::Compounds::BatchLoader do
   let(:compound) { create(:grit_compounds_compound, origin: origin, compound_type: compound_type) }
 
   before do
-    admin = create(:grit_core_user, :admin, :with_admin_role)
+    admin = create(:grit_core_user, :admin, :with_administrator_role)
     set_current_user(admin)
   end
 

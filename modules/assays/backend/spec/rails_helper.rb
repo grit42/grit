@@ -36,6 +36,7 @@ ActiveRecord::Migrator.migrations_paths = [
 
 # Load support files
 Dir[File.expand_path("support/**/*.rb", __dir__)].each { |f| require f }
+require Grit::Core::Engine.root.join("spec", "support", "access_control_seeder").to_s
 
 # File fixtures path
 FILE_FIXTURE_PATH = "#{__dir__}/fixtures/files"
@@ -98,7 +99,7 @@ RSpec.configure do |config|
     RequestStore.store.clear
     activate_authlogic
     bootstrap = Struct.new(:login, :id) do
-      def role?(_name = nil)
+      def permission?(_name = nil)
         true
       end
 
@@ -111,6 +112,8 @@ RSpec.configure do |config|
     # Seed PublicationStatus records needed by controllers (find_by name).
     Grit::Core::PublicationStatus.find_or_create_by!(name: "Draft")
     Grit::Core::PublicationStatus.find_or_create_by!(name: "Published")
+
+    AssaysAccessControlSeeder.seed!
   end
 
   # Dynamic tables (ds_{id}) are created via DDL and are not rolled back by

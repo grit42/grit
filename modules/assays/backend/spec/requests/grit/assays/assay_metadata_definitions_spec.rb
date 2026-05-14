@@ -21,7 +21,7 @@ require "swagger_helper"
 
 module Grit::Assays
   RSpec.describe "Assay Metadata Definitions API", type: :request do
-    let(:admin) { create(:grit_core_user, :admin, :with_admin_role) }
+    let(:admin) { create(:grit_core_user, :admin, :with_administrator_role) }
     let(:vocabulary) { create(:grit_core_vocabulary) }
     let(:biochemical) { create(:grit_assays_assay_type, :biochemical) }
 

@@ -22,7 +22,7 @@ require "swagger_helper"
 RSpec.describe Grit::Compounds::MoleculesController, type: :request do
   include AuthHelpers
 
-  let(:admin) { create(:grit_core_user, :admin, :with_admin_role) }
+  let(:admin) { create(:grit_core_user, :admin, :with_administrator_role) }
   let(:molecule) do
     mol = create(:grit_compounds_molecule, :ethanol)
     compound = create(:grit_compounds_compound)

@@ -54,7 +54,7 @@ module AuthHelpers
       activate_authlogic
     end
     RequestStore.store["current_user"] = Struct.new(:login, :id) do
-      def role?(_name = nil)
+      def permission?(_name = nil)
         true
       end
       def active?

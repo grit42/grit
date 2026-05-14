@@ -21,7 +21,7 @@ require "rails_helper"
 
 module Grit::Assays
   RSpec.describe AssayModelMetadatum, type: :model do
-    let(:admin) { create(:grit_core_user, :admin, :with_admin_role) }
+    let(:admin) { create(:grit_core_user, :admin, :with_administrator_role) }
     let(:draft_status) { create(:grit_core_publication_status, :draft) }
     let(:published_status) { create(:grit_core_publication_status, :published) }
     let(:vocabulary) { create(:grit_core_vocabulary) }

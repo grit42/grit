@@ -21,7 +21,7 @@ require "rails_helper"
 
 module Grit::Assays
   RSpec.describe AssayMetadataDefinition, type: :model do
-    let(:admin) { create(:grit_core_user, :admin, :with_admin_role) }
+    let(:admin) { create(:grit_core_user, :admin, :with_administrator_role) }
     let(:vocabulary) { create(:grit_core_vocabulary) }
     let(:draft_status) { create(:grit_core_publication_status, :draft) }
     let(:biochemical) { create(:grit_assays_assay_type, :biochemical) }

@@ -360,7 +360,7 @@ Grit::Core::RolePermission.upsert({ role_id: write_role_id, permission_id: write
 Grit::Core::RolePermission.upsert({ role_id: manage_role_id, permission_id: write_analysis_permission_id }, unique_by: [ :role_id, :permission_id ])
 Grit::Core::RolePermission.upsert({ role_id: manage_role_id, permission_id: admin_vocabularies_permission_id }, unique_by: [ :role_id, :permission_id ])
 
-Grit::Core::RolePermission.upsert({ role_id: manage_role_id, permission_id: write_analysis_permission_id }, unique_by: [ :role_id, :permission_id ])
+Grit::Core::RolePermission.upsert({ role_id: admin_role_id, permission_id: write_analysis_permission_id }, unique_by: [ :role_id, :permission_id ])
 Grit::Core::RolePermission.upsert({ role_id: admin_role_id, permission_id: admin_vocabularies_permission_id }, unique_by: [ :role_id, :permission_id ])
 Grit::Core::RolePermission.upsert({ role_id: admin_role_id, permission_id: admin_system_permission_id }, unique_by: [ :role_id, :permission_id ])
 Grit::Core::RolePermission.upsert({ role_id: admin_role_id, permission_id: admin_users_permission_id }, unique_by: [ :role_id, :permission_id ])

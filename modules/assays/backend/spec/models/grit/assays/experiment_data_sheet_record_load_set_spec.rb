@@ -23,7 +23,7 @@ module Grit::Assays
   # NOTE: This spec file tests ExperimentDataSheetRecordLoadSetBlock.
   # The file name references "load_set" but the actual model is LoadSetBlock.
   RSpec.describe ExperimentDataSheetRecordLoadSetBlock, type: :model do
-    let(:admin) { create(:grit_core_user, :admin, :with_admin_role) }
+    let(:admin) { create(:grit_core_user, :admin, :with_administrator_role) }
 
     before do
       set_current_user(admin)

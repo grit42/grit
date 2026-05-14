@@ -21,7 +21,7 @@ require "rails_helper"
 
 module Grit::Assays
   RSpec.describe ExperimentMetadataTemplate, type: :model do
-    let(:admin) { create(:grit_core_user, :admin, :with_admin_role) }
+    let(:admin) { create(:grit_core_user, :admin, :with_administrator_role) }
     let(:vocabulary) { create(:grit_core_vocabulary) }
     let(:vocab_item_one) { create(:grit_core_vocabulary_item, vocabulary: vocabulary) }
     let(:vocab_item_two) { create(:grit_core_vocabulary_item, vocabulary: vocabulary) }

@@ -27,7 +27,7 @@ RSpec.describe Grit::Compounds::CompoundLoader do
   end
 
   before do
-    admin = create(:grit_core_user, :admin, :with_admin_role)
+    admin = create(:grit_core_user, :admin, :with_administrator_role)
     set_current_user(admin)
   end
 

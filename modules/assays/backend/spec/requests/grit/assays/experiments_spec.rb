@@ -22,7 +22,7 @@ require "zip"
 
 module Grit::Assays
   RSpec.describe "Experiments API", type: :request do
-    let(:admin) { create(:grit_core_user, :admin, :with_admin_role) }
+    let(:admin) { create(:grit_core_user, :admin, :with_administrator_role) }
     let(:biochemical) { create(:grit_assays_assay_type, :biochemical) }
     let(:integer_type) { create(:grit_core_data_type, :integer) }
     let(:vocabulary) { create(:grit_core_vocabulary) }
