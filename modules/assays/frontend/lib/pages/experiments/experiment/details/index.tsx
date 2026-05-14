@@ -157,9 +157,7 @@ const ExperimentActions = ({
 }: {
   experiment: Partial<ExperimentData>;
 }) => {
-  const canCrudExperiment =
-    useHasPermission("write:assays") &&
-    experiment.publication_status_id__name !== "Published";
+  const hasWrite = useHasPermission("write:assays");
   const navigate = useNavigate();
   const destroyEntityMutation = useDestroyEntityMutation(
     "grit/assays/experiments",
@@ -199,7 +197,7 @@ const ExperimentActions = ({
     await draftMutation.mutateAsync();
   };
 
-  if (!experiment.id || !canCrudExperiment) {
+  if (!experiment.id || !hasWrite) {
     return null;
   }
 

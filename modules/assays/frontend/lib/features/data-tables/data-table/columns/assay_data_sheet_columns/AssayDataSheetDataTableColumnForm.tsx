@@ -36,6 +36,7 @@ import {
   useCreateEntityMutation,
   useDestroyEntityMutation,
   useEditEntityMutation,
+  useHasPermission,
 } from "@grit42/core";
 import { DataTableColumnData } from "../../../queries/data_table_columns";
 import { useQueryClient } from "@grit42/api";
@@ -44,6 +45,7 @@ import styles from "./assayDataSheetColumns.module.scss";
 import ExperimentSelector from "./ExperimentSelector";
 import ExperimentMetadataFilters from "./ExperimentMetadataFilters";
 import { CenteredSurface, SidebarLayout } from "@grit42/client-library/layouts";
+import { useMemo } from "react";
 
 const ExperimentsFilter = ({
   assayModelId,
@@ -86,7 +88,7 @@ const ExperimentsFilter = ({
 };
 
 const AssayDataSheetDataTableColumnForm = ({
-  fields,
+  fields: fieldsFromProps,
   dataTableColumn,
   dataTableId,
   dataTableColumnId,
@@ -96,7 +98,14 @@ const AssayDataSheetDataTableColumnForm = ({
   dataTableId: string | number;
   dataTableColumnId: string | number;
 }) => {
+  const canCrud = useHasPermission("write:analysis");
   const queryClient = useQueryClient();
+
+  const fields = useMemo(
+    () =>
+      fieldsFromProps.map((f) => ({ ...f, disabled: f.disabled || !canCrud })),
+    [canCrud, fieldsFromProps],
+  );
 
   const navigate = useNavigate();
 
@@ -231,7 +240,7 @@ const AssayDataSheetDataTableColumnForm = ({
                 </Link>
               </AddFormControl>
             )}
-            {dataTableColumnId !== "new" && (
+            {dataTableColumnId !== "new" && canCrud && (
               <FormControls
                 onDelete={onDelete}
                 showDelete={dataTableColumnId !== "new"}

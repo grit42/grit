@@ -25,7 +25,7 @@ import {
   useParams,
 } from "react-router-dom";
 import { useMemo } from "react";
-import { Tabs } from "@grit42/client-library/components";
+import { ErrorPage, Tabs } from "@grit42/client-library/components";
 import DataTablePlot from "./DataTablePlot";
 import { useHasPermission } from "@grit42/core";
 import { DataTableData, useDataTable } from "../../queries/data_tables";
@@ -79,8 +79,13 @@ const DataTablePlotTabs = ({ dataTable }: Props) => {
 
 const DataTablePlots = ({ dataTableId }: { dataTableId: string | number }) => {
   const { data: dataTable } = useDataTable(dataTableId);
+  const canCrudPlots = useHasPermission("write:analysis");
 
   if (!dataTable) return null;
+
+  if (!canCrudPlots) {
+    return <ErrorPage error="This data table has no plots." />;
+  }
 
   return (
     <Routes>

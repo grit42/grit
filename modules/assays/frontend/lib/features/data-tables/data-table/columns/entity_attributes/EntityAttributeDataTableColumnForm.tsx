@@ -35,15 +35,17 @@ import {
   useCreateEntityMutation,
   useDestroyEntityMutation,
   useEditEntityMutation,
+  useHasPermission,
 } from "@grit42/core";
 import { DataTableColumnData } from "../../../queries/data_table_columns";
 import { useQueryClient } from "@grit42/api";
 import styles from "./entityAttributes.module.scss";
 import { toSafeIdentifier } from "@grit42/core/utils";
 import { CenteredSurface } from "@grit42/client-library/layouts";
+import { useMemo } from "react";
 
 const EntityAttributeDataTableColumnForm = ({
-  fields,
+  fields: fieldsFromProps,
   dataTableColumn,
   dataTableId,
   dataTableColumnId,
@@ -53,7 +55,13 @@ const EntityAttributeDataTableColumnForm = ({
   dataTableId: string | number;
   dataTableColumnId: string | number;
 }) => {
+  const canCrud = useHasPermission("write:analysis");
   const queryClient = useQueryClient();
+  const fields = useMemo(
+    () =>
+      fieldsFromProps.map((f) => ({ ...f, disabled: f.disabled || !canCrud })),
+    [canCrud, fieldsFromProps],
+  );
 
   const navigate = useNavigate();
 
@@ -183,7 +191,7 @@ const EntityAttributeDataTableColumnForm = ({
             </Link>
           </AddFormControl>
         )}
-        {dataTableColumnId !== "new" && (
+        {dataTableColumnId !== "new" && canCrud && (
           <FormControls
             onDelete={onDelete}
             showDelete={dataTableColumnId !== "new"}

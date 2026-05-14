@@ -202,43 +202,45 @@ const ExperimentPlot = ({ experiment }: Props) => {
       {canDisplayPlot && (
         <Plot data={plotData} dataProperties={columns ?? []} def={plot.def} />
       )}
-      <Surface className={styles.plotSidebar}>
-        <ButtonGroup>
-          {dirty && (
-            <Button onClick={onSave} loading={saving} color="secondary">
-              {plot_id === "new" ? "Add" : "Save"}
-            </Button>
-          )}
-          {dirty && <Button onClick={onRevert}>Revert</Button>}
-          {plot_id !== "new" && (
-            <Button onClick={onDelete} color="danger" loading={deleting}>
-              Delete
-            </Button>
-          )}
-        </ButtonGroup>
-        <Select
-          label="Data sheet"
-          options={experiment.data_sheets.map(({ name, id }) => ({
-            label: name,
-            value: id,
-          }))}
-          value={plot.data_sheet_id}
-          onChange={(data_sheet_id) => {
-            setPlot((prev) => ({ ...prev, data_sheet_id }));
-            setDirty(true);
-          }}
-        />
-        <PlotSettings
-          plot={plot.def}
-          xAxisProperties={xAxisProperties as SourceDataProperties}
-          yAxisProperties={yAxisProperties as SourceDataProperties}
-          groupByProperties={groupByProperties as SourceDataProperties}
-          onChange={(def) => {
-            setPlot({ ...plot, def });
-            setDirty(true);
-          }}
-        />
-      </Surface>
+      {canCrudPlots && (
+        <Surface className={styles.plotSidebar}>
+          <ButtonGroup>
+            {dirty && (
+              <Button onClick={onSave} loading={saving} color="secondary">
+                {plot_id === "new" ? "Add" : "Save"}
+              </Button>
+            )}
+            {dirty && <Button onClick={onRevert}>Revert</Button>}
+            {plot_id !== "new" && (
+              <Button onClick={onDelete} color="danger" loading={deleting}>
+                Delete
+              </Button>
+            )}
+          </ButtonGroup>
+          <Select
+            label="Data sheet"
+            options={experiment.data_sheets.map(({ name, id }) => ({
+              label: name,
+              value: id,
+            }))}
+            value={plot.data_sheet_id}
+            onChange={(data_sheet_id) => {
+              setPlot((prev) => ({ ...prev, data_sheet_id }));
+              setDirty(true);
+            }}
+          />
+          <PlotSettings
+            plot={plot.def}
+            xAxisProperties={xAxisProperties as SourceDataProperties}
+            yAxisProperties={yAxisProperties as SourceDataProperties}
+            groupByProperties={groupByProperties as SourceDataProperties}
+            onChange={(def) => {
+              setPlot({ ...plot, def });
+              setDirty(true);
+            }}
+          />
+        </Surface>
+      )}
     </div>
   );
 };
