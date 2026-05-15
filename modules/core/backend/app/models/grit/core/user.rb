@@ -228,9 +228,11 @@ module Grit::Core
     end
 
     def forgot_token_expired?
-      logger.info "nil" if forgot_token_expires_at.nil?
-      logger.info "expired" if forgot_token_expires_at.present? && forgot_token_expires_at < Time.current
       forgot_token_expires_at.nil? || forgot_token_expires_at < Time.current
+    end
+
+    def valid_forgot_token?
+      forgot_token_expires_at.present? && forgot_token_expires_at > Time.current
     end
 
     def record_failed_two_factor_attempt!
