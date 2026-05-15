@@ -16,11 +16,11 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useMemo } from "react";
 import { GritColumnDef, Table, useSetupTableState } from "@grit42/table";
 import { EntityData, useInfiniteEntityData } from "../../../../entities";
-import { ErrorPage } from "@grit42/client-library/components";
+import { Button, ErrorPage } from "@grit42/client-library/components";
 import { CenteredColumnLayout } from "@grit42/client-library/layouts";
 
 const ROLE_TABLE_COLUMNS: GritColumnDef<EntityData>[] = [
@@ -78,6 +78,11 @@ export default function RolesList() {
     <CenteredColumnLayout>
       <Table<EntityData>
         header="Roles"
+        headerActions={
+          <Link to="new">
+            <Button>New</Button>
+          </Link>
+        }
         tableState={tableState}
         data={flatData}
         loading={isFetching && !isFetchingNextPage}

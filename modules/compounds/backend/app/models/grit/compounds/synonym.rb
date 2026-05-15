@@ -22,9 +22,6 @@ module Grit::Compounds
 
     belongs_to :compound
 
-    entity_crud_with read: [],
-      create: [ "Administrator", "CompoundAdministrator", "CompoundUser" ],
-      update: [ "Administrator", "CompoundAdministrator", "CompoundUser" ],
-      destroy: [ "Administrator", "CompoundAdministrator", "CompoundUser" ]
+    entity_crud_with read: [ "read:system" ], write: [ "write:compounds" ]
   end
 end

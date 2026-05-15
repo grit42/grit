@@ -21,6 +21,9 @@ import CompoundTypeManager from "./compound-type-manager";
 import CompoundBatchLoadSets from "./load-sets/CompoundBatchLoadSets";
 import { RoutedTabs } from "@grit42/client-library/components";
 import styles from "./settings.module.scss";
+import CompoundTypeFormWrapper from "./compound-type-manager/CompoundType";
+import CompoundPropertyFormWrapper from "./compound-type-manager/CompoundProperty";
+import BatchPropertyFormWrapper from "./compound-type-manager/BatchProperty";
 
 const TABS = [
   {
@@ -48,6 +51,18 @@ const CompoundAdministrationTab = () => {
     <Routes>
       <Route element={<CompoundAdministration />}>
         <Route path="metadata" element={<CompoundTypeManager />} />
+        <Route
+          path="metadata/compound_types/:compound_type_id"
+          element={<CompoundTypeFormWrapper />}
+        />
+        <Route
+          path="metadata/compound_properties/:compound_property_id"
+          element={<CompoundPropertyFormWrapper />}
+        />
+        <Route
+          path="metadata/batch_properties/:batch_property_id"
+          element={<BatchPropertyFormWrapper />}
+        />
         <Route path="load-sets">
           <Route index path="*" element={<CompoundBatchLoadSets />} />
         </Route>

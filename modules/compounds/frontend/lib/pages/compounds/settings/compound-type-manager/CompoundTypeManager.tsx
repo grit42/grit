@@ -26,14 +26,13 @@ import styles from "./compoundTypeManager.module.scss";
 import { useEntityColumns, useToolbar } from "@grit42/core";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Circle1NewIcon from "@grit42/client-library/icons/Circle1New";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@grit42/client-library/components";
 import { useTableColumns } from "@grit42/core/utils";
 
 const CompoundTypeManager = () => {
   const registerToolbarActions = useToolbar();
   const navigate = useNavigate();
-  const { pathname } = useLocation();
   const [selectedTypes, setSelectedTypes] = useState<number[]>([]);
 
   const { data: types } = useCompoundTypes();
@@ -79,13 +78,8 @@ const CompoundTypeManager = () => {
     }, [compoundProperties, batchProperties, selectedTypes]);
 
   const navigateToNew = useCallback(
-    (type: string) => () =>
-      navigate(`/core/entities/${type}/new`, {
-        state: {
-          redirect: pathname,
-        },
-      }),
-    [navigate, pathname],
+    (type: string) => () => navigate(`${type}/new`),
+    [navigate],
   );
 
   useEffect(() => {
@@ -99,23 +93,23 @@ const CompoundTypeManager = () => {
             {
               id: "TYPE",
               text: "Compound type",
-              onClick: navigateToNew("Grit::Compounds::CompoundType"),
+              onClick: navigateToNew("compound_types"),
             },
             {
               id: "COMPOUND_PROPERTY",
               text: "Compound property",
-              onClick: navigateToNew("Grit::Compounds::CompoundProperty"),
+              onClick: navigateToNew("compound_properties"),
             },
             {
               id: "BATCH_PROPERTY",
               text: "Batch property",
-              onClick: navigateToNew("Grit::Compounds::BatchProperty"),
+              onClick: navigateToNew("batch_properties"),
             },
           ],
         },
       ],
     });
-  }, [registerToolbarActions, navigateToNew, pathname]);
+  }, [registerToolbarActions, navigateToNew]);
 
   return (
     <div className={styles.compoundTypeManagerGrid}>
@@ -126,9 +120,7 @@ const CompoundTypeManager = () => {
           disableVisibilitySettings: true,
         }}
         headerActions={
-          <Button onClick={navigateToNew("Grit::Compounds::CompoundType")}>
-            New
-          </Button>
+          <Button onClick={navigateToNew("compound_types")}>New</Button>
         }
         onSelect={(rows) =>
           setSelectedTypes(
@@ -138,16 +130,7 @@ const CompoundTypeManager = () => {
         className={styles.typesTable}
         data={types}
         columns={typesTableColumns}
-        onRowClick={(row) =>
-          navigate(
-            `/core/entities/Grit::Compounds::CompoundType/${row.original.id}`,
-            {
-              state: {
-                redirect: pathname,
-              },
-            },
-          )
-        }
+        onRowClick={(row) => navigate(`compound_types/${row.original.id}`)}
       />
       <Table
         header="Compound properties"
@@ -155,24 +138,13 @@ const CompoundTypeManager = () => {
           disableVisibilitySettings: true,
         }}
         headerActions={
-          <Button onClick={navigateToNew("Grit::Compounds::CompoundProperty")}>
-            New
-          </Button>
+          <Button onClick={navigateToNew("compound_properties")}>New</Button>
         }
         className={styles.compoundPropertiesTable}
         data={compoundProperties}
         columns={compoundPropertiesTableColumns}
         emphasizedRows={emphasizedCompoundProperties}
-        onRowClick={(row) =>
-          navigate(
-            `/core/entities/Grit::Compounds::CompoundProperty/${row.original.id}`,
-            {
-              state: {
-                redirect: pathname,
-              },
-            },
-          )
-        }
+        onRowClick={(row) => navigate(`compound_properties/${row.original.id}`)}
       />
       <Table
         header="Batch properties"
@@ -180,24 +152,13 @@ const CompoundTypeManager = () => {
           disableVisibilitySettings: true,
         }}
         headerActions={
-          <Button onClick={navigateToNew("Grit::Compounds::BatchProperty")}>
-            New
-          </Button>
+          <Button onClick={navigateToNew("batch_properties")}>New</Button>
         }
         className={styles.batchPropertiesTable}
         data={batchProperties}
         columns={batchPropertiesTableColumns}
         emphasizedRows={emphasizedBatchProperties}
-        onRowClick={(row) =>
-          navigate(
-            `/core/entities/Grit::Compounds::BatchProperty/${row.original.id}`,
-            {
-              state: {
-                redirect: pathname,
-              },
-            },
-          )
-        }
+        onRowClick={(row) => navigate(`batch_properties/${row.original.id}`)}
       />
     </div>
   );

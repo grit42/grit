@@ -35,7 +35,7 @@ import {
   getURLParams,
   useQueryClient,
 } from "@grit42/api";
-import { useHasRoles } from "../../../auth";
+import { useHasPermission } from "../../../auth";
 import { downloadFile } from "@grit42/client-library/utils";
 
 interface Props {
@@ -59,10 +59,7 @@ const VocabularyItemsTable = ({ vocabularyId }: Props) => {
   const registerToolbarActions = useToolbar();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const canEditVocabularies = useHasRoles([
-    "Administrator",
-    "VocabularyAdministrator",
-  ]);
+  const canWrite = useHasPermission("admin:vocabularies");
 
   const { data: columns } = useVocabularyItemColumns();
 
@@ -125,7 +122,7 @@ const VocabularyItemsTable = ({ vocabularyId }: Props) => {
 
   useEffect(() => {
     return registerToolbarActions({
-      actions: canEditVocabularies
+      actions: canWrite
         ? [
             {
               id: "NEW",
@@ -136,7 +133,7 @@ const VocabularyItemsTable = ({ vocabularyId }: Props) => {
             },
           ]
         : undefined,
-      importItems: canEditVocabularies
+      importItems: canWrite
         ? [
             {
               id: "IMPORT ITEMS",
@@ -162,7 +159,7 @@ const VocabularyItemsTable = ({ vocabularyId }: Props) => {
     navigateToNew,
     vocabularyId,
     navigate,
-    canEditVocabularies,
+    canWrite,
     exportUrl,
   ]);
 
@@ -177,16 +174,16 @@ const VocabularyItemsTable = ({ vocabularyId }: Props) => {
   return (
     <Table
       tableState={tableState}
-      header={canEditVocabularies ? undefined : "Items"}
+      header={canWrite ? undefined : "Items"}
       loading={isLoading}
       headerActions={
-        canEditVocabularies ? (
+        canWrite ? (
           <Link to="new">
             <Button>New</Button>
           </Link>
         ) : undefined
       }
-      rowActions={canEditVocabularies ? ["delete"] : undefined}
+      rowActions={canWrite ? ["delete"] : undefined}
       onDelete={async (rows) => {
         if (
           !window.confirm(
@@ -210,7 +207,7 @@ const VocabularyItemsTable = ({ vocabularyId }: Props) => {
       className={styles.typesTable}
       data={flatData ?? []}
       onRowClick={
-        canEditVocabularies
+        canWrite
           ? (row) => {
               queryClient.setQueryData(
                 [

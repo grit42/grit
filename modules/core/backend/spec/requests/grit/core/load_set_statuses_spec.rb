@@ -20,7 +20,7 @@
 require "swagger_helper"
 
 RSpec.describe "Load Set Statuses API", type: :request do
-  let(:admin) { create(:grit_core_user, :admin, :with_admin_role) }
+  let(:admin) { create(:grit_core_user, :admin, :with_administrator_role) }
   let!(:load_set_status) { create(:grit_core_load_set_status, :mapping) }
 
   before(:each) do
@@ -37,32 +37,6 @@ RSpec.describe "Load Set Statuses API", type: :request do
         run_test!
       end
     end
-
-    post "Attempts to create a load set status" do
-      tags "Core - Load Set Statuses"
-      consumes "application/json"
-      produces "application/json"
-      security [ { bearer_auth: [] } ]
-      parameter name: :status_params, in: :body, schema: {
-        type: :object,
-        properties: {
-          name: { type: :string },
-          description: { type: :string }
-        }
-      }
-
-      response "403", "creation is forbidden" do
-        let(:status_params) { { name: "Test", description: "Test status" } }
-
-        it "does not change the count" do
-          expect {
-            post "/api/grit/core/load_set_statuses", params: status_params, as: :json
-          }.not_to change(Grit::Core::LoadSetStatus, :count)
-        end
-
-        run_test!
-      end
-    end
   end
 
   path "/api/grit/core/load_set_statuses/{id}" do
@@ -75,43 +49,6 @@ RSpec.describe "Load Set Statuses API", type: :request do
 
       response "200", "load set status found" do
         let(:id) { load_set_status.id }
-        run_test!
-      end
-    end
-
-    patch "Attempts to update a load set status" do
-      tags "Core - Load Set Statuses"
-      consumes "application/json"
-      produces "application/json"
-      security [ { bearer_auth: [] } ]
-      parameter name: :status_params, in: :body, schema: {
-        type: :object,
-        properties: {
-          name: { type: :string }
-        }
-      }
-
-      response "403", "update is forbidden" do
-        let(:id) { load_set_status.id }
-        let(:status_params) { { name: "Testtest" } }
-        run_test!
-      end
-    end
-
-    delete "Attempts to destroy a load set status" do
-      tags "Core - Load Set Statuses"
-      produces "application/json"
-      security [ { bearer_auth: [] } ]
-
-      response "403", "destruction is forbidden" do
-        let(:id) { load_set_status.id }
-
-        it "does not change the count" do
-          expect {
-            delete "/api/grit/core/load_set_statuses/#{load_set_status.id}", as: :json
-          }.not_to change(Grit::Core::LoadSetStatus, :count)
-        end
-
         run_test!
       end
     end

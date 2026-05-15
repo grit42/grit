@@ -21,7 +21,7 @@ require "rails_helper"
 
 module Grit::Assays
   RSpec.describe DataTableRow, type: :model do
-    let(:admin) { create(:grit_core_user, :admin, :with_admin_role) }
+    let(:admin) { create(:grit_core_user, :admin, :with_administrator_role) }
 
     before do
       set_current_user(admin)
@@ -61,18 +61,5 @@ module Grit::Assays
         }.to raise_error(RuntimeError, /'data_table_id' is required/)
       end
     end
-
-    # --- CRUD Permissions ---
-
-    describe "CRUD permissions" do
-      it "entity_crud_with allows read for everyone" do
-        crud = DataTableRow.entity_crud
-        expect(crud[:read]).to be_empty
-      end
-    end
-
-    # Note: DataTableRow is a virtual model that uses DataTableEntity table
-    # and generates dynamic columns based on DataTableColumn configurations.
-    # Full testing requires data tables with entity data types and columns.
   end
 end

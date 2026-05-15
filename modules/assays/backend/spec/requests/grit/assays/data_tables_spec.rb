@@ -21,7 +21,7 @@ require "swagger_helper"
 
 module Grit::Assays
   RSpec.describe "Data Tables API", type: :request do
-    let(:admin) { create(:grit_core_user, :admin, :with_admin_role) }
+    let(:admin) { create(:grit_core_user, :admin, :with_administrator_role, :with_write_role) }
 
     before do
       set_current_user(admin)

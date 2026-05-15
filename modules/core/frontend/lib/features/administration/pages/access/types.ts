@@ -37,4 +37,16 @@ export interface User extends EntityData {
 export interface Role extends EntityData {
   name: string;
   description: string;
+  system: boolean;
+}
+
+export interface Permission extends EntityData {
+  name: string;
+  description: string;
+  provides_permissions: number[];
+}
+
+export interface RolePermission extends EntityData {
+  role_id: number;
+  permission_id: number;
 }

@@ -28,7 +28,7 @@ module Grit::Assays
     # See experiment_metadata_templates_spec.rb for full CRUD testing
     # of templates including their metadata.
 
-    let(:admin) { create(:grit_core_user, :admin, :with_admin_role) }
+    let(:admin) { create(:grit_core_user, :admin, :with_administrator_role) }
 
     before do
       set_current_user(admin)

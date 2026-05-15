@@ -21,11 +21,11 @@ import { useCallback, useMemo } from "react";
 import { classnames } from "@grit42/client-library/utils";
 import { Dropdown, Tooltip } from "@grit42/client-library/components";
 import { ToolbarActionItem } from "./types";
-import { hasRoles } from "../auth/utils";
+import { hasOneOfPermissions } from "../auth/utils";
 import { useSession } from "../auth";
 
 interface Props {
-  requiredRoles?: string[];
+  requiredPermissions?: string[];
   label?: string;
   isExpanded: boolean;
   icon: React.ReactNode;
@@ -46,7 +46,7 @@ const ToolbarIcon = ({
   icon,
   disabled,
   onClick,
-  requiredRoles,
+  requiredPermissions,
   items,
   active = false,
   className,
@@ -54,9 +54,10 @@ const ToolbarIcon = ({
 }: Props) => {
   const { data: session } = useSession();
 
-  const hasRequiredRoles =
-    !requiredRoles || (session && hasRoles(session, requiredRoles));
-  const isDisabled = disabled || !hasRequiredRoles;
+  const hasRequiredPermissions =
+    !requiredPermissions ||
+    (session && hasOneOfPermissions(session, requiredPermissions));
+  const isDisabled = disabled || !hasRequiredPermissions;
 
   const clickHandler = useCallback(() => {
     if (isDisabled) return;
@@ -116,7 +117,7 @@ const ToolbarIcon = ({
   }, [items, isDisabled, id, active, className, icon, clickHandler]);
 
   let tooltipContent = label ?? "";
-  let tooltipDisabled = isDisabled || !hasRequiredRoles || isExpanded;
+  let tooltipDisabled = isDisabled || !hasRequiredPermissions || isExpanded;
   if (isDisabled && disabledMessage) {
     tooltipDisabled = false;
     tooltipContent = disabledMessage;

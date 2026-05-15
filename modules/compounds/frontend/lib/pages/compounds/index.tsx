@@ -38,8 +38,8 @@ import CompoundTypesSelector from "../../components/CompoundTypesSelector";
 import {
   useEntityData,
   useDestroyEntityMutation,
-  useHasRoles,
   useToolbar,
+  useHasPermission,
 } from "@grit42/core";
 import {
   getFilterParams,
@@ -71,11 +71,7 @@ const getExportFileUrl = (
 };
 
 const CompoundsTable = () => {
-  const canCrud = useHasRoles([
-    "Administrator",
-    "CompoundAdministrator",
-    "CompoundUser",
-  ]);
+  const canCrud = useHasPermission("write:compounds");
   const navigate = useNavigate();
   const columnTypeDefs = useColumnTypeDefs();
 
@@ -233,18 +229,10 @@ const CompoundsTable = () => {
         },
       ],
       import: {
-        requiredRoles: [
-          "Administrator",
-          "CompoundAdministrator",
-          "CompoundUser",
-        ],
+        requiredPermissions: ["write:compounds"],
       },
       export: {
-        requiredRoles: [
-          "Administrator",
-          "CompoundAdministrator",
-          "CompoundUser",
-        ],
+        requiredPermissions: ["read:system"],
       },
       exportItems: [
         {
@@ -258,18 +246,14 @@ const CompoundsTable = () => {
           id: "NEW_COMPOUND",
           icon: <MoleculePlusIcon />,
           label: "Register compound",
-          requiredRoles: [
-            "Administrator",
-            "CompoundAdministrator",
-            "CompoundUser",
-          ],
+          requiredPermissions: ["write:compounds"],
           items: newDropdownItems,
         },
         {
           id: "COMPOUND_SETTINGS",
           icon: <CogIcon />,
           label: "Compound settings",
-          requiredRoles: ["Administrator", "CompoundAdministrator"],
+          requiredPermissions: ["admin:compounds"],
           onClick: () => navigate("/compounds/settings"),
         },
       ],

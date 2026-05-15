@@ -23,7 +23,7 @@ import { GritColumnDef, Table, useSetupTableState } from "@grit42/table";
 import { useToolbar } from "../../../../toolbar";
 import { EntityData, useInfiniteEntityData } from "../../../../entities";
 import { Button, ErrorPage } from "@grit42/client-library/components";
-import { useHasRoles } from "../../../../auth";
+import { useHasPermission } from "../../../../auth";
 import { CenteredColumnLayout } from "@grit42/client-library/layouts";
 
 const USER_TABLE_COLUMNS: GritColumnDef<EntityData>[] = [
@@ -78,7 +78,7 @@ const USER_TABLE_COLUMNS: GritColumnDef<EntityData>[] = [
 ];
 
 export default function UsersList() {
-  const canCrud = useHasRoles(["Administrator"]);
+  const canCrud = useHasPermission("admin:users");
   const navigate = useNavigate();
   const registerToolbarActions = useToolbar();
   const tableState = useSetupTableState<EntityData>(
@@ -100,7 +100,7 @@ export default function UsersList() {
           icon: <Circle1New />,
           label: "New",
           onClick: () => navigate("new"),
-          requiredRoles: ["Administrator"],
+          requiredPermissions: ["admin:users"],
         },
       ],
     });

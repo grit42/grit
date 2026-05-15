@@ -21,7 +21,7 @@ require "rails_helper"
 
 module Grit::Assays
   RSpec.describe AssayMetadataDefinition, type: :model do
-    let(:admin) { create(:grit_core_user, :admin, :with_admin_role) }
+    let(:admin) { create(:grit_core_user, :admin, :with_administrator_role) }
     let(:vocabulary) { create(:grit_core_vocabulary) }
     let(:draft_status) { create(:grit_core_publication_status, :draft) }
     let(:biochemical) { create(:grit_assays_assay_type, :biochemical) }
@@ -151,22 +151,6 @@ module Grit::Assays
         expect {
           AssayMetadataDefinition.by_assay_model({})
         }.to raise_error(RuntimeError)
-      end
-    end
-
-    # --- CRUD Permissions ---
-
-    describe "CRUD permissions" do
-      it "entity_crud_with is configured correctly" do
-        crud = AssayMetadataDefinition.entity_crud
-
-        expect(crud[:create]).to include("Administrator")
-        expect(crud[:create]).to include("AssayAdministrator")
-        expect(crud[:update]).to include("Administrator")
-        expect(crud[:update]).to include("AssayAdministrator")
-        expect(crud[:destroy]).to include("Administrator")
-        expect(crud[:destroy]).to include("AssayAdministrator")
-        expect(crud[:read]).to be_empty
       end
     end
   end

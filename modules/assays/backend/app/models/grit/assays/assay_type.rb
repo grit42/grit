@@ -24,9 +24,6 @@ module Grit::Assays
 
     display_column "name"
 
-    entity_crud_with read: [],
-      create: [ "Administrator", "AssayAdministrator" ],
-      update: [ "Administrator", "AssayAdministrator" ],
-      destroy: [ "Administrator", "AssayAdministrator" ]
+    entity_crud_with read: [ "read:system" ], write: [ "admin:assays" ]
   end
 end

@@ -35,10 +35,7 @@ module Grit::Assays
 
     display_column "name"
 
-    entity_crud_with read: [],
-      create: [ "Administrator", "AssayAdministrator", "AssayUser" ],
-      update: [ "Administrator", "AssayAdministrator", "AssayUser" ],
-      destroy: [ "Administrator", "AssayAdministrator", "AssayUser" ]
+    entity_crud_with read: [ "read:system" ], write: [ "write:assays" ]
 
     def set_metadata_values(params)
       success = true

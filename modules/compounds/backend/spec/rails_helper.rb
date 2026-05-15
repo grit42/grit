@@ -36,6 +36,7 @@ ActiveRecord::Migrator.migrations_paths = [
 
 # Load support files
 Dir[File.expand_path("support/**/*.rb", __dir__)].each { |f| require f }
+require Grit::Core::Engine.root.join("spec", "support", "access_control_seeder").to_s
 
 # File fixtures path (shared with minitest)
 FILE_FIXTURE_PATH = "#{__dir__}/fixtures/files"
@@ -115,7 +116,7 @@ RSpec.configure do |config|
     RequestStore.store.clear
     activate_authlogic
     bootstrap = Struct.new(:login, :id) do
-      def role?(_name = nil)
+      def permission?(_name = nil)
         true
       end
 
@@ -134,5 +135,10 @@ RSpec.configure do |config|
         s.description = status_name
       end
     end
+
+    # Seed compounds permissions/roles so controller specs that exercise
+    # access control (CompoundUser, CompoundAdministrator, write:compounds,
+    # admin:compounds) can rely on them without re-running db/seeds.rb.
+    CompoundsAccessControlSeeder.seed!
   end
 end

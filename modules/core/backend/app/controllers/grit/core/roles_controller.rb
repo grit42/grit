@@ -19,5 +19,42 @@
 module Grit::Core
   class RolesController < ApplicationController
     include Grit::Core::GritEntityController
+
+    before_action :check_system_role, only: [ :update, :destroy ]
+
+    def set_permissions
+      if params[:permissions].nil?
+        render json: { success: false, errors: "Must provide 'permissions'" }, status: :bad_request
+        return
+      end
+      role = Grit::Core::Role.find(params[:id])
+      role_permissions = params[:permissions].map { |p| { permission_id: p, role_id: role.id } }
+      Grit::Core::Role.transaction do
+        role.role_permissions.insert_all(role_permissions) if role_permissions.present?
+        role_permissions_to_destroy = role.role_permissions
+        role_permissions_to_destroy = role_permissions_to_destroy.where("permission_id NOT IN (?)", params[:permissions]) unless params[:permissions].blank?
+        role_permissions_to_destroy.destroy_all
+      end
+      render json: { success: true }
+    rescue ActiveRecord::RecordNotFound
+      render json: { success: false, errors: "Role not found" }, status: :not_found
+    rescue StandardError => e
+      logger.error e.to_s
+      logger.error e.backtrace.join("\n")
+      render json: { success: false, errors: e.to_s }, status: :internal_server_error
+    end
+
+    def permitted_params
+      [ :name, :description ]
+    end
+
+    private
+
+    def check_system_role
+      id = params[:id] if params[:id] != "destroy"
+      id = params[:ids].split(",")[0] if params[:id] == "destroy"
+      role = Grit::Core::Role.find(id)
+      render json: { success: false, errors: "#{role.name} is a system role and cannot be modified" }, status: :forbidden if role.system?
+    end
   end
 end

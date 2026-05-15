@@ -23,7 +23,7 @@ import {
   Spinner,
   Surface,
 } from "@grit42/client-library/components";
-import { EntitySelector } from "@grit42/core";
+import { EntitySelector, useHasPermission } from "@grit42/core";
 import { useEffect, useMemo, useState } from "react";
 import { useAssayModelMetadata } from "../../../../../queries/assay_model_metadata";
 import { useAssayMetadataDefinitions } from "../../../../../queries/assay_metadata_definitions";
@@ -51,6 +51,7 @@ const ExperimentMetadataFilters = ({
   setMetadataFilters,
   identifier = "safe_name",
 }: Props) => {
+  const canCrud = useHasPermission("write:analysis");
   const [selectorOpen, setSelectorOpen] = useState(false);
   const [selectedMetadataDefinitions, setSelectedMetadataDefinitions] =
     useState<Set<number> | null>(null);
@@ -144,7 +145,12 @@ const ExperimentMetadataFilters = ({
         if (!a.belongsToAssayModel && b.belongsToAssayModel) return 1;
         return a.name.localeCompare(b.name);
       });
-  }, [metadataDefinitions, modelMetadata, selectedMetadataDefinitions]);
+  }, [
+    canCrud,
+    metadataDefinitions,
+    modelMetadata,
+    selectedMetadataDefinitions,
+  ]);
 
   if (isMetadataDefinitionsLoading || isModelMetadataLoading) {
     return <Spinner />;
@@ -217,6 +223,7 @@ const ExperimentMetadataFilters = ({
             value={metadataFilters[f[identifier]]}
             error=""
             multiple
+            disabled={!canCrud}
           />
           {!f.belongsToAssayModel && (
             <Button

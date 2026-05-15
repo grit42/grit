@@ -21,7 +21,13 @@ require "grit/core/entity_loader"
 
 module Grit::Core
   class LoadSetsController < ApplicationController
-    include Grit::Core::GritEntityController
+    include Grit::Core::Controller::Unforgeable
+    include Grit::Core::Controller::Authenticated
+    include Grit::Core::Controller::Readable
+    include Grit::Core::Controller::Writable
+
+    before_action :check_read, only: %i[ index show entity_info load_set_blocks ]
+    before_action :check_write, only: %i[ create update destroy initialize_blocks cancel ]
 
     def create
       ActiveRecord::Base.transaction do
@@ -65,7 +71,7 @@ module Grit::Core
 
     def cancel
       ActiveRecord::Base.transaction do
-        Grit::Core::LoadSet.find(params[:load_set_id]).cancel
+        Grit::Core::LoadSet.find(params[:id]).cancel
       end
       render json: { success: true }
     rescue StandardError => e
@@ -87,7 +93,7 @@ module Grit::Core
     end
 
     def load_set_blocks
-      load_set = Grit::Core::LoadSet.find(params[:load_set_id])
+      load_set = Grit::Core::LoadSet.find(params[:id])
       load_set_blocks = Grit::Core::EntityLoader.index_load_set_blocks(load_set).order("grit_core_load_set_blocks.id ASC")
       render json: { success: true, data: load_set_blocks }
     rescue StandardError => e
@@ -97,7 +103,7 @@ module Grit::Core
     end
 
     def initialize_blocks
-      load_set = Grit::Core::LoadSet.find(params[:load_set_id])
+      load_set = Grit::Core::LoadSet.find(params[:id])
       load_set.initialize_blocks
       render json: { success: true }
     rescue StandardError => e
@@ -109,6 +115,37 @@ module Grit::Core
     private
       def permitted_params
         [ :name, :entity, :origin_id, load_set_blocks: [ :name, :separator, mappings: {} ] ]
+      end
+
+      def check_read
+        render json: { success: false }, status: :bad_request if params[:id].blank? && params[:entity].blank?
+        entity = params[:entity]
+        if entity.blank?
+          begin
+            entity = Grit::Core::LoadSet.find(params[:id]).entity
+          rescue ActiveRecord::RecordNotFound
+            render json: { success: false, errors: "Not found" }, status: :not_found
+            return
+          end
+        end
+
+        klass = entity.constantize
+
+        render json: { success: false, errors: "You do not have the permissions required to read Grit::Core::LoadSet for entity #{entity}" }, status: :forbidden  if klass.entity_crud[:read].nil? or !current_user.permission?(klass.entity_crud[:read])
+      end
+
+      def check_write
+        render json: { success: false }, status: :bad_request if params[:id].blank? && params[:entity].blank?
+        entity = params[:entity]
+        if entity.blank?
+          entity = Grit::Core::LoadSet.find(params[:id]).entity
+        end
+
+        klass = entity.constantize
+
+        render json: { success: false, errors: "You do not have the permissions required to write Grit::Core::LoadSet for entity #{entity}" }, status: :forbidden  if klass.entity_crud[:write].nil? or !current_user.permission?(klass.entity_crud[:write])
+      rescue ActiveRecord::RecordNotFound
+        render json: { success: false, errors: "Not found" }, status: :not_found
       end
   end
 end

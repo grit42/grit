@@ -21,7 +21,7 @@ require "rails_helper"
 
 module Grit::Assays
   RSpec.describe ExperimentMetadataTemplateMetadatum, type: :model do
-    let(:admin) { create(:grit_core_user, :admin, :with_admin_role) }
+    let(:admin) { create(:grit_core_user, :admin, :with_administrator_role) }
     let(:vocabulary) { create(:grit_core_vocabulary) }
     let(:vocab_item_one) { create(:grit_core_vocabulary_item, vocabulary: vocabulary) }
     let(:vocab_item_two) { create(:grit_core_vocabulary_item, vocabulary: vocabulary) }
@@ -116,22 +116,6 @@ module Grit::Assays
         expect(template.reload.experiment_metadata_template_metadata.count).to eq(1)
 
         template.destroy
-      end
-    end
-
-    # --- CRUD Permissions ---
-
-    describe "CRUD permissions" do
-      it "entity_crud_with is configured correctly" do
-        crud = ExperimentMetadataTemplateMetadatum.entity_crud
-
-        expect(crud[:create]).to include("Administrator")
-        expect(crud[:create]).to include("AssayAdministrator")
-        expect(crud[:update]).to include("Administrator")
-        expect(crud[:update]).to include("AssayAdministrator")
-        expect(crud[:destroy]).to include("Administrator")
-        expect(crud[:destroy]).to include("AssayAdministrator")
-        expect(crud[:read]).to be_empty
       end
     end
   end

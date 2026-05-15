@@ -42,7 +42,7 @@ import { z } from "zod";
 import styles from "./files.module.scss";
 import { useState } from "react";
 import { downloadFile } from "@grit42/client-library/utils";
-import { useHasRoles } from "@grit42/core";
+import { useHasPermission } from "@grit42/core";
 import { toast } from "@grit42/notifications";
 import {
   CenteredColumnLayout,
@@ -62,7 +62,7 @@ const getRowId = (row: ExperimentAttachedFile) => row.id.toString();
 
 const ExperimentFiles = ({ experiment }: { experiment: ExperimentData }) => {
   const canCrudExperiment =
-    useHasRoles(["Administrator", "AssayAdministrator", "AssayUser"]) &&
+    useHasPermission("write:assays") &&
     experiment.publication_status_id__name !== "Published";
 
   const [isAdding, setIsAdding] = useState(false);

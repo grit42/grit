@@ -21,7 +21,7 @@ require "rails_helper"
 
 module Grit::Assays
   RSpec.describe DataTableColumn, type: :model do
-    let(:admin) { create(:grit_core_user, :admin, :with_admin_role) }
+    let(:admin) { create(:grit_core_user, :admin, :with_administrator_role) }
 
     before do
       set_current_user(admin)
@@ -109,28 +109,5 @@ module Grit::Assays
         expect(column).to respond_to(:sql_aggregate_method)
       end
     end
-
-    # --- CRUD Permissions ---
-
-    describe "CRUD permissions" do
-      it "entity_crud_with is configured correctly" do
-        crud = DataTableColumn.entity_crud
-
-        expect(crud[:create]).to include("Administrator")
-        expect(crud[:create]).to include("AssayAdministrator")
-        expect(crud[:create]).to include("AssayUser")
-        expect(crud[:update]).to include("Administrator")
-        expect(crud[:update]).to include("AssayAdministrator")
-        expect(crud[:update]).to include("AssayUser")
-        expect(crud[:destroy]).to include("Administrator")
-        expect(crud[:destroy]).to include("AssayAdministrator")
-        expect(crud[:destroy]).to include("AssayUser")
-        expect(crud[:read]).to be_empty
-      end
-    end
-
-    # Note: Full DataTableColumn testing requires a DataTable with an entity
-    # data type pointing to a real model. These tests focus on model structure
-    # and validations that don't require database records.
   end
 end

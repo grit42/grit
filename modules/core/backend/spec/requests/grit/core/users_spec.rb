@@ -20,8 +20,9 @@
 require "swagger_helper"
 
 RSpec.describe "Users API", type: :request do
-  let(:admin) { create(:grit_core_user, :admin, :with_admin_role) }
-  let(:notadmin) { create(:grit_core_user) }
+  let(:admin) { create(:grit_core_user, :admin, :with_administrator_role) }
+  let(:notadmin) { create(:grit_core_user, :with_read_role) }
+  let(:norole) { create(:grit_core_user) }
   let(:origin) { create(:grit_core_origin) }
 
   before(:each) do
@@ -34,7 +35,7 @@ RSpec.describe "Users API", type: :request do
       produces "application/json"
       security [ { bearer_auth: [] } ]
 
-      response "200", "anyone can list users" do
+      response "200", "users with 'read:system' can list users" do
         before { login_as(notadmin) }
         run_test!
       end
@@ -51,6 +52,12 @@ RSpec.describe "Users API", type: :request do
       login_as(notadmin)
       get "/api/grit/core/users", params: "scope=user_administration"
       expect(response).to have_http_status(:bad_request)
+    end
+
+    it "users without 'read:system' should not get index" do
+      login_as(norole)
+      get "/api/grit/core/users"
+      expect(response).to have_http_status(:forbidden)
     end
   end
 
@@ -138,7 +145,7 @@ RSpec.describe "Users API", type: :request do
       produces "application/json"
       security [ { bearer_auth: [] } ]
 
-      response "200", "anyone can show user" do
+      response "200", "users with 'read:system' can show user" do
         let(:id) { notadmin.id }
         before { login_as(notadmin) }
         run_test!
@@ -205,6 +212,13 @@ RSpec.describe "Users API", type: :request do
       login_as(notadmin)
       get "/api/grit/core/users/#{notadmin.id}", params: "scope=user_administration"
       expect(response).to have_http_status(:bad_request)
+    end
+
+    it "users without 'read:system' should not show user" do
+      notadmin_id = notadmin.id
+      login_as(norole)
+      get "/api/grit/core/users/#{notadmin_id}"
+      expect(response).to have_http_status(:forbidden)
     end
   end
 
@@ -288,7 +302,7 @@ RSpec.describe "Users API", type: :request do
 
     it "user should authenticate with valid token" do
       logout
-      get "/api/grit/core/user/hello_world_api", params: { user_credentials: notadmin.single_access_token }
+      get "/api/grit/test_entities", params: { user_credentials: notadmin.single_access_token }
       expect(response).to have_http_status(:success)
     end
 
@@ -298,13 +312,13 @@ RSpec.describe "Users API", type: :request do
       post "/api/grit/core/user/generate_api_token"
       logout
 
-      get "/api/grit/core/user/hello_world_api", params: { user_credentials: old_token }
+      get "/api/grit/test_entities", params: { user_credentials: old_token }
       expect(response).to have_http_status(:unauthorized)
     end
 
     it "user should not authenticate with an invalid token" do
       logout
-      get "/api/grit/core/user/hello_world_api", params: { user_credentials: "not a valid token" }
+      get "/api/grit/test_entities", params: { user_credentials: "not a valid token" }
       expect(response).to have_http_status(:unauthorized)
     end
   end

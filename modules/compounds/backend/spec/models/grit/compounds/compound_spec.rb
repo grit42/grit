@@ -26,7 +26,7 @@ RSpec.describe Grit::Compounds::Compound, type: :model do
   let(:synonym) { create(:grit_compounds_synonym, compound: compound, name: "wan") }
 
   before do
-    admin = create(:grit_core_user, :admin, :with_admin_role)
+    admin = create(:grit_core_user, :admin, :with_administrator_role)
     set_current_user(admin)
   end
 

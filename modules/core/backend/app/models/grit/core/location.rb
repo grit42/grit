@@ -22,9 +22,6 @@ module Grit::Core
 
     display_column "name"
 
-    entity_crud_with read: [],
-      create: [ "Administrator" ],
-      update: [ "Administrator" ],
-      destroy: [ "Administrator" ]
+    entity_crud_with read: [ "read:system" ], write: [ "admin:system" ]
   end
 end

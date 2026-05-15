@@ -49,7 +49,7 @@ module AuthHelpers
     delete "/api/grit/core/user_session"
     activate_authlogic
     RequestStore.store["current_user"] = Struct.new(:login, :id) do
-      def role?(_name = nil)
+      def permission?(_name = nil)
         true
       end
       def active?

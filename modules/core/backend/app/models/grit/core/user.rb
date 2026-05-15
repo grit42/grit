@@ -27,7 +27,7 @@ module Grit::Core
 
 
     display_columns [ "name", "login" ]
-    entity_crud_with read: [], create: [ "Administrator" ], update: [ "Administrator" ], destroy: [ "Administrator" ]
+    entity_crud_with read: [ "read:system" ], write: [ "admin:users" ]
 
     EMAIL = /
     \A
@@ -188,8 +188,19 @@ module Grit::Core
       RequestStore.store["current_user"]
     end
 
-    def role?(role_name = nil)
-      Grit::Core::Role.access?(role_name: role_name)
+    def permissions
+      Grit::Core::Permission
+        .joins(:user_roles)
+        .where("grit_core_user_roles.user_id = ?", id)
+        .joins("JOIN grit_core_permissions all_permissions ON all_permissions.id = grit_core_permissions.id OR all_permissions.id = ANY(grit_core_permissions.provides_permissions)")
+        .select("all_permissions.name")
+        .distinct
+        .map(&:name)
+    end
+
+    def permission?(requested_permissions)
+      requested_permissions = [ requested_permissions ] unless requested_permissions.is_a? Array
+      (permissions & requested_permissions).present?
     end
 
     def one_of_these_roles?(roles = [])
@@ -199,7 +210,7 @@ module Grit::Core
     end
 
     def self.user_administration(params = nil)
-      return nil unless Grit::Core::User.current.role?("Administrator")
+      return nil unless Grit::Core::User.current.permission?("admin:users")
 
       self.detailed
       .select("(
@@ -258,7 +269,7 @@ module Grit::Core
     private
 
       def check_role
-        return if Grit::Core::User.current.role?("Administrator")
+        return if Grit::Core::User.current.permission?("admin:users")
 
         raise "Administrator role required to manage users"
       end
@@ -283,7 +294,7 @@ module Grit::Core
       def check_who
         # It is only admin and the user self that can edit user accounts
         # Exception when activating process is in progress
-        raise "Not allowed" unless forgot_token_was.blank? || (forgot_token.blank? && !forgot_token_was.nil?) || activation_token_was.blank? || (activation_token.blank? && !activation_token_was.nil?) || Grit::Core::User.current.role?("Administrator") || (login == Grit::Core::User.current.login)
+        raise "Not allowed" unless forgot_token_was.blank? || (forgot_token.blank? && !forgot_token_was.nil?) || activation_token_was.blank? || (activation_token.blank? && !activation_token_was.nil?) || Grit::Core::User.current.permission?("admin:users") || (login == Grit::Core::User.current.login)
 
         true
       end

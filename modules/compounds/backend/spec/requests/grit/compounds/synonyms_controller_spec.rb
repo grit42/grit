@@ -22,7 +22,7 @@ require "swagger_helper"
 RSpec.describe Grit::Compounds::SynonymsController, type: :request do
   include AuthHelpers
 
-  let(:admin) { create(:grit_core_user, :admin, :with_admin_role) }
+  let(:admin) { create(:grit_core_user, :admin, :with_administrator_role) }
   let(:compound_user) do
     user = create(:grit_core_user, login: "compounduser", name: "CompoundUser", email: "compounduser@test.com")
     role = Grit::Core::Role.find_or_create_by!(name: "CompoundUser") { |r| r.description = "Compound user" }
@@ -30,7 +30,7 @@ RSpec.describe Grit::Compounds::SynonymsController, type: :request do
     user
   end
   let!(:notadmin) do
-    create(:grit_core_user, login: "notadmin", name: "NotAdmin", email: "notadmin@test.com")
+    create(:grit_core_user, :with_read_role, login: "notadmin", name: "NotAdmin", email: "notadmin@test.com")
   end
   let(:compound) { create(:grit_compounds_compound) }
   let(:synonym) { create(:grit_compounds_synonym, name: "wan", compound: compound) }

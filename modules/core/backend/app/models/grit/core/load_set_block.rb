@@ -46,8 +46,6 @@ module Grit::Core
       errors.add(:separator, "cannot be blank") if separator.nil? || separator.blank?
     end
 
-    entity_crud_with create: [], read: [], update: [], destroy: []
-
     def self.entity_fields(params = nil)
       @entity_fields ||= self.entity_fields_from_properties(
         self.db_properties
@@ -68,13 +66,13 @@ module Grit::Core
     end
 
     def self.preview_data(params = nil)
-      raise "No load set block id provided" if params.nil? or params[:load_set_block_id].nil?
-      self.unscoped.from("raw_lsb_#{params[:load_set_block_id]}").select("raw_lsb_#{params[:load_set_block_id]}.*")
+      raise "No load set block id provided" if params.nil? or params[:id].nil?
+      self.unscoped.from("raw_lsb_#{params[:id]}").select("raw_lsb_#{params[:id]}.*")
     end
 
     def self.errored_data(params = nil)
-      raise "No load set block id provided" if params.nil? or params[:load_set_block_id].nil?
-      load_set_block_id =  params[:load_set_block_id]
+      raise "No load set block id provided" if params.nil? or params[:id].nil?
+      load_set_block_id =  params[:id]
       self.unscoped.from("lsb_#{load_set_block_id}")
         .select(
           "lsb_#{load_set_block_id}.line",
@@ -86,8 +84,8 @@ module Grit::Core
     end
 
     def self.warning_data(params = nil)
-      raise "No load set block id provided" if params.nil? or params[:load_set_block_id].nil?
-      load_set_block_id =  params[:load_set_block_id]
+      raise "No load set block id provided" if params.nil? or params[:id].nil?
+      load_set_block_id =  params[:id]
       self.unscoped.from("lsb_#{load_set_block_id}")
         .select(
           "lsb_#{load_set_block_id}.line",

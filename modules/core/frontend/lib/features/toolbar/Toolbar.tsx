@@ -74,7 +74,7 @@ const Toolbar = () => {
                       icon={action.icon}
                       isExpanded={isExpanded}
                       label={action.label}
-                      requiredRoles={action.requiredRoles}
+                      requiredPermissions={action.requiredPermissions}
                       disabled={action.disabled}
                       disabledMessage={action.disabledMessage}
                       items={action.items}
@@ -95,7 +95,7 @@ const Toolbar = () => {
                 isExpanded={isExpanded}
                 disabled={!exportItems.length}
                 items={exportItems}
-                requiredRoles={exportSettings.requiredRoles}
+                requiredPermissions={exportSettings.requiredPermissions}
               />
               <ToolbarIcon
                 icon={<DesktopImport />}
@@ -104,7 +104,7 @@ const Toolbar = () => {
                 isExpanded={isExpanded}
                 disabled={!importItems.length}
                 items={importItems}
-                requiredRoles={importSettings.requiredRoles}
+                requiredPermissions={importSettings.requiredPermissions}
               />
             </div>
           </ToolbarBlock>

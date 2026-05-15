@@ -17,16 +17,26 @@
  */
 
 import { Navigate } from "react-router-dom";
-import { hasRoles } from "../utils";
+import { hasOneOfPermissions, hasPermission, hasRoles } from "../utils";
 import { useSession } from "../api/queries";
 import { Spinner } from "@grit42/client-library/components";
 
 interface Props {
+  /**
+   * @deprecated
+   */
   roles?: string[];
+  permission?: string;
+  permissions?: string[];
   children: React.ReactNode;
 }
 
-export default function AuthGuard({ children, roles }: Props) {
+export default function AuthGuard({
+  children,
+  roles,
+  permission,
+  permissions,
+}: Props) {
   const { isLoading, data } = useSession();
 
   if (isLoading) return <Spinner />;
@@ -35,7 +45,15 @@ export default function AuthGuard({ children, roles }: Props) {
     return <Navigate to="/core/authenticate" />;
   }
 
-  if (roles && !hasRoles(data, roles)) {
+  if (data.permissions.length === 0) {
+    return <Navigate to="/unauthorized" />;
+  }
+
+  if (permission && !hasPermission(data, permission)) {
+    return <Navigate to="/" />;
+  } else if (permissions && !hasOneOfPermissions(data, permissions)) {
+    return <Navigate to="/" />;
+  } else if (roles && !hasRoles(data, roles)) {
     return <Navigate to="/" />;
   }
 

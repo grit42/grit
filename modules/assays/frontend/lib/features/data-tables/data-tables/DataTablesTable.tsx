@@ -18,7 +18,7 @@
 
 import { Table, useSetupTableState } from "@grit42/table";
 import { useCallback, useEffect, useMemo } from "react";
-import { useHasRoles, useToolbar } from "@grit42/core";
+import { useHasPermission, useToolbar } from "@grit42/core";
 import Circle1NewIcon from "@grit42/client-library/icons/Circle1New";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button, ErrorPage } from "@grit42/client-library/components";
@@ -32,11 +32,7 @@ import { CenteredColumnLayout } from "@grit42/client-library/layouts";
 const DataTablesTable = () => {
   const registerToolbarActions = useToolbar();
   const navigate = useNavigate();
-  const canManageDataTable = useHasRoles([
-    "Administrator",
-    "AssayAdministrator",
-    "AssayUser",
-  ]);
+  const canManageDataTable = useHasPermission("write:analysis");
   const { pathname } = useLocation();
   const { data: dataTableColumns } = useDataTableColumns();
 

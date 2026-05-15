@@ -21,7 +21,7 @@ require "rails_helper"
 
 module Grit::Assays
   RSpec.describe ExperimentDataSheetRecord, type: :model do
-    let(:admin) { create(:grit_core_user, :admin, :with_admin_role) }
+    let(:admin) { create(:grit_core_user, :admin, :with_administrator_role) }
     let(:draft_status) { create(:grit_core_publication_status, :draft) }
     let(:biochemical) { create(:grit_assays_assay_type, :biochemical) }
     let(:integer_type) { create(:grit_core_data_type, :integer) }
@@ -75,24 +75,6 @@ module Grit::Assays
       sheet.drop_table rescue nil
       Experiment.delete(experiment.id) rescue nil
       model.destroy rescue nil
-    end
-
-    # --- Permissions ---
-
-    describe "permissions" do
-      it "entity_crud returns correct roles" do
-        crud = ExperimentDataSheetRecord.entity_crud
-        expect(crud[:create]).to include("Administrator")
-        expect(crud[:create]).to include("AssayAdministrator")
-        expect(crud[:create]).to include("AssayUser")
-        expect(crud[:update]).to include("Administrator")
-        expect(crud[:update]).to include("AssayAdministrator")
-        expect(crud[:update]).to include("AssayUser")
-        expect(crud[:destroy]).to include("Administrator")
-        expect(crud[:destroy]).to include("AssayAdministrator")
-        expect(crud[:destroy]).to include("AssayUser")
-        expect(crud[:read]).to be_empty
-      end
     end
 
     # --- sheet_record_klass ---

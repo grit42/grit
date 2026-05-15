@@ -20,7 +20,7 @@
 require "swagger_helper"
 
 RSpec.describe "Load Sets API", type: :request do
-  let(:admin) { create(:grit_core_user, :admin, :with_admin_role) }
+  let(:admin) { create(:grit_core_user, :admin, :with_administrator_role) }
   let(:origin) { create(:grit_core_origin) }
   let(:load_set) { create(:grit_core_load_set, :with_mapping_block, origin_id: origin.id) }
 
@@ -41,8 +41,10 @@ RSpec.describe "Load Sets API", type: :request do
       tags "Core - Load Sets"
       produces "application/json"
       security [ { bearer_auth: [] } ]
+      parameter name: :entity, in: :query, type: :string
 
       response "200", "load sets listed" do
+        let(:entity) { "Grit::TestEntity" }
         run_test!
       end
     end
@@ -192,17 +194,9 @@ RSpec.describe "Load Sets API", type: :request do
         end
       end
 
-      response "500", "load set not found" do
+      response "404", "load set not found" do
         let(:id) { 0 }
-
-        it "returns an error", rswag: false do
-          post "/api/grit/core/load_sets/0/initialize_blocks", as: :json
-
-          expect(response).to have_http_status(:internal_server_error)
-          body = JSON.parse(response.body)
-          expect(body["success"]).to be false
-          expect(body["errors"]).to be_present
-        end
+        run_test!
       end
     end
   end

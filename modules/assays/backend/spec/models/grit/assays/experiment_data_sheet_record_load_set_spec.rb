@@ -23,7 +23,7 @@ module Grit::Assays
   # NOTE: This spec file tests ExperimentDataSheetRecordLoadSetBlock.
   # The file name references "load_set" but the actual model is LoadSetBlock.
   RSpec.describe ExperimentDataSheetRecordLoadSetBlock, type: :model do
-    let(:admin) { create(:grit_core_user, :admin, :with_admin_role) }
+    let(:admin) { create(:grit_core_user, :admin, :with_administrator_role) }
 
     before do
       set_current_user(admin)
@@ -66,27 +66,5 @@ module Grit::Assays
         expect(field_names).to include("assay_data_sheet_definition_id")
       end
     end
-
-    # --- CRUD Permissions ---
-
-    describe "CRUD permissions" do
-      it "entity_crud_with is configured correctly" do
-        crud = ExperimentDataSheetRecordLoadSetBlock.entity_crud
-
-        expect(crud[:create]).to include("Administrator")
-        expect(crud[:create]).to include("AssayAdministrator")
-        expect(crud[:create]).to include("AssayUser")
-        expect(crud[:update]).to include("Administrator")
-        expect(crud[:update]).to include("AssayAdministrator")
-        expect(crud[:update]).to include("AssayUser")
-        expect(crud[:destroy]).to include("Administrator")
-        expect(crud[:destroy]).to include("AssayAdministrator")
-        expect(crud[:destroy]).to include("AssayUser")
-        expect(crud[:read]).to be_empty
-      end
-    end
-
-    # Note: Full testing of load set blocks requires load_set fixtures from
-    # core module and integration with the data loading pipeline.
   end
 end

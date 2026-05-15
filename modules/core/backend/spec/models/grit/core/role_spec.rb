@@ -20,7 +20,7 @@
 require "rails_helper"
 
 RSpec.describe Grit::Core::Role, type: :model do
-  let(:admin) { create(:grit_core_user, :admin, :with_admin_role) }
+  let(:admin) { create(:grit_core_user, :admin, :with_administrator_role) }
   let(:admin_role) { described_class.find_by!(name: "Administrator") }
 
   before(:each) do

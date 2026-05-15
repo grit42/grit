@@ -32,7 +32,7 @@ module Grit::Core::GritEntityRecord
     @db_properties = nil
 
     @display_columns = nil
-    @entity_crud = { create: nil, read: nil, update: nil, destroy: nil }
+    @entity_crud = { read: nil, write: nil }
 
     @entity_properties = nil
     @entity_fields = nil
@@ -102,12 +102,10 @@ module Grit::Core::GritEntityRecord
 
     alias_method :display_column, :display_columns
 
-    def entity_crud_with(create: nil, read: nil, update: nil, destroy: nil)
+    def entity_crud_with(read: nil, write: nil)
       @entity_crud = {
-        create: create,
         read: read,
-        update: update,
-        destroy: destroy
+        write: write
       }
     end
 

@@ -22,7 +22,7 @@ require "swagger_helper"
 RSpec.describe Grit::Compounds::CompoundTypesController, type: :request do
   include AuthHelpers
 
-  let(:admin) { create(:grit_core_user, :admin, :with_admin_role) }
+  let(:admin) { create(:grit_core_user, :admin, :with_administrator_role) }
   let(:compound_type) { create(:grit_compounds_compound_type, :screening) }
   let(:reagent_type) { create(:grit_compounds_compound_type, :reagent) }
 

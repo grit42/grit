@@ -21,7 +21,7 @@ import { useCallback, useEffect, useMemo } from "react";
 import { Link, useLocation, useMatch, useNavigate } from "react-router-dom";
 import { useCompound } from "../../../../queries/compounds";
 import { Table, useSetupTableState } from "@grit42/table";
-import { useToolbar, useHasRoles } from "@grit42/core";
+import { useToolbar, useHasPermission } from "@grit42/core";
 import Circle1NewIcon from "@grit42/client-library/icons/Circle1New";
 import {
   BatchData,
@@ -59,11 +59,7 @@ const CompoundBatches = ({ id }: Props) => {
     },
   );
 
-  const canCrud = useHasRoles([
-    "Administrator",
-    "CompoundAdministrator",
-    "CompoundUser",
-  ]);
+  const canCrud = useHasPermission("write:compounds");
 
   const navigate = useNavigate();
   const registerToolbarActions = useToolbar();
@@ -137,18 +133,10 @@ const CompoundBatches = ({ id }: Props) => {
         },
       ],
       import: {
-        requiredRoles: [
-          "Administrator",
-          "CompoundAdministrator",
-          "CompoundUser",
-        ],
+        requiredPermissions: ["write:compounds"],
       },
       export: {
-        requiredRoles: [
-          "Administrator",
-          "CompoundAdministrator",
-          "CompoundUser",
-        ],
+        requiredPermissions: ["read:system"],
       },
       exportItems: [
         {
@@ -162,11 +150,7 @@ const CompoundBatches = ({ id }: Props) => {
           icon: <Circle1NewIcon />,
           id: "ADD_BATCH",
           label: "New batch",
-          requiredRoles: [
-            "Administrator",
-            "CompoundAdministrator",
-            "CompoundUser",
-          ],
+          requiredPermissions: ["write:compounds"],
           onClick: () =>
             navigate("/core/entities/Grit::Compounds::Batch/new", {
               state: {

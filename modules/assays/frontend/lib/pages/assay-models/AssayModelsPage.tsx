@@ -37,7 +37,7 @@ const AssayModelsPage = () => {
           id: "ASSAY_MODEL_SETTINGS",
           icon: <CogIcon />,
           label: "Manage assay models",
-          requiredRoles: ["Administrator", "AssayAdministrator"],
+          requiredPermissions: ["admin:assays"],
           onClick: () => navigate("/assays/assay-models/settings/assay-models"),
         },
       ],

@@ -38,7 +38,7 @@ import {
   useEditEntityMutation,
 } from "../../../entities";
 import { useQueryClient } from "@grit42/api";
-import { useHasRoles } from "../../../auth";
+import { useHasPermission } from "../../../auth";
 
 const VocabularyForm = ({
   fields,
@@ -48,10 +48,7 @@ const VocabularyForm = ({
   vocabulary: Partial<VocabularyData>;
 }) => {
   const navigate = useNavigate();
-  const canEditVocabularies = useHasRoles([
-    "Administrator",
-    "VocabularyAdministrator",
-  ]);
+  const canWrite = useHasPermission("admin:vocabularies");
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState<Partial<VocabularyData>>(vocabulary);
 
@@ -126,7 +123,7 @@ const VocabularyForm = ({
         </FormFields>
         <FormControls
           onDelete={onDelete}
-          showDelete={!!vocabulary.id && canEditVocabularies}
+          showDelete={!!vocabulary.id && canWrite}
           showCancel
           cancelLabel="Back"
           onCancel={() => navigate("../../..")}

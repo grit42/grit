@@ -21,9 +21,8 @@ require "csv"
 
 module Grit::Assays
   class ExperimentAttachmentsController < ApplicationController
-    before_action :check_read, only: %i[ index export ]
-    before_action :check_create, only: :create
-    before_action :check_destroy, only: :destroy
+    before_action :check_read, only: [ :index, :export ]
+    before_action :check_write, only: [ :create, :destroy ]
 
     def export
       params[:ids] ||= ""
@@ -145,41 +144,20 @@ module Grit::Assays
     end
 
     def check_read
-      if Grit::Assays::Experiment.entity_crud[:read].nil? or
-        (
-          !Grit::Assays::Experiment.entity_crud[:read].length.zero? and
-          !Grit::Core::User.current.one_of_these_roles?(Grit::Assays::Experiment.entity_crud[:read])
-        )
-          render json: {
-            success: false,
-            errors: "You do not have the permissions required to read Experiment attachments"
-          }, status: :forbidden
+      unless Grit::Core::User.current.permission?(Grit::Assays::Experiment.entity_crud[:read])
+        render json: {
+          success: false,
+          errors: "You do not have the permissions required to read Experiment attachments"
+        }, status: :forbidden
       end
     end
 
-    def check_create
-      if Grit::Assays::Experiment.entity_crud[:create].nil? or
-        (
-          !Grit::Assays::Experiment.entity_crud[:create].length.zero? and
-          !Grit::Core::User.current.one_of_these_roles?(Grit::Assays::Experiment.entity_crud[:create])
-        )
-          render json: {
-            success: false,
-            errors: "You do not have the permissions required to create Experiment attachments"
-          }, status: :forbidden
-      end
-    end
-
-    def check_destroy
-      if Grit::Assays::Experiment.entity_crud[:destroy].nil? or
-        (
-          !Grit::Assays::Experiment.entity_crud[:destroy].length.zero? and
-          !Grit::Core::User.current.one_of_these_roles?(Grit::Assays::Experiment.entity_crud[:destroy])
-        )
-          render json: {
-            success: false,
-            errors: "You do not have the permissions required to delete Experiment attachments"
-          }, status: :forbidden
+    def check_write
+      unless Grit::Core::User.current.permission?(Grit::Assays::Experiment.entity_crud[:write])
+        render json: {
+          success: false,
+          errors: "You do not have the permissions required to write Experiment attachments"
+        }, status: :forbidden
       end
     end
   end

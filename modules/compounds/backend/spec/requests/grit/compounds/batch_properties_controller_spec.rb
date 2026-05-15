@@ -22,7 +22,7 @@ require "swagger_helper"
 RSpec.describe Grit::Compounds::BatchPropertiesController, type: :request do
   include AuthHelpers
 
-  let(:admin) { create(:grit_core_user, :admin, :with_admin_role) }
+  let(:admin) { create(:grit_core_user, :admin, :with_administrator_role) }
   let(:compound_admin) do
     user = create(:grit_core_user, login: "compoundadmin", name: "CompoundAdministrator", email: "compoundadmin@test.com")
     role = Grit::Core::Role.find_or_create_by!(name: "CompoundAdministrator") { |r| r.description = "Compound administrator" }
@@ -30,7 +30,7 @@ RSpec.describe Grit::Compounds::BatchPropertiesController, type: :request do
     user
   end
   let!(:notadmin) do
-    create(:grit_core_user, login: "notadmin", name: "NotAdmin", email: "notadmin@test.com")
+    create(:grit_core_user, :with_read_role, login: "notadmin", name: "NotAdmin", email: "notadmin@test.com")
   end
   let(:compound_type) { create(:grit_compounds_compound_type, :screening) }
   let(:data_type) { create(:grit_core_data_type, :string) }

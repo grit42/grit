@@ -7,7 +7,7 @@ import {
 } from "@grit42/table";
 import { useTableColumns } from "@grit42/core/utils";
 import { SetStateAction, useCallback, useEffect, useMemo } from "react";
-import { EntityData } from "@grit42/core";
+import { EntityData, useHasPermission } from "@grit42/core";
 import {
   useExperimentColumns,
   useInfinitePublishedExperimentsOfModel,
@@ -22,6 +22,7 @@ const ExperimentsTable = ({
   assayModelId,
   metadataFilters,
 }: Props) => {
+  const canCrud = useHasPermission("write:analysis");
   const { data: columns } = useExperimentColumns(undefined, {
     select: (data) =>
       data.map((c) =>
@@ -49,6 +50,7 @@ const ExperimentsTable = ({
 
   const setSelection = useCallback(
     (selectionState: SetStateAction<RowSelectionState>) => {
+      if (!canCrud) return;
       if (typeof selectionState === "function")
         selectionState = selectionState(selection);
       return setSelectedExperiments(
@@ -57,7 +59,7 @@ const ExperimentsTable = ({
           .map(([key]) => Number(key)),
       );
     },
-    [setSelectedExperiments, selection],
+    [canCrud, selection, setSelectedExperiments],
   );
 
   const tableState = useSetupTableState(
@@ -145,6 +147,7 @@ const ExperimentsTable = ({
       getRowId={getRowId}
       tableState={tableState}
       onRowClick={({ id }) =>
+        canCrud &&
         setSelectedExperiments(
           selectedExperiments?.includes(Number(id))
             ? selectedExperiments.filter(

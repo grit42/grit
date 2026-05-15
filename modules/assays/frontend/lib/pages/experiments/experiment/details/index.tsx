@@ -35,7 +35,7 @@ import {
   useEditEntityMutation,
   useDestroyEntityMutation,
   EntityFormFieldDef,
-  useHasRoles,
+  useHasPermission,
 } from "@grit42/core";
 import { useMemo, useState } from "react";
 import styles from "./details.module.scss";
@@ -157,6 +157,7 @@ const ExperimentActions = ({
 }: {
   experiment: Partial<ExperimentData>;
 }) => {
+  const hasWrite = useHasPermission("write:assays");
   const navigate = useNavigate();
   const destroyEntityMutation = useDestroyEntityMutation(
     "grit/assays/experiments",
@@ -196,7 +197,7 @@ const ExperimentActions = ({
     await draftMutation.mutateAsync();
   };
 
-  if (!experiment.id) {
+  if (!experiment.id || !hasWrite) {
     return null;
   }
 
@@ -266,7 +267,7 @@ const ExperimentForm = ({
   experiment: Partial<ExperimentData>;
 }) => {
   const canCrudExperiment =
-    useHasRoles(["Administrator", "AssayAdministrator", "AssayUser"]) &&
+    useHasPermission("write:assays") &&
     experiment.publication_status_id__name !== "Published";
 
   const [searchParams] = useSearchParams();

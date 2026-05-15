@@ -22,7 +22,7 @@ import {
   EntityProperties,
   useEditEntityMutation,
   useDestroyEntityMutation,
-  useHasRoles,
+  useHasPermission,
 } from "@grit42/core";
 import { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -41,11 +41,7 @@ import { AsyncMoleculeViewer } from "../../../../components/MoleculeViewer";
 import styles from "./details.module.scss";
 
 const CompoundDetails = () => {
-  const canCrud = useHasRoles([
-    "Administrator",
-    "CompoundAdministrator",
-    "CompoundUser",
-  ]);
+  const canCrud = useHasPermission("write:compounds");
   const { id } = useParams() as { id: string };
   const { data: compound } = useCompound(id);
   const { data: fields } = useCompoundFields(compound?.compound_type_id);

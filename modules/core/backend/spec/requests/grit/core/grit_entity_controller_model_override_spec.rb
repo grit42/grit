@@ -25,7 +25,7 @@ require "rails_helper"
 # responses prove the override is wired through every relevant before_action
 # and action.
 RSpec.describe "GritEntityController model_override", type: :request do
-  let(:admin)     { create(:grit_core_user, :admin, :with_admin_role) }
+  let(:admin)     { create(:grit_core_user, :admin, :with_administrator_role) }
   let(:non_admin) { create(:grit_core_user) }
 
   describe "when model_override is defined" do

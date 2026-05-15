@@ -22,6 +22,7 @@ import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { classnames } from "@grit42/client-library/utils";
 import { Dropdown } from "@grit42/client-library/components";
 import {
+  hasOneOfPermissions,
   hasRoles,
   useSession,
   useUpdateUserSettingsMutation,
@@ -31,6 +32,7 @@ import type { UserSettings } from "../../../features/auth";
 import Logo from "../../../assets/grit42-logo.svg";
 import { notifyOnError } from "@grit42/api";
 import NewTabIcon from "@grit42/client-library/icons/NewTab";
+import { NavItem } from "../../navigation";
 
 const isActivePath = (location: string, path: string) => {
   return (
@@ -40,7 +42,7 @@ const isActivePath = (location: string, path: string) => {
 };
 
 interface Props {
-  navItems: { name: string; path: string; roles?: string[] }[];
+  navItems: NavItem[];
 }
 
 const Header = ({ navItems }: Props) => {
@@ -53,7 +55,12 @@ const Header = ({ navItems }: Props) => {
   const availableNavItems = useMemo(
     () =>
       session
-        ? navItems.filter(({ roles }) => !roles || hasRoles(session, roles))
+        ? navItems.filter(
+            ({ roles, permissions }) =>
+              (!roles && !permissions) ||
+              (roles && hasRoles(session, roles)) ||
+              (permissions && hasOneOfPermissions(session, permissions)),
+          )
         : [],
     [navItems, session],
   );

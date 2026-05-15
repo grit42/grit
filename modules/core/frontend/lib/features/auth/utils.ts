@@ -19,17 +19,57 @@
 import { useSession } from "./api/queries";
 import { Session } from "./types";
 
-export function hasRoles(session: Session | null, requiredRoles: string[]) {
+/**
+ * @deprecated
+ * Checks if session has one of these roles
+ * @param session
+ * @param requiredPermissions
+ * @returns
+ */
+export const hasRoles = (
+  session: Session | null,
+  requiredPermissions: string[],
+) => {
   if (!session) return false;
-  for (const role of requiredRoles) {
+  for (const role of requiredPermissions) {
     if (session.roles.includes(role)) {
       return true;
     }
   }
   return false;
-}
-
-export const useHasRoles = (requiredRoles: string[]) => {
+};
+/**
+ * @deprecated
+ * Checks if current user has one of these roles
+ * @param requiredPermissions
+ * @returns
+ */
+export const useHasRoles = (requiredPermissions: string[]) => {
   const session = useSession().data;
-  return hasRoles(session ?? null, requiredRoles);
+  return hasRoles(session ?? null, requiredPermissions);
+};
+
+export const hasPermission = (session: Session | null, permission: string) => {
+  if (!session) return false;
+  return session.permissions.includes(permission);
+};
+
+export const hasOneOfPermissions = (
+  session: Session | null,
+  permissions: string[],
+) => {
+  if (!session) return false;
+  return (
+    new Set(session.permissions).intersection(new Set(permissions)).size > 0
+  );
+};
+
+export const useHasPermission = (permission: string) => {
+  const session = useSession().data;
+  return hasPermission(session ?? null, permission);
+};
+
+export const useHasOnOfPermissions = (permissions: string[]) => {
+  const session = useSession().data;
+  return hasOneOfPermissions(session ?? null, permissions);
 };

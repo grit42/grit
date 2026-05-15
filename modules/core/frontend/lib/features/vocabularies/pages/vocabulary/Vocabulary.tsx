@@ -19,7 +19,7 @@
 import styles from "./vocabulary.module.scss";
 import { Outlet } from "react-router-dom";
 import { useVocabulary, useVocabularyFields } from "../../queries/vocabularies";
-import { useHasRoles } from "../../../auth";
+import { useHasPermission } from "../../../auth";
 import VocabularyForm from "./VocabularyForm";
 
 interface Props {
@@ -27,14 +27,12 @@ interface Props {
 }
 
 const Vocabulary = ({ vocabularyId }: Props) => {
-  const canEditVocabularies = useHasRoles([
-    "Administrator",
-    "VocabularyAdministrator",
-  ]);
+  const canAdmin = useHasPermission("admin:vocabularies");
+
   const { data: vocabulary } = useVocabulary(vocabularyId);
   const { data: vocabularyFields } = useVocabularyFields(undefined, {
     select: (data) =>
-      canEditVocabularies ? data : data.map((f) => ({ ...f, disabled: true })),
+      canAdmin ? data : data.map((f) => ({ ...f, disabled: true })),
   });
 
   return (

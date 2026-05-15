@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { useModules, useNavItems } from "./modules";
 import { AppShell } from "./components";
+import UnauthorizedPage from "./pages/unauthorized";
 
 const Router = () => {
   const modules = useModules();
@@ -20,6 +21,7 @@ const Router = () => {
                 </Route>
               ) : null,
             )}
+            <Route path="unauthorized" element={<UnauthorizedPage />} />
             <Route
               index
               path="*"

@@ -28,7 +28,7 @@ import {
   EntityData,
   EntityPropertyDef,
   useEditEntityMutation,
-  useHasRoles,
+  useHasPermission,
 } from "@grit42/core";
 import { generateUniqueID } from "@grit42/client-library/utils";
 import styles from "./plots.module.scss";
@@ -70,11 +70,9 @@ const NEW_PLOT = (data_sheet_id?: number) => ({
 
 const ExperimentPlot = ({ experiment }: Props) => {
   const navigate = useNavigate();
-  const canCrudPlots = useHasRoles([
-    "Administrator",
-    "AssayAdministrator",
-    "AssayUser",
-  ]);
+  const canCrudPlots =
+    useHasPermission("write:assays") &&
+    experiment.publication_status_id__name !== "Published";
   const { experiment_id, plot_id } = useParams() as {
     experiment_id: string;
     plot_id: string;
@@ -204,43 +202,45 @@ const ExperimentPlot = ({ experiment }: Props) => {
       {canDisplayPlot && (
         <Plot data={plotData} dataProperties={columns ?? []} def={plot.def} />
       )}
-      <Surface className={styles.plotSidebar}>
-        <ButtonGroup>
-          {dirty && (
-            <Button onClick={onSave} loading={saving} color="secondary">
-              {plot_id === "new" ? "Add" : "Save"}
-            </Button>
-          )}
-          {dirty && <Button onClick={onRevert}>Revert</Button>}
-          {plot_id !== "new" && (
-            <Button onClick={onDelete} color="danger" loading={deleting}>
-              Delete
-            </Button>
-          )}
-        </ButtonGroup>
-        <Select
-          label="Data sheet"
-          options={experiment.data_sheets.map(({ name, id }) => ({
-            label: name,
-            value: id,
-          }))}
-          value={plot.data_sheet_id}
-          onChange={(data_sheet_id) => {
-            setPlot((prev) => ({ ...prev, data_sheet_id }));
-            setDirty(true);
-          }}
-        />
-        <PlotSettings
-          plot={plot.def}
-          xAxisProperties={xAxisProperties as SourceDataProperties}
-          yAxisProperties={yAxisProperties as SourceDataProperties}
-          groupByProperties={groupByProperties as SourceDataProperties}
-          onChange={(def) => {
-            setPlot({ ...plot, def });
-            setDirty(true);
-          }}
-        />
-      </Surface>
+      {canCrudPlots && (
+        <Surface className={styles.plotSidebar}>
+          <ButtonGroup>
+            {dirty && (
+              <Button onClick={onSave} loading={saving} color="secondary">
+                {plot_id === "new" ? "Add" : "Save"}
+              </Button>
+            )}
+            {dirty && <Button onClick={onRevert}>Revert</Button>}
+            {plot_id !== "new" && (
+              <Button onClick={onDelete} color="danger" loading={deleting}>
+                Delete
+              </Button>
+            )}
+          </ButtonGroup>
+          <Select
+            label="Data sheet"
+            options={experiment.data_sheets.map(({ name, id }) => ({
+              label: name,
+              value: id,
+            }))}
+            value={plot.data_sheet_id}
+            onChange={(data_sheet_id) => {
+              setPlot((prev) => ({ ...prev, data_sheet_id }));
+              setDirty(true);
+            }}
+          />
+          <PlotSettings
+            plot={plot.def}
+            xAxisProperties={xAxisProperties as SourceDataProperties}
+            yAxisProperties={yAxisProperties as SourceDataProperties}
+            groupByProperties={groupByProperties as SourceDataProperties}
+            onChange={(def) => {
+              setPlot({ ...plot, def });
+              setDirty(true);
+            }}
+          />
+        </Surface>
+      )}
     </div>
   );
 };
