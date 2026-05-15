@@ -51,8 +51,8 @@ module Grit::Core
     private
 
     def check_system_role
-      id = params[:id]
-      id ||= params[:id]
+      id = params[:id] if params[:id] != "destroy"
+      id = params[:ids].split(",")[0] if params[:id] == "destroy"
       role = Grit::Core::Role.find(id)
       render json: { success: false, errors: "#{role.name} is a system role and cannot be modified" }, status: :forbidden if role.system?
     end
