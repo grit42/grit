@@ -46,6 +46,22 @@ In the form, enter your registered email address and click **Please send me a re
 
 ## Multiple Failed Login Attempts
 
-If you enter an incorrect password multiple times, your account will be locked and an email will be sent to you. You will not be able to log in until you set a new password using the link provided in the email.
+If login lockout is enabled and you enter an incorrect password too many times consecutively, your account will be locked and an email will be sent to you with a reactivation link. You will not be able to log in until you set a new password using the link provided in the email.
 
 ![Reactivate account](./assets/reactivate.png)
+
+:::note
+The lockout threshold is configurable by an administrator. See [Security configuration](/getting-started#security-configuration) for details. The `admin` account is never automatically locked out.
+:::
+
+## Password Expiry
+
+If password expiry is enabled, your password will expire after a set number of days. When you attempt to log in with an expired password, you will be prompted to reset it using the forgotten password flow.
+
+:::note
+Password expiry applies only to local (non-SSO) accounts.
+:::
+
+## Session Expiry
+
+If session expiry is enabled, your session will automatically expire after a period of inactivity. When this happens, you will be redirected to the login page and must authenticate again.

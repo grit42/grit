@@ -23,14 +23,19 @@ module Grit::Core::Controller::Authorized
   included do
     private
 
+    def get_model(params)
+      return model_override(params) if respond_to?(:model_override)
+      controller_path.classify.constantize
+    end
+
     def check_read
-      klass = controller_path.classify.constantize
-      render json: { success: false, errors: "You do not have the permissions required to read #{controller_path.classify}" }, status: :forbidden if klass.entity_crud[:read].nil? or !current_user.permission?(klass.entity_crud[:read])
+      klass = get_model(params)
+      render json: { success: false, errors: "You do not have the permissions required to read #{klass.name}" }, status: :forbidden if klass.entity_crud[:read].nil? or !current_user.permission?(klass.entity_crud[:read])
     end
 
     def check_write
-      klass = controller_path.classify.constantize
-      render json: { success: false, errors: "You do not have the permissions required to write #{controller_path.classify}" }, status: :forbidden if klass.entity_crud[:write].nil? or !current_user.permission?(klass.entity_crud[:write])
+      klass = get_model(params)
+      render json: { success: false, errors: "You do not have the permissions required to write #{klass.name}" }, status: :forbidden if klass.entity_crud[:write].nil? or !current_user.permission?(klass.entity_crud[:write])
     end
   end
 end

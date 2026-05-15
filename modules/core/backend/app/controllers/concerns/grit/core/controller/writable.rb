@@ -26,7 +26,7 @@ module Grit::Core::Controller::Writable
     before_action :check_write, only: %i[ create update destroy ] if self.include? Grit::Core::Controller::Authorized
 
     def create
-      klass = controller_path.classify.constantize
+      klass = get_model(params)
       permitted_params = params.permit(self.permitted_params)
       @record = klass.new(permitted_params)
 
@@ -42,7 +42,7 @@ module Grit::Core::Controller::Writable
     end
 
     def update
-      klass = controller_path.classify.constantize
+      klass = get_model(params)
       @record = klass.find(params[:id])
       permitted_params = params.permit(self.permitted_params)
 
@@ -60,7 +60,7 @@ module Grit::Core::Controller::Writable
     end
 
     def destroy
-      klass = controller_path.classify.constantize
+      klass = get_model(params)
       ids = params[:id] if params[:id] != "destroy"
       ids = params[:ids].split(",") if params[:id] == "destroy"
       Rails.logger.info klass.where(id: ids)
@@ -74,10 +74,15 @@ module Grit::Core::Controller::Writable
 
     private
 
+    def get_model(params)
+      return model_override(params) if respond_to?(:model_override)
+      controller_path.classify.constantize
+    end
+
     def get_scope(scope, params)
-      klass = controller_path.classify.constantize
+      klass = get_model(params)
       klass_scope = klass.send(scope, params) if klass.respond_to?(scope)
-      render json: { success: false, errors: "#{controller_path.classify} does not implement scope '#{scope}'" }, status: :bad_request if klass_scope.nil?
+      render json: { success: false, errors: "#{klass.name} does not implement scope '#{scope}'" }, status: :bad_request if klass_scope.nil?
       klass_scope
     end
   end

@@ -26,7 +26,7 @@ module Grit::Core::Controller::Readable
     before_action :check_read, only: %i[ index show export ] if self.include? Grit::Core::Controller::Authorized
 
     def filter_and_sort_raw_sql(scope, filter, sort)
-      klass = controller_path.classify.constantize
+      klass = get_model(params)
 
       scope = klass.unscoped.select("sub.*").from("(#{scope}) sub")
 
@@ -99,7 +99,7 @@ module Grit::Core::Controller::Readable
     def csv_from_query(query)
       csv_sql = "COPY (#{query.to_sql}) TO STDOUT WITH DELIMITER ',' CSV HEADER"
 
-      temp_file = Tempfile.new("#{controller_path.classify.demodulize.underscore}.csv")
+      temp_file = Tempfile.new("#{get_model(params).name.demodulize.underscore}.csv")
 
       ActiveRecord::Base.connection.raw_connection.copy_data(csv_sql) do
         row = ActiveRecord::Base.connection.raw_connection.get_copy_data
@@ -118,7 +118,7 @@ module Grit::Core::Controller::Readable
     end
 
     def export_file_name
-      "#{controller_path.classify.demodulize.underscore}.csv"
+      "#{get_model(params).name.demodulize.underscore}.csv"
     end
 
     def export
@@ -126,7 +126,7 @@ module Grit::Core::Controller::Readable
       return if query.nil?
 
       if params[:columns]&.length
-        klass = controller_path.classify.constantize
+        klass = get_model(params)
         query = klass.unscoped.select(*params[:columns]).from(query, :sub)
       end
 
@@ -160,10 +160,15 @@ module Grit::Core::Controller::Readable
 
     private
 
+    def get_model(params)
+      return model_override(params) if respond_to?(:model_override)
+      controller_path.classify.constantize
+    end
+
     def get_scope(scope, params)
-      klass = controller_path.classify.constantize
+      klass = get_model(params)
       klass_scope = klass.send(scope, params) if klass.respond_to?(scope)
-      render json: { success: false, errors: "#{controller_path.classify} does not implement scope '#{scope}'" }, status: :bad_request if klass_scope.nil?
+      render json: { success: false, errors: "#{klass.name} does not implement scope '#{scope}'" }, status: :bad_request if klass_scope.nil?
       klass_scope
     end
   end

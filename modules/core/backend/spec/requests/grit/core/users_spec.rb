@@ -253,6 +253,21 @@ RSpec.describe "Users API", type: :request do
       expect(response).to have_http_status(:success)
     end
 
+    it "should not reset password with expired token" do
+      post "/api/grit/core/user/request_password_reset", params: { user: admin.email }, as: :json
+      expect(response).to have_http_status(:success)
+
+      admin.update_column(:forgot_token_expires_at, 1.hours.ago)
+      admin.reload
+
+      post "/api/grit/core/user/password_reset", params: {
+        forgot_token: admin.forgot_token,
+        password: "testtest",
+        password_confirmation: "testtest"
+      }, as: :json
+      expect(response).to have_http_status(:internal_server_error)
+    end
+
     it "should update password" do
       login_as(notadmin)
       post "/api/grit/core/user/update_password", params: {

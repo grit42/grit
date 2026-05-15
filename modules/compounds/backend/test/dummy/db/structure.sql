@@ -887,8 +887,12 @@ CREATE TABLE public.grit_core_users (
     settings jsonb DEFAULT '{}'::jsonb,
     origin_id bigint NOT NULL,
     location_id bigint,
+    two_factor_attempts integer DEFAULT 0 NOT NULL,
+    two_factor_locked_until timestamp(6) without time zone,
     auth_method character varying DEFAULT 'local'::character varying NOT NULL,
-    sso_uid character varying
+    sso_uid character varying,
+    password_changed_at timestamp(6) without time zone,
+    forgot_token_expires_at timestamp(6) without time zone
 );
 
 
@@ -936,54 +940,6 @@ CREATE TABLE public.grit_core_vocabulary_items (
     description text,
     vocabulary_id bigint NOT NULL
 );
-
-
---
--- Name: lsb_10735_line_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.lsb_10735_line_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: lsb_10768_line_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.lsb_10768_line_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: raw_lsb_10735_line_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.raw_lsb_10735_line_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: raw_lsb_10768_line_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.raw_lsb_10768_line_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
 
 
 --
@@ -2347,6 +2303,8 @@ INSERT INTO "schema_migrations" (version) VALUES
 ('20260510051018'),
 ('20260510051017'),
 ('20260510051016'),
+('20260502000001'),
+('20260502000000'),
 ('20260317095910'),
 ('20260203040615'),
 ('20250627000012'),
@@ -2361,6 +2319,7 @@ INSERT INTO "schema_migrations" (version) VALUES
 ('20250627000003'),
 ('20250627000002'),
 ('20250627000001'),
+('20250627000000'),
 ('20250625074209'),
 ('20250624081122'),
 ('20250624080646'),
