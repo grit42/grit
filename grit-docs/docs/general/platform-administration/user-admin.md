@@ -13,7 +13,19 @@ Account activation links, password reset links, and two-factor authentication to
 
 ## Roles
 
-Roles define what users can see and modify in the system. These roles are predefined and cannot be changed. Available roles depend on installed modules.
+Roles determine what users can do on the system. Each role grants a set of permissions to the users assigned to it.
+
+There are 5 system roles, each building on the previous one:
+
+| Role | Description |
+| --- | --- |
+| Read | Read data |
+| Analyse | _Read_ and use analysis features |
+| Write | _Analyse_ and write data |
+| Manage | _Write_ and manage models and controlled terminology |
+| Administrator | System administrator |
+
+The permissions available on the system depend on the modules installed. It is also possible to define custom roles with a specific set of permissions to suit your organisation's needs.
 
 ## Creating user accounts
 
@@ -36,6 +48,10 @@ To create a user, fill in the form and click **Save**.
 
 :::note
 If an email service have been setup an email will be sent to the user. If not the admin must distribute the activation link found on the user detail page.
+:::
+
+:::note
+Using the platform requires at a minimum the "read:system" permission to access the platform, for instance by configuring the _Read_ role.
 :::
 
 ![User creation form](./assets/create_user.png)
