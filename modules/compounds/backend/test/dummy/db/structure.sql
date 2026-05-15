@@ -855,8 +855,12 @@ CREATE TABLE public.grit_core_users (
     settings jsonb DEFAULT '{}'::jsonb,
     origin_id bigint NOT NULL,
     location_id bigint,
+    two_factor_attempts integer DEFAULT 0 NOT NULL,
+    two_factor_locked_until timestamp(6) without time zone,
     auth_method character varying DEFAULT 'local'::character varying NOT NULL,
-    sso_uid character varying
+    sso_uid character varying,
+    password_changed_at timestamp(6) without time zone,
+    forgot_token_expires_at timestamp(6) without time zone
 );
 
 
@@ -2190,6 +2194,8 @@ ALTER TABLE ONLY public.grit_compounds_compound_property_values
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20260502000001'),
+('20260502000000'),
 ('20260317095910'),
 ('20260203040615'),
 ('20250627000012'),
@@ -2204,6 +2210,7 @@ INSERT INTO "schema_migrations" (version) VALUES
 ('20250627000003'),
 ('20250627000002'),
 ('20250627000001'),
+('20250627000000'),
 ('20250625074209'),
 ('20250624081122'),
 ('20250624080646'),

@@ -113,6 +113,61 @@ URL matches what is registered in your Identity Provider. The callback URL is:
 {GRIT_SERVER_URL}/api/grit/core/auth/oidc/callback
 ```
 
+### Security configuration
+
+grit provides optional security hardening features that can be enabled via environment variables in the `.env` file.
+
+#### Login lockout
+
+Accounts are locked after a configurable number of consecutive failed password attempts. When locked, the user receives an email with a reactivation link.
+
+```sh
+# Enable login lockout (default: false)
+PASSWORD_LOCKOUT_ENABLED=true
+
+# Number of consecutive failed attempts before lockout (default: 5)
+PASSWORD_LOCKOUT_ATTEMPTS=5
+```
+
+The `admin` account is exempt from automatic lockout to ensure system access is never lost.
+
+#### Password expiry
+
+Passwords can be configured to expire after a set number of days. Users whose password has expired will be prompted to reset it via the forgotten password flow.
+
+```sh
+# Enable password expiry (default: false)
+PASSWORD_EXPIRY_ENABLED=true
+
+# Days before a password expires (default: 90)
+PASSWORD_EXPIRY_DAYS=90
+```
+
+:::note
+Password expiry applies only to local (non-SSO) accounts.
+:::
+
+#### Session expiry
+
+Sessions can be configured to expire after a period of inactivity. Users with an expired session are redirected to the login page.
+
+```sh
+# Enable session expiry (default: false)
+SESSION_EXPIRY_ENABLED=true
+
+# Minutes of inactivity before a session expires (default: 60)
+SESSION_EXPIRY_MINUTES=60
+```
+
+#### Failed login limit
+
+The maximum number of consecutive failed login attempts tracked by the system can be adjusted:
+
+```sh
+# Maximum tracked consecutive failed logins (default: 50)
+MAX_FAILED_LOGINS=50
+```
+
 ## Maintaining the app
 
 ### Backup the database
