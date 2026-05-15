@@ -57,6 +57,8 @@ User login cannot be modified.
 
 If a user's access to the system is revoked, their account can be deactivated. Deactivating an account prevents system access while preserving data integrity by retaining ownership records. A deactivated account can be reactivated at any time and will resume normal function using the last configured password.
 
+Accounts can also be deactivated automatically if [login lockout](/getting-started#login-lockout) is enabled and the user exceeds the maximum number of failed login attempts. A locked account is treated the same as a manually deactivated one and can be reactivated in the same way. The user also receives an email with a reactivation link.
+
 To deactivate a user account, click the account in the list under the **User management** view, toggle off the **Active** switch and click **Save**.
 
 ![User update form with active switch highlighted](./assets/deactivate_user.png)
