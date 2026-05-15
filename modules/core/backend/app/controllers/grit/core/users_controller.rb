@@ -133,6 +133,7 @@ module Grit::Core
       @user = Grit::Core::User.find_by(forgot_token: params[:forgot_token])
 
       raise "This password recovery token does not exist" unless @user
+      raise "This password recovery token has expired" if @user.forgot_token_expired?
       raise "Password reset is not available for SSO accounts" unless @user.auth_method == "local"
       raise "Password and password confirmation do not match" if params[:password] != params[:password_confirmation]
 
@@ -181,12 +182,12 @@ module Grit::Core
         return
       end
 
-      token =SecureRandom.urlsafe_base64(20)
-      @user.forgot_token = token
+      @user.forgot_token = SecureRandom.urlsafe_base64(20)
+      @user.forgot_token_expires_at = Grit::Core::User::FORGOT_TOKEN_EXPIRY_HOURS.hours.from_now
       @user.save_without_session_maintenance
 
       Grit::Core::Mailer.deliver_password_reset(@user).deliver_now
-      render json: { success: true, token: token }
+      render json: { success: true, token: @user.forgot_token }
     rescue StandardError => e
       logger.warn e.to_s
       logger.warn e.backtrace.join("\n")

@@ -227,6 +227,12 @@ module Grit::Core
       two_factor_expiry.nil? || two_factor_expiry < Time.current
     end
 
+    def forgot_token_expired?
+      logger.info "nil" if forgot_token_expires_at.nil?
+      logger.info "expired" if forgot_token_expires_at.present? && forgot_token_expires_at < Time.current
+      forgot_token_expires_at.nil? || forgot_token_expires_at < Time.current
+    end
+
     def record_failed_two_factor_attempt!
       increment!(:two_factor_attempts)
       if two_factor_attempts >= TWO_FACTOR_MAX_ATTEMPTS
