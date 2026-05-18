@@ -43,15 +43,15 @@ module Grit::Core
       render json: {
             success: true,
             data: {
-              id: current_user_session.record.id,
-              login: current_user_session.record.login,
-              name: current_user_session.record.name,
-              email: current_user_session.record.email,
-              token: current_user_session.record.single_access_token,
-              auth_method: current_user_session.record.auth_method,
-              roles: Grit::Core::User.current.roles.select(:name).all.map(&:name),
-              permissions: Grit::Core::User.current.permissions,
-              settings: current_user_session.record.settings,
+              id: current_user.id,
+              login: current_user.login,
+              name: current_user.name,
+              email: current_user.email,
+              token: current_user.single_access_token,
+              auth_method: current_user.auth_method,
+              roles: current_user.roles.select(:name).all.map(&:name),
+              permissions: current_user.permissions,
+              settings: current_user.settings,
               platform_information: platform_information,
               server_settings: build_server_settings
             }
@@ -116,7 +116,7 @@ module Grit::Core
     end
 
     def destroy
-      current_user_session.destroy
+      current_user_session&.destroy
       cookies.delete :user_login
       render json: { success: true }
     end

@@ -21,11 +21,25 @@ module Grit::Core::Controller::Authenticated
   included do
     helper_method :current_user_session, :current_user
 
+    before_action :authenticate_via_strategies
     before_action :set_bearer_token
     before_action :require_user
 
     private
+    def authenticate_via_strategies
+      Grit::Core::AuthenticationStrategies.each do |strategy|
+        user = strategy.authenticate(request)
+        next unless user
+
+        @current_user = user
+        RequestStore.store["current_user"] = user
+        return
+      end
+    end
+
     def set_bearer_token
+      return if defined?(@current_user) && @current_user
+
       header = request.headers["Authorization"]
       return unless header&.start_with?("Bearer ")
 
