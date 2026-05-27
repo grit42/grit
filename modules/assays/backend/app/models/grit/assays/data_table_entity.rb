@@ -38,9 +38,10 @@ module Grit::Assays
     end
 
     def self.detailed(params = nil)
-      model = DataTable.find(params[:data_table_id]).entity_data_type.model
+      data_table_id = params[:data_table_id].to_i
+      model = DataTable.find(data_table_id).entity_data_type.model
       model.detailed(params)
-        .joins("JOIN grit_assays_data_table_entities ON grit_assays_data_table_entities.entity_id = #{model.table_name}.id AND grit_assays_data_table_entities.data_table_id = #{params[:data_table_id]}")
+        .joins("JOIN grit_assays_data_table_entities ON grit_assays_data_table_entities.entity_id = #{model.table_name}.id AND grit_assays_data_table_entities.data_table_id = #{data_table_id}")
         .select("grit_assays_data_table_entities.id as data_table_entity_id")
         .select("grit_assays_data_table_entities.data_table_id")
         .select("grit_assays_data_table_entities.sort")
@@ -48,9 +49,10 @@ module Grit::Assays
     end
 
     def self.available(params = nil)
-      data_type = DataTable.find(params[:data_table_id]).entity_data_type
+      data_table_id = params[:data_table_id].to_i
+      data_type = DataTable.find(data_table_id).entity_data_type
       query = data_type.model_scope("detailed", params)
-        .joins("LEFT OUTER JOIN grit_assays_data_table_entities ON grit_assays_data_table_entities.entity_id = #{data_type.table_name}.id AND grit_assays_data_table_entities.data_table_id = #{params[:data_table_id]}")
+        .joins("LEFT OUTER JOIN grit_assays_data_table_entities ON grit_assays_data_table_entities.entity_id = #{data_type.table_name}.id AND grit_assays_data_table_entities.data_table_id = #{data_table_id}")
         .where("grit_assays_data_table_entities.id IS NULL")
       query
     end
