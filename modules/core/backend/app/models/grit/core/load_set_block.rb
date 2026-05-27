@@ -67,12 +67,13 @@ module Grit::Core
 
     def self.preview_data(params = nil)
       raise "No load set block id provided" if params.nil? or params[:id].nil?
-      self.unscoped.from("raw_lsb_#{params[:id]}").select("raw_lsb_#{params[:id]}.*")
+      load_set_block_id = params[:id].to_i
+      self.unscoped.from("raw_lsb_#{load_set_block_id}").select("raw_lsb_#{load_set_block_id}.*")
     end
 
     def self.errored_data(params = nil)
       raise "No load set block id provided" if params.nil? or params[:id].nil?
-      load_set_block_id =  params[:id]
+      load_set_block_id =  params[:id].to_i
       self.unscoped.from("lsb_#{load_set_block_id}")
         .select(
           "lsb_#{load_set_block_id}.line",
@@ -85,7 +86,7 @@ module Grit::Core
 
     def self.warning_data(params = nil)
       raise "No load set block id provided" if params.nil? or params[:id].nil?
-      load_set_block_id =  params[:id]
+      load_set_block_id =  params[:id].to_i
       self.unscoped.from("lsb_#{load_set_block_id}")
         .select(
           "lsb_#{load_set_block_id}.line",
