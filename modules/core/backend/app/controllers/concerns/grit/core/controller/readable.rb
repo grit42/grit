@@ -31,7 +31,7 @@ module Grit::Core::Controller::Readable
       scope = klass.unscoped.select("sub.*").from("(#{scope}) sub")
 
       sort.each do |sort_item|
-        scope = scope.order(ActiveRecord::Base.send(:sanitize_sql_array, [ "sub.#{sort_item["property"]} #{sort_item["direction"]}" ]))
+        scope = scope.order(ActiveRecord::Base.send(:sanitize_sql_array, [ "sub.#{sort_item["property"]} #{sort_direction(sort_item["direction"])}" ]))
       end
 
       filter.each do |filter_item|
@@ -55,7 +55,7 @@ module Grit::Core::Controller::Readable
       default_order_values = scope.order_values
       scope = scope.unscope(:order)
       sort.each do |sort_item|
-        scope = scope.order(ActiveRecord::Base.send(:sanitize_sql_array, [ "#{select_values_map[sort_item["property"]]} #{sort_item["direction"]} NULLS LAST" ]))
+        scope = scope.order(ActiveRecord::Base.send(:sanitize_sql_array, [ "#{select_values_map[sort_item["property"]]} #{sort_direction(sort_item["direction"])} NULLS LAST" ]))
       end
       scope.order_values = [ *scope.order_values, *default_order_values ]
 
@@ -163,6 +163,10 @@ module Grit::Core::Controller::Readable
     end
 
     private
+
+    def sort_direction(direction)
+      direction.to_s.strip.casecmp("desc").zero? ? "DESC" : "ASC"
+    end
 
     def get_model(params)
       return model_override(params) if respond_to?(:model_override)
