@@ -44,15 +44,17 @@ module Grit::Assays
       data_table = DataTable.find(params[:data_table_id])
 
       if params[:columns]&.length
-        query = data_table.entity_data_type.model.unscoped.select(*params[:columns]).from(query, :sub)
+        model = data_table.entity_data_type.model
+        query = model.unscoped.select(*quote_export_columns(model, params[:columns])).from(query, :sub)
       end
 
       file = csv_from_query(query)
 
       send_data file.read, filename: data_table.name + ".csv", type: "text/csv"
     rescue StandardError => e
-      logger.info e.message
+      logger.info e.to_s
       logger.info e.backtrace.join("\n")
+      render json: { success: false, errors: e.to_s }, status: :internal_server_error
     end
   end
 end

@@ -120,7 +120,8 @@ module Grit::Compounds
 
       if params[:columns]&.length
         klass = controller_path.classify.constantize
-        query = klass.unscoped.select(*params[:columns].map { |c| c == "molecule" ? "smiles" : c }).from(query, :sub)
+        columns = params[:columns].map { |c| c == "molecule" ? "smiles" : c }
+        query = klass.unscoped.select(*quote_export_columns(klass, columns)).from(query, :sub)
       end
 
       return if query.nil?
@@ -128,6 +129,10 @@ module Grit::Compounds
       file = csv_from_query(query)
 
       send_data file.read, filename: "#{controller_path.classify.demodulize.underscore}.csv", type: :csv
+    rescue StandardError => e
+      logger.info e.to_s
+      logger.info e.backtrace.join("\n")
+      render json: { success: false, errors: e.to_s }, status: :internal_server_error
     end
 
     private
