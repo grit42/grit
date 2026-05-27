@@ -31,11 +31,11 @@ module Grit::Core::Controller::Readable
       scope = klass.unscoped.select("sub.*").from("(#{scope}) sub")
 
       sort.each do |sort_item|
-        scope = scope.order(ActiveRecord::Base.send(:sanitize_sql_array, [ "sub.#{sort_item["property"]} #{sort_direction(sort_item["direction"])}" ]))
+        scope = scope.order(ActiveRecord::Base.send(:sanitize_sql_array, [ "sub.#{quote_sort_property(sort_item["property"])} #{sort_direction(sort_item["direction"])}" ]))
       end
 
       filter.each do |filter_item|
-        scope = scope.where(Grit::Core::FilterProvider.execute(filter_item["type"], filter_item["operator"], "sub.#{filter_item["property"]}", filter_item["value"]))
+        scope = scope.where(Grit::Core::FilterProvider.execute(filter_item["type"], filter_item["operator"], "sub.#{quote_sort_property(filter_item["property"])}", filter_item["value"]))
       end
 
       scope
@@ -166,6 +166,10 @@ module Grit::Core::Controller::Readable
 
     def sort_direction(direction)
       direction.to_s.strip.casecmp("desc").zero? ? "DESC" : "ASC"
+    end
+
+    def quote_sort_property(property)
+      ActiveRecord::Base.connection.quote_column_name(property.to_s)
     end
 
     def get_model(params)
