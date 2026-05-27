@@ -127,12 +127,16 @@ module Grit::Core::Controller::Readable
 
       if params[:columns]&.length
         klass = get_model(params)
-        query = klass.unscoped.select(*params[:columns]).from(query, :sub)
+        query = klass.unscoped.select(*quote_export_columns(klass, params[:columns])).from(query, :sub)
       end
 
       file = csv_from_query(query)
 
       send_data file.read, filename: export_file_name, type: "text/csv"
+    rescue StandardError => e
+      logger.info e.to_s
+      logger.info e.backtrace.join("\n")
+      render json: { success: false, errors: e.to_s }, status: :internal_server_error
     end
 
     def show_entity(params)
@@ -163,6 +167,10 @@ module Grit::Core::Controller::Readable
     def get_model(params)
       return model_override(params) if respond_to?(:model_override)
       controller_path.classify.constantize
+    end
+
+    def quote_export_columns(klass, columns)
+      columns.map { |c| klass.connection.quote_column_name(c) }
     end
 
     def get_scope(scope, params)
