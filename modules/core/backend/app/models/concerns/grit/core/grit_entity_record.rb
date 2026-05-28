@@ -90,6 +90,17 @@ module Grit::Core::GritEntityRecord
   # ==========================================================================
 
   class_methods do
+    # True only for scope methods defined by application code (under /modules/),
+    # never for inherited ActiveRecord methods (update_all, delete_by, ...). Used
+    # to gate request-supplied `params[:scope]` dispatch.
+    def entity_scope?(scope)
+      return false unless respond_to?(scope)
+      location = method(scope).source_location
+      location.present? && location.first.include?("/modules/")
+    rescue NameError
+      false
+    end
+
     # ------------------------------------------------------------------------
     # DSL Methods (Model Configuration)
     # ------------------------------------------------------------------------

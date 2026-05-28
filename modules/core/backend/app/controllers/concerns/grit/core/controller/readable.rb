@@ -175,7 +175,7 @@ module Grit::Core::Controller::Readable
 
     def get_scope(scope, params)
       klass = get_model(params)
-      klass_scope = klass.send(scope, params) if klass.respond_to?(scope)
+      klass_scope = klass.send(scope, params) if klass.entity_scope?(scope)
       render json: { success: false, errors: "#{klass.name} does not implement scope '#{scope}'" }, status: :bad_request if klass_scope.nil?
       klass_scope
     end
