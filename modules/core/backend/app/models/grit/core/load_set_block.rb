@@ -25,6 +25,13 @@ module Grit::Core
     has_one_attached :data
     has_one :vocabulary_item_load_set_block, dependent: :destroy
 
+    ALLOWED_DATA_TYPES = %w[
+      text/plain text/csv text/tab-separated-values application/octet-stream
+    ].freeze
+    MAX_DATA_FILE_SIZE = 200.megabytes
+
+    validate :data_file_is_valid, if: -> { data.attached? }
+
     before_destroy :check_status
     before_destroy :drop_tables
     after_save :drop_tables_if_succeeded
@@ -301,6 +308,21 @@ module Grit::Core
     private
       def check_status
         throw :abort if self.status.name == "Succeeded"
+      end
+
+      def data_file_is_valid
+        blob = data.blob
+        detected_type = blob.open { |io| Marcel::MimeType.for(io, name: blob.filename.to_s) }
+
+        unless ALLOWED_DATA_TYPES.include?(detected_type)
+          errors.add(:data, "#{blob.filename} has a disallowed file type (detected: #{detected_type})")
+        end
+
+        if blob.byte_size > MAX_DATA_FILE_SIZE
+          errors.add(:data, "#{blob.filename} exceeds the #{MAX_DATA_FILE_SIZE / 1.megabyte}MB size limit")
+        end
+
+        blob.update_column(:content_type, detected_type) if blob.content_type != detected_type
       end
   end
 end

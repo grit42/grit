@@ -35,6 +35,11 @@ module Grit::Assays
     end
 
     def create
+      if request.content_length.to_i > 510.megabytes
+        render json: { success: false, errors: "Request too large" }, status: :payload_too_large
+        return
+      end
+
       record = Experiment.find(params[:experiment_id])
       permitted = params.permit(files: [])
 
@@ -55,7 +60,16 @@ module Grit::Assays
         return
       end
 
-      record.attached_files.attach(permitted[:files])
+      ActiveRecord::Base.transaction do
+        record.attached_files.attach(permitted[:files])
+        raise ActiveRecord::Rollback unless record.valid?
+      end
+
+      if record.errors[:attached_files].any?
+        render json: { success: false, errors: record.errors[:attached_files].join(", ") }, status: :unprocessable_entity
+        return
+      end
+
       render json: { success: true }
     rescue StandardError => e
       logger.info e.to_s
@@ -115,7 +129,8 @@ module Grit::Assays
 
     def export_many(ids)
       record = Grit::Assays::Experiment.find(params[:experiment_id])
-      archive_filename = "#{record[:name]}_attachments.zip"
+      safe_dir = record[:name].gsub(/[\/\\:*?"<>|\r\n]/, "_")
+      archive_filename = "#{safe_dir}_attachments.zip"
 
       temp_file = Tempfile.new([ archive_filename, ".zip" ])
 
@@ -125,7 +140,8 @@ module Grit::Assays
             next unless ids.blank? || ids.include?(attached_file.id)
 
             attached_file.open do |file|
-              entry_name = "#{record[:name]}_attachments/#{attached_file.filename}"
+              safe_name = File.basename(attached_file.filename.to_s)
+              entry_name = "#{safe_dir}_attachments/#{safe_name}"
 
               zos.put_next_entry(entry_name)
 
