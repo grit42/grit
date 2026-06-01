@@ -381,6 +381,55 @@ module Grit::Assays
       end
     end
 
+    # --- Attachment Validation ---
+
+    describe "attachment validation" do
+      let(:experiment) do
+        Experiment.create!(
+          name: "Attachment Validation Test",
+          assay_model: draft_model,
+          publication_status: draft_status
+        )
+      end
+
+      it "accepts files within size limits" do
+        experiment.attached_files.attach(
+          io: StringIO.new("col1,col2\n1,2"),
+          filename: "results.csv",
+          content_type: "text/csv"
+        )
+        experiment.valid?
+        expect(experiment.errors[:attached_files]).to be_empty
+      end
+
+      it "rejects a file exceeding 100 MB" do
+        experiment.attached_files.attach(
+          io: StringIO.new("x"),
+          filename: "large.csv",
+          content_type: "text/csv"
+        )
+        blob = experiment.attached_files.last.blob
+        allow(blob).to receive(:byte_size).and_return(Experiment::MAX_ATTACHMENT_SIZE + 1)
+        experiment.valid?
+        expect(experiment.errors[:attached_files])
+          .to include(a_string_matching(/exceeds the 100MB size limit/))
+      end
+
+      it "rejects when total attachment size exceeds 500 MB" do
+        3.times do |i|
+          experiment.attached_files.attach(
+            io: StringIO.new("x"),
+            filename: "file_#{i}.csv",
+            content_type: "text/csv"
+          )
+        end
+        allow_any_instance_of(ActiveStorage::Blob).to receive(:byte_size).and_return(200.megabytes)
+        experiment.valid?
+        expect(experiment.errors[:attached_files])
+          .to include(a_string_matching(/total attachment size exceeds/))
+      end
+    end
+
     # --- Metadata Properties ---
 
     describe ".metadata_properties" do
