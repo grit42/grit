@@ -18,6 +18,7 @@
 
 
 require "swagger_helper"
+require "csv"
 
 RSpec.describe "Countries API", type: :request do
   let(:admin) { create(:grit_core_user, :admin, :with_administrator_role) }
@@ -160,5 +161,85 @@ RSpec.describe "Countries API", type: :request do
       delete "/api/grit/core/countries/#{country.id}", as: :json
     }.not_to change(Grit::Core::Country, :count)
     expect(response).to have_http_status(:forbidden)
+  end
+
+  # Security finding B: scope dispatch rejects inherited ActiveRecord methods.
+  describe "scope dispatch security" do
+    it "accepts the default scope (no param)" do
+      get "/api/grit/core/countries", as: :json
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "accepts the explicit 'detailed' scope" do
+      get "/api/grit/core/countries", params: { scope: "detailed" }
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "rejects the inherited 'update_all' scope" do
+      get "/api/grit/core/countries", params: { scope: "update_all" }
+      expect(response).to have_http_status(:bad_request)
+      expect(JSON.parse(response.body)["errors"]).to include("update_all")
+    end
+
+    it "rejects the inherited 'delete_all' scope" do
+      get "/api/grit/core/countries", params: { scope: "delete_all" }
+      expect(response).to have_http_status(:bad_request)
+    end
+
+    it "rejects the inherited 'column_names' scope" do
+      get "/api/grit/core/countries", params: { scope: "column_names" }
+      expect(response).to have_http_status(:bad_request)
+    end
+
+    it "rejects a non-existent scope" do
+      get "/api/grit/core/countries", params: { scope: "nonexistent_scope" }
+      expect(response).to have_http_status(:bad_request)
+    end
+  end
+
+  # Security finding C: CSV export neutralizes formula-injection cell values.
+  describe "CSV export formula injection" do
+    let!(:normal)       { create(:grit_core_country, name: "Denmark",             iso: "DK") }
+    let!(:eq_formula)   { create(:grit_core_country, name: "=CMD|'/c calc'!A1",  iso: "ZZ") }
+    let!(:plus_formula) { create(:grit_core_country, name: "+1+1",               iso: "YY") }
+    let!(:at_formula)   { create(:grit_core_country, name: "@SUM(1,2)",          iso: "XX") }
+
+    before { get "/api/grit/core/countries/export" }
+
+    it "returns a CSV response" do
+      expect(response).to have_http_status(:ok)
+      expect(response.content_type).to include("text/csv")
+    end
+
+    it "leaves normal values unchanged" do
+      rows = CSV.parse(response.body, headers: true)
+      dk_row = rows.find { |r| r["Iso"] == "DK" }
+      expect(dk_row["Name"]).to eq("Denmark")
+    end
+
+    it "prepends ' to values starting with =" do
+      rows = CSV.parse(response.body, headers: true)
+      zz_row = rows.find { |r| r["Iso"] == "ZZ" }
+      expect(zz_row["Name"]).to start_with("'=")
+    end
+
+    it "prepends ' to values starting with +" do
+      rows = CSV.parse(response.body, headers: true)
+      yy_row = rows.find { |r| r["Iso"] == "YY" }
+      expect(yy_row["Name"]).to start_with("'+")
+    end
+
+    it "prepends ' to values starting with @" do
+      rows = CSV.parse(response.body, headers: true)
+      xx_row = rows.find { |r| r["Iso"] == "XX" }
+      expect(xx_row["Name"]).to start_with("'@")
+    end
+
+    it "contains no unescaped leading formula triggers in data rows" do
+      data_rows = response.body.lines.drop(1) # skip header
+      data_rows.each do |line|
+        expect(line).not_to match(/\A[=+\-@]/)
+      end
+    end
   end
 end
