@@ -166,17 +166,9 @@ module Grit::Assays
         total = 0
         attached_files.each do |file|
           blob = file.blob
-          detected_type = blob.open { |io| Marcel::MimeType.for(io, name: blob.filename.to_s) }
-
-          if BLOCKED_ATTACHMENT_TYPES.include?(detected_type)
-            errors.add(:attached_files, "#{blob.filename} has a disallowed file type")
-          end
-
           if blob.byte_size > MAX_ATTACHMENT_SIZE
             errors.add(:attached_files, "#{blob.filename} exceeds the #{MAX_ATTACHMENT_SIZE / 1.megabyte}MB size limit")
           end
-
-          blob.update_column(:content_type, detected_type) if blob.content_type != detected_type
           total += blob.byte_size
         end
 

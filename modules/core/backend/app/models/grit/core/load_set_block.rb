@@ -312,17 +312,14 @@ module Grit::Core
 
       def data_file_is_valid
         blob = data.blob
-        detected_type = blob.open { |io| Marcel::MimeType.for(io, name: blob.filename.to_s) }
 
-        unless ALLOWED_DATA_TYPES.include?(detected_type)
-          errors.add(:data, "#{blob.filename} has a disallowed file type (detected: #{detected_type})")
+        unless ALLOWED_DATA_TYPES.include?(blob.content_type)
+          errors.add(:data, "#{blob.filename} has a disallowed file type (#{blob.content_type})")
         end
 
         if blob.byte_size > MAX_DATA_FILE_SIZE
           errors.add(:data, "#{blob.filename} exceeds the #{MAX_DATA_FILE_SIZE / 1.megabyte}MB size limit")
         end
-
-        blob.update_column(:content_type, detected_type) if blob.content_type != detected_type
       end
   end
 end
