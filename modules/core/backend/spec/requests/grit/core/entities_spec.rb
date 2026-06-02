@@ -73,4 +73,21 @@ RSpec.describe "Entities API — allow-list security", type: :request do
       expect(response).to have_http_status(:ok)
     end
   end
+
+  # Regression for commit f3b5a03 — LoadSet and LoadSetBlock included
+  # GritEntityRecord but never called entity_crud_with, leaving entity_crud[:read]
+  # nil. The authorized_entity guard treats nil read as forbidden (403).
+  describe "entity_crud_with read regression (commit f3b5a03)" do
+    %w[Grit::Core::LoadSet Grit::Core::LoadSetBlock].each do |entity|
+      it "returns 200 for #{entity} fields (not 403)" do
+        get "/api/grit/core/entities/#{entity}/fields", as: :json
+        expect(response).to have_http_status(:ok)
+      end
+
+      it "returns 200 for #{entity} columns (not 403)" do
+        get "/api/grit/core/entities/#{entity}/columns", as: :json
+        expect(response).to have_http_status(:ok)
+      end
+    end
+  end
 end
