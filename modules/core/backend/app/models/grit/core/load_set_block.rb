@@ -20,6 +20,8 @@ module Grit::Core
   class LoadSetBlock < ApplicationRecord
     include Grit::Core::GritEntityRecord
 
+    entity_crud_with read: [ "read:system" ]
+
     belongs_to :status, class_name: "Grit::Core::LoadSetStatus"
     belongs_to :load_set
     has_one_attached :data
