@@ -27,6 +27,7 @@ module Grit::Core
 
     ALLOWED_DATA_TYPES = %w[
       text/plain text/csv text/tab-separated-values application/octet-stream
+      chemical/x-mdl-sdfile
     ].freeze
     MAX_DATA_FILE_SIZE = 200.megabytes
 
