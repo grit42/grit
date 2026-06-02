@@ -89,7 +89,34 @@ module Grit::Core::GritEntityRecord
   # Class Methods
   # ==========================================================================
 
+  # Lazily-computed set of methods inherited from ActiveRecord::Base / Ruby core.
+  # Not computed at module load time to avoid triggering DB connections or class
+  # loading in environments with partial schemas (e.g. per-module test databases).
+  def self.inherited_scope_blocklist
+    @inherited_scope_blocklist ||= (
+      ActiveRecord::Base.public_methods(true) + Object.public_methods(true)
+    ).map(&:to_s).to_set
+  end
+
   class_methods do
+    # True only for scope methods defined by application code (under /modules/),
+    # never for inherited ActiveRecord methods (update_all, delete_by, ...). Used
+    # to gate request-supplied `params[:scope]` dispatch.
+    def entity_scope?(scope)
+      return false unless respond_to?(scope)
+      location = method(scope).source_location
+      if location&.first&.include?("/modules/")
+        true
+      else
+        # source_location is nil (C extension) or outside /modules/ (e.g. an
+        # RSpec stub whose source is in a gem path). Fall back to blocklist:
+        # block known AR/Ruby inherited methods, allow everything else.
+        !Grit::Core::GritEntityRecord.inherited_scope_blocklist.include?(scope.to_s)
+      end
+    rescue NameError
+      false
+    end
+
     # ------------------------------------------------------------------------
     # DSL Methods (Model Configuration)
     # ------------------------------------------------------------------------

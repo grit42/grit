@@ -105,7 +105,7 @@ module Grit::Core::Controller::Readable
         row = ActiveRecord::Base.connection.raw_connection.get_copy_data
         temp_file.write(row.upcase.force_encoding("UTF-8").split(",").map { |h| h.gsub(/_+/, " ").humanize }.join(","))
         while (row = ActiveRecord::Base.connection.raw_connection.get_copy_data)
-          temp_file.write(row.force_encoding("UTF-8"))
+          temp_file.write(neutralize_formula_injection(row.force_encoding("UTF-8")))
         end
       end
 
@@ -181,9 +181,15 @@ module Grit::Core::Controller::Readable
       columns.map { |c| klass.connection.quote_column_name(c) }
     end
 
+    def neutralize_formula_injection(row)
+      cells = CSV.parse_line(row)
+      return row if cells.nil?
+      CSV.generate_line(cells.map { |cell| cell&.match?(/\A[=+\-@\t\r]/) ? "'#{cell}" : cell })
+    end
+
     def get_scope(scope, params)
       klass = get_model(params)
-      klass_scope = klass.send(scope, params) if klass.respond_to?(scope)
+      klass_scope = klass.send(scope, params) if klass.entity_scope?(scope)
       render json: { success: false, errors: "#{klass.name} does not implement scope '#{scope}'" }, status: :bad_request if klass_scope.nil?
       klass_scope
     end

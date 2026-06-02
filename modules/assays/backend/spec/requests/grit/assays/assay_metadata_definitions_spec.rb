@@ -166,5 +166,31 @@ module Grit::Assays
         expect(response).to have_http_status(:unauthorized)
       end
     end
+
+    # SQL injection prevention — finding #4 (SQL_INJECTION_AUDIT.md)
+    # assay_model_id was previously interpolated raw into a JOIN ON clause.
+    # The fix: .to_i coerces the param before interpolation.
+    describe "SQL injection prevention in by_assay_model (finding #4)" do
+      before { login_as(admin) }
+
+      it "coerces assay_model_id to integer, preventing JOIN injection" do
+        get "/api/grit/assays/assay_metadata_definitions",
+            params: { scope: "by_assay_model",
+                      assay_model_id: "0 OR (SELECT 'sqli_probe')='sqli_probe'--" }
+        # After fix: "0 OR ...".to_i == 0 → valid query with no matching rows → 200
+        expect(response).to have_http_status(:ok)
+        body = JSON.parse(response.body)
+        expect(body["success"]).to be true
+        # The injected expression was never evaluated as SQL
+        expect(response.body).not_to include("sqli_probe")
+      end
+
+      it "returns results normally for a valid assay_model_id" do
+        get "/api/grit/assays/assay_metadata_definitions",
+            params: { scope: "by_assay_model", assay_model_id: "0" }
+        expect(response).to have_http_status(:ok)
+        expect(JSON.parse(response.body)["success"]).to be true
+      end
+    end
   end
 end

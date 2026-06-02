@@ -563,4 +563,31 @@ RSpec.describe "Load Set Blocks API", type: :request do
       end
     end
   end
+
+  # SQL injection prevention — finding #3 (SQL_INJECTION_AUDIT.md)
+  # params[:id] is coerced with .to_i before being interpolated into table names
+  # (raw_lsb_<id>, lsb_<id>). A string probe becomes 0, not the probe string.
+  describe "SQL injection prevention (finding #3)" do
+    before { login_as(admin) }
+
+    %w[preview_data errored_data warning_data].each do |action|
+      it "coerces a string id to integer in #{action}, so the probe never reaches the table name" do
+        sql_error = nil
+        begin
+          get "/api/grit/core/load_set_blocks/sqli_probe/#{action}",
+              params: { entity: "Grit::Core::Country" }
+        rescue ActiveRecord::StatementInvalid => e
+          sql_error = e
+        end
+
+        if sql_error
+          # The error is about raw_lsb_0 / lsb_0 (coerced), NOT raw_lsb_sqli_probe
+          expect(sql_error.message).to include("_0")
+          expect(sql_error.message).not_to include("sqli_probe")
+        else
+          expect(response.body).not_to include("sqli_probe")
+        end
+      end
+    end
+  end
 end

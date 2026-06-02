@@ -56,4 +56,30 @@ RSpec.describe "Data Types API", type: :request do
       end
     end
   end
+
+  # SQL injection prevention — finding #5 (SQL_INJECTION_AUDIT.md)
+  # DataType.name (sourced from a user-editable vocabulary name) was previously
+  # interpolated raw into the UNION-ALL query in guess_data_type_for_columns.
+  # The fix: connection.quote() escapes the name so a single quote can't terminate
+  # the SQL literal and inject additional statements.
+  describe "SQL injection prevention in guess_data_type_for_columns (finding #5)" do
+    context "when an entity data type name contains SQL injection characters" do
+      let!(:malicious_data_type) do
+        # Entity data type (is_entity: true) pointing to the Countries table.
+        # The controller processes these and interpolates data_type.name into SQL.
+        # connection.quote() in the fix escapes the single quote, preventing injection.
+        create(:grit_core_data_type, :entity,
+               name: "sqli'; SELECT 'sqli_probe'; --",
+               table_name: "grit_core_countries")
+      end
+
+      it "quotes data type names, preventing second-order SQL injection" do
+        get "/api/grit/core/data_types/guess_data_type_for_columns",
+            params: { columns: { col1: [ "test_value" ] } }
+        expect(response).not_to have_http_status(:internal_server_error)
+        # The probe was never executed — it must not appear as a SQL result value
+        expect(response.body).not_to include("sqli_probe")
+      end
+    end
+  end
 end
