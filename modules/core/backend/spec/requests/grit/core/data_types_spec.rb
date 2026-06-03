@@ -57,12 +57,7 @@ RSpec.describe "Data Types API", type: :request do
     end
   end
 
-  # SQL injection prevention — finding #5 (SQL_INJECTION_AUDIT.md)
-  # DataType.name (sourced from a user-editable vocabulary name) was previously
-  # interpolated raw into the UNION-ALL query in guess_data_type_for_columns.
-  # The fix: connection.quote() escapes the name so a single quote can't terminate
-  # the SQL literal and inject additional statements.
-  describe "SQL injection prevention in guess_data_type_for_columns (finding #5)" do
+  describe "SQL injection prevention in guess_data_type_for_columns" do
     context "when an entity data type name contains SQL injection characters" do
       let!(:malicious_data_type) do
         # Entity data type (is_entity: true) pointing to the Countries table.

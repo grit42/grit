@@ -163,8 +163,7 @@ RSpec.describe "Countries API", type: :request do
     expect(response).to have_http_status(:forbidden)
   end
 
-  # Security finding B: scope dispatch rejects inherited ActiveRecord methods.
-  describe "scope dispatch security" do
+    describe "scope dispatch security" do
     it "accepts the default scope (no param)" do
       get "/api/grit/core/countries"
       expect(response).to have_http_status(:ok)
@@ -197,7 +196,6 @@ RSpec.describe "Countries API", type: :request do
     end
   end
 
-  # SQL injection prevention — finding #1 (sort direction whitelist, SQL_INJECTION_AUDIT.md)
   describe "sort direction SQL injection prevention" do
     it "sanitizes a malicious sort direction to ASC, never executing injected SQL" do
       get "/api/grit/core/countries",
@@ -207,7 +205,6 @@ RSpec.describe "Countries API", type: :request do
     end
   end
 
-  # SQL injection prevention — PR #97 (export column quoting)
   describe "CSV export column SQL injection prevention" do
     it "rejects a malicious column name, not executing it as SQL" do
       get "/api/grit/core/countries/export",
@@ -223,7 +220,6 @@ RSpec.describe "Countries API", type: :request do
     end
   end
 
-  # Security finding C: CSV export neutralizes formula-injection cell values.
   describe "CSV export formula injection" do
     let!(:normal)       { create(:grit_core_country, name: "Denmark",             iso: "DK") }
     let!(:eq_formula)   { create(:grit_core_country, name: "=CMD|'/c calc'!A1",  iso: "ZZ") }

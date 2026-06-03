@@ -158,9 +158,6 @@ RSpec.describe Grit::Compounds::CompoundsController, type: :request do
     end
   end
 
-  # SQL injection prevention — PR #97 (export column quoting)
-  # params[:columns] was passed directly to .select() without quoting.
-  # The fix: quote_export_columns wraps each column name with quote_column_name.
   describe "SQL injection prevention in export columns (PR #97)" do
     before { login_as(admin) }
 

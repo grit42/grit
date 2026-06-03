@@ -151,10 +151,6 @@ module Grit::Assays
       end
     end
 
-    # SQL injection prevention — PR #97 (export column quoting)
-    # params[:columns] was passed directly to .select() without quoting.
-    # The fix: quote_export_columns wraps each column name with quote_column_name.
-    # Route: data_table_rows are nested under data_tables.
     describe "SQL injection prevention in export columns (PR #97)" do
       before { login_as(admin) }
 
@@ -176,9 +172,6 @@ module Grit::Assays
       end
     end
 
-    # SQL injection prevention — PR #98 (data_table_id coercion in DataTableEntity)
-    # params[:data_table_id] was interpolated into a JOIN ON clause without .to_i.
-    # The fix: data_table_id = params[:data_table_id].to_i before interpolation.
     describe "SQL injection prevention in data_table_id (PR #98)" do
       before { login_as(admin) }
 

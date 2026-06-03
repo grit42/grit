@@ -167,10 +167,7 @@ module Grit::Assays
       end
     end
 
-    # SQL injection prevention — finding #4 (SQL_INJECTION_AUDIT.md)
-    # assay_model_id was previously interpolated raw into a JOIN ON clause.
-    # The fix: .to_i coerces the param before interpolation.
-    describe "SQL injection prevention in by_assay_model (finding #4)" do
+    describe "SQL injection prevention in by_assay_model" do
       before { login_as(admin) }
 
       it "coerces assay_model_id to integer, preventing JOIN injection" do

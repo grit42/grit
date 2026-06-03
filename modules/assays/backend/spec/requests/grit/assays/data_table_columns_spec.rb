@@ -84,12 +84,7 @@ module Grit::Assays
       end
     end
 
-    # SQL injection prevention — finding #2 (SQL_INJECTION_AUDIT.md)
-    # The filter property was interpolated raw into a WHERE clause in the raw-SQL
-    # scope path (filter_and_sort_raw_sql). available_entity_attributes returns a
-    # raw SQL string, triggering that path. The fix: quote_sort_property wraps the
-    # property with quote_column_name before interpolation.
-    describe "SQL injection prevention in filter property (finding #2)" do
+    describe "SQL injection prevention in filter property" do
       before { login_as(admin) }
 
       it "quotes a malicious filter property, not executing injected SQL" do
