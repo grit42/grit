@@ -18,8 +18,6 @@
 
 require "swagger_helper"
 
-# Security finding A: entities controller allow-list prevents arbitrary
-# constantize of user-supplied class names.
 RSpec.describe "Entities API — allow-list security", type: :request do
   let(:admin)    { create(:grit_core_user, :admin, :with_administrator_role) }
   let(:no_roles) { create(:grit_core_user) }
