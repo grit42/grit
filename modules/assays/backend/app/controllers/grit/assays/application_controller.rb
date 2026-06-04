@@ -19,6 +19,7 @@
 module Grit
   module Assays
     class ApplicationController < ActionController::API
+      before_action { response.headers["X-Content-Type-Options"] = "nosniff" }
     end
   end
 end

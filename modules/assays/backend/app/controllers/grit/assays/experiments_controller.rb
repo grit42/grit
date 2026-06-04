@@ -88,7 +88,8 @@ module Grit::Assays
 
     def export
       experiment = Grit::Assays::Experiment.find(params[:experiment_id])
-      archive_filename = "#{experiment[:name]}.zip"
+      safe_name = experiment[:name].gsub(/[\/\\:*?"<>|\r\n]/, "_")
+      archive_filename = "#{safe_name}.zip"
       begin
         temp_file = Tempfile.new(archive_filename)
 
@@ -169,7 +170,9 @@ module Grit::Assays
         end
         experiment.attached_files.each do |attached_file|
           attached_file.open do |file|
-            entry_name = "#{experiment[:name]}/attachments/#{attached_file.filename}"
+            safe_dir = experiment[:name].gsub(/[\/\\:*?"<>|\r\n]/, "_")
+            safe_file = File.basename(attached_file.filename.to_s)
+            entry_name = "#{safe_dir}/attachments/#{safe_file}"
             zos.put_next_entry(entry_name)
             IO.copy_stream(file, zos)
           end
