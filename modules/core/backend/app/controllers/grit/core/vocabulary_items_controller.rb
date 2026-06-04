@@ -29,7 +29,7 @@ module Grit::Core
     end
 
     def get_scope(scope, params)
-      klass_scope = Grit::Core::VocabularyItem.send(scope, params) if Grit::Core::VocabularyItem.respond_to?(scope)
+      klass_scope = Grit::Core::VocabularyItem.send(scope, params) if Grit::Core::VocabularyItem.entity_scope?(scope)
       if klass_scope.nil?
         render json: {
           success: false,

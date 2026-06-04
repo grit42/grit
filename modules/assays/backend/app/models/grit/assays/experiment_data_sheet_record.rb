@@ -20,9 +20,6 @@ module Grit::Assays
   class ExperimentDataSheetRecord < ApplicationRecord # TODO: fix not use activerecord
     include Grit::Core::GritEntityRecord
 
-    # No real DB table exists for this class; skip schema-based validation setup.
-    self.infer_rails_validation_from_db = false
-
     entity_crud_with read: [ "read:system" ], write: [ "write:assays" ]
 
     def self.sheet_record_klass(assay_data_sheet_definition_id)

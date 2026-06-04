@@ -106,11 +106,13 @@ module Grit::Core::GritEntityRecord
       return false unless respond_to?(scope)
       location = method(scope).source_location
       if location&.first&.include?("/modules/")
+        # Method is defined in application code — always allow.
         true
       else
-        # source_location is nil (C extension) or outside /modules/ (e.g. an
-        # RSpec stub whose source is in a gem path). Fall back to blocklist:
-        # block known AR/Ruby inherited methods, allow everything else.
+        # source_location is nil (C extension) or points outside /modules/
+        # (inherited AR method or a test stub whose source is in a gem path).
+        # Fall back to blocklist: block known AR/Ruby inherited methods,
+        # allow everything else (including stubbed application scopes).
         !Grit::Core::GritEntityRecord.inherited_scope_blocklist.include?(scope.to_s)
       end
     rescue NameError

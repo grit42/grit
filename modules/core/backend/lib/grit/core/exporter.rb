@@ -27,7 +27,7 @@ module Grit::Core
         temp_file.write(CSV.generate_line(columns.map { |c| c["display_name"] }, col_sep: col_sep))
         ActiveRecord::Base.connection.raw_connection.copy_data(sql) do
           while (row = ActiveRecord::Base.connection.raw_connection.get_copy_data)
-            temp_file.write(row.force_encoding("UTF-8"))
+            temp_file.write(neutralize_formula_injection(row.force_encoding("UTF-8")))
           end
         end
 
@@ -38,5 +38,12 @@ module Grit::Core
         temp_file.unlink
       end
     end
+
+    def self.neutralize_formula_injection(row)
+      cells = CSV.parse_line(row)
+      return row if cells.nil?
+      CSV.generate_line(cells.map { |cell| cell&.match?(/\A[=+\-@\t\r]/) ? "'#{cell}" : cell })
+    end
+    private_class_method :neutralize_formula_injection
   end
 end

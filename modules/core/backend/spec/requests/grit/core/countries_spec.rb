@@ -163,9 +163,9 @@ RSpec.describe "Countries API", type: :request do
     expect(response).to have_http_status(:forbidden)
   end
 
-    describe "scope dispatch security" do
+  describe "scope dispatch security" do
     it "accepts the default scope (no param)" do
-      get "/api/grit/core/countries"
+      get "/api/grit/core/countries", as: :json
       expect(response).to have_http_status(:ok)
     end
 
