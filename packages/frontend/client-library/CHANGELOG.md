@@ -1,3 +1,10 @@
+## 0.12.0
+
+### 🩹 Fixes
+
+- `Dialog` component `className` applied after default styles
+- `Tabs` component `className` applied after default styles
+
 ## 0.8.1
 
 ### 🩹 Fixes

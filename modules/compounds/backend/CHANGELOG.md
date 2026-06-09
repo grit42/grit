@@ -1,3 +1,13 @@
+## 0.12.0
+
+### 🚀 Features
+
+- permission-based roles
+
+### 🩹 Fixes
+
+- sanitize CSV export columns
+
 ## 0.11.0
 
 ### 🚀 Features

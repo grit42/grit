@@ -1,3 +1,9 @@
+## 0.12.0
+
+### 🚀 Features
+
+- permission-based roles
+
 ## 0.11.0
 
 ### 🚀 Features
