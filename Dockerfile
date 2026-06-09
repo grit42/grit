@@ -5,7 +5,7 @@
 # docker run -d -p 80:80 -p 443:443 --name my-app -e RAILS_MASTER_KEY=<value from config/master.key> my-app
 
 # Make sure RUBY_VERSION matches the Ruby version in .ruby-version
-ARG RUBY_VERSION=3.4.8
+ARG RUBY_VERSION=3.4.9
 ARG APP=grit
 FROM docker.io/library/ruby:$RUBY_VERSION-slim AS base
 
@@ -37,14 +37,14 @@ ENV APP_WORKDIR=/workspace/${APP_DIR}
 
 WORKDIR /workspace
 
-# Install base packages
-RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y nodejs npm && \
-    rm -rf /var/lib/apt/lists /var/cache/apt/archives
+RUN apt-get update && apt-get install -y curl ca-certificates \
+  && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+  && apt-get install -y nodejs \
+  && rm -rf /var/lib/apt/lists/*
 
 RUN gem update --system
 
-RUN npm install -g pnpm@10.30.1
+RUN npm install -g pnpm@11.5.2
 
 COPY --parents package.json pnpm-workspace.yaml pnpm-lock.yaml nx.json tsconfig.base.json ./**/package.json ./
 
@@ -68,9 +68,9 @@ FROM node:lts AS docs
 
 WORKDIR /docs
 
-RUN npm install -g pnpm@10.30.1
+RUN npm install -g pnpm@11.5.2
 
-COPY grit-docs/package.json grit-docs/pnpm-lock.yaml ./
+COPY grit-docs/package.json grit-docs/pnpm-lock.yaml grit-docs/pnpm-workspace.yaml ./
 
 RUN pnpm install --frozen-lockfile
 

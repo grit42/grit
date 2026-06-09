@@ -4,6 +4,15 @@ packages:
   - packages/frontend/*
   - tools/ruby
 
+allowBuilds:
+  '@parcel/watcher': true
+  '@swc/core': true
+  es5-ext: true
+  esbuild: true
+  lefthook: true
+  nx: true
+  unrs-resolver: true
+
 catalog:
   "@eslint/js": ^9.39.3
   "@playwright/test": ^1.58.2
@@ -29,7 +38,7 @@ catalog:
   react: ^19.2.4
   react-dom: ^19.2.4
   react-router-dom: ^7.13.1
-  sass-embedded: "1"
+  sass-embedded: "^1.100.0"
   typescript: ~5.9.3
   typescript-eslint: ^8.56.1
   vite: ^7.3.1
