@@ -2,17 +2,17 @@
   "name": "@grit42/spreadsheet",
   "author": "Jonathan Rebourt, grit42 <jonny@grit42.com>",
   "license": "GPL-3.0-or-later",
-  "version": "0.6.1",
+  "version": "0.7.1",
   "type": "module",
   "scripts": {
     "tsc": "tsc -b",
     "build": "tsc -b ./tsconfig.lib.json && vite build",
-    "build:watch": "vite build --watch --emptyOutDir=false",
     "lint": "eslint . --fix",
     "lint:check": "eslint .",
-    "format": "prettier . -w",
-    "format:check": "prettier . -c",
-    "test": "vitest"
+    "format": "prettier . -w --ignore-path ../../../.prettierignore",
+    "format:check": "prettier . -c --ignore-path ../../../.prettierignore",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "exports": {
     ".": {

@@ -19,5 +19,9 @@
 module Grit::Core
   class CountriesController < ApplicationController
     include Grit::Core::GritEntityController
+
+    def permitted_params
+      %i[ name iso ]
+    end
   end
 end

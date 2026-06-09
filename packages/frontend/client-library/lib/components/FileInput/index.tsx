@@ -16,7 +16,7 @@
  * @grit42/client-library. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import {
   DropzoneProps as ReactDropZoneProps,
   useDropzone,
@@ -56,10 +56,14 @@ const FileInput = ({
   const [files, setFiles] = useState<FileWithPath[]>(
     overrideFiles ?? initialFiles ?? [],
   );
+  const [prevOverrideFiles, setPrevOverrideFiles] = useState<FileWithPath[]>(
+    overrideFiles ?? [],
+  );
 
-  useEffect(() => {
+  if (overrideFiles !== prevOverrideFiles) {
+    setPrevOverrideFiles(overrideFiles ?? []);
     setFiles(overrideFiles ?? []);
-  }, [overrideFiles]);
+  }
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     ...props,
@@ -87,7 +91,13 @@ const FileInput = ({
 
   const removeFile = useCallback(
     (file: FileWithPath) => {
-      const newFileList = files.filter((x) => x.path !== file.path);
+      const newFileList = files.filter(
+        (x) =>
+          (x.path && file.path && x.path !== file.path) ||
+          x.name !== file.name ||
+          x.lastModified !== file.lastModified ||
+          x.size !== file.size,
+      );
 
       setFiles(newFileList);
       if (onDrop) onDrop(newFileList);
@@ -120,7 +130,12 @@ const FileInput = ({
       <div className={styles.files}>
         {files.map((file) => {
           return (
-            <div key={file.path ?? file.name} className={styles.file}>
+            <div
+              key={
+                file.path ?? `${file.name}-${file.lastModified}-${file.size}`
+              }
+              className={styles.file}
+            >
               <p>{file.name}</p>
               <DeleteIcon
                 className={styles.icon}

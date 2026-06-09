@@ -1,3 +1,4 @@
+/* eslint-disable no-empty-pattern */
 import { basename, resolve } from "path";
 import { readFile } from "fs/promises";
 

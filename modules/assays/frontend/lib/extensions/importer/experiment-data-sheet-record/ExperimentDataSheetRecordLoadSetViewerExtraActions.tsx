@@ -1,11 +1,13 @@
 import { Button } from "@grit42/client-library/components";
-import { LoadSetViewerExtraActionsProps } from "@grit42/core";
+import { LoadSetBlockViewerExtraActionsProps } from "@grit42/core";
 import { Link } from "react-router-dom";
 
-const ExperimentDataSheetRecordLoadSetViewerExtraActions = ({loadSet}: LoadSetViewerExtraActionsProps) => {
+const ExperimentDataSheetRecordLoadSetViewerExtraActions = ({
+  loadSetBlock,
+}: LoadSetBlockViewerExtraActionsProps) => {
   return (
     <Link
-      to={`/assays/experiments/${loadSet.experiment_id}/sheets/${loadSet.experiment_data_sheet_id}`}
+      to={`/assays/experiments/${loadSetBlock.experiment_id}/sheets/${loadSetBlock.assay_data_sheet_definition_id}`}
     >
       <Button color="secondary">Go to experiment</Button>
     </Link>

@@ -109,7 +109,8 @@ const CloneAssayDataSheetDataTableColumn = () => {
             "assay_data_sheet_column_id",
             "entity_attribute_name",
             "source_type",
-            "pivots",
+            "experiment_ids",
+            "metadata_filters",
             "aggregation_method",
           ].includes(f.name),
       ),
@@ -142,11 +143,11 @@ const CloneAssayDataSheetDataTableColumn = () => {
             assay_data_sheet_definition_id__name:
               data.assay_data_sheet_definition_id__name,
             data_type_id: data.data_type_id,
-            data_type_id__name:
-              data.data_type_id__name,
+            data_type_id__name: data.data_type_id__name,
             aggregation_method: data.aggregation_method,
             sort: data.sort,
-            pivots: data.pivots,
+            experiment_ids: data.experiment_ids,
+            metadata_filters: data.metadata_filters,
             source_type: "assay_data_sheet_column",
           }
         : null,
@@ -163,8 +164,7 @@ const CloneAssayDataSheetDataTableColumn = () => {
     );
   }
 
-  if (isLoading || isDataTableColumnFieldsLoading)
-    return <Spinner />;
+  if (isLoading || isDataTableColumnFieldsLoading) return <Spinner />;
   if (
     isError ||
     !dataTableColumn ||
@@ -172,9 +172,7 @@ const CloneAssayDataSheetDataTableColumn = () => {
     !dataTableColumnFields
   ) {
     return (
-      <ErrorPage
-        error={error ?? dataTableColumnFieldsError}
-      >
+      <ErrorPage error={error ?? dataTableColumnFieldsError}>
         <Link to="..">
           <Button>Back</Button>
         </Link>

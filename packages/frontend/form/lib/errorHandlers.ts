@@ -17,28 +17,23 @@
  */
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { DeepKeys, FormApi, Validator } from "@tanstack/react-form";
+import { AnyFormApi, DeepKeys } from "@tanstack/react-form";
 
 export type FormData = Record<string, any>;
 
-type SubmitFnProps<
-  TFormData extends FormData,
-  TFormValidator extends Validator<TFormData, unknown> | undefined = undefined,
-> = {
+type SubmitFnProps<TFormData extends FormData> = {
   value: TFormData;
-  formApi: FormApi<TFormData, TFormValidator>;
+  formApi: AnyFormApi;
 };
 
-type SubmitFn<
-  TFormData extends FormData,
-  TFormValidator extends Validator<TFormData, unknown> | undefined = undefined,
-> = (props: SubmitFnProps<TFormData, TFormValidator>) => any | Promise<any>;
+type SubmitFn<TFormData extends FormData> = (
+  props: SubmitFnProps<TFormData>,
+) => any | Promise<any>;
 
-export function genericErrorHandler<
-  TFormData extends FormData,
-  TFormValidator extends Validator<TFormData, unknown> | undefined = undefined,
->(submitFn: SubmitFn<TFormData, TFormValidator>) {
-  return async (props: SubmitFnProps<TFormData, TFormValidator>) => {
+export function genericErrorHandler<TFormData extends FormData>(
+  submitFn: SubmitFn<TFormData>,
+) {
+  return async (props: SubmitFnProps<TFormData>) => {
     try {
       await submitFn(props);
     } catch (e) {

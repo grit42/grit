@@ -22,7 +22,7 @@ module Grit::Core
 
     display_column "name"
 
-    entity_crud_with read: []
+    entity_crud_with read: [ "read:system" ]
 
     def self.entity_columns(**args)
       @entity_columns ||= self.entity_columns_from_properties(self.db_properties, [ "id", "created_at", "updated_at", "created_by", "updated_by", "meta", "table_name", "is_entity" ])
@@ -64,6 +64,13 @@ module Grit::Core
       model_scope = model.send(scope, params)
       model_scope = model_scope.where(vocabulary_id: self.meta["vocabulary_id"]) if model == Grit::Core::VocabularyItem
       model_scope
+    end
+
+    def sql_name
+      return "bigint" if name == "integer" || is_entity
+      return "varchar" if name == "string"
+      return "timestamp without time zone" if name == "datetime"
+      name
     end
   end
 end

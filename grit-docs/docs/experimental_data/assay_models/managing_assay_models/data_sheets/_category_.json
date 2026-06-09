@@ -1,0 +1,9 @@
+{
+    "label": "Managing Data Sheets",
+    "description": "Define the shape of your experimental data",
+    "position": 1,
+    "link": {
+      "type": "doc",
+      "id": "index"
+    }
+  }

@@ -17,18 +17,17 @@
  */
 
 import { Table, useSetupTableState } from "@grit42/table";
-import { useCallback, useEffect } from "react";
-import { useToolbar } from "@grit42/core/Toolbar";
+import { useCallback, useEffect, useMemo } from "react";
+import { useToolbar } from "@grit42/core";
 import Circle1NewIcon from "@grit42/client-library/icons/Circle1New";
-import CogIcon from "@grit42/client-library/icons/Cog";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Button, ErrorPage, Spinner } from "@grit42/client-library/components";
 import { useTableColumns } from "@grit42/core/utils";
-import styles from "./assayMetadataDefinitions.module.scss";
 import {
   useAssayMetadataDefinitionColumns,
-  useAssayMetadataDefinitions,
+  useInfiniteAssayMetadataDefinitions,
 } from "../../../../queries/assay_metadata_definitions";
+import { CenteredColumnLayout } from "@grit42/client-library/layouts";
 
 const DEFAULT_COLUMN_SIZES = {
   name: 200,
@@ -38,23 +37,19 @@ const DEFAULT_COLUMN_SIZES = {
 const AssayMetadataDefinitionsTable = () => {
   const registerToolbarActions = useToolbar();
   const navigate = useNavigate();
-  const { pathname } = useLocation();
-  const { data: assayMetadataDefinitions } = useAssayMetadataDefinitions();
-  const { data: assayMetadataDefinitionColumns } = useAssayMetadataDefinitionColumns(undefined, {
-    select: (data) =>
-      data.map((d) => ({
-        ...d,
-        defaultColumnSize:
-          DEFAULT_COLUMN_SIZES[d.name as keyof typeof DEFAULT_COLUMN_SIZES],
-      })),
-  });
+  const { data: assayMetadataDefinitionColumns } =
+    useAssayMetadataDefinitionColumns(undefined, {
+      select: (data) =>
+        data.map((d) => ({
+          ...d,
+          defaultColumnSize:
+            DEFAULT_COLUMN_SIZES[d.name as keyof typeof DEFAULT_COLUMN_SIZES],
+        })),
+    });
 
   const tableColumns = useTableColumns(assayMetadataDefinitionColumns);
 
-  const navigateToNew = useCallback(
-    () => navigate("new"),
-    [navigate, pathname],
-  );
+  const navigateToNew = useCallback(() => navigate("new"), [navigate]);
 
   useEffect(() => {
     return registerToolbarActions({
@@ -65,58 +60,64 @@ const AssayMetadataDefinitionsTable = () => {
           label: "New assay metadata",
           onClick: navigateToNew,
         },
-        {
-          id: "ASSAY_SETTINGS",
-          icon: <CogIcon />,
-          label: "Assay settings",
-          requiredRoles: [
-            "Administrator",
-            "AssayAdministrator",
-          ],
-          onClick: () =>
-            navigate("/assays/settings")
-        },
       ],
     });
-  }, [registerToolbarActions, navigateToNew, pathname]);
+  }, [registerToolbarActions, navigateToNew]);
 
   const tableState = useSetupTableState(
     "admin-assay_metadata_definitions-list",
     tableColumns,
-    {
-      settings: {
-        disableColumnReorder: true,
-        disableVisibilitySettings: true,
-      },
-    },
+  );
+
+  const {
+    data,
+    isFetching,
+    isFetchingNextPage,
+    isError,
+    error,
+    fetchNextPage,
+  } = useInfiniteAssayMetadataDefinitions(
+    tableState.sorting,
+    tableState.filters,
+  );
+
+  const flatData = useMemo(
+    () => data?.pages.flatMap(({ data }) => data) ?? [],
+    [data],
   );
 
   return (
+    <CenteredColumnLayout>
       <Table
         header="Assay metadata"
         tableState={tableState}
         headerActions={<Button onClick={navigateToNew}>New</Button>}
-        className={styles.table}
-        data={assayMetadataDefinitions}
+        fitContent
+        data={flatData}
         onRowClick={(row) => navigate(`${row.original.id}`)}
+        loading={isFetching}
+        noDataMessage={isError ? error : undefined}
+        pagination={{
+          fetchNextPage,
+          isFetchingNextPage,
+          totalRows: data?.pages[0]?.total,
+        }}
       />
+    </CenteredColumnLayout>
   );
 };
 
 const AssayMetadataDefinitionsTableWrapper = () => {
-    const {
-      isLoading: isAssayMetadataDefinitionColumnsLoading,
-      isError: isAssayMetadataDefinitionColumnsError,
-      error: assayMetadataDefinitionColumnsError,
-    } = useAssayMetadataDefinitionColumns();
+  const {
+    isLoading: isAssayMetadataDefinitionColumnsLoading,
+    isError: isAssayMetadataDefinitionColumnsError,
+    error: assayMetadataDefinitionColumnsError,
+  } = useAssayMetadataDefinitionColumns();
 
-    const { isLoading, isError, error } = useAssayMetadataDefinitions();
-
-    if (isAssayMetadataDefinitionColumnsLoading || isLoading)
-      return <Spinner />;
-    if (isAssayMetadataDefinitionColumnsError || isError)
-      return <ErrorPage error={assayMetadataDefinitionColumnsError ?? error} />;
-  return <AssayMetadataDefinitionsTable />
-}
+  if (isAssayMetadataDefinitionColumnsLoading) return <Spinner />;
+  if (isAssayMetadataDefinitionColumnsError)
+    return <ErrorPage error={assayMetadataDefinitionColumnsError} />;
+  return <AssayMetadataDefinitionsTable />;
+};
 
 export default AssayMetadataDefinitionsTableWrapper;

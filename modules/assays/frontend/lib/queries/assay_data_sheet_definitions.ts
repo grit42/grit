@@ -62,7 +62,9 @@ export const useAssayDataSheetDefinitions = (
   sort?: SortingState,
   filter?: Filter[],
   params: URLParams = {},
-  queryOptions: Partial<UseQueryOptions<AssayDataSheetDefinitionData[], string>> = {},
+  queryOptions: Partial<
+    UseQueryOptions<AssayDataSheetDefinitionData[], string>
+  > = {},
 ) => {
   return useEntityData<AssayDataSheetDefinitionData>(
     "grit/assays/assay_data_sheet_definitions",
@@ -94,7 +96,9 @@ export const useAssayDataSheetDefinitions = (
 export const useAssayDataSheetDefinition = (
   assayDataSheetDefinitionId: string | number,
   params: URLParams = {},
-  queryOptions: Partial<UseQueryOptions<AssayDataSheetDefinitionData | null, string>> = {},
+  queryOptions: Partial<
+    UseQueryOptions<AssayDataSheetDefinitionData | null, string>
+  > = {},
 ) => {
   return useEntityDatum<AssayDataSheetDefinitionData>(
     "grit/assays/assay_data_sheet_definitions",

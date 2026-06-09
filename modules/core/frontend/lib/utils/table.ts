@@ -26,7 +26,7 @@ import { EntityData, EntityPropertyDef } from "../features/entities";
 import { useMemo } from "react";
 
 export function getTableColumns<T extends EntityData>(
-  properties?: EntityPropertyDef<T>[],
+  properties?: EntityPropertyDef[],
   columnTypeDefs?: Record<string, ColumnTypeDef>,
 ): GritTypedColumnDef<T>[] {
   if (!properties) return [];
@@ -51,7 +51,7 @@ export function getTableColumns<T extends EntityData>(
 }
 
 export function useTableColumns<T extends EntityData>(
-  properties?: EntityPropertyDef<T>[],
+  properties?: EntityPropertyDef[],
 ): GritColumnDef<T>[] {
   const columnTypeDefs = useColumnTypeDefs();
   return useMemo(

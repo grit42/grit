@@ -95,7 +95,8 @@ const CompoundTypeManagerPage = () => {
           compoundPropertiesError ??
           compoundPropertyColumnsError ??
           batchPropertiesError ??
-          batchPropertyColumnsError}
+          batchPropertyColumnsError
+        }
       />
     );
   }

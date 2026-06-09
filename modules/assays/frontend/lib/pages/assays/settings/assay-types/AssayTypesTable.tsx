@@ -17,18 +17,17 @@
  */
 
 import { Table, useSetupTableState } from "@grit42/table";
-import { useCallback, useEffect } from "react";
-import { useToolbar } from "@grit42/core/Toolbar";
+import { useCallback, useEffect, useMemo } from "react";
+import { useToolbar } from "@grit42/core";
 import Circle1NewIcon from "@grit42/client-library/icons/Circle1New";
-import CogIcon from "@grit42/client-library/icons/Cog";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button, ErrorPage, Spinner } from "@grit42/client-library/components";
 import { useTableColumns } from "@grit42/core/utils";
-import styles from "./assayTypes.module.scss";
 import {
   useAssayTypeColumns,
-  useAssayTypes,
+  useInfiniteAssayTypes,
 } from "../../../../queries/assay_types";
+import { CenteredColumnLayout } from "@grit42/client-library/layouts";
 
 const DEFAULT_COLUMN_SIZES = {
   name: 200,
@@ -39,7 +38,6 @@ const AssayTypesTable = () => {
   const registerToolbarActions = useToolbar();
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const { data: assayTypes } = useAssayTypes();
   const { data: assayTypeColumns } = useAssayTypeColumns(undefined, {
     select: (data) =>
       data.map((d) => ({
@@ -51,10 +49,7 @@ const AssayTypesTable = () => {
 
   const tableColumns = useTableColumns(assayTypeColumns);
 
-  const navigateToNew = useCallback(
-    () => navigate("new"),
-    [navigate, pathname],
-  );
+  const navigateToNew = useCallback(() => navigate("new"), [navigate]);
 
   useEffect(() => {
     return registerToolbarActions({
@@ -65,58 +60,58 @@ const AssayTypesTable = () => {
           label: "New assay type",
           onClick: navigateToNew,
         },
-        {
-          id: "ASSAY_SETTINGS",
-          icon: <CogIcon />,
-          label: "Assay settings",
-          requiredRoles: [
-            "Administrator",
-            "AssayAdministrator",
-          ],
-          onClick: () =>
-            navigate("/assays/settings")
-        },
       ],
     });
   }, [registerToolbarActions, navigateToNew, pathname]);
 
-  const tableState = useSetupTableState(
-    "admin-assay_types-list",
-    tableColumns,
-    {
-      settings: {
-        disableColumnReorder: true,
-        disableVisibilitySettings: true,
-      },
-    },
+  const tableState = useSetupTableState("admin-assay_types-list", tableColumns);
+
+  const {
+    data,
+    isFetching,
+    isFetchingNextPage,
+    isError,
+    error,
+    fetchNextPage,
+  } = useInfiniteAssayTypes(tableState.sorting, tableState.filters);
+
+  const flatData = useMemo(
+    () => data?.pages.flatMap(({ data }) => data) ?? [],
+    [data],
   );
 
   return (
+    <CenteredColumnLayout>
       <Table
         header="Assay types"
         tableState={tableState}
         headerActions={<Button onClick={navigateToNew}>New</Button>}
-        className={styles.typesTable}
-        data={assayTypes}
+        fitContent
+        data={flatData}
         onRowClick={(row) => navigate(`${row.original.id}`)}
+        loading={isFetching}
+        noDataMessage={isError ? error : undefined}
+        pagination={{
+          fetchNextPage,
+          isFetchingNextPage,
+          totalRows: data?.pages[0]?.total,
+        }}
       />
+    </CenteredColumnLayout>
   );
 };
 
 const AssayTypesTableWrapper = () => {
-    const {
-      isLoading: isAssayTypeColumnsLoading,
-      isError: isAssayTypeColumnsError,
-      error: assayTypeColumnsError,
-    } = useAssayTypeColumns();
+  const {
+    isLoading: isAssayTypeColumnsLoading,
+    isError: isAssayTypeColumnsError,
+    error: assayTypeColumnsError,
+  } = useAssayTypeColumns();
 
-    const { isLoading, isError, error } = useAssayTypes();
-
-    if (isAssayTypeColumnsLoading || isLoading)
-      return <Spinner />;
-    if (isAssayTypeColumnsError || isError)
-      return <ErrorPage error={assayTypeColumnsError ?? error} />;
-  return <AssayTypesTable />
-}
+  if (isAssayTypeColumnsLoading) return <Spinner />;
+  if (isAssayTypeColumnsError)
+    return <ErrorPage error={assayTypeColumnsError} />;
+  return <AssayTypesTable />;
+};
 
 export default AssayTypesTableWrapper;

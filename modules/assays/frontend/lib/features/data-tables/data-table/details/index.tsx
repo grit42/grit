@@ -18,7 +18,6 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Surface } from "@grit42/client-library/components";
 import {
   DataTableData,
   useDataTable,
@@ -26,9 +25,11 @@ import {
 } from "../../queries/data_tables";
 import {
   Form,
+  FormBanner,
   FormControls,
   FormField,
   FormFieldDef,
+  FormFields,
   genericErrorHandler,
   getVisibleFieldData,
   useForm,
@@ -37,21 +38,17 @@ import {
   useCreateEntityMutation,
   useDestroyEntityMutation,
   useEditEntityMutation,
-  useHasRoles,
+  useHasPermission,
 } from "@grit42/core";
 import { useQueryClient } from "@grit42/api";
-import styles from "./dataTableDetails.module.scss";
+import { CenteredSurface } from "@grit42/client-library/layouts";
 interface Props {
   dataTableId: string | number;
 }
 
 const DataTableDetails = ({ dataTableId }: Props) => {
   const navigate = useNavigate();
-  const canEditDataTable = useHasRoles([
-    "Administrator",
-    "AssayAdministrator",
-    "AssayUser",
-  ]);
+  const canEditDataTable = useHasPermission("write:analysis");
 
   const { data: dataTable } = useDataTable(dataTableId) as {
     data: DataTableData;
@@ -83,7 +80,7 @@ const DataTableDetails = ({ dataTableId }: Props) => {
     "grit/assays/data_tables",
   );
 
-  const form = useForm<Partial<DataTableData>>({
+  const form = useForm({
     defaultValues: formData,
     onSubmit: genericErrorHandler(async ({ value: formValue, formApi }) => {
       const value = getVisibleFieldData<Partial<DataTableData>>(
@@ -134,27 +131,22 @@ const DataTableDetails = ({ dataTableId }: Props) => {
   };
 
   return (
-    <Surface className={styles.dataTable}>
-      <Form<Partial<DataTableData>> form={form}>
-        <div className={styles.dataTableForm}>
-          {form.state.errorMap.onSubmit && (
-            <div className={styles.dataTableFormError}>
-              {form.state.errorMap.onSubmit?.toString()}
-            </div>
-          )}
+    <CenteredSurface>
+      <Form form={form}>
+        <FormFields columns={1}>
+          <FormBanner content={form.state.errorMap.onSubmit} />
           {fields.map((f) => (
-            <FormField form={form} fieldDef={f} key={f.name} />
+            <FormField fieldDef={f} key={f.name} />
           ))}
-        </div>
+        </FormFields>
         <FormControls
-          form={form}
           onDelete={onDelete}
           showDelete={!!dataTable.id && canEditDataTable}
           showCancel={!dataTable.id}
           onCancel={() => navigate("..")}
         />
       </Form>
-    </Surface>
+    </CenteredSurface>
   );
 };
 

@@ -1,0 +1,106 @@
+
+  Mrv0541 02231217582D          
+
+  6  5  0  0  0  0  0  0  0  0999 V2000
+    3.4641   -0.5000   -0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    2.5981   -0.0000   -0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.7321   -0.5000   -0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.7321   -1.5000   -0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+    0.8660   -0.0000   -0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0
+    0.0000   -0.5000   -0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+  2  1  1  0  0  0  0
+  3  2  1  0  0  0  0
+  4  3  2  0  0  0  0
+  5  3  1  0  0  0  0
+  6  5  1  0  0  0  0
+M  END
+
+> <DATABASE_ID>
+DC04874
+
+> <DATABASE_NAME>
+drugbank
+
+> <SMILES>
+N.[Cl-].[Cl-].[Pt++].CC1=CC=CC=N1
+
+> <INCHI_IDENTIFIER>
+InChI=1S/C6H7N.2ClH.H3N.Pt/c1-6-4-2-3-5-7-6;;;;/h2-5H,1H3;2*1H;1H3;/q;;;;+2/p-2
+
+> <INCHI_KEY>
+InChIKey=IIMIOEBMYPRQGU-UHFFFAOYSA-L
+
+> <JCHEM_ACCEPTOR_COUNT>
+1
+
+> <JCHEM_AVERAGE_POLARIZABILITY>
+10.38540127893755
+
+> <JCHEM_BIOAVAILABILITY>
+1
+
+> <JCHEM_DONOR_COUNT>
+0
+
+> <JCHEM_EXACT_MASS>
+374.986878193
+
+> <JCHEM_FORMAL_CHARGE>
+0
+
+> <JCHEM_FORMULA>
+C6H10Cl2N2Pt
+
+> <JCHEM_GHOSE_FILTER>
+0
+
+> <JCHEM_IUPAC>
+platinum(2+) ion 2-methylpyridine amine dichloride
+
+> <JCHEM_LOGP>
+0.8869435579999998
+
+> <JCHEM_MASS>
+376,147
+
+> <JCHEM_MDDR_LIKE_RULE>
+0
+
+> <JCHEM_NUMBER_OF_RINGS>
+1
+
+> <JCHEM_PHYSIOLOGICAL_CHARGE>
+0
+
+> <JCHEM_PKA_STRONGEST_BASIC>
+5.8116853236678585
+
+> <JCHEM_POLAR_SURFACE_AREA>
+12.89
+
+> <JCHEM_REFRACTIVITY>
+28.4926
+
+> <JCHEM_ROTATABLE_BOND_COUNT>
+0
+
+> <JCHEM_RULE_OF_FIVE>
+1
+
+> <JCHEM_TRADITIONAL_IUPAC>
+platinum(2+) ion α-methylpyridine amine dichloride
+
+> <JCHEM_VEBER_RULE>
+1
+
+> <DRUGBANK_ID>
+DB04874
+
+> <DRUG_GROUPS>
+investigational
+
+> <GENERIC_NAME>
+Picoplatin
+
+$$$$
+

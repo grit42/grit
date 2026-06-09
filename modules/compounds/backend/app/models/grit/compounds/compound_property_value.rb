@@ -33,11 +33,8 @@ module Grit::Compounds
 
       errors.add(value_prop, "cannot be blank") if required && (value.nil? || value.blank?)
 
-      if data_type.name == "integer" && !value.nil? && !value.blank? && value.to_i.bit_length > self.class.columns.find { |c| c.name == "integer_value" } &.sql_type_metadata.limit * 8
+      if data_type.name == "integer" && !value.nil? && !value.blank? && (value < -(2**53-1) || value > 2**53-1)
         errors.add(value_prop, "is out of range")
-      elsif data_type.name == "float" && !value.nil? && !value.blank?
-        errors.add(value_prop, "is out of range") if value.to_f.infinite?
-        errors.add(value_prop, "is not a number") if value.to_f.nan?
       end
     end
   end

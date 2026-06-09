@@ -1,4 +1,5 @@
 import { dataSheetDefinitionSchema } from "./schema";
+import defEditorStyles from "./dataSheetDefinitionEditor.module.scss";
 import {
   DATA_SHEET_FIELDS,
   DataSheetDefinition,
@@ -9,7 +10,7 @@ import {
   Surface,
 } from "@grit42/client-library/components";
 import { useFormInputs } from "@grit42/form";
-import z from "zod";
+import { z } from "zod";
 
 const DataSheetForm = ({
   errorTree,
@@ -29,15 +30,7 @@ const DataSheetForm = ({
   const inputs = useFormInputs();
 
   return (
-    <Surface
-      style={{
-        display: "grid",
-        gridTemplateColumns: "1fr",
-        gridAutoRows: "min-content",
-        maxWidth: "40ch",
-        gap: "var(--spacing)",
-      }}
-    >
+    <Surface className={defEditorStyles.formContainer}>
       {DATA_SHEET_FIELDS.map((fieldDef) => {
         const Input = inputs[fieldDef.type] ?? inputs["default"];
         return (

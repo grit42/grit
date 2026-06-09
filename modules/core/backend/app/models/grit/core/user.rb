@@ -18,6 +18,8 @@
 
 module Grit::Core
   class User < ApplicationRecord
+    cattr_accessor :infer_rails_validation_from_db
+    self.infer_rails_validation_from_db = false
     include Grit::Core::GritEntityRecord
 
     self.table_name = "grit_core_users"
@@ -25,7 +27,7 @@ module Grit::Core
 
 
     display_columns [ "name", "login" ]
-    entity_crud_with read: [], create: [ "Administrator" ], update: [ "Administrator" ], destroy: [ "Administrator" ]
+    entity_crud_with read: [ "read:system" ], write: [ "admin:users" ]
 
     EMAIL = /
     \A
@@ -81,6 +83,12 @@ module Grit::Core
                 if: :require_password?
               }
 
+    FORGOT_TOKEN_EXPIRY_HOURS = 1
+    TWO_FACTOR_MAX_ATTEMPTS = 5
+    TWO_FACTOR_LOCKOUT_MINUTES = 15
+    TWO_FACTOR_EXPIRY_MINUTES = 10
+    PASSWORD_EXPIRY_DAYS = ENV.fetch("PASSWORD_EXPIRY_DAYS", 90).to_i
+
     before_validation :random_password, on: :create
     before_create :set_default_values
     before_create :check_user
@@ -108,8 +116,14 @@ module Grit::Core
     "last_login_at",
     "current_login_ip",
     "last_login_ip",
+    "forgot_token",
+    "activation_token",
+    "single_access_token",
     "two_factor_token",
-    "two_factor_expiry"
+    "two_factor_expiry",
+    "sso_uid",
+    "two_factor_attempts",
+    "two_factor_locked_until"
   ]
 
     def self.entity_properties(**args)
@@ -143,13 +157,21 @@ module Grit::Core
     end
 
     def self.permitted_params
-      %i[login name email origin_id location_id password password_confirmation settings status_id
-         auth_method two_factor profile_picture active]
+     %i[login name email origin_id location_id password password_confirmation settings status_id two_factor profile_picture active]
     end
 
     acts_as_authentic do |c|
       c.crypto_provider = Authlogic::CryptoProviders::SCrypt
       c.log_in_after_create = false
+      c.logged_in_timeout = ENV.fetch("SESSION_EXPIRY_MINUTES", 60).to_i.minutes
+    end
+
+    before_save :set_password_changed_at, if: :will_save_change_to_crypted_password?
+
+    # SSO users don't have passwords — skip all password validations
+    def require_password?
+      return false unless auth_method == "local"
+      super
     end
 
     def active?
@@ -166,8 +188,19 @@ module Grit::Core
       RequestStore.store["current_user"]
     end
 
-    def role?(role_name = nil)
-      Grit::Core::Role.access?(role_name: role_name)
+    def permissions
+      Grit::Core::Permission
+        .joins(:user_roles)
+        .where("grit_core_user_roles.user_id = ?", id)
+        .joins("JOIN grit_core_permissions all_permissions ON all_permissions.id = grit_core_permissions.id OR all_permissions.id = ANY(grit_core_permissions.provides_permissions)")
+        .select("all_permissions.name")
+        .distinct
+        .map(&:name)
+    end
+
+    def permission?(requested_permissions)
+      requested_permissions = [ requested_permissions ] unless requested_permissions.is_a? Array
+      (permissions & requested_permissions).present?
     end
 
     def one_of_these_roles?(roles = [])
@@ -177,7 +210,7 @@ module Grit::Core
     end
 
     def self.user_administration(params = nil)
-      return nil unless Grit::Core::User.current.role?("Administrator")
+      return nil unless Grit::Core::User.current.permission?("admin:users")
 
       self.detailed
       .select("(
@@ -186,18 +219,64 @@ module Grit::Core
         ) as user_roles__
       ) as role_ids")
       .select("grit_core_users.active")
+      .select("grit_core_users.sso_uid")
+      .select("grit_core_users.forgot_token")
+      .select("grit_core_users.activation_token")
+      .select("grit_core_users.single_access_token")
+    end
+
+    def password_expired?
+      return false unless ENV.fetch("PASSWORD_EXPIRY_ENABLED", "false") == "true"
+      password_changed_at.nil? || password_changed_at < PASSWORD_EXPIRY_DAYS.days.ago
+    end
+
+    def two_factor_locked?
+      two_factor_locked_until.present? && two_factor_locked_until > Time.current
+    end
+
+    def two_factor_token_expired?
+      two_factor_expiry.nil? || two_factor_expiry < Time.current
+    end
+
+    def forgot_token_expired?
+      forgot_token_expires_at.nil? || forgot_token_expires_at < Time.current
+    end
+
+    def valid_forgot_token?
+      forgot_token_expires_at.present? && forgot_token_expires_at > Time.current
+    end
+
+    def record_failed_two_factor_attempt!
+      increment!(:two_factor_attempts)
+      if two_factor_attempts >= TWO_FACTOR_MAX_ATTEMPTS
+        update!(
+          two_factor_locked_until: TWO_FACTOR_LOCKOUT_MINUTES.minutes.from_now,
+          two_factor_attempts: 0,
+          two_factor_token: nil
+        )
+      end
+    end
+
+    def reset_two_factor_state!
+      update!(
+        two_factor_token: nil,
+        two_factor_attempts: 0,
+        two_factor_locked_until: nil,
+        two_factor_expiry: nil
+      )
     end
 
     private
 
       def check_role
-        return if Grit::Core::User.current.role?("Administrator")
+        return if Grit::Core::User.current.permission?("admin:users")
 
         raise "Administrator role required to manage users"
       end
 
       def check_user
         return if created_by == "admin"
+        return if created_by == "sso"
 
         check_role
       end
@@ -215,7 +294,7 @@ module Grit::Core
       def check_who
         # It is only admin and the user self that can edit user accounts
         # Exception when activating process is in progress
-        raise "Not allowed" unless forgot_token_was.blank? || (forgot_token.blank? && !forgot_token_was.nil?) || activation_token_was.blank? || (activation_token.blank? && !activation_token_was.nil?) || Grit::Core::User.current.role?("Administrator") || (login == Grit::Core::User.current.login)
+        raise "Not allowed" unless forgot_token_was.blank? || (forgot_token.blank? && !forgot_token_was.nil?) || activation_token_was.blank? || (activation_token.blank? && !activation_token_was.nil?) || Grit::Core::User.current.permission?("admin:users") || (login == Grit::Core::User.current.login)
 
         true
       end
@@ -254,7 +333,12 @@ module Grit::Core
         raise "Not allowed"
       end
 
+      def set_password_changed_at
+        self.password_changed_at = Time.current
+      end
+
       def random_password
+        return if auth_method != "local"
         @rand_password = SecureRandom.urlsafe_base64(8)
         self.password = @rand_password
         self.password_confirmation = @rand_password

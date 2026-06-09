@@ -42,7 +42,7 @@ export const useExperimentDataSheetRecordColumns = (
   return useEntityColumns<EntityPropertyDef>(
     "Grit::Assays::ExperimentDataSheetRecord",
     {
-      experiment_data_sheet_id: experimentDataSheetId.toString(),
+      assay_data_sheet_definition_id: experimentDataSheetId.toString(),
       ...params,
     },
     { staleTime: 0, ...queryOptions },
@@ -57,7 +57,7 @@ export const useExperimentDataSheetRecordFields = (
   return useEntityFields<FormFieldDef>(
     "Grit::Assays::ExperimentDataSheetRecord",
     {
-      experiment_data_sheet_id: experimentDataSheetId.toString(),
+      assay_data_sheet_definition_id: experimentDataSheetId.toString(),
       ...params,
     },
     { staleTime: 0, ...queryOptions },
@@ -69,14 +69,14 @@ export interface ExperimentDataSheetRecordData extends EntityData {
   [key: string]: string | number | boolean | null;
 }
 
-export interface AssayDataSheetRecordData
-  extends ExperimentDataSheetRecordData {
+export interface AssayDataSheetRecordData extends ExperimentDataSheetRecordData {
   experiment_id: number;
   experiment_id__name: string;
 }
 
 export const useInfiniteExperimentDataSheetRecords = (
-  experiment_data_sheet_id: number | string,
+  experiment_id: number | string,
+  assay_data_sheet_definition_id: number | string,
   sort?: SortingState,
   filter?: Filter[],
   params: URLParams = {},
@@ -88,10 +88,10 @@ export const useInfiniteExperimentDataSheetRecords = (
   > = {},
 ) => {
   return useInfiniteEntityData<ExperimentDataSheetRecordData>(
-    "grit/assays/experiment_data_sheet_records",
+    `grit/assays/assay_data_sheet_definitions/${assay_data_sheet_definition_id}/experiment_data_sheet_records`,
     sort ?? [],
     filter ?? [],
-    { experiment_data_sheet_id, scope: "by_experiment_data_sheet", ...params },
+    { experiment_id, scope: "by_experiment", ...params },
     queryOptions,
   );
 };
@@ -109,11 +109,10 @@ export const useInfiniteAssayDataSheetDefinitionRecords = (
   > = {},
 ) => {
   return useInfiniteEntityData<AssayDataSheetRecordData>(
-    "grit/assays/experiment_data_sheet_records",
+    `grit/assays/assay_data_sheet_definitions/${assay_data_sheet_definition_id}/experiment_data_sheet_records`,
     sort ?? [],
     filter ?? [],
     {
-      assay_data_sheet_definition_id,
       scope: "by_assay_data_sheet_definition",
       ...params,
     },
@@ -122,7 +121,8 @@ export const useInfiniteAssayDataSheetDefinitionRecords = (
 };
 
 export const useExperimentDataSheetRecords = (
-  experiment_data_sheet_id: number | string,
+  experiment_id: number | string,
+  assay_data_sheet_definition_id: number | string,
   sort?: SortingState,
   filter?: Filter[],
   params: URLParams = {},
@@ -131,26 +131,26 @@ export const useExperimentDataSheetRecords = (
   > = {},
 ) => {
   return useEntityData<ExperimentDataSheetRecordData>(
-    "grit/assays/experiment_data_sheet_records",
+    `grit/assays/assay_data_sheet_definitions/${assay_data_sheet_definition_id}/experiment_data_sheet_records`,
     sort ?? [],
     filter ?? [],
-    { experiment_data_sheet_id, ...params },
+    { experiment_id, scope: "by_experiment", ...params },
     queryOptions,
   );
 };
 
 export const useExperimentDataSheetRecord = (
   recordId: string | number,
-  sheetId: string | number,
+  assay_data_sheet_definition_id: number | string,
   params: URLParams = {},
   queryOptions: Partial<
     UseQueryOptions<ExperimentDataSheetRecordData | null, string>
   > = {},
 ) => {
   return useEntityDatum<ExperimentDataSheetRecordData>(
-    "grit/assays/experiment_data_sheet_records",
+    `grit/assays/assay_data_sheet_definitions/${assay_data_sheet_definition_id}/experiment_data_sheet_records`,
     recordId,
-    { ...params, experiment_data_sheet_id: sheetId },
+    params,
     queryOptions,
   );
 };

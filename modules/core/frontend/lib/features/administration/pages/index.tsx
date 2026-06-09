@@ -16,67 +16,40 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Tabs } from "@grit42/client-library/components";
-import { useEffect, useState } from "react";
-import {
-  Navigate,
-  Outlet,
-  Route,
-  Routes,
-  useMatch,
-  useNavigate,
-} from "react-router-dom";
-import {
-  useAdministrationTabs,
-} from "../AdministrationContext";
-import styles from "./administration.module.scss"
+import { RoutedTabs } from "@grit42/client-library/components";
+import { Navigate, Route, Routes } from "react-router-dom";
+import AccessAdministrationTab from "./access";
+import GeneralAdministrationTab from "./general";
 
-const AdministrationTabs = () => {
-  const navigate = useNavigate();
-  const match = useMatch("core/administration/:childPath/*");
-  const tabs = useAdministrationTabs();
-  const childPath = match?.params.childPath;
-
-  const [selectedTab, setSelectedTab] = useState(
-    tabs.findIndex(({ id }) => childPath === id),
-  );
-
-  useEffect(() => {
-    setSelectedTab(tabs.findIndex(({ id }) => childPath === id));
-  }, [childPath, tabs]);
-
-  const handleTabChange = (index: number) => {
-    navigate(tabs[index].id);
-  };
-
-  return (
-    <div
-      className={styles.administrationPage}
-    >
-      <Tabs
-        onTabChange={handleTabChange}
-        selectedTab={selectedTab}
-        tabs={tabs.map((t) => ({
-          key: t.id,
-          name: t.label,
-          panel: <></>,
-        }))}
-      />
-      <Outlet />
-    </div>
-  );
-};
+const TABS = [
+  {
+    label: "Access",
+    url: "user-management",
+  },
+  {
+    label: "General",
+    url: "general",
+  },
+];
 
 const AdministrationPage = () => {
-  const tabs = useAdministrationTabs();
-
   return (
     <Routes>
-      <Route element={<AdministrationTabs />}>
-        {tabs.map((t) => (
-          <Route key={t.id} path={`${t.id}/*`} element={<t.Tab />} />
-        ))}
-        <Route path="*" element={<Navigate to={tabs[0].id} />} />
+      <Route
+        element={
+          <RoutedTabs
+            matchPattern="core/administration/:childPath/*"
+            tabs={TABS}
+          />
+        }
+      >
+        <Route path="user-management">
+          <Route index path="*" element={<AccessAdministrationTab />} />
+        </Route>
+        <Route path="general">
+          <Route index path="*" element={<GeneralAdministrationTab />} />
+        </Route>
+        <Route path="*" index element={<Navigate to="../user-management" />} />
       </Route>
     </Routes>
   );

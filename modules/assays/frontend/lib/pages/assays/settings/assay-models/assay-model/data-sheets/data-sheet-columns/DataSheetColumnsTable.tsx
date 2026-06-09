@@ -20,15 +20,16 @@ import { useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@grit42/client-library/components";
 import { useQueryClient } from "@grit42/api";
-import { useToolbar } from "@grit42/core/Toolbar";
+import { useToolbar } from "@grit42/core";
 import Circle1NewIcon from "@grit42/client-library/icons/Circle1New";
-import styles from "../../../assayModels.module.scss";
 import {
   useAssayDataSheetColumnColumns,
   useAssayDataSheetColumns,
 } from "../../../../../../../queries/assay_data_sheet_columns";
 import { Table, useSetupTableState } from "@grit42/table";
 import { useTableColumns } from "@grit42/core/utils";
+import { AssayModelData } from "../../../../../../../queries/assay_models";
+import { useAssayModelEditorContext } from "../../AssayModelEditorContext";
 
 const DataSheetColumnsTable = ({
   sheetId,
@@ -36,7 +37,10 @@ const DataSheetColumnsTable = ({
 }: {
   sheetId: string;
   disableNavigation?: boolean;
+  assayModel?: AssayModelData;
 }) => {
+  const { canEdit } = useAssayModelEditorContext();
+
   const registerToolbarActions = useToolbar();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -55,8 +59,13 @@ const DataSheetColumnsTable = ({
     tableState.sorting,
     tableState.filters,
     undefined,
-    { enabled: sheetId !== "new" },
+    {
+      enabled: sheetId !== "new",
+    },
   );
+
+  const canCreateColumn =
+    sheetId !== "new" && canEdit && data && data.length < 250;
 
   const navigateToNew = useCallback(() => navigate("new"), [navigate]);
 
@@ -68,45 +77,46 @@ const DataSheetColumnsTable = ({
           icon: <Circle1NewIcon />,
           label: "New column",
           onClick: navigateToNew,
-          disabled: sheetId === "new",
+          disabled: !canCreateColumn,
         },
       ],
     });
-  }, [registerToolbarActions, navigateToNew, sheetId]);
+  }, [registerToolbarActions, navigateToNew, sheetId, canCreateColumn]);
+
+  if (sheetId === "new") {
+    return null;
+  }
 
   return (
-    <>
-      {sheetId !== "new" && (
-        <Table
-          header="Columns"
-          tableState={tableState}
-          loading={isLoading}
-          headerActions={
-            <Button disabled={sheetId === "new"} onClick={navigateToNew}>
-              New
-            </Button>
-          }
-          className={styles.typesTable}
-          data={data ?? []}
-          onRowClick={
-            disableNavigation
-              ? undefined
-              : (row) => {
-                  queryClient.setQueryData(
-                    [
-                      "entities",
-                      "datum",
-                      "grit/assays/assay_data_sheet_columns",
-                      row.original.id.toString(),
-                    ],
-                    row.original,
-                  );
-                  navigate(row.original.id.toString());
-                }
-          }
-        />
-      )}
-    </>
+    <Table
+      header="Columns"
+      tableState={tableState}
+      loading={isLoading}
+      headerActions={
+        canCreateColumn ? (
+          <Button disabled={sheetId === "new"} onClick={navigateToNew}>
+            New
+          </Button>
+        ) : undefined
+      }
+      data={data ?? []}
+      onRowClick={
+        disableNavigation
+          ? undefined
+          : (row) => {
+              queryClient.setQueryData(
+                [
+                  "entities",
+                  "datum",
+                  "grit/assays/assay_data_sheet_columns",
+                  row.original.id.toString(),
+                ],
+                row.original,
+              );
+              navigate(row.original.id.toString());
+            }
+      }
+    />
   );
 };
 

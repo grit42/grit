@@ -1,0 +1,12 @@
+@use "@grit42/client-library/theme.scss";
+
+.nameAndStatus {
+  display: flex;
+  gap: theme.$spacing;
+  align-items: baseline;
+  flex-basis: 100%;
+
+  h2 {
+    color: theme.$palette-secondary-main;
+  }
+}

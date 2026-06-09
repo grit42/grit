@@ -21,6 +21,10 @@ require "grit/core/entity_mapper"
 module Grit::Core::GritEntityRecord
   extend ActiveSupport::Concern
 
+  # ==========================================================================
+  # Setup & Configuration
+  # ==========================================================================
+
   included do
     @db_foreign_keys = nil
     @db_indexes = nil
@@ -28,56 +32,89 @@ module Grit::Core::GritEntityRecord
     @db_properties = nil
 
     @display_columns = nil
-    @entity_crud = { create: nil, read: nil, update: nil, destroy: nil }
+    @entity_crud = { read: nil, write: nil }
 
     @entity_properties = nil
     @entity_fields = nil
     @entity_columns = nil
     @display_properties = nil
 
-    begin
-      ActiveRecord::Base.connection.indexes(self.table_name).each do |index|
-        validates index.columns[0], uniqueness: index.columns.length > 1 ? { scope: index.columns[1..] } : true, allow_nil: !index.nulls_not_distinct if index.unique
-      end
+    cattr_accessor :infer_rails_validation_from_db
 
-      self.columns.each do |column|
-        next if [ "id", "created_at", "created_by", "updated_at", "updated_by" ].include?(column.name)
-        validates column.name, presence: true unless column.null || column.sql_type_metadata.type == :boolean
-        validates column.name, inclusion: { in: [ true, false ] } if column.sql_type_metadata.type == :boolean && !column.null
-        validates column.name, length: { maximum: column.sql_type_metadata.limit } unless column.sql_type_metadata.limit.nil? or ![ :string, :text ].include?(column.sql_type_metadata.type)
-      end
-    rescue
-    end
-
-    validate :numbers_in_range
-
-    def numbers_in_range
-      self.class.columns.each do |column|
-        next if ![ :integer, :float ].include?(column.sql_type_metadata.type) or column.sql_type_metadata.sql_type.end_with? "[]"
-
-        if column.sql_type_metadata.type == :integer && self[column.name].present? && self[column.name].to_i.bit_length > column.sql_type_metadata.limit * 8
-          errors.add(column.name, "is out of range")
-        elsif column.sql_type_metadata.type == :float && self[column.name].present?
-          errors.add(column.name, "is out of range") if self[column.name].to_f.infinite?
-          errors.add(column.name, "is not a number") if self[column.name].to_f.nan?
+    unless self.infer_rails_validation_from_db == false
+      begin
+        ActiveRecord::Base.connection.indexes(self.table_name).each do |index|
+          validates index.columns[0], uniqueness: index.columns.length > 1 ? { scope: index.columns[1..] } : true, allow_nil: !index.nulls_not_distinct if index.unique
         end
+
+        self.columns.each do |column|
+          next if [ "id", "created_at", "created_by", "updated_at", "updated_by" ].include?(column.name)
+          validates column.name, presence: true unless column.null || column.sql_type_metadata.type == :boolean
+          validates column.name, inclusion: { in: [ true, false ] } if column.sql_type_metadata.type == :boolean && !column.null
+          validates column.name, length: { maximum: column.sql_type_metadata.limit } unless column.sql_type_metadata.limit.nil? or ![ :string, :text ].include?(column.sql_type_metadata.type)
+        end
+      rescue StandardError => e
+        logger.info e.to_s
+        logger.info e.backtrace.join("\n")
       end
+
+      validate :numbers_in_range
+      before_save :set_updater
     end
+  end
 
-    before_save :set_updater
+  # ==========================================================================
+  # Instance Methods
+  # ==========================================================================
 
-    def set_updater
-      unless self.class.name == "Grit::Core::User"
-        current_user_login = Grit::Core::User.current.login
-        self.created_by = current_user_login if self.new_record?
-        self.updated_by = current_user_login
+  def numbers_in_range
+    self.class.columns.each do |column|
+      next if ![ :integer, :float ].include?(column.sql_type_metadata.type) or column.sql_type_metadata.sql_type.end_with? "[]"
+
+      if column.sql_type_metadata.type == :integer && self[column.name].present? && (self[column.name].to_i < -(2**53-1) || self[column.name].to_i > 2**53-1)
+        errors.add(column.name, "is out of range")
       end
     end
   end
 
-  # The methods added inside the class_methods block (or, ClassMethods module)
-  # become the class methods on the including class.
+  def set_updater
+    unless self.class.name == "Grit::Core::User"
+      current_user_login = Grit::Core::User.current.login
+      self.created_by = current_user_login if self.new_record?
+      self.updated_by = current_user_login
+    end
+  end
+
+  # ==========================================================================
+  # Class Methods
+  # ==========================================================================
+
   class_methods do
+    # ------------------------------------------------------------------------
+    # DSL Methods (Model Configuration)
+    # ------------------------------------------------------------------------
+
+    private
+
+    def display_columns(display_columns)
+      @display_columns = display_columns.is_a?(String) ? [ display_columns ] : display_columns
+    end
+
+    alias_method :display_column, :display_columns
+
+    def entity_crud_with(read: nil, write: nil)
+      @entity_crud = {
+        read: read,
+        write: write
+      }
+    end
+
+    public
+
+    # ------------------------------------------------------------------------
+    # Database Introspection
+    # ------------------------------------------------------------------------
+
     def foreign_keys
       @db_foreign_keys ||= ActiveRecord::Base.connection.foreign_keys(self.table_name)
     end
@@ -123,6 +160,10 @@ module Grit::Core::GritEntityRecord
         property
       end
     end
+
+    # ------------------------------------------------------------------------
+    # Entity Metadata (Properties / Fields / Columns)
+    # ------------------------------------------------------------------------
 
     def display_properties
       @display_properties ||= @display_columns&.map { |name| self.db_properties.find { |p| p[:name] == name } } || []
@@ -205,6 +246,14 @@ module Grit::Core::GritEntityRecord
       @entity_columns ||= self.entity_columns_from_properties(self.db_properties)
     end
 
+    def entity_crud
+      @entity_crud
+    end
+
+    # ------------------------------------------------------------------------
+    # Query Building (Scopes)
+    # ------------------------------------------------------------------------
+
     def detailed_scope(params = nil)
       query = self.from(self.table_name)
       self.columns.each do |column|
@@ -226,37 +275,17 @@ module Grit::Core::GritEntityRecord
       self.detailed_scope(params)
     end
 
-    def by_load_set(params)
-      raise "Load set id must be specified" if !params or !params[:load_set_id]
-      self.detailed.where("#{self.table_name}.id IN (SELECT record_id FROM grit_core_load_set_loaded_records WHERE grit_core_load_set_loaded_records.load_set_id = ?)", params[:load_set_id].to_i).order(:created_at)
+    def by_load_set_block(params)
+      raise "Load set block id must be specified" if !params or !params[:load_set_block_id]
+      self.detailed.where("#{self.table_name}.id IN (SELECT record_id FROM grit_core_load_set_block_loaded_records WHERE grit_core_load_set_block_loaded_records.load_set_block_id = ?)", params[:load_set_block_id].to_i).order(:created_at)
     end
 
-    def entity_crud
-      @entity_crud
-    end
+    # ------------------------------------------------------------------------
+    # Loader Support
+    # ------------------------------------------------------------------------
 
     def loader_find_by!(prop, value, **args)
       find_by!({ prop => value })
-    end
-
-    private
-    def display_columns(display_columns)
-      @display_columns = display_columns.is_a?(String) ? [ display_columns ] : display_columns
-    end
-
-    alias_method :display_column, :display_columns
-
-    def entity_crud_with(create: nil, read: nil, update: nil, destroy: nil)
-      @entity_crud = {
-        create: create,
-        read: read,
-        update: update,
-        destroy: destroy
-      }
-    end
-
-    def entity_table_with(default_visible: nil, default_hidden: nil)
-      @entity_table_columns = { default_visible: default_visible, default_hidden: default_hidden }
     end
   end
 end

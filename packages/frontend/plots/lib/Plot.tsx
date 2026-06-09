@@ -15,7 +15,7 @@ const Plot = ({ def, ...rest }: PlotProps) => {
   } else if (def.type === "scatter") {
     return <ScatterPlot def={def} {...rest} />;
   }
-  return <ErrorPage error={`Unsupported plot type: ${(def as any).type}`} />
+  return <ErrorPage error={`Unsupported plot type: ${(def as any).type}`} />;
 };
 
 export default Plot;

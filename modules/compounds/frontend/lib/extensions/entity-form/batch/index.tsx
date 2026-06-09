@@ -19,21 +19,19 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useMemo, useState } from "react";
 import {
-  useForm, useStore,
+  useForm,
   Form,
   FormControls,
   FormField,
   FormFieldDef,
   genericErrorHandler,
   getVisibleFieldData,
+  FormFields,
+  FormBanner,
 } from "@grit42/form";
+import { Button, ErrorPage, Spinner } from "@grit42/client-library/components";
 import {
-  Button,
-  ErrorPage,
-  Spinner,
-  Surface,
-} from "@grit42/client-library/components";
-import {
+  EntityDetailsProps,
   useCreateEntityMutation,
   useDestroyEntityMutation,
   useEditEntityMutation,
@@ -44,13 +42,9 @@ import {
   useBatch,
   useBatchFields,
 } from "../../../queries/batches";
+import { CenteredSurface } from "@grit42/client-library/layouts";
 
-export interface EntityDetailsProps {
-  entity: string;
-  id: string | number;
-}
-
-export const BatchDetails = ({ id }: EntityDetailsProps) => {
+const BatchDetails = ({ id }: EntityDetailsProps) => {
   const { initialData } = (useLocation().state ?? {}) as {
     initialData?: BatchData;
   };
@@ -73,13 +67,13 @@ export const BatchDetails = ({ id }: EntityDetailsProps) => {
 
   if (!initialData?.compound_type_id) {
     return (
-      <Surface style={{ width: 960 }}>
+      <CenteredSurface>
         <ErrorPage error="No compound type specified">
           <Link to="/compounds">
             <Button color="secondary">Go to compounds</Button>
           </Link>
         </ErrorPage>
-      </Surface>
+      </CenteredSurface>
     );
   }
 
@@ -132,7 +126,7 @@ const EntityForm = ({
     "grit/compounds/batches",
   );
 
-  const form = useForm<Partial<BatchData>>({
+  const form = useForm({
     defaultValues: formData,
     onSubmit: genericErrorHandler(async ({ value: formValue, formApi }) => {
       const value = getVisibleFieldData<Partial<BatchData>>(formValue, fields);
@@ -152,11 +146,6 @@ const EntityForm = ({
     }),
   });
 
-  const compound_type_id = useStore(
-    form.baseStore,
-    (state) => state.values.compound_type_id,
-  );
-
   const fieldsForInitialData = useMemo(
     () =>
       fields.map((f) => {
@@ -172,7 +161,7 @@ const EntityForm = ({
         }
         return field;
       }),
-    [fields, data, initialData, compound_type_id],
+    [fields, data, initialData],
   );
 
   const onDelete = async () => {
@@ -199,33 +188,18 @@ const EntityForm = ({
   };
 
   return (
-    <Surface style={{ width: 960 }}>
+    <CenteredSurface>
+      <h2>{`${id === "new" ? "Create" : "Edit"} Batch`}</h2>
       <Form form={form}>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gridAutoRows: "max-content",
-            gap: "calc(var(--spacing) * 2)",
-            paddingBottom: "calc(var(--spacing) * 2)",
-          }}
-        >
-          {form.state.errorMap.onSubmit && (
-            <div style={{ gridColumnStart: 1, gridColumnEnd: -1 }}>
-              {form.state.errorMap.onSubmit?.toString()}
-            </div>
-          )}
+        <FormFields>
+          <FormBanner content={form.state.errorMap.onSubmit} />
           {fieldsForInitialData.map((f) => (
-            <FormField form={form} fieldDef={f} key={f.name} />
+            <FormField fieldDef={f} key={f.name} />
           ))}
-        </div>
-        <FormControls
-          form={form}
-          onDelete={onDelete}
-          showDelete={id !== "new"}
-        />
+        </FormFields>
+        <FormControls onDelete={onDelete} showDelete={id !== "new"} />
       </Form>
-    </Surface>
+    </CenteredSurface>
   );
 };
 

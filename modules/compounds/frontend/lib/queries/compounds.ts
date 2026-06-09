@@ -34,7 +34,7 @@ import {
 import { Filter, SortingState } from "@grit42/table";
 import { FormFieldDef } from "@grit42/form";
 
-export interface CompoundPropertyDef extends EntityPropertyDef<CompoundData> {
+export interface CompoundPropertyDef extends EntityPropertyDef {
   compound_type_id?: number | null;
   compound_type_id__name?: string;
 }
@@ -139,7 +139,9 @@ export const useCompoundTypes = () => {
     "grit/compounds/compound_types",
     [{ id: "id", desc: false }],
     undefined,
-    { limit: -1 },
+    {
+      limit: -1,
+    },
   );
 };
 

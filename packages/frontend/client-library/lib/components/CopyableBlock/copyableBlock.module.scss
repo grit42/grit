@@ -1,19 +1,19 @@
 @use "../../scss/theme.scss";
 
 .copyContainer {
-    background-color: theme.$palette-primary-main;
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
+  background-color: theme.$palette-primary-main;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
 
-    .copyAction {
-      cursor: pointer;
-      padding: 0.5rem;
-      margin-left: 8px;
-      font-size: 0.75rem;
-    }
-
-    .preContainer {
-      width: 100%;
-    }
+  .copyAction {
+    cursor: pointer;
+    padding: 0.5rem;
+    margin-left: 8px;
+    font-size: 0.75rem;
   }
+
+  .preContainer {
+    width: 100%;
+  }
+}

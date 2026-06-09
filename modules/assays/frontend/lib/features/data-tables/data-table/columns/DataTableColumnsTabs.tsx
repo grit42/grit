@@ -16,54 +16,25 @@
  * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { useEffect, useState } from "react";
-import { Tabs } from "@grit42/client-library/components";
-import styles from "../dataTable.module.scss";
-import { Outlet, useMatch, useNavigate } from "react-router-dom";
+import { RoutedTabs } from "@grit42/client-library/components";
 
 const TABS = [
   {
-    key: "assay",
-    name: "Assay columns",
     url: "assay",
-    panel: <></>,
+    label: "Assay columns",
   },
   {
-    key: "entity",
-    name: "Entity attributes",
     url: "entity",
-    panel: <></>,
-  }
+    label: "Entity attributes",
+  },
 ];
 
 const DataTableColumnsTabs = () => {
-  const navigate = useNavigate();
-  const match = useMatch("/assays/data_tables/:data_table_id/columns/:tab/*");
-
-  const tab = match?.params.tab ?? "assay";
-
-  const [selectedTab, setSelectedTab] = useState(
-    TABS.findIndex(({ url }) => tab === url),
-  );
-
-  useEffect(() => {
-    setSelectedTab(TABS.findIndex(({ url }) => tab === url));
-  }, [tab]);
-
-  const handleTabChange = (index: number) => {
-    navigate(`${TABS[index].url}`);
-  };
-
   return (
-    <div className={styles.dataTableContainer}>
-      <Tabs
-        selectedTab={selectedTab}
-        onTabChange={handleTabChange}
-        className={styles.dataTableTabs}
-        tabs={TABS}
-      />
-      <Outlet />
-    </div>
+    <RoutedTabs
+      matchPattern="/assays/data_tables/:data_table_id/columns/:tab/*"
+      tabs={TABS}
+    />
   );
 };
 

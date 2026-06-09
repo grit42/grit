@@ -168,3 +168,18 @@
     }
   }
 }
+
+.dialogContent {
+  height: 100%;
+  display: grid;
+  grid-template-rows: 1fr min-content;
+  gap: var(--spacing);
+}
+
+.dialogTableContainer {
+  overflow: auto;
+}
+
+.selectorWrapper {
+  cursor: pointer;
+}

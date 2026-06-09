@@ -54,24 +54,30 @@ export interface AssayDataSheetColumnData extends EntityData {
   name: string;
   description: string | null;
   assay_data_sheet_definition_id: number;
+  safe_name: string;
+  required: boolean;
+  data_type_id: number;
 }
 
 export const useAssayDataSheetColumns = (
   assayDataSheetDefinitionId: number | string,
-  sort?: SortingState,
-  filter?: Filter[],
+  sort: SortingState = [],
+  filter: Filter[] = [],
   params: URLParams = {},
-  queryOptions: Partial<UseQueryOptions<AssayDataSheetColumnData[], string>> = {},
+  queryOptions: Partial<
+    UseQueryOptions<AssayDataSheetColumnData[], string>
+  > = {},
 ) => {
   return useEntityData<AssayDataSheetColumnData>(
     "grit/assays/assay_data_sheet_columns",
-    [
-      ...(sort ?? []),
-      {
-        id: "sort",
-        desc: false,
-      },
-    ],
+    sort.length > 0
+      ? sort
+      : [
+          {
+            id: "sort",
+            desc: false,
+          },
+        ],
     [
       {
         active: true,
@@ -93,7 +99,9 @@ export const useAssayDataSheetColumns = (
 export const useAssayDataSheetColumn = (
   assayDataSheetColumnId: string | number,
   params: URLParams = {},
-  queryOptions: Partial<UseQueryOptions<AssayDataSheetColumnData | null, string>> = {},
+  queryOptions: Partial<
+    UseQueryOptions<AssayDataSheetColumnData | null, string>
+  > = {},
 ) => {
   return useEntityDatum<AssayDataSheetColumnData>(
     "grit/assays/assay_data_sheet_columns",

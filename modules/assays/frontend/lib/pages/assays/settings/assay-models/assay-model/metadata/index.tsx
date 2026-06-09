@@ -1,9 +1,10 @@
 import { Button, ErrorPage, Spinner } from "@grit42/client-library/components";
+import styles from "./metadata.module.scss";
 import {
   EntityPropertyDef,
   EntityData,
   useCreateEntityMutation,
-  useDestroyEntityMutation,
+  useDangerousDestroyEntityMutation,
 } from "@grit42/core";
 import { useCallback, useMemo } from "react";
 import {
@@ -15,7 +16,9 @@ import {
 import { Row, Table, useSetupTableState } from "@grit42/table";
 import { useTableColumns } from "@grit42/core/utils";
 import { Link, Route, Routes, useParams } from "react-router-dom";
-import { queryClient } from "@grit42/api";
+import { useQueryClient } from "@grit42/api";
+import { CenteredColumnLayout } from "@grit42/client-library/layouts";
+import { useAssayModelEditorContext } from "../AssayModelEditorContext";
 
 const getRowId = (data: EntityData) => data.id.toString();
 
@@ -24,28 +27,38 @@ const AssayMetadataDefinitionSelector = ({
   assayModelId,
 }: {
   assayModelId: string | number;
-  columns: EntityPropertyDef<AssayMetadataDefinitionData>[];
+  columns: EntityPropertyDef[];
 }) => {
-  const tableColumns = useTableColumns(columns);
-  const availableTableState = useSetupTableState("assay-model-available-metadata", tableColumns, {
-    saveState: {
-      columnSizing: true
+  const { dangerousEditMode } = useAssayModelEditorContext();
+  const queryClient = useQueryClient();
+  const tableColumns = useTableColumns<AssayMetadataDefinitionData>(columns);
+  const availableTableState = useSetupTableState(
+    "assay-model-available-metadata",
+    tableColumns,
+    {
+      saveState: {
+        columnSizing: true,
+      },
+      settings: {
+        disableColumnReorder: true,
+        disableVisibilitySettings: true,
+      },
     },
-    settings: {
-      disableColumnReorder: true,
-      disableVisibilitySettings: true,
-    },
-  });
+  );
 
-  const selectedTableState = useSetupTableState("assay-model-selected-metadata", tableColumns, {
-    saveState: {
-      columnSizing: true
+  const selectedTableState = useSetupTableState<AssayMetadataDefinitionData>(
+    "assay-model-selected-metadata",
+    tableColumns,
+    {
+      saveState: {
+        columnSizing: true,
+      },
+      settings: {
+        disableColumnReorder: true,
+        disableVisibilitySettings: true,
+      },
     },
-    settings: {
-      disableColumnReorder: true,
-      disableVisibilitySettings: true,
-    },
-  });
+  );
 
   const {
     data: selectedMetadataDefintions,
@@ -81,7 +94,7 @@ const AssayMetadataDefinitionSelector = ({
       "grit/assays/assay_model_metadata",
     );
 
-  const destroyEntityMutation = useDestroyEntityMutation(
+  const destroyEntityMutation = useDangerousDestroyEntityMutation(
     "grit/assays/assay_model_metadata",
   );
 
@@ -90,6 +103,7 @@ const AssayMetadataDefinitionSelector = ({
       await createEntityMutation.mutateAsync({
         assay_model_id: assayModelId,
         assay_metadata_definition_id: row.original.id,
+        dangerous_edit: dangerousEditMode ?? undefined,
       });
       await queryClient.invalidateQueries({
         queryKey: [
@@ -99,14 +113,15 @@ const AssayMetadataDefinitionSelector = ({
         ],
       });
     },
-    [queryClient],
+    [assayModelId, createEntityMutation, dangerousEditMode, queryClient],
   );
 
   const onSelectedRowClick = useCallback(
     async (row: Row<AssayMetadataDefinitionData>) => {
-      await destroyEntityMutation.mutateAsync(
-        (row.original as any).assay_model_metadatum_id,
-      );
+      await destroyEntityMutation.mutateAsync([
+        row.original.assay_model_metadatum_id,
+        dangerousEditMode,
+      ]);
       await queryClient.invalidateQueries({
         queryKey: [
           "entities",
@@ -115,19 +130,11 @@ const AssayMetadataDefinitionSelector = ({
         ],
       });
     },
-    [queryClient],
+    [dangerousEditMode, destroyEntityMutation, queryClient],
   );
 
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "1fr 1fr",
-        gap: "calc(var(--spacing) * 2 )",
-        width: "100%",
-        height: "100%",
-      }}
-    >
+    <div className={styles.metadataSelector}>
       <Table
         header="Selected"
         getRowId={getRowId}
@@ -171,10 +178,11 @@ const AssayModelMetadata = ({
   assayModelId: string | number;
   columns: EntityPropertyDef[];
 }) => {
+  const { canEdit } = useAssayModelEditorContext();
   const tableColumns = useTableColumns(columns);
   const tableState = useSetupTableState("assay-model-metadat", tableColumns, {
     saveState: {
-      columnSizing: true
+      columnSizing: true,
     },
     settings: {
       disableColumnReorder: true,
@@ -194,22 +202,28 @@ const AssayModelMetadata = ({
   );
 
   return (
-    <Table
-      headerActions={
-        <Link to="edit">
-          <Button>Edit</Button>
-        </Link>
-      }
-      getRowId={getRowId}
-      loading={isModelMetadataLoading}
-      tableState={tableState}
-      disableFooter
-      data={modelMetadata}
-      noDataMessage={
-        (isModelMetadataError ? modelMetadataError : undefined) ??
-        "No metadata selected"
-      }
-    />
+    <CenteredColumnLayout>
+      <Table
+        headerActions={
+          canEdit ? (
+            <Link to="edit">
+              <Button>Edit</Button>
+            </Link>
+          ) : undefined
+        }
+        fitContent
+        getRowId={getRowId}
+        loading={isModelMetadataLoading}
+        tableState={tableState}
+        disableFooter
+        data={modelMetadata}
+        noDataMessage={
+          ((isModelMetadataError ? modelMetadataError : undefined) ?? canEdit)
+            ? "No metadata selected"
+            : "This assay model does not define any metadata"
+        }
+      />
+    </CenteredColumnLayout>
   );
 };
 

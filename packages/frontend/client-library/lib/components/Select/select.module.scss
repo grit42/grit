@@ -176,7 +176,6 @@
   position: absolute;
   top: 100%;
   left: 0;
-  //position: fixed;
 
   max-height: 200px;
   overflow-y: auto;
@@ -184,7 +183,6 @@
   background: theme.$palette-background-surface;
   border-radius: theme.$border-radius;
   box-shadow: theme.$box-shadow;
-  //padding: 0.5em 0;
   margin-top: 0.5em;
   width: 100%;
 
@@ -259,4 +257,10 @@
 
 .searchInput {
   opacity: 1 !important;
+}
+
+.options.insideDialog {
+  position: fixed;
+  top: unset;
+  left: unset;
 }

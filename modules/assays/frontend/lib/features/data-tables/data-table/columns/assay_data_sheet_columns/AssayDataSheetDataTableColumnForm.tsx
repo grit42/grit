@@ -17,53 +17,78 @@
  */
 
 import { createSearchParams, Link, useNavigate } from "react-router-dom";
-import { Button, Surface } from "@grit42/client-library/components";
+import { Button } from "@grit42/client-library/components";
 import {
   AddFormControl,
   Form,
   FormControls,
   FormField,
   FormFieldDef,
+  FormApi,
   genericErrorHandler,
   getVisibleFieldData,
-  ReactFormExtendedApi,
   useForm,
   useStore,
+  FormBanner,
+  FormFields,
 } from "@grit42/form";
 import {
   useCreateEntityMutation,
   useDestroyEntityMutation,
   useEditEntityMutation,
+  useHasPermission,
 } from "@grit42/core";
 import { DataTableColumnData } from "../../../queries/data_table_columns";
 import { useQueryClient } from "@grit42/api";
 import { toSafeIdentifier } from "@grit42/core/utils";
-import styles from "../dataTableColumns.module.scss";
-import AssaySelector from "./AssaySelector";
+import styles from "./assayDataSheetColumns.module.scss";
+import ExperimentSelector from "./ExperimentSelector";
+import ExperimentMetadataFilters from "./ExperimentMetadataFilters";
+import { CenteredSurface, SidebarLayout } from "@grit42/client-library/layouts";
+import { useMemo } from "react";
 
-const AssaysFilter = ({
+const ExperimentsFilter = ({
   assayModelId,
   form,
 }: {
   assayModelId: string | number;
-  form: ReactFormExtendedApi<Partial<DataTableColumnData>, undefined>;
+  form: FormApi<any>;
 }) => {
+  const metadata_filters = useStore(
+    form.store,
+    ({ values }) =>
+      values.metadata_filters as Record<string, number[]> | undefined,
+  );
   return (
-    <form.Field
-      name="pivots"
-      children={(field) => (
-        <AssaySelector
-          assayModelId={assayModelId}
-          selectedAssays={field.state.value as number[]}
-          setSelectedAssays={field.handleChange}
-        />
-      )}
-    />
+    <>
+      <form.Field
+        name="metadata_filters"
+        children={(field) => (
+          <ExperimentMetadataFilters
+            assayModelId={assayModelId}
+            metadataFilters={field.state.value as Record<string, number[]>}
+            setMetadataFilters={field.handleChange}
+            identifier="metadata_definition_id"
+          />
+        )}
+      />
+      <form.Field
+        name="experiment_ids"
+        children={(field) => (
+          <ExperimentSelector
+            assayModelId={assayModelId}
+            selectedExperiments={field.state.value as number[]}
+            setSelectedExperiments={field.handleChange}
+            metadataFilters={metadata_filters ?? {}}
+          />
+        )}
+      />
+    </>
   );
 };
 
 const AssayDataSheetDataTableColumnForm = ({
-  fields,
+  fields: fieldsFromProps,
   dataTableColumn,
   dataTableId,
   dataTableColumnId,
@@ -73,7 +98,14 @@ const AssayDataSheetDataTableColumnForm = ({
   dataTableId: string | number;
   dataTableColumnId: string | number;
 }) => {
+  const canCrud = useHasPermission("write:analysis");
   const queryClient = useQueryClient();
+
+  const fields = useMemo(
+    () =>
+      fieldsFromProps.map((f) => ({ ...f, disabled: f.disabled || !canCrud })),
+    [canCrud, fieldsFromProps],
+  );
 
   const navigate = useNavigate();
 
@@ -90,13 +122,14 @@ const AssayDataSheetDataTableColumnForm = ({
     "grit/assays/data_table_columns",
   );
 
-  const form = useForm<Partial<DataTableColumnData>>({
+  const form = useForm({
     defaultValues: dataTableColumn,
     onSubmit: genericErrorHandler(async ({ value: formValue, formApi }) => {
       const value = {
         ...dataTableColumn,
         ...getVisibleFieldData<Partial<DataTableColumnData>>(formValue, fields),
-        pivots: formValue.pivots ?? []
+        experiment_ids: formValue.experiment_ids ?? [],
+        metadata_filters: formValue.metadata_filters ?? {},
       };
       const res = await (dataTableColumnId === "new"
         ? createEntityMutation.mutateAsync(value as DataTableColumnData)
@@ -108,14 +141,14 @@ const AssayDataSheetDataTableColumnForm = ({
         queryClient.invalidateQueries({
           queryKey: [
             "entities",
-            "data",
+            "infiniteData",
             `grit/assays/data_tables/${dataTableId}/data_table_columns`,
           ],
         }),
         queryClient.invalidateQueries({
           queryKey: [
             "entities",
-            "data",
+            "infiniteData",
             `grit/assays/data_tables/${dataTableId}/data_table_rows`,
           ],
         }),
@@ -126,7 +159,7 @@ const AssayDataSheetDataTableColumnForm = ({
   });
 
   const { safe_name, proposed_safe_name } = useStore(
-    form.baseStore,
+    form.store,
     ({ values }) => {
       const { name, safe_name } = values;
       const proposed_safe_name = form.getFieldMeta("name")?.isDirty
@@ -153,14 +186,14 @@ const AssayDataSheetDataTableColumnForm = ({
       queryClient.invalidateQueries({
         queryKey: [
           "entities",
-          "data",
+          "infiniteData",
           `grit/assays/data_tables/${dataTableId}/data_table_columns`,
         ],
       }),
       queryClient.invalidateQueries({
         queryKey: [
           "entities",
-          "data",
+          "infiniteData",
           `grit/assays/data_tables/${dataTableId}/data_table_rows`,
         ],
       }),
@@ -169,32 +202,29 @@ const AssayDataSheetDataTableColumnForm = ({
   };
 
   return (
-    <div className={styles.columnFormContainer}>
-      <h1>{dataTableColumnId === "new" ? "Add" : "Edit"} column</h1>
-      <Form<Partial<DataTableColumnData>>
-        form={form}
-        className={styles.dataSheetColumnForm}
-      >
-        <Surface className={styles.columnFormSurface}>
-          <div className={styles.columnForm}>
-            {form.state.errorMap.onSubmit && (
-              <div className={styles.columnFormError}>
-                {form.state.errorMap.onSubmit?.toString()}
-              </div>
-            )}
-            <div className={styles.columnFormFields}>
+    <Form form={form} className={styles.form}>
+      <SidebarLayout
+        sidebar={
+          <CenteredSurface className={styles.columnFormFields}>
+            <h2>{dataTableColumnId === "new" ? "Add" : "Edit"} column</h2>
+            <FormFields columns={1}>
+              <FormBanner content={form.state.errorMap.onSubmit} />
               {fields.map((f) => (
                 <div className={styles.columnFormField} key={f.name}>
-                  <FormField form={form} fieldDef={f} />
+                  <FormField fieldDef={f} />
                   {f.name === "safe_name" &&
                     safe_name !== proposed_safe_name &&
                     form.state.isDirty && (
                       <div className={styles.columnFormFieldSuggestion}>
                         <em
                           role="button"
-                          onClick={() =>
-                            form.setFieldValue("safe_name", proposed_safe_name)
-                          }
+                          onClick={() => {
+                            form.setFieldValue("safe_name", proposed_safe_name);
+                            form.setFieldMeta("safe_name", (prev) => ({
+                              ...prev,
+                              errorMap: {},
+                            }));
+                          }}
                         >
                           Use "{proposed_safe_name}"
                         </em>
@@ -202,55 +232,56 @@ const AssayDataSheetDataTableColumnForm = ({
                     )}
                 </div>
               ))}
-            </div>
-          </div>
-          {dataTableColumnId === "new" && (
-            <AddFormControl form={form} label="Save">
-              <Link to="..">
-                <Button>Cancel</Button>
-              </Link>
-            </AddFormControl>
-          )}
-          {dataTableColumnId !== "new" && (
-            <FormControls
-              form={form}
-              onDelete={onDelete}
-              showDelete={dataTableColumnId !== "new"}
-              showCancel
-              cancelLabel={dataTableColumnId === "new" ? "Cancel" : "Back"}
-              onCancel={() => navigate("..")}
-            >
-              {dataTableColumnId !== "new" && (
-                <Link
-                  to={{
-                    pathname: "../clone",
-                    search: createSearchParams({
-                      data_table_column_id: dataTableColumnId.toString(),
-                    }).toString(),
-                  }}
-                >
-                  <Button color="secondary">Clone</Button>
+            </FormFields>
+            {dataTableColumnId === "new" && (
+              <AddFormControl label="Save">
+                <Link to="..">
+                  <Button>Cancel</Button>
                 </Link>
-              )}
-            </FormControls>
-          )}
-        </Surface>
-        <div className={styles.columnPivots}>
-          <div>
-            <h3>Assays filter</h3>
+              </AddFormControl>
+            )}
+            {dataTableColumnId !== "new" && canCrud && (
+              <FormControls
+                onDelete={onDelete}
+                showDelete={dataTableColumnId !== "new"}
+                showCancel
+                cancelLabel={dataTableColumnId === "new" ? "Cancel" : "Back"}
+                onCancel={() => navigate("..")}
+              >
+                {dataTableColumnId !== "new" && (
+                  <Link
+                    to={{
+                      pathname: "../clone",
+                      search: createSearchParams({
+                        data_table_column_id: dataTableColumnId.toString(),
+                      }).toString(),
+                    }}
+                  >
+                    <Button color="secondary">Clone</Button>
+                  </Link>
+                )}
+              </FormControls>
+            )}
+          </CenteredSurface>
+        }
+      >
+        <div className={styles.experimentFilters}>
+          <div className={styles.experimentsFiltersHeader}>
+            <h3>Experiments filter</h3>
             <p>
-              Aggregate results from experiments of the selected assays.
+              Aggregate results from selected experiments.
               <br />
-              No selection includes all experiments of all assays.
+              No selection includes all experiments matching the metadata
+              filters.
             </p>
           </div>
-          <AssaysFilter
+          <ExperimentsFilter
             assayModelId={dataTableColumn.assay_model_id!}
-            form={form}
+            form={form as any}
           />
         </div>
-      </Form>
-    </div>
+      </SidebarLayout>
+    </Form>
   );
 };
 

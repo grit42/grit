@@ -12,6 +12,7 @@ import {
 } from "react-router-dom";
 import {
   Form,
+  FormBanner,
   FormControls,
   FormField,
   FormFieldDef,
@@ -19,118 +20,242 @@ import {
   getVisibleFieldData,
   useForm,
 } from "@grit42/form";
-import { useQueryClient } from "@grit42/api";
+import {
+  EndpointError,
+  EndpointErrorErrors,
+  EndpointSuccess,
+  notifyOnError,
+  request,
+  useMutation,
+  UseMutationOptions,
+  useQueryClient,
+} from "@grit42/api";
 import {
   useCreateEntityMutation,
   useEditEntityMutation,
   useDestroyEntityMutation,
   EntityFormFieldDef,
-  useHasRoles,
+  useHasPermission,
 } from "@grit42/core";
 import { useMemo, useState } from "react";
-import styles from "../../experiments.module.scss";
+import styles from "./details.module.scss";
 import {
   ExperimentData,
   useExperiment,
   useExperimentFields,
 } from "../../../../queries/experiments";
-import { useAssay, useAssayFields } from "../../../../queries/assays";
 import { classnames } from "@grit42/client-library/utils";
-
-type OrganizedFields = ["assay_id", "name", "description"][number];
+import ExperimentMetadataForm from "./ExperimentMetadataForm";
+import ExperimentMetadataTemplates from "./ExperimentMetadataTemplates";
 
 type ExperimentFormFields = {
-  [key in OrganizedFields]?: FormFieldDef;
-} & {
-  rest: FormFieldDef[];
+  assay_model_id_field?: FormFieldDef;
+  name_field?: FormFieldDef;
+  description_field?: FormFieldDef;
 };
 
-const AssayMetadata = ({ assayId }: { assayId: number }) => {
-  const {
-    data: assay,
-    isLoading: isAssayLoading,
-    isError: isAssayError,
-    error: assayError,
-  } = useAssay(assayId);
-  const {
-    data: assayFields,
-    isLoading: isAssayFieldsLoading,
-    isError: isAssayFieldsError,
-    error: assayFieldsError,
-  } = useAssayFields(
-    { assay_id: assayId.toString() },
-    {
-      select: (data) =>
-        data.filter(({ metadata_definition_id }) => !!metadata_definition_id),
+export const usePublishExperimentMutation = (
+  id: string | number,
+  mutationOptions: UseMutationOptions<
+    ExperimentData,
+    EndpointErrorErrors<ExperimentData>
+  > = {},
+) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ["publishExperiment", id.toString()],
+    mutationFn: async () => {
+      const response = await request<
+        EndpointSuccess<ExperimentData>,
+        EndpointError<EndpointErrorErrors<ExperimentData>>
+      >(`grit/assays/experiments/${id}/publish`, {
+        method: "POST",
+      });
+      if (!response.success) {
+        throw response.errors;
+      }
+
+      return response.data;
     },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: [
+            "entities",
+            "datum",
+            "grit/assays/experiments",
+            id.toString(),
+          ],
+          refetchType: "all",
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["entities", "data", "grit/assays/experiments"],
+          refetchType: "all",
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["entities", "infiniteData", "grit/assays/experiments"],
+          refetchType: "all",
+        }),
+      ]);
+    },
+    onError: notifyOnError,
+    ...mutationOptions,
+  });
+};
+
+export const useDraftExperimentMutation = (
+  id: string | number,
+  mutationOptions: UseMutationOptions<
+    ExperimentData,
+    EndpointErrorErrors<ExperimentData>
+  > = {},
+) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ["draftExperiment", id.toString()],
+    mutationFn: async () => {
+      const response = await request<
+        EndpointSuccess<ExperimentData>,
+        EndpointError<EndpointErrorErrors<ExperimentData>>
+      >(`grit/assays/experiments/${id}/draft`, {
+        method: "POST",
+      });
+      if (!response.success) {
+        throw response.errors;
+      }
+
+      return response.data;
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: [
+            "entities",
+            "datum",
+            "grit/assays/experiments",
+            id.toString(),
+          ],
+          refetchType: "all",
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["entities", "data", "grit/assays/experiments"],
+          refetchType: "all",
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["entities", "infiniteData", "grit/assays/experiments"],
+          refetchType: "all",
+        }),
+      ]);
+    },
+    onError: notifyOnError,
+    ...mutationOptions,
+  });
+};
+
+const ExperimentActions = ({
+  experiment,
+}: {
+  experiment: Partial<ExperimentData>;
+}) => {
+  const hasWrite = useHasPermission("write:assays");
+  const navigate = useNavigate();
+  const destroyEntityMutation = useDestroyEntityMutation(
+    "grit/assays/experiments",
   );
 
-  const metadata = useMemo(
-    () =>
-      assay &&
-      assayFields?.map((f) => ({
-        key: f.name,
-        label: f.display_name,
-        value:
-          assay[
-            (f as any).entity
-              ? `${f.name}__${(f as any).entity.display_column}`
-              : f.name
-          ] as string,
-      })),
-    [assay, assayFields],
-  );
+  const publishMutation = usePublishExperimentMutation(experiment.id!);
+  const draftMutation = useDraftExperimentMutation(experiment.id!);
 
-  if (isAssayLoading || isAssayFieldsLoading) {
-    return <Spinner />;
-  }
+  const onDelete = async () => {
+    if (
+      !experiment.id ||
+      !window.confirm(
+        `Are you sure you want to delete this Experiment? This action is irreversible`,
+      )
+    )
+      return;
+    await destroyEntityMutation.mutateAsync(experiment.id);
+    navigate("../../..");
+  };
 
-  if (isAssayError || isAssayFieldsError || !assay || !assayFields) {
-    return <ErrorPage error={assayError ?? assayFieldsError} />;
+  const onPublish = async () => {
+    if (!experiment.id) {
+      return;
+    }
+    await publishMutation.mutateAsync();
+  };
+
+  const onDraft = async () => {
+    if (
+      !experiment.id ||
+      !window.confirm(
+        `Are you sure you want to convert this Experiment to draft?`,
+      )
+    ) {
+      return;
+    }
+    await draftMutation.mutateAsync();
+  };
+
+  if (!experiment.id || !hasWrite) {
+    return null;
   }
 
   return (
-    <Surface
-      style={{
-        width: "20vw",
-        maxWidth: "20vw",
-        display: "flex",
-        flexDirection: "column",
-        gap: "var(--spacing)",
-        overflow: "auto",
-      }}
-    >
-      <em>Assay</em>
-      <Link to={`/assays/assays/${assay.id}`}>
-        <h3>{assay.name}</h3>
-      </Link>
-      <em>Assay model</em>
-      <h3>{assay.assay_model_id__name}</h3>
-      <em>Assay type</em>
-      <h3>{assay.assay_type_id__name}</h3>
-      <em>Metadata</em>
-      {metadata?.length && (
-        <div
-          style={{ display: "flex", gap: "var(--spacing)", flexWrap: "wrap" }}
-        >
-          {metadata.map((m) => (
-            <span
-              key={m.key}
-              style={{
-                backgroundColor: "rgb(from var(--palette-info-main) r g b / 0.5)",
-                padding: "calc(var(--spacing) / 2)",
-                borderRadius: "var(--border-radius)",
-                textWrap: "nowrap",
-              }}
-            >
-              <strong>
-                {m.label}: {m.value}
-              </strong>
-            </span>
-          ))}
+    <div className={styles.detailsContainer}>
+      {experiment.publication_status_id__name === "Draft" && (
+        <div className={styles.publishSection}>
+          <div className={styles.publishContent}>
+            <h3>Publish this Experiment</h3>
+            <p>
+              Publishing this Experiment will make it available in Data Tables.
+            </p>
+          </div>
+          <Button
+            color="secondary"
+            onClick={onPublish}
+            loading={publishMutation.isPending}
+          >
+            Publish
+          </Button>
         </div>
       )}
-    </Surface>
+      {experiment.publication_status_id__name === "Published" && (
+        <div className={styles.draftSection}>
+          <div className={styles.draftContent}>
+            <h3>Convert this Experiment to Draft</h3>
+            <p>
+              Converting this Experiment to draft will allow you to make changes
+              to its Metadata and Data Sheets Records. It will not be available
+              in Data Tables until it is published again.
+            </p>
+          </div>
+          <Button
+            color="danger"
+            onClick={onDraft}
+            loading={draftMutation.isPending}
+          >
+            Convert to Draft
+          </Button>
+        </div>
+      )}
+      <div className={styles.deleteSection}>
+        <div className={styles.deleteContent}>
+          <h3>Delete this Experiment</h3>
+          <p>
+            Deleting this Experiment will permanently remove it from the
+            database. <b>This action is irreversible.</b>
+          </p>
+        </div>
+        <Button
+          color="danger"
+          onClick={onDelete}
+          loading={destroyEntityMutation.isPending}
+        >
+          Delete
+        </Button>
+      </div>
+    </div>
   );
 };
 
@@ -141,16 +266,18 @@ const ExperimentForm = ({
   fields: FormFieldDef[];
   experiment: Partial<ExperimentData>;
 }) => {
-  const canCrudExperiment = useHasRoles(["Administrator", "AssayAdministrator", "AssayUser"])
+  const canCrudExperiment =
+    useHasPermission("write:assays") &&
+    experiment.publication_status_id__name !== "Published";
 
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const assay_id = searchParams.has("assay_id")
-    ? Number(searchParams.get("assay_id"))
+  const assay_model_id = searchParams.has("assay_model_id")
+    ? Number(searchParams.get("assay_model_id"))
     : undefined;
   const [formData, setFormData] = useState<Partial<ExperimentData>>({
-    assay_id,
+    assay_model_id,
     ...experiment,
   });
 
@@ -163,11 +290,7 @@ const ExperimentForm = ({
     experiment.id ?? -1,
   );
 
-  const destroyEntityMutation = useDestroyEntityMutation(
-    "grit/assays/experiments",
-  );
-
-  const form = useForm<Partial<ExperimentData>>({
+  const form = useForm({
     defaultValues: formData,
     onSubmit: genericErrorHandler(async ({ value: formValue, formApi }) => {
       const value = getVisibleFieldData<Partial<ExperimentData>>(
@@ -202,54 +325,35 @@ const ExperimentForm = ({
     }),
   });
 
-  const onDelete = async () => {
-    if (
-      !experiment.id ||
-      !window.confirm(
-        `Are you sure you want to delete this experiment? This action is irreversible`,
-      )
-    ) {
-      return;
-    }
-    await destroyEntityMutation.mutateAsync(experiment.id);
-    navigate("../..");
-  };
+  const { assay_model_id_field, name_field, description_field } =
+    useMemo(() => {
+      const assay_model_id_field = fields.find(
+        ({ name }) => name === "assay_model_id",
+      ) as EntityFormFieldDef | undefined;
+      if (assay_model_id_field) {
+        assay_model_id_field.disabled = !!experiment.id || !canCrudExperiment;
+        assay_model_id_field.entity = {
+          ...assay_model_id_field.entity,
+          params: { scope: "published" },
+        };
+      }
+      return {
+        assay_model_id_field,
+        name_field: {
+          ...fields.find(({ name }) => name === "name")!,
+          disabled: !canCrudExperiment,
+        },
+        description_field: {
+          ...fields.find(({ name }) => name === "description")!,
+          disabled: !canCrudExperiment,
+        },
+      } satisfies ExperimentFormFields;
+    }, [fields, experiment.id, canCrudExperiment]);
 
-  const {
-    assay_id: assay_id_field,
-    name: name_field,
-    description: description_field,
-    rest,
-  } = useMemo(() => {
-    return fields.reduce(
-      (acc, f) => {
-        const entityField = f as EntityFormFieldDef;
-        switch (f.name) {
-          case "assay_id":
-            acc.assay_id = {
-              ...entityField,
-              hidden: !!experiment.id,
-              disabled: !canCrudExperiment,
-              entity: { ...entityField.entity, params: { scope: "published" } },
-            } as EntityFormFieldDef;
-            break;
-          case "name":
-          case "description":
-            acc[f.name] = {...f, disabled: !canCrudExperiment};
-            break;
-          default:
-            acc.rest.push({...f, disabled: !canCrudExperiment});
-        }
-        return acc;
-      },
-      { rest: [] } as ExperimentFormFields,
-    );
-  }, [fields, experiment.id, canCrudExperiment]);
-
-  if (!assay_id_field || !name_field || !description_field) {
+  if (!assay_model_id_field || !name_field || !description_field) {
     return (
       <ErrorPage>
-        <Link to="..">
+        <Link to="../..">
           <Button>Back</Button>
         </Link>
       </ErrorPage>
@@ -257,65 +361,39 @@ const ExperimentForm = ({
   }
 
   return (
-    <div
-      className={classnames(styles.experiment, {
-        [styles.withAssayInfo]: !!experiment.assay_id,
+    <Form
+      form={form}
+      className={classnames(styles.container, {
+        [styles.withMetadataTemplates]: !experiment.assay_id,
       })}
     >
-      {experiment.assay_id && <AssayMetadata assayId={experiment.assay_id} />}
-      <Surface className={styles.modelForm}>
-        {!experiment.id && (
-          <h2 style={{ alignSelf: "baseline", marginBottom: ".5em" }}>
-            New experiment
-          </h2>
-        )}
-        <Form<Partial<ExperimentData>> form={form}>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: experiment.id ? "1fr" : "1fr 1fr",
-              gridAutoRows: "max-content",
-              gap: "calc(var(--spacing) * 2)",
-              paddingBottom: "calc(var(--spacing) * 2)",
-            }}
-          >
-            {form.state.errorMap.onSubmit && (
-              <div
-                style={{
-                  gridColumnStart: 1,
-                  gridColumnEnd: -1,
-                  color: "var(--palette-error-main)",
-                }}
-              >
-                {form.state.errorMap.onSubmit?.toString()}
-              </div>
-            )}
-            <FormField form={form} fieldDef={name_field} />
-            <FormField form={form} fieldDef={assay_id_field} />
-            <div
-              style={{
-                gridColumnStart: 1,
-                gridColumnEnd: -1,
-              }}
-            >
-              <FormField form={form} fieldDef={description_field} />
-            </div>
-            {rest.map((f) => (
-              <FormField form={form} fieldDef={f} key={f.name} />
-            ))}
+      <Surface className={styles.form}>
+        {!experiment.id && <h2 className={styles.formTitle}>New experiment</h2>}
+        <div className={styles.formFields}>
+          <FormBanner content={form.state.errorMap.onSubmit} />
+          <div className={styles.formFullwidthField}>
+            <FormField fieldDef={assay_model_id_field} />
           </div>
-          <FormControls
-            form={form}
-            onDelete={onDelete}
-            showDelete={!!experiment.id && canCrudExperiment}
-            showCancel
-            cancelLabel={experiment.id ? "Back" : "Cancel"}
-            onCancel={() => navigate(experiment.id ? "../.." : "..")}
-            isDeleting={destroyEntityMutation.isPending}
+          <div className={styles.formFullwidthField}>
+            <FormField fieldDef={name_field} />
+          </div>
+          <div className={styles.formFullwidthField}>
+            <FormField fieldDef={description_field} />
+          </div>
+          <ExperimentMetadataForm
+            form={form as any}
+            disabled={!canCrudExperiment}
           />
-        </Form>
+        </div>
+        <FormControls
+          showCancel
+          cancelLabel={experiment.id ? "Back" : "Cancel"}
+          onCancel={() => navigate(experiment.id ? "../../.." : "../..")}
+        />
+        {experiment.id && <ExperimentActions experiment={experiment} />}
       </Surface>
-    </div>
+      {!experiment.id && <ExperimentMetadataTemplates form={form as any} />}
+    </Form>
   );
 };
 
@@ -326,7 +404,9 @@ const Details = () => {
     isLoading: isExperimentFieldsLoading,
     isError: isExperimentFieldsError,
     error: experimentFieldsError,
-  } = useExperimentFields();
+  } = useExperimentFields(undefined, undefined, {
+    select: (d) => d.filter(({ name }) => name !== "publication_status_id"),
+  });
 
   const { data, isLoading, isError, error } = useExperiment(experiment_id);
 

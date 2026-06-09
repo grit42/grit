@@ -65,10 +65,6 @@
       "name": "frontend/spreadsheet",
     },
     {
-      "path": "packages/frontend/app",
-      "name": "frontend/app",
-    },
-    {
       "path": "grit-docs",
       "name": "docs"
     }

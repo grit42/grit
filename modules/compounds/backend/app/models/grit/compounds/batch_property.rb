@@ -28,10 +28,7 @@ module Grit::Compounds
     display_column "name"
 
 
-    entity_crud_with read: [],
-      create: [ "Administrator", "CompoundAdministrator" ],
-      update: [ "Administrator", "CompoundAdministrator" ],
-      destroy: [ "Administrator", "CompoundAdministrator" ]
+    entity_crud_with read: [ "read:system" ], write: [ "admin:compounds" ]
 
     validates :safe_name, uniqueness: true, length: { minimum: 3, maximum: 30 }
     validates :safe_name, format: { with: /\A[a-z_]{2}/, message: "should start with two lowercase letters or underscores" }
@@ -40,7 +37,7 @@ module Grit::Compounds
 
     def safe_name_not_conflict
       return unless self.safe_name_changed?
-      if Grit::Compounds::Batch.respond_to?(self.safe_name)
+      if Grit::Compounds::Batch.new.respond_to?(self.safe_name)
         errors.add("safe_name", "cannot be used as a safe name")
       end
     end

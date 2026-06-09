@@ -18,17 +18,12 @@
 
 import { PropsWithChildren, useCallback, useMemo, useState } from "react";
 import EntityFormsContext from "./EntityFormsContext";
-import {
-  EntityDetails,
-  EntityDetailsProps,
-} from "./pages/[entity]/[id]";
+import { EntityDetailsProps } from "./types";
 
 const EntityFormsProvider: React.FC<PropsWithChildren> = ({ children }) => {
   const [forms, setForms] = useState<
     Record<string, React.ComponentType<EntityDetailsProps>>
-  >({
-    default: EntityDetails,
-  });
+  >({});
   const register = useCallback(
     (type: string, form: React.ComponentType<EntityDetailsProps>) => {
       setForms((prev) => ({

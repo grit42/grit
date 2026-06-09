@@ -1,0 +1,20 @@
+@use "@grit42/client-library/theme.scss";
+
+.assayModelHeader {
+  display: flex;
+  flex-direction: column;
+  gap: theme.$spacing;
+  margin-bottom: theme.$spacing;
+
+  .nameAndStatus {
+    display: flex;
+    gap: theme.$spacing;
+    align-items: baseline;
+    flex-basis: 100%;
+
+    h2 {
+      color: theme.$palette-secondary-main;
+      margin-bottom: 0;
+    }
+  }
+}

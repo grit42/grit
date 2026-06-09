@@ -17,29 +17,35 @@
  */
 
 import { Link, useNavigate } from "react-router-dom";
-import { Button, Surface } from "@grit42/client-library/components";
+import { Button } from "@grit42/client-library/components";
 import {
   AddFormControl,
   Form,
+  FormBanner,
   FormControls,
   FormField,
   FormFieldDef,
+  FormFields,
   genericErrorHandler,
   getVisibleFieldData,
   useForm,
+  useStore,
 } from "@grit42/form";
 import {
   useCreateEntityMutation,
   useDestroyEntityMutation,
   useEditEntityMutation,
+  useHasPermission,
 } from "@grit42/core";
 import { DataTableColumnData } from "../../../queries/data_table_columns";
 import { useQueryClient } from "@grit42/api";
-import styles from "../dataTableColumns.module.scss";
-import { classnames } from "@grit42/client-library/utils";
+import styles from "./entityAttributes.module.scss";
+import { toSafeIdentifier } from "@grit42/core/utils";
+import { CenteredSurface } from "@grit42/client-library/layouts";
+import { useMemo } from "react";
 
 const EntityAttributeDataTableColumnForm = ({
-  fields,
+  fields: fieldsFromProps,
   dataTableColumn,
   dataTableId,
   dataTableColumnId,
@@ -49,7 +55,13 @@ const EntityAttributeDataTableColumnForm = ({
   dataTableId: string | number;
   dataTableColumnId: string | number;
 }) => {
+  const canCrud = useHasPermission("write:analysis");
   const queryClient = useQueryClient();
+  const fields = useMemo(
+    () =>
+      fieldsFromProps.map((f) => ({ ...f, disabled: f.disabled || !canCrud })),
+    [canCrud, fieldsFromProps],
+  );
 
   const navigate = useNavigate();
 
@@ -66,7 +78,7 @@ const EntityAttributeDataTableColumnForm = ({
     "grit/assays/data_table_columns",
   );
 
-  const form = useForm<Partial<DataTableColumnData>>({
+  const form = useForm({
     defaultValues: dataTableColumn,
     onSubmit: genericErrorHandler(async ({ value: formValue }) => {
       const value = {
@@ -83,14 +95,14 @@ const EntityAttributeDataTableColumnForm = ({
         queryClient.invalidateQueries({
           queryKey: [
             "entities",
-            "data",
+            "infiniteData",
             `grit/assays/data_tables/${dataTableId}/data_table_columns`,
           ],
         }),
         queryClient.invalidateQueries({
           queryKey: [
             "entities",
-            "data",
+            "infiniteData",
             `grit/assays/data_tables/${dataTableId}/data_table_rows`,
           ],
         }),
@@ -116,14 +128,14 @@ const EntityAttributeDataTableColumnForm = ({
       queryClient.invalidateQueries({
         queryKey: [
           "entities",
-          "data",
+          "infiniteData",
           `grit/assays/data_tables/${dataTableId}/data_table_columns`,
         ],
       }),
       queryClient.invalidateQueries({
         queryKey: [
           "entities",
-          "data",
+          "infiniteData",
           `grit/assays/data_tables/${dataTableId}/data_table_rows`,
         ],
       }),
@@ -131,53 +143,65 @@ const EntityAttributeDataTableColumnForm = ({
     navigate("..");
   };
 
+  const { safe_name, proposed_safe_name } = useStore(
+    form.store,
+    ({ values }) => {
+      const { name, safe_name } = values;
+      const proposed_safe_name = form.getFieldMeta("name")?.isDirty
+        ? toSafeIdentifier(name as string)
+        : safe_name;
+      return { safe_name, proposed_safe_name };
+    },
+  );
+
   return (
-    <div
-      className={classnames(
-        styles.columnFormContainer,
-        styles.entityAttributeColumnFormContainer,
-      )}
-    >
-      <h1>Edit column</h1>
-      <Surface className={styles.columnFormSurface}>
-        <Form<Partial<DataTableColumnData>> form={form}>
-          <div
-            className={classnames(
-              styles.columnForm,
-              styles.entityAttributeColumnForm,
-            )}
-          >
-            {form.state.errorMap.onSubmit && (
-              <div className={styles.columnFormError}>
-                {form.state.errorMap.onSubmit?.toString()}
-              </div>
-            )}
-            <div className={styles.columnFormFields}>
-              {fields.map((f) => (
-                <FormField form={form} fieldDef={f} key={f.name} />
-              ))}
+    <CenteredSurface>
+      <h2>{dataTableColumnId === "new" ? "Add" : "Edit"} column</h2>
+      <Form form={form}>
+        <FormFields columns={1}>
+          <FormBanner content={form.state.errorMap.onSubmit} />
+          {fields.map((f) => (
+            <div className={styles.columnFormField} key={f.name}>
+              <FormField fieldDef={f} />
+              {f.name === "safe_name" &&
+                safe_name !== proposed_safe_name &&
+                form.state.isDirty && (
+                  <div className={styles.columnFormFieldSuggestion}>
+                    <em
+                      role="button"
+                      onClick={() => {
+                        form.setFieldValue("safe_name", proposed_safe_name);
+                        form.setFieldMeta("safe_name", (prev) => ({
+                          ...prev,
+                          errorMap: {},
+                        }));
+                      }}
+                    >
+                      Use "{proposed_safe_name}"
+                    </em>
+                  </div>
+                )}
             </div>
-          </div>
-          {dataTableColumnId === "new" && (
-            <AddFormControl form={form} label="Save">
-              <Link to="..">
-                <Button>Cancel</Button>
-              </Link>
-            </AddFormControl>
-          )}
-          {dataTableColumnId !== "new" && (
-            <FormControls
-              form={form}
-              onDelete={onDelete}
-              showDelete={dataTableColumnId !== "new"}
-              showCancel
-              cancelLabel={dataTableColumnId === "new" ? "Cancel" : "Back"}
-              onCancel={() => navigate("..")}
-            />
-          )}
-        </Form>
-      </Surface>
-    </div>
+          ))}
+        </FormFields>
+        {dataTableColumnId === "new" && (
+          <AddFormControl label="Save">
+            <Link to="..">
+              <Button>Cancel</Button>
+            </Link>
+          </AddFormControl>
+        )}
+        {dataTableColumnId !== "new" && canCrud && (
+          <FormControls
+            onDelete={onDelete}
+            showDelete={dataTableColumnId !== "new"}
+            showCancel
+            cancelLabel={dataTableColumnId === "new" ? "Cancel" : "Back"}
+            onCancel={() => navigate("..")}
+          />
+        )}
+      </Form>
+    </CenteredSurface>
   );
 };
 

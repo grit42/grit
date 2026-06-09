@@ -18,15 +18,16 @@
 
 require "grit/core/version"
 require "grit/core/engine"
+require "grit/core/exporter"
 require "grit/core/filter_provider"
 require "grit/core/vocabulary_item_loader"
-require "test_entity_loader"
+require "grit/core/authentication_strategies"
 require "authlogic"
 
 module Grit
   module Core
     eq = lambda { |property, value| ActiveRecord::Base.send(:sanitize_sql_array, [ "#{property} = ?", value ]) }
-    ne = lambda { |property, value| ActiveRecord::Base.send(:sanitize_sql_array, [ "#{property} <> ?", value ]) }
+    ne = lambda { |property, value| ActiveRecord::Base.send(:sanitize_sql_array, [ "#{property} IS DISTINCT FROM ?", value ]) }
     gt = lambda { |property, value| ActiveRecord::Base.send(:sanitize_sql_array, [ "#{property} > ?", value ]) }
     gte = lambda { |property, value| ActiveRecord::Base.send(:sanitize_sql_array, [ "#{property} >= ?", value ]) }
     lt = lambda { |property, value| ActiveRecord::Base.send(:sanitize_sql_array, [ "#{property} < ?", value ]) }

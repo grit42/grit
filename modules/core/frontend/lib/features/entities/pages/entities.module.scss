@@ -5,3 +5,23 @@
   height: 100%;
   overflow-y: auto;
 }
+
+.entityTabsContainer {
+  max-height: 100%;
+  height: 100%;
+  overflow: auto;
+  width: 100%;
+}
+
+.tabPanel {
+  overflow-y: auto;
+}
+
+.entity {
+  width: 960px;
+  margin-inline: auto;
+}
+
+.entityForm {
+  width: 960px;
+}

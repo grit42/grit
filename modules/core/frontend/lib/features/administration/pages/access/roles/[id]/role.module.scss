@@ -1,0 +1,30 @@
+@use "@grit42/client-library/theme.scss";
+
+.surface {
+  height: 100%;
+  width: 960px;
+  display: grid;
+  grid-auto-rows: max-content;
+  gap: theme.$spacing-lg;
+}
+
+.permissions {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-auto-rows: min-content;
+  gap: theme.$spacing-md;
+
+  ul {
+    padding-inline: theme.$spacing-lg;
+    list-style-type: none;
+    display: grid;
+    grid-auto-rows: max-content;
+    gap: theme.$spacing-md;
+  }
+
+  li {
+    display: grid;
+    grid-template-columns: min-content 20ch 1fr;
+    gap: theme.$spacing-lg;
+  }
+}

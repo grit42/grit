@@ -19,15 +19,12 @@
 import { CellContext, ColumnDefTemplate } from "@grit42/table";
 import { CompoundData } from "../../queries/compounds";
 import { AsyncMoleculeViewer } from "../../components/MoleculeViewer";
+import styles from "./table.module.scss";
 
 const MolCell: ColumnDefTemplate<CellContext<CompoundData, string>> = (
   info,
 ) => (
-  <div
-    style={{
-      height: 300,
-    }}
-  >
+  <div className={styles.molCell}>
     <AsyncMoleculeViewer
       id={`molecule-viewer-${info.row.original.id}`}
       molfile={info.getValue() ?? ""}

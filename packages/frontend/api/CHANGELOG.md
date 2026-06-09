@@ -1,3 +1,13 @@
+## 0.7.0
+
+### 🚀 Features
+
+- dependencies upgrade
+
+### 🧱 Updated Dependencies
+
+- Updated @grit42/notifications to 0.7.0
+
 ## 0.6.0
 
 ### 🚀 Features

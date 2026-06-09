@@ -20,7 +20,7 @@ import { Button } from "@grit42/client-library/components";
 import { createSearchParams, Link, useNavigate } from "react-router-dom";
 import {
   DataTableColumnData,
-  useAvailableDataTableColumns,
+  useInfiniteAvailableDataTableColumns,
 } from "../../../queries/data_table_columns";
 import { useTableColumns } from "@grit42/core/utils";
 import { Table, useSetupTableState } from "@grit42/table";
@@ -29,7 +29,8 @@ import {
   useAssayDataSheetColumnColumns,
 } from "../../../../../queries/assay_data_sheet_columns";
 import { EntityPropertyDef } from "@grit42/core";
-import styles from "../dataTableColumns.module.scss";
+import { useMemo } from "react";
+import { CenteredColumnLayout } from "@grit42/client-library/layouts";
 
 const getRowId = (data: DataTableColumnData | AssayDataSheetColumnData) =>
   `${data.assay_model_id}-${data.assay_id}-${data.id}`;
@@ -105,19 +106,20 @@ const AssayDataSheetDataTableColumnSelector = ({
       },
     },
   );
-  const {
-    data: availableDataTableColumns,
-    isLoading: isAvailableDataTableColumnsLoading,
-    isError: isAvailableDataTableColumnsError,
-    error: availableDataTableColumnsError,
-  } = useAvailableDataTableColumns(
-    dataTableId,
-    availableTableState.sorting,
-    availableTableState.filters,
+  const { data, isLoading, isError, error, isFetchingNextPage, fetchNextPage } =
+    useInfiniteAvailableDataTableColumns(
+      dataTableId,
+      availableTableState.sorting,
+      availableTableState.filters,
+    );
+
+  const flatData = useMemo(
+    () => data?.pages.flatMap(({ data }) => data) ?? [],
+    [data],
   );
 
   return (
-    <div className={styles.selectorContainer}>
+    <CenteredColumnLayout>
       <Table<AssayDataSheetColumnData>
         header="Select a column"
         getRowId={getRowId}
@@ -134,17 +136,21 @@ const AssayDataSheetDataTableColumnSelector = ({
             <Button color="primary">Cancel</Button>
           </Link>
         }
-        loading={isAvailableDataTableColumnsLoading}
+        loading={isLoading}
         tableState={availableTableState}
         disableFooter
-        data={availableDataTableColumns}
+        data={flatData}
         noDataMessage={
-          (isAvailableDataTableColumnsError
-            ? availableDataTableColumnsError
-            : undefined) ?? "No columns available for this source entity"
+          (isError ? error : undefined) ??
+          "No columns available for this source entity"
         }
+        pagination={{
+          fetchNextPage,
+          isFetchingNextPage,
+          totalRows: data?.pages[0]?.total,
+        }}
       />
-    </div>
+    </CenteredColumnLayout>
   );
 };
 

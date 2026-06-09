@@ -18,11 +18,11 @@
 
 import styles from "./form.module.scss";
 import { Button, ButtonGroup } from "@grit42/client-library/components";
-import { ReactFormExtendedApi } from "@tanstack/react-form";
 import { PropsWithChildren } from "react";
+import { useFormContext } from "./gritFormContext";
+import { classnames } from "@grit42/client-library/utils";
 
-interface Props<T> {
-  form: ReactFormExtendedApi<T>;
+interface Props {
   cancelLabel?: string;
   deleteLabel?: string;
   showCancel?: boolean;
@@ -34,8 +34,7 @@ interface Props<T> {
   style?: React.CSSProperties;
 }
 
-const FormControls = <T,>({
-  form,
+const FormControls = ({
   showCancel,
   cancelLabel = "Cancel",
   onCancel,
@@ -46,18 +45,19 @@ const FormControls = <T,>({
   isDeleting,
   style,
   children,
-}: PropsWithChildren<Props<T>>) => {
+}: PropsWithChildren<Props>) => {
+  const form = useFormContext();
+
   return (
     <form.Subscribe
       selector={(state) => [state.canSubmit, state.isSubmitting, state.isDirty]}
       children={([canSubmit, isSubmitting, isDirty]) => {
         return (
           <div
-            style={{
-              ...(style ?? {}),
-              display: isDirty || showDelete || showCancel ? undefined : "none",
-            }}
-            className={styles.controls}
+            style={style}
+            className={classnames(styles.controls, {
+              [styles.hidden]: !(isDirty || showDelete || showCancel),
+            })}
           >
             <ButtonGroup>
               {isDirty && (
@@ -74,7 +74,9 @@ const FormControls = <T,>({
                 <Button onClick={() => form.reset()}>Revert changes</Button>
               )}
               {showCancel && !isDirty && (
-                <Button onClick={onCancel} loading={isCancelling}>{cancelLabel}</Button>
+                <Button onClick={onCancel} loading={isCancelling}>
+                  {cancelLabel}
+                </Button>
               )}
               {showDelete && (
                 <Button color="danger" onClick={onDelete} loading={isDeleting}>

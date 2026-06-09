@@ -1,4 +1,6 @@
 Grit::Assays::Engine.routes.draw do
+  resources :experiment_metadata_templates
+  resources :experiment_metadata
   resources :data_table_columns
   resources :data_table_entities do
     collection do
@@ -15,12 +17,18 @@ Grit::Assays::Engine.routes.draw do
     resources :data_table_entities
     resources :data_table_columns
   end
-  resources :experiment_data_sheet_values
-  resources :experiment_data_sheet_records
-  resources :experiment_data_sheets
 
   resources :experiments do
+    resources :experiment_attachments, only: [ :index, :create, :destroy ] do
+      collection do
+        get :export
+      end
+    end
+
     get :export
+    post :publish
+    post :draft
+    get :assay_data_sheet_definitions
   end
 
   resources :assay_data_sheet_columns
@@ -28,13 +36,15 @@ Grit::Assays::Engine.routes.draw do
     collection do
       post :create_bulk
     end
+    resources :experiment_data_sheet_records
   end
   resources :assay_metadata_definitions
-  resources :assay_metadata
-  resources :assays
   resources :assay_model_metadata
   resources :assay_models do
+    post :clone
     post :update_metadata
+    post :publish
+    post :draft
   end
   resources :assay_types
 end

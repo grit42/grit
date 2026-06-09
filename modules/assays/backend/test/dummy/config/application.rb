@@ -3,9 +3,9 @@ require_relative "boot"
 require "rails"
 # Pick the frameworks you want:
 require "active_model/railtie"
-# require "active_job/railtie"
+require "active_job/railtie"
 require "active_record/railtie"
-# require "active_storage/engine"
+require "active_storage/engine"
 require "action_controller/railtie"
 require "action_mailer/railtie"
 # require "action_mailbox/engine"
@@ -40,6 +40,9 @@ module Dummy
     # Skip views, helpers and assets when generating a new resource.
     config.api_only = true
 
+    # Store files locally.
+    config.active_storage.service = :local
+
     config.action_mailer.delivery_method = :smtp
     config.action_mailer.smtp_settings = {
       address: ENV.fetch("SMTP_SERVER", nil),
@@ -49,5 +52,7 @@ module Dummy
       authentication: "plain",
       enable_starttls_auto: true
     }
+
+    config.active_storage.variant_processor = :disabled
   end
 end

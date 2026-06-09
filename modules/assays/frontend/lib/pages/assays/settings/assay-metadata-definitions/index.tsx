@@ -24,7 +24,10 @@ const AssayMetadataDefinitionsAdministrationPage = () => {
   return (
     <Routes>
       <Route index element={<AssayMetadataDefinitionsTable />} />
-      <Route path="/:assay_metadata_definition_id" element={<AssayMetadataDefinitionForm />} />
+      <Route
+        path="/:assay_metadata_definition_id"
+        element={<AssayMetadataDefinitionForm />}
+      />
     </Routes>
   );
 };

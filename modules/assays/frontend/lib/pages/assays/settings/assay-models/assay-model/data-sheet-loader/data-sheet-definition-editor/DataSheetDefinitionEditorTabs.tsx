@@ -1,8 +1,6 @@
 import { Tabs } from "@grit42/client-library/components";
-import {
-  DataSetDefinitionFull,
-} from "./dataSheetDefinitionEditorForm";
-import styles from "../dataSheetStructureLoader.module.scss";
+import { DataSetDefinitionFull } from "./dataSheetDefinitionEditorForm";
+import styles from "./dataSheetDefinitionEditor.module.scss";
 import { useMemo } from "react";
 
 const DataSheetDefinitionEditorTabs = ({
@@ -30,7 +28,7 @@ const DataSheetDefinitionEditorTabs = ({
 
   return (
     <Tabs
-      className={styles.dataSheetsFormHeader}
+      className={styles.tabs}
       selectedTab={focusedSheetIndex}
       onTabChange={handleTabChange}
       tabs={tabs}

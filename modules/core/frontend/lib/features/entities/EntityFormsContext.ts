@@ -16,8 +16,8 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { createContext, useContext } from "react";
-import { EntityDetailsProps } from "./pages/[entity]/[id]";
+import { createContext, useContext, useMemo } from "react";
+import { EntityDetailsProps } from "./types";
 
 interface EntityFormsContextValue {
   forms: Record<string, React.ComponentType<EntityDetailsProps>>;
@@ -39,7 +39,10 @@ const EntityFormsContext = createContext(defaultContextValue);
 export const useEntityFormsContext = () => useContext(EntityFormsContext);
 export const useEntityForm = (type: string) => {
   const forms = useContext(EntityFormsContext).forms;
-  return forms[type] ?? forms["default"];
+  return useMemo(
+    () => ({ Form: forms[type] ?? forms["default"] }),
+    [forms, type],
+  );
 };
 
 export const useRegisterEntityForm = () =>

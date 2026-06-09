@@ -24,38 +24,33 @@ import {
   useEditEntityMutation,
 } from "../../../mutations";
 import { useMemo, useState } from "react";
-import { useForm } from "@grit42/form";
 import {
+  useForm,
   Form,
   FormControls,
   FormField,
   genericErrorHandler,
   getVisibleFieldData,
   FormFieldDef,
+  FormFields,
+  FormBanner,
 } from "@grit42/form";
-import { EntityData, EntityInfo, EntityProperties } from "../../../types";
-import { ErrorPage, Spinner, Surface } from "@grit42/client-library/components";
+import {
+  EntityData,
+  EntityDetailsProps,
+  EntityInfo,
+  EntityProperties,
+} from "../../../types";
+import { ErrorPage, Spinner } from "@grit42/client-library/components";
 import { useEntityForm } from "../../../EntityFormsContext";
+import { CenteredSurface } from "@grit42/client-library/layouts";
 
 const EntityDetailsPage = () => {
-  const { title } = (useLocation().state ?? {}) as {
-    title?: string;
-  };
   const { entity, id = "new" } = useParams();
-  const Form = useEntityForm(entity!);
+  const entityForm = useEntityForm(entity!);
 
-  return (
-    <>
-      <h1>{title ?? `${id === "new" ? "Create" : "Edit"} ${entity}`}</h1>
-      <Form entity={entity!} id={id} />
-    </>
-  );
+  return <entityForm.Form entity={entity!} id={id} />;
 };
-
-export interface EntityDetailsProps {
-  entity: string;
-  id: string | number;
-}
 
 export const EntityDetails = ({ entity, id }: EntityDetailsProps) => {
   const {
@@ -92,9 +87,7 @@ export const EntityDetails = ({ entity, id }: EntityDetailsProps) => {
     !fields ||
     (id !== "new" && !datum)
   ) {
-    return (
-      <ErrorPage error={infoError ?? fieldsError ?? datumError} />
-    );
+    return <ErrorPage error={infoError ?? fieldsError ?? datumError} />;
   }
 
   return (
@@ -153,7 +146,7 @@ const EntityForm = ({
 
   const destroyEntityMutation = useDestroyEntityMutation(info.path);
 
-  const form = useForm<EntityData>({
+  const form = useForm({
     defaultValues: formData,
     onSubmit: genericErrorHandler(async ({ value: formValue, formApi }) => {
       const value = getVisibleFieldData<EntityProperties>(formValue, fields);
@@ -182,7 +175,12 @@ const EntityForm = ({
 
   const onDelete = async () => {
     if (id !== "new") {
-      if (!window.confirm(`Are you sure you want to delete this record? This action is irreversible`)) return;
+      if (
+        !window.confirm(
+          `Are you sure you want to delete this record? This action is irreversible`,
+        )
+      )
+        return;
       await destroyEntityMutation.mutateAsync(id);
       navigate(redirect ?? "..", {
         relative: redirect ? undefined : "path",
@@ -191,35 +189,23 @@ const EntityForm = ({
   };
 
   return (
-    <Surface style={{ width: 960 }}>
-      <Form<EntityData> form={form}>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gridAutoRows: "max-content",
-            gap: "calc(var(--spacing) * 2)",
-            paddingBottom: "calc(var(--spacing) * 2)",
-          }}
-        >
-          {form.state.errorMap.onSubmit && (
-            <div style={{ gridColumnStart: 1, gridColumnEnd: -1, color: "var(--palette-error-main)" }}>
-              {form.state.errorMap.onSubmit?.toString()}
-            </div>
-          )}
+    <CenteredSurface>
+      <h2>{`${id === "new" ? "Create" : "Edit"} ${info.name}`}</h2>
+      <Form form={form}>
+        <FormFields>
+          <FormBanner content={form.state.errorMap.onSubmit} />
           {fieldsForInitialData.map((f) => (
-            <FormField<EntityData> form={form} fieldDef={f} key={f.name} />
+            <FormField fieldDef={f} key={f.name} />
           ))}
-        </div>
+        </FormFields>
         <FormControls
-          form={form}
           onDelete={onDelete}
           showDelete={id !== "new"}
           showCancel={id !== "new"}
           onCancel={() => navigate(-1)}
         />
       </Form>
-    </Surface>
+    </CenteredSurface>
   );
 };
 

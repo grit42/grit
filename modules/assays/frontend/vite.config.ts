@@ -7,7 +7,6 @@ import { fileURLToPath } from "node:url";
 import { externalizeDeps } from "vite-plugin-externalize-deps";
 import autoprefixer from "autoprefixer";
 import { libInjectCss } from "vite-plugin-lib-inject-css";
-import { preventOverwritePlugin } from "vite-plugin-prevent-overwrite";
 
 export default defineConfig(({ mode }) => ({
   plugins: [
@@ -17,7 +16,6 @@ export default defineConfig(({ mode }) => ({
       tsconfigPath: resolve(__dirname, "tsconfig.lib.json"),
     }),
     externalizeDeps(),
-    preventOverwritePlugin(),
   ],
   build: {
     minify: false,
@@ -62,9 +60,18 @@ export default defineConfig(({ mode }) => ({
               return `grit-${fileName}__${name}`;
             },
     },
-    preprocessorOptions: {
-      scss: {
-        api: "modern-compiler",
+  },
+  resolve: {
+    alias: {
+      "@grit42/assays": resolve(__dirname, "./lib"),
+    },
+  },
+  server: {
+    strictPort: true,
+    proxy: {
+      "/api": {
+        target: `http://localhost:3000/`,
+        changeOrigin: false,
       },
     },
   },

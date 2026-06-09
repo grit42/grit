@@ -40,6 +40,7 @@ export {
   useCreateEntityMutation,
   useEditEntityMutation,
   useDestroyEntityMutation,
+  useDangerousDestroyEntityMutation,
 } from "./mutations";
 
 export { default as EntitySelector } from "./components/EntitySelector";

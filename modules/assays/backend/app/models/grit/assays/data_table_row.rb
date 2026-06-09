@@ -21,7 +21,7 @@ module Grit::Assays
     self.table_name = "grit_assays_data_table_entities"
     include Grit::Core::GritEntityRecord
 
-    entity_crud_with read: []
+    entity_crud_with read: [ "read:system" ]
 
     def self.entity_properties(**args)
       data_table_id = args[:data_table_id]
@@ -67,7 +67,7 @@ module Grit::Assays
     end
 
     def self.entity_columns(**args)
-      self.entity_columns_from_properties(self.entity_properties(**args),[ "id" ])
+      self.entity_columns_from_properties(self.entity_properties(**args), [ "id" ])
     end
 
     def self.full_perspective(params = nil)
@@ -94,7 +94,7 @@ module Grit::Assays
         .each do |table_colum|
         query = table_colum.full_perspective_statement(query)
       end
-      return query
+      query
     end
 
     def self.for_data_table(data_table_id)
@@ -112,7 +112,7 @@ module Grit::Assays
       DataTableColumn.detailed.where(data_table_id: data_table.id).each do |table_colum|
         query = table_colum.data_table_statement(query)
       end
-      query
+      query.with(experiments_with_metadata: Experiment.detailed)
     end
 
 

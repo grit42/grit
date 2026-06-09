@@ -1,15 +1,14 @@
 {
   "name": "@grit42/api",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "type": "module",
   "scripts": {
     "tsc": "tsc -b",
     "build": "tsc -b ./tsconfig.lib.json && vite build",
-    "build:watch": "vite build --watch --emptyOutDir=false",
     "lint": "eslint . --fix",
     "lint:check": "eslint .",
-    "format": "prettier . -w",
-    "format:check": "prettier . -c"
+    "format": "prettier . -w --ignore-path ../../../.prettierignore",
+    "format:check": "prettier . -c --ignore-path ../../../.prettierignore"
   },
   "exports": {
     ".": {

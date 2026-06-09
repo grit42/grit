@@ -1,0 +1,9 @@
+# REFERENCE:
+#
+#   https://lefthook.dev/configuration/
+#
+
+pre-commit:
+  jobs:
+    - name: lint and format
+      run: pnpm nx affected -t lint:check format:check --files {staged_files}

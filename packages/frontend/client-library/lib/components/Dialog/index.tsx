@@ -23,7 +23,6 @@ import styles from "./dialog.module.scss";
 import useMountTransition, {
   TransitionState,
 } from "../../hooks/useMountTransition";
-import { Helmet } from "react-helmet-async";
 import Cross from "../../icons/Cross";
 
 export const DialogContext = createContext(false);
@@ -148,10 +147,7 @@ const DialogContent = ({
         data-title={title}
         ref={overlayRef}
       >
-        <Helmet>
-          <html style={{ overflow: "hidden" }} />
-        </Helmet>
-
+        <style>{` html { overflow: hidden; } `}</style>
         <div
           className={classnames(styles.backdrop, {
             [styles.show as string]: showTransition,
@@ -165,12 +161,16 @@ const DialogContent = ({
         <div
           ref={ref}
           onKeyDown={handleKeyDown}
-          className={classnames(styles.dialog, className, {
-            [styles.show as string]: showTransition,
-            [styles.withTable as string]: withTable === true,
-            [styles.wide as string]: isWide === true,
-            [styles.fullscreen as string]: isFullscreen === true,
-          })}
+          className={classnames(
+            styles.dialog,
+            {
+              [styles.show as string]: showTransition,
+              [styles.withTable as string]: withTable === true,
+              [styles.wide as string]: isWide === true,
+              [styles.fullscreen as string]: isFullscreen === true,
+            },
+            className,
+          )}
           onTransitionEnd={() => {
             if (transitionState === "out") {
               if (
@@ -188,8 +188,9 @@ const DialogContent = ({
           }}
         >
           <div
-            className={styles.header}
-            style={{ margin: headerMargin ? undefined : "unset" }}
+            className={classnames(styles.header, {
+              [styles.noMargin as string]: !headerMargin,
+            })}
           >
             <div className={styles.icon}>{icon}</div>
 

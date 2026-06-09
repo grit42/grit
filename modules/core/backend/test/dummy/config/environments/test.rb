@@ -10,6 +10,7 @@ Rails.application.configure do
 
   # While tests run files are not watched, reloading is not necessary.
   config.enable_reloading = false
+  config.active_job.queue_adapter = :inline
 
   # Eager loading loads your entire application. When running a single test locally,
   # this is usually not necessary, and can slow down your test suite. However, it's
@@ -32,7 +33,7 @@ Rails.application.configure do
   config.action_controller.allow_forgery_protection = false
 
   # Store uploaded files on the local file system in a temporary directory.
-  # config.active_storage.service = :test
+  config.active_storage.service = :test
 
   # Disable caching for Action Mailer templates even if Action Controller
   # caching is enabled.

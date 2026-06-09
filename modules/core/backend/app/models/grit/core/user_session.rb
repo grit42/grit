@@ -20,6 +20,9 @@
 
 module Grit::Core
   class UserSession < Authlogic::Session::Base
+    consecutive_failed_logins_limit ENV.fetch("MAX_FAILED_LOGINS", 50).to_i
+    logout_on_timeout ENV.fetch("SESSION_EXPIRY_ENABLED", "false") == "true"
+
     def cookie_key
       "grit_core_user_credentials"
     end

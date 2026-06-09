@@ -22,7 +22,6 @@ module Grit::Core
 
     display_column "name"
 
-
-    entity_crud_with read: []
+    entity_crud_with read: [ "read:system" ]
   end
 end

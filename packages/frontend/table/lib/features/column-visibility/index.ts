@@ -18,4 +18,4 @@
 
 export { default as ColumnVisibility } from "./ColumnVisibility";
 export * from "./utils";
-export { default as useColumnVisiblity } from "./useColumnVisbility"
+export { default as useColumnVisibility } from "./useColumnVisibility";

@@ -24,23 +24,19 @@ import {
   useNavigate,
   useParams,
 } from "react-router-dom";
-import { useEffect, useMemo, useState } from "react";
-import { Tabs } from "@grit42/client-library/components";
+import { useMemo } from "react";
+import { ErrorPage, Tabs } from "@grit42/client-library/components";
 import DataTablePlot from "./DataTablePlot";
-import { useHasRoles } from "@grit42/core";
+import { useHasPermission } from "@grit42/core";
 import { DataTableData, useDataTable } from "../../queries/data_tables";
-import styles from "./plots.module.scss";
+import { TabbedLayout } from "@grit42/client-library/layouts";
 
 interface Props {
   dataTable: DataTableData;
 }
 
 const DataTablePlotTabs = ({ dataTable }: Props) => {
-  const canCrudPlots = useHasRoles([
-    "Administrator",
-    "AssayAdministrator",
-    "AssayUser",
-  ]);
+  const canCrudPlots = useHasPermission("write:analysis");
 
   const navigate = useNavigate();
   const { plot_id } = useParams() as { plot_id: string };
@@ -57,51 +53,46 @@ const DataTablePlotTabs = ({ dataTable }: Props) => {
     [canCrudPlots, dataTable.plots],
   );
 
-  const [selectedTab, setSelectedTab] = useState(
-    tabs.findIndex(({ key }) => plot_id === key),
-  );
-
-  useEffect(() => {
-    setSelectedTab(tabs.findIndex(({ key }) => plot_id === key));
-  }, [plot_id, tabs]);
+  const selectedTab = tabs.findIndex(({ key }) => plot_id === key);
 
   if (selectedTab === -1) {
-    return <Navigate to={Object.keys(dataTable.plots)[0] ?? "new"} replace />;
+    return (
+      <Navigate to={`../${Object.keys(dataTable.plots)[0] ?? "new"}`} replace />
+    );
   }
 
   const handleTabChange = (index: number) => {
-    navigate(tabs[index].key);
+    navigate(`../${tabs[index].key}`);
   };
 
   return (
-    <div className={styles.plotTabs}>
+    <TabbedLayout>
       <Tabs
         onTabChange={handleTabChange}
         selectedTab={selectedTab}
         tabs={tabs}
       />
       <Outlet />
-    </div>
+    </TabbedLayout>
   );
 };
 
 const DataTablePlots = ({ dataTableId }: { dataTableId: string | number }) => {
   const { data: dataTable } = useDataTable(dataTableId);
+  const canCrudPlots = useHasPermission("write:analysis");
 
   if (!dataTable) return null;
+
+  if (!canCrudPlots) {
+    return <ErrorPage error="This data table has no plots." />;
+  }
 
   return (
     <Routes>
       <Route element={<DataTablePlotTabs dataTable={dataTable} />}>
         <Route
-          path=":plot_id"
+          path=":plot_id?"
           element={<DataTablePlot dataTable={dataTable} />}
-        />
-        <Route
-          path="*"
-          element={
-            <Navigate to={Object.keys(dataTable.plots)[0] ?? "new"} replace />
-          }
         />
       </Route>
     </Routes>

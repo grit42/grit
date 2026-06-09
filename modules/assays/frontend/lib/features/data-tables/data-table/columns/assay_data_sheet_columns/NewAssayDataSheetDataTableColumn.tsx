@@ -108,7 +108,8 @@ const NewAssayDataSheetDataTableColumn = () => {
             "assay_data_sheet_column_id",
             "entity_attribute_name",
             "source_type",
-            "pivots",
+            "experiment_ids",
+            "metadata_filters",
             "aggregation_method",
           ].includes(f.name),
       ),
@@ -145,6 +146,8 @@ const NewAssayDataSheetDataTableColumn = () => {
             aggregation_method: AGGREGATE_METHODS_FOR_DATA_TYPE(
               data?.data_type_id__name as string | undefined,
             )[0]?.value,
+            experiment_ids: [],
+            metadata_filters: {},
           } as Partial<DataTableColumnData>)
         : null,
     [data],
@@ -160,8 +163,7 @@ const NewAssayDataSheetDataTableColumn = () => {
     );
   }
 
-  if (isLoading || isDataTableColumnFieldsLoading)
-    return <Spinner />;
+  if (isLoading || isDataTableColumnFieldsLoading) return <Spinner />;
   if (
     isError ||
     !dataTableColumn ||
@@ -169,9 +171,7 @@ const NewAssayDataSheetDataTableColumn = () => {
     !dataTableColumnFields
   ) {
     return (
-      <ErrorPage
-        error={error ?? dataTableColumnFieldsError}
-      >
+      <ErrorPage error={error ?? dataTableColumnFieldsError}>
         <Link to="..">
           <Button>Back</Button>
         </Link>

@@ -2,8 +2,8 @@ import { ProjectGraphProjectNode, Tree } from "@nx/devkit";
 import { join } from "node:path";
 import { AfterAllProjectsVersioned, VersionActions } from "nx/release";
 import { ReleaseGroupWithName } from "nx/src/command-line/release/config/filter-release-groups";
-import { FinalConfigForProject } from "nx/src/command-line/release/version/release-group-processor";
 import { readdirSync, statSync } from "node:fs";
+import { FinalConfigForProject } from "nx/src/command-line/release/utils/release-graph";
 
 export const afterAllProjectsVersioned: AfterAllProjectsVersioned = async (
   _cwd,
@@ -16,7 +16,7 @@ export const afterAllProjectsVersioned: AfterAllProjectsVersioned = async (
 };
 
 export default class RubyVersionActions extends VersionActions {
-  validManifestFilenames = [];
+  validManifestFilenames: string[] = [];
 
   constructor(
     releaseGroup: ReleaseGroupWithName,
@@ -24,7 +24,7 @@ export default class RubyVersionActions extends VersionActions {
     finalConfigForProject: FinalConfigForProject,
   ) {
     super(releaseGroup, projectGraphNode, finalConfigForProject);
-    const files = [];
+    const files: string[] = [];
     function through_directory(path: string) {
       readdirSync(path).forEach((file) => {
         const absolute = join(path, file);
@@ -51,12 +51,15 @@ export default class RubyVersionActions extends VersionActions {
     manifestPath: string;
   }> {
     try {
-      const currentVersion = tree
-        .read(
-          join(this.projectGraphNode.data.root, this.validManifestFilenames[0]),
-        )
+      const fileContent = tree.read(
+        join(this.projectGraphNode.data.root, this.validManifestFilenames[0]),
+      );
+      if (!fileContent) throw new Error("File not found");
+      const match = fileContent
         .toString()
-        .match(/(\d+\.\d+\.\d+(?:-(?:alpha|beta|rc\d+))?)/)[0];
+        .match(/(\d+\.\d+\.\d+(?:-(?:alpha|beta|rc\d+))?)/);
+      if (!match) throw new Error("No version found");
+      const currentVersion = match[0];
 
       return {
         manifestPath: this.validManifestFilenames[0],
@@ -73,7 +76,7 @@ export default class RubyVersionActions extends VersionActions {
     currentVersion: string;
     logText: string;
   }> {
-    return null;
+    throw new Error("Ruby gems do not support registry version lookup");
   }
 
   async readCurrentVersionOfDependency(): Promise<{
@@ -92,8 +95,12 @@ export default class RubyVersionActions extends VersionActions {
   ): Promise<string[]> {
     const logMessages: string[] = [];
     for (const manifestToUpdate of this.manifestsToUpdate) {
-      const content = tree
-        .read(manifestToUpdate.manifestPath)
+      const raw = tree.read(manifestToUpdate.manifestPath);
+      if (!raw)
+        throw new Error(
+          `Unable to read manifest: ${manifestToUpdate.manifestPath}`,
+        );
+      const content = raw
         .toString()
         .replace(/(\d+\.\d+\.\d+(?:-(?:alpha|beta|rc\d+))?)/, newVersion);
       tree.write(manifestToUpdate.manifestPath, content);

@@ -30,8 +30,8 @@ Rails.application.configure do
   # config.action_dispatch.x_sendfile_header = "X-Sendfile" # for Apache
   # config.action_dispatch.x_sendfile_header = "X-Accel-Redirect" # for NGINX
 
-  # Store uploaded files on the local file system (see config/storage.yml for options).
-  # config.active_storage.service = :local
+  # Configure active storage service, default to local
+  config.active_storage.service = ENV.fetch("STORAGE_SERVICE", :local)
 
   # Mount Action Cable outside main process or domain.
   # config.action_cable.mount_path = nil
@@ -40,10 +40,12 @@ Rails.application.configure do
 
   # Assume all access to the app is happening through a SSL-terminating reverse proxy.
   # Can be used together with config.force_ssl for Strict-Transport-Security and secure cookies.
-  # config.assume_ssl = true
+  # Derive SSL enforcement from GRIT_SERVER_URL so that local HTTP deployments work without SSL.
+  _ssl = URI.parse(ENV.fetch("GRIT_SERVER_URL", "https://localhost")).scheme == "https"
+  config.assume_ssl = _ssl
 
   # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
-  config.force_ssl = true
+  config.force_ssl = _ssl
 
   # Skip http-to-https redirect for the default health check endpoint.
   # config.ssl_options = { redirect: { exclude: ->(request) { request.path == "/up" } } }
@@ -64,9 +66,8 @@ Rails.application.configure do
   # Use a different cache store in production.
   # config.cache_store = :mem_cache_store
 
-  # Use a real queuing backend for Active Job (and separate queues per environment).
-  # config.active_job.queue_adapter = :resque
-  # config.active_job.queue_name_prefix = "grit_production"
+  # Use Async backend for Active Job
+  config.active_job.queue_adapter = :async
 
   # Disable caching for Action Mailer templates even if Action Controller
   # caching is enabled.
@@ -97,6 +98,5 @@ Rails.application.configure do
   # Skip DNS rebinding protection for the default health check endpoint.
   # config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
 
-  config.force_ssl = false # UNSECURE
   config.public_file_server.enabled = true
 end

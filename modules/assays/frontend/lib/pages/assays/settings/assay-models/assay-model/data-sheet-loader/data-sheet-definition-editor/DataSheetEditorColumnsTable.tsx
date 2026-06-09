@@ -1,4 +1,3 @@
-import styles from "../dataSheetStructureLoader.module.scss";
 import {
   DATA_SHEET_COLUMN_COLUMNS,
   DataSheetColumnDefinition,
@@ -31,7 +30,6 @@ const DataSheetColumnsTable = ({
     <Table
       header="Columns"
       tableState={tableState}
-      className={styles.typesTable}
       data={columns as unknown as EntityData[]}
       onRowClick={(row) => setFocusedColumnIndex(row.index)}
     />

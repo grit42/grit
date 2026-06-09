@@ -1,0 +1,28 @@
+@use "../../scss/theme.scss";
+
+.content {
+  width: auto;
+}
+
+.body {
+  margin-bottom: calc(theme.$spacing * 2);
+}
+
+.challenge {
+  margin-top: calc(theme.$spacing * 2);
+
+  .challengePrompt {
+    margin-bottom: theme.$spacing;
+    font-size: 0.9em;
+
+    code {
+      font-weight: bold;
+    }
+  }
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: calc(theme.$spacing * 2);
+}

@@ -40,76 +40,150 @@ module Grit::Core
       loader(params[:entity]).fields(params)
     end
 
+    def self.load_set_block_fields(params)
+      loader(params[:entity]).block_fields(params)
+    end
+
     def self.create_load_set(params)
       loader(params[:entity]).create(params)
     end
 
-    def self.load_set_data_fields(load_set)
-      loader(load_set.entity).data_set_fields(load_set)
+    def self.load_set_entity_info(params)
+      loader(params[:entity]).entity_info(params[:entity])
+    end
+
+    def self.create_load_set_block(load_set, params)
+      loader(load_set.entity).create_block(load_set, params)
+    end
+
+    def self.create_load_set_blocks(load_set, params)
+      loader(load_set.entity).create_blocks(load_set, params)
+    end
+
+    def self.load_set_block_set_data_fields(load_set_block)
+      loader(load_set_block.load_set.entity).block_set_data_fields(load_set_block)
     end
 
     def self.show_load_set(load_set)
       loader(load_set.entity).show(load_set)
     end
 
-    def self.destroy_load_set(load_set)
-      loader(load_set.entity).destroy(load_set)
+    def self.index_load_set_blocks(load_set)
+      loader(load_set.entity).index_blocks(load_set)
     end
 
     def self.load_set_mapping_fields(load_set)
       loader(load_set.entity).mapping_fields(load_set)
     end
 
+    def self.load_set_block_mapping_fields(load_set_block)
+      loader(load_set_block.load_set.entity).block_mapping_fields(load_set_block)
+    end
+
+    def self.load_set_block_loading_fields(load_set_block)
+      loader(load_set_block.load_set.entity).block_loading_fields(load_set_block)
+    end
+
+    def self.load_set_block_entity_info(load_set_block)
+      loader(load_set_block.load_set.entity).block_entity_info(load_set_block)
+    end
+
     def self.load_set_loaded_data_columns(load_set)
       loader(load_set.entity).loaded_data_columns(load_set)
+    end
+
+    def self.load_set_block_loaded_data_columns(load_set_block)
+      loader(load_set_block.load_set.entity).block_loaded_data_columns(load_set_block)
     end
 
     def self.confirm_load_set(load_set)
       loader(load_set.entity).confirm(load_set)
     end
 
+    def self.confirm_load_set_block(load_set_block)
+      loader(load_set_block.load_set.entity).confirm_block(load_set_block)
+    end
+
     def self.validate_load_set(load_set)
       loader(load_set.entity).validate(load_set)
     end
 
-    def self.set_load_set_data(load_set, data, **args)
-      loader(load_set.entity).set_data(load_set, data, **args)
+    def self.validate_load_set_block(load_set_block)
+      loader(load_set_block.load_set.entity).validate_block(load_set_block)
+    end
+
+    def self.rollback_load_set(load_set)
+      loader(load_set.entity).rollback(load_set)
+    end
+
+    def self.rollback_load_set_block(load_set_block)
+      loader(load_set_block.load_set.entity).rollback_block(load_set_block)
+    end
+
+    def self.set_load_set_block_data(load_set_block, data, **args)
+      loader(load_set_block.load_set.entity).set_block_data(load_set_block, data, **args)
+    end
+
+    def self.load_set_block_columns_from_file(load_set_block)
+      loader(load_set_block.load_set.entity).columns_from_file(load_set_block)
+    end
+
+    def self.load_set_block_records_from_file(load_set_block, &block)
+      loader(load_set_block.load_set.entity).records_from_file(load_set_block, &block)
     end
 
     protected
     def self.fields(params)
-      fields = Grit::Core::LoadSet.entity_fields.filter { |f| f[:name] != "data" }.to_h { |item| [ item[:name], item.dup ] }
+      fields = Grit::Core::LoadSet.entity_fields.to_h { |item| [ item[:name], item.dup ] }
       fields["entity"][:disabled] = true unless fields["entity"].nil?
+      fields.values
+    end
+
+    def self.block_fields(params)
+      fields = Grit::Core::LoadSetBlock.entity_fields.filter { |f| f[:name] != "data" }.to_h { |item| [ item[:name], item.dup ] }
       fields["separator"][:required] = true unless fields["separator"].nil?
       fields["separator"][:placeholder] = "Will attempt to guess based on provided data" unless fields["separator"].nil?
       fields.values
     end
 
-    def self.data_set_fields(params)
-      self.fields(params).filter { |f| f[:name] == "separator" }
+    def self.block_set_data_fields(params)
+      self.block_fields(params).filter { |f| f[:name] == "separator" }
     end
 
-    def self.show(load_set)
-      load_set.as_json
+    def self.create_block(load_set, value)
+      block = Grit::Core::LoadSetBlock.create!({
+        load_set_id: load_set.id,
+        name: value["name"],
+        separator: value["separator"],
+        data: value["data"],
+        status_id: Grit::Core::LoadSetStatus.find_by(name: "Created").id
+      })
+
+      self.create_entity_block(block, value) if self.respond_to? :create_entity_block
+      block
+    end
+
+    def self.create_blocks(load_set, params)
+      params[:load_set_blocks]&.each_value { |value| self.create_block(load_set, value) }
     end
 
     def self.create(params)
-      data = read_data(params[:data].tempfile)
-
-      parsed_data = self.parse(data, params[:separator])
-
-      record = Grit::Core::LoadSet.new({
+      load_set = Grit::Core::LoadSet.create!({
         name: params[:name],
         entity: params[:entity],
-        data: data,
-        separator: params[:separator],
-        parsed_data: parsed_data,
-        origin_id: params[:origin_id],
-        status_id: Grit::Core::LoadSetStatus.find_by(name: "Mapping").id
+        origin_id: params[:origin_id]
       })
+      self.create_blocks(load_set, params)
+      load_set
+    end
 
-      record.save!
-      record
+    def self.show(load_set)
+      load_set_blocks = Grit::Core::LoadSetBlock.detailed.where(load_set_id: load_set.id)
+      { **load_set.as_json, load_set_blocks: load_set_blocks.as_json }
+    end
+
+    def self.index_blocks(load_set)
+      Grit::Core::LoadSetBlock.detailed.where(load_set_id: load_set.id)
     end
 
     def self.destroy(load_set)
@@ -120,185 +194,250 @@ module Grit::Core
       load_set.entity.constantize.entity_columns(**self.show(load_set).symbolize_keys!)
     end
 
-    def self.validate(load_set)
-      load_set_entity = load_set.entity.constantize
-      load_set_entity_properties = load_set_entity.entity_properties
-      data = load_set.parsed_data[1..]
-      errors = []
-
-      Grit::Core::LoadSetLoadingRecordPropertyValue.delete_by(load_set_id: load_set.id)
-      Grit::Core::LoadSetLoadingRecord.delete_by(load_set_id: load_set.id)
-
-      data.each_with_index do |datum, index|
-        record_props = {}
-        record_errors = {}
-        ActiveRecord::Base.transaction(requires_new: true) do
-          loading_record = LoadSetLoadingRecord.new({
-            load_set_id: load_set.id,
-            number: index
-          })
-          loading_record.save!
-          load_set_entity_properties.each do |entity_property|
-            mapping = load_set.mappings[entity_property[:name].to_s]
-            next if mapping.nil?
-            find_by = mapping["find_by"]
-            header_index = mapping["header"].to_i unless mapping["header"].nil? or mapping["header"].blank?
-            value = nil
-            if mapping["constant"]
-              value = mapping["value"]
-            elsif !find_by.blank? and !datum[header_index].blank?
-              begin
-                field_entity = entity_property[:entity][:full_name].constantize
-                value = field_entity.loader_find_by!(find_by, datum[header_index]).id
-              rescue NameError
-                record_errors[entity_property[:name].to_s] = [ "#{entity_property[:entity][:name]}: No such model" ]
-                value = 0
-              rescue ActiveRecord::RecordNotFound
-                record_errors[entity_property[:name].to_s] = [ "could not find #{entity_property[:entity][:name]} with '#{find_by}' = #{datum[header_index]}" ]
-                value = 0
-              end
-            elsif !header_index.nil?
-              value = datum[header_index]
-            end
-            loading_record_property_value_props = {
-              load_set_id: load_set.id,
-              load_set_loading_record_id: loading_record.id,
-              name: entity_property[:name]
-            }
-            if entity_property[:type] == "entity"
-              loading_record_property_value_props["entity_id_value"] = value
-            else
-              loading_record_property_value_props["#{entity_property[:type]}_value"] = value
-            end
-
-            loading_record_property_value = LoadSetLoadingRecordPropertyValue.new(loading_record_property_value_props)
-            loading_record_property_value.save!
-
-            record_props[entity_property[:name].to_s] = value
-            if entity_property[:required] && value.nil?
-              record_errors[entity_property[:name].to_s] = [ "can't be blank" ]
-            elsif (entity_property[:type].to_s == "integer" or entity_property[:type].to_s == "float" or entity_property[:type].to_s == "decimal") and !value.nil? and !value.blank? and !/^[+\-]?(\d+\.\d*|\d*\.\d+|\d+)([eE][+\-]?\d+)?$/.match?(value.to_s)
-              record_errors[entity_property[:name].to_s] = [ "is not a number" ]
-            elsif entity_property[:type].to_s == "datetime" and !value.nil? and !value.blank?
-              begin
-                record_props[entity_property[:name].to_s] = DateTime.parse(value)
-              rescue
-                record_errors[entity_property[:name].to_s] = [ "Unable to parse datetime, please use YYYY/MM/DD HH:mm:ss or ISO 8601" ]
-              end
-            elsif entity_property[:type].to_s == "date" and !value.nil? and !value.blank?
-              begin
-                record_props[entity_property[:name].to_s] = Date.parse(value)
-              rescue
-                record_errors[entity_property[:name].to_s] = [ "Unable to parse date, please use YYYY/MM/DD or ISO 8601" ]
-              end
-            end
-          end
-
-          if !record_errors.empty?
-            errors.push({ index: index, datum: datum, errors: record_errors })
-            raise ActiveRecord::Rollback
-          end
-
-          record = load_set_entity.new(record_props)
-          unless record.valid?
-            errors.push({ index: index, datum: datum, errors: record.errors })
-            raise ActiveRecord::Rollback
-          end
-        end
-      end
-      { errors: errors }
+    def self.block_loaded_data_columns(load_set_block)
+      load_set_block.load_set.entity.constantize.entity_columns(**load_set_block.as_json.symbolize_keys!)
     end
 
-    def self.confirm(load_set)
-      load_set_entity = load_set.entity.constantize
-      load_set_entity_properties = load_set_entity.entity_properties
-      load_set_entity_table = load_set_entity.table_name
+    def self.base_record_props(load_set_block)
+      {}
+    end
 
-      ActiveRecord::Base.transaction do
-        Grit::Core::LoadSetLoadingRecord.includes(:load_set_loading_record_property_values).where(load_set_id: load_set.id).each do |loading_record|
-          record_props = {}
-          loading_record.load_set_loading_record_property_values.each do |loading_record_property_value|
-            entity_property = load_set_entity_properties.find { |p| p[:name] == loading_record_property_value.name }
-            if entity_property[:type] == "entity"
-              record_props[loading_record_property_value.name] = loading_record_property_value.entity_id_value
-            else
-              record_props[loading_record_property_value.name] = loading_record_property_value["#{entity_property[:type]}_value"]
-            end
+    def self.validate_block_context(load_set_block)
+      {}
+    end
+
+    def self.validate_block(load_set_block)
+      load_set_block.truncate_loading_records_table
+
+      load_set_entity = block_entity(load_set_block)
+      load_set_entity_properties = block_mapping_fields(load_set_block)
+      load_set_block_record_klass = load_set_block.loading_record_klass
+      context = validate_block_context(load_set_block)
+
+      records = []
+      unique_properties = Hash.new { |h, k| h[k] = Set.new }
+      has_errors = false
+      has_warnings = false
+      new_record_props = base_record_props(load_set_block)
+
+      load_set_block.preview_data.find_each do |datum|
+        record = { line: datum[:line], record_errors: nil, record_warnings: nil }
+        record_props = new_record_props.dup
+
+        validate_record_properties(load_set_entity_properties, load_set_block, datum, record, record_props, unique_properties)
+        result = validate_record(load_set_entity, record, record_props, context)
+        has_warnings = true if result[:has_warnings]
+        has_errors = true unless record[:record_errors].nil?
+
+        record.merge!(record_props)
+        records.push record
+
+        if records.length >= 1000
+          load_set_block_record_klass.insert_all(records)
+          records = []
+        end
+      end
+      load_set_block_record_klass.insert_all(records) if records.length.positive?
+      { has_errors: has_errors, has_warnings: has_warnings }
+    end
+
+    def self.validate_record_properties(properties, load_set_block, datum, record, record_props, unique_properties)
+      properties.each do |entity_property|
+        value = nil
+        find_by = nil
+        header = nil
+        entity_property_name = entity_property[:name].to_s
+        mapping = load_set_block.mappings[entity_property_name]
+        next if mapping.nil?
+        find_by = mapping["find_by"]
+        header = mapping["header"] unless mapping["header"].nil? or mapping["header"].blank?
+        if mapping["constant"]
+          value = mapping["value"]
+        elsif !find_by.blank? and !datum[header].blank?
+          begin
+            entity_property[:_klass] ||= entity_property[:entity][:full_name].constantize
+            field_entity = entity_property[:_klass]
+            value = field_entity.loader_find_by!(find_by, datum[header], options: entity_property[:entity][:options]).id
+          rescue NameError
+            record[:record_errors] ||= {}
+            record[:record_errors][entity_property_name] = [ "#{entity_property[:entity][:name]}: No such model" ]
+            value = 0
+          rescue ActiveRecord::RecordNotFound
+            record[:record_errors] ||= {}
+            record[:record_errors][entity_property_name] = [ "could not find #{entity_property[:entity][:name]} with '#{find_by}' = #{datum[header]}" ]
+            value = 0
           end
-
-          record = load_set_entity.new(record_props)
-          record.save!
-
-          Grit::Core::LoadSetLoadedRecord.new({
-            load_set_id: load_set.id,
-            table: load_set_entity_table,
-            record_id: record.id
-          }).save!
+        elsif !header.nil?
+          value = datum[header]
         end
 
-        Grit::Core::LoadSetLoadingRecordPropertyValue.delete_by(load_set_id: load_set.id)
-        Grit::Core::LoadSetLoadingRecord.delete_by(load_set_id: load_set.id)
+        record_props[entity_property_name] = value
+
+        if entity_property[:required] && (value.nil? || ([ "string", "text" ].include?(entity_property[:type].to_s) && value.blank?))
+          record_props[entity_property_name] = nil
+          record[:record_errors] ||= {}
+          record[:record_errors][entity_property_name] = [ "can't be blank" ]
+        elsif entity_property[:type].to_s == "decimal" and value.present? and !/\A[+\-]?(\d+\.\d*|\d*\.\d+|\d+)([eE][+\-]?\d+)?\z/.match?(value.to_s)
+          record_props[entity_property_name] = nil
+          value = nil
+          record[:record_errors] ||= {}
+          record[:record_errors][entity_property_name] = [ "is not a number" ]
+        elsif entity_property[:type].to_s == "integer" and value.present? and !/\A[+\-]?\d+([eE][+]?\d+)?\z/.match?(value.to_s)
+          record_props[entity_property_name] = nil
+          value = nil
+          record[:record_errors] ||= {}
+          record[:record_errors][entity_property_name] = [ "is not a integer" ]
+        elsif entity_property[:type].to_s == "integer" and value.present? and (value.to_i < -(2**53-1) || value.to_i > 2**53-1)
+          record_props[entity_property_name] = nil
+          value = nil
+          record[:record_errors] ||= {}
+          record[:record_errors][entity_property_name] = [ "is out of range" ]
+        elsif entity_property[:type].to_s == "datetime" and value.present?
+          begin
+            record_props[entity_property_name] = DateTime.parse(value)
+          rescue ArgumentError
+            record_props[entity_property_name] = nil
+            value = nil
+            record[:record_errors] ||= {}
+            record[:record_errors][entity_property_name] = [ "Unable to parse datetime, please use YYYY/MM/DD HH:mm:ss or ISO 8601" ]
+          end
+        elsif entity_property[:type].to_s == "date" and value.present?
+          begin
+            record_props[entity_property_name] = Date.parse(value)
+          rescue ArgumentError
+            record_props[entity_property_name] = nil
+            value = nil
+            record[:record_errors] ||= {}
+            record[:record_errors][entity_property_name] = [ "Unable to parse date, please use YYYY/MM/DD or ISO 8601" ]
+          end
+        end
+
+        if entity_property[:unique]
+          if unique_properties[entity_property_name].include?(value)
+            record[:record_errors] ||= {}
+            record[:record_errors][entity_property_name] = [ "should be unique (duplicate in file)" ]
+          else
+            unique_properties[entity_property_name].add(value)
+          end
+        end
       end
+    end
+
+    def self.validate_record(load_set_entity, record, record_props, context)
+      if record[:record_errors].nil?
+        load_set_entity_record = load_set_entity.new(record_props)
+        record[:record_errors] = load_set_entity_record.errors unless load_set_entity_record.valid?
+      end
+      { has_warnings: false }
+    end
+
+    def self.confirm_block(load_set_block)
+      load_set_entity = block_entity(load_set_block)
+      load_set_entity_properties = block_loading_fields(load_set_block)
+      conn = ActiveRecord::Base.connection
+
+      insert = "WITH inserted_records as (INSERT INTO #{conn.quote_table_name(load_set_entity.table_name)}(created_by"
+      load_set_entity_properties.each do |column|
+        insert += ",#{conn.quote_column_name(column[:name])}"
+      end
+      insert += ") "
+
+      load_set_block_record_klass = load_set_block.loading_record_klass
+      insert += load_set_block_record_klass.for_confirm.where(record_errors: nil).to_sql
+      insert += " RETURNING id) INSERT INTO grit_core_load_set_block_loaded_records(\"record_id\",\"load_set_block_id\",\"table\") SELECT inserted_records.id,#{conn.quote(load_set_block.id)}, #{conn.quote(load_set_entity.table_name)} from inserted_records"
+
+      ActiveRecord::Base.transaction do
+        conn.execute(insert)
+      end
+    end
+
+    def self.rollback_block(load_set_block)
+      load_set_entity = load_set_block.load_set.entity.constantize
+
+      load_set_entity.where("id IN (SELECT record_id FROM grit_core_load_set_block_loaded_records WHERE grit_core_load_set_block_loaded_records.load_set_block_id = ?)", load_set_block.id).delete_all
+      Grit::Core::LoadSetBlockLoadedRecord.delete_by(load_set_block_id: load_set_block.id)
     end
 
     def self.mapping_fields(load_set)
       load_set.entity.constantize.entity_fields
     end
 
-    def self.set_data(load_set, tempfile, **args)
-      data = read_data(tempfile)
-      parsed_data = self.parse(data, args[:separator])
-      load_set.data = data
-      load_set.separator = args[:separator]
-      load_set.parsed_data = parsed_data
-      load_set.status_id = Grit::Core::LoadSetStatus.find_by(name: "Mapping").id
-      load_set.record_errors = nil
-      load_set.record_warnings = nil
+    def self.block_mapping_fields(load_set_block)
+      load_set_block.load_set.entity.constantize.entity_fields
+    end
+
+    def self.block_loading_fields(load_set_block)
+      load_set_block.load_set.entity.constantize.entity_fields
+    end
+
+    def self.block_entity(load_set_block)
+      load_set_block.load_set.entity.constantize
+    end
+
+    def self.set_block_data(load_set_block, params)
+      load_set_block.separator = params[:separator] unless params[:separator].nil?
+      load_set_block.data = params[:data] unless params[:data].nil?
+      load_set_block.name = params[:name] unless params[:name].nil?
+      load_set_block.has_errors = false
+      load_set_block.has_warnings = false
+      load_set_block.status_id = Grit::Core::LoadSetStatus.find_by(name: "Created").id
       ActiveRecord::Base.transaction do
-        Grit::Core::LoadSetLoadingRecordPropertyValue.delete_by(load_set_id: load_set.id)
-        Grit::Core::LoadSetLoadingRecord.delete_by(load_set_id: load_set.id)
-        load_set.save!
+        load_set_block.drop_tables
+        load_set_block.save!
       end
-      load_set
+      load_set_block
     end
 
-    def self.parse(data, separator)
-      raise ParseException, "Separator must be provided" if separator.blank? && separator != "\t"
-      begin
-        parsed = CSV.parse(data,
-                          col_sep: separator,
-                          liberal_parsing: true,
-                          encoding: "utf-8"
-                        )
-
-        cleaned = parsed.reject { |row| row.all?(&:blank?) }
-        return cleaned if cleaned.map(&:size).uniq.size == 1
-      rescue CSV::MalformedCSVError => e
-        raise ParseException.new "Malformed CSV data: #{e.message}"
-      rescue ArgumentError => e
-        raise ParseException.new "Invalid CSV parameters: #{e.message}"
-      rescue Encoding::InvalidByteSequenceError => e
-        raise ParseException.new "Invalid character encoding in CSV: #{e.message}"
-      rescue StandardError => e
-        raise ParseException.new "Failed to parse CSV: #{e.message}"
-      end
-      raise ParseException.new "Inconsistent column count in CSV rows"
+    def self.entity_info(entity)
+      {
+        full_name: entity,
+        name: entity.demodulize.underscore.humanize,
+        plural: entity.demodulize.underscore.humanize.pluralize,
+        path: entity.underscore.pluralize,
+        dictionary: true
+      }
     end
 
+    def self.block_entity_info(load_set_block)
+      model = load_set_block.load_set.entity.constantize
+      {
+        full_name: model.name,
+        name: model.name.demodulize.underscore.humanize,
+        plural: model.name.demodulize.underscore.humanize.pluralize,
+        path: model.name.underscore.pluralize,
+        dictionary: true
+      }
+    end
 
-    MAX_FILE_SIZE = 50.megabytes
-
-    def self.read_data(file)
-      if file.size > MAX_FILE_SIZE
-        raise MaxFileSizeExceededError.new "File size exceeds maximum allowed size of 50MB"
-        return
+    def self.columns_from_csv(load_set_block)
+      load_set_block.data.open do |io|
+        csv = CSV.new(io, col_sep: load_set_block.separator, liberal_parsing: true, encoding: "utf-8")
+        row = csv.shift
+        row.each_with_index.map { |h, index| { name: "col_#{index}", display_name: h.nil? ? "col_#{index}" : h.strip } }
       end
+    end
 
-      data = "".force_encoding("UTF-8")
-      until file.eof?
-        data << file.read(1.megabyte)
+    def self.columns_from_file(load_set_block)
+      columns_from_csv(load_set_block)
+    end
+
+    def self.records_from_csv(load_set_block)
+      strip_converter = proc { |field| field.respond_to?(:strip) ? field.strip : field }
+      load_set_block.data.open do |file|
+        csv = CSV.new(file, col_sep: load_set_block.separator, liberal_parsing: true)
+        csv.shift # skip header row
+        record_number = 0
+        csv.each do |row|
+          record_number += 1
+          next if row.all? { |field| field.nil? || field.strip.empty? }
+          stripped_row = row.map { |field| field.respond_to?(:strip) ? field.strip : field }
+          yield CSV.generate_line([ record_number, *stripped_row ], col_sep: ",")
+        end
       end
-      data
+    end
+
+    def self.records_from_file(load_set_block, &block)
+      records_from_csv(load_set_block, &block)
     end
   end
 end

@@ -17,7 +17,9 @@
  */
 
 import { UseMutationOptions, UseMutationResult } from "@grit42/api";
-import { Filter } from "@grit42/table";
+import { Filter, RowData } from "@grit42/table";
+import { Option } from "@grit42/client-library/components";
+import { FormFieldDef } from "@grit42/form";
 
 export type EntityInfo = {
   full_name: string;
@@ -41,8 +43,8 @@ export type ForeignEntityPropertyDef = {
   params?: Record<string, string>;
 };
 
-export type EntityPropertyDef<T extends EntityData = EntityData> = {
-  name: keyof T;
+export type EntityPropertyDef = {
+  name: string;
   display_name: string;
   description?: string | null;
   type: string;
@@ -82,3 +84,29 @@ export type DestroyEntityMutation<
 > = (
   mutationOptions?: UseMutationOptions<EntityData<TData>, string, TId>,
 ) => UseMutationResult<EntityData<TData>, string, TId>;
+
+export interface EntityDetailsProps {
+  entity: string;
+  id: string | number;
+}
+
+declare module "@grit42/table" {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  interface GritColumnMeta<TData extends RowData, TValue> {
+    entity?: GritColumnDefEntity;
+  }
+}
+
+export type GritColumnDefEntity = ForeignEntityPropertyDef & {
+  filters?: Filter[];
+  extraData?: Option<string | number>[];
+};
+
+export interface EntityFormFieldEntity extends ForeignEntityPropertyDef {
+  multiple?: boolean;
+}
+
+export interface EntityFormFieldDef extends FormFieldDef {
+  type: "entity";
+  entity: EntityFormFieldEntity;
+}

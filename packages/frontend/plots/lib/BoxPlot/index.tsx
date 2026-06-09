@@ -28,15 +28,18 @@ const getBoxPlotData = (
   def: BoxPlotDefinition,
 ): GritBoxData[] => {
   return Object.values(
-    data.reduce((acc, d) => {
-      if (nullish(d[def.y.key])) return acc;
-      const key = def.groupBy?.map((k) => d[k]).join("-") ?? "all";
-      if (!acc[key]) {
-        acc[key] = { ...DEFAULT_BOX, y: [], name: key };
-      }
-      acc[key].y.push(d[def.y.key]);
-      return acc;
-    }, {} as Record<string, GritBoxData>),
+    data.reduce(
+      (acc, d) => {
+        if (nullish(d[def.y.key])) return acc;
+        const key = def.groupBy?.map((k) => d[k]).join("-") ?? "all";
+        if (!acc[key]) {
+          acc[key] = { ...DEFAULT_BOX, y: [], name: key };
+        }
+        acc[key].y.push(d[def.y.key]);
+        return acc;
+      },
+      {} as Record<string, GritBoxData>,
+    ),
   );
 };
 

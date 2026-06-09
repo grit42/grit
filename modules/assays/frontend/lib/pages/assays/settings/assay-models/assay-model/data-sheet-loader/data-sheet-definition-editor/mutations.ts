@@ -1,7 +1,5 @@
 import { AssayDataSheetDefinitionData } from "../../../../../../../queries/assay_data_sheet_definitions";
-import {
-  DataSetDefinitionFull,
-} from "./dataSheetDefinitionEditorForm";
+import { DataSetDefinitionFull } from "./dataSheetDefinitionEditorForm";
 import {
   EndpointError,
   EndpointSuccess,
@@ -25,7 +23,11 @@ export const useCreateBulkDataSheetDefinitionMutation = (
       "createBulkDataSheetDefinition",
       "grit/assays/assay_data_sheet_definitions/create_bulk",
     ],
-    mutationFn: async (dataSheetDefinitions: DataSetDefinitionFull) => {
+    mutationFn: async (
+      dataSheetDefinitions: DataSetDefinitionFull & {
+        dangerous_edit?: boolean;
+      },
+    ) => {
       const response = await request<
         EndpointSuccess<AssayDataSheetDefinitionData[]>,
         EndpointError<string | Record<string, string[]>>

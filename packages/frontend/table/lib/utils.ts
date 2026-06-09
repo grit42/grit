@@ -33,7 +33,10 @@ export const getLeafColumns = <T>(
   });
 };
 
-export const getLeafColumnsWithGroupLabels = <TData extends RowData, TValue = unknown>(
+export const getLeafColumnsWithGroupLabels = <
+  TData extends RowData,
+  TValue = unknown,
+>(
   columns: GritColumnDef<TData, TValue>[],
   groupColumn?: GritColumnDef<TData, TValue>,
 ): GritTypedColumnDef<TData, TValue>[] => {
@@ -53,4 +56,3 @@ export const getLeafColumnsWithGroupLabels = <TData extends RowData, TValue = un
     ];
   });
 };
-

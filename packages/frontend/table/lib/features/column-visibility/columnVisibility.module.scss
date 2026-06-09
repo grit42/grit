@@ -1,5 +1,31 @@
 @use "@grit42/client-library/theme.scss";
 
+.columnGroupWrapper {
+  margin-block: theme.$spacing-md;
+}
+
+.groupColumnList {
+  display: flex;
+  flex-direction: column;
+  gap: theme.$spacing-md;
+  margin-top: theme.$spacing-md;
+  padding-left: 0.5em;
+}
+
+.toggleAllButton {
+  height: 2em;
+  flex: 1;
+}
+
+.columnList {
+  display: flex;
+  flex-direction: column;
+  gap: theme.$spacing-md;
+  overflow-y: auto;
+  max-height: 40vh;
+  padding-inline: theme.$spacing-lg;
+}
+
 .columnPopover {
   color: theme.$palette-background-contrast-text;
 
@@ -7,12 +33,12 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: theme.$spacing;
-    padding: calc(theme.$spacing * 2);
+    gap: theme.$spacing-md;
+    padding: theme.$spacing-lg;
   }
 
   .columnSearchInput {
-    margin: calc(theme.$spacing * 2);
+    margin: theme.$spacing-lg;
     height: 2em !important;
     font-size: 12px;
   }
@@ -20,17 +46,17 @@
   .columnGroup {
     display: flex;
     flex-direction: row;
-    gap: calc(theme.$spacing * 3);
+    gap: theme.$spacing-xl;
   }
 
   .columnControl {
     border-radius: theme.$border-radius;
-    padding: theme.$spacing;
+    padding: theme.$spacing-md;
     background-color: theme.$palette-background-default;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: calc(theme.$spacing * 2);
+    gap: theme.$spacing-lg;
     user-select: none;
 
     .columnToggleIcon {
@@ -43,61 +69,6 @@
         fill: theme.$palette-secondary-main !important;
       }
     }
-
-    &.hidden {
-      opacity: 0.3;
-    }
-  }
-}
-
-.groupColumnList {
-  display: flex;
-  flex-direction: column;
-  gap: theme.$spacing;
-  margin-top: theme.$spacing;
-}
-
-.columnList {
-  display: flex;
-  flex-direction: column;
-  gap: theme.$spacing;
-  overflow-y: auto;
-  max-height: 40vh;
-  padding-inline: calc(theme.$spacing * 2);
-}
-
-.columnPopover {
-  color: theme.$palette-background-contrast-text;
-
-  .toggleAll {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: theme.$spacing;
-    padding: calc(theme.$spacing * 2);
-  }
-
-  .columnSearchInput {
-    margin: calc(theme.$spacing * 2);
-    height: 2em !important;
-    font-size: 12px;
-  }
-
-  .columnGroup {
-    display: flex;
-    flex-direction: row;
-    gap: calc(theme.$spacing * 3);
-  }
-
-  .columnControl {
-    border-radius: theme.$border-radius;
-    padding: theme.$spacing;
-    background-color: theme.$palette-background-default;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: calc(theme.$spacing * 2);
-    user-select: none;
 
     &.hidden {
       opacity: 0.3;

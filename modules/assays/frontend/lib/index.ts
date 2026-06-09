@@ -25,8 +25,10 @@ export { default as Registrant } from "./Registrant";
 export { default as Meta } from "./meta";
 export const Router = lazy(() => import("./Router"));
 
-export default {
+const AssaysModule: GritModule = {
   Meta,
   Router,
   Registrant,
-} as GritModule;
+};
+
+export default AssaysModule;

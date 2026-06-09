@@ -18,6 +18,7 @@ Before continuing, ensure the Docker daemon is running.
 grit has been shown to run smoothly on modest hardware such as [Hetzner CPX21](https://www.hetzner.com/cloud/) with over 200 millions data points.
 
 Indicative requirements for less than 10 concurrent users:
+
 - 2 vCPUs @ 3 GHz
 - 4 GB RAM
 - 40 GB storage
@@ -28,7 +29,7 @@ Indicative requirements for less than 10 concurrent users:
 
 1. Clone the [starter repo](https://github.com/grit42/grit-starter) or download and extract the [zip](https://github.com/grit42/grit-starter/archive/refs/heads/main.zip)
 2. Copy the content of `.env.template` to `.env`
-    * Some users may need to enable display of hidden files if using a file explorer
+   - Some users may need to enable display of hidden files if using a file explorer
 
 Subsequent steps of this guide are to be executed in the cloned repository or the extracted zip unless instructed otherwise.
 
@@ -61,6 +62,7 @@ To do this a SMTP mail service has to be configured.
 The SMTP mail service can be configured through environment variables in the `.env` file.
 
 The following variables are required:
+
 ```sh
 # Mailer configuration
 SMTP_SERVER=smtp.example.com
@@ -73,6 +75,99 @@ SMTP_USER=user@example.com
 GRIT_SERVER_URL=https://grit.example.com
 ```
 
+### Single Sign-On (SSO)
+
+grit supports enterprise Single Sign-On via **OpenID Connect (OIDC)**. When enabled, a "Sign in with SSO" button appears on the login page. Users who authenticate through the Identity Provider (IdP) are automatically created in grit on first login.
+
+Local login (username/password) always remains available alongside SSO, ensuring admin access if the IdP is unavailable.
+
+SSO is configured through environment variables in the `.env` file. Set `SSO_PROVIDER` to enable it:
+
+```sh
+# SSO provider: "none" (default), or "oidc"
+SSO_PROVIDER=none
+```
+
+#### OpenID Connect (OIDC)
+
+```sh
+SSO_PROVIDER=oidc
+
+# OIDC issuer URL, e.g. https://accounts.google.com or
+# https://login.microsoftonline.com/{tenant}/v2.0 (required)
+OIDC_ISSUER=https://idp.example.com
+
+# OAuth2 client credentials (required)
+OIDC_CLIENT_ID=your-client-id
+OIDC_CLIENT_SECRET=your-client-secret
+
+# Explicit callback URL (optional — derived from GRIT_SERVER_URL by default).
+# Use this if you need to override the auto-derived value.
+# OIDC_REDIRECT_URI=https://grit.example.com/api/grit/core/auth/oidc/callback
+```
+
+`GRIT_SERVER_URL` (or `OIDC_REDIRECT_URI`) must be set so the OIDC callback
+URL matches what is registered in your Identity Provider. The callback URL is:
+
+```
+{GRIT_SERVER_URL}/api/grit/core/auth/oidc/callback
+```
+
+### Security configuration
+
+grit provides optional security hardening features that can be enabled via environment variables in the `.env` file.
+
+#### Login lockout
+
+Accounts are locked after a configurable number of consecutive failed password attempts. When locked, the user receives an email with a reactivation link.
+
+```sh
+# Enable login lockout (default: false)
+PASSWORD_LOCKOUT_ENABLED=true
+
+# Number of consecutive failed attempts before lockout (default: 5)
+PASSWORD_LOCKOUT_ATTEMPTS=5
+```
+
+The `admin` account is exempt from automatic lockout to ensure system access is never lost.
+
+#### Password expiry
+
+Passwords can be configured to expire after a set number of days. Users whose password has expired will be prompted to reset it via the forgotten password flow.
+
+```sh
+# Enable password expiry (default: false)
+PASSWORD_EXPIRY_ENABLED=true
+
+# Days before a password expires (default: 90)
+PASSWORD_EXPIRY_DAYS=90
+```
+
+:::note
+Password expiry applies only to local (non-SSO) accounts.
+:::
+
+#### Session expiry
+
+Sessions can be configured to expire after a period of inactivity. Users with an expired session are redirected to the login page.
+
+```sh
+# Enable session expiry (default: false)
+SESSION_EXPIRY_ENABLED=true
+
+# Minutes of inactivity before a session expires (default: 60)
+SESSION_EXPIRY_MINUTES=60
+```
+
+#### Failed login limit
+
+The maximum number of consecutive failed login attempts tracked by the system can be adjusted:
+
+```sh
+# Maximum tracked consecutive failed logins (default: 50)
+MAX_FAILED_LOGINS=50
+```
+
 ## Maintaining the app
 
 ### Backup the database
@@ -81,6 +176,7 @@ It is a good idea to back up the database regularly and before upgrading.
 If a backup already exists, it will be overwritten when making a new backup.
 
 Run the following command to back up the database:
+
 ```sh
 docker compose run --rm backup
 ```
@@ -88,6 +184,7 @@ docker compose run --rm backup
 ### Restore the latest backup
 
 Run the following command to restore the latest backup of the database:
+
 ```sh
 docker compose run --rm restore
 ```
@@ -97,6 +194,7 @@ docker compose run --rm restore
 New releases are announced in [Discussions](https://github.com/grit42/grit/discussions/categories/announcements) of the main repo on [GitHub](https://github.com/grit42/grit). Additional steps or warnings may be specified in the release announcement, please read it carefully before upgrading.
 
 Run the following command to upgrade to the latest version:
+
 ```sh
 docker compose pull app
 docker compose up --no-deps --force-recreate app
@@ -117,7 +215,7 @@ docker compose up --no-deps --force-recreate app
         alpine \
         sh -c "cd /from && tar cf - . | tar xf - -C /to"
     ```
-4. Fix database files ownership
+4.  Fix database files ownership
     ```sh
     docker run --rm \
       -v grit_postgres_data:/data \

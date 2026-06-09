@@ -30,11 +30,7 @@ module Grit::Compounds
 
     display_columns [ "number", "name" ]
 
-
-    entity_crud_with read: [],
-      create: [ "Administrator", "CompoundAdministrator", "CompoundUser" ],
-      update: [ "Administrator", "CompoundAdministrator", "CompoundUser" ],
-      destroy: [ "Administrator", "CompoundAdministrator", "CompoundUser" ]
+    entity_crud_with read: [ "read:system" ], write: [ "write:compounds" ]
 
     validate :no_synonyms_with_name
 
@@ -78,7 +74,6 @@ module Grit::Compounds
               molfile: molfile
             })
             molecule_record.save!
-            molecule_id = molecule_record.id
             molecule_id = molecule_record.id
           end
           molecule_compound_record = Grit::Compounds::MoleculesCompound.new({

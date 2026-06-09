@@ -21,7 +21,7 @@ import {
   EntityPropertyDef,
   EntityData,
   useEntityData,
-  useInfiniteEntityData
+  useInfiniteEntityData,
 } from "@grit42/core";
 import {
   UseQueryOptions,
@@ -39,7 +39,7 @@ export const useDataTableRowColumns = (
   return useEntityColumns<EntityPropertyDef>(
     "Grit::Assays::DataTableRow",
     params,
-    queryOptions,
+    { ...queryOptions, staleTime: 0 },
   );
 };
 
@@ -62,7 +62,7 @@ export const useDataTableRows = (
 };
 
 export const useInfiniteDataTableRows = (
-  dataTableId:string,
+  dataTableId: string,
   sort?: SortingState,
   filter?: Filter[],
   params: URLParams = {},
@@ -81,4 +81,3 @@ export const useInfiniteDataTableRows = (
     queryOptions,
   );
 };
-

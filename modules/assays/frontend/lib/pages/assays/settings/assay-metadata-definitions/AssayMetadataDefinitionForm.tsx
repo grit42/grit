@@ -18,7 +18,7 @@
 
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { Button, ErrorPage, Spinner, Surface } from "@grit42/client-library/components";
+import { Button, ErrorPage, Spinner } from "@grit42/client-library/components";
 import styles from "./assayMetadataDefinitions.module.scss";
 import {
   AssayMetadataDefinitionData,
@@ -33,13 +33,18 @@ import {
 } from "@grit42/core";
 import {
   Form,
+  FormBanner,
   FormControls,
   FormField,
   FormFieldDef,
+  FormFields,
   genericErrorHandler,
   getVisibleFieldData,
   useForm,
+  useStore,
 } from "@grit42/form";
+import { toSafeIdentifier } from "@grit42/core/utils";
+import { CenteredSurface } from "@grit42/client-library/layouts";
 
 const AssayMetadataDefinitionForm = ({
   fields,
@@ -50,11 +55,14 @@ const AssayMetadataDefinitionForm = ({
 }) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [formData, setFormData] = useState<Partial<AssayMetadataDefinitionData>>(assayMetadataDefinition);
+  const [formData, setFormData] = useState<
+    Partial<AssayMetadataDefinitionData>
+  >(assayMetadataDefinition);
 
-  const createEntityMutation = useCreateEntityMutation<AssayMetadataDefinitionData>(
-    "grit/assays/assay_metadata_definitions",
-  );
+  const createEntityMutation =
+    useCreateEntityMutation<AssayMetadataDefinitionData>(
+      "grit/assays/assay_metadata_definitions",
+    );
 
   const editEntityMutation = useEditEntityMutation<AssayMetadataDefinitionData>(
     "grit/assays/assay_metadata_definitions",
@@ -65,7 +73,7 @@ const AssayMetadataDefinitionForm = ({
     "grit/assays/assay_metadata_definitions",
   );
 
-  const form = useForm<Partial<AssayMetadataDefinitionData>>({
+  const form = useForm({
     defaultValues: formData,
     onSubmit: genericErrorHandler(async ({ value: formValue, formApi }) => {
       const value = getVisibleFieldData<Partial<AssayMetadataDefinitionData>>(
@@ -87,18 +95,28 @@ const AssayMetadataDefinitionForm = ({
         );
         setFormData(newEntity);
         formApi.reset();
-        navigate(`../${newEntity.id}`, {
-          relative: "path",
-          replace: true,
-        });
+        navigate(`..`);
       } else {
         setFormData(
-          await editEntityMutation.mutateAsync(value as AssayMetadataDefinitionData),
+          await editEntityMutation.mutateAsync(
+            value as AssayMetadataDefinitionData,
+          ),
         );
         formApi.reset();
       }
     }),
   });
+
+  const { safe_name, proposed_safe_name } = useStore(
+    form.store,
+    ({ values }) => {
+      const { name, safe_name } = values;
+      const proposed_safe_name = form.getFieldMeta("name")?.isDirty
+        ? toSafeIdentifier(name as string)
+        : safe_name;
+      return { safe_name, proposed_safe_name };
+    },
+  );
 
   const onDelete = async () => {
     if (
@@ -113,52 +131,51 @@ const AssayMetadataDefinitionForm = ({
   };
 
   return (
-    <div className={styles.container}>
-      <Surface className={styles.form}>
-        <h2
-          style={{ alignSelf: "baseline", marginBottom: "1em" }}
-        >{`${assayMetadataDefinition.id ? "Edit" : "New"} assay metadata`}</h2>
-        <Form<Partial<AssayMetadataDefinitionData>> form={form}>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr",
-              gridAutoRows: "max-content",
-              gap: "calc(var(--spacing) * 2)",
-              paddingBottom: "calc(var(--spacing) * 2)",
-            }}
-          >
-            {form.state.errorMap.onSubmit && (
-              <div
-                style={{
-                  gridColumnStart: 1,
-                  gridColumnEnd: -1,
-                  color: "var(--palette-error-main)",
-                }}
-              >
-                {form.state.errorMap.onSubmit?.toString()}
-              </div>
-            )}
-            {fields.map((f) => (
-              <FormField form={form} fieldDef={f} key={f.name} />
-            ))}
-          </div>
-          <FormControls
-            form={form}
-            onDelete={onDelete}
-            showDelete={!!assayMetadataDefinition.id}
-            showCancel
-            cancelLabel={assayMetadataDefinition.id ? "Back" : "Cancel"}
-            onCancel={() => navigate("..")}
-          />
-        </Form>
-      </Surface>
-    </div>
+    <CenteredSurface>
+      <h2>{`${assayMetadataDefinition.id ? "Edit" : "New"} metadata`}</h2>
+      <Form form={form}>
+        <FormFields columns={1}>
+          <FormBanner content={form.state.errorMap.onSubmit} />
+          {fields.map((f) => (
+            <div className={styles.formField} key={f.name}>
+              <FormField fieldDef={f} />
+              {f.name === "safe_name" &&
+                safe_name !== proposed_safe_name &&
+                form.state.isDirty && (
+                  <div className={styles.formFieldSuggestion}>
+                    <em
+                      role="button"
+                      onClick={() => {
+                        form.setFieldValue("safe_name", proposed_safe_name);
+                        form.setFieldMeta("safe_name", (prev) => ({
+                          ...prev,
+                          errorMap: {},
+                        }));
+                      }}
+                    >
+                      Use "{proposed_safe_name}"
+                    </em>
+                  </div>
+                )}
+            </div>
+          ))}
+        </FormFields>
+        <FormControls
+          onDelete={onDelete}
+          showDelete={!!assayMetadataDefinition.id}
+          showCancel
+          cancelLabel={assayMetadataDefinition.id ? "Back" : "Cancel"}
+          onCancel={() => navigate("..")}
+        />
+      </Form>
+    </CenteredSurface>
   );
 };
 
 const AssayMetadataDefinitionFormWrapper = () => {
-  const { assay_metadata_definition_id } = useParams() as { assay_metadata_definition_id: string };
+  const { assay_metadata_definition_id } = useParams() as {
+    assay_metadata_definition_id: string;
+  };
 
   const {
     data: fields,
@@ -167,7 +184,9 @@ const AssayMetadataDefinitionFormWrapper = () => {
     error: assayMetadataDefinitionFieldsError,
   } = useAssayMetadataDefinitionFields();
 
-  const { data, isLoading, isError, error } = useAssayMetadataDefinition(assay_metadata_definition_id);
+  const { data, isLoading, isError, error } = useAssayMetadataDefinition(
+    assay_metadata_definition_id,
+  );
 
   if (isAssayMetadataDefinitionFieldsLoading || isLoading) return <Spinner />;
   if (isAssayMetadataDefinitionFieldsError || isError || !fields || !data)
@@ -178,7 +197,12 @@ const AssayMetadataDefinitionFormWrapper = () => {
         </Link>
       </ErrorPage>
     );
-  return <AssayMetadataDefinitionForm fields={fields} assayMetadataDefinition={data} />;
+  return (
+    <AssayMetadataDefinitionForm
+      fields={fields}
+      assayMetadataDefinition={data}
+    />
+  );
 };
 
 export default AssayMetadataDefinitionFormWrapper;

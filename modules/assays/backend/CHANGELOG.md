@@ -1,3 +1,36 @@
+## 0.11.0
+
+### 🚀 Features
+
+- import multiple files
+
+### 🧱 Updated Dependencies
+
+- Updated grit-core to 0.11.0
+
+## 0.10.0
+
+### 🚀 Features
+
+- dependencies upgrade
+- edit published assay models
+
+### 🧱 Updated Dependencies
+
+- Updated grit-core to 0.10.0
+
+## 0.9.0
+
+### 🚀 Features
+
+- importer upgrade
+- experiment file attachments
+- remove assays
+
+### 🧱 Updated Dependencies
+
+- Updated grit-core to 0.9.0
+
 ## 0.8.0
 
 ### 🚀 Features

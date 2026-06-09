@@ -24,10 +24,7 @@ import {
   useState,
 } from "react";
 import ColumnTypeDefProviderContext from "./ColumnTypeDefProviderContext";
-import {
-  GritColumnDef,
-  GritTypedColumnDef,
-} from "../../types";
+import { GritColumnDef, GritTypedColumnDef } from "../../types";
 import GenericFilterInput from "../filters/GenericFilterInput";
 import { generateUniqueID } from "@grit42/client-library/utils";
 import { ColumnTypeDef, ColumnTypeDefs } from "./types";
@@ -173,9 +170,7 @@ const defaultColumnTypeDef: ColumnTypeDef = {
 const ColumnTypeDefProvider: FunctionComponent<PropsWithChildren> = ({
   children,
 }) => {
-  const [definitions, setDefinitions] = useState<
-    ColumnTypeDefs
-  >({
+  const [definitions, setDefinitions] = useState<ColumnTypeDefs>({
     string: stringTextUrlColumnTypeDef,
     text: stringTextUrlColumnTypeDef,
     url: stringTextUrlColumnTypeDef,

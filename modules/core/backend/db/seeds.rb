@@ -267,8 +267,6 @@ end
 
 Grit::Core::Origin.insert({ id: 1, name: "ADMIN" }) if Grit::Core::Origin.find_by(name: "ADMIN").nil?
 
-Grit::Core::Role.insert({ id: 1, name: "Administrator", description: "Platform administrator" }) if Grit::Core::Role.find_by(name: "Administrator").nil?
-
 Grit::Core::User.insert({
   id: 1,
   origin_id: 1,
@@ -279,18 +277,21 @@ Grit::Core::User.insert({
   activation_token: "admin"
 }) if Grit::Core::User.find_by(login: "admin").nil?
 
-Grit::Core::UserRole.insert({ user_id: 1, role_id: 1 }) if Grit::Core::UserRole.find_by(user_id: 1, role_id: 1).nil?
 
+Grit::Core::LoadSetStatus.insert({ name: 'Created', description: 'Created' }) if Grit::Core::LoadSetStatus.find_by(name: 'Created').nil?
+Grit::Core::LoadSetStatus.insert({ name: 'Initializing', description: 'Initializing' }) if Grit::Core::LoadSetStatus.find_by(name: 'Initializing').nil?
+Grit::Core::LoadSetStatus.insert({ name: 'Errored', description: 'Errored' }) if Grit::Core::LoadSetStatus.find_by(name: 'Errored').nil?
 Grit::Core::LoadSetStatus.insert({ name: 'Mapping', description: 'The columns must be mapped to attributes' }) if Grit::Core::LoadSetStatus.find_by(name: 'Mapping').nil?
 Grit::Core::LoadSetStatus.insert({ name: 'Mapped', description: 'The columns have been mapped to attributes and the dataset must be validated' }) if Grit::Core::LoadSetStatus.find_by(name: 'Mapped').nil?
 Grit::Core::LoadSetStatus.insert({ name: 'Validating', description: 'The dataset is being validated' }) if Grit::Core::LoadSetStatus.find_by(name: 'Validating').nil?
 Grit::Core::LoadSetStatus.insert({ name: 'Validated', description: 'The dataset has been validated and the import can be confirmed' }) if Grit::Core::LoadSetStatus.find_by(name: 'Validated').nil?
 Grit::Core::LoadSetStatus.insert({ name: 'Invalidated', description: 'The dataset has not been validated, mappings must be changed or the upload cancelled' }) if Grit::Core::LoadSetStatus.find_by(name: 'Invalidated').nil?
+Grit::Core::LoadSetStatus.insert({ name: 'Confirming', description: 'The data is being written to the database' }) if Grit::Core::LoadSetStatus.find_by(name: 'Confirming').nil?
 Grit::Core::LoadSetStatus.insert({ name: 'Succeeded', description: 'The upload succeded' }) if Grit::Core::LoadSetStatus.find_by(name: 'Succeeded').nil?
 
 Grit::Core::DataType.upsert({ name: "string", description: "Best for short text. Displayed as a single line input" }, unique_by: :name)
 Grit::Core::DataType.upsert({ name: "text", description: "Best for longer text. Displayed as a multiline input" }, unique_by: :name)
-Grit::Core::DataType.upsert({ name: "integer", description: "Prefer over decimal when the values are always integer number" }, unique_by: :name)
+Grit::Core::DataType.upsert({ name: "integer", description: "Prefer over decimal when the values are always integer number. Use decimal if values can be higher than 2^63-1 or lower than -2^63" }, unique_by: :name)
 Grit::Core::DataType.upsert({ name: "decimal", description: "Exact decimal numbers" }, unique_by: :name)
 Grit::Core::DataType.upsert({ name: "date", description: "Prefer over datetime when only the date is relevant" }, unique_by: :name)
 Grit::Core::DataType.upsert({ name: "datetime", description: "Date and time"  }, unique_by: :name)
@@ -332,6 +333,38 @@ Grit::Core::Unit.insert({ unit_type: 'flow dynamics', name: 'milliliter per minu
 
 Grit::Core::PublicationStatus.insert({ name: "Draft", description: "Actively worked on" }) if Grit::Core::PublicationStatus.find_by(name: "Draft").nil?
 Grit::Core::PublicationStatus.insert({ name: "Published", description: "Available for use" }) if Grit::Core::PublicationStatus.find_by(name: "Published").nil?
-Grit::Core::PublicationStatus.insert({ name: "Withdrawn", description: "Should not be used anymore" }) if Grit::Core::PublicationStatus.find_by(name: "Withdrawn").nil?
 
-Grit::Core::Role.upsert({ name: "VocabularyAdministrator", description: "Can create and modify controlled vocabularies" }) if Grit::Core::Role.find_by(name: "VocabularyAdministrator").nil?
+# Access control
+
+## Roles
+read_role_id = Grit::Core::Role.find_by(name: "Read")&.id || Grit::Core::Role.insert({ name: "Read", description: "Read data", system: true })[0]["id"]
+analyse_role_id = Grit::Core::Role.find_by(name: "Analyse")&.id || Grit::Core::Role.insert({ name: "Analyse", description: "'Read' and use analysis features", system: true })[0]["id"]
+write_role_id = Grit::Core::Role.find_by(name: "Write")&.id || Grit::Core::Role.insert({ name: "Write", description: "'Analyse' and write data", system: true })[0]["id"]
+manage_role_id = Grit::Core::Role.find_by(name: "Manage")&.id || Grit::Core::Role.insert({ name: "Manage", description: "'Write' and manage models and controlled terminology", system: true })[0]["id"]
+admin_role_id = Grit::Core::Role.find_by(name: "Administrator")&.id || Grit::Core::Role.insert({ name: "Administrator", description: "System administrator", system: true })[0]["id"]
+
+## Permissions
+read_system_permission_id = Grit::Core::Permission.find_by(name: "read:system")&.id || Grit::Core::Permission.insert({ name: "read:system", description: "Read data" })[0]["id"]
+write_analysis_permission_id = Grit::Core::Permission.find_by(name: "write:analysis")&.id || Grit::Core::Permission.insert({ name: "write:analysis", description: "Use analysis features", provides_permissions: [ read_system_permission_id ] })[0]["id"]
+admin_system_permission_id = Grit::Core::Permission.find_by(name: "admin:system")&.id || Grit::Core::Permission.insert({ name: "admin:system", description: "Manage system", provides_permissions: [ read_system_permission_id ] })[0]["id"]
+admin_users_permission_id = Grit::Core::Permission.find_by(name: "admin:users")&.id || Grit::Core::Permission.insert({ name: "admin:users", description: "Manage users", provides_permissions: [ read_system_permission_id ] })[0]["id"]
+admin_vocabularies_permission_id = Grit::Core::Permission.find_by(name: "admin:vocabularies")&.id || Grit::Core::Permission.insert({ name: "admin:vocabularies", description: "Manage vocabularies", provides_permissions: [ read_system_permission_id ] })[0]["id"]
+
+## Role Permissions
+Grit::Core::RolePermission.upsert({ role_id: read_role_id, permission_id: read_system_permission_id }, unique_by: [ :role_id, :permission_id ])
+
+Grit::Core::RolePermission.upsert({ role_id: analyse_role_id, permission_id: write_analysis_permission_id }, unique_by: [ :role_id, :permission_id ])
+
+Grit::Core::RolePermission.upsert({ role_id: write_role_id, permission_id: write_analysis_permission_id }, unique_by: [ :role_id, :permission_id ])
+
+Grit::Core::RolePermission.upsert({ role_id: manage_role_id, permission_id: write_analysis_permission_id }, unique_by: [ :role_id, :permission_id ])
+Grit::Core::RolePermission.upsert({ role_id: manage_role_id, permission_id: admin_vocabularies_permission_id }, unique_by: [ :role_id, :permission_id ])
+
+Grit::Core::RolePermission.upsert({ role_id: admin_role_id, permission_id: write_analysis_permission_id }, unique_by: [ :role_id, :permission_id ])
+Grit::Core::RolePermission.upsert({ role_id: admin_role_id, permission_id: admin_vocabularies_permission_id }, unique_by: [ :role_id, :permission_id ])
+Grit::Core::RolePermission.upsert({ role_id: admin_role_id, permission_id: admin_system_permission_id }, unique_by: [ :role_id, :permission_id ])
+Grit::Core::RolePermission.upsert({ role_id: admin_role_id, permission_id: admin_users_permission_id }, unique_by: [ :role_id, :permission_id ])
+
+## User roles
+
+Grit::Core::UserRole.insert({ user_id: 1, role_id: admin_role_id }) if Grit::Core::UserRole.find_by(user_id: 1, role_id: admin_role_id).nil?

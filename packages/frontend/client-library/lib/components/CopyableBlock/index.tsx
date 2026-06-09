@@ -25,34 +25,33 @@ interface Props {
 }
 
 const CopyableBlock = ({ content }: Props) => {
-    const [text, setText] = useState<"Copy" | "Copied!">("Copy");
+  const [text, setText] = useState<"Copy" | "Copied!">("Copy");
 
-    const onCopyToClipboard = () => {
-      navigator.clipboard.writeText(content);
-      setText("Copied!");
-    };
-
-    useEffect(() => {
-      if (text === "Copied!") {
-        const handle = setTimeout(() => setText("Copy"), 1000);
-        return () => clearTimeout(handle);
-      }
-    }, [text]);
-
-    return (
-      <div className={styles.container}>
-        <div className={styles.copyContainer}>
-          <pre className={styles.preContainer}>{content}</pre>
-          <div
-            className={styles.copyAction}
-            onClick={text === "Copy" ? onCopyToClipboard : undefined}
-          >
-            {text}
-          </div>
-        </div>
-
-      </div>
-    );
+  const onCopyToClipboard = () => {
+    navigator.clipboard.writeText(content);
+    setText("Copied!");
   };
+
+  useEffect(() => {
+    if (text === "Copied!") {
+      const handle = setTimeout(() => setText("Copy"), 1000);
+      return () => clearTimeout(handle);
+    }
+  }, [text]);
+
+  return (
+    <div className={styles.container}>
+      <div className={styles.copyContainer}>
+        <pre className={styles.preContainer}>{content}</pre>
+        <div
+          className={styles.copyAction}
+          onClick={text === "Copy" ? onCopyToClipboard : undefined}
+        >
+          {text}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default CopyableBlock;

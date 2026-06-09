@@ -22,7 +22,7 @@ import {
   EntityProperties,
   useEditEntityMutation,
   useDestroyEntityMutation,
-  useHasRoles,
+  useHasPermission,
 } from "@grit42/core";
 import { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -33,17 +33,15 @@ import {
   FormField,
   genericErrorHandler,
   getVisibleFieldData,
+  FormFields,
+  FormBanner,
 } from "@grit42/form";
 import { useCompound, useCompoundFields } from "../../../../queries/compounds";
 import { AsyncMoleculeViewer } from "../../../../components/MoleculeViewer";
 import styles from "./details.module.scss";
 
 const CompoundDetails = () => {
-  const canCrud = useHasRoles([
-    "Administrator",
-    "CompoundAdministrator",
-    "CompoundUser",
-  ]);
+  const canCrud = useHasPermission("write:compounds");
   const { id } = useParams() as { id: string };
   const { data: compound } = useCompound(id);
   const { data: fields } = useCompoundFields(compound?.compound_type_id);
@@ -64,7 +62,7 @@ const CompoundDetails = () => {
             ? { ...f, disabled: true }
             : { ...f, disabled: !canCrud },
         ) ?? [],
-    [fields, compound],
+    [fields, compound?.compound_type_id, canCrud],
   );
 
   const editEntityMutation = useEditEntityMutation(
@@ -76,7 +74,7 @@ const CompoundDetails = () => {
     "grit/compounds/compounds",
   );
 
-  const form = useForm<EntityData>({
+  const form = useForm({
     defaultValues: formData,
     onSubmit: genericErrorHandler(async ({ value: formValue, formApi }) => {
       const value = getVisibleFieldData<EntityProperties>(
@@ -92,7 +90,7 @@ const CompoundDetails = () => {
     try {
       if (
         !window.confirm(
-          `Are you sure you want to delete this Batch? This action is irreversible`,
+          `Are you sure you want to delete this Compound? This action is irreversible`,
         )
       )
         return;
@@ -109,27 +107,15 @@ const CompoundDetails = () => {
 
   return (
     <div className={styles.container}>
-      <Surface style={{ width: "100%" }}>
+      <Surface className={styles.formSurface}>
         <Form form={form}>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gridAutoRows: "max-content",
-              gap: "calc(var(--spacing) * 2)",
-              paddingBottom: "calc(var(--spacing) * 2)",
-            }}
-          >
-            {form.state.errorMap.onSubmit && (
-              <div style={{ gridColumnStart: 1, gridColumnEnd: -1 }}>
-                {form.state.errorMap.onSubmit?.toString()}
-              </div>
-            )}
-            {compoundTypeFields!.map((f) => (
-              <FormField form={form} fieldDef={f} key={f.name} />
+          <FormFields>
+            <FormBanner content={form.state.errorMap.onSubmit} />
+            {compoundTypeFields.map((f) => (
+              <FormField fieldDef={f} key={f.name} />
             ))}
-          </div>
-          <FormControls form={form} onDelete={onDelete} showDelete={canCrud} />
+          </FormFields>
+          <FormControls onDelete={onDelete} showDelete={canCrud} />
         </Form>
       </Surface>
 

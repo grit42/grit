@@ -39,16 +39,11 @@ export const formatDateNumber = (number: number) => {
 
 export const formatDate = (date: Date, withTime?: boolean) => {
   return (
-    `${formatDateNumber(date.getDate())} ${months[date.getMonth()]?.slice(
-      0,
-      3,
-    )}. ${date.getFullYear()}` +
+    `${formatDateNumber(date.getDate())} ${months[date.getMonth()]?.slice(0, 3)}. ${date.getFullYear()}` +
     (withTime
       ? `, ${formatDateNumber(date.getHours())}:${formatDateNumber(
           date.getMinutes(),
-        )} UTC${date.getTimezoneOffset() > 0 ? "-" : "+"}${Math.abs(
-          date.getTimezoneOffset() / 60,
-        )}`
+        )} UTC${date.getTimezoneOffset() > 0 ? "-" : "+"}${Math.abs(date.getTimezoneOffset() / 60)}`
       : "")
   );
 };

@@ -7,7 +7,6 @@ import { fileURLToPath } from "node:url";
 import { externalizeDeps } from "vite-plugin-externalize-deps";
 import autoprefixer from "autoprefixer";
 import { libInjectCss } from "vite-plugin-lib-inject-css";
-import { preventOverwritePlugin } from "vite-plugin-prevent-overwrite";
 
 export default defineConfig(({ mode }) => ({
   plugins: [
@@ -17,7 +16,6 @@ export default defineConfig(({ mode }) => ({
       tsconfigPath: resolve(__dirname, "tsconfig.lib.json"),
     }),
     externalizeDeps(),
-    preventOverwritePlugin(),
   ],
   build: {
     minify: false,
@@ -62,9 +60,37 @@ export default defineConfig(({ mode }) => ({
               return `grit-${fileName}__${name}`;
             },
     },
-    preprocessorOptions: {
-      scss: {
-        api: "modern-compiler",
+  },
+  resolve: {
+    alias: {
+      "@grit42/core": resolve(__dirname, "./lib"),
+    },
+  },
+  test: {
+    globals: true,
+    environment: "happy-dom",
+    setupFiles: "./test/setup.ts",
+    exclude: ["test/e2e/**", "test/playwright/**", "node_modules/**"],
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "html", "lcov"],
+      include: ["lib/**/*.{ts,tsx}"],
+      exclude: ["lib/**/*.d.ts", "lib/**/index.ts"],
+      // Disable thresholds initially - will enable after Phase 3
+      // thresholds: {
+      //   lines: 80,
+      //   functions: 80,
+      //   branches: 70,
+      //   statements: 80,
+      // },
+    },
+  },
+  server: {
+    strictPort: true,
+    proxy: {
+      "/api": {
+        target: `http://localhost:3000/`,
+        changeOrigin: false,
       },
     },
   },

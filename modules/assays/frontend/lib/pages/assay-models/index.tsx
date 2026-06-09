@@ -1,0 +1,16 @@
+import { Route, Routes } from "react-router-dom";
+import AssayModelsPage from "./AssayModelsPage";
+import AssayModelPage from "./assay-model";
+
+const AssayModelsSection = () => {
+  return (
+    <Routes>
+      <Route index element={<AssayModelsPage />} />
+      <Route path=":assay_model_id">
+        <Route index path="*" element={<AssayModelPage />} />
+      </Route>
+    </Routes>
+  );
+};
+
+export default AssayModelsSection;

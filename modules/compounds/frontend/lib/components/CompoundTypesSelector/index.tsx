@@ -66,7 +66,6 @@ const CompoundTypesSelector = ({
       {options.map(({ id, value, label }) => (
         <Button
           className={styles.button}
-          style={{ margin: 0 }}
           key={id}
           onClick={onClick(value)}
           size="small"

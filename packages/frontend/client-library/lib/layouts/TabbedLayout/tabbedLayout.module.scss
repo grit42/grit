@@ -1,0 +1,17 @@
+@use "../../scss/mixins.scss";
+
+.tabbedLayout {
+  display: grid;
+  grid-template-rows: min-content 1fr;
+
+  height: 100%;
+  width: 100%;
+  max-width: 100%;
+  max-height: 100%;
+
+  overflow: auto;
+
+  &.withHeading {
+    grid-template-rows: min-content min-content 1fr;
+  }
+}

@@ -1,10 +1,12 @@
-import { ErrorPage, Spinner, Surface } from "@grit42/client-library/components";
+import { ErrorPage, Spinner } from "@grit42/client-library/components";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   Form,
+  FormBanner,
   FormControls,
   FormField,
   FormFieldDef,
+  FormFields,
   genericErrorHandler,
   getVisibleFieldData,
   useForm,
@@ -13,40 +15,23 @@ import { useQueryClient } from "@grit42/api";
 import {
   PublicationStatus,
   useCreateEntityMutation,
-  useEntityData,
   usePublicationStatuses,
 } from "@grit42/core";
 import { useState } from "react";
-import styles from "../assayModels.module.scss";
-import {
-  AssayDataSheetDefinitionData,
-  useAssayDataSheetDefinitions,
-} from "../../../../../queries/assay_data_sheet_definitions";
-import { AssayDataSheetColumnData } from "../../../../../queries/assay_data_sheet_columns";
-import { Filter } from "@grit42/table";
 import {
   AssayModelData,
   useAssayModel,
   useAssayModelFields,
 } from "../../../../../queries/assay_models";
-import {
-  AssayModelMetadatumData,
-  useAssayModelMetadata,
-} from "../../../../../queries/assay_model_metadata";
+import { CenteredSurface } from "@grit42/client-library/layouts";
 
 const AssayModelForm = ({
   fields,
   assayModel,
-  metadata,
-  sheets,
-  columns,
   publicationStatuses,
 }: {
   fields: FormFieldDef[];
   assayModel: Partial<AssayModelData>;
-  sheets: AssayDataSheetDefinitionData[];
-  columns: AssayDataSheetColumnData[];
-  metadata: AssayModelMetadatumData[];
   publicationStatuses: PublicationStatus[];
 }) => {
   const navigate = useNavigate();
@@ -54,10 +39,10 @@ const AssayModelForm = ({
   const [formData, setFormData] = useState<Partial<AssayModelData>>(assayModel);
 
   const createEntityMutation = useCreateEntityMutation<AssayModelData>(
-    "grit/assays/assay_models",
+    `grit/assays/assay_models/${assayModel.id}/clone`,
   );
 
-  const form = useForm<Partial<AssayModelData>>({
+  const form = useForm({
     defaultValues: {
       ...formData,
       publication_status_id: publicationStatuses.find(
@@ -70,18 +55,8 @@ const AssayModelForm = ({
         fields,
       );
 
-      const sheetsWithColumns = sheets.map((s) => ({
-        ...s,
-        columns: columns.filter(
-          ({ assay_data_sheet_definition_id }) =>
-            s.id === assay_data_sheet_definition_id,
-        ),
-      }));
-
       const newEntity = await createEntityMutation.mutateAsync({
         ...value,
-        metadata,
-        sheets: sheetsWithColumns,
       } as AssayModelData);
 
       queryClient.setQueryData(
@@ -103,45 +78,22 @@ const AssayModelForm = ({
   });
 
   return (
-    <div className={styles.model}>
-      <Surface className={styles.modelForm}>
-        <h2 style={{ alignSelf: "baseline", marginBottom: ".5em" }}>
-          Clone assay model
-        </h2>
-        <Form<Partial<AssayModelData>> form={form}>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr",
-              gridAutoRows: "max-content",
-              gap: "calc(var(--spacing) * 2)",
-              paddingBottom: "calc(var(--spacing) * 2)",
-            }}
-          >
-            {form.state.errorMap.onSubmit && (
-              <div
-                style={{
-                  gridColumnStart: 1,
-                  gridColumnEnd: -1,
-                  color: "var(--palette-error-main)",
-                }}
-              >
-                {form.state.errorMap.onSubmit?.toString()}
-              </div>
-            )}
-            {fields.map((f) => (
-              <FormField form={form} fieldDef={f} key={f.name} />
-            ))}
-          </div>
-          <FormControls
-            form={form}
-            showCancel
-            cancelLabel={"Cancel"}
-            onCancel={() => navigate("..")}
-          />
-        </Form>
-      </Surface>
-    </div>
+    <CenteredSurface>
+      <h2>Clone assay model</h2>
+      <Form form={form}>
+        <FormFields columns={1}>
+          <FormBanner content={form.state.errorMap.onSubmit} />
+          {fields.map((f) => (
+            <FormField fieldDef={f} key={f.name} />
+          ))}
+        </FormFields>
+        <FormControls
+          showCancel
+          cancelLabel={"Cancel"}
+          onCancel={() => navigate("..")}
+        />
+      </Form>
+    </CenteredSurface>
   );
 };
 
@@ -157,83 +109,31 @@ const CloneAssayModel = () => {
 
   const { data, isLoading, isError, error } = useAssayModel(assay_model_id);
   const {
-    data: sheets,
-    isLoading: isSheetsLoading,
-    isError: isSheetsError,
-    error: sheetsError,
-  } = useAssayDataSheetDefinitions(assay_model_id);
-  const {
-    data: columns,
-    isLoading: isColumnsLoading,
-    isError: isColumnsError,
-    error: columnsError,
-  } = useEntityData<AssayDataSheetColumnData>(
-    "grit/assays/assay_data_sheet_columns",
-    undefined,
-    [
-      {
-        property: "assay_model_id",
-        operator: "eq",
-        property_type: "integer",
-        value: Number(assay_model_id),
-      } as Filter,
-    ],
-  );
-  const {
     data: publicationStatuses,
     isLoading: isPublicationStatusesLoading,
     isError: isPublicationStatusesError,
     error: publicationStatusesError,
   } = usePublicationStatuses();
-  const {
-    data: modelMetadata,
-    isLoading: isModelMetadataLoading,
-    isError: isModelMetadataError,
-    error: modelMetadataError,
-  } = useAssayModelMetadata(assay_model_id);
 
-  if (
-    isAssayModelFieldsLoading ||
-    isLoading ||
-    isSheetsLoading ||
-    isColumnsLoading ||
-    isModelMetadataLoading ||
-    isPublicationStatusesLoading
-  )
+  if (isAssayModelFieldsLoading || isLoading || isPublicationStatusesLoading)
     return <Spinner />;
   if (
     isAssayModelFieldsError ||
     isError ||
-    isSheetsError ||
-    isColumnsError ||
-    isModelMetadataError ||
     isPublicationStatusesError ||
     !fields ||
     !data ||
-    !sheets ||
-    !columns ||
-    !modelMetadata ||
     !publicationStatuses
   )
     return (
       <ErrorPage
-        error={
-          assayModelFieldsError ??
-          sheetsError ??
-          columnsError ??
-          modelMetadataError ??
-          publicationStatusesError ??
-          error
-        }
+        error={assayModelFieldsError ?? publicationStatusesError ?? error}
       />
     );
   return (
     <AssayModelForm
       fields={fields}
       assayModel={data}
-      columns={columns}
-      sheets={sheets}
-      metadata={modelMetadata}
       publicationStatuses={publicationStatuses}
     />
   );

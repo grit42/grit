@@ -1,3 +1,40 @@
+## 0.11.0
+
+### 🚀 Features
+
+- import multiple files
+
+### 🧱 Updated Dependencies
+
+- Updated grit-core to 0.11.0
+
+## 0.10.0
+
+### 🚀 Features
+
+- dependencies upgrade
+
+### 🧱 Updated Dependencies
+
+- Updated grit-core to 0.10.0
+
+## 0.9.1
+
+### 🩹 Fixes
+
+- (sdf) allow property names with spaces
+- (sdf) handle windows line endings
+
+## 0.9.0
+
+### 🚀 Features
+
+- importer upgrade
+
+### 🧱 Updated Dependencies
+
+- Updated grit-core to 0.9.0
+
 ## 0.8.0
 
 ### 🚀 Features

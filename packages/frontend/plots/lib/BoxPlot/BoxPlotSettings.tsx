@@ -32,7 +32,7 @@ const BoxPlotSettings = ({
         value: name,
         id: name,
       })),
-    [yAxisProperties],
+    [groupByProperties],
   );
 
   const onYAxisKeyChange = (key: string) => {

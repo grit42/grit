@@ -20,6 +20,8 @@ module Grit::Core
   class UserRole < ApplicationRecord
     include Grit::Core::GritEntityRecord
 
+    entity_crud_with read: [ "admin:users" ], write: [ "admin:users" ]
+
     before_create :check_role
     before_update :check_role
     before_destroy :check_dependencies
@@ -31,14 +33,17 @@ module Grit::Core
     private
 
       def check_role
-        return if Grit::Core::User.current.role?("Administrator")
-
+        Rails.logger.info "check role"
+        return if Grit::Core::User.current.permission?("admin:users")
+        Rails.logger.info "check role failed"
         raise "Administrator role required to manage user roles"
       end
 
       def check_dependencies
+        Rails.logger.info "check deps"
         check_role
         return unless user.login == "admin" && role.name == "Administrator"
+        Rails.logger.info "check role failed"
 
         raise "Not allowed"
       end

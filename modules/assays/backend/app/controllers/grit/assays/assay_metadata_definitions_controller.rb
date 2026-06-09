@@ -23,7 +23,7 @@ module Grit::Assays
     private
 
     def permitted_params
-      %i[ name description vocabulary_id ]
+      %i[ name safe_name description vocabulary_id ]
     end
   end
 end

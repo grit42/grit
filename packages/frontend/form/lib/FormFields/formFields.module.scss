@@ -1,0 +1,9 @@
+@use "@grit42/client-library/theme.scss";
+
+.fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-auto-rows: max-content;
+  gap: theme.$spacing-lg;
+  padding-bottom: theme.$spacing-lg;
+}

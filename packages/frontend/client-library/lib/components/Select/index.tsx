@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/refs */
 /**
  * Copyright 2025 grit42 A/S. <https://grit42.com/>
  *
@@ -79,8 +80,7 @@ interface SingleSelectProps<T> extends StandardProps<T>, ComboboxProps {
 }
 
 interface SingleSelectPropsClearable<T>
-  extends StandardProps<T>,
-    ComboboxProps {
+  extends StandardProps<T>, ComboboxProps {
   multiple?: false;
   onChange?: (value: T | null, optionValue: Option<T> | null) => void;
   isClearable: true;
@@ -547,20 +547,16 @@ const Select = <T,>({
           ref={optionsRef}
           className={classnames(styles.options, {
             [styles.fitContent as string]: optionsFitContent === true,
+            [styles.insideDialog as string]: isInsideDialog,
           })}
-          style={{
-            ...(isInsideDialog
+          style={
+            isInsideDialog
               ? {
-                  position: "fixed",
                   width: fieldRef.current?.clientWidth,
-                  marginTop: `calc(${
-                    containerRef.current?.clientHeight ?? 0
-                  }px + .5em)`,
-                  top: "unset",
-                  left: "unset",
+                  marginTop: `calc(${containerRef.current?.clientHeight ?? 0}px + .5em)`,
                 }
-              : {}),
-          }}
+              : undefined
+          }
         >
           {isClearable &&
             multiple &&

@@ -17,8 +17,13 @@
  */
 
 import { useEffect } from "react";
-import { useRegisterImporter } from "@grit42/core";
-import { guessCompoundDataSetValues } from "./utils/data";
+import {
+  dsvSampleData,
+  PendingLoadSetBlock,
+  useRegisterImporter,
+} from "@grit42/core";
+import { guessCompoundDataSetValues, sdfSampleData } from "./utils/data";
+import CompoundLoadSetBlockViewerExtraActions from "./CompoundLoadSetBlockViewerExtraActions";
 
 const useRegisterCompoundImporter = () => {
   const registerImporter = useRegisterImporter();
@@ -27,7 +32,10 @@ const useRegisterCompoundImporter = () => {
     const unregisterCompoundImporter = registerImporter(
       "Grit::Compounds::Compound",
       {
-        guessDataSetValues: guessCompoundDataSetValues,
+        guessLoadSetBlockValues: guessCompoundDataSetValues,
+        LoadSetBlockViewerExtraActions: CompoundLoadSetBlockViewerExtraActions,
+        sampleData: (block: PendingLoadSetBlock) =>
+          block.format === "sdf" ? sdfSampleData(block) : dsvSampleData(block),
       },
     );
 

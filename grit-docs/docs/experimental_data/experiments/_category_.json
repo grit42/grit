@@ -1,0 +1,9 @@
+{
+    "label": "Experiments",
+    "position": 20,
+    "description": "Experimental data sets",
+    "link": {
+      "type": "doc",
+      "id": "index"
+    }
+}

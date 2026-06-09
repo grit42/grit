@@ -35,23 +35,29 @@ const handleMutationSuccess = (
   entityPath: string,
   entityId?: string,
 ) => {
-  queryClient.invalidateQueries({
-    queryKey: ["entities", "datum", entityPath, entityId],
-    refetchType: "all",
-  });
-  queryClient.invalidateQueries({
-    queryKey: ["entities", "data", entityPath],
-    refetchType: "all",
-  });
-  queryClient.invalidateQueries({
-    queryKey: ["entities", "infiniteData", entityPath],
-    refetchType: "all",
-  });
+  return Promise.all([
+    queryClient.invalidateQueries({
+      queryKey: ["entities", "datum", entityPath, entityId],
+      refetchType: "all",
+    }),
+    queryClient.invalidateQueries({
+      queryKey: ["entities", "data", entityPath],
+      refetchType: "all",
+    }),
+    queryClient.invalidateQueries({
+      queryKey: ["entities", "infiniteData", entityPath],
+      refetchType: "all",
+    }),
+  ]);
 };
 
 export const useCreateEntityMutation = <T extends EntityProperties>(
   entityPath: string,
-  mutationOptions: UseMutationOptions<EntityData<T>, EndpointErrorErrors<T>, Partial<T>> = {},
+  mutationOptions: UseMutationOptions<
+    EntityData<T>,
+    EndpointErrorErrors<T>,
+    Partial<T>
+  > = {},
 ) => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -71,12 +77,12 @@ export const useCreateEntityMutation = <T extends EntityProperties>(
       });
       toast.dismiss(toastId);
       if (!response.success) {
-         throw response.errors;
+        throw response.errors;
       }
 
       return response.data;
     },
-    onSuccess: () => handleMutationSuccess(queryClient, entityPath),
+    onSuccess: async () => await handleMutationSuccess(queryClient, entityPath),
     onError: notifyOnError,
     ...mutationOptions,
   });
@@ -113,8 +119,8 @@ export const useEditEntityMutation = <T extends EntityProperties>(
       }
       return response.data;
     },
-    onSuccess: () =>
-      handleMutationSuccess(queryClient, entityPath, entityId.toString()),
+    onSuccess: async () =>
+      await handleMutationSuccess(queryClient, entityPath, entityId.toString()),
     onError: notifyOnError,
     ...mutationOptions,
   });
@@ -146,7 +152,9 @@ export const useDestroyEntityMutation = <
         EndpointError
       >(url, {
         method: "DELETE",
-        data: { ids: (Array.isArray(entityIds) ? entityIds : [entityIds]).join(",") }
+        data: {
+          ids: (Array.isArray(entityIds) ? entityIds : [entityIds]).join(","),
+        },
       });
       toast.dismiss(toastId);
       if (!response.success) {
@@ -154,7 +162,45 @@ export const useDestroyEntityMutation = <
       }
       return response.data;
     },
-    onSuccess: () => handleMutationSuccess(queryClient, entityPath),
+    onSuccess: async () => await handleMutationSuccess(queryClient, entityPath),
+    onError: notifyOnError,
+    ...mutationOptions,
+  });
+};
+
+export const useDangerousDestroyEntityMutation = <
+  TPayload extends [string | number, boolean] = [string | number, boolean],
+  TData extends EntityProperties = EntityProperties,
+>(
+  entityPath: string,
+  mutationOptions: UseMutationOptions<EntityData<TData>, string, TPayload> = {},
+) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ["destroyEntity", entityPath],
+    mutationFn: async ([entityId, dangerousEditMode]: TPayload) => {
+      const url = `${entityPath}/${entityId}`;
+      const toastId = toast("Deleting records...", {
+        autoClose: false,
+        closeButton: false,
+        isLoading: true,
+      });
+      const response = await request<
+        EndpointSuccess<EntityData<TData>>,
+        EndpointError
+      >(url, {
+        method: "DELETE",
+        data: {
+          dangerous_edit: dangerousEditMode ?? false,
+        },
+      });
+      toast.dismiss(toastId);
+      if (!response.success) {
+        throw response.errors;
+      }
+      return response.data;
+    },
+    onSuccess: async () => await handleMutationSuccess(queryClient, entityPath),
     onError: notifyOnError,
     ...mutationOptions,
   });

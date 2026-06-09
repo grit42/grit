@@ -8,10 +8,6 @@
 
 @media (max-width: 1000px) {
   .dataTableContainer {
-    min-width: none;
+    min-width: 0;
   }
-}
-
-.fullPerspectiveDialog {
-  width: max-content;
 }

@@ -25,7 +25,9 @@ const DataTablesTab = () => {
     <Routes>
       <Route element={<Outlet />}>
         <Route index element={<DataTables />} />
-        <Route path="/:data_table_id/*" element={<DataTable />} />
+        <Route path=":data_table_id">
+          <Route index path="*" element={<DataTable />} />
+        </Route>
       </Route>
     </Routes>
   );

@@ -26,13 +26,12 @@ import {
   useSynonymsColumns,
 } from "../../../../queries/synonyms";
 import { Table, useSetupTableState } from "@grit42/table";
-import { useToolbar } from "@grit42/core/Toolbar";
+import { useToolbar, useHasPermission } from "@grit42/core";
 import { useDestroySynonym } from "../../../../mutations/synonyms";
 import Circle1NewIcon from "@grit42/client-library/icons/Circle1New";
 import { useTableColumns } from "@grit42/core/utils";
 import { downloadFile } from "@grit42/client-library/utils";
 import { getFilterParams, getSortParams, getURLParams } from "@grit42/api";
-import { useHasRoles } from "@grit42/core";
 
 interface Props {
   id: string;
@@ -52,11 +51,7 @@ const getExportFileUrl = (
 };
 
 const CompoundSynonyms = ({ id }: Props) => {
-  const canCrud = useHasRoles([
-    "Administrator",
-    "CompoundAdministrator",
-    "CompoundUser",
-  ]);
+  const canCrud = useHasPermission("write:compounds");
 
   const { data: columns } = useSynonymsColumns();
   const navigate = useNavigate();
@@ -133,22 +128,14 @@ const CompoundSynonyms = ({ id }: Props) => {
         },
       ],
       import: {
-        requiredRoles: [
-          "Administrator",
-          "CompoundAdministrator",
-          "CompoundUser",
-        ],
+        requiredPermissions: ["write:compounds"],
       },
       actions: [
         {
           icon: <Circle1NewIcon />,
           id: "ADD_SYNONYM",
           label: "New synonym",
-          requiredRoles: [
-            "Administrator",
-            "CompoundAdministrator",
-            "CompoundUser",
-          ],
+          requiredPermissions: ["write:compounds"],
           onClick: () =>
             navigate("/core/entities/Grit::Compounds::Synonym/new", {
               state: {
@@ -162,11 +149,7 @@ const CompoundSynonyms = ({ id }: Props) => {
         },
       ],
       export: {
-        requiredRoles: [
-          "Administrator",
-          "CompoundAdministrator",
-          "CompoundUser",
-        ],
+        requiredPermissions: ["read:system"],
       },
       exportItems: [
         {

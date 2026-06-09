@@ -3,7 +3,7 @@ import {
   ExperimentData,
   ExperimentPlotDefinition,
 } from "../../../../queries/experiments";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Button,
   ButtonGroup,
@@ -28,9 +28,10 @@ import {
   EntityData,
   EntityPropertyDef,
   useEditEntityMutation,
-  useHasRoles,
+  useHasPermission,
 } from "@grit42/core";
 import { generateUniqueID } from "@grit42/client-library/utils";
+import styles from "./plots.module.scss";
 
 interface Props {
   experiment: ExperimentData;
@@ -46,9 +47,7 @@ const getPlotData = (data: EntityData[], properties: EntityPropertyDef[]) => {
     for (const prop of propsToConvert) {
       if (!nullish(datum[prop.name])) {
         datum[prop.name] =
-          prop.type === "decimal"
-            ? datum[prop.name]
-            : (datum[prop.name] as any).toString();
+          prop.type === "decimal" ? datum[prop.name] : `${datum[prop.name]}`;
       } else if (prop.type === "boolean") {
         datum[prop.name] = (!!datum[prop.name]).toString();
       }
@@ -71,25 +70,37 @@ const NEW_PLOT = (data_sheet_id?: number) => ({
 
 const ExperimentPlot = ({ experiment }: Props) => {
   const navigate = useNavigate();
-  const canCrudPlots = useHasRoles([
-    "Administrator",
-    "AssayAdministrator",
-    "AssayUser",
-  ]);
-  const { plot_id } = useParams() as { plot_id: string };
+  const canCrudPlots =
+    useHasPermission("write:assays") &&
+    experiment.publication_status_id__name !== "Published";
+  const { experiment_id, plot_id } = useParams() as {
+    experiment_id: string;
+    plot_id: string;
+  };
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  const [plot, setPlot] = useState<ExperimentPlotDefinition>(
-    experiment.plots[plot_id] ?? NEW_PLOT(experiment.data_sheets[0]?.id),
-  );
-
-  useEffect(() => {
-    setPlot(
-      experiment.plots[plot_id] ?? NEW_PLOT(experiment.data_sheets[0]?.id),
-    );
-  }, [plot_id, experiment.plots, experiment.data_sheets]);
+  const defaultPlot =
+    experiment.plots[plot_id] ?? NEW_PLOT(experiment.data_sheets[0]?.id);
+  const [plot, setPlot] = useState<ExperimentPlotDefinition>(defaultPlot);
+  const [prevDeps, setPrevDeps] = useState({
+    plot_id,
+    plots: experiment.plots,
+    data_sheets: experiment.data_sheets,
+  });
+  if (
+    prevDeps.plot_id !== plot_id ||
+    prevDeps.plots !== experiment.plots ||
+    prevDeps.data_sheets !== experiment.data_sheets
+  ) {
+    setPrevDeps({
+      plot_id,
+      plots: experiment.plots,
+      data_sheets: experiment.data_sheets,
+    });
+    setPlot(defaultPlot);
+  }
 
   const editEntityMutation = useEditEntityMutation<ExperimentData>(
     "grit/assays/experiments",
@@ -151,7 +162,7 @@ const ExperimentPlot = ({ experiment }: Props) => {
     isLoading: isDataLoading,
     isError: isDataError,
     error: dataError,
-  } = useExperimentDataSheetRecords(plot.data_sheet_id);
+  } = useExperimentDataSheetRecords(experiment_id, plot.data_sheet_id);
 
   const plotData = useMemo(
     () => getPlotData(data ?? [], columns ?? []),
@@ -181,75 +192,55 @@ const ExperimentPlot = ({ experiment }: Props) => {
   );
 
   if (!canCrudPlots && plot_id === "new") {
-    return <ErrorPage error="Nothing to see here..."/>
+    return <ErrorPage error="Nothing to see here..." />;
   }
 
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "8fr 2fr",
-        gap: "var(--spacing)",
-        height: "100%",
-        overflow: "auto",
-      }}
-    >
+    <div className={styles.plotContainer}>
       {isLoading && <Spinner />}
       {isError && <ErrorPage error={columnsError ?? dataError} />}
       {canDisplayPlot && (
-        <Plot
-          data={plotData}
-          dataProperties={(columns as any) ?? []}
-          def={plot.def}
-        />
+        <Plot data={plotData} dataProperties={columns ?? []} def={plot.def} />
       )}
-      <Surface
-        style={{
-          width: "auto",
-          display: "grid",
-          gap: "calc(var(--spacing) * 2)",
-          gridAutoRows: "min-content",
-          overflowY: "auto",
-        }}
-      >
-        <ButtonGroup>
-          {dirty && (
-            <Button onClick={onSave} loading={saving} color="secondary">
-              {plot_id === "new" ? "Add" : "Save"}
-            </Button>
-          )}
-          {dirty && <Button onClick={onRevert}>Revert</Button>}
-          {plot_id !== "new" && (
-            <Button onClick={onDelete} color="danger" loading={deleting}>
-              Delete
-            </Button>
-          )}
-        </ButtonGroup>
-        <Select
-          label="Data sheet"
-          options={experiment.data_sheets.map(
-            ({ assay_data_sheet_definition_id__name, id }) => ({
-              label: assay_data_sheet_definition_id__name,
+      {canCrudPlots && (
+        <Surface className={styles.plotSidebar}>
+          <ButtonGroup>
+            {dirty && (
+              <Button onClick={onSave} loading={saving} color="secondary">
+                {plot_id === "new" ? "Add" : "Save"}
+              </Button>
+            )}
+            {dirty && <Button onClick={onRevert}>Revert</Button>}
+            {plot_id !== "new" && (
+              <Button onClick={onDelete} color="danger" loading={deleting}>
+                Delete
+              </Button>
+            )}
+          </ButtonGroup>
+          <Select
+            label="Data sheet"
+            options={experiment.data_sheets.map(({ name, id }) => ({
+              label: name,
               value: id,
-            }),
-          )}
-          value={plot.data_sheet_id}
-          onChange={(data_sheet_id) => {
-            setPlot((prev) => ({ ...prev, data_sheet_id }));
-            setDirty(true);
-          }}
-        />
-        <PlotSettings
-          plot={plot.def}
-          xAxisProperties={xAxisProperties as SourceDataProperties}
-          yAxisProperties={yAxisProperties as SourceDataProperties}
-          groupByProperties={groupByProperties as SourceDataProperties}
-          onChange={(def) => {
-            setPlot({ ...plot, def });
-            setDirty(true);
-          }}
-        />
-      </Surface>
+            }))}
+            value={plot.data_sheet_id}
+            onChange={(data_sheet_id) => {
+              setPlot((prev) => ({ ...prev, data_sheet_id }));
+              setDirty(true);
+            }}
+          />
+          <PlotSettings
+            plot={plot.def}
+            xAxisProperties={xAxisProperties as SourceDataProperties}
+            yAxisProperties={yAxisProperties as SourceDataProperties}
+            groupByProperties={groupByProperties as SourceDataProperties}
+            onChange={(def) => {
+              setPlot({ ...plot, def });
+              setDirty(true);
+            }}
+          />
+        </Surface>
+      )}
     </div>
   );
 };

@@ -24,36 +24,39 @@ import useLocalOrStoredState from "../../useLocalOrStoredState";
 import { getLeafColumns } from "../../utils";
 
 function useColumnOrder<T>(
-    id: string,
-    columns: GritColumnDef<T>[],
-    initialColumnOrder: ColumnOrderState | null = null,
-    saveState = true,
-  ) {
-    const defaultColumnOrder = useMemo(
-      () => initialColumnOrder ?? getDefaultColumnOrder(columns),
-      [columns, initialColumnOrder],
-    );
+  id: string,
+  columns: GritColumnDef<T>[],
+  initialColumnOrder: ColumnOrderState | null = null,
+  saveState = true,
+) {
+  const defaultColumnOrder = useMemo(
+    () => initialColumnOrder ?? getDefaultColumnOrder(columns),
+    [columns, initialColumnOrder],
+  );
 
-    const [value, setValue] = useLocalOrStoredState(
-      `${id}_columnOrder`,
-      defaultColumnOrder,
-      saveState,
-    );
+  const [value, setValue] = useLocalOrStoredState(
+    `${id}_columnOrder`,
+    defaultColumnOrder,
+    saveState,
+  );
 
-    useEffect(() => {
-      const leafColumns = getLeafColumns(columns);
-      if (!leafColumns.every(({ id }) => value.includes(id))) {
-        const orderWithAllColumns = [
-          ...value,
-          ...leafColumns
-            .filter(({ id }) => !value.includes(id))
-            .map(({ id }) => id),
-        ];
-        setValue(orderWithAllColumns);
-      }
-    }, [columns, value, setValue]);
+  useEffect(() => {
+    const leafColumns = getLeafColumns(columns);
+    const leafIds = leafColumns.map(({ id }) => id);
+    const hasNew = !leafColumns.every(({ id }) => value.includes(id));
+    const hasStale = value.some((id) => !leafIds.includes(id));
+    if (hasNew || hasStale) {
+      const orderWithAllColumns = [
+        ...value.filter((id) => leafIds.includes(id)),
+        ...leafColumns
+          .filter(({ id }) => !value.includes(id))
+          .map(({ id }) => id),
+      ];
+      setValue(orderWithAllColumns);
+    }
+  }, [columns, value, setValue]);
 
-    return [value, setValue] as const;
-  }
+  return [value, setValue] as const;
+}
 
 export default useColumnOrder;

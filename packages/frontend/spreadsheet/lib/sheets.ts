@@ -68,7 +68,7 @@ export const defaultColumnDefinitionsFromSheetOptions: ColumnDefinitionsFromShee
     requiredRowIndex: null,
   };
 
-const mergeRanges = (sheet: WorkSheet) => {
+export const mergeRanges = (sheet: WorkSheet) => {
   if (sheet["!merges"]) {
     sheet["!merges"].forEach((merge) => {
       const value = ((sheet["!data"] || [])[merge.s.r] || [])[merge.s.c];

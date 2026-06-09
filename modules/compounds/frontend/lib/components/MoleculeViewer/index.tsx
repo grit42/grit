@@ -40,7 +40,7 @@ export const AsyncMoleculeViewer = ({
   height = 300,
 }: Props) => {
   const [molSvg, setMolSvg] = useState<string | null>(null);
-  const moleculeRef = useRef<Molecule>();
+  const moleculeRef = useRef<Molecule>(null);
 
   const options = useMemo(
     () => ({
@@ -84,7 +84,6 @@ export const AsyncMoleculeViewer = ({
                 await navigator.clipboard.writeText(
                   moleculeRef.current?.toSmiles() ?? "",
                 );
-                // toast.info("SMILES copied to clipboard!");
               },
             },
             {
@@ -94,7 +93,6 @@ export const AsyncMoleculeViewer = ({
                 await navigator.clipboard.writeText(
                   moleculeRef.current?.toMolfile() ?? "",
                 );
-                // toast.info("Molfile copied to clipboard!");
               },
             },
           ]}

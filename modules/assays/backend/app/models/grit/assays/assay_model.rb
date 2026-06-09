@@ -19,21 +19,46 @@
 module Grit::Assays
   class AssayModel < ApplicationRecord
     include Grit::Core::GritEntityRecord
+    include Grit::Core::Model::DangerousEdit
 
+    before_destroy :drop_tables
     belongs_to :assay_type
-    has_many :assays, dependent: :destroy
+    belongs_to :publication_status, class_name: "Grit::Core::PublicationStatus"
     has_many :assay_model_metadata, dependent: :destroy
     has_many :assay_data_sheet_definitions, dependent: :destroy
+    has_many :experiments, dependent: :destroy
+
+    before_save :check_publication_status
 
     display_column "name"
-    
-    entity_crud_with read: [],
-      create: [ "Administrator", "AssayAdministrator" ],
-      update: [ "Administrator", "AssayAdministrator" ],
-      destroy: [ "Administrator", "AssayAdministrator" ]
+
+    entity_crud_with read: [ "read:system" ], write: [ "admin:assays" ]
 
     def self.published(params)
       self.detailed(params).where("grit_core_publication_statuses__.name = 'Published'")
     end
+
+    def create_tables
+      assay_data_sheet_definitions.each(&:create_table)
+    end
+
+    def drop_tables
+      assay_data_sheet_definitions.each(&:drop_table)
+    end
+
+    def published?
+      publication_status.name === "Published"
+    end
+
+    def draft?
+      publication_status.name === "Draft"
+    end
+
+    private
+      def check_publication_status
+        return if publication_status_changed?
+        return if dangerous_edit?
+        raise "Cannot modify a published Assay Model" if published?
+      end
   end
 end

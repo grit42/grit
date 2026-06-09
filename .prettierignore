@@ -5,3 +5,7 @@
 **/node_modules
 **/postgres-data/
 **/postgres-data-prod/
+**/playwright-report/
+**/test-results/
+**/playwright/.auth/
+**/coverage/

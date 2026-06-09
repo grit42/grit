@@ -18,6 +18,7 @@ development:
 
 test:
   <<: *local
+  prepared_statements: false
   database: <%= ENV["GRIT_DATABASE"] || "compounds" %>_test
 
 production:

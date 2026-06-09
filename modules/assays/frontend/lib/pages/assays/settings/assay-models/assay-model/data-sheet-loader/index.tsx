@@ -1,5 +1,5 @@
 import { Navigate, Route, Routes } from "react-router-dom";
-import FileLoader, { SheetWithOptions } from "./FileLoader";
+import FileLoader, { SheetWithOptions } from "./file-loader";
 import { useState } from "react";
 import SheetMapper, { SheetWithColumns } from "./sheet-mapper";
 import { AssayModelData } from "../../../../../../queries/assay_models";
@@ -30,22 +30,24 @@ const DataSheetLoader = ({ assayModel }: { assayModel: AssayModelData }) => {
         element={
           <SheetMapper
             sheets={sheets}
-            sheetsWithColumns={sheetsWithColumns}
             setSheetsWithOptions={setSheets}
             setSheetsWithColumns={setSheetsWithColumns}
           />
         }
       />
-      <Route
-        path="edit/*"
-        element={
-          <DataSetDefinitionEditor
-            assayModel={assayModel}
-            sheetsWithColumns={sheetsWithColumns}
-          />
-        }
-      />
-      <Route index element={<Navigate to="files" />} />
+      <Route path="edit">
+        <Route
+          index
+          path="*"
+          element={
+            <DataSetDefinitionEditor
+              assayModel={assayModel}
+              sheetsWithColumns={sheetsWithColumns}
+            />
+          }
+        />
+      </Route>
+      <Route index path="*" element={<Navigate to="../files" replace />} />
     </Routes>
   );
 };

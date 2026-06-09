@@ -1,2 +1,1 @@
-export * from "./queries"
-export type * from "./queries"
+export * from "./queries";

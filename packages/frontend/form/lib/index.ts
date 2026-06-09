@@ -16,6 +16,8 @@
  * @grit42/form. If not, see <https://www.gnu.org/licenses/>.
  */
 
+import { ReactFormExtendedApi } from "@tanstack/react-form";
+
 export * from "@tanstack/react-form";
 
 export { default as AddFormControl } from "./AddFormControl";
@@ -26,6 +28,9 @@ export { default as FormField } from "./FormField";
 
 export { default as Form } from "./Form";
 
+export { default as FormFields } from "./FormFields";
+export { default as FormBanner } from "./FormBanner";
+
 export { default as FormInputProvider } from "./FormInputProvider";
 
 export {
@@ -35,6 +40,13 @@ export {
   useRegisterFormInput,
 } from "./FormInputProviderContext";
 
+export {
+  useFormContext,
+  useFieldContext,
+  formContext,
+  fieldContext,
+} from "./gritFormContext";
+
 export * from "./types";
 
 export { getFieldLabel, isFieldVisible, getVisibleFieldData } from "./utils";
@@ -42,3 +54,20 @@ export { getFieldLabel, isFieldVisible, getVisibleFieldData } from "./utils";
 export { requiredValidator } from "./validators";
 
 export { genericErrorHandler } from "./errorHandlers";
+
+export type { ReactFormExtendedApi };
+
+export type FormApi<T> = ReactFormExtendedApi<
+  T,
+  any,
+  any,
+  any,
+  any,
+  any,
+  any,
+  any,
+  any,
+  any,
+  any,
+  any
+>;

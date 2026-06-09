@@ -18,8 +18,8 @@
 
 import { AuthGuard } from "@grit42/core";
 import { lazy } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
-const LazyAssaysPage = lazy(() => import("./pages/assays"));
+import { Navigate, Outlet, Route, Routes } from "react-router-dom";
+const LazyAssayModelsPage = lazy(() => import("./pages/assay-models"));
 const LazyExperimentsPage = lazy(() => import("./pages/experiments"));
 const LazyDataTablesPage = lazy(() => import("./features/data-tables/pages"));
 const LazyAssaySettingsPage = lazy(() => import("./pages/assays/settings"));
@@ -27,41 +27,52 @@ const LazyAssaySettingsPage = lazy(() => import("./pages/assays/settings"));
 const Router = () => {
   return (
     <Routes>
-      <Route path="assays/*">
+      <Route path="assay-models">
         <Route
-          path="settings/*"
+          path="settings"
           element={
-            <AuthGuard>
-              <LazyAssaySettingsPage />
+            <AuthGuard permission="admin:assays">
+              <Outlet />
             </AuthGuard>
           }
-        />
+        >
+          <Route index path="*" element={<LazyAssaySettingsPage />} />
+        </Route>
         <Route
+          index
           path="*"
           element={
-            <AuthGuard>
-              <LazyAssaysPage />
+            <AuthGuard permission="read:system">
+              <LazyAssayModelsPage />
             </AuthGuard>
           }
         ></Route>
       </Route>
       <Route
-        path="experiments/*"
+        path="experiments"
         element={
-          <AuthGuard>
-            <LazyExperimentsPage />
+          <AuthGuard permission="read:system">
+            <Outlet />
           </AuthGuard>
         }
-      />
+      >
+        <Route index path="*" element={<LazyExperimentsPage />} />
+      </Route>
       <Route
-        path="data_tables/*"
+        path="data_tables"
         element={
-          <AuthGuard>
-            <LazyDataTablesPage />
+          <AuthGuard permission="read:system">
+            <Outlet />
           </AuthGuard>
         }
+      >
+        <Route index path="*" element={<LazyDataTablesPage />} />
+      </Route>
+      <Route
+        index
+        path="*"
+        element={<Navigate to="../experiments" replace />}
       />
-      <Route path="*" element={<Navigate to="assays" replace />} />
     </Routes>
   );
 };

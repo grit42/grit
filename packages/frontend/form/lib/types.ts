@@ -56,7 +56,12 @@ export interface BinaryFormFieldDef extends FormFieldDef, DropzoneProps {
   placeholder: never;
 }
 
-export type FieldDef = FormFieldDef | StringFormFieldDef | SelectFormFieldDef | BooleanFormFieldDef | BinaryFormFieldDef
+export type FieldDef =
+  | FormFieldDef
+  | StringFormFieldDef
+  | SelectFormFieldDef
+  | BooleanFormFieldDef
+  | BinaryFormFieldDef;
 
 export type NullablePartial<T> = Partial<{ [K in keyof T]: T[K] | null }>;
 
@@ -67,4 +72,5 @@ export interface FormInputProps<T extends FormFieldDef = FormFieldDef> {
   handleChange: (updater: any) => void;
   handleBlur: () => void;
   field: T;
+  className?: string;
 }

@@ -16,7 +16,7 @@
  * @grit42/client-library. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React, { useEffect, useLayoutEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import classnames from "../../utils/classnames";
 import Portal from "../Portal";
 import styles from "./tooltip.module.scss";
@@ -34,7 +34,7 @@ import {
 
 interface Props {
   placement?: Placement;
-  content: string | JSX.Element;
+  content: string | React.ReactElement;
   disabled?: boolean;
   isTutorial?: boolean;
   zIndex?: number;
@@ -62,13 +62,8 @@ export const TooltipRender = ({
   className,
   autoPlacementOptions,
 }: TooltipRenderProps) => {
-  const [showing, setShowing] = useState(false);
   const [tooltipRef, setTooltipRef] = useState<HTMLDivElement | null>(null);
   const [arrowRef, setArrowRef] = useState<SVGSVGElement | null>(null);
-
-  useLayoutEffect(() => {
-    setShowing(true);
-  }, []);
 
   const middleware = useMemo(
     () => [
@@ -79,7 +74,7 @@ export const TooltipRender = ({
         element: arrowRef,
       }),
     ],
-    [arrowRef, placementFromProps],
+    [arrowRef, autoPlacementOptions, placementFromProps],
   );
 
   const { floatingStyles, placement, context } = useFloating({
@@ -95,7 +90,7 @@ export const TooltipRender = ({
   return (
     <div
       className={classnames(className, styles.tooltip, styles[placement], {
-        [styles.show as string]: showing && isHovering,
+        [styles.show as string]: isHovering,
       })}
       onTransitionEnd={(e) => {
         e.persist();
@@ -158,7 +153,7 @@ const Tooltip = (props: TooltipProps) => {
       ref={(value) => {
         setChildRef(value);
       }}
-      style={{ display: "inline-flex", position: "relative" }}
+      className={styles.trigger}
     >
       <Portal>
         {(isHovering || isTransitioning || isTutorial) && (

@@ -76,7 +76,7 @@
     height: 100%;
 
     a {
-      display: contents !important;
+      display: flex;
     }
 
     &.invalid {

@@ -1,3 +1,23 @@
+## 0.7.1
+
+### 🩹 Fixes
+
+- use select for boolean filter
+
+### 🧱 Updated Dependencies
+
+- Updated @grit42/client-library to 0.8.1
+
+## 0.7.0
+
+### 🚀 Features
+
+- dependencies upgrade
+
+### 🧱 Updated Dependencies
+
+- Updated @grit42/client-library to 0.8.0
+
 ## 0.6.2
 
 ### 🩹 Fixes

@@ -16,58 +16,33 @@
  * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { useCallback, useEffect, useState } from "react";
-import { Outlet, useMatch, useNavigate } from "react-router-dom";
-import { Tabs } from "@grit42/client-library/components";
-import { useToolbar } from "@grit42/core/Toolbar";
+import { useCallback, useEffect, useMemo } from "react";
+import { useMatch, useNavigate } from "react-router-dom";
+import { ErrorPage, RoutedTabs } from "@grit42/client-library/components";
+import { useToolbar } from "@grit42/core";
 import Circle1NewIcon from "@grit42/client-library/icons/Circle1New";
 import { AssayDataSheetDefinitionData } from "../../../../../../queries/assay_data_sheet_definitions";
-import styles from "../../assayModels.module.scss";
+import { AssayModelData } from "../../../../../../queries/assay_models";
+import { useAssayModelEditorContext } from "../AssayModelEditorContext";
 
 interface Props {
   sheetDefinitions: AssayDataSheetDefinitionData[];
+  assayModel: AssayModelData;
 }
 
-const DataSheetTabs = ({ sheetDefinitions }: Props) => {
+const DataSheetTabs = ({ sheetDefinitions, assayModel }: Props) => {
+  const { canEdit } = useAssayModelEditorContext();
   const registerToolbarActions = useToolbar();
   const navigate = useNavigate();
 
   const match = useMatch(
-    "/assays/assays/settings/assay-models/:assay_model_id/data-sheets/:sheet_id/*",
+    "/assays/assay-models/settings/assay-models/:assay_model_id/data-sheets/:sheet_id/*",
   );
 
   const sheet_id = match?.params.sheet_id ?? 0;
 
-  const [selectedTab, setSelectedTab] = useState(
-    sheetDefinitions?.findIndex(({ id }) => sheet_id === id.toString()) ?? 0,
-  );
-
-  useEffect(() => {
-    if (sheet_id === "new") {
-      setSelectedTab(sheetDefinitions?.length ?? 0);
-    } else {
-      setSelectedTab(
-        sheetDefinitions?.findIndex(({ id }) => sheet_id === id.toString()) ??
-          0,
-      );
-    }
-  }, [sheet_id, sheetDefinitions]);
-
-  const handleTabChange = (index: number) => {
-    if (index === sheetDefinitions?.length) {
-      navigate("new", { replace: true });
-    }
-    if (
-      selectedTab !== index &&
-      sheetDefinitions?.length &&
-      sheetDefinitions[index]
-    ) {
-      navigate(sheetDefinitions[index].id.toString(), { replace: true });
-    }
-  };
-
   const navigateToNew = useCallback(
-    () => navigate("new", { replace: true }),
+    () => navigate("../new", { replace: true }),
     [navigate],
   );
 
@@ -79,39 +54,57 @@ const DataSheetTabs = ({ sheetDefinitions }: Props) => {
           icon: <Circle1NewIcon />,
           label: "New sheet",
           onClick: navigateToNew,
-          disabled: sheet_id === "new",
+          disabled: sheet_id === "new" || !canEdit,
         },
       ],
-      importItems: [
-        {
-          id: "IMPORT_SHEETS",
-          text: "Import data sheets",
-          onClick: () => navigate("../data-sheet-loader/files"),
-        },
-      ],
+      importItems: canEdit
+        ? [
+            {
+              id: "IMPORT_SHEETS",
+              text: "Import data sheets",
+              onClick: () =>
+                navigate("../../data-sheet-loader/files", {
+                  relative: "path",
+                }),
+            },
+          ]
+        : undefined,
     });
-  }, [registerToolbarActions, navigateToNew, sheet_id, navigate]);
+  }, [
+    registerToolbarActions,
+    navigateToNew,
+    sheet_id,
+    navigate,
+    assayModel.publication_status_id__name,
+    canEdit,
+  ]);
+
+  const tabs = useMemo(() => {
+    const baseTabs = sheetDefinitions.map((sheetDefinition) => ({
+      url: sheetDefinition.id.toString(),
+      label: sheetDefinition.name,
+    }));
+
+    if (canEdit) {
+      baseTabs.push({
+        url: "new",
+        label: "+ New sheet",
+      });
+    }
+
+    return baseTabs;
+  }, [sheetDefinitions, canEdit]);
+
+  if (!canEdit && sheetDefinitions.length === 0) {
+    return <ErrorPage error="This model does not define any data sheets" />;
+  }
 
   return (
-    <div className={styles.dataSheets}>
-      <Tabs
-        selectedTab={selectedTab}
-        onTabChange={handleTabChange}
-        tabs={[
-          ...(sheetDefinitions?.map((sheetDefinition) => ({
-            key: sheetDefinition.id.toString(),
-            name: sheetDefinition.name,
-            panel: <></>,
-          })) ?? []),
-          {
-            key: "new",
-            name: "+ New sheet",
-            panel: <></>,
-          },
-        ]}
-      />
-      <Outlet />
-    </div>
+    <RoutedTabs
+      matchPattern="/assays/assay-models/settings/assay-models/:assay_model_id/data-sheets/:sheet_id/*"
+      tabs={tabs}
+      replaceNavigation={true}
+    />
   );
 };
 

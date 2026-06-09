@@ -22,7 +22,7 @@ module Grit::Core
 
     before_action :require_administrator, only: %i[create update destroy]
     before_action :require_no_user, only: %i[activate request_password_reset password_reset]
-    before_action :require_user, only: %i[index show update_password generate_api_token hello_world_api]
+    before_action :require_user, only: %i[index show update_password generate_api_token]
 
     def create
       user = params.require(:user).permit(:origin_id, :location_id, :login, :name, :active, :email, :two_factor, role_ids: [])
@@ -75,7 +75,7 @@ module Grit::Core
     def activate
       @user = Grit::Core::User.find_by(activation_token: params[:activation_token])
 
-      raise "This activation token does not exist" unless @user
+      raise "Invalid or expired activation link" unless @user
       raise "Password and password confirmation do not match" if params[:password] != params[:password_confirmation]
 
       params[:login] = @user.login unless params[:login]
@@ -103,17 +103,21 @@ module Grit::Core
       end
 
       @user = Grit::Core::User.find_by(login: params[:user]&.downcase)
-      @user = Grit::Core::User.find_by(email: params[:user]&.downcase)
+      @user = Grit::Core::User.find_by(email: params[:user]&.downcase) if @user.nil?
 
       if @user.nil?
         render json: { success: false, errors: "No user found" }, status: :not_found
         return
       end
 
-      if @user
-        @user.forgot_token = SecureRandom.urlsafe_base64(20)
-        @user.save_without_session_maintenance
+      if @user.valid_forgot_token?
+        render json: { success: true }
+        return
       end
+
+      @user.forgot_token = SecureRandom.urlsafe_base64(20)
+      @user.forgot_token_expires_at = Grit::Core::User::FORGOT_TOKEN_EXPIRY_HOURS.hours.from_now
+      @user.save_without_session_maintenance
 
       Grit::Core::Mailer.deliver_password_reset(@user).deliver_now
       render json: { success: true }
@@ -129,6 +133,8 @@ module Grit::Core
       @user = Grit::Core::User.find_by(forgot_token: params[:forgot_token])
 
       raise "This password recovery token does not exist" unless @user
+      raise "This password recovery token has expired" if @user.forgot_token_expired?
+      raise "Password reset is not available for SSO accounts" unless @user.auth_method == "local"
       raise "Password and password confirmation do not match" if params[:password] != params[:password_confirmation]
 
       params[:login] = @user.login unless params[:login]
@@ -150,7 +156,7 @@ module Grit::Core
     end
 
     def request_password_reset_for_user
-      if  !Grit::Core::User.current.role?("Administrator")
+      if  !Grit::Core::User.current.permission?("admin:users")
         render json: { success: false, errors: "Not allowed" }, status: :unauthorized
         return
       end
@@ -159,7 +165,7 @@ module Grit::Core
         return
       end
       @user = Grit::Core::User.find_by(login: params[:user]&.downcase)
-      @user = Grit::Core::User.find_by(email: params[:user]&.downcase)
+      @user = Grit::Core::User.find_by(email: params[:user]&.downcase) if @user.nil?
 
       if @user.nil?
         render json: { success: false, errors: "No user found" }, status: :not_found
@@ -171,12 +177,17 @@ module Grit::Core
         return
       end
 
-      token =SecureRandom.urlsafe_base64(20)
-      @user.forgot_token = token
+      unless @user.auth_method == "local"
+        render json: { success: false, errors: "Password reset is not available for SSO accounts" }, status: :bad_request
+        return
+      end
+
+      @user.forgot_token = SecureRandom.urlsafe_base64(20)
+      @user.forgot_token_expires_at = Grit::Core::User::FORGOT_TOKEN_EXPIRY_HOURS.hours.from_now
       @user.save_without_session_maintenance
 
       Grit::Core::Mailer.deliver_password_reset(@user).deliver_now
-      render json: { success: true, token: token }
+      render json: { success: true, token: @user.forgot_token }
     rescue StandardError => e
       logger.warn e.to_s
       logger.warn e.backtrace.join("\n")
@@ -185,6 +196,7 @@ module Grit::Core
 
     def update_password
       user = Grit::Core::User.current
+      raise "Password changes are not available for SSO accounts" unless user.auth_method == "local"
       unless user.valid_password?(params[:old_password])
         render json: { success: false, errors: { old_password: [ "Wrong password" ] } }, status: :unauthorized
         return
@@ -242,12 +254,8 @@ module Grit::Core
       render json: { success: false, msg: e.to_s }, status: :internal_server_error
     end
 
-    def hello_world_api
-      render json: { success: true, msg: "Hello" }
-    end
-
     def generate_api_token_for_user
-      if  !Grit::Core::User.current.role?("Administrator")
+      if  !Grit::Core::User.current.permission?("admin:users")
         render json: { success: false, errors: "Not allowed" }, status: :unauthorized
         return
       end
@@ -256,7 +264,7 @@ module Grit::Core
         return
       end
       @user = Grit::Core::User.find_by(login: params[:user]&.downcase)
-      @user = Grit::Core::User.find_by(email: params[:user]&.downcase)
+      @user = Grit::Core::User.find_by(email: params[:user]&.downcase) if @user.nil?
 
       @user.reset_single_access_token
       @user.save!
@@ -269,7 +277,7 @@ module Grit::Core
     end
 
     def revoke_activation_token_for_user
-      if  !Grit::Core::User.current.role?("Administrator")
+      if  !Grit::Core::User.current.permission?("admin:users")
         render json: { success: false, errors: "Not allowed" }, status: :unauthorized
         return
       end
@@ -278,7 +286,7 @@ module Grit::Core
         return
       end
       @user = Grit::Core::User.find_by(login: params[:user]&.downcase)
-      @user = Grit::Core::User.find_by(email: params[:user]&.downcase)
+      @user = Grit::Core::User.find_by(email: params[:user]&.downcase) if @user.nil?
 
       @user.activation_token = nil
       @user.save_without_session_maintenance
@@ -291,7 +299,7 @@ module Grit::Core
     end
 
     def revoke_forgot_token_for_user
-      if  !Grit::Core::User.current.role?("Administrator")
+      if  !Grit::Core::User.current.permission?("admin:users")
         render json: { success: false, errors: "Not allowed" }, status: :unauthorized
         return
       end
@@ -300,7 +308,7 @@ module Grit::Core
         return
       end
       @user = Grit::Core::User.find_by(login: params[:user]&.downcase)
-      @user = Grit::Core::User.find_by(email: params[:user]&.downcase)
+      @user = Grit::Core::User.find_by(email: params[:user]&.downcase) if @user.nil?
 
       @user.forgot_token = nil
       @user.save_without_session_maintenance
@@ -314,8 +322,16 @@ module Grit::Core
 
     private
 
-    def single_access_allowed?
-      action_name == "hello_world_api"
-    end
+      def require_no_user
+        return unless current_user
+
+        false
+      end
+
+      def require_administrator
+        return true if Grit::Core::User.current.permission?("admin:users")
+
+        render json: { success: false, errors: "Insufficient roles" }, status: :unauthorized
+      end
   end
 end

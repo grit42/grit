@@ -18,9 +18,10 @@
 
 import { Button } from "@grit42/client-library/components";
 import { createSearchParams, Link, useNavigate } from "react-router-dom";
-import { useAvailableEntityAttributes } from "../../../queries/data_table_columns";
+import { useInfiniteAvailableEntityAttributes } from "../../../queries/data_table_columns";
 import { GritColumnDef, Table, useSetupTableState } from "@grit42/table";
-import styles from "../dataTableColumns.module.scss";
+import { useMemo } from "react";
+import { CenteredColumnLayout } from "@grit42/client-library/layouts";
 
 const COLUMNS: GritColumnDef[] = [
   {
@@ -58,20 +59,22 @@ const EntityAttributeDataTableColumnSelector = ({
     },
   );
 
-  const {
-    data: availableDataTableColumns,
-    isLoading: isAvailableDataTableColumnsLoading,
-    isError: isAvailableDataTableColumnsError,
-    error: availableDataTableColumnsError,
-  } = useAvailableEntityAttributes(
-    dataTableId,
-    availableTableState.sorting,
-    availableTableState.filters,
+  const { data, isLoading, isError, error, isFetchingNextPage, fetchNextPage } =
+    useInfiniteAvailableEntityAttributes(
+      dataTableId,
+      availableTableState.sorting,
+      availableTableState.filters,
+    );
+
+  const flatData = useMemo(
+    () => data?.pages.flatMap(({ data }) => data) ?? [],
+    [data],
   );
 
   return (
-    <div className={styles.selectorContainer}>
+    <CenteredColumnLayout>
       <Table
+        fitContent
         header="Select an attribute"
         onRowClick={(row) =>
           navigate({
@@ -87,17 +90,21 @@ const EntityAttributeDataTableColumnSelector = ({
             <Button color="primary">Cancel</Button>
           </Link>
         }
-        loading={isAvailableDataTableColumnsLoading}
+        loading={isLoading}
         tableState={availableTableState}
         disableFooter
-        data={availableDataTableColumns}
+        data={flatData}
         noDataMessage={
-          (isAvailableDataTableColumnsError
-            ? availableDataTableColumnsError
-            : undefined) ?? "No attributes available for this source entity"
+          (isError ? error : undefined) ??
+          "No attributes available for this source entity"
         }
+        pagination={{
+          fetchNextPage,
+          isFetchingNextPage,
+          totalRows: data?.pages[0]?.total,
+        }}
       />
-    </div>
+    </CenteredColumnLayout>
   );
 };
 

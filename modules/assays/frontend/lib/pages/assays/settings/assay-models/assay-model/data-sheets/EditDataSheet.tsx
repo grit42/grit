@@ -24,12 +24,18 @@ import {
   ErrorPage,
   Spinner,
   Surface,
+  useConfirm,
 } from "@grit42/client-library/components";
-import { useDestroyEntityMutation, useEditEntityMutation } from "@grit42/core";
+import {
+  useDangerousDestroyEntityMutation,
+  useEditEntityMutation,
+} from "@grit42/core";
 import {
   Form,
+  FormBanner,
   FormField,
   FormFieldDef,
+  FormFields,
   genericErrorHandler,
   getVisibleFieldData,
   useForm,
@@ -39,9 +45,11 @@ import {
   useAssayDataSheetDefinitionFields,
   useAssayDataSheetDefinitions,
 } from "../../../../../../queries/assay_data_sheet_definitions";
-import styles from "../../assayModels.module.scss";
+import styles from "./dataSheets.module.scss";
 import DataSheetColumns from "./data-sheet-columns";
-import z from "zod";
+import { z } from "zod";
+import { AssayModelData } from "../../../../../../queries/assay_models";
+import { useAssayModelEditorContext } from "../AssayModelEditorContext";
 
 const AssayDataSheetDefinitionForm = ({
   fields,
@@ -54,7 +62,10 @@ const AssayDataSheetDefinitionForm = ({
   sheets: AssayDataSheetDefinitionData[];
   onDeleteRedirectId: string;
 }) => {
+  const confirm = useConfirm();
+  const { canEdit, dangerousEditMode } = useAssayModelEditorContext();
   const { assay_model_id } = useParams() as { assay_model_id: string };
+
   const navigate = useNavigate();
 
   const validators = useMemo(
@@ -77,11 +88,11 @@ const AssayDataSheetDefinitionForm = ({
       sheetDefinition.id ?? -1,
     );
 
-  const destroyEntityMutation = useDestroyEntityMutation(
+  const destroyEntityMutation = useDangerousDestroyEntityMutation(
     "grit/assays/assay_data_sheet_definitions",
   );
 
-  const form = useForm<Partial<AssayDataSheetDefinitionData>>({
+  const form = useForm({
     defaultValues: sheetDefinition,
     onSubmit: genericErrorHandler(async ({ value: formValue, formApi }) => {
       const value = {
@@ -90,6 +101,7 @@ const AssayDataSheetDefinitionForm = ({
           fields,
         ),
         assay_model_id: Number(assay_model_id),
+        dangerous_edit: dangerousEditMode ?? undefined,
       };
       formApi.reset(
         await editEntityMutation.mutateAsync(
@@ -100,52 +112,41 @@ const AssayDataSheetDefinitionForm = ({
   });
 
   const onDelete = async () => {
-    if (
-      !sheetDefinition.id ||
-      !window.confirm(
-        `Are you sure you want to delete this data sheet? This action is irreversible`,
-      )
-    )
+    if (!sheetDefinition.id) {
       return;
-    await destroyEntityMutation.mutateAsync(sheetDefinition.id);
+    }
+    const confirmed = await confirm({
+      title: `Delete data sheet ${sheetDefinition.name}?`,
+      body: `Are you sure you want to delete this data sheet? This action is irreversible`,
+      challenge: dangerousEditMode ? sheetDefinition.name : undefined,
+      danger: true,
+    });
+    if (!confirmed) {
+      return;
+    }
+    await destroyEntityMutation.mutateAsync([
+      sheetDefinition.id,
+      dangerousEditMode,
+    ]);
     navigate(`../${onDeleteRedirectId}`, { replace: true });
   };
 
   return (
-    <Surface style={{ width: "100%" }}>
-      <Form<Partial<AssayDataSheetDefinitionData>> form={form}>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr",
-            gridAutoRows: "max-content",
-            gap: "calc(var(--spacing) * 2)",
-            paddingBottom: "calc(var(--spacing) * 2)",
-          }}
-        >
-          {form.state.errorMap.onSubmit && (
-            <div
-              style={{
-                gridColumnStart: 1,
-                gridColumnEnd: -1,
-                color: "var(--palette-error-main)",
-              }}
-            >
-              {form.state.errorMap.onSubmit?.toString()}
-            </div>
-          )}
+    <Surface className={styles.dataSheetFormContainer}>
+      <Form form={form}>
+        <FormFields columns={1}>
+          <FormBanner content={form.state.errorMap.onSubmit} />
           {fields.map((f) => (
             <FormField
-              form={form}
-              fieldDef={f}
-              key={f.name}
-              validators={{
-                onChange: validators[f.name as "name"],
-                onMount: validators[f.name as "name"],
+              fieldDef={{
+                ...f,
+                disabled: !canEdit,
               }}
+              key={f.name}
+              validators={validators[f.name as "name"] as any}
             />
           ))}
-        </div>
+        </FormFields>
         <form.Subscribe
           selector={(state) => [
             state.canSubmit,
@@ -168,10 +169,7 @@ const AssayDataSheetDefinitionForm = ({
                 {isDirty && (
                   <Button onClick={() => form.reset()}>Revert changes</Button>
                 )}
-                {/* {!isDirty && (
-                  <Button onClick={() => navigate("..")}>Back</Button>
-                )} */}
-                {!isDirty && (
+                {!isDirty && canEdit && (
                   <Link
                     to={{
                       pathname: "clone",
@@ -180,13 +178,15 @@ const AssayDataSheetDefinitionForm = ({
                     <Button>Clone</Button>
                   </Link>
                 )}
-                <Button
-                  color="danger"
-                  onClick={onDelete}
-                  loading={destroyEntityMutation.isPending}
-                >
-                  Delete
-                </Button>
+                {canEdit && (
+                  <Button
+                    color="danger"
+                    onClick={onDelete}
+                    loading={destroyEntityMutation.isPending}
+                  >
+                    Delete
+                  </Button>
+                )}
               </ButtonGroup>
             );
           }}
@@ -196,7 +196,13 @@ const AssayDataSheetDefinitionForm = ({
   );
 };
 
-const EditDataSheet = ({ assayModelId }: { assayModelId: string }) => {
+const EditDataSheet = ({
+  assayModelId,
+  assayModel,
+}: {
+  assayModelId: string;
+  assayModel: AssayModelData;
+}) => {
   const { sheet_id } = useParams() as { sheet_id: string | undefined };
 
   const { data, isLoading, isError, error } =
@@ -238,7 +244,7 @@ const EditDataSheet = ({ assayModelId }: { assayModelId: string }) => {
   }
 
   return (
-    <div className={styles.dataSheet}>
+    <div className={styles.dataSheetContainer}>
       <AssayDataSheetDefinitionForm
         key={sheet_id}
         sheetDefinition={sheetDefinition ?? {}}
@@ -246,7 +252,7 @@ const EditDataSheet = ({ assayModelId }: { assayModelId: string }) => {
         onDeleteRedirectId={deleteRedirectId}
         sheets={otherSheetDefinitions ?? []}
       />
-      <DataSheetColumns />
+      <DataSheetColumns assayModel={assayModel} />
     </div>
   );
 };

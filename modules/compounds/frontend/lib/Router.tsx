@@ -18,7 +18,7 @@
 
 import { AuthGuard } from "@grit42/core";
 import { lazy } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Outlet, Route, Routes } from "react-router-dom";
 
 const LazyCompoundsPage = lazy(() => import("./pages/compounds"));
 
@@ -35,43 +35,59 @@ const LazyCompoundSynonymsPage = lazy(
 const LazyCompoundCVPage = lazy(
   () => import("./pages/compounds/[id]/compound-cv"),
 )
-const LazyCompoundSettingsPage = lazy(() => import("./pages/compounds/settings"));
+const LazyCompoundSettingsPage = lazy(
+  () => import("./pages/compounds/settings"),
+);
 
 const Router = () => {
   return (
     <Routes>
       <Route
-        index
         element={
-          <AuthGuard>
-            <LazyCompoundsPage />
-          </AuthGuard>
-        }
-      />
-
-      <Route
-        path=":id"
-        element={
-          <AuthGuard>
-            <LazyCompoundPage />
+          <AuthGuard permission="read:system">
+            <Outlet />
           </AuthGuard>
         }
       >
-        <Route path="details" element={<LazyCompoundDetailsPage />} />
-        <Route path="batches" element={<LazyCompoundBatchesPage />} />
-        <Route path="synonyms" element={<LazyCompoundSynonymsPage />} />
-        <Route path="compound-cv" element={<LazyCompoundCVPage />} />
-        <Route index path="*" element={<Navigate to="details" replace />} />
-      </Route>
+        <Route
+          index
+          element={
+            <AuthGuard>
+              <LazyCompoundsPage />
+            </AuthGuard>
+          }
+        />
 
-      <Route
-        path="settings/*"
-        element={
-          <AuthGuard>
-            <LazyCompoundSettingsPage />
-          </AuthGuard>
-        }
-      />
+        <Route
+          path=":id"
+          element={
+            <AuthGuard>
+              <LazyCompoundPage />
+            </AuthGuard>
+          }
+        >
+          <Route path="details" element={<LazyCompoundDetailsPage />} />
+          <Route path="batches" element={<LazyCompoundBatchesPage />} />
+          <Route path="synonyms" element={<LazyCompoundSynonymsPage />} />
+        <Route path="compound-cv" element={<LazyCompoundCVPage />} />
+          <Route
+            index
+            path="*"
+            element={<Navigate to="../details" replace />}
+          />
+        </Route>
+
+        <Route
+          path="settings"
+          element={
+            <AuthGuard permission="admin:compounds">
+              <Outlet />
+            </AuthGuard>
+          }
+        >
+          <Route index path="*" element={<LazyCompoundSettingsPage />} />
+        </Route>
+      </Route>
     </Routes>
   );
 };

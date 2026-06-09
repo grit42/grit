@@ -34,16 +34,11 @@ const UrlInput = forwardRef<HTMLInputElement, UrlInputProps>(
     const link = useMemo(
       () =>
         type === "localurl" ? (
-          <Link to={value as string} style={{ display: "flex" }}>
+          <Link to={value as string}>
             <Information height={16} />
           </Link>
         ) : (
-          <a
-            style={{ display: "flex" }}
-            href={value as string}
-            rel="noreferrer"
-            target="_blank"
-          >
+          <a href={value as string} rel="noreferrer" target="_blank">
             <Information height={16} />
           </a>
         ),
@@ -60,17 +55,12 @@ const UrlInput = forwardRef<HTMLInputElement, UrlInputProps>(
           placeholder={inputProps.placeholder}
           value={value ?? ""}
         />
-
         <div
           className={classNames(styles.urlControls, {
             [styles.disabled as string]: inputProps.disabled === true,
           })}
         >
-          <Tooltip
-            content={value ?? ""}
-          >
-            {link}
-          </Tooltip>
+          <Tooltip content={value ?? ""}>{link}</Tooltip>
         </div>
       </div>
     );

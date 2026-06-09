@@ -16,28 +16,12 @@
  * @grit42/client-library. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { useMemo } from "react";
 import { classnames } from "../../utils";
 import styles from "./surface.module.scss";
 
-interface Props extends React.HTMLAttributes<HTMLDivElement> {
-  spacing?: number | string | false;
-}
-
-export default function Surface({ spacing, ...props }: Props) {
-  const padding = useMemo(() => {
-    if (typeof spacing === "number") {
-      return `calc(var(--spacing) * ${spacing})`;
-    }
-    return spacing ? spacing : undefined;
-  }, [spacing]);
-
+export default function Surface(props: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div
-      {...props}
-      style={{ padding, ...(props.style ?? {}) }}
-      className={classnames(styles.surface, props.className)}
-    >
+    <div {...props} className={classnames(styles.surface, props.className)}>
       {props.children}
     </div>
   );
