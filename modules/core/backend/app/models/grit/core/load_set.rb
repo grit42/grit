@@ -20,6 +20,8 @@ module Grit::Core
   class LoadSet < ApplicationRecord
     include Grit::Core::GritEntityRecord
 
+    entity_crud_with read: [ "read:system" ]
+
     has_many :load_set_blocks, dependent: :destroy
 
     before_destroy :check_status

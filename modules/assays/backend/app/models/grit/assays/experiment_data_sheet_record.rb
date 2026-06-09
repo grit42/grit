@@ -18,10 +18,12 @@
 
 module Grit::Assays
   class ExperimentDataSheetRecord < ApplicationRecord # TODO: fix not use activerecord
-    @entity_crud = {
-      read: [ "read:system" ],
-      write: [ "write:assays" ]
-    }
+    include Grit::Core::GritEntityRecord
+
+    # No real DB table exists for this class; skip schema-based validation setup.
+    self.infer_rails_validation_from_db = false
+
+    entity_crud_with read: [ "read:system" ], write: [ "write:assays" ]
 
     def self.sheet_record_klass(assay_data_sheet_definition_id)
       sheet = Grit::Assays::AssayDataSheetDefinition.includes(assay_data_sheet_columns: [ :data_type ]).find(assay_data_sheet_definition_id)
@@ -283,8 +285,5 @@ module Grit::Assays
         assay_data_sheet_definition.sheet_record_klass.detailed.where("#{assay_data_sheet_definition.table_name}.id IN (SELECT record_id FROM grit_core_load_set_block_loaded_records WHERE grit_core_load_set_block_loaded_records.load_set_block_id = ?)", params[:load_set_block_id].to_i).order(:created_at)
       end
 
-      def self.entity_crud
-        @entity_crud
-      end
   end
 end

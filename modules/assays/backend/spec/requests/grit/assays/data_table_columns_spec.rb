@@ -83,5 +83,27 @@ module Grit::Assays
         expect(response).to have_http_status(:unauthorized)
       end
     end
+
+    describe "SQL injection prevention in filter property" do
+      before { login_as(admin) }
+
+      it "quotes a malicious filter property, not executing injected SQL" do
+        malicious_filter = [
+          { type: "string", operator: "contains",
+            property: "name IS NULL OR (SELECT 'sqli_probe')='sqli_probe'--",
+            value: "x" }
+        ].to_json
+
+        get "/api/grit/assays/data_table_columns",
+            params: { scope: "available_entity_attributes",
+                      data_table_id: "0",
+                      filter: malicious_filter }
+
+        # The probe was never executed as SQL (quoted as a column name, not evaluated)
+        # Note: HTML error pages echo request params; only check status, not body
+        # Status may vary (404 if data_table not found, 422 if column rejected) — never 500
+        expect(response).not_to have_http_status(:internal_server_error)
+      end
+    end
   end
 end

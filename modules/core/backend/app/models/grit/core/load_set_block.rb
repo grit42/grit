@@ -20,10 +20,20 @@ module Grit::Core
   class LoadSetBlock < ApplicationRecord
     include Grit::Core::GritEntityRecord
 
+    entity_crud_with read: [ "read:system" ]
+
     belongs_to :status, class_name: "Grit::Core::LoadSetStatus"
     belongs_to :load_set
     has_one_attached :data
     has_one :vocabulary_item_load_set_block, dependent: :destroy
+
+    ALLOWED_DATA_TYPES = %w[
+      text/plain text/csv text/tab-separated-values application/octet-stream
+      chemical/x-mdl-sdfile
+    ].freeze
+    MAX_DATA_FILE_SIZE = 200.megabytes
+
+    validate :data_file_is_valid, if: -> { data.attached? }
 
     before_destroy :check_status
     before_destroy :drop_tables
@@ -67,12 +77,13 @@ module Grit::Core
 
     def self.preview_data(params = nil)
       raise "No load set block id provided" if params.nil? or params[:id].nil?
-      self.unscoped.from("raw_lsb_#{params[:id]}").select("raw_lsb_#{params[:id]}.*")
+      load_set_block_id = params[:id].to_i
+      self.unscoped.from("raw_lsb_#{load_set_block_id}").select("raw_lsb_#{load_set_block_id}.*")
     end
 
     def self.errored_data(params = nil)
       raise "No load set block id provided" if params.nil? or params[:id].nil?
-      load_set_block_id =  params[:id]
+      load_set_block_id =  params[:id].to_i
       self.unscoped.from("lsb_#{load_set_block_id}")
         .select(
           "lsb_#{load_set_block_id}.line",
@@ -85,7 +96,7 @@ module Grit::Core
 
     def self.warning_data(params = nil)
       raise "No load set block id provided" if params.nil? or params[:id].nil?
-      load_set_block_id =  params[:id]
+      load_set_block_id =  params[:id].to_i
       self.unscoped.from("lsb_#{load_set_block_id}")
         .select(
           "lsb_#{load_set_block_id}.line",
@@ -301,6 +312,18 @@ module Grit::Core
     private
       def check_status
         throw :abort if self.status.name == "Succeeded"
+      end
+
+      def data_file_is_valid
+        blob = data.blob
+
+        unless ALLOWED_DATA_TYPES.include?(blob.content_type)
+          errors.add(:data, "#{blob.filename} has a disallowed file type (#{blob.content_type})")
+        end
+
+        if blob.byte_size > MAX_DATA_FILE_SIZE
+          errors.add(:data, "#{blob.filename} exceeds the #{MAX_DATA_FILE_SIZE / 1.megabyte}MB size limit")
+        end
       end
   end
 end

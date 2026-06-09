@@ -33,6 +33,19 @@ module Grit::Assays
 
     before_destroy :destroy_load_sets
 
+    BLOCKED_ATTACHMENT_TYPES = %w[
+      application/x-executable application/x-msdownload application/x-msdos-program
+      application/vnd.microsoft.portable-executable application/x-dosexec
+      application/x-sh application/x-csh application/x-bat
+      application/javascript text/javascript text/html
+      application/x-httpd-php application/x-perl application/x-python application/x-ruby
+      image/svg+xml
+    ].freeze
+    MAX_ATTACHMENT_SIZE = 100.megabytes
+    MAX_TOTAL_ATTACHMENT_SIZE = 500.megabytes
+
+    validate :attached_files_are_valid, if: -> { attached_files.attached? }
+
     display_column "name"
 
     entity_crud_with read: [ "read:system" ], write: [ "write:assays" ]
@@ -149,6 +162,21 @@ module Grit::Assays
     end
 
     private
+      def attached_files_are_valid
+        total = 0
+        attached_files.each do |file|
+          blob = file.blob
+          if blob.byte_size > MAX_ATTACHMENT_SIZE
+            errors.add(:attached_files, "#{blob.filename} exceeds the #{MAX_ATTACHMENT_SIZE / 1.megabyte}MB size limit")
+          end
+          total += blob.byte_size
+        end
+
+        if total > MAX_TOTAL_ATTACHMENT_SIZE
+          errors.add(:attached_files, "total attachment size exceeds #{MAX_TOTAL_ATTACHMENT_SIZE / 1.megabyte}MB")
+        end
+      end
+
       def check_publication_status
         return if publication_status_changed?
         raise "Cannot modify a published Experiment" if publication_status.name === "Published"

@@ -47,13 +47,45 @@ module Grit::Core
     end
 
     def columns
-      klass = params[:entity_id].constantize
-      render json: { success: true, data: klass.entity_columns(**params.permit!.to_h.symbolize_keys) }
+      klass = authorized_entity
+      return if klass.nil?
+      render json: { success: true, data: klass.entity_columns(**entity_args) }
     end
 
     def fields
-      klass = params[:entity_id].constantize
-      render json: { success: true, data: klass.entity_fields(**params.permit!.to_h.symbolize_keys) }
+      klass = authorized_entity
+      return if klass.nil?
+      render json: { success: true, data: klass.entity_fields(**entity_args) }
+    end
+
+    private
+
+    def authorized_entity
+      entity_id = params[:entity_id]
+      unless entities.key?(entity_id)
+        render json: { success: false, errors: "Unknown entity" }, status: :bad_request
+        return nil
+      end
+
+      klass = entity_id.constantize
+      crud = klass.entity_crud
+      if crud.nil? || crud[:read].nil? || !current_user.permission?(crud[:read])
+        render json: { success: false, errors: "You do not have the permissions required to read #{klass.name}" }, status: :forbidden
+        return nil
+      end
+
+      klass
+    end
+
+    def entity_args
+      params.permit(
+        :data_table_id,
+        :assay_data_sheet_definition_id,
+        :experiment_id,
+        :load_set_block_id,
+        :load_set_id,
+        :with_experiment_id
+      ).to_h.symbolize_keys
     end
   end
 end

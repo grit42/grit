@@ -31,11 +31,11 @@ module Grit::Core::Controller::Readable
       scope = klass.unscoped.select("sub.*").from("(#{scope}) sub")
 
       sort.each do |sort_item|
-        scope = scope.order(ActiveRecord::Base.send(:sanitize_sql_array, [ "sub.#{sort_item["property"]} #{sort_item["direction"]}" ]))
+        scope = scope.order(ActiveRecord::Base.send(:sanitize_sql_array, [ "sub.#{quote_sort_property(sort_item["property"])} #{sort_direction(sort_item["direction"])}" ]))
       end
 
       filter.each do |filter_item|
-        scope = scope.where(Grit::Core::FilterProvider.execute(filter_item["type"], filter_item["operator"], "sub.#{filter_item["property"]}", filter_item["value"]))
+        scope = scope.where(Grit::Core::FilterProvider.execute(filter_item["type"], filter_item["operator"], "sub.#{quote_sort_property(filter_item["property"])}", filter_item["value"]))
       end
 
       scope
@@ -55,7 +55,7 @@ module Grit::Core::Controller::Readable
       default_order_values = scope.order_values
       scope = scope.unscope(:order)
       sort.each do |sort_item|
-        scope = scope.order(ActiveRecord::Base.send(:sanitize_sql_array, [ "#{select_values_map[sort_item["property"]]} #{sort_item["direction"]} NULLS LAST" ]))
+        scope = scope.order(ActiveRecord::Base.send(:sanitize_sql_array, [ "#{select_values_map[sort_item["property"]]} #{sort_direction(sort_item["direction"])} NULLS LAST" ]))
       end
       scope.order_values = [ *scope.order_values, *default_order_values ]
 
@@ -105,7 +105,7 @@ module Grit::Core::Controller::Readable
         row = ActiveRecord::Base.connection.raw_connection.get_copy_data
         temp_file.write(row.upcase.force_encoding("UTF-8").split(",").map { |h| h.gsub(/_+/, " ").humanize }.join(","))
         while (row = ActiveRecord::Base.connection.raw_connection.get_copy_data)
-          temp_file.write(row.force_encoding("UTF-8"))
+          temp_file.write(neutralize_formula_injection(row.force_encoding("UTF-8")))
         end
       end
 
@@ -164,6 +164,14 @@ module Grit::Core::Controller::Readable
 
     private
 
+    def sort_direction(direction)
+      direction.to_s.strip.casecmp("desc").zero? ? "DESC" : "ASC"
+    end
+
+    def quote_sort_property(property)
+      ActiveRecord::Base.connection.quote_column_name(property.to_s)
+    end
+
     def get_model(params)
       return model_override(params) if respond_to?(:model_override)
       controller_path.classify.constantize
@@ -173,9 +181,15 @@ module Grit::Core::Controller::Readable
       columns.map { |c| klass.connection.quote_column_name(c) }
     end
 
+    def neutralize_formula_injection(row)
+      cells = CSV.parse_line(row)
+      return row if cells.nil?
+      CSV.generate_line(cells.map { |cell| cell&.match?(/\A[=+\-@\t\r]/) ? "'#{cell}" : cell })
+    end
+
     def get_scope(scope, params)
       klass = get_model(params)
-      klass_scope = klass.send(scope, params) if klass.respond_to?(scope)
+      klass_scope = klass.send(scope, params) if klass.entity_scope?(scope)
       render json: { success: false, errors: "#{klass.name} does not implement scope '#{scope}'" }, status: :bad_request if klass_scope.nil?
       klass_scope
     end
