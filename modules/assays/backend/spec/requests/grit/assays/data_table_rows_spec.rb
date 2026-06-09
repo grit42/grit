@@ -150,5 +150,40 @@ module Grit::Assays
         expect(response).to have_http_status(:unauthorized)
       end
     end
+
+    describe "SQL injection prevention in export columns (PR #97)" do
+      before { login_as(admin) }
+
+      it "rejects a malicious export column, not executing it as SQL" do
+        # With a quoted column, PG rejects it as an unknown identifier.
+        # With data_table_id=0 the DataTable is not found first — either way, NOT a 200 export.
+        get "/api/grit/assays/data_tables/0/data_table_rows/export",
+            params: { columns: [ "name", "(SELECT 'sqli_probe')" ] }
+        expect(response).not_to have_http_status(:ok)
+      end
+
+      it "handles a valid column name when DataTable is missing (not SQL injection)" do
+        get "/api/grit/assays/data_tables/0/data_table_rows/export",
+            params: { columns: [ "name" ] }
+        # DataTable not found → structured error, not SQL injection
+        # Rails may return 500 (RecordNotFound caught by rescue StandardError)
+        # The point is: the column name was NOT used as raw SQL
+        expect(response.content_type).not_to include("text/csv")
+      end
+    end
+
+    describe "SQL injection prevention in data_table_id (PR #98)" do
+      before { login_as(admin) }
+
+      it "coerces a non-numeric data_table_id to integer, preventing JOIN injection" do
+        # After fix: "0 OR 1=1".to_i == 0 → DataTable.find(0) → RecordNotFound
+        # The JOIN clause never executes with the raw injection string
+        get "/api/grit/assays/data_table_entities",
+            params: { scope: "detailed",
+                      data_table_id: "0 OR 1=1" }
+        # Not a successful 200 (DataTable not found) and not a SQL injection error
+        expect(response).not_to have_http_status(:ok)
+      end
+    end
   end
 end

@@ -44,8 +44,9 @@ module Grit::Assays
     def self.by_assay_model(params)
       raise "No assay model provided" if params["assay_model_id"].nil?
 
+      assay_model_id = params["assay_model_id"].to_i
       detailed(params)
-      .joins("JOIN grit_assays_assay_model_metadata grit_assays_assay_model_metadata__ on grit_assays_assay_model_metadata__.assay_metadata_definition_id = grit_assays_assay_metadata_definitions.id and grit_assays_assay_model_metadata__.assay_model_id = #{params["assay_model_id"]}")
+      .joins("JOIN grit_assays_assay_model_metadata grit_assays_assay_model_metadata__ on grit_assays_assay_model_metadata__.assay_metadata_definition_id = grit_assays_assay_metadata_definitions.id and grit_assays_assay_model_metadata__.assay_model_id = #{assay_model_id}")
       .select("grit_assays_assay_model_metadata__.id as assay_model_metadatum_id")
     end
 

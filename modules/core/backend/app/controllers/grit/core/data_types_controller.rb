@@ -28,13 +28,16 @@ module Grit::Core
 
       common_table_expressions = []
       data_type_names_queries = []
+      connection = ActiveRecord::Base.connection
       Grit::Core::DataType.where(is_entity: true).order(:id)
       .each do |data_type|
         data_type.model.display_properties.each do |display_property|
+          value_name_column = connection.quote_column_name(display_property[:name])
+          data_type_name = connection.quote(data_type.name)
           if data_type[:meta]["vocabulary_id"].nil?
-            data_type_names_queries.push("SELECT \"#{display_property[:name]}\" as value_name, #{data_type.id} as data_type_id, '#{data_type.name}' as data_type_name FROM \"#{data_type.table_name}\"")
+            data_type_names_queries.push("SELECT #{value_name_column} as value_name, #{data_type.id.to_i} as data_type_id, #{data_type_name} as data_type_name FROM #{connection.quote_table_name(data_type.table_name)}")
           else
-            data_type_names_queries.push("SELECT \"#{display_property[:name]}\" as value_name, #{data_type.id} as data_type_id, '#{data_type.name}' as data_type_name FROM grit_core_vocabulary_items WHERE vocabulary_id = #{data_type[:meta]["vocabulary_id"].to_i}")
+            data_type_names_queries.push("SELECT #{value_name_column} as value_name, #{data_type.id.to_i} as data_type_id, #{data_type_name} as data_type_name FROM grit_core_vocabulary_items WHERE vocabulary_id = #{data_type[:meta]["vocabulary_id"].to_i}")
           end
         end
       end

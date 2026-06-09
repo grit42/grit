@@ -125,6 +125,41 @@ RSpec.describe Grit::Core::LoadSetBlock, type: :model do
     end
   end
 
+  # data file validation tests
+  describe "data file validation" do
+    let(:block) { create(:grit_core_load_set_block, :mapping, load_set: load_set) }
+
+    it "accepts a valid CSV file" do
+      block.data.attach(
+        io: StringIO.new("col1,col2\n1,2"),
+        filename: "data.csv",
+        content_type: "text/csv"
+      )
+      expect(block.errors[:data]).to be_empty
+    end
+
+    it "rejects a file with a disallowed content type" do
+      block.data.attach(
+        io: StringIO.new("<html>not a csv</html>"),
+        filename: "upload.html",
+        content_type: "text/html"
+      )
+      expect(block.errors[:data]).to include(a_string_matching(/disallowed file type/))
+    end
+
+    it "rejects a file exceeding 200 MB" do
+      block.data.attach(
+        io: StringIO.new("col1,col2\n1,2"),
+        filename: "large.csv",
+        content_type: "text/csv"
+      )
+      blob = block.data.blob
+      allow(blob).to receive(:byte_size).and_return(Grit::Core::LoadSetBlock::MAX_DATA_FILE_SIZE + 1)
+      block.valid?
+      expect(block.errors[:data]).to include(a_string_matching(/exceeds the 200MB/))
+    end
+  end
+
   # entity_fields tests
   describe ".entity_fields" do
     it "returns name and separator fields" do

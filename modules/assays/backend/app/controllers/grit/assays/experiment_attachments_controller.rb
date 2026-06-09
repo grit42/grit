@@ -35,6 +35,11 @@ module Grit::Assays
     end
 
     def create
+      if request.content_length.to_i > 510.megabytes
+        render json: { success: false, errors: "Request too large" }, status: :payload_too_large
+        return
+      end
+
       record = Experiment.find(params[:experiment_id])
       permitted = params.permit(files: [])
 
@@ -52,6 +57,12 @@ module Grit::Assays
 
       if duplicate_names_in_attached_files
         render json: { success: false, errors: "Some files have the same name as already attached files." }, status: :unprocessable_entity
+        return
+      end
+
+      file_errors = validate_uploaded_files(permitted[:files])
+      if file_errors.any?
+        render json: { success: false, errors: file_errors.join(", ") }, status: :unprocessable_entity
         return
       end
 
@@ -99,6 +110,31 @@ module Grit::Assays
       [ files: [] ]
     end
 
+    def validate_uploaded_files(files)
+      errors = []
+      total = 0
+
+      files.each do |file|
+        detected_type = Marcel::MimeType.for(file.tempfile, name: file.original_filename)
+
+        if Experiment::BLOCKED_ATTACHMENT_TYPES.include?(detected_type)
+          errors << "#{file.original_filename} has a disallowed file type"
+        end
+
+        if file.size > Experiment::MAX_ATTACHMENT_SIZE
+          errors << "#{file.original_filename} exceeds the #{Experiment::MAX_ATTACHMENT_SIZE / 1.megabyte}MB size limit"
+        end
+
+        total += file.size
+      end
+
+      if total > Experiment::MAX_TOTAL_ATTACHMENT_SIZE
+        errors << "Total attachment size exceeds #{Experiment::MAX_TOTAL_ATTACHMENT_SIZE / 1.megabyte}MB"
+      end
+
+      errors
+    end
+
     def export_one(id)
       record = Grit::Assays::Experiment.find(params[:experiment_id])
       attached_file = record.attached_files.find(id)
@@ -115,7 +151,8 @@ module Grit::Assays
 
     def export_many(ids)
       record = Grit::Assays::Experiment.find(params[:experiment_id])
-      archive_filename = "#{record[:name]}_attachments.zip"
+      safe_dir = record[:name].gsub(/[\/\\:*?"<>|\r\n]/, "_")
+      archive_filename = "#{safe_dir}_attachments.zip"
 
       temp_file = Tempfile.new([ archive_filename, ".zip" ])
 
@@ -125,7 +162,8 @@ module Grit::Assays
             next unless ids.blank? || ids.include?(attached_file.id)
 
             attached_file.open do |file|
-              entry_name = "#{record[:name]}_attachments/#{attached_file.filename}"
+              safe_name = File.basename(attached_file.filename.to_s)
+              entry_name = "#{safe_dir}_attachments/#{safe_name}"
 
               zos.put_next_entry(entry_name)
 

@@ -157,4 +157,20 @@ RSpec.describe Grit::Compounds::CompoundsController, type: :request do
       end
     end
   end
+
+  describe "SQL injection prevention in export columns (PR #97)" do
+    before { login_as(admin) }
+
+    it "rejects a malicious export column, not executing it as SQL" do
+      get "/api/grit/compounds/compounds/export",
+          params: { columns: [ "name", "(SELECT 'sqli_probe')" ] }
+      # Quoted column is rejected by PG as an unknown identifier → not a successful export
+      expect(response).not_to have_http_status(:ok)
+    end
+
+    it "exports normally with legitimate columns" do
+      get "/api/grit/compounds/compounds/export", params: { columns: [ "name" ] }
+      expect(response).to have_http_status(:ok)
+    end
+  end
 end
