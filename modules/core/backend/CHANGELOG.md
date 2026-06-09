@@ -1,3 +1,15 @@
+## 0.12.0
+
+### 🚀 Features
+
+- permission-based roles
+
+### 🩹 Fixes
+
+- sanitize CSV export columns
+- Security hardening
+- active record relation sort precedence
+
 ## 0.11.0
 
 ### 🚀 Features

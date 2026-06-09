@@ -82,6 +82,7 @@
   "release": {
     "versionPlans": true,
     "changelog": {
+      "workspaceChangelog": false,
       "projectChangelogs": {
         "renderOptions": {
           "authors": false,
@@ -92,33 +93,23 @@
       }
     },
     "git": {
-      "tag": false
+      "tag": true
     },
-    "version": {
-      "updateDependents": "never"
-    },
-    "projectsRelationship": "independent",
-    "groups": {
-      "lib": {
-        "projects": [
-          "@grit42/notifications",
-          "@grit42/client-library",
-          "@grit42/form",
-          "@grit42/api",
-          "@grit42/table",
-          "@grit42/spreadsheet",
-          "@grit42/plots"
-        ]
-      },
-      "core": {
-        "projects": ["grit-core", "@grit42/core"]
-      },
-      "compounds": {
-        "projects": ["grit-compounds", "@grit42/compounds"]
-      },
-      "assays": {
-        "projects": ["grit-assays", "@grit42/assays"]
-      }
-    }
+    "projectsRelationship": "fixed",
+    "projects": [
+      "grit-core",
+      "@grit42/core",
+      "grit-compounds",
+      "@grit42/compounds",
+      "grit-assays",
+      "@grit42/assays",
+      "@grit42/notifications",
+      "@grit42/client-library",
+      "@grit42/form",
+      "@grit42/api",
+      "@grit42/table",
+      "@grit42/spreadsheet",
+      "@grit42/plots"
+    ]
   }
 }

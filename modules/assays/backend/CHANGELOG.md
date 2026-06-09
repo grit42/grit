@@ -1,3 +1,14 @@
+## 0.12.0
+
+### 🚀 Features
+
+- permission-based roles
+
+### 🩹 Fixes
+
+- data table entities sql injection
+- sanitize CSV export columns
+
 ## 0.11.0
 
 ### 🚀 Features
