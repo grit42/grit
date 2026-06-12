@@ -1,0 +1,101 @@
+name: Security Audit
+
+on:
+  workflow_dispatch:
+
+jobs:
+  brakeman:
+    name: Brakeman (Ruby SAST)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/grit/server
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.4.9
+          bundler-cache: true
+          working-directory: apps/grit/server
+          bundler-opts: --with local
+
+      - name: Run Brakeman (server)
+        # --no-exit-on-warn: exit 0 on warnings, non-zero only on errors.
+        # Switch to --exit-on-warn once the initial warning baseline is resolved.
+        # --force: server has no app/ dir (code lives in modules), scan routes/config anyway.
+        run: bundle exec brakeman -q --no-exit-on-warn --force
+
+      - name: Run Brakeman (core)
+        run: bundle exec brakeman -q --no-exit-on-warn -p ../../../modules/core/backend
+
+      - name: Run Brakeman (assays)
+        run: bundle exec brakeman -q --no-exit-on-warn -p ../../../modules/assays/backend
+
+      - name: Run Brakeman (compounds)
+        run: bundle exec brakeman -q --no-exit-on-warn -p ../../../modules/compounds/backend
+
+  bundler-audit:
+    name: Bundler Audit (Gem CVEs)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.4.9
+
+      - name: Install bundler-audit
+        run: gem install bundler-audit
+
+      - name: Audit main app
+        working-directory: apps/grit/server
+        run: bundle-audit check --update
+
+      - name: Audit core module
+        working-directory: modules/core/backend
+        run: bundle-audit check --update
+
+      - name: Audit compounds module
+        working-directory: modules/compounds/backend
+        run: bundle-audit check --update
+
+      - name: Audit assays module
+        working-directory: modules/assays/backend
+        run: bundle-audit check --update
+
+  pnpm-audit:
+    name: pnpm Audit (npm CVEs)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run audit
+        # moderate: flags medium+ severity. Raise to --audit-level high to reduce noise if needed.
+        run: pnpm audit --audit-level moderate
+
+  codeql:
+    name: CodeQL (SAST — Ruby & TypeScript)
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ruby, javascript-typescript
+
+      - name: Analyze
+        uses: github/codeql-action/analyze@v3

@@ -1,0 +1,71 @@
+name: Lint
+
+on:
+  workflow_dispatch:
+
+jobs:
+  frontend-lint:
+    name: Frontend Lint (ESLint, Prettier, TypeScript)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: ESLint
+        run: pnpm exec nx run-many -t eslint --all
+
+      - name: Prettier
+        run: pnpm exec nx run-many -t format:check --all
+
+      - name: TypeScript
+        run: pnpm exec nx run-many -t typecheck --all
+
+  ruby-lint:
+    name: Ruby Lint (RuboCop)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.4.9
+          bundler-cache: true
+          working-directory: apps/grit/server
+          bundler-opts: --with local
+
+      - name: RuboCop (server)
+        working-directory: apps/grit/server
+        run: bundle exec rubocop
+
+      - name: Install dependencies (core)
+        working-directory: modules/core/backend
+        run: bundle install
+
+      - name: RuboCop (core)
+        working-directory: modules/core/backend
+        run: bundle exec rubocop
+
+      - name: Install dependencies (assays)
+        working-directory: modules/assays/backend
+        run: bundle install
+
+      - name: RuboCop (assays)
+        working-directory: modules/assays/backend
+        run: bundle exec rubocop
+
+      - name: Install dependencies (compounds)
+        working-directory: modules/compounds/backend
+        run: bundle install
+
+      - name: RuboCop (compounds)
+        working-directory: modules/compounds/backend
+        run: bundle exec rubocop

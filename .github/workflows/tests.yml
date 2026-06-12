@@ -1,0 +1,118 @@
+name: Tests
+
+on:
+  workflow_dispatch:
+
+jobs:
+  frontend-tests:
+    name: Frontend Tests (Vitest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run tests (@grit42/spreadsheet)
+        # @grit42/core and module frontends depend on live Rails backends (serve:test).
+        # Only run packages whose tests are backend-independent.
+        working-directory: packages/frontend/spreadsheet
+        run: pnpm run test
+
+  ruby-tests:
+    name: Ruby Tests (RSpec)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: grit42com/pgrdkit:16.3-2024.03.1
+        env:
+          POSTGRES_USER: grit
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: grit_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    defaults:
+      run:
+        working-directory: apps/grit/server
+    env:
+      RAILS_ENV: test
+      POSTGRES_USER: grit
+      POSTGRES_PASSWORD: password
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: 5432
+      GRIT_DATABASE: grit
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.4.9
+          bundler-cache: true
+          working-directory: apps/grit/server
+          bundler-opts: --with local
+
+      - name: Set up database
+        run: bundle exec rails db:create db:schema:load
+
+      - name: Run RSpec
+        run: bundle exec rspec
+
+      - name: Install dependencies (core)
+        working-directory: modules/core/backend
+        run: bundle install
+
+      - name: Set up database (core)
+        working-directory: modules/core/backend
+        env:
+          GRIT_DATABASE: core
+        run: bundle exec rake db:create db:migrate
+
+      - name: Run RSpec (core)
+        working-directory: modules/core/backend
+        env:
+          GRIT_DATABASE: core
+        run: bundle exec rspec
+
+      - name: Install dependencies (assays)
+        working-directory: modules/assays/backend
+        run: bundle install
+
+      - name: Set up database (assays)
+        working-directory: modules/assays/backend
+        env:
+          GRIT_DATABASE: assays
+        run: bundle exec rake db:create db:migrate
+
+      - name: Run RSpec (assays)
+        working-directory: modules/assays/backend
+        env:
+          GRIT_DATABASE: assays
+        run: bundle exec rspec
+
+      - name: Install dependencies (compounds)
+        working-directory: modules/compounds/backend
+        run: bundle install
+
+      - name: Set up database (compounds)
+        working-directory: modules/compounds/backend
+        env:
+          GRIT_DATABASE: compounds
+        run: bundle exec rake db:create db:migrate
+
+      - name: Run RSpec (compounds)
+        working-directory: modules/compounds/backend
+        env:
+          GRIT_DATABASE: compounds
+        run: bundle exec rspec
