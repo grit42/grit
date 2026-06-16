@@ -1,7 +1,6 @@
 @use "@grit42/client-library/theme.scss";
 
 h1 {
-  color: theme.$palette-secondary-main;
   margin-bottom: calc(theme.$spacing * 2);
 }
 

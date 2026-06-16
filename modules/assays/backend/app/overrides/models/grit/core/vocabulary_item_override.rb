@@ -25,9 +25,4 @@ Grit::Core::VocabularyItem.class_eval do
     used_as_metadata = Grit::Assays::ExperimentMetadatum.unscoped.where(vocabulary_id: vocabulary_id, vocabulary_item_id: id).count(:all).positive?
     raise "'#{self.name}' of '#{self.vocabulary.name}' is used as value of at least one experiment metadata" if used_as_metadata
   end
-
-  def check_experiment_metadata
-    used_as_metadata = Grit::Assays::ExperimentMetadatum.unscoped.where(vocabulary_id: vocabulary_id, vocabulary_item_id: id).count(:all).positive?
-    raise "'#{self.name}' of '#{self.vocabulary.name}' is used as value of at least one experiment metadata" if used_as_metadata
-  end
 end

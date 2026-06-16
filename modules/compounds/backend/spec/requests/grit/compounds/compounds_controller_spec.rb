@@ -61,6 +61,23 @@ RSpec.describe Grit::Compounds::CompoundsController, type: :request do
 
       expect(response).to have_http_status(:created)
     end
+
+    it "creates compound with a molecule from a SMILES structure" do
+      expect {
+        post "/api/grit/compounds/compounds",
+             params: {
+               name: "five",
+               origin_id: origin.id,
+               compound_type_id: compound_type.id,
+               structure_format: "smiles",
+               molecule: "CCCCC"
+             },
+             as: :json
+      }.to change(Grit::Compounds::Molecule, :count).by(1)
+        .and change(Grit::Compounds::MoleculesCompound, :count).by(1)
+
+      expect(response).to have_http_status(:created)
+    end
   end
 
   describe "GET /api/grit/compounds/compounds/:id" do

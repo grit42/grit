@@ -45,6 +45,14 @@ export default defineConfig(({ mode }) => ({
       formats: ["es"],
     },
   },
+  resolve: {
+    alias: {
+      "@grit42/plots": resolve(__dirname, "./lib"),
+    },
+  },
+  server: {
+    strictPort: true,
+  },
   css: {
     postcss: {
       plugins: [autoprefixer()],

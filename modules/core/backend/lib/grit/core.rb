@@ -33,9 +33,9 @@ module Grit
     lt = lambda { |property, value| ActiveRecord::Base.send(:sanitize_sql_array, [ "#{property} < ?", value ]) }
     lte = lambda { |property, value| ActiveRecord::Base.send(:sanitize_sql_array, [ "#{property} <= ?", value ]) }
     empty = lambda { |property, value| ActiveRecord::Base.send(:sanitize_sql_array, [ "#{property} IS NULL" ]) }
-    empty_text = lambda { |property, value| ActiveRecord::Base.send(:sanitize_sql_array, [ "#{property} = '' OR #{property} IS NULL" ]) }
+    empty_text = lambda { |property, value| ActiveRecord::Base.send(:sanitize_sql_array, [ "(#{property} = '' OR #{property} IS NULL)" ]) }
     not_empty = lambda { |property, value| ActiveRecord::Base.send(:sanitize_sql_array, [ "#{property} IS NOT NULL" ]) }
-    not_empty_text = lambda { |property, value| ActiveRecord::Base.send(:sanitize_sql_array, [ "#{property} <> '' OR #{property} IS NOT NULL" ]) }
+    not_empty_text = lambda { |property, value| ActiveRecord::Base.send(:sanitize_sql_array, [ "(#{property} <> '' OR #{property} IS NOT NULL)" ]) }
     contains = lambda do |property, value|
       value.gsub!("_", '\\_')
       value.gsub!("*", "%")
@@ -53,6 +53,18 @@ module Grit
       value = "%#{value}" unless value.start_with?(*wildcards)
       value = "#{value}%" unless value.end_with?(*wildcards)
       ActiveRecord::Base.send(:sanitize_sql_array, [ "#{property} NOT ILIKE ?", value ])
+    end
+    starts_with = lambda do |property, value|
+      value = value.gsub("_", '\\_').gsub("*", "%").gsub(".", "_")
+      wildcards = %w[% _]
+      value = "#{value}%" unless value.end_with?(*wildcards)
+      ActiveRecord::Base.send(:sanitize_sql_array, [ "#{property} ILIKE ?", value ])
+    end
+    ends_with = lambda do |property, value|
+      value = value.gsub("_", '\\_').gsub("*", "%").gsub(".", "_")
+      wildcards = %w[% _]
+      value = "%#{value}" unless value.start_with?(*wildcards)
+      ActiveRecord::Base.send(:sanitize_sql_array, [ "#{property} ILIKE ?", value ])
     end
     like = lambda do |property, value|
       value.gsub!("_", '\\_')
@@ -77,6 +89,8 @@ module Grit
       "not_empty"=> not_empty_text,
       "contains"=> contains,
       "not_contains"=> not_contains,
+      "starts_with"=> starts_with,
+      "ends_with"=> ends_with,
       "like"=> like,
       "in_list"=> in_list,
       "not_in_list"=> not_in_list,
@@ -89,6 +103,8 @@ module Grit
       "not_empty"=> not_empty_text,
       "contains"=> contains,
       "not_contains"=> not_contains,
+      "starts_with"=> starts_with,
+      "ends_with"=> ends_with,
       "like"=> like,
       "in_list"=> in_list,
       "not_in_list"=> not_in_list,

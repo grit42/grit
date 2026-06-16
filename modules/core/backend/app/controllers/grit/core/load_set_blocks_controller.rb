@@ -243,7 +243,10 @@ module Grit::Core
       end
 
       def check_read
-        render json: { success: false }, status: :bad_request if params[:id].blank? && params[:load_set_id].blank? && params[:entity].blank?
+        if params[:id].blank? && params[:load_set_id].blank? && params[:entity].blank?
+          render json: { success: false, errors: "'entity' not specified" }, status: :bad_request
+          return
+        end
         entity = params[:entity]
         if entity.blank? && params[:id].present?
           entity = Grit::Core::LoadSetBlock.find(params[:id]).load_set.entity

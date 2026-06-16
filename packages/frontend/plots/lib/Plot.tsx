@@ -1,6 +1,7 @@
 import { ErrorPage } from "@grit42/client-library/components";
 import BoxPlot from "./BoxPlot";
 import ScatterPlot from "./ScatterPlot";
+import TimeSeriesPlot from "./TimeSeriesPlot";
 import { PlotDefinition, SourceData, SourceDataProperties } from "./types";
 
 interface PlotProps {
@@ -14,6 +15,8 @@ const Plot = ({ def, ...rest }: PlotProps) => {
     return <BoxPlot def={def} {...rest} />;
   } else if (def.type === "scatter") {
     return <ScatterPlot def={def} {...rest} />;
+  } else if (def.type === "timeseries") {
+    return <TimeSeriesPlot def={def} {...rest} />;
   }
   return <ErrorPage error={`Unsupported plot type: ${(def as any).type}`} />;
 };
