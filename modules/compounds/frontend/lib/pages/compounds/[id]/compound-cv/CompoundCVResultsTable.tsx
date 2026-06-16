@@ -6,32 +6,31 @@ import { Table, useSetupTableState } from "@grit42/table";
 import { useTableColumns } from "@grit42/core/utils";
 import { CompoundData } from "../../../../queries/compounds";
 
-
 interface CompoundCVData extends EntityData {
   id: number;
-  entity_id_value: number;
   value: number;
   assay_data_sheet_column_id: number;
-  experiment_data_sheet_record_id: number;
   assay_data_sheet_column_id__name: string;
   assay_data_sheet_definition_id: number;
   assay_data_sheet_definition_id__name: string;
-  experiment_data_sheet_id: number;
   experiment_id: number;
   experiment_id__name: string;
-  assay_id: number;
-  assay_id__name: string;
-  unit_id: number;
+  assay_model_id: number;
+  assay_model_id__name: string;
   unit_id__abbreviation: string | null;
 }
 
-const CompoundCVResultsTable = ({ compound }: { compound: CompoundData }) => {
+export const CompoundCVResultsTable = ({
+  compound,
+}: {
+  compound: CompoundData;
+}) => {
   const navigate = useNavigate();
 
   const tableColumns = useTableColumns<CompoundCVData>([
     {
-      name: "assay_id__name",
-      display_name: "Assay",
+      name: "assay_model_id__name",
+      display_name: "Assay model",
       default_hidden: false,
       required: false,
       type: "string",
@@ -74,18 +73,8 @@ const CompoundCVResultsTable = ({ compound }: { compound: CompoundData }) => {
       display_name: "Unit",
       default_hidden: false,
       required: false,
-      type: "entity",
+      type: "string",
       unique: false,
-      entity: {
-        name: "Unit",
-        full_name: "Grit::Core::Unit",
-        path: "grit/core/unit",
-        column: "unit_id",
-        primary_key: "id",
-        primary_key_type: "integer",
-        display_column: "abbreviation",
-        display_column_type: "string",
-      }
     },
   ]);
 
@@ -129,7 +118,7 @@ const CompoundCVResultsTable = ({ compound }: { compound: CompoundData }) => {
       tableState={tableState}
       onRowClick={(row) =>
         navigate(
-          `/assays/experiments/${row.original.experiment_id.toString()}/sheets/${row.original.experiment_data_sheet_id.toString()}`,
+          `/assays/experiments/${row.original.experiment_id.toString()}/sheets/${row.original.assay_data_sheet_definition_id.toString()}`,
         )
       }
       pagination={{
@@ -140,5 +129,3 @@ const CompoundCVResultsTable = ({ compound }: { compound: CompoundData }) => {
     />
   );
 };
-
-export { CompoundCVResultsTable };
