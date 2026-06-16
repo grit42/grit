@@ -335,6 +335,39 @@ CREATE SEQUENCE public.grit_seq
 
 
 --
+-- Name: grit_assays_analyses; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.grit_assays_analyses (
+    id bigint DEFAULT nextval('public.grit_seq'::regclass) NOT NULL,
+    created_by character varying(30) DEFAULT 'SYSTEM'::character varying NOT NULL,
+    created_at timestamp(6) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_by character varying(30),
+    updated_at timestamp(6) without time zone,
+    name character varying NOT NULL,
+    description text,
+    filters jsonb DEFAULT '{}'::jsonb,
+    plots jsonb DEFAULT '{}'::jsonb,
+    assay_data_sheet_definition_id bigint NOT NULL
+);
+
+
+--
+-- Name: grit_assays_analysis_experiments; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.grit_assays_analysis_experiments (
+    id bigint DEFAULT nextval('public.grit_seq'::regclass) NOT NULL,
+    created_by character varying(30) DEFAULT 'SYSTEM'::character varying NOT NULL,
+    created_at timestamp(6) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_by character varying(30),
+    updated_at timestamp(6) without time zone,
+    analysis_id bigint NOT NULL,
+    experiment_id bigint NOT NULL
+);
+
+
+--
 -- Name: grit_assays_assay_data_sheet_columns; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -972,6 +1005,22 @@ ALTER TABLE ONLY public.audit_trail_generic
 
 
 --
+-- Name: grit_assays_analyses grit_assays_analyses_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.grit_assays_analyses
+    ADD CONSTRAINT grit_assays_analyses_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: grit_assays_analysis_experiments grit_assays_analysis_experiments_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.grit_assays_analysis_experiments
+    ADD CONSTRAINT grit_assays_analysis_experiments_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: grit_assays_assay_data_sheet_columns grit_assays_assay_data_sheet_columns_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1433,6 +1482,34 @@ CREATE UNIQUE INDEX index_active_storage_variant_records_uniqueness ON public.ac
 
 
 --
+-- Name: index_grit_assays_analyses_on_assay_data_sheet_definition_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_grit_assays_analyses_on_assay_data_sheet_definition_id ON public.grit_assays_analyses USING btree (assay_data_sheet_definition_id);
+
+
+--
+-- Name: index_grit_assays_analyses_on_name; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_grit_assays_analyses_on_name ON public.grit_assays_analyses USING btree (name);
+
+
+--
+-- Name: index_grit_assays_analysis_experiments_on_analysis_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_grit_assays_analysis_experiments_on_analysis_id ON public.grit_assays_analysis_experiments USING btree (analysis_id);
+
+
+--
+-- Name: index_grit_assays_analysis_experiments_on_experiment_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_grit_assays_analysis_experiments_on_experiment_id ON public.grit_assays_analysis_experiments USING btree (experiment_id);
+
+
+--
 -- Name: index_grit_assays_assay_data_sheet_columns_on_data_type_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1748,6 +1825,13 @@ CREATE UNIQUE INDEX uniq_assay_model_metadata_definition_per_assay_model ON publ
 
 
 --
+-- Name: uniq_experiment_per_vocabulary; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX uniq_experiment_per_vocabulary ON public.grit_assays_analysis_experiments USING btree (analysis_id, experiment_id);
+
+
+--
 -- Name: uniq_metadata_definition_per_experiment; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1773,6 +1857,20 @@ CREATE UNIQUE INDEX uniq_permission_per_role ON public.grit_core_role_permission
 --
 
 CREATE UNIQUE INDEX uniq_vocabulary_item_name_per_vocabulary ON public.grit_core_vocabulary_items USING btree (name, vocabulary_id);
+
+
+--
+-- Name: grit_assays_analyses manage_stamps_grit_assays_analyses; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER manage_stamps_grit_assays_analyses BEFORE INSERT OR UPDATE ON public.grit_assays_analyses FOR EACH ROW EXECUTE FUNCTION public.manage_stamps();
+
+
+--
+-- Name: grit_assays_analysis_experiments manage_stamps_grit_assays_analysis_experiments; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER manage_stamps_grit_assays_analysis_experiments BEFORE INSERT OR UPDATE ON public.grit_assays_analysis_experiments FOR EACH ROW EXECUTE FUNCTION public.manage_stamps();
 
 
 --
@@ -1997,6 +2095,30 @@ CREATE TRIGGER manage_stamps_grit_core_vocabulary_item_load_set_blocks BEFORE IN
 --
 
 CREATE TRIGGER manage_stamps_grit_core_vocabulary_items BEFORE INSERT OR UPDATE ON public.grit_core_vocabulary_items FOR EACH ROW EXECUTE FUNCTION public.manage_stamps();
+
+
+--
+-- Name: grit_assays_analyses analysis_assay_data_sheet_definition; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.grit_assays_analyses
+    ADD CONSTRAINT analysis_assay_data_sheet_definition FOREIGN KEY (assay_data_sheet_definition_id) REFERENCES public.grit_assays_assay_data_sheet_definitions(id);
+
+
+--
+-- Name: grit_assays_analysis_experiments analysis_experiments_analysis; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.grit_assays_analysis_experiments
+    ADD CONSTRAINT analysis_experiments_analysis FOREIGN KEY (analysis_id) REFERENCES public.grit_assays_analyses(id);
+
+
+--
+-- Name: grit_assays_analysis_experiments analysis_experiments_experiment; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.grit_assays_analysis_experiments
+    ADD CONSTRAINT analysis_experiments_experiment FOREIGN KEY (experiment_id) REFERENCES public.grit_assays_experiments(id);
 
 
 --
@@ -2350,6 +2472,8 @@ ALTER TABLE ONLY public.active_storage_attachments
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20260529074944'),
+('20260525045003'),
 ('20260510051019'),
 ('20260510051017'),
 ('20260510051016'),

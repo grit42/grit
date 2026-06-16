@@ -39,6 +39,7 @@
     "@grit42/plots": "workspace:*",
     "@grit42/spreadsheet": "workspace:*",
     "@grit42/table": "workspace:*",
+    "@react-awesome-query-builder/ui": "^6.6.15",
     "lodash": "^4.17.21",
     "mathjs": "15.2.0",
     "zod": "catalog:"

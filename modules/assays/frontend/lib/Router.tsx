@@ -23,6 +23,7 @@ const LazyAssayModelsPage = lazy(() => import("./pages/assay-models"));
 const LazyExperimentsPage = lazy(() => import("./pages/experiments"));
 const LazyDataTablesPage = lazy(() => import("./features/data-tables/pages"));
 const LazyAssaySettingsPage = lazy(() => import("./pages/assays/settings"));
+const LazyAnalysesPage = lazy(() => import("./pages/analyses"));
 
 const Router = () => {
   return (
@@ -67,6 +68,9 @@ const Router = () => {
         }
       >
         <Route index path="*" element={<LazyDataTablesPage />} />
+      </Route>
+      <Route path="analyses" element={<AuthGuard permission="read:system" />}>
+        <Route index path="*" element={<LazyAnalysesPage />} />
       </Route>
       <Route
         index

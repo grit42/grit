@@ -16,33 +16,25 @@
  * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { ModuleMeta } from "@grit42/core";
+import { EntityData } from "@grit42/core";
+import { PlotDefinition } from "@grit42/plots";
+import { JsonTree } from "@react-awesome-query-builder/ui";
 
-const Meta: ModuleMeta = {
-  identifier: "ASSAYS",
-  rootRoute: "/assays",
-  navItems: [
-    {
-      identifier: "EXPERIMENTS",
-      name: "Experiments",
-      path: "/assays/experiments",
-    },
-    {
-      identifier: "DATA_TABLES",
-      name: "Data Tables",
-      path: "/assays/data_tables",
-    },
-    {
-      identifier: "ANALYSES",
-      name: "Analyses",
-      path: "/assays/analyses",
-    },
-    {
-      identifier: "ASSAY_MODELS",
-      name: "Assay Models",
-      path: "/assays/assay-models",
-    },
-  ],
-};
+export interface AnalysisPlotDefinition {
+  id: string;
+  def: PlotDefinition;
+}
 
-export default Meta;
+export interface AnalysisData extends EntityData {
+  name: string;
+  description: string | null;
+  assay_data_sheet_definition_id: number;
+  assay_data_sheet_definition_id__name: string;
+  filters: JsonTree;
+  plots: Record<string, AnalysisPlotDefinition>;
+}
+
+export interface AnalysisExperiment extends EntityData {
+  analysis_id: number;
+  experiment_id: number;
+}

@@ -16,33 +16,22 @@
  * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { ModuleMeta } from "@grit42/core";
+import { useAnalysisContext } from "../../../../features/analyses";
+import { useHasPermission } from "@grit42/core";
+import PlotTabs from "../../../../features/plots/PlotTabs";
 
-const Meta: ModuleMeta = {
-  identifier: "ASSAYS",
-  rootRoute: "/assays",
-  navItems: [
-    {
-      identifier: "EXPERIMENTS",
-      name: "Experiments",
-      path: "/assays/experiments",
-    },
-    {
-      identifier: "DATA_TABLES",
-      name: "Data Tables",
-      path: "/assays/data_tables",
-    },
-    {
-      identifier: "ANALYSES",
-      name: "Analyses",
-      path: "/assays/analyses",
-    },
-    {
-      identifier: "ASSAY_MODELS",
-      name: "Assay Models",
-      path: "/assays/assay-models",
-    },
-  ],
+const PlotsPage = () => {
+  const { analysis } = useAnalysisContext();
+  const canCrudPlots = useHasPermission("write:analysis");
+
+  return (
+    <PlotTabs
+      plots={analysis.plots}
+      canCrudPlots={canCrudPlots}
+      matchPattern="/assays/analyses/:analysis_id/plots/:plot_id"
+      navigationPattern="relative-sibling"
+    />
+  );
 };
 
-export default Meta;
+export default PlotsPage;

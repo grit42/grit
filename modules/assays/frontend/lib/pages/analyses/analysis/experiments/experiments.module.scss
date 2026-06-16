@@ -16,33 +16,12 @@
  * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { ModuleMeta } from "@grit42/core";
+@use "@grit42/client-library/theme.scss";
 
-const Meta: ModuleMeta = {
-  identifier: "ASSAYS",
-  rootRoute: "/assays",
-  navItems: [
-    {
-      identifier: "EXPERIMENTS",
-      name: "Experiments",
-      path: "/assays/experiments",
-    },
-    {
-      identifier: "DATA_TABLES",
-      name: "Data Tables",
-      path: "/assays/data_tables",
-    },
-    {
-      identifier: "ANALYSES",
-      name: "Analyses",
-      path: "/assays/analyses",
-    },
-    {
-      identifier: "ASSAY_MODELS",
-      name: "Assay Models",
-      path: "/assays/assay-models",
-    },
-  ],
-};
-
-export default Meta;
+.metadataSelector {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: theme.$spacing-lg;
+  width: 100%;
+  height: 100%;
+}
