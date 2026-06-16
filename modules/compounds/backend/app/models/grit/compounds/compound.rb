@@ -414,37 +414,64 @@ module Grit::Compounds
   def self.cv(params = nil)
     raise "compound_id parameter is required" if params.nil? || params[:compound_id].nil?
     compound_id = params[:compound_id]
-     query = Grit::Assays::ExperimentDataSheetValue.unscoped
-      .select("grit_assays_experiment_data_sheet_values.id")
-      .select("grit_assays_experiment_data_sheet_values.entity_id_value")
-      .select("target_values.id")
-      .select("coalesce(target_values.decimal_value, target_values.integer_value, target_values.float_value) as value")
-      .select("target_values.assay_data_sheet_column_id")
-      .select("target_values.experiment_data_sheet_record_id")
-      .select("target_data_sheet_columns.name as assay_data_sheet_column_id__name")
-      .select("data_sheet_definitions.id as assay_data_sheet_definition_id")
-      .select("data_sheet_definitions.name as assay_data_sheet_definition_id__name")
-      .select("data_sheets.id as experiment_data_sheet_id")
-      .select("experiments.id as experiment_id")
-      .select("experiments.name as experiment_id__name")
-      .select("assays.id as assay_id")
-      .select("assays.name as assay_id__name")
-      .select("units.id as unit_id")
-      .select("units.abbreviation as unit_id__abbreviation")
-      .joins("join grit_assays_experiment_data_sheet_values target_values on target_values.experiment_data_sheet_record_id = grit_assays_experiment_data_sheet_values.experiment_data_sheet_record_id")
-      .joins("join grit_assays_assay_data_sheet_columns target_data_sheet_columns on target_values.assay_data_sheet_column_id = target_data_sheet_columns.id")
-      .joins("join grit_core_data_types data_types on data_types.id = target_data_sheet_columns.data_type_id")
-      .joins("left join grit_core_units as units on units.id = target_data_sheet_columns.unit_id")
-      .joins("join grit_assays_assay_data_sheet_definitions data_sheet_definitions on target_data_sheet_columns.assay_data_sheet_definition_id = data_sheet_definitions.id")
-      .joins("join grit_assays_experiment_data_sheet_records as data_sheet_records on grit_assays_experiment_data_sheet_values.experiment_data_sheet_record_id = data_sheet_records.id")
-      .joins("join grit_assays_experiment_data_sheets as data_sheets on data_sheets.id = data_sheet_records.experiment_data_sheet_id")
-      .joins("join grit_assays_experiments as experiments on experiments.id = data_sheets.experiment_id")
-      .joins("join grit_assays_assays as assays on assays.id = experiments.assay_id")
-      .joins("join grit_core_publication_statuses as publication_statuses on publication_statuses.id = experiments.publication_status_id")
-      .where("grit_assays_experiment_data_sheet_values.entity_id_value = ?", compound_id)
-      .where("data_types.name in ('decimal', 'integer', 'float')")
-      .where("publication_statuses.name = 'Published'")
-    end
+    compound_data_type_id = Grit::Core::DataType.find_by!(
+      table_name: Grit::Compounds::Compound.table_name, is_entity: true
+    ).id
 
+    data_sheet_definitions = Grit::Assays::AssayDataSheetDefinition
+      .includes(assay_data_sheet_columns: [ :data_type, :unit ]).all
+
+    subqueries = data_sheet_definitions.flat_map do |definition|
+      target_column = definition.assay_data_sheet_columns.find { |col| col.data_type.is_entity && col.data_type_id == compound_data_type_id }
+      next [] if target_column.nil?
+
+      experiment_data_sheet = Grit::Assays::ExperimentDataSheetRecord.sheet_record_klass(definition.id)
+
+      definition.assay_data_sheet_columns
+      .select { |col| %w[integer decimal float].include?(col.data_type.name) }
+      .map do |value_column|
+        experiment_data_sheet.unscoped
+        .select(
+          "(data_sources.id * 1000000 + #{value_column.id}) AS id",
+          "CAST(data_sources.#{value_column.safe_name} AS double precision) AS value",
+          "#{value_column.id} AS assay_data_sheet_column_id",
+          "#{ActiveRecord::Base.connection.quote(value_column.name)} AS assay_data_sheet_column_id__name",
+          "#{definition.id} AS assay_data_sheet_definition_id",
+          "#{ActiveRecord::Base.connection.quote(definition.name)} AS assay_data_sheet_definition_id__name",
+          "experiments_with_metadata.id AS experiment_id",
+          "experiments_with_metadata.name AS experiment_id__name",
+          "experiments_with_metadata.assay_model_id AS assay_model_id",
+          "experiments_with_metadata.assay_model_id__name AS assay_model_id__name",
+          "#{ActiveRecord::Base.connection.quote(value_column.unit&.abbreviation)} AS unit_id__abbreviation",
+        )
+        .from("#{experiment_data_sheet.table_name} data_sources")
+        .joins("JOIN experiments_with_metadata ON experiments_with_metadata.id = data_sources.experiment_id")
+        .joins("JOIN grit_assays_assay_models assay_models ON assay_models.id = experiments_with_metadata.assay_model_id")
+        .joins("JOIN grit_core_publication_statuses eps ON eps.id = experiments_with_metadata.publication_status_id AND eps.name = 'Published'")
+        .joins("JOIN grit_core_publication_statuses mps ON mps.id = assay_models.publication_status_id AND mps.name = 'Published'")
+        .where("data_sources.#{target_column.safe_name} = ?", compound_id)
+        .to_sql
+      end
+    end
+    return self.none if subqueries.empty?
+
+    union_sql = subqueries.join("\nUNION ALL\n")
+    self.unscoped
+      .with(experiments_with_metadata: Grit::Assays::Experiment.detailed)
+      .select(
+        "cv.id AS id",
+        "cv.value AS value",
+        "cv.assay_data_sheet_column_id AS assay_data_sheet_column_id",
+        "cv.assay_data_sheet_column_id__name AS assay_data_sheet_column_id__name",
+        "cv.assay_data_sheet_definition_id AS assay_data_sheet_definition_id",
+        "cv.assay_data_sheet_definition_id__name AS assay_data_sheet_definition_id__name",
+        "cv.experiment_id AS experiment_id",
+        "cv.experiment_id__name AS experiment_id__name",
+        "cv.assay_model_id AS assay_model_id",
+        "cv.assay_model_id__name AS assay_model_id__name",
+        "cv.unit_id__abbreviation AS unit_id__abbreviation",
+      )
+      .from("(\n#{union_sql}\n) cv")
+  end
   end
 end
