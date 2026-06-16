@@ -20,7 +20,7 @@ import { SortableMultiselect } from "@grit42/client-library/components";
 import { PlotDefinition, SourceDataProperties } from "../types";
 import { usePropertiesOptions } from "../utils";
 
-const BaseSettings = <TPlot extends PlotDefinition,>({
+const BaseSettings = <TPlot extends PlotDefinition>({
   plot,
   onChange,
   properties,

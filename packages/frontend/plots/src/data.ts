@@ -38,8 +38,7 @@ const generateSampleData = (): SourceData => {
     for (const batch of BATCHES) {
       for (const concentration of CONCENTRATIONS) {
         const inhibition =
-          100 /
-          (1 + Math.pow(compound.ic50 / concentration, compound.hill)) +
+          100 / (1 + Math.pow(compound.ic50 / concentration, compound.hill)) +
           noise(i) * 5;
         data.push({
           compound: compound.name,

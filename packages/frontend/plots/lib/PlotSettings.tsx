@@ -12,28 +12,31 @@ interface PlotImplementation {
   value: PlotDefinition["type"];
 }
 
-const PLOT_IMPLEMENTATIONS: Record<PlotDefinition["type"], PlotImplementation> = {
-  scatter: {
-    PlotSettings: ScatterPlotSettings as ComponentType<PlotSettingsProps>,
-    label: "Scatter",
-    value: "scatter",
-  },
-  box: {
-    PlotSettings: BoxPlotSettings as ComponentType<PlotSettingsProps>,
-    label: "Box",
-    value: "box",
-  },
-  timeseries: {
-    PlotSettings: TimeSeriesPlotSettings as ComponentType<PlotSettingsProps>,
-    label: "Time series",
-    value: "timeseries",
-  },
-};
+const PLOT_IMPLEMENTATIONS: Record<PlotDefinition["type"], PlotImplementation> =
+  {
+    scatter: {
+      PlotSettings: ScatterPlotSettings as ComponentType<PlotSettingsProps>,
+      label: "Scatter",
+      value: "scatter",
+    },
+    box: {
+      PlotSettings: BoxPlotSettings as ComponentType<PlotSettingsProps>,
+      label: "Box",
+      value: "box",
+    },
+    timeseries: {
+      PlotSettings: TimeSeriesPlotSettings as ComponentType<PlotSettingsProps>,
+      label: "Time series",
+      value: "timeseries",
+    },
+  };
 
-const PLOT_OPTIONS = Object.values(PLOT_IMPLEMENTATIONS).map(({ label, value }) => ({
-  label,
-  value,
-}));
+const PLOT_OPTIONS = Object.values(PLOT_IMPLEMENTATIONS).map(
+  ({ label, value }) => ({
+    label,
+    value,
+  }),
+);
 
 const PlotSettings = ({ plot, ...props }: PlotSettingsProps) => {
   const plotImplementation = PLOT_IMPLEMENTATIONS[plot.type];
@@ -48,11 +51,7 @@ const PlotSettings = ({ plot, ...props }: PlotSettingsProps) => {
           props.onChange({
             ...plot,
             type,
-            title: getPlotTitle(
-              type,
-              plot,
-              props.properties,
-            ),
+            title: getPlotTitle(type, plot, props.properties),
           })
         }
       />

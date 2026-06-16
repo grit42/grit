@@ -119,7 +119,9 @@ const zipSeries = ({
   const n = Math.min(xSeriesList.length, ySeriesList.length, labels.length);
   const colorList = Array.from(
     { length: n },
-    (_, i) => colorMap.universalColors[i % colorMap.universalColors.length] ?? colorMap.markerFill,
+    (_, i) =>
+      colorMap.universalColors[i % colorMap.universalColors.length] ??
+      colorMap.markerFill,
   );
 
   return Array.from({ length: n }, (_, i) => ({

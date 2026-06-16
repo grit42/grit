@@ -98,7 +98,7 @@ const ScatterPlot = ({ def, data }: ScatterPlotProps) => {
     },
   };
 
-  console.log(traces)
+  console.log(traces);
 
   return (
     <PlotBase

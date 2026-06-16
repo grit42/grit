@@ -110,6 +110,5 @@ module Grit::Assays
         assay_data_sheet_definition = Grit::Assays::ExperimentDataSheetRecordLoadSetBlock.find_by(load_set_block_id: params[:load_set_block_id]).assay_data_sheet_definition
         assay_data_sheet_definition.sheet_record_klass.detailed.where("#{assay_data_sheet_definition.table_name}.id IN (SELECT record_id FROM grit_core_load_set_block_loaded_records WHERE grit_core_load_set_block_loaded_records.load_set_block_id = ?)", params[:load_set_block_id].to_i).order(:created_at)
       end
-
   end
 end

@@ -52,10 +52,7 @@ interface ScatterPlotFacet {
   data: ScatterPlotGroup[];
 }
 
-const buildTraces = (
-  facets: ScatterPlotFacet[],
-  colorMap: ColorMap,
-) => {
+const buildTraces = (facets: ScatterPlotFacet[], colorMap: ColorMap) => {
   const traces: Data[] = [];
   const axes: Record<string, Partial<LayoutAxis>> = {};
   const annotations: Partial<Annotations>[] = [];

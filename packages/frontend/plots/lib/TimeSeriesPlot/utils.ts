@@ -189,8 +189,12 @@ const buildTraces = (
           color,
           xLabel,
           yLabel,
-          groupLabel: multiFacet ? `${facet.label} ${group.label}` : group.label,
-          legendgroup: multiFacet ? `${facet.label} ${group.label}` : group.label,
+          groupLabel: multiFacet
+            ? `${facet.label} ${group.label}`
+            : group.label,
+          legendgroup: multiFacet
+            ? `${facet.label} ${group.label}`
+            : group.label,
           errorLabel: "SD",
           customData: statCustomdata,
           hoverSuffix: statHoverSuffix,
