@@ -1,3 +1,11 @@
+overrides:
+  minimatch: ">=10.2.1"
+  picomatch: ">=4.0.4"
+  esbuild: ">=0.28.1"
+  form-data: ">=4.0.6"
+  file-type: ">=21.3.1"
+  js-yaml: ">=4.1.2"
+
 packages:
   - apps/grit/client
   - modules/**/frontend

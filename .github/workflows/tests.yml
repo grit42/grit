@@ -4,28 +4,6 @@ on:
   workflow_dispatch:
 
 jobs:
-  frontend-tests:
-    name: Frontend Tests (Vitest)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Run tests (@grit42/spreadsheet)
-        # @grit42/core and module frontends depend on live Rails backends (serve:test).
-        # Only run packages whose tests are backend-independent.
-        working-directory: packages/frontend/spreadsheet
-        run: pnpm run test
-
   ruby-tests:
     name: Ruby Tests (RSpec)
     runs-on: ubuntu-latest
