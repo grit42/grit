@@ -39,7 +39,7 @@ const TABS = [
     label: "Synonyms",
   },
   {
-    url: "Compound-cv",
+    url: "compound-cv",
     label: "Compound CV",
   }
 ];
