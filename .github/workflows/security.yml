@@ -1,6 +1,10 @@
 name: Security Audit
 
 on:
+  schedule:
+    - cron: "0 8 * * 1"
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -86,6 +90,7 @@ jobs:
 
   codeql:
     name: CodeQL (SAST — Ruby & TypeScript)
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     permissions:
       security-events: write
