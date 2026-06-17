@@ -16,66 +16,12 @@
  * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import {
-  Navigate,
-  Outlet,
-  Route,
-  Routes,
-  useNavigate,
-  useParams,
-} from "react-router-dom";
-import { useMemo } from "react";
-import { ErrorPage, Tabs } from "@grit42/client-library/components";
+import { Route, Routes } from "react-router-dom";
+import { ErrorPage } from "@grit42/client-library/components";
 import DataTablePlot from "./DataTablePlot";
 import { useHasPermission } from "@grit42/core";
-import { DataTableData, useDataTable } from "../../queries/data_tables";
-import { TabbedLayout } from "@grit42/client-library/layouts";
-
-interface Props {
-  dataTable: DataTableData;
-}
-
-const DataTablePlotTabs = ({ dataTable }: Props) => {
-  const canCrudPlots = useHasPermission("write:analysis");
-
-  const navigate = useNavigate();
-  const { plot_id } = useParams() as { plot_id: string };
-
-  const tabs = useMemo(
-    () => [
-      ...Object.values(dataTable.plots).map(({ id, def }) => ({
-        key: id,
-        name: `${def.title} (${def.type})`,
-        panel: <></>,
-      })),
-      ...(canCrudPlots ? [{ key: "new", name: "New plot", panel: <></> }] : []),
-    ],
-    [canCrudPlots, dataTable.plots],
-  );
-
-  const selectedTab = tabs.findIndex(({ key }) => plot_id === key);
-
-  if (selectedTab === -1) {
-    return (
-      <Navigate to={`../${Object.keys(dataTable.plots)[0] ?? "new"}`} replace />
-    );
-  }
-
-  const handleTabChange = (index: number) => {
-    navigate(`../${tabs[index].key}`);
-  };
-
-  return (
-    <TabbedLayout>
-      <Tabs
-        onTabChange={handleTabChange}
-        selectedTab={selectedTab}
-        tabs={tabs}
-      />
-      <Outlet />
-    </TabbedLayout>
-  );
-};
+import { useDataTable } from "../../queries/data_tables";
+import PlotTabs from "../../../plots/PlotTabs";
 
 const DataTablePlots = ({ dataTableId }: { dataTableId: string | number }) => {
   const { data: dataTable } = useDataTable(dataTableId);
@@ -89,7 +35,15 @@ const DataTablePlots = ({ dataTableId }: { dataTableId: string | number }) => {
 
   return (
     <Routes>
-      <Route element={<DataTablePlotTabs dataTable={dataTable} />}>
+      <Route
+        element={
+          <PlotTabs
+            plots={dataTable.plots}
+            canCrudPlots={canCrudPlots}
+            matchPattern="/assays/data_tables/:data_table_id/plots/:plot_id/*"
+          />
+        }
+      >
         <Route
           path=":plot_id?"
           element={<DataTablePlot dataTable={dataTable} />}

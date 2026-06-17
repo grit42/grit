@@ -24,7 +24,7 @@ module Grit::Compounds
       ActiveRecord::Base.transaction do
         ActiveRecord::Base.connection.execute("SET LOCAL rdkit.do_chiral_sss=true;")
         existing_molecule = Molecule.by_molfile(params[:molfile])
-        existing_molecule_compounds = existing_molecule.nil? ? [] : Compound.detailed().where("grit_compounds_molecules__.id = #{existing_molecule.id}").all
+        existing_molecule_compounds = existing_molecule.nil? ? [] : Compound.detailed().where("grit_compounds_molecules__.id = ?", existing_molecule.id).all
 
         render json: { success: true, data: { molfile: params[:molfile], existing_molecule_id: existing_molecule&.id, existing_molecule_compounds: existing_molecule_compounds } }
       end

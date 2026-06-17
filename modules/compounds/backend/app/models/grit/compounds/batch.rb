@@ -56,7 +56,7 @@ module Grit::Compounds
         batch.save!
 
         Grit::Compounds::BatchProperty.where(compound_type_id: [ batch.compound_type_id, nil ]).each do |prop|
-          if !params[prop.safe_name].nil?
+          if !params[prop.safe_name].nil? && !params[prop.safe_name].blank?
             prop_value = Grit::Compounds::BatchPropertyValue.new(
               batch_id: batch.id,
               batch_property_id: prop.id,

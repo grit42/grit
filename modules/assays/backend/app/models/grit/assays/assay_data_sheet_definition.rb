@@ -76,6 +76,15 @@ module Grit::Assays
           query
         end
 
+        def self.published(params = nil)
+          query = self.detailed(params)
+          experiments_table = self.connection.quote_table_name(Grit::Assays::Experiment.table_name)
+          ps_table = self.connection.quote_table_name(Grit::Core::PublicationStatus.table_name)
+          records_table = self.connection.quote_table_name(self.table_name)
+          query = query.joins("JOIN #{experiments_table} on #{experiments_table}.id = #{records_table}.experiment_id")
+          query = query.joins("JOIN #{ps_table} on #{ps_table}.id = #{experiments_table}.publication_status_id AND #{ps_table}.name = 'Published'")
+        end
+
         def self.assay_data_sheet_definition_properties(**args)
           assay_data_sheet_definition = Grit::Assays::AssayDataSheetDefinition.find(@sheet.id)
 

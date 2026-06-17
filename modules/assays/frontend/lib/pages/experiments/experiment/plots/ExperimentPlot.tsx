@@ -1,155 +1,61 @@
-import { useNavigate, useParams } from "react-router-dom";
+import { useMemo } from "react";
 import {
   ExperimentData,
   ExperimentPlotDefinition,
 } from "../../../../queries/experiments";
-import { useMemo, useState } from "react";
-import {
-  Button,
-  ButtonGroup,
-  ErrorPage,
-  Select,
-  Spinner,
-  Surface,
-} from "@grit42/client-library/components";
-import {
-  nullish,
-  Plot,
-  PlotSettings,
-  SourceData,
-  SourceDataProperties,
-  SourceDatum,
-} from "@grit42/plots";
+import { ErrorPage, Select, Spinner } from "@grit42/client-library/components";
+import { Plot, PlotSettings, SourceDataProperties } from "@grit42/plots";
 import {
   useExperimentDataSheetRecordColumns,
   useExperimentDataSheetRecords,
 } from "../../../../queries/experiment_data_sheet_records";
-import {
-  EntityData,
-  EntityPropertyDef,
-  useEditEntityMutation,
-  useHasPermission,
-} from "@grit42/core";
-import { generateUniqueID } from "@grit42/client-library/utils";
-import styles from "./plots.module.scss";
+import { useHasPermission } from "@grit42/core";
+import { useParams } from "react-router-dom";
+import { getPlotData } from "../../../../features/plots/utils";
+import { usePlotCrud } from "../../../../features/plots/usePlotCrud";
+import PlotEditorLayout from "../../../../features/plots/PlotEditorLayout";
 
 interface Props {
   experiment: ExperimentData;
 }
 
-const getPlotData = (data: EntityData[], properties: EntityPropertyDef[]) => {
-  const propsToConvert = properties.filter(
-    ({ type }) => !["integer", "string", "text", "entity"].includes(type),
-  );
-  if (!propsToConvert.length) return data as SourceData;
-  return data.map((d) => {
-    const datum = { ...d };
-    for (const prop of propsToConvert) {
-      if (!nullish(datum[prop.name])) {
-        datum[prop.name] =
-          prop.type === "decimal" ? datum[prop.name] : `${datum[prop.name]}`;
-      } else if (prop.type === "boolean") {
-        datum[prop.name] = (!!datum[prop.name]).toString();
-      }
-    }
-    return datum as SourceDatum;
-  });
-};
-
-const NEW_PLOT = (data_sheet_id?: number) => ({
-  data_sheet_id,
-  def: {
-    type: "scatter",
-    x: { axisType: "linear", key: "" },
-    y: { axisType: "linear", key: "" },
-    groupBy: [],
-  },
-  id: "new",
-  name: "New plot",
-});
+const NEW_PLOT = (data_sheet_id?: number): ExperimentPlotDefinition =>
+  ({
+    data_sheet_id,
+    def: {
+      type: "scatter",
+      title: "",
+      x: { axisType: "linear", key: "" },
+      y: { axisType: "linear", key: "" },
+      groupBy: [],
+    },
+    id: "new",
+  }) as ExperimentPlotDefinition;
 
 const ExperimentPlot = ({ experiment }: Props) => {
-  const navigate = useNavigate();
   const canCrudPlots =
     useHasPermission("write:assays") &&
     experiment.publication_status_id__name !== "Published";
-  const { experiment_id, plot_id } = useParams() as {
-    experiment_id: string;
-    plot_id: string;
-  };
-  const [dirty, setDirty] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [deleting, setDeleting] = useState(false);
+  const { experiment_id } = useParams() as { experiment_id: string };
 
-  const defaultPlot =
-    experiment.plots[plot_id] ?? NEW_PLOT(experiment.data_sheets[0]?.id);
-  const [plot, setPlot] = useState<ExperimentPlotDefinition>(defaultPlot);
-  const [prevDeps, setPrevDeps] = useState({
-    plot_id,
-    plots: experiment.plots,
-    data_sheets: experiment.data_sheets,
+  const {
+    plot,
+    setPlot,
+    setDirty,
+    dirty,
+    saving,
+    deleting,
+    isNew,
+    onSave,
+    onDelete,
+    onRevert,
+  } = usePlotCrud<ExperimentData, ExperimentPlotDefinition>({
+    entityPath: "grit/assays/experiments",
+    entity: experiment,
+    getDefaultPlot: () => NEW_PLOT(experiment.data_sheets[0]?.id),
+    extraResetDeps: [experiment.data_sheets],
+    buildPayload: (plots) => ({ ...experiment, plots }),
   });
-  if (
-    prevDeps.plot_id !== plot_id ||
-    prevDeps.plots !== experiment.plots ||
-    prevDeps.data_sheets !== experiment.data_sheets
-  ) {
-    setPrevDeps({
-      plot_id,
-      plots: experiment.plots,
-      data_sheets: experiment.data_sheets,
-    });
-    setPlot(defaultPlot);
-  }
-
-  const editEntityMutation = useEditEntityMutation<ExperimentData>(
-    "grit/assays/experiments",
-    experiment.id,
-  );
-
-  const onSave = async () => {
-    setSaving(true);
-    const plotId = plot_id === "new" ? generateUniqueID() : plot_id;
-    const plots = {
-      ...experiment.plots,
-      [plotId]: {
-        ...plot,
-        id: plotId,
-      },
-    };
-    await editEntityMutation.mutateAsync({ ...experiment, plots });
-    setDirty(false);
-    setSaving(false);
-    if (plot_id === "new") {
-      navigate(`../${plotId}`);
-    }
-  };
-
-  const onDelete = async () => {
-    if (
-      plot_id === "new" ||
-      !confirm(
-        "Are you sure you want to delete this plot? This action is irreversible.",
-      )
-    )
-      return;
-    setDeleting(true);
-    const plots = {
-      ...experiment.plots,
-    };
-    delete plots[plot_id];
-    await editEntityMutation.mutateAsync({ ...experiment, plots });
-    setDeleting(false);
-    setDirty(false);
-    navigate(`../${Object.keys(plots)[0] ?? "new"}`);
-  };
-
-  const onRevert = () => {
-    setDirty(false);
-    setPlot(
-      experiment.plots[plot_id] ?? NEW_PLOT(experiment.data_sheets[0]?.id),
-    );
-  };
 
   const {
     data: columns,
@@ -173,50 +79,27 @@ const ExperimentPlot = ({ experiment }: Props) => {
   const isError = isColumnsError || isDataError;
   const canDisplayPlot = !isLoading && !isError;
 
-  const groupByProperties = useMemo(
+  const properties = useMemo(
     () => columns?.filter(({ default_hidden }) => !default_hidden) ?? [],
     [columns],
   );
 
-  const xAxisProperties = useMemo(
-    () => columns?.filter(({ default_hidden }) => !default_hidden) ?? [],
-    [columns],
-  );
-
-  const yAxisProperties = useMemo(
-    () =>
-      xAxisProperties?.filter(({ type }) =>
-        ["integer", "decimal"].includes(type),
-      ) ?? [],
-    [xAxisProperties],
-  );
-
-  if (!canCrudPlots && plot_id === "new") {
+  if (!canCrudPlots && isNew) {
     return <ErrorPage error="Nothing to see here..." />;
   }
 
   return (
-    <div className={styles.plotContainer}>
-      {isLoading && <Spinner />}
-      {isError && <ErrorPage error={columnsError ?? dataError} />}
-      {canDisplayPlot && (
-        <Plot data={plotData} dataProperties={columns ?? []} def={plot.def} />
-      )}
-      {canCrudPlots && (
-        <Surface className={styles.plotSidebar}>
-          <ButtonGroup>
-            {dirty && (
-              <Button onClick={onSave} loading={saving} color="secondary">
-                {plot_id === "new" ? "Add" : "Save"}
-              </Button>
-            )}
-            {dirty && <Button onClick={onRevert}>Revert</Button>}
-            {plot_id !== "new" && (
-              <Button onClick={onDelete} color="danger" loading={deleting}>
-                Delete
-              </Button>
-            )}
-          </ButtonGroup>
+    <PlotEditorLayout
+      canCrudPlots={canCrudPlots}
+      isNew={isNew}
+      dirty={dirty}
+      saving={saving}
+      deleting={deleting}
+      onSave={onSave}
+      onRevert={onRevert}
+      onDelete={onDelete}
+      settings={
+        <>
           <Select
             label="Data sheet"
             options={experiment.data_sheets.map(({ name, id }) => ({
@@ -231,17 +114,21 @@ const ExperimentPlot = ({ experiment }: Props) => {
           />
           <PlotSettings
             plot={plot.def}
-            xAxisProperties={xAxisProperties as SourceDataProperties}
-            yAxisProperties={yAxisProperties as SourceDataProperties}
-            groupByProperties={groupByProperties as SourceDataProperties}
+            properties={properties as SourceDataProperties}
             onChange={(def) => {
               setPlot({ ...plot, def });
               setDirty(true);
             }}
           />
-        </Surface>
+        </>
+      }
+    >
+      {isLoading && <Spinner />}
+      {isError && <ErrorPage error={columnsError ?? dataError} />}
+      {canDisplayPlot && (
+        <Plot data={plotData} dataProperties={columns ?? []} def={plot.def} />
       )}
-    </div>
+    </PlotEditorLayout>
   );
 };
 

@@ -5,6 +5,7 @@
   "version": "0.12.0",
   "type": "module",
   "scripts": {
+    "dev": "vite --port 3002",
     "tsc": "tsc -b",
     "build": "tsc -b ./tsconfig.lib.json && vite build",
     "lint": "eslint . --fix",
@@ -29,6 +30,7 @@
   "description": "",
   "dependencies": {
     "@grit42/client-library": "workspace:*",
+    "mathjs": "15.2.0",
     "plotly.js": "^3.4.0",
     "react-plotly.js": "^2.6.0"
   },
@@ -40,6 +42,7 @@
     "@types/node": "catalog:",
     "@types/plotly.js": "^2.35.14",
     "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
     "@types/react-plotly.js": "^2.6.4",
     "@vitejs/plugin-react": "catalog:",
     "autoprefixer": "catalog:",
@@ -49,6 +52,7 @@
     "glob": "catalog:",
     "globals": "catalog:",
     "react": "catalog:",
+    "react-dom": "catalog:",
     "typescript": "catalog:",
     "typescript-eslint": "catalog:",
     "vite": "catalog:",
