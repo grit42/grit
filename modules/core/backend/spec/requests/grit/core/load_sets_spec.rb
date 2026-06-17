@@ -201,6 +201,26 @@ RSpec.describe "Load Sets API", type: :request do
     end
   end
 
+  describe "entity allow-list" do
+    it "returns 400 on index when entity is not a GritEntityRecord class" do
+      get "/api/grit/core/load_sets", params: { entity: "Kernel" }
+      expect(response).to have_http_status(:bad_request)
+      expect(JSON.parse(response.body)["errors"]).to eq("Unknown entity")
+    end
+
+    it "returns 400 on create when entity is not a GritEntityRecord class" do
+      post "/api/grit/core/load_sets", params: {
+        name: "evil",
+        entity: "Kernel",
+        origin_id: origin.id,
+        load_set_blocks: { "0" => { name: "b", separator: ",",
+          data: Rack::Test::UploadedFile.new(
+            File.join(FILE_FIXTURE_PATH, "test_entity.csv"), "text/csv") } }
+      }
+      expect(response).to have_http_status(:bad_request)
+    end
+  end
+
   describe "succeeded load set" do
     let!(:succeeded_load_set) { create(:grit_core_load_set, :with_succeeded_block, origin_id: origin.id) }
 

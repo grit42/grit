@@ -27,14 +27,14 @@ module Grit::Core
         Zeitwerk::Loader.eager_load_namespace(Grit)
         @entities = ActiveRecord::Base.descendants.each_with_object({}) do |model, memo|
           next if !model.include?(Grit::Core::GritEntityRecord) || model.name.blank?
-          memo[model.name] = { full_name: model.name, name: model.name.demodulize.underscore.humanize, plural: model.name.demodulize.underscore.humanize.pluralize, path: model.name.underscore.pluralize, dictionary: true }
+          memo[model.name] = { klass: model, full_name: model.name, name: model.name.demodulize.underscore.humanize, plural: model.name.demodulize.underscore.humanize.pluralize, path: model.name.underscore.pluralize, dictionary: true }
         end
       end
       @entities
     end
 
     def dictionary_entities
-      self.entities.values.select { |entity| entity[:dictionary] }
+      self.entities.values.select { |entity| entity[:dictionary] }.map { |e| e.except(:klass) }
     end
 
     def index
@@ -43,7 +43,7 @@ module Grit::Core
 
     def show
       entity = params[:id]
-      render json: { success: true, data: entities[entity] }
+      render json: { success: true, data: entities[entity]&.except(:klass) }
     end
 
     def columns
@@ -67,7 +67,7 @@ module Grit::Core
         return nil
       end
 
-      klass = entity_id.constantize
+      klass = entities[entity_id][:klass]
       crud = klass.entity_crud
       if crud.nil? || crud[:read].nil? || !current_user.permission?(crud[:read])
         render json: { success: false, errors: "You do not have the permissions required to read #{klass.name}" }, status: :forbidden
