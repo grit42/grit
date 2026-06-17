@@ -55,9 +55,12 @@
     "lint:check": "eslint .",
     "format": "prettier . -w --ignore-path ../../../.prettierignore",
     "format:check": "prettier . -c --ignore-path ../../../.prettierignore",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "devDependencies": {
+    "@testing-library/react": "^16.0.0",
     "@eslint/js": "catalog:",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
@@ -78,7 +81,9 @@
     "vite-plugin-dts": "catalog:",
     "vite-plugin-externalize-deps": "catalog:",
     "vite-plugin-lib-inject-css": "catalog:",
-    "vite-plugin-static-copy": "catalog:"
+    "vite-plugin-static-copy": "catalog:",
+    "jsdom": "^25.0.0",
+    "vitest": "catalog:"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
