@@ -37,7 +37,7 @@ module Grit
     not_empty = lambda { |property, value| ActiveRecord::Base.send(:sanitize_sql_array, [ "#{property} IS NOT NULL" ]) }
     not_empty_text = lambda { |property, value| ActiveRecord::Base.send(:sanitize_sql_array, [ "(#{property} <> '' OR #{property} IS NOT NULL)" ]) }
     contains = lambda do |property, value|
-      value.gsub!("_", '\\_')
+      value = ActiveRecord::Base.sanitize_sql_like(value)
       value.gsub!("*", "%")
       value.gsub!(".", "_")
       wildcards = %w[% _]
@@ -46,7 +46,7 @@ module Grit
       ActiveRecord::Base.send(:sanitize_sql_array, [ "#{property} ILIKE ?", value ])
     end
     not_contains = lambda do |property, value|
-      value.gsub!("_", '\\_')
+      value = ActiveRecord::Base.sanitize_sql_like(value)
       value.gsub!("*", "%")
       value.gsub!(".", "_")
       wildcards = %w[% _]
@@ -55,19 +55,19 @@ module Grit
       ActiveRecord::Base.send(:sanitize_sql_array, [ "#{property} NOT ILIKE ?", value ])
     end
     starts_with = lambda do |property, value|
-      value = value.gsub("_", '\\_').gsub("*", "%").gsub(".", "_")
+      value = ActiveRecord::Base.sanitize_sql_like(value).gsub("*", "%").gsub(".", "_")
       wildcards = %w[% _]
       value = "#{value}%" unless value.end_with?(*wildcards)
       ActiveRecord::Base.send(:sanitize_sql_array, [ "#{property} ILIKE ?", value ])
     end
     ends_with = lambda do |property, value|
-      value = value.gsub("_", '\\_').gsub("*", "%").gsub(".", "_")
+      value = ActiveRecord::Base.sanitize_sql_like(value).gsub("*", "%").gsub(".", "_")
       wildcards = %w[% _]
       value = "%#{value}" unless value.start_with?(*wildcards)
       ActiveRecord::Base.send(:sanitize_sql_array, [ "#{property} ILIKE ?", value ])
     end
     like = lambda do |property, value|
-      value.gsub!("_", '\\_')
+      value = ActiveRecord::Base.sanitize_sql_like(value)
       value.gsub!("*", "%")
       value.gsub!(".", "_")
       ActiveRecord::Base.send(:sanitize_sql_array, [ "#{property} ILIKE ?", value ])
