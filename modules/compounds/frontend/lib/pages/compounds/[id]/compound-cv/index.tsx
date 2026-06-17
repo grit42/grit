@@ -25,7 +25,7 @@ import {
 } from "../../../../queries/compounds";
 import { AsyncMoleculeViewer } from "../../../../components/MoleculeViewer";
 import styles from "./compoundCv.module.scss";
-import { GeneralInfo, CalculatedProps } from "./compoundCVInfo";
+import { GeneralInfo, CalculatedProps } from "./CompoundCVInfo";
 import { CompoundCVResultsTable } from "./CompoundCVResultsTable";
 
 const MoleculeViewer = ({ compound }: { compound: CompoundData }) => {

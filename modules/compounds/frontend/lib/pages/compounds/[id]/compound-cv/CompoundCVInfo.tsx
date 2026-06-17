@@ -120,7 +120,7 @@ const GeneralInfo = ({ compound }: { compound: CompoundData }) => {
       ...item,
       value: (
         <ExpandText
-          text={item.value === "string" ? item.value : String(item.value)}
+          text={typeof item.value === "string" ? item.value : String(item.value)}
           maxLength={100}
         />
       ),
@@ -150,7 +150,7 @@ const CalculatedProps = ({ compound }: { compound: CompoundData }) => {
     ...item,
     value: (
       <ExpandText
-        text={item.value === "string" ? item.value : String(item.value)}
+        text={typeof item.value === "string" ? item.value : String(item.value)}
         maxLength={100}
       />
     ),
