@@ -418,7 +418,9 @@ module Grit::Compounds
       table_name: Grit::Compounds::Compound.table_name, is_entity: true
     ).id
 
+    # Only result sheets (result: true); 
     data_sheet_definitions = Grit::Assays::AssayDataSheetDefinition
+      .where(result: true)
       .includes(assay_data_sheet_columns: [ :data_type, :unit ]).all
 
     subqueries = data_sheet_definitions.flat_map do |definition|
@@ -432,7 +434,7 @@ module Grit::Compounds
       .map do |value_column|
         experiment_data_sheet.unscoped
         .select(
-          "(data_sources.id * 1000000 + #{value_column.id}) AS id",
+          "data_sources.id AS id",
           "CAST(data_sources.#{value_column.safe_name} AS double precision) AS value",
           "#{value_column.id} AS assay_data_sheet_column_id",
           "#{ActiveRecord::Base.connection.quote(value_column.name)} AS assay_data_sheet_column_id__name",

@@ -115,7 +115,9 @@ export const CompoundCVResultsTable = ({
       loading={isLoading && !isFetchingNextPage}
       header=""
       data={flatData}
+      noDataMessage="No published assay results for this compound yet."
       tableState={tableState}
+      getRowId={(row) => `${row.id}-${row.assay_data_sheet_column_id}`}
       onRowClick={(row) =>
         navigate(
           `/assays/experiments/${row.original.experiment_id.toString()}/sheets/${row.original.assay_data_sheet_definition_id.toString()}`,

@@ -102,6 +102,38 @@ module Grit::Compounds
         expect(Compound.cv(compound_id: compound.id).to_a).to be_empty
       end
 
+      it "excludes values from raw-data (non-result) sheets" do
+        raw_model = Grit::Assays::AssayModel.create!(
+          name: "Raw Model", assay_type: assay_type, publication_status: draft
+        )
+        raw_def = Grit::Assays::AssayDataSheetDefinition.create!(
+          name: "Raw Sheet", assay_model: raw_model, result: false, sort: 1
+        )
+        Grit::Assays::AssayDataSheetColumn.create!(
+          name: "Compound", safe_name: "eos",
+          assay_data_sheet_definition: raw_def, data_type: compound_data_type, sort: 1
+        )
+        Grit::Assays::AssayDataSheetColumn.create!(
+          name: "Raw", safe_name: "raw",
+          assay_data_sheet_definition: raw_def, data_type: decimal_type, sort: 2
+        )
+        raw_def.reload
+        raw_def.create_table
+        raw_model.update!(publication_status: published)
+
+        raw_experiment = Grit::Assays::Experiment.create!(
+          name: "Raw Experiment", assay_model: raw_model, publication_status: published
+        )
+        klass = Grit::Assays::ExperimentDataSheetRecord.sheet_record_klass(raw_def.id)
+        klass.reset_column_information
+        klass.create!(experiment_id: raw_experiment.id, eos: compound.id, raw: 12.3)
+
+        # Only result sheets feed a compound's CV, so a raw-data sheet's value must not appear.
+        expect(Compound.cv(compound_id: compound.id).to_a).to be_empty
+      ensure
+        raw_def&.drop_table rescue nil
+      end
+
       it "raises when compound_id is missing" do
         expect { Compound.cv }.to raise_error(/compound_id parameter is required/)
       end
