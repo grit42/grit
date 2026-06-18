@@ -20,14 +20,7 @@ interface CompoundCVData extends EntityData {
   unit_id__abbreviation: string | null;
 }
 
-export const CompoundCVResultsTable = ({
-  compound,
-}: {
-  compound: CompoundData;
-}) => {
-  const navigate = useNavigate();
-
-  const tableColumns = useTableColumns<CompoundCVData>([
+const COLUMNS = [
     {
       name: "assay_model_id__name",
       display_name: "Assay model",
@@ -76,7 +69,17 @@ export const CompoundCVResultsTable = ({
       type: "string",
       unique: false,
     },
-  ]);
+  ];
+
+
+export const CompoundCVResultsTable = ({
+  compound,
+}: {
+  compound: CompoundData;
+}) => {
+  const navigate = useNavigate();
+
+  const tableColumns = useTableColumns<CompoundCVData>(COLUMNS);
 
   const tableState = useSetupTableState<CompoundCVData>(
     "experiment-data-sheet-records-list",
@@ -115,12 +118,12 @@ export const CompoundCVResultsTable = ({
       loading={isLoading && !isFetchingNextPage}
       header=""
       data={flatData}
-      noDataMessage="No published assay results for this compound yet."
+      noDataMessage={isError ? error : "No published experiment results for this compound."}
       tableState={tableState}
-      getRowId={(row) => `${row.id}-${row.assay_data_sheet_column_id}`}
+      getRowId={(row) => String(row.id)}
       onRowClick={(row) =>
         navigate(
-          `/assays/experiments/${row.original.experiment_id.toString()}/sheets/${row.original.assay_data_sheet_definition_id.toString()}`,
+          `/assays/experiments/${row.original.experiment_id}/sheets/${row.original.assay_data_sheet_definition_id}`,
         )
       }
       pagination={{

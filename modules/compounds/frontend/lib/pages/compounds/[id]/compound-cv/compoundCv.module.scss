@@ -1,33 +1,7 @@
 @use "@grit42/client-library/theme.scss";
 
-.Container {
-  height: 100vh;
-  display: grid;
-  gap: calc(theme.$spacing * 1);
-  overflow: hidden;
-  grid-template-columns: 500px 1fr;
-  grid-template-rows: auto auto 1fr;
-
-  grid-template-areas:
-    "leftSide       ResultsTable";
-
-  @media screen and (max-width: 960px) {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto auto;
-    grid-template-areas:
-      "leftSide"
-      "ResultsTable";
-  }
-}
-
-.leftSideContainer {
-  grid-area: leftSide;
-  min-height: 0;
-  padding-bottom: calc(theme.$spacing * 1);
-}
-
-.resultsTableContainer {
-  grid-area: ResultsTable;
+.sidebarSurface {
+  width: 480px;
   height: 100%;
   min-height: 0;
   overflow-y: auto;
@@ -35,11 +9,37 @@
   flex-direction: column;
 }
 
-.section {
+.sidebarHeader {
+  display: grid;
+  justify-items: end;
+  margin-bottom: theme.$spacing-sm;
+}
+
+.collapsedStrip {
+  display: grid;
+  justify-items: center;
+  gap: theme.$spacing-sm;
+  padding-top: theme.$spacing-sm;
+}
+
+.resultsPanel {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.moleculeViewer {
+  width: 100%;
   margin-bottom: calc(theme.$spacing * 1);
 }
 
-.sectionHeader {
+.infoSection {
+  margin-bottom: calc(theme.$spacing * 1);
+}
+
+.infoSectionHeader {
   width: 100%;
   display: flex;
   justify-content: space-between;
@@ -52,22 +52,22 @@
   font-weight: 600;
 }
 
-.sectionList {
+.infoSectionList {
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
-.sectionListItem {
+.infoSectionItem {
   padding: calc(theme.$spacing * 0.25) 0;
   text-align: left;
 }
 
-.sectionLabel {
+.infoSectionItemLabel {
   font-weight: 500;
 }
 
-.sectionValue {
+.infoSectionItemValue {
   display: inline-block;
   max-width: 100%;
   white-space: normal;
