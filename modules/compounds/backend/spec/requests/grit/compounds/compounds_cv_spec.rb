@@ -83,6 +83,8 @@ RSpec.describe "Grit::Compounds::Compound CV via index", type: :request do
     data = JSON.parse(response.body)["data"]
     expect(data.length).to eq(2)
     expect(data.map { |r| r["assay_data_sheet_column_id__name"] }).to match_array(%w[IC50 Inhibition])
+    ids = data.map { |r| r["id"] }
+    expect(ids.uniq.length).to eq(ids.length)
   end
 
   it "filters by a cv column without erroring (regression: WHERE ( = '...') syntax error)" do
@@ -93,6 +95,8 @@ RSpec.describe "Grit::Compounds::Compound CV via index", type: :request do
     expect(data.length).to eq(1)
     expect(data[0]["assay_data_sheet_column_id__name"]).to eq("IC50")
     expect(data[0]["value"]).to eq(42.5)
+    ids = data.map { |r| r["id"] }
+    expect(ids.uniq.length).to eq(ids.length)
   end
 
   it "returns no rows when the filter matches nothing" do

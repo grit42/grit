@@ -418,7 +418,6 @@ module Grit::Compounds
       table_name: Grit::Compounds::Compound.table_name, is_entity: true
     ).id
 
-    # Only result sheets (result: true); 
     data_sheet_definitions = Grit::Assays::AssayDataSheetDefinition
       .where(result: true)
       .includes(assay_data_sheet_columns: [ :data_type, :unit ]).all
@@ -434,7 +433,7 @@ module Grit::Compounds
       .map do |value_column|
         experiment_data_sheet.unscoped
         .select(
-          "data_sources.id AS id",
+          "data_sources.id AS experiment_data_sheet_record_id",
           "CAST(data_sources.#{value_column.safe_name} AS double precision) AS value",
           "#{value_column.id} AS assay_data_sheet_column_id",
           "#{ActiveRecord::Base.connection.quote(value_column.name)} AS assay_data_sheet_column_id__name",
@@ -461,17 +460,17 @@ module Grit::Compounds
     self.unscoped
       .with(experiments_with_metadata: Grit::Assays::Experiment.detailed)
       .select(
-        "cv.id AS id",
-        "cv.value AS value",
-        "cv.assay_data_sheet_column_id AS assay_data_sheet_column_id",
-        "cv.assay_data_sheet_column_id__name AS assay_data_sheet_column_id__name",
-        "cv.assay_data_sheet_definition_id AS assay_data_sheet_definition_id",
-        "cv.assay_data_sheet_definition_id__name AS assay_data_sheet_definition_id__name",
-        "cv.experiment_id AS experiment_id",
-        "cv.experiment_id__name AS experiment_id__name",
-        "cv.assay_model_id AS assay_model_id",
-        "cv.assay_model_id__name AS assay_model_id__name",
-        "cv.unit_id__abbreviation AS unit_id__abbreviation",
+        "ROW_NUMBER() OVER (ORDER BY cv.experiment_data_sheet_record_id, cv.assay_data_sheet_column_id) AS id",
+        "cv.value",
+        "cv.assay_data_sheet_column_id",
+        "cv.assay_data_sheet_column_id__name",
+        "cv.assay_data_sheet_definition_id",
+        "cv.assay_data_sheet_definition_id__name",
+        "cv.experiment_id",
+        "cv.experiment_id__name",
+        "cv.assay_model_id",
+        "cv.assay_model_id__name",
+        "cv.unit_id__abbreviation",
       )
       .from("(\n#{union_sql}\n) cv")
   end
