@@ -21,56 +21,55 @@ interface CompoundCVData extends EntityData {
 }
 
 const COLUMNS = [
-    {
-      name: "assay_model_id__name",
-      display_name: "Assay model",
-      default_hidden: false,
-      required: false,
-      type: "string",
-      unique: false,
-    },
-    {
-      name: "experiment_id__name",
-      display_name: "Experiment",
-      default_hidden: false,
-      required: false,
-      type: "string",
-      unique: false,
-    },
-    {
-      name: "assay_data_sheet_definition_id__name",
-      display_name: "Data Sheet",
-      default_hidden: false,
-      required: false,
-      type: "string",
-      unique: false,
-    },
-    {
-      name: "assay_data_sheet_column_id__name",
-      display_name: "Column",
-      default_hidden: false,
-      required: false,
-      type: "string",
-      unique: false,
-    },
-    {
-      name: "value",
-      display_name: "Value",
-      default_hidden: false,
-      required: false,
-      type: "decimal",
-      unique: false,
-    },
-    {
-      name: "unit_id__abbreviation",
-      display_name: "Unit",
-      default_hidden: false,
-      required: false,
-      type: "string",
-      unique: false,
-    },
-  ];
-
+  {
+    name: "assay_model_id__name",
+    display_name: "Assay model",
+    default_hidden: false,
+    required: false,
+    type: "string",
+    unique: false,
+  },
+  {
+    name: "experiment_id__name",
+    display_name: "Experiment",
+    default_hidden: false,
+    required: false,
+    type: "string",
+    unique: false,
+  },
+  {
+    name: "assay_data_sheet_definition_id__name",
+    display_name: "Data Sheet",
+    default_hidden: false,
+    required: false,
+    type: "string",
+    unique: false,
+  },
+  {
+    name: "assay_data_sheet_column_id__name",
+    display_name: "Column",
+    default_hidden: false,
+    required: false,
+    type: "string",
+    unique: false,
+  },
+  {
+    name: "value",
+    display_name: "Value",
+    default_hidden: false,
+    required: false,
+    type: "decimal",
+    unique: false,
+  },
+  {
+    name: "unit_id__abbreviation",
+    display_name: "Unit",
+    default_hidden: false,
+    required: false,
+    type: "string",
+    unique: false,
+  },
+];
 
 export const CompoundCVResultsTable = ({
   compound,
@@ -118,7 +117,9 @@ export const CompoundCVResultsTable = ({
       loading={isLoading && !isFetchingNextPage}
       header=""
       data={flatData}
-      noDataMessage={isError ? error : "No published experiment results for this compound."}
+      noDataMessage={
+        isError ? error : "No published experiment results for this compound."
+      }
       tableState={tableState}
       getRowId={(row) => String(row.id)}
       onRowClick={(row) =>

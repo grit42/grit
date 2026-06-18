@@ -161,7 +161,6 @@ const CompoundCVInfoSidebar = ({
   toggleButton,
 }: {
   compound: CompoundData;
-  // The collapse toggle is created by the parent (it owns the collapse state) and rendered here.
   toggleButton: ReactNode;
 }) => {
   if (!compound) return null;
