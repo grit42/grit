@@ -5,8 +5,15 @@
   "type": "commonjs",
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
   "dependencies": {
     "@nx/devkit": "22.5.2",
     "tslib": "^2.3.0"
+  },
+  "devDependencies": {
+    "vitest": "catalog:"
   }
 }
