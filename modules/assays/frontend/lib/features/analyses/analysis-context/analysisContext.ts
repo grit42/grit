@@ -28,8 +28,8 @@ export interface AnalysisContextValue {
   dataSheet: AssayDataSheetDefinitionData;
   properties: EntityPropertyDef[];
   filters: {
-    tree: JsonTree;
-    setTree: React.Dispatch<React.SetStateAction<JsonTree>>;
+    persistableTree: JsonTree;
+    isDirty: boolean;
     builderState: QueryBuilderState;
     setBuilderState: React.Dispatch<React.SetStateAction<QueryBuilderState>>;
   };

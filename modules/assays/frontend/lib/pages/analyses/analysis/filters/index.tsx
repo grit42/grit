@@ -23,8 +23,8 @@ import {
 } from "../../../../features/analyses";
 import { Grit42QueryBuilder } from "../../../../features/query-builder";
 import { useQueryClient } from "@grit42/api";
-import { TabbedLayout } from "@grit42/client-library/layouts";
 import { Button } from "@grit42/client-library/components";
+import styles from "./filters.module.scss";
 
 const FiltersPage = () => {
   const queryClient = useQueryClient();
@@ -51,6 +51,7 @@ const FiltersPage = () => {
               "infiniteData",
               `grit/assays/analyses/${analysis.id}/analysis_records`,
             ],
+            refetchType: "none",
           }),
         ]);
       },
@@ -58,18 +59,27 @@ const FiltersPage = () => {
   );
 
   const onSave = async () => {
-    await editEntityMutation.mutateAsync({ filters: filters.tree });
+    await editEntityMutation.mutateAsync({
+      filters: filters.persistableTree,
+    });
   };
 
   return (
-    <TabbedLayout>
-      <Button onClick={onSave}>Save</Button>
+    <div className={styles.container}>
+      <Button
+        className={styles.button}
+        onClick={onSave}
+        color="secondary"
+        disabled={editEntityMutation.isPending || !filters.isDirty}
+        loading={editEntityMutation.isPending}
+      >
+        Save
+      </Button>
       <Grit42QueryBuilder
         state={filters.builderState}
         setState={filters.setBuilderState}
-        setTree={filters.setTree}
       />
-    </TabbedLayout>
+    </div>
   );
 };
 

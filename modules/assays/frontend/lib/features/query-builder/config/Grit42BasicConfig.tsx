@@ -33,8 +33,17 @@ import {
   Input,
   Select,
 } from "@grit42/client-library/components";
+import { EntityPropertyDef, EntitySelector } from "@grit42/core";
 import { Grit42ConjsRender } from "./Grit42ConjsRender";
 import { transformSelectListValues } from "../tree/treeUtils";
+
+type EntitySelectWidgetProps = SelectWidgetProps & {
+  entity: EntityPropertyDef["entity"];
+};
+
+type EntityMultiSelectWidgetProps = MultiSelectWidgetProps & {
+  entity: EntityPropertyDef["entity"];
+};
 
 /**
  * Grit42-themed extension of @react-awesome-query-builder/ui BasicConfig:
@@ -121,6 +130,60 @@ export const Grit42BasicConfig = {
           options={transformSelectListValues(props.listValues)}
         />
       ),
+    },
+    entity: {
+      ...BasicConfig.widgets.select,
+      jsType: "number",
+      factory: (props: EntitySelectWidgetProps) => {
+        const entityDef = props.entity;
+        if (!entityDef) return <></>;
+        return (
+          <EntitySelector
+            entity={entityDef}
+            value={(props.value as number) ?? null}
+            onChange={(v) =>
+              props.setValue(v === null ? undefined : (v as string | number))
+            }
+            onBlur={() => {}}
+            disabled={props.readonly}
+          />
+        );
+      },
+    },
+    entity_multiselect: {
+      ...BasicConfig.widgets.multiselect,
+      factory: (props: EntityMultiSelectWidgetProps) => {
+        const entityDef = props.entity;
+        if (!entityDef) return <></>;
+        return (
+          <EntitySelector
+            entity={entityDef}
+            multiple
+            value={(props.value as number[]) ?? []}
+            onChange={(v) =>
+              props.setValue(Array.isArray(v) && v.length ? v : [])
+            }
+            onBlur={() => {}}
+            disabled={props.readonly}
+          />
+        );
+      },
+    },
+  },
+  types: {
+    ...BasicConfig.types,
+    entity: {
+      defaultOperator: "equal",
+      widgets: {
+        entity: {
+
+          operators: ["equal", "not_equal", "is_null", "is_not_null"],
+        },
+        entity_multiselect: {
+          operators: ["select_any_in", "select_not_any_in"],
+        },
+      },
+      valueSources: ["value"],
     },
   },
   settings: {

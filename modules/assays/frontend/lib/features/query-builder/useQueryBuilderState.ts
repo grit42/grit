@@ -17,12 +17,14 @@
  */
 
 import { useCallback, useMemo, useState } from "react";
-import type {
-  Config,
-  ImmutableTree,
-  JsonTree,
+import {
+  Utils,
+  type Config,
+  type ImmutableTree,
+  type JsonTree,
 } from "@react-awesome-query-builder/ui";
-import { safeLoadTree, toValidJsonTree } from "./tree/treeUtils";
+import { isEqual } from "lodash";
+import { safeLoadTree } from "./tree/treeUtils";
 
 export interface QueryBuilderState {
   tree: ImmutableTree;
@@ -30,46 +32,24 @@ export interface QueryBuilderState {
 }
 
 export interface UseQueryBuilderStateArgs {
-  /**
-   * Raw initial tree from persistence — anything (null, undefined, an old
-   * shape) is safe; toValidJsonTree / safeLoadTree fall back to an empty
-   * group.
-   */
   initialTree: unknown;
-  /** Final RAQB config — produced by buildGrit42Config (or compatible). */
   config: Config;
 }
 
 export interface UseQueryBuilderStateReturn {
-  /** Persistable JsonTree — sync'd from the immutable tree on valid changes. */
-  tree: JsonTree;
-  setTree: React.Dispatch<React.SetStateAction<JsonTree>>;
-  /** Bundle passed to <Grit42QueryBuilder>. */
   builderState: QueryBuilderState;
   setBuilderState: React.Dispatch<React.SetStateAction<QueryBuilderState>>;
-  /** Imperative reload — e.g. after a refetch of the underlying entity. */
+  persistableTree: JsonTree;
+  isDirty: boolean;
   loadFromTree: (next: unknown) => void;
 }
 
-/**
- * Owns the dual tree state required by react-awesome-query-builder:
- *   - `builderTree: ImmutableTree` — what the builder UI mutates each keystroke
- *   - `tree: JsonTree` — the persistable serialised form, written only when
- *     the builder reports a valid tree
- *
- * `setBuilderState` accepts the standard React state-action shape but only
- * propagates the `tree` slice; the live `config` is always taken from this
- * hook's args so a single source of truth wins.
- */
 export const useQueryBuilderState = ({
   initialTree,
   config,
 }: UseQueryBuilderStateArgs): UseQueryBuilderStateReturn => {
-  const [tree, setTree] = useState<JsonTree>(() =>
-    toValidJsonTree(initialTree),
-  );
   const [builderTree, setBuilderTree] = useState<ImmutableTree>(() =>
-    safeLoadTree(tree),
+    safeLoadTree(initialTree),
   );
 
   const builderState = useMemo<QueryBuilderState>(
@@ -93,16 +73,20 @@ export const useQueryBuilderState = ({
   );
 
   const loadFromTree = useCallback((next: unknown) => {
-    const condTree = toValidJsonTree(next);
-    setTree(condTree);
-    setBuilderTree(safeLoadTree(condTree));
+    setBuilderTree(safeLoadTree(next));
   }, []);
 
+  const { persistableTree, isDirty } = useMemo(() => {
+    const persistableTree = Utils.getTree(builderState.tree, false);
+    const isDirty = !isEqual(initialTree, persistableTree);
+    return { persistableTree, isDirty };
+  }, [builderState.tree, initialTree]);
+
   return {
-    tree,
-    setTree,
     builderState,
     setBuilderState,
+    persistableTree,
+    isDirty,
     loadFromTree,
   };
 };

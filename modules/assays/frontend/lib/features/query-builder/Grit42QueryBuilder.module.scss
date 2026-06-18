@@ -2,45 +2,57 @@
 
 $border-color: #666666;
 
-:global(.query-builder) {
-  :global(.group) {
-    background-color: theme.$palette-background-surface !important;
-    border-color: $border-color !important;
+:global(.query-builder-container) {
+  height: 100%;
+  overflow: auto;
 
-    &::before {
-      border-color: $border-color !important;
-    }
-  }
+  :global(.query-builder) {
+    margin: 0;
+    overflow: unset;
 
-  :global(.group--header) {
-    &::before {
-      border-color: $border-color !important;
-    }
-  }
-
-  :global(.group-or-rule) {
-    &::after {
-      border-color: $border-color !important;
-    }
-  }
-
-  :global(.rule) {
-    background-color: theme.$palette-background-surface !important;
-    border-color: $border-color !important;
-    &::before {
-      border-color: $border-color !important;
+    :global(> .group-or-rule-container:first-of-type) {
+      padding: 0;
     }
 
-    :global(.rule--body) {
-      gap: theme.$spacing-lg;
+    :global(.group) {
+      background-color: theme.$palette-background-surface !important;
+      border-color: $border-color !important;
 
-      :global(.rule--operator) {
-        margin: 0;
+      &::before {
+        border-color: $border-color !important;
       }
     }
 
-    :global(.widget--sep) {
-      vertical-align: unset;
+    :global(.group--header) {
+      &::before {
+        border-color: $border-color !important;
+      }
+    }
+
+    :global(.group-or-rule) {
+      &::after {
+        border-color: $border-color !important;
+      }
+    }
+
+    :global(.rule) {
+      background-color: theme.$palette-background-surface !important;
+      border-color: $border-color !important;
+      &::before {
+        border-color: $border-color !important;
+      }
+
+      :global(.rule--body) {
+        gap: theme.$spacing-lg;
+
+        :global(.rule--operator) {
+          margin: 0;
+        }
+      }
+
+      :global(.widget--sep) {
+        vertical-align: unset;
+      }
     }
   }
 }

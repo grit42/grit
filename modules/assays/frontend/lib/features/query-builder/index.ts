@@ -37,7 +37,6 @@ export type { BuildGrit42ConfigOptions } from "./config/buildGrit42Config";
 export {
   makeEmptyTree,
   safeLoadTree,
-  toValidJsonTree,
   getTreeFields,
   transformSelectListValues,
 } from "./tree/treeUtils";

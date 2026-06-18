@@ -68,7 +68,8 @@ module Grit
         "date"      => "date",
         "datetime"  => "datetime",
         "timestamp" => "datetime",
-        "boolean"   => "boolean"
+        "boolean"   => "boolean",
+        "entity"    => "integer"
       }.freeze
 
       # Operators that don't carry a value — skip the missing-value guard.

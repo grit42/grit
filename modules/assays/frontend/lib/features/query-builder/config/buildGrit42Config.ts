@@ -16,8 +16,12 @@
  * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import type { Config, Fields } from "@react-awesome-query-builder/ui";
+import type {
+  Config,
+  Fields,
+} from "@react-awesome-query-builder/ui";
 import { Grit42BasicConfig } from "./Grit42BasicConfig";
+import { EntityPropertyDef } from "@grit42/core";
 
 export interface BuildGrit42ConfigOptions {
   /**
@@ -42,15 +46,57 @@ const READ_ONLY_SETTINGS = {
   canRegroup: false,
 } as const;
 
+const PROPERTY_TYPE_TO_QB_TYPE: Record<string, string> = {
+  text: "text",
+  string: "text",
+  numeric: "number",
+  decimal: "number",
+  integer: "number",
+  datetime: "datetime",
+  timestamp: "datetime",
+  date: "date",
+  boolean: "boolean",
+};
+
+/**
+ * Build the RAQB `fields` record for an analysis's filter query from the
+ * data sheet's column definitions. Properties whose type doesn't map to a
+ * supported widget are skipped — adding one is a matter of extending the
+ * map above.
+ */
+export const buildFiltersFields = (properties: EntityPropertyDef[]): Fields => {
+  const fields: Fields = {};
+  for (const property of properties) {
+    if (property.type === "entity" && property.entity) {
+      fields[property.entity.column] = {
+        label: property.display_name,
+        type: "entity",
+        fieldSettings: {
+          entity: property.entity,
+        } as any,
+      };
+      continue;
+    }
+    const type = PROPERTY_TYPE_TO_QB_TYPE[property.type];
+    if (!type) continue;
+    fields[property.name] = {
+      label: property.display_name,
+      type,
+      valueSources: ["value"],
+    };
+  }
+  return fields;
+};
+
 /**
  * Merge a caller-supplied `fields` record into Grit42BasicConfig and return a
  * full RAQB Config. The fields shape is RAQB's own — consumers build it from
  * their domain data.
  */
 export const buildGrit42Config = (
-  fields: Fields,
+  properties: EntityPropertyDef[],
   options: BuildGrit42ConfigOptions = {},
-): Config => {
+) => {
   return {
     ...Grit42BasicConfig,
     settings: {
@@ -58,6 +104,6 @@ export const buildGrit42Config = (
       ...(options.readOnly ? READ_ONLY_SETTINGS : {}),
       ...(options.settingsOverrides ?? {}),
     },
-    fields,
-  } as Config;
+    fields: buildFiltersFields(properties),
+  } as unknown as Config;
 };

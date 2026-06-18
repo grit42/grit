@@ -33,18 +33,6 @@ export const makeEmptyTree = (): JsonGroup =>
   }) as JsonGroup;
 
 /**
- * Coerce arbitrary input into a valid JsonTree, falling back to an empty
- * group when the value isn't a recognisable tree (null, undefined, plain
- * object missing id/type, etc.).
- */
-export const toValidJsonTree = (t: unknown): JsonTree => {
-  if (t && typeof t === "object" && "id" in t && "type" in t) {
-    return t as JsonTree;
-  }
-  return makeEmptyTree();
-};
-
-/**
  * Load anything into an ImmutableTree without throwing — falls back to an
  * empty group on invalid input.
  */

@@ -26,7 +26,8 @@ RSpec.describe Grit::Assays::JsonTreeFilter do
       { name: "score", type: "integer" },
       { name: "ratio", type: "decimal" },
       { name: "started_at", type: "datetime" },
-      { name: "active", type: "boolean" }
+      { name: "active", type: "boolean" },
+      { name: "compound_id", type: "entity" }
     ]
   end
 
@@ -195,6 +196,34 @@ RSpec.describe Grit::Assays::JsonTreeFilter do
       tree = group(children: [ rule(field: "name", operator: "equal", value: [ "x" ]) ])
       sql = described_class.to_sql(tree: tree, properties: props)
       expect(sql).to include("'x'")
+    end
+
+    context "entity type" do
+      it "translates equal to an integer equality check" do
+        tree = group(children: [ rule(field: "compound_id", operator: "equal", value: [ 42 ]) ])
+        sql = described_class.to_sql(tree: tree, properties: properties)
+        expect(sql).to include("= 42")
+        expect(sql).to include("compound_id")
+      end
+
+      it "translates select_any_in to an IN clause" do
+        tree = group(children: [
+          rule(field: "compound_id", operator: "select_any_in", value: [ [ 1, 2, 3 ] ])
+        ])
+        sql = described_class.to_sql(tree: tree, properties: properties)
+        expect(sql).to include("IN (")
+        expect(sql).to include("1").and include("2").and include("3")
+      end
+
+      it "supports is_null and is_not_null on entity fields" do
+        tree = group(children: [
+          rule(field: "compound_id", operator: "is_null", value: nil),
+          rule(field: "compound_id", operator: "is_not_null", value: nil)
+        ])
+        sql = described_class.to_sql(tree: tree, properties: properties)
+        expect(sql).to match(/IS NULL/)
+        expect(sql).to match(/IS NOT NULL/)
+      end
     end
 
     it "tolerates children1 serialised as id-keyed map" do

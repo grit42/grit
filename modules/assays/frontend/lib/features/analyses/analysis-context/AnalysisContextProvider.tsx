@@ -9,7 +9,6 @@ import {
 import AnalysisContext, { AnalysisContextValue } from "./analysisContext";
 import { useExperimentDataSheetRecordColumns } from "../../../queries/experiment_data_sheet_records";
 import { buildGrit42Config, useQueryBuilderState } from "../../query-builder";
-import { buildFiltersFields } from "./buildFiltersFields";
 import { EntityPropertyDef } from "@grit42/core";
 
 const LoadedAnalysisContextProvider = ({
@@ -22,26 +21,22 @@ const LoadedAnalysisContextProvider = ({
   dataSheet: AssayDataSheetDefinitionData;
   properties: EntityPropertyDef[];
 }>) => {
-  const filterFields = useMemo(
-    () => buildFiltersFields(properties),
+  const filterConfig = useMemo(
+    () => buildGrit42Config(properties),
     [properties],
   );
-  const filterConfig = useMemo(
-    () => buildGrit42Config(filterFields),
-    [filterFields],
-  );
-  const { tree, setTree, builderState, setBuilderState } = useQueryBuilderState(
-    {
+
+  const { builderState, setBuilderState, persistableTree, isDirty } =
+    useQueryBuilderState({
       initialTree: analysis.filters,
       config: filterConfig,
-    },
-  );
+    });
 
   const value: AnalysisContextValue = {
     analysis,
     dataSheet,
     properties,
-    filters: { tree, setTree, builderState, setBuilderState },
+    filters: { builderState, setBuilderState, persistableTree, isDirty },
   };
 
   return (
