@@ -16,10 +16,7 @@
  * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import type {
-  Config,
-  Fields,
-} from "@react-awesome-query-builder/ui";
+import type { Config, Fields } from "@react-awesome-query-builder/ui";
 import { Grit42BasicConfig } from "./Grit42BasicConfig";
 import { EntityPropertyDef } from "@grit42/core";
 

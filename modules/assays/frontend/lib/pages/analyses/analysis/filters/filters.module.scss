@@ -1,12 +1,12 @@
 @use "@grit42/client-library/theme.scss";
 
 .container {
-    display: grid;
-    grid-template-rows: min-content 1fr;
-    grid-template-columns: 1fr;
-    gap: theme.$spacing-md;
+  display: grid;
+  grid-template-rows: min-content 1fr;
+  grid-template-columns: 1fr;
+  gap: theme.$spacing-md;
 
-    .button {
-        justify-self: end;
-    }
+  .button {
+    justify-self: end;
+  }
 }

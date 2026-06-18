@@ -24,7 +24,6 @@ import {
   Utils as QbUtils,
 } from "@react-awesome-query-builder/ui";
 
-/** Build an empty AND-group root tree. */
 export const makeEmptyTree = (): JsonGroup =>
   ({
     id: QbUtils.uuid(),
@@ -32,10 +31,6 @@ export const makeEmptyTree = (): JsonGroup =>
     properties: { not: false, conjunction: "AND" },
   }) as JsonGroup;
 
-/**
- * Load anything into an ImmutableTree without throwing — falls back to an
- * empty group on invalid input.
- */
 export const safeLoadTree = (t: unknown): ImmutableTree => {
   try {
     if (t && typeof t === "object" && "id" in t && "type" in t) {
@@ -47,24 +42,6 @@ export const safeLoadTree = (t: unknown): ImmutableTree => {
   return QbUtils.loadTree(makeEmptyTree());
 };
 
-/**
- * Walk a JsonTree and produce a nested array of rule field names. Useful for
- * detecting node-order changes via deep equality.
- */
-export const getTreeFields = (node: JsonTree): unknown => {
-  return (
-    node.children1?.map((c) => {
-      if (c.type === "group") return getTreeFields(c);
-      if (c.type === "rule") return c.properties.field?.toString() ?? "";
-      return "";
-    }) ?? []
-  );
-};
-
-/**
- * Normalise RAQB's ListValues (string[] | number[] | { value, title }[]) into
- * the { value, label } shape used by @grit42/client-library Select.
- */
 export const transformSelectListValues = (
   listValues: ListValues = [],
 ): { value: string; label: string }[] => {

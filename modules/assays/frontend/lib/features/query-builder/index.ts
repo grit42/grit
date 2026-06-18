@@ -16,11 +16,9 @@
  * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
  */
 
-// Component
 export { Grit42QueryBuilder } from "./Grit42QueryBuilder";
 export type { Grit42QueryBuilderProps } from "./Grit42QueryBuilder";
 
-// State hook
 export { useQueryBuilderState } from "./useQueryBuilderState";
 export type {
   QueryBuilderState,
@@ -28,20 +26,16 @@ export type {
   UseQueryBuilderStateReturn,
 } from "./useQueryBuilderState";
 
-// Config helpers
 export { Grit42BasicConfig } from "./config/Grit42BasicConfig";
 export { buildGrit42Config } from "./config/buildGrit42Config";
 export type { BuildGrit42ConfigOptions } from "./config/buildGrit42Config";
 
-// Tree utilities
 export {
   makeEmptyTree,
   safeLoadTree,
-  getTreeFields,
   transformSelectListValues,
 } from "./tree/treeUtils";
 
-// Convenience re-exports of common RAQB types so consumers don't double-import.
 export type {
   Config,
   ImmutableTree,

@@ -26,14 +26,9 @@ module Grit::Assays
     entity_crud_with read: [ "read:system" ], write: [ "write:assays" ]
 
     def self.entity_fields(**args)
-      begin
-        @entity_fields ||= self.entity_fields_from_properties(
-          self.entity_properties.select { |p| [ "experiment_id", "assay_data_sheet_definition_id" ].include?(p[:name]) }
-        )
-      rescue StandardError => e
-        logger.info e.to_s
-      end
-      @entity_fields
+      @entity_fields ||= self.entity_fields_from_properties(
+        self.entity_properties.select { |p| [ "experiment_id", "assay_data_sheet_definition_id" ].include?(p[:name]) }
+      )
     end
   end
 end

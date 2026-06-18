@@ -23,11 +23,6 @@ import {
   Checkbox,
 } from "@grit42/client-library/components";
 
-/**
- * Renders the AND/OR conjunction toggle and the NOT checkbox using Grit42
- * Button/ButtonGroup/Checkbox primitives. Internal to the query-builder
- * module — wired in via Grit42BasicConfig.settings.renderConjs.
- */
 export const Grit42ConjsRender = (props: ConjsProps) => {
   const conjsCount = Object.keys(props.conjunctionOptions ?? []).length;
   const { forceShowConj } = props.config?.settings ?? {};

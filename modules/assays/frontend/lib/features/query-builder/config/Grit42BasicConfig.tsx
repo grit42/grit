@@ -45,18 +45,6 @@ type EntityMultiSelectWidgetProps = MultiSelectWidgetProps & {
   entity: EntityPropertyDef["entity"];
 };
 
-/**
- * Grit42-themed extension of @react-awesome-query-builder/ui BasicConfig:
- * - Replaces text/datetime/number/select/multiselect widgets with
- *   @grit42/client-library Input and Select.
- * - Overrides renderField / renderOperator / renderButton / renderButtonGroup
- *   / renderConjs to use the Grit42 button and select primitives.
- * - Disables RAQB's "removeEmpty / removeIncomplete on load" defaults so a
- *   draft tree round-trips cleanly through persistence.
- *
- * Consumers should not use this directly when they need fields configured —
- * call buildGrit42Config(fields, options) instead.
- */
 export const Grit42BasicConfig = {
   ...BasicConfig,
   widgets: {
@@ -176,7 +164,6 @@ export const Grit42BasicConfig = {
       defaultOperator: "equal",
       widgets: {
         entity: {
-
           operators: ["equal", "not_equal", "is_null", "is_not_null"],
         },
         entity_multiselect: {

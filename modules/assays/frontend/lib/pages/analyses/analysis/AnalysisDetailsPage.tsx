@@ -24,14 +24,7 @@ const AnalysisDetailsPage = () => {
       </ErrorPage>
     );
   return (
-    <CenteredSurface
-      style={{
-        display: "grid",
-        gridTemplateColumns: "1fr",
-        gridAutoRows: "max-content",
-        gap: "var(--spacing)",
-      }}
-    >
+    <CenteredSurface>
       <AnalysisForm analysis={data} />
     </CenteredSurface>
   );

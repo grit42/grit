@@ -124,9 +124,11 @@ const AnalysisForm = ({ analysis }: { analysis: Partial<AnalysisData> }) => {
           cancelLabel={analysis.id ? "Back" : "Cancel"}
           onCancel={() => navigate(analysis.id ? "../.." : "../details")}
         >
-          <Button onClick={() => navigate("../clone")} color="secondary">
-            Clone
-          </Button>
+          {analysis.id && (
+            <Button onClick={() => navigate("../clone")} color="secondary">
+              Clone
+            </Button>
+          )}
         </FormControls>
       </Form>
     </>

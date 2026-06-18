@@ -2,12 +2,7 @@ Grit::Assays::Engine.routes.draw do
   resources :analysis_experiments
   resources :analyses do
     resources :analysis_records, only: :index
-    resources :analysis_experiments, only: [ :index, :create, :destroy ] do
-      collection do
-        post :create_bulk
-        delete :destroy_bulk
-      end
-    end
+    resources :analysis_experiments, only: [ :index, :create, :destroy ]
   end
   resources :experiment_metadata_templates
   resources :experiment_metadata
