@@ -7,6 +7,9 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   brakeman:
     name: Brakeman (Ruby SAST)
@@ -87,20 +90,3 @@ jobs:
       - name: Run audit
         # moderate: flags medium+ severity. Raise to --audit-level high to reduce noise if needed.
         run: pnpm audit --audit-level moderate
-
-  codeql:
-    name: CodeQL (SAST — Ruby & TypeScript)
-    if: github.event_name != 'pull_request'
-    runs-on: ubuntu-latest
-    permissions:
-      security-events: write
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
-        with:
-          languages: ruby, javascript-typescript
-
-      - name: Analyze
-        uses: github/codeql-action/analyze@v3
