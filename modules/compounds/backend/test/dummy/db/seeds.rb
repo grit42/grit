@@ -1,5 +1,6 @@
 Grit::Core::Engine.load_seed
 Grit::Compounds::Engine.load_seed
+Grit::Assays::Engine.load_seed
 
 read_role_id = Grit::Core::Role.find_by(name: "Read").id
 analyse_role_id = Grit::Core::Role.find_by(name: "Analyse").id
