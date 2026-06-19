@@ -25,7 +25,7 @@ module Grit::Assays
                     analaysis_experiments_table = self.connection.quote_table_name(Grit::Assays::AnalysisExperiment.table_name)
                     records_table = self.connection.quote_table_name(self.table_name)
                     query = self.published(params)
-                    if Grit::Assays::AnalysisExperiment.where(analysis_id: @analysis_id).count.positive?
+                    if Grit::Assays::AnalysisExperiment.where(analysis_id: @analysis.id).count.positive?
                         query = query.joins(
                             "JOIN #{analaysis_experiments_table} on #{analaysis_experiments_table}.experiment_id = #{records_table}.experiment_id"
                         )
