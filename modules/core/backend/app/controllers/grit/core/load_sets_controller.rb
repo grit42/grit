@@ -132,8 +132,7 @@ module Grit::Core
           end
         end
 
-        Zeitwerk::Loader.eager_load_namespace(Grit)
-        klass = ActiveRecord::Base.descendants.find { |m| m.include?(Grit::Core::GritEntityRecord) && m.name == entity }
+        klass = Grit::Core::EntityMapper.find_entity_class(entity)
         if klass.nil?
           render json: { success: false, errors: "Unknown entity" }, status: :bad_request
           return
@@ -149,8 +148,7 @@ module Grit::Core
           entity = Grit::Core::LoadSet.find(params[:id]).entity
         end
 
-        Zeitwerk::Loader.eager_load_namespace(Grit)
-        klass = ActiveRecord::Base.descendants.find { |m| m.include?(Grit::Core::GritEntityRecord) && m.name == entity }
+        klass = Grit::Core::EntityMapper.find_entity_class(entity)
         if klass.nil?
           render json: { success: false, errors: "Unknown entity" }, status: :bad_request
           return
