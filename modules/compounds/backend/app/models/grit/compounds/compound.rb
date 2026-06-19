@@ -85,7 +85,7 @@ module Grit::Compounds
         end
 
         Grit::Compounds::CompoundProperty.where(compound_type_id: [ compound.compound_type_id, nil ]).each do |prop|
-          if !params[prop.safe_name].nil?
+          if !params[prop.safe_name].nil? && !params[prop.safe_name].blank?
             prop_value = Grit::Compounds::CompoundPropertyValue.new(
               compound_id: compound.id,
               compound_property_id: prop.id,
@@ -258,7 +258,7 @@ module Grit::Compounds
             filter_value
           ]))
       elsif [ "like", "contains", "regexp" ].include?(name_filter["operator"]) then
-          filter_value.gsub!("_", '\\_') # Take _ literal
+          filter_value = ActiveRecord::Base.sanitize_sql_like(filter_value)
           filter_value.gsub!("*", "%") # Use * as wildcard
           filter_value.gsub!(".", "_") # Use . as wildcard
           wildcards = %w[% _]

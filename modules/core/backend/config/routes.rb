@@ -65,7 +65,6 @@ Grit::Core::Engine.routes.draw do
   resources_with_export :countries
   resources :user_roles
   resources :users
-  resources :user_statuses
   resources :permissions
   resources :role_permissions
   resources :roles do

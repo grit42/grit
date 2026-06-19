@@ -243,14 +243,21 @@ module Grit::Core
       end
 
       def check_read
-        render json: { success: false }, status: :bad_request if params[:id].blank? && params[:load_set_id].blank? && params[:entity].blank?
+        if params[:id].blank? && params[:load_set_id].blank? && params[:entity].blank?
+          render json: { success: false, errors: "'entity' not specified" }, status: :bad_request
+          return
+        end
         entity = params[:entity]
         if entity.blank? && params[:id].present?
           entity = Grit::Core::LoadSetBlock.find(params[:id]).load_set.entity
         elsif entity.blank? && params[:load_set_id].present?
           entity = Grit::Core::LoadSet.find(params[:load_set_id]).entity
         end
-        klass = entity.constantize
+        klass = Grit::Core::EntityMapper.find_entity_class(entity)
+        if klass.nil?
+          render json: { success: false, errors: "Unknown entity" }, status: :bad_request
+          return
+        end
         render json: { success: false, errors: "You do not have the permissions required to read Grit::Core::LoadSetBlock for entity #{entity}" }, status: :forbidden  if klass.entity_crud[:read].nil? or !current_user.permission?(klass.entity_crud[:read])
       rescue ActiveRecord::RecordNotFound
         render json: { success: false, errors: "Not found" }, status: :not_found
@@ -264,7 +271,11 @@ module Grit::Core
         elsif entity.blank? && params[:load_set_id].present?
           Grit::Core::LoadSet.find(params[:load_set_id]).entity
         end
-        klass = entity.constantize
+        klass = Grit::Core::EntityMapper.find_entity_class(entity)
+        if klass.nil?
+          render json: { success: false, errors: "Unknown entity" }, status: :bad_request
+          return
+        end
         render json: { success: false, errors: "You do not have the permissions required to write Grit::Core::LoadSetBlock for entity #{entity}" }, status: :forbidden  if klass.entity_crud[:write].nil? or !current_user.permission?(klass.entity_crud[:write])
       rescue ActiveRecord::RecordNotFound
         render json: { success: false, errors: "Not found" }, status: :not_found

@@ -1,7 +1,29 @@
-# This file should ensure the existence of records required to run the application in every environment (production,
-# development, test). The code here should be idempotent so that it can be executed at any point in every environment.
-# The data can then be loaded with the bin/rails db:seed command (or created alongside the database with db:setup).
+def load_engine_seed(engine, seeded)
+  unless seeded.include? engine
+    puts "Seeding #{engine.name}"
+    engine.load_seed
+    seeded = [ *seeded, engine ]
+  end
+  seeded
+end
 
-Grit::Core::Engine.load_seed
-Grit::Compounds::Engine.load_seed
-Grit::Assays::Engine.load_seed
+def seed_engine_prerequisites(engine, seeded)
+  engine.seeds[:prerequisites]&.each do |e|
+    unless seeded.include? e
+      seeded = [ *seed(e, seeded) ]
+    end
+  end
+  seeded
+end
+
+def seed(engine, seeded)
+  seeded = seed_engine_prerequisites(engine, seeded)
+  seeded = load_engine_seed(engine, seeded)
+end
+
+seeded = []
+Rails::Engine.descendants.each do |engine|
+  if engine.respond_to?(:seeds) && engine.seeds[:auto_seed]
+    seeded = seed(engine, seeded)
+  end
+end

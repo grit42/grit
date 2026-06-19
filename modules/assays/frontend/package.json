@@ -39,8 +39,8 @@
     "@grit42/plots": "workspace:*",
     "@grit42/spreadsheet": "workspace:*",
     "@grit42/table": "workspace:*",
-    "openchemlib": "8.18.1",
-    "react-ocl": "7.0.2",
+    "lodash": "^4.17.21",
+    "mathjs": "15.2.0",
     "zod": "catalog:"
   },
   "peerDependencies": {
@@ -51,6 +51,7 @@
   "devDependencies": {
     "@eslint/js": "catalog:",
     "@playwright/test": "catalog:",
+    "@types/lodash": "^4.17.0",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

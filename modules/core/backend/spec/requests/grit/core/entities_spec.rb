@@ -72,6 +72,19 @@ RSpec.describe "Entities API — allow-list security", type: :request do
     end
   end
 
+  describe "response shape — klass not exposed" do
+    it "index does not include a klass key in any entity entry" do
+      get "/api/grit/core/entities", as: :json
+      entities = JSON.parse(response.body)["data"]
+      entities.each { |e| expect(e).not_to have_key("klass") }
+    end
+
+    it "show does not include a klass key" do
+      get "/api/grit/core/entities/Grit::Core::Country", as: :json
+      expect(JSON.parse(response.body)["data"]).not_to have_key("klass")
+    end
+  end
+
   # Regression for commit f3b5a03 — LoadSet and LoadSetBlock included
   # GritEntityRecord but never called entity_crud_with, leaving entity_crud[:read]
   # nil. The authorized_entity guard treats nil read as forbidden (403).
