@@ -1,6 +1,6 @@
 # This migration comes from active_storage (originally 20170806125915)
 class CreateActiveStorageTables < ActiveRecord::Migration[7.0]
-  def up
+  def change
     # Use Active Record's configured type for primary and foreign keys
     primary_key_type, foreign_key_type = primary_and_foreign_key_types
 
@@ -50,12 +50,6 @@ class CreateActiveStorageTables < ActiveRecord::Migration[7.0]
         t.foreign_key :active_storage_blobs, column: :blob_id
       end
     end
-  end
-
-  def down
-    drop_table :active_storage_variant_records if table_exists?(:active_storage_variant_records)
-    drop_table :active_storage_attachments     if table_exists?(:active_storage_attachments)
-    drop_table :active_storage_blobs           if table_exists?(:active_storage_blobs)
   end
 
   private
