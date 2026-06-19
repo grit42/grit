@@ -4101,6 +4101,9 @@ packages:
   compare-versions@6.1.1:
     resolution: {integrity: sha512-4hm4VPpIecmlg59CHXnRDnqGplJFrbLG4aFEl5vl6cK1u76ws3LLvX7ikFnTDl5vo39sjWD6AaDPYodJp/NNHg==}
 
+  complex.js@2.4.3:
+    resolution: {integrity: sha512-UrQVSUur14tNX6tiP4y8T4w4FeJAX3bi2cIv0pu/DTLFNxoq7z2Yh83Vfzztj6Px3X/lubqQ9IrPp7Bpn6p4MQ==}
+
   concat-stream@1.6.2:
     resolution: {integrity: sha512-27HBghJxjiZtIk3Ycvn/4kbJk/1uZuJFfuPEns6LaEvpvG1f0hTea8lilrouyo9mVc2GWdcEZ8OLoGmSADlrCw==}
     engines: {'0': node >= 0.8}
@@ -9950,8 +9953,8 @@ snapshots:
   '@xhmikosr/decompress-tar@9.0.1':
     dependencies:
       file-type: 22.0.1
-      is-stream: 2.0.1
-      tar-stream: 3.2.0
+      is-stream: 4.0.1
+      tar-stream: 3.1.7
     transitivePeerDependencies:
       - bare-abort-controller
       - react-native-b4a
@@ -9959,9 +9962,9 @@ snapshots:
 
   '@xhmikosr/decompress-tarbz2@9.0.2':
     dependencies:
-      '@xhmikosr/decompress-tar': 8.1.0
+      '@xhmikosr/decompress-tar': 9.0.1
       file-type: 22.0.1
-      is-stream: 2.0.1
+      is-stream: 4.0.1
       seek-bzip: 2.0.0
       unbzip2-stream: 1.4.3
     transitivePeerDependencies:
@@ -9971,9 +9974,9 @@ snapshots:
 
   '@xhmikosr/decompress-targz@9.0.1':
     dependencies:
-      '@xhmikosr/decompress-tar': 8.1.0
+      '@xhmikosr/decompress-tar': 9.0.1
       file-type: 22.0.1
-      is-stream: 2.0.1
+      is-stream: 4.0.1
     transitivePeerDependencies:
       - bare-abort-controller
       - react-native-b4a
@@ -9982,8 +9985,8 @@ snapshots:
   '@xhmikosr/decompress-unzip@8.2.1':
     dependencies:
       file-type: 22.0.1
-      get-stream: 6.0.1
-      yauzl: 3.3.2
+      get-stream: 9.0.1
+      yauzl: 3.4.0
     transitivePeerDependencies:
       - supports-color
 
@@ -10007,9 +10010,8 @@ snapshots:
       content-disposition: 2.0.1
       ext-name: 5.0.0
       file-type: 22.0.1
-      filenamify: 6.0.0
-      get-stream: 6.0.1
-      got: 13.0.0
+      filenamify: 7.0.1
+      got: 14.6.6
     transitivePeerDependencies:
       - bare-abort-controller
       - react-native-b4a
@@ -10491,6 +10493,8 @@ snapshots:
   comment-parser@1.4.7: {}
 
   compare-versions@6.1.1: {}
+
+  complex.js@2.4.3: {}
 
   concat-stream@1.6.2:
     dependencies:
@@ -12050,7 +12054,7 @@ snapshots:
       cssstyle: 4.6.0
       data-urls: 5.0.0
       decimal.js: 10.6.0
-      form-data: 4.0.5
+      form-data: 4.0.6
       html-encoding-sniffer: 4.0.0
       http-proxy-agent: 7.0.2
       https-proxy-agent: 7.0.6
