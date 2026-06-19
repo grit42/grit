@@ -21,12 +21,21 @@ module Grit::Core
     @table_to_model_name = nil
     @model_to_table_name = nil
 
-    def self.discover
+    def self.grit_entity_classes
       Zeitwerk::Loader.eager_load_namespace(Grit)
+      ActiveRecord::Base.descendants.select do |m|
+        m.include?(Grit::Core::GritEntityRecord) && !m.name.blank?
+      end
+    end
+
+    def self.find_entity_class(name)
+      grit_entity_classes.find { |m| m.name == name }
+    end
+
+    def self.discover
       @table_to_model_name = {}
       @model_to_table_name = {}
-      ActiveRecord::Base.descendants.each do |model|
-        next unless model.include?(Grit::Core::GritEntityRecord)
+      grit_entity_classes.each do |model|
         @table_to_model_name[model.table_name] = model.name
         @model_to_table_name[model.name] = model.table_name
       end
