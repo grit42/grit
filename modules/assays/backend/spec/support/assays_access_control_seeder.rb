@@ -16,11 +16,16 @@ module AssaysAccessControlSeeder
       p.description = "Can admin assay models and metadata"
       p.provides_permissions = [ core[:permissions][:read_system].id, write_assays.id ]
     end
+    write_analysis = Grit::Core::Permission.find_or_create_by!(name: "write:analysis") do |p|
+      p.description = "Can create, modify and delete analyses"
+      p.provides_permissions = [ core[:permissions][:read_system].id ]
+    end
 
     Grit::Core::RolePermission.find_or_create_by!(role: core[:roles][:write], permission: write_assays)
     Grit::Core::RolePermission.find_or_create_by!(role: core[:roles][:manage], permission: admin_assays)
     Grit::Core::RolePermission.find_or_create_by!(role: core[:roles][:administrator], permission: admin_assays)
+    Grit::Core::RolePermission.find_or_create_by!(role: core[:roles][:administrator], permission: write_analysis)
 
-    { core: core, permissions: { write_assays: write_assays, admin_assays: admin_assays } }
+    { core: core, permissions: { write_assays: write_assays, admin_assays: admin_assays, write_analysis: write_analysis } }
   end
 end

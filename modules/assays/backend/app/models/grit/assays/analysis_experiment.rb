@@ -2,8 +2,6 @@ module Grit::Assays
   class AnalysisExperiment < ApplicationRecord
     include Grit::Core::GritEntityRecord
 
-    display_column "name"
-
     entity_crud_with read: [ "read:system" ], write: [ "write:analysis" ]
 
     belongs_to :analysis

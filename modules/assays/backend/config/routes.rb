@@ -1,5 +1,4 @@
 Grit::Assays::Engine.routes.draw do
-  resources :analysis_experiments
   resources :analyses do
     resources :analysis_records, only: :index
     resources :analysis_experiments, only: [ :index, :create, :destroy ]
