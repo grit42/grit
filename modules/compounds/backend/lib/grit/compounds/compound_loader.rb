@@ -164,13 +164,14 @@ module Grit::Compounds
 
     def self.block_mapping_fields(load_set_block)
       compound_load_set_block = Grit::Compounds::CompoundLoadSetBlock.find_by(load_set_block_id: load_set_block.id)
-      Grit::Compounds::Compound.entity_fields(compound_type_id: compound_load_set_block.compound_type_id).filter { |f| ![ "compound_type_id", "molweight", "logp", "molformula", "number" ].include?(f[:name]) }
+      Grit::Compounds::Compound.entity_fields(compound_type_id: compound_load_set_block.compound_type_id)
+        .filter { |f| ![ "compound_type_id", "molweight", "logp", "molformula", "number", "smiles", "inchi", "inchikey", "hba", "hbd" ].include?(f[:name]) }
     end
 
     def self.block_loading_fields(load_set_block)
       compound_load_set_block = Grit::Compounds::CompoundLoadSetBlock.find_by(load_set_block_id: load_set_block.id)
       Grit::Compounds::Compound.entity_fields(compound_type_id: compound_load_set_block.compound_type_id)
-        .filter { |f| ![ "molweight", "logp", "molformula", "number" ].include?(f[:name]) }
+        .filter { |f| ![ "molweight", "logp", "molformula", "number", "smiles", "inchi", "inchikey", "hba", "hbd" ].include?(f[:name]) }
         .map { |f| f[:type] == "mol" ? { **f, type: "text" } : f }
     end
 
