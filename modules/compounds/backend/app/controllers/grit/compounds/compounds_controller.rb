@@ -21,56 +21,14 @@ module Grit::Compounds
     include Grit::Core::GritEntityController
 
     def create
-      ActiveRecord::Base.transaction do
-        permitted_params = params.permit(self.permitted_params)
-        @record = Grit::Compounds::Compound.new(permitted_params)
+      structure_format = params[:structure_format] || "molfile"
+      result = Grit::Compounds::Compound.create(params, structure_format)
 
-        if !@record.save
-          render json: { success: false, errors: @record.errors }, status: :unprocessable_entity
-          return
-        end
-
-        unless params[:molecule].nil?
-          molecule_id = Grit::Compounds::Molecule.by_molfile(params[:molecule])&.id
-          if molecule_id.nil?
-            molecule_record = Grit::Compounds::Molecule.new({
-              molfile: params[:molecule]
-            })
-            if !molecule_record.save
-              render json: { success: false, errors: molecule_record.errors }, status: :unprocessable_entity
-              return
-            end
-            molecule_id = molecule_record.id
-          end
-          molecule_compound_record = Grit::Compounds::MoleculesCompound.new({
-            molecule_id: molecule_id,
-            compound_id: @record.id
-          })
-          if !molecule_compound_record.save
-            render json: { success: false, errors: molecule_compound_record.errors }, status: :unprocessable_entity
-            return
-          end
-        end
-
-        Grit::Compounds::CompoundProperty.where(compound_type_id: [ @record.compound_type_id, nil ]).each do |prop|
-          if !params[prop.safe_name].nil? && !params[prop.safe_name].blank?
-            prop_value = Grit::Compounds::CompoundPropertyValue.new(
-              compound_id: @record.id,
-              compound_property_id: prop.id,
-            )
-            if prop.data_type.is_entity
-              prop_value.entity_id_value = params[prop.safe_name]
-            else
-              prop_value["#{prop.data_type.name}_value"] = params[prop.safe_name]
-            end
-            prop_value.save!
-          end
-        end
-
-        scope = get_scope(params[:scope] || "detailed", params)
-        @record = scope.find(@record.id)
-        render json: { success: true, data: @record }, status: :created, location: @record
-      end
+      scope = get_scope(params[:scope] || "detailed", params)
+      @record = scope.find(result[:compound_id])
+      render json: { success: true, data: @record }, status: :created, location: @record
+    rescue ActiveRecord::RecordInvalid => e
+      render json: { success: false, errors: e.record.errors }, status: :unprocessable_entity
     rescue StandardError => e
       render json: { success: false, errors: e.to_s }, status: :internal_server_error
     end

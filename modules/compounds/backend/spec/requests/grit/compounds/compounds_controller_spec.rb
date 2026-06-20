@@ -61,6 +61,23 @@ RSpec.describe Grit::Compounds::CompoundsController, type: :request do
 
       expect(response).to have_http_status(:created)
     end
+
+    it "creates compound with a molecule from a SMILES structure" do
+      expect {
+        post "/api/grit/compounds/compounds",
+             params: {
+               name: "five",
+               origin_id: origin.id,
+               compound_type_id: compound_type.id,
+               structure_format: "smiles",
+               molecule: "CCCCC"
+             },
+             as: :json
+      }.to change(Grit::Compounds::Molecule, :count).by(1)
+        .and change(Grit::Compounds::MoleculesCompound, :count).by(1)
+
+      expect(response).to have_http_status(:created)
+    end
   end
 
   describe "GET /api/grit/compounds/compounds/:id" do
@@ -155,6 +172,41 @@ RSpec.describe Grit::Compounds::CompoundsController, type: :request do
         before { login_as(admin) }
         run_test!
       end
+    end
+  end
+
+  describe "LIKE filter — literal % character (Fix #2)" do
+    let!(:compound_without_percent) do
+      create(:grit_compounds_compound, name: "discount50",
+             origin: origin, compound_type: compound_type)
+    end
+    let!(:compound_with_percent) do
+      create(:grit_compounds_compound, name: "discount50%",
+             origin: origin, compound_type: compound_type)
+    end
+
+    it "contains: returns only the record whose name literally contains '50%'" do
+      filter = ActiveSupport::JSON.encode([
+        { type: "string", operator: "contains", property: "name", value: "50%" }
+      ])
+      get "/api/grit/compounds/compounds", params: "filter=#{URI.encode_uri_component(filter)}"
+
+      expect(response).to have_http_status(:success)
+      names = JSON.parse(response.body)["data"].map { |r| r["name"] }
+      expect(names).to include("discount50%")
+      expect(names).not_to include("discount50")
+    end
+
+    it "like: treats % in the value as a literal character, not a wildcard" do
+      filter = ActiveSupport::JSON.encode([
+        { type: "string", operator: "like", property: "name", value: "discount50%" }
+      ])
+      get "/api/grit/compounds/compounds", params: "filter=#{URI.encode_uri_component(filter)}"
+
+      expect(response).to have_http_status(:success)
+      names = JSON.parse(response.body)["data"].map { |r| r["name"] }
+      expect(names).to include("discount50%")
+      expect(names).not_to include("discount50")
     end
   end
 

@@ -78,11 +78,6 @@ module Grit::Assays
       experiment_data_sheet_record_klass.entity_fields(with_experiment_id: true)
     end
 
-    def self.loaded_data_columns(load_set)
-      record_load_set = Grit::Assays::ExperimentDataSheetRecordLoadSet.find_by(load_set_id: load_set.id)
-      Grit::Assays::ExperimentDataSheetRecord.sheet_record_klass(record_load_set.assay_data_sheet_definition_id).entity_columns.filter { |f| f[:name] != "experiment_id" }
-    end
-
     def self.block_entity(load_set_block)
       experiment_data_sheet_record_load_set_block = Grit::Assays::ExperimentDataSheetRecordLoadSetBlock.find_by(load_set_block_id: load_set_block.id)
       experiment_data_sheet_record_klass = experiment_data_sheet_record_load_set_block.assay_data_sheet_definition.sheet_record_klass

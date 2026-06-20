@@ -1,72 +1,30 @@
-import { CheckboxGroup, Select } from "@grit42/client-library/components";
-import { useMemo } from "react";
+import { Select } from "@grit42/client-library/components";
 import { BoxPlotDefinition, SourceDataProperties } from "../types";
 import { getBoxPlotTitle } from "./utils";
-import { AxisType } from "plotly.js";
+import { PropertyOption, usePropertiesOptions } from "../utils";
+import AxesTypeSettings from "../PlotBase/AxisTypeSettings";
+import BaseSettings from "../PlotBase/BaseSettings";
 
 const BoxPlotSettings = ({
   plot,
-  yAxisProperties,
-  groupByProperties,
+  properties,
   onChange,
 }: {
   plot: BoxPlotDefinition;
-  yAxisProperties: SourceDataProperties;
-  groupByProperties: SourceDataProperties;
+  properties: SourceDataProperties;
   onChange: (plot: BoxPlotDefinition) => void;
 }) => {
-  const axisOptions = useMemo(
-    () =>
-      yAxisProperties.map(({ name, display_name }) => ({
-        label: display_name,
-        value: name,
-        id: name,
-      })),
-    [yAxisProperties],
-  );
+  const axisOptions = usePropertiesOptions(properties);
 
-  const groupByOptions = useMemo(
-    () =>
-      groupByProperties.map(({ name, display_name }) => ({
-        label: display_name,
-        value: name,
-        id: name,
-      })),
-    [groupByProperties],
-  );
-
-  const onYAxisKeyChange = (key: string) => {
-    const axisProperty = yAxisProperties.find(({ name }) => name === key);
+  const onYAxisKeyChange = (key: string, option: PropertyOption) => {
     onChange({
       ...plot,
       y: {
         ...plot.y,
         key,
-        label: axisProperty?.display_name ?? axisProperty?.name ?? key,
+        label: option.label ?? key,
       },
-      title: getBoxPlotTitle(
-        key,
-        plot.groupBy ?? [],
-        yAxisProperties,
-        groupByProperties,
-      ),
-    });
-  };
-
-  const onAxisTypeChange = (axisType: AxisType) => {
-    onChange({ ...plot, y: { ...plot.y, axisType } });
-  };
-
-  const onGroupByChange = (groupBy: string[]) => {
-    onChange({
-      ...plot,
-      groupBy,
-      title: getBoxPlotTitle(
-        plot.y.key,
-        groupBy,
-        yAxisProperties,
-        groupByProperties,
-      ),
+      title: getBoxPlotTitle(key, plot.groupBy ?? [], properties),
     });
   };
 
@@ -78,27 +36,8 @@ const BoxPlotSettings = ({
         value={plot.y.key}
         onChange={onYAxisKeyChange}
       />
-      <Select
-        label="Y axis type"
-        options={[
-          {
-            value: "linear",
-            label: "Linear",
-          },
-          {
-            value: "log",
-            label: "Log",
-          },
-        ]}
-        value={plot.y.axisType}
-        onChange={onAxisTypeChange}
-      />
-      <CheckboxGroup
-        label="Group by"
-        options={groupByOptions}
-        value={plot.groupBy}
-        onChange={onGroupByChange}
-      ></CheckboxGroup>
+      <AxesTypeSettings axes="y" plot={plot} onChange={onChange} />
+      <BaseSettings plot={plot} properties={properties} onChange={onChange} />
     </>
   );
 };

@@ -564,6 +564,19 @@ RSpec.describe "Load Set Blocks API", type: :request do
     end
   end
 
+  describe "entity allow-list" do
+    it "returns 400 on fields when entity is not a GritEntityRecord class" do
+      get "/api/grit/core/load_set_blocks/fields", params: { entity: "Kernel" }
+      expect(response).to have_http_status(:bad_request)
+      expect(JSON.parse(response.body)["errors"]).to eq("Unknown entity")
+    end
+
+    it "returns 400 on fields for a made-up class name" do
+      get "/api/grit/core/load_set_blocks/fields", params: { entity: "Totally::Fake" }
+      expect(response).to have_http_status(:bad_request)
+    end
+  end
+
   describe "SQL injection prevention" do
     before { login_as(admin) }
 

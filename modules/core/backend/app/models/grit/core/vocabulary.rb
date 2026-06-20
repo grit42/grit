@@ -30,7 +30,7 @@ module Grit::Core
     entity_crud_with read: [ "read:system" ], write: [ "admin:vocabularies" ]
 
     def data_type
-      @data_type ||= Grit::Core::DataType.unscoped.find_by("meta->'vocabulary_id' = ?", self.id)
+      @data_type ||= Grit::Core::DataType.unscoped.find_by("(meta->>'vocabulary_id')::integer = ?", self.id)
     end
 
     def self.maintain_data_types

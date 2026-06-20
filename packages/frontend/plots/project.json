@@ -1,0 +1,12 @@
+{
+  "targets": {
+    "dev": {
+      "dependsOn": [
+        {
+          "dependencies": true,
+          "target": "build"
+        }
+      ]
+    }
+  }
+}
