@@ -110,6 +110,7 @@ overrides:
   form-data: '>=4.0.6'
   file-type: '>=21.3.1'
   js-yaml: '>=4.1.2'
+  piscina: '>=4.9.3'
 
 importers:
 
@@ -5955,8 +5956,9 @@ packages:
     resolution: {integrity: sha512-TfySrs/5nm8fQJDcBDuUng3VOUKsd7S+zqvbOTiGXHfxX4wK31ard+hoNuvkicM/2YFzlpDgABOevKSsB4G/FA==}
     engines: {node: '>= 6'}
 
-  piscina@4.9.2:
-    resolution: {integrity: sha512-Fq0FERJWFEUpB4eSY59wSNwXD4RYqR+nR/WiEVcZW8IWfVBxJJafcgTEZDQo8k3w0sUarJ8RyVbbUF4GQ2LGbQ==}
+  piscina@5.2.0:
+    resolution: {integrity: sha512-DszUCKeVN/5G5QKo6jAVHL8fmKnkJvQ0ACiVgY7YGCq3TUB2oznAOayvZPIAdEThvhczkXR+qm3IHsNXpFCYfA==}
+    engines: {node: '>=20.x'}
 
   pkg-dir@4.2.0:
     resolution: {integrity: sha512-HRDzbaKjC+AOWVXxAU/x54COGeIv9eb+6CkDSQoNTt4XyWoIJvuPsXizxu/Fr23EiekbtZwmh1IcIG/l/a10GQ==}
@@ -9324,7 +9326,7 @@ snapshots:
       '@xhmikosr/bin-wrapper': 14.3.0
       commander: 8.3.0
       minimatch: 10.2.5
-      piscina: 4.9.2
+      piscina: 5.2.0
       semver: 7.8.1
       slash: 3.0.0
       source-map: 0.7.6
@@ -12656,7 +12658,7 @@ snapshots:
 
   pirates@4.0.7: {}
 
-  piscina@4.9.2:
+  piscina@5.2.0:
     optionalDependencies:
       '@napi-rs/nice': 1.1.1
 

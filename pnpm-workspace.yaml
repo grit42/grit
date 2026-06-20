@@ -5,6 +5,7 @@ overrides:
   form-data: ">=4.0.6"
   file-type: ">=21.3.1"
   js-yaml: ">=4.1.2"
+  piscina: ">=4.9.3"
 
 packages:
   - apps/grit/client
