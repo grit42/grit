@@ -20,10 +20,10 @@ import { Spinner } from "@grit42/client-library/components";
 import { useSession } from "../../../features/auth";
 import styles from "./appShell.module.scss";
 import { classnames } from "@grit42/client-library/utils";
-import Header from "../Header";
+import Header from "./Header";
 import { Outlet } from "react-router-dom";
-import { Toolbar } from "../../../features/toolbar";
 import { NavItem } from "../../navigation";
+import Navbar from "./Navbar";
 
 interface AppShellProps {
   navItems: NavItem[];
@@ -35,7 +35,7 @@ const AppShell = ({ navItems }: React.PropsWithChildren<AppShellProps>) => {
   if (isLoading && !session) {
     return (
       <main
-        id="app-shell"
+        id="app-body"
         className={classnames(styles.appContainer, styles.loading)}
       >
         <Spinner />
@@ -43,20 +43,19 @@ const AppShell = ({ navItems }: React.PropsWithChildren<AppShellProps>) => {
     );
   }
 
+  if (!session) {
+    return (
+      <main id="app-body" className={styles.appBodyContainer}>
+        <Outlet />
+      </main>
+    );
+  }
+
   return (
-    <div
-      className={classnames(styles.appContainer, {
-        [styles.withHeader]: !!session,
-      })}
-    >
-      <Header navItems={navItems} />
-      {session && <Toolbar />}
-      <main
-        id="app-shell"
-        className={classnames(styles.appBodyContainer, {
-          [styles.withPadding]: !!session,
-        })}
-      >
+    <div className={styles.authenticatedAppContainer}>
+      <Navbar navItems={navItems} />
+      <Header />
+      <main id="app-body" className={styles.appBodyContainer}>
         <Outlet />
       </main>
     </div>

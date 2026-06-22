@@ -1,0 +1,69 @@
+@use "@grit42/client-library/theme.scss";
+
+$navigation-switch-width: 1124px;
+$navigation-height: 4.5em;
+
+$header-background: #04040c;
+$dark-secondary-main: #f8eb5f;
+$dark-contrast-text: #eee;
+$header-inactive-link: #a4a4a6;
+
+.topbar {
+  background-color: theme.$palette-background-surface;
+
+  display: flex;
+  align-items: center;
+  gap: theme.$spacing-lg;
+  padding: theme.$spacing-sm;
+  padding-inline: theme.$spacing-lg;
+  border-block-end: 1px solid
+    rgb(from theme.$palette-background-contrast-text r g b / 0.1);
+}
+
+.sidebarToggle {
+  padding-block: theme.$spacing-sm;
+  svg {
+    fill: $dark-contrast-text;
+    height: 24px;
+  }
+}
+
+.breadcrumbs {
+  flex: 1;
+  display: flex;
+  gap: theme.$spacing;
+  align-items: center;
+}
+
+.gritLogo {
+  height: calc($navigation-height - 2em);
+  fill: $dark-secondary-main;
+}
+
+.right {
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  gap: 2em;
+  margin-left: auto;
+
+  .marvinIcon {
+    height: calc($navigation-height - 1.5em);
+    fill: $dark-secondary-main !important;
+  }
+}
+
+.profile {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75em;
+}
+
+.username {
+  color: $dark-contrast-text !important;
+  text-transform: capitalize;
+  font-size: calc($navigation-height / 4.5);
+  white-space: nowrap;
+}

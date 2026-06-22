@@ -2,7 +2,7 @@ import { Spinner } from "@grit42/client-library/components";
 import { Suspense } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { useModules, useNavItems } from "./modules";
-import { AppShell } from "./components";
+import { AppShell } from "./shell";
 import UnauthorizedPage from "./pages/unauthorized";
 
 const Router = () => {

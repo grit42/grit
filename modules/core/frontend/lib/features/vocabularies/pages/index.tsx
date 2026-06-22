@@ -19,8 +19,16 @@
 import { Outlet, Route, Routes } from "react-router-dom";
 import Vocabularies from "./vocabularies";
 import Vocabulary from "./vocabulary";
+import { useBreadcrumbs } from "../../../app/shell/AppShell/AppShellContext";
+import { useEffect } from "react";
 
 const VocabulariesTab = () => {
+  const { register } = useBreadcrumbs();
+
+  useEffect(() => {
+    return register([{ label: "Vocabularies", url: "/core/vocabularies" }]);
+  }, [register]);
+
   return (
     <Routes>
       <Route element={<Outlet />}>

@@ -25,12 +25,15 @@ import VocabularyTabs from "./VocabularyItems";
 import { useHasPermission } from "../../../auth";
 import VocabularyItem from "./VocabularyItem";
 import VocabularyItemsTable from "./VocabularyItemsTable";
+import { useBreadcrumbs } from "../../../../app/shell/AppShell/AppShellContext";
+import { useEffect } from "react";
 
 const VocabularyPage = () => {
   const { vocabulary_id } = useParams() as { vocabulary_id: string };
   const canWrite = useHasPermission("admin:vocabularies");
 
   const {
+    data: vocabulary,
     isLoading: isVocabularyLoading,
     isError: isVocabularyError,
     error: vocabularyError,
@@ -46,6 +49,14 @@ const VocabularyPage = () => {
     isError: isColumnsError,
     error: columnsError,
   } = useVocabularyItemColumns();
+
+  const { register } = useBreadcrumbs();
+  useEffect(() => {
+    if (!vocabulary) return;
+    return register([
+      { label: vocabulary.name, url: `/core/vocabularies/${vocabulary.id}` },
+    ]);
+  }, [register, vocabulary]);
 
   if (isColumnsLoading || isVocabularyLoading || isVocabularyFieldsLoading)
     return <Spinner />;

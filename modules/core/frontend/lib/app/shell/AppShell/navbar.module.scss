@@ -1,0 +1,59 @@
+@use "@grit42/client-library/theme.scss";
+
+.navbar {
+  grid-area: 1 / 1 / -1 / 2;
+  height: 100%;
+  display: flex;
+  width: max-content;
+  flex-direction: column;
+  overflow: auto;
+  gap: theme.$spacing;
+  background-color: theme.$palette-background-surface;
+  padding: theme.$spacing;
+  border-inline-end: 1px solid
+    rgb(from theme.$palette-background-contrast-text r g b / 0.1);
+  align-items: stretch;
+
+  &.open {
+    width: 20ch;
+  }
+}
+
+.closeButton {
+  width: max-content;
+  margin-inline-end: auto;
+  padding: theme.$spacing;
+}
+
+.navLink {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: theme.$spacing;
+  padding: theme.$spacing;
+  border-radius: theme.$border-radius;
+  width: 100%;
+  background-color: theme.$palette-background-surface;
+
+  span {
+    font-weight: normal;
+    color: theme.$palette-background-contrast-text;
+  }
+
+  &:hover {
+    background-color: rgb(
+      from theme.$palette-background-contrast-text r g b / 0.1
+    );
+  }
+
+  &.active {
+    background-color: rgb(
+      from theme.$palette-background-contrast-text r g b / 0.1
+    );
+
+    span {
+      font-weight: bolder;
+      color: theme.$palette-background-contrast-text;
+    }
+  }
+}
