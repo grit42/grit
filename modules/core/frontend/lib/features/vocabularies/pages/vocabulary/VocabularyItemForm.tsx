@@ -17,7 +17,6 @@
  */
 
 import { useNavigate, useParams } from "react-router-dom";
-import { Surface } from "@grit42/client-library/components";
 import { VocabularyItemData } from "../../queries/vocabulary_items";
 import styles from "./vocabulary.module.scss";
 import {
@@ -37,6 +36,7 @@ import {
   useEditEntityMutation,
 } from "../../../entities";
 import { useQueryClient } from "@grit42/api";
+import { CenteredSurface } from "@grit42/client-library/layouts";
 
 const VocabularyItemForm = ({
   fields,
@@ -102,7 +102,7 @@ const VocabularyItemForm = ({
   };
 
   return (
-    <Surface className={styles.vocabularyItemForm}>
+    <CenteredSurface className={styles.vocabularyForm}>
       <Form form={form}>
         <FormFields columns={1}>
           <FormBanner content={form.state.errorMap.onSubmit} />
@@ -117,7 +117,7 @@ const VocabularyItemForm = ({
           onCancel={() => navigate("..")}
         />
       </Form>
-    </Surface>
+    </CenteredSurface>
   );
 };
 

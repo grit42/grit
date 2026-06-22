@@ -2,9 +2,10 @@ import { NavLink } from "react-router-dom";
 import { NavItem } from "../../navigation";
 import { hasRoles, useSession } from "../../../features/auth";
 import { useMemo } from "react";
-import Circle1CloseIcon from "@grit42/client-library/icons/Circle1Close";
+import CloseIcon from "@grit42/client-library/icons/MinusSquare";
+import OpenIcon from "@grit42/client-library/icons/PlusSquare";
 import { useNavbar } from "./AppShellContext";
-import { Button } from "@grit42/client-library/components";
+import { Button, Tooltip } from "@grit42/client-library/components";
 import styles from "./navbar.module.scss";
 import { classnames } from "@grit42/client-library/utils";
 
@@ -22,21 +23,23 @@ const Sidebar = ({ navItems }: { navItems: NavItem[] }) => {
   return (
     <div className={classnames(styles.navbar, { [styles.open]: open })}>
       <Button onClick={toggleNavbar} size="tiny" className={styles.closeButton}>
-        <Circle1CloseIcon height={16} />
+        {open ? <CloseIcon height={16} /> : <OpenIcon height={16} />}
       </Button>
       {availableNavItems.map((navItem) => (
         <NavLink key={navItem.identifier} to={navItem.path}>
           {({ isActive }) => (
-            <Button
-              size="tiny"
-              className={classnames(styles.navLink, {
-                [styles.active]: isActive,
-                [styles.open]: open,
-              })}
-            >
-              <Circle1CloseIcon height={16} fill={"white"} />
-              {open && <span>{navItem.name}</span>}
-            </Button>
+            <Tooltip content={navItem.name} disabled={open} >
+              <Button
+                size="tiny"
+                className={classnames(styles.navLink, {
+                  [styles.active]: isActive,
+                  [styles.open]: open,
+                })}
+              >
+                <OpenIcon height={16} fill={"white"} />
+                {open && <span>{navItem.name}</span>}
+              </Button>
+            </Tooltip>
           )}
         </NavLink>
       ))}

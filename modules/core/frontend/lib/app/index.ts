@@ -4,4 +4,4 @@ export type * from "./modules";
 
 export type * from "./navigation";
 
-export { useBreadcrumbs } from "./shell"
+export { useBreadcrumbs, useTabs } from "./shell"

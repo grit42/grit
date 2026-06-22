@@ -18,19 +18,43 @@
 
 import { ErrorPage, Spinner } from "@grit42/client-library/components";
 import { useVocabularyItemColumns } from "../../queries/vocabulary_items";
-import { Route, Routes, useParams } from "react-router-dom";
+import { Outlet, Route, Routes, useParams } from "react-router-dom";
 import Vocabulary from "./Vocabulary";
 import { useVocabulary, useVocabularyFields } from "../../queries/vocabularies";
-import VocabularyTabs from "./VocabularyItems";
-import { useHasPermission } from "../../../auth";
+import { AuthGuard, useHasPermission } from "../../../auth";
 import VocabularyItem from "./VocabularyItem";
-import VocabularyItemsTable from "./VocabularyItemsTable";
-import { useBreadcrumbs } from "../../../../app/shell/AppShell/AppShellContext";
+import {
+  useBreadcrumbs,
+  useTabs,
+} from "../../../../app/shell/AppShell/AppShellContext";
 import { useEffect } from "react";
+import VocabularyLoadSets from "./VocabularyLoadSets";
+import VocabularySettings from "./VocabularySettings";
+
+const Test = ({ vocabularyId }: { vocabularyId: string | number }) => {
+  const { register } = useTabs();
+  const canAdmin = useHasPermission("admin:vocabularies");
+
+  useEffect(() => {
+    if (!canAdmin) return;
+    return register([
+      { label: "Items", url: `/core/vocabularies/${vocabularyId}/items` },
+      {
+        label: "Load sets",
+        url: `/core/vocabularies/${vocabularyId}/load-sets`,
+      },
+      {
+        label: "Settings",
+        url: `/core/vocabularies/${vocabularyId}/settings`,
+      },
+    ]);
+  }, [canAdmin, register, vocabularyId]);
+
+  return <Outlet />;
+};
 
 const VocabularyPage = () => {
   const { vocabulary_id } = useParams() as { vocabulary_id: string };
-  const canWrite = useHasPermission("admin:vocabularies");
 
   const {
     data: vocabulary,
@@ -50,13 +74,33 @@ const VocabularyPage = () => {
     error: columnsError,
   } = useVocabularyItemColumns();
 
-  const { register } = useBreadcrumbs();
+  const { register: registerBreadcrumbs } = useBreadcrumbs();
   useEffect(() => {
     if (!vocabulary) return;
-    return register([
-      { label: vocabulary.name, url: `/core/vocabularies/${vocabulary.id}` },
+    return registerBreadcrumbs([
+      {
+        label: vocabulary.name,
+        url: `/core/vocabularies/${vocabulary.id}/items`,
+      },
     ]);
-  }, [register, vocabulary]);
+  }, [registerBreadcrumbs, vocabulary]);
+  const { register: registerTabs } = useTabs();
+  const canAdmin = useHasPermission("admin:vocabularies");
+
+  useEffect(() => {
+    if (!canAdmin) return;
+    return registerTabs([
+      { label: "Items", url: `/core/vocabularies/${vocabulary_id}/items` },
+      {
+        label: "Load sets",
+        url: `/core/vocabularies/${vocabulary_id}/load-sets`,
+      },
+      {
+        label: "Settings",
+        url: `/core/vocabularies/${vocabulary_id}/settings`,
+      },
+    ]);
+  }, [canAdmin, registerTabs, vocabulary_id]);
 
   if (isColumnsLoading || isVocabularyLoading || isVocabularyFieldsLoading)
     return <Spinner />;
@@ -71,19 +115,28 @@ const VocabularyPage = () => {
 
   return (
     <Routes>
-      <Route element={<Vocabulary vocabularyId={vocabulary_id} />}>
         <Route
-          index
+          path="items"
+          element={<Vocabulary vocabularyId={vocabulary_id} />}
+        >
+          <Route path=":vocabulary_item_id" element={<VocabularyItem />} />
+        </Route>
+        <Route
+          path="load-sets"
           element={
-            canWrite ? (
-              <VocabularyTabs vocabularyId={vocabulary_id} />
-            ) : (
-              <VocabularyItemsTable vocabularyId={vocabulary_id} />
-            )
+            <AuthGuard permission="admin:vocabularies">
+              <VocabularyLoadSets vocabularyId={vocabulary_id} />
+            </AuthGuard>
           }
         />
-        <Route path=":vocabulary_item_id" element={<VocabularyItem />} />
-      </Route>
+        <Route
+          path="settings"
+          element={
+            <AuthGuard permission="admin:vocabularies">
+              <VocabularySettings vocabularyId={vocabulary_id} />
+            </AuthGuard>
+          }
+        />
     </Routes>
   );
 };

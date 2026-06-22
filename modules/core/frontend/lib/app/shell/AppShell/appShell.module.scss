@@ -1,12 +1,12 @@
 @use "@grit42/client-library/theme.scss";
 
 .appContainer {
+  width: 100vw;
+  height: 100vh;
   display: grid;
-  width: 100%;
   grid-template-columns: 1fr;
   grid-template-rows: 1fr;
-  height: 100vh;
-  max-height: 100vh;
+  overflow: auto;
 
   &.loading {
     display: flex;
@@ -38,10 +38,6 @@
   ::-webkit-scrollbar-corner {
     background: theme.$palette-primary-main;
   }
-
-  &.withHeader {
-    grid-template-rows: max-content max-content 1fr;
-  }
 }
 
 .authenticatedAppContainer {
@@ -56,8 +52,6 @@
 }
 
 .appBodyContainer {
-  width: 100%;
-  max-width: 100%;
   overflow: auto;
   display: grid;
   grid-template-columns: 1fr;

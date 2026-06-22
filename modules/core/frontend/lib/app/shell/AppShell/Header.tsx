@@ -17,8 +17,8 @@
  */
 
 import styles from "./header.module.scss";
-import { Link, useNavigate } from "react-router-dom";
-import { Dropdown } from "@grit42/client-library/components";
+import { Link, NavLink, useNavigate } from "react-router-dom";
+import { Button, Dropdown } from "@grit42/client-library/components";
 import {
   useSession,
   useUpdateUserSettingsMutation,
@@ -27,10 +27,12 @@ import { useLogoutMutation } from "../../../features/auth/api/mutations";
 import type { UserSettings } from "../../../features/auth";
 import Logo from "../../../assets/grit42-logo.svg";
 import { notifyOnError } from "@grit42/api";
-import { useBreadcrumbs } from "./AppShellContext";
+import { useBreadcrumbs, useTabs } from "./AppShellContext";
+import { classnames } from "@grit42/client-library/utils";
 
 const Header = () => {
   const { items: breadcrumbsItems } = useBreadcrumbs();
+  const { items: tabsItems } = useTabs();
   const { data: session } = useSession();
   const navigate = useNavigate();
   const logoutMutation = useLogoutMutation();
@@ -61,50 +63,71 @@ const Header = () => {
       : "comfortable";
 
   return (
-    <div className={styles.topbar}>
-      <Link to="/">
-        <img className={styles.gritLogo} src={Logo} alt="grit42 logo" />
-      </Link>
+    <div className={styles.header}>
+      <div className={styles.topbar}>
+        <Link to="/">
+          <img className={styles.gritLogo} src={Logo} alt="grit42 logo" />
+        </Link>
 
-      <div className={styles.breadcrumbs}>
-        {breadcrumbsItems.map((item, index) => (
-          <>
-            {index !== 0 && <span>/</span>}
-            <Link to={item.url}>{item.label}</Link>
-          </>
-        ))}
+        <div className={styles.breadcrumbs}>
+          {breadcrumbsItems.map((item, index) => (
+            <>
+              {index !== 0 && <span className={styles.separator}>/</span>}
+              <Link className={styles.breadcrumb} to={item.url}>{item.label}</Link>
+            </>
+          ))}
+        </div>
+        <div className={styles.profile}>
+          <Dropdown
+            menuItems={[
+              {
+                id: "ACCOUNT_SETTINGS",
+                text: "Account settings",
+                onClick: () => navigate("/core/account"),
+              },
+              {
+                id: "TOGGLE_THEME",
+                text: `Switch to ${nextTheme} mode`,
+                onClick: () => handleSettingsUpdate("theme", nextTheme),
+              },
+              {
+                id: "TOGGLE_DISPLAY_DENSITY",
+                text: `Switch to ${nextDisplayDensity} mode`,
+                onClick: () =>
+                  handleSettingsUpdate("display_density", nextDisplayDensity),
+              },
+              {
+                id: "LOGOUT",
+                text: "Log out",
+                onClick: () => logoutMutation.mutateAsync(),
+              },
+            ]}
+          >
+            <h4 className={styles.username}>
+              {session?.name ?? session?.login ?? "Guest user"}
+            </h4>
+          </Dropdown>
+        </div>
       </div>
-      <div className={styles.profile}>
-        <Dropdown
-          menuItems={[
-            {
-              id: "ACCOUNT_SETTINGS",
-              text: "Account settings",
-              onClick: () => navigate("/core/account"),
-            },
-            {
-              id: "TOGGLE_THEME",
-              text: `Switch to ${nextTheme} mode`,
-              onClick: () => handleSettingsUpdate("theme", nextTheme),
-            },
-            {
-              id: "TOGGLE_DISPLAY_DENSITY",
-              text: `Switch to ${nextDisplayDensity} mode`,
-              onClick: () =>
-                handleSettingsUpdate("display_density", nextDisplayDensity),
-            },
-            {
-              id: "LOGOUT",
-              text: "Log out",
-              onClick: () => logoutMutation.mutateAsync(),
-            },
-          ]}
-        >
-          <h4 className={styles.username}>
-            {session?.name ?? session?.login ?? "Guest user"}
-          </h4>
-        </Dropdown>
-      </div>
+      {tabsItems?.length && (
+        <div className={styles.tabs}>
+          {tabsItems.map(({ label, url }) => (
+            <NavLink to={url}>
+              {({ isActive }) => (
+                <Button
+                  className={classnames(styles.tab, {
+                    [styles.active]: isActive,
+                  })}
+                  size="tiny"
+                >
+                  {label}
+                  {isActive && <span />}
+                </Button>
+              )}
+            </NavLink>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

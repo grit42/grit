@@ -17,10 +17,11 @@
  */
 
 import styles from "./vocabulary.module.scss";
-import { Outlet } from "react-router-dom";
-import { useVocabulary, useVocabularyFields } from "../../queries/vocabularies";
+import { Link, Outlet, useMatch } from "react-router-dom";
+import { useVocabulary } from "../../queries/vocabularies";
 import { useHasPermission } from "../../../auth";
-import VocabularyForm from "./VocabularyForm";
+import { Button } from "@grit42/client-library/components";
+import VocabularyItemsTable from "./VocabularyItemsTable";
 
 interface Props {
   vocabularyId: string | number;
@@ -28,17 +29,28 @@ interface Props {
 
 const Vocabulary = ({ vocabularyId }: Props) => {
   const canAdmin = useHasPermission("admin:vocabularies");
+  const match = useMatch("/core/vocabularies/:vocabulary_id/items");
 
   const { data: vocabulary } = useVocabulary(vocabularyId);
-  const { data: vocabularyFields } = useVocabularyFields(undefined, {
-    select: (data) =>
-      canAdmin ? data : data.map((f) => ({ ...f, disabled: true })),
-  });
+
+  if (!match) {
+    return <Outlet />;
+  }
 
   return (
     <div className={styles.vocabulary}>
-      <VocabularyForm fields={vocabularyFields!} vocabulary={vocabulary!} />
-      <Outlet />
+      <div className={styles.vocabularyDetails}>
+        <div className={styles.vocabularyDetailsHeader}>
+          <h1>{vocabulary?.name}</h1>
+          {canAdmin && (
+            <Link to="new">
+              <Button>New item</Button>
+            </Link>
+          )}
+        </div>
+        <p className={styles.description}>{vocabulary?.description}</p>
+      </div>
+      <VocabularyItemsTable vocabularyId={vocabularyId} />
     </div>
   );
 };

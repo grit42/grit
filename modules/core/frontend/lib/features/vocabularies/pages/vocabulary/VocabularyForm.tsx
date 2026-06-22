@@ -87,7 +87,7 @@ const VocabularyForm = ({
         );
         setFormData(newEntity);
         formApi.reset();
-        navigate(`../${newEntity.id}`, {
+        navigate(`../${newEntity.id}/items`, {
           relative: "path",
           replace: true,
         });
@@ -95,7 +95,7 @@ const VocabularyForm = ({
         setFormData(
           await editEntityMutation.mutateAsync(value as VocabularyData),
         );
-        formApi.reset();
+        navigate("../items");
       }
     }),
   });
@@ -106,10 +106,11 @@ const VocabularyForm = ({
       !window.confirm(
         `Are you sure you want to delete this vocabulary? This action is irreversible`,
       )
-    )
+    ) {
       return;
+    }
     await destroyEntityMutation.mutateAsync(vocabulary.id);
-    navigate("../../..");
+    navigate("../..");
   };
 
   return (
@@ -124,9 +125,8 @@ const VocabularyForm = ({
         <FormControls
           onDelete={onDelete}
           showDelete={!!vocabulary.id && canWrite}
-          showCancel
-          cancelLabel="Back"
-          onCancel={() => navigate("../../..")}
+          showCancel={!vocabulary.id}
+          onCancel={() => navigate("../items")}
         />
       </Form>
     </Surface>

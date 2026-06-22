@@ -23,6 +23,7 @@ import {
   useVocabularyItemFields,
 } from "../../queries/vocabulary_items";
 import VocabularyItemForm from "./VocabularyItemForm";
+import styles from "./vocabulary.module.scss"
 
 const VocabularyItem = () => {
   const { vocabulary_item_id } = useParams() as { vocabulary_item_id: string };
@@ -52,10 +53,13 @@ const VocabularyItem = () => {
   }
 
   return (
-    <VocabularyItemForm
-      fields={vocabularyItemFields!}
-      vocabularyItem={vocabularyItem!}
-    />
+    <div className={styles.vocabularyItem}>
+      <h2>Edit vocabulary item</h2>
+      <VocabularyItemForm
+        fields={vocabularyItemFields!}
+        vocabularyItem={vocabularyItem!}
+      />
+    </div>
   );
 };
 

@@ -21,6 +21,7 @@ import { useInfiniteEntityData, EntityData } from "../../../entities";
 import { useNavigate } from "react-router-dom";
 import { GritColumnDef, Table, useSetupTableState } from "@grit42/table";
 import { ErrorPage } from "@grit42/client-library/components";
+import styles from "./vocabulary.module.scss";
 
 const LOAD_SET_COLUMNS: GritColumnDef<EntityData>[] = [
   {
@@ -79,6 +80,7 @@ const LOAD_SET_COLUMNS: GritColumnDef<EntityData>[] = [
     id: "created_at",
     type: "datetime",
     size: 150,
+    defaultVisibility: "hidden",
   },
   {
     accessorKey: "created_by",
@@ -86,6 +88,7 @@ const LOAD_SET_COLUMNS: GritColumnDef<EntityData>[] = [
     id: "created_by",
     size: 150,
     type: "entity",
+    defaultVisibility: "hidden",
     meta: {
       entity: {
         full_name: "Grit::Core::User",
@@ -105,6 +108,7 @@ const LOAD_SET_COLUMNS: GritColumnDef<EntityData>[] = [
     id: "updated_at",
     type: "datetime",
     size: 150,
+    defaultVisibility: "hidden",
   },
   {
     accessorKey: "updated_by",
@@ -112,6 +116,7 @@ const LOAD_SET_COLUMNS: GritColumnDef<EntityData>[] = [
     id: "updated_by",
     size: 150,
     type: "entity",
+    defaultVisibility: "hidden",
     meta: {
       entity: {
         full_name: "Grit::Core::User",
@@ -174,17 +179,19 @@ const VocabularyLoadSets = ({
   }
 
   return (
-    <Table<EntityData>
-      loading={isFetching && !isFetchingNextPage}
-      data={flatData}
-      tableState={tableState}
-      onRowClick={(row) => navigate(`/core/load_sets/${row.original.id}`)}
-      pagination={{
-        fetchNextPage,
-        isFetchingNextPage,
-        totalRows: data?.pages[0]?.total,
-      }}
-    />
+    <div className={styles.loadSets}>
+      <Table<EntityData>
+        loading={isFetching && !isFetchingNextPage}
+        data={flatData}
+        tableState={tableState}
+        onRowClick={(row) => navigate(`/core/load_sets/${row.original.id}`)}
+        pagination={{
+          fetchNextPage,
+          isFetchingNextPage,
+          totalRows: data?.pages[0]?.total,
+        }}
+      />
+    </div>
   );
 };
 

@@ -21,8 +21,8 @@ import styles from "./vocabulary.module.scss";
 import { useCallback, useEffect, useMemo } from "react";
 import { useToolbar } from "../../../toolbar";
 import Circle1NewIcon from "@grit42/client-library/icons/Circle1New";
-import { Link, useNavigate } from "react-router-dom";
-import { Button, ErrorPage } from "@grit42/client-library/components";
+import { useNavigate } from "react-router-dom";
+import { ErrorPage } from "@grit42/client-library/components";
 import { useTableColumns } from "../../../../utils";
 import {
   useVocabularyItemColumns,
@@ -61,7 +61,9 @@ const VocabularyItemsTable = ({ vocabularyId }: Props) => {
   const queryClient = useQueryClient();
   const canWrite = useHasPermission("admin:vocabularies");
 
-  const { data: columns } = useVocabularyItemColumns();
+  const { data: columns } = useVocabularyItemColumns(undefined, {
+    select: (d) => d.filter(({name}) => name !== "vocabulary_id__name")
+  });
 
   const destroyItemsMutation = useDestroyEntityMutation(
     "grit/core/vocabulary_items",
@@ -74,8 +76,9 @@ const VocabularyItemsTable = ({ vocabularyId }: Props) => {
     tableColumns,
     {
       settings: {
-        enableSelection: true,
+        enableSelection: canWrite,
         disableVisibilitySettings: true,
+        disableFilters: true,
       },
     },
   );
@@ -174,15 +177,8 @@ const VocabularyItemsTable = ({ vocabularyId }: Props) => {
   return (
     <Table
       tableState={tableState}
-      header={canWrite ? undefined : "Items"}
+      // header={canWrite ? undefined : "Items"}
       loading={isLoading}
-      headerActions={
-        canWrite ? (
-          <Link to="new">
-            <Button>New</Button>
-          </Link>
-        ) : undefined
-      }
       rowActions={canWrite ? ["delete"] : undefined}
       onDelete={async (rows) => {
         if (

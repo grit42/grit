@@ -5,6 +5,11 @@ export interface BreadcrumbItem {
   url: string;
 }
 
+export interface HeaderTab {
+  label: string;
+  url: string;
+}
+
 export interface AppShellContextValue {
   navbar: {
     open: boolean;
@@ -15,6 +20,10 @@ export interface AppShellContextValue {
   breadcrumbs: {
     items: BreadcrumbItem[];
     register: (items: BreadcrumbItem[]) => () => void;
+  };
+  tabs: {
+    items: HeaderTab[];
+    register: (tabs: HeaderTab[]) => () => void;
   };
 }
 
@@ -29,6 +38,10 @@ const defaultValue: AppShellContextValue = {
     items: [],
     register: () => () => void 0,
   },
+  tabs: {
+    items: [],
+    register: () => () => void 0,
+  },
 };
 
 export const AppShellContext =
@@ -37,3 +50,4 @@ export const AppShellContext =
 export const useAppShell = () => useContext(AppShellContext);
 export const useNavbar = () => useContext(AppShellContext).navbar;
 export const useBreadcrumbs = () => useContext(AppShellContext).breadcrumbs;
+export const useTabs = () => useContext(AppShellContext).tabs;

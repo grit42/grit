@@ -104,7 +104,7 @@ const VocabulariesTable = () => {
         }
         className={styles.typesTable}
         data={flatData}
-        onRowClick={(row) => navigate(`${row.original.id}`)}
+        onRowClick={(row) => navigate(`${row.original.id}/items`)}
         loading={isLoading}
         pagination={{
           fetchNextPage,

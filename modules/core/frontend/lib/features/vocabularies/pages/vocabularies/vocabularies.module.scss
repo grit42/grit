@@ -1,4 +1,7 @@
+@use "@grit42/client-library/theme.scss";
+
 .vocabularies {
+  padding-top: theme.$spacing-xl;
   display: grid;
   grid-template-columns: auto;
   max-width: 100%;
