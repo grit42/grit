@@ -18,7 +18,7 @@
 
 import { ErrorPage, Spinner } from "@grit42/client-library/components";
 import { useVocabularyItemColumns } from "../../queries/vocabulary_items";
-import { Outlet, Route, Routes, useParams } from "react-router-dom";
+import { Route, Routes, useParams } from "react-router-dom";
 import Vocabulary from "./Vocabulary";
 import { useVocabulary, useVocabularyFields } from "../../queries/vocabularies";
 import { AuthGuard, useHasPermission } from "../../../auth";
@@ -30,28 +30,6 @@ import {
 import { useEffect } from "react";
 import VocabularyLoadSets from "./VocabularyLoadSets";
 import VocabularySettings from "./VocabularySettings";
-
-const Test = ({ vocabularyId }: { vocabularyId: string | number }) => {
-  const { register } = useTabs();
-  const canAdmin = useHasPermission("admin:vocabularies");
-
-  useEffect(() => {
-    if (!canAdmin) return;
-    return register([
-      { label: "Items", url: `/core/vocabularies/${vocabularyId}/items` },
-      {
-        label: "Load sets",
-        url: `/core/vocabularies/${vocabularyId}/load-sets`,
-      },
-      {
-        label: "Settings",
-        url: `/core/vocabularies/${vocabularyId}/settings`,
-      },
-    ]);
-  }, [canAdmin, register, vocabularyId]);
-
-  return <Outlet />;
-};
 
 const VocabularyPage = () => {
   const { vocabulary_id } = useParams() as { vocabulary_id: string };

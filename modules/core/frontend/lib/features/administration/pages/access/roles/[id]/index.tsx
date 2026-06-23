@@ -97,7 +97,6 @@ function RoleForm({ role }: { role: Role }) {
   const form = useForm({
     defaultValues: role,
     onSubmit: genericErrorHandler(async ({ value, formApi }) => {
-      console.log(value);
       const updatedRole = role.id
         ? await editRole.mutateAsync(value)
         : await createRole.mutateAsync(value);

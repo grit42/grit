@@ -66,7 +66,7 @@ export * from "./features/publication-status";
 
 export * from "./components";
 
-export { App, useBreadcrumbs } from "./app";
+export { App, useBreadcrumbs, useTabs } from "./app";
 export type { GritModule, NavItem, ModuleMeta } from "./app";
 
 import CoreModule from "./module";

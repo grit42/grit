@@ -17,22 +17,22 @@
  */
 
 import { RoutedTabs } from "@grit42/client-library/components";
+import { ExperimentData } from "../../../../queries/experiments";
+import styles from "./experimentData.module.scss"
 
-const TABS = [
-  { url: "details", label: "Details" },
-  { url: "data", label: "Data" },
-  { url: "plots", label: "Plots" },
-  { url: "files", label: "Files" },
-  { url: "load-sets", label: "Load sets" },
-];
-
-const ExperimentTabs = () => {
+const Data = ({ experiment }: { experiment: ExperimentData }) => {
   return (
     <RoutedTabs
-      matchPattern="/assays/experiments/:experiment_id/:tab/*"
-      tabs={TABS}
+    tabsClassName={styles.tabs}
+      tabs={experiment.data_sheets.map(({ name, id }) => ({
+        label: name,
+        url: id.toString(),
+      }))}
+      matchPattern="/assays/experiments/:experiment_id/data/:tab/*"
+      paramName="tab"
+      navigationPattern="relative-sibling"
     />
   );
 };
 
-export default ExperimentTabs;
+export default Data;

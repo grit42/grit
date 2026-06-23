@@ -36,7 +36,7 @@ import { useTableColumns } from "@grit42/core/utils";
 import { Table, useSetupTableState } from "@grit42/table";
 import ExperimentDataSheetRecordFormWrapper from "./RecordForm";
 import { useToolbar, useHasPermission } from "@grit42/core";
-import { ExperimentData, useExperiment } from "../../../../queries/experiments";
+import { ExperimentData } from "../../../../queries/experiments";
 
 const getRowId = (data: ExperimentDataSheetRecordData) => data.id.toString();
 
@@ -121,19 +121,20 @@ const ExperimentDataSheetRecords = ({
 };
 
 const ExperimentDataSheet = ({
-  dataSheets,
+  experiment,
 }: {
-  dataSheets: ExperimentDataSheetData[];
+  experiment: ExperimentData;
 }) => {
-  const { sheet_id, experiment_id } = useParams() as {
+  const { sheet_id } = useParams() as {
     sheet_id: string;
-    experiment_id: string;
   };
-  const { data: experiment } = useExperiment(experiment_id);
 
   const dataSheet = useMemo(
-    () => dataSheets.find(({ id }) => sheet_id === id.toString()),
-    [dataSheets, sheet_id],
+    () =>
+      sheet_id
+        ? experiment.data_sheets.find(({ id }) => sheet_id === id.toString())
+        : experiment.data_sheets[0],
+    [experiment.data_sheets, sheet_id],
   );
 
   const { data, isLoading, isError, error } =
@@ -141,8 +142,16 @@ const ExperimentDataSheet = ({
       enabled: !!dataSheet,
     });
 
-  if (isLoading || !dataSheet) return <Spinner />;
-  if (isError || !data)
+  if (!sheet_id) {
+    return <Navigate to={experiment.data_sheets[0].id.toString()} />;
+  }
+
+  if (!dataSheet) {
+    return <Navigate to=".." replace />;
+  }
+
+  if (isLoading) return <Spinner />;
+  if (isError || !data) {
     return (
       <ErrorPage error={error}>
         <Link to="../details">
@@ -150,9 +159,6 @@ const ExperimentDataSheet = ({
         </Link>
       </ErrorPage>
     );
-
-  if (!dataSheet) {
-    return <Navigate to=".." replace />;
   }
 
   return (

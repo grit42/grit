@@ -1,5 +1,35 @@
 @use "@grit42/client-library/theme.scss";
 
+.details {
+  margin-inline: auto;
+  display: grid;
+  grid-template-columns: auto;
+  grid-template-rows: min-content 1fr;
+  gap: theme.$spacing;
+  margin-top: theme.$spacing-xl;
+
+  .header {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-auto-rows: min-content;
+
+    .title {
+      width: 100%;
+      max-width: 80ch;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+  }
+
+  .body {
+    width: 100%;
+    max-width: 80ch;
+  }
+}
+
+// ======= OLD
+
 .container {
   width: 100%;
   max-width: 100%;

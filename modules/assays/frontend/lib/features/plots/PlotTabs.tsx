@@ -18,6 +18,7 @@
 
 import { useMemo } from "react";
 import { RoutedTabs } from "@grit42/client-library/components";
+import styles from "./plots.module.scss";
 
 interface PlotLike {
   id: string;
@@ -67,6 +68,7 @@ const PlotTabs = <P extends PlotLike>({
       paramName="plot_id"
       navigationPattern={navigationPattern}
       defaultTab={Object.keys(plots)[0] ?? "new"}
+      tabsClassName={styles.tabs}
     />
   );
 };
