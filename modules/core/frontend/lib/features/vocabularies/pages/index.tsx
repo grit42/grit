@@ -21,6 +21,7 @@ import Vocabularies from "./vocabularies";
 import Vocabulary from "./vocabulary";
 import { useBreadcrumbs } from "../../../app/shell/AppShell/AppShellContext";
 import { useEffect } from "react";
+import NewVocabulary from "./vocabulary/NewVocabulary";
 
 const VocabulariesTab = () => {
   const { register } = useBreadcrumbs();
@@ -33,6 +34,7 @@ const VocabulariesTab = () => {
     <Routes>
       <Route element={<Outlet />}>
         <Route index element={<Vocabularies />} />
+        <Route path="new" element={<NewVocabulary />} />
         <Route path=":vocabulary_id">
           <Route index path="*" element={<Vocabulary />} />
         </Route>

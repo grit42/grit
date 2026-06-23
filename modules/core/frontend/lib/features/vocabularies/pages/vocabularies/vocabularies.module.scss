@@ -2,6 +2,7 @@
 
 .vocabularies {
   padding-top: theme.$spacing-xl;
+  padding-inline: theme.$spacing-xl;
   display: grid;
   grid-template-columns: auto;
   max-width: 100%;

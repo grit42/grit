@@ -48,7 +48,7 @@ const Vocabulary = ({ vocabularyId }: Props) => {
             </Link>
           )}
         </div>
-        <p className={styles.description}>{vocabulary?.description}</p>
+        {vocabulary?.description && <p className={styles.description}>{vocabulary?.description}</p>}
       </div>
       <VocabularyItemsTable vocabularyId={vocabularyId} />
     </div>

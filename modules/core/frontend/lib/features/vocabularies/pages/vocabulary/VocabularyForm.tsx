@@ -110,7 +110,7 @@ const VocabularyForm = ({
       return;
     }
     await destroyEntityMutation.mutateAsync(vocabulary.id);
-    navigate("../..");
+    navigate("/core/vocabularies");
   };
 
   return (

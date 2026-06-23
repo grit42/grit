@@ -68,13 +68,6 @@ const LOAD_SET_COLUMNS: GritColumnDef<EntityData>[] = [
     },
   },
   {
-    accessorKey: "item_count",
-    header: "Items",
-    id: "item_count",
-    type: "integer",
-    size: 150,
-  },
-  {
     accessorKey: "created_at",
     header: "Created at",
     id: "created_at",
@@ -147,6 +140,7 @@ const VocabularyLoadSets = ({
       settings: {
         disableColumnReorder: true,
         disableVisibilitySettings: true,
+        disableFilters: true,
       },
     },
   );
@@ -185,6 +179,7 @@ const VocabularyLoadSets = ({
         data={flatData}
         tableState={tableState}
         onRowClick={(row) => navigate(`/core/load_sets/${row.original.id}`)}
+        noDataMessage={"No load sets for this vocabulary"}
         pagination={{
           fetchNextPage,
           isFetchingNextPage,
