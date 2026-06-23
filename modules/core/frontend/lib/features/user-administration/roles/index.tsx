@@ -16,31 +16,15 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { ModuleMeta } from "../app";
+import RolesTable from "./RolesTable";
+import styles from "./roles.module.scss";
 
-const Meta: ModuleMeta = {
-  identifier: "core",
-  rootRoute: "/core",
-  navItems: [
-    {
-      identifier: "VOCABULARIES",
-      name: "Vocabularies",
-      path: "/core/vocabularies",
-      permissions: ["read:system"],
-    },
-    {
-      identifier: "ADMIN_USERS",
-      name: "User Administration",
-      path: "/core/user-administration",
-      permissions: ["admin:users"],
-    },
-    {
-      identifier: "ADMIN_SYSTEM",
-      name: "System Administration",
-      path: "/core/system-administration",
-      permissions: ["admin:system"],
-    },
-  ],
+const RolesPage = () => {
+  return (
+    <div className={styles.rolesPage}>
+      <RolesTable />
+    </div>
+  );
 };
 
-export default Meta;
+export default RolesPage;

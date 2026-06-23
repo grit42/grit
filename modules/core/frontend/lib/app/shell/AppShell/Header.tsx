@@ -29,6 +29,7 @@ import Logo from "../../../assets/grit42-logo.svg";
 import { notifyOnError } from "@grit42/api";
 import { useBreadcrumbs, useTabs } from "./AppShellContext";
 import { classnames } from "@grit42/client-library/utils";
+import { Fragment } from "react/jsx-runtime";
 
 const Header = () => {
   const { items: breadcrumbsItems } = useBreadcrumbs();
@@ -71,10 +72,10 @@ const Header = () => {
 
         <div className={styles.breadcrumbs}>
           {breadcrumbsItems.map((item, index) => (
-            <>
+            <Fragment key={`${item.label}-${item.url}`}>
               {index !== 0 && <span className={styles.separator}>/</span>}
               <Link className={styles.breadcrumb} to={item.url}>{item.label}</Link>
-            </>
+            </Fragment>
           ))}
         </div>
         <div className={styles.profile}>
@@ -112,7 +113,7 @@ const Header = () => {
       {tabsItems?.length && (
         <div className={styles.tabs}>
           {tabsItems.map(({ label, url }) => (
-            <NavLink to={url}>
+            <NavLink key={`${label}-${url}`} to={url}>
               {({ isActive }) => (
                 <Button
                   className={classnames(styles.tab, {

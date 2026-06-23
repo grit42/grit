@@ -1,0 +1,61 @@
+@use "@grit42/client-library/theme.scss";
+
+.surface {
+  height: 100%;
+  width: 960px;
+  display: grid;
+  grid-auto-rows: max-content;
+  gap: theme.$spacing-lg;
+}
+
+.rolePage {
+  padding-top: theme.$spacing-xl;
+  padding-inline: theme.$spacing-xl;
+  display: grid;
+  grid-template-columns: minmax(100%, 80ch);
+  grid-template-rows: 1fr;
+  margin-inline: auto;
+}
+
+.roleForm {
+  width: auto;
+}
+
+.systemRoleBanner {
+  display: flex;
+  align-items: center;
+  gap: theme.$spacing-md;
+  background-color: rgb(from theme.$palette-info-main r g b / 0.25);
+  border: 2px solid theme.$palette-info-main;
+  border-radius: theme.$border-radius;
+  padding: theme.$spacing-lg;
+  margin-bottom: theme.$spacing-lg;
+
+  svg {
+    fill: theme.$palette-info-contrast-text;
+  }
+}
+
+
+
+.permissions {
+  margin-top: theme.$spacing-lg;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-auto-rows: min-content;
+  gap: theme.$spacing-md;
+
+  ul {
+    padding-inline: theme.$spacing-lg;
+    list-style-type: none;
+    display: grid;
+    grid-auto-rows: max-content;
+    gap: theme.$spacing-md;
+  }
+
+  li {
+    display: grid;
+    grid-template-columns: min-content 20ch 1fr;
+    gap: theme.$spacing-lg;
+  }
+}

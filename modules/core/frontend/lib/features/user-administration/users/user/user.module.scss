@@ -1,0 +1,23 @@
+@use "@grit42/client-library/theme.scss";
+
+.userPage {
+  padding-top: theme.$spacing-xl;
+  padding-inline: theme.$spacing-xl;
+  display: grid;
+  grid-template-columns: minmax(100%, 80ch);
+  grid-template-rows: 1fr;
+  margin-inline: auto;
+}
+
+.userForm {
+  width: auto;
+}
+
+.divider {
+  margin-top: calc(theme.$spacing * 4);
+  margin-bottom: calc(theme.$spacing * 2);
+  height: 1px;
+  background-color: rgb(
+    from var(--palette-background-contrast-text) r g b / 20%
+  );
+}

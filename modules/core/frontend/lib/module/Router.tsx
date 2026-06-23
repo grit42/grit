@@ -45,8 +45,11 @@ const LazyEntityDetailsPage = lazy(
 const LazyVocabulariesPage = lazy(
   () => import("../features/vocabularies/pages"),
 );
-const LazyAdministrationPage = lazy(
-  () => import("../features/administration/pages"),
+const LazyUserAdministrationPage = lazy(
+  () => import("../features/user-administration"),
+);
+const LazySystemAdministrationPage = lazy(
+  () => import("../features/system-administration"),
 );
 const LazyAccountPage = lazy(
   () => import("../features/auth/pages/account-settings"),
@@ -133,14 +136,24 @@ const Router = () => {
         <Route index path="*" element={<LazyVocabulariesPage />} />
       </Route>
       <Route
-        path="/administration"
+        path="/user-administration/*"
         element={
-          <AuthGuard permissions={["admin:system", "admin:users"]}>
+          <AuthGuard permission={"admin:users"}>
             <Outlet />
           </AuthGuard>
         }
       >
-        <Route index path="*" element={<LazyAdministrationPage />} />
+        <Route index path="*" element={<LazyUserAdministrationPage />} />
+      </Route>
+      <Route
+        path="/system-administration/*"
+        element={
+          <AuthGuard permission={"admin:users"}>
+            <Outlet />
+          </AuthGuard>
+        }
+      >
+        <Route index path="*" element={<LazySystemAdministrationPage />} />
       </Route>
       <Route
         path="/account"

@@ -16,31 +16,18 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { ModuleMeta } from "../app";
+import { Surface } from "@grit42/client-library/components";
+import styles from "./role.module.scss";
+import RoleForm from "./RoleForm";
 
-const Meta: ModuleMeta = {
-  identifier: "core",
-  rootRoute: "/core",
-  navItems: [
-    {
-      identifier: "VOCABULARIES",
-      name: "Vocabularies",
-      path: "/core/vocabularies",
-      permissions: ["read:system"],
-    },
-    {
-      identifier: "ADMIN_USERS",
-      name: "User Administration",
-      path: "/core/user-administration",
-      permissions: ["admin:users"],
-    },
-    {
-      identifier: "ADMIN_SYSTEM",
-      name: "System Administration",
-      path: "/core/system-administration",
-      permissions: ["admin:system"],
-    },
-  ],
+const NewRolePage = () => {
+  return (
+    <div className={styles.rolePage}>
+      <Surface className={styles.roleForm}>
+        <RoleForm role={{}} />
+      </Surface>
+    </div>
+  );
 };
 
-export default Meta;
+export default NewRolePage;

@@ -16,31 +16,10 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { ModuleMeta } from "../app";
+import { EntityTabs } from "../../entities";
 
-const Meta: ModuleMeta = {
-  identifier: "core",
-  rootRoute: "/core",
-  navItems: [
-    {
-      identifier: "VOCABULARIES",
-      name: "Vocabularies",
-      path: "/core/vocabularies",
-      permissions: ["read:system"],
-    },
-    {
-      identifier: "ADMIN_USERS",
-      name: "User Administration",
-      path: "/core/user-administration",
-      permissions: ["admin:users"],
-    },
-    {
-      identifier: "ADMIN_SYSTEM",
-      name: "System Administration",
-      path: "/core/system-administration",
-      permissions: ["admin:system"],
-    },
-  ],
+const UnitsAdministrationTab = () => {
+  return <EntityTabs entity="Grit::Core::Unit" />;
 };
 
-export default Meta;
+export default UnitsAdministrationTab;
