@@ -27,13 +27,12 @@ import { useLogoutMutation } from "../../../features/auth/api/mutations";
 import type { UserSettings } from "../../../features/auth";
 import Logo from "../../../assets/grit42-logo.svg";
 import { notifyOnError } from "@grit42/api";
-import { useBreadcrumbs, useTabs } from "./AppShellContext";
+import { useAppShell } from "./AppShellContext";
 import { classnames } from "@grit42/client-library/utils";
 import { Fragment } from "react/jsx-runtime";
 
 const Header = () => {
-  const { items: breadcrumbsItems } = useBreadcrumbs();
-  const { items: tabsItems } = useTabs();
+  const { breadcrumbs, tabs } = useAppShell();
   const { data: session } = useSession();
   const navigate = useNavigate();
   const logoutMutation = useLogoutMutation();
@@ -71,12 +70,15 @@ const Header = () => {
         </Link>
 
         <div className={styles.breadcrumbs}>
-          {breadcrumbsItems.map((item, index) => (
-            <Fragment key={`${item.label}-${item.url}`}>
-              {index !== 0 && <span className={styles.separator}>/</span>}
-              <Link className={styles.breadcrumb} to={item.url}>{item.label}</Link>
-            </Fragment>
-          ))}
+          {!!breadcrumbs.items?.length &&
+            breadcrumbs.items.map((item, index) => (
+              <Fragment key={`${item.label}-${item.url}`}>
+                {index !== 0 && <span className={styles.separator}>/</span>}
+                <Link className={styles.breadcrumb} to={item.url}>
+                  {item.label}
+                </Link>
+              </Fragment>
+            ))}
         </div>
         <div className={styles.profile}>
           <Dropdown
@@ -110,9 +112,9 @@ const Header = () => {
           </Dropdown>
         </div>
       </div>
-      {tabsItems?.length && (
+      {!!tabs.items?.length && (
         <div className={styles.tabs}>
-          {tabsItems.map(({ label, url }) => (
+          {tabs.items.map(({ label, url }) => (
             <NavLink key={`${label}-${url}`} to={url}>
               {({ isActive }) => (
                 <Button

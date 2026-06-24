@@ -16,11 +16,11 @@
  * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { Link, Navigate, Route, Routes, useParams } from "react-router-dom";
 import { Button, ErrorPage, Spinner } from "@grit42/client-library/components";
 import Details from "./details";
-import { useExperiment } from "../../../queries/experiments";
+import { ExperimentData, useExperiment } from "../../../queries/experiments";
 import { useBreadcrumbs, useTabs, useToolbar } from "@grit42/core";
 import { downloadFile } from "@grit42/client-library/utils";
 import ExperimentPlots from "./plots";
@@ -29,14 +29,48 @@ import ExperimentFiles from "./files";
 import Data from "./data";
 import ExperimentDataSheet from "./data/DataSheet";
 import DetailsView from "./details/DetailsView";
+import { EXPERIMENT_BREADCRUMBS } from "./breadcrumbs";
+
+const useExperimentBreadcrumbs = (experiment?: ExperimentData | null) =>
+  useMemo(() => EXPERIMENT_BREADCRUMBS(experiment), [experiment]);
+const useExperimentTabs = (experiment?: ExperimentData | null) =>
+  useMemo(
+    () =>
+      experiment
+        ? [
+            {
+              url: `/assays/experiments/${experiment.id}/details`,
+              label: "Details",
+            },
+            {
+              url: `/assays/experiments/${experiment.id}/data`,
+              label: "Data",
+            },
+            {
+              url: `/assays/experiments/${experiment.id}/plots`,
+              label: "Plots",
+            },
+            {
+              url: `/assays/experiments/${experiment.id}/files`,
+              label: "Files",
+            },
+            {
+              url: `/assays/experiments/${experiment.id}/load-sets`,
+              label: "Load sets",
+            },
+          ]
+        : [],
+    [experiment],
+  );
 
 const Experiment = () => {
   const { experiment_id } = useParams() as { experiment_id: string };
   const registerToolbarAction = useToolbar();
-  const { register: registerBreadcrumbs } = useBreadcrumbs();
-  const { register: registerTabs } = useTabs();
 
   const { data, isLoading, isError, error } = useExperiment(experiment_id);
+
+  useBreadcrumbs(useExperimentBreadcrumbs(data));
+  useTabs(useExperimentTabs(data));
 
   useEffect(() => {
     if (experiment_id === "new") return;
@@ -52,42 +86,14 @@ const Experiment = () => {
         },
       ],
     });
-    const unregisterBreadcrumbs = registerBreadcrumbs([
-      {
-        label: `${data?.assay_model_id__name}`,
-        url: `/assays/assay-models/${data?.assay_model_id}/experiments`,
-      },
-      {
-        label: `${data?.name}`,
-        url: `/assays/experiments/${experiment_id}/details`,
-      },
-    ]);
-    const unregisterTabs = registerTabs([
-      { url: `/assays/experiments/${experiment_id}/details`, label: "Details" },
-      {
-        url: `/assays/experiments/${experiment_id}/data`,
-        label: "Data",
-      },
-      { url: `/assays/experiments/${experiment_id}/plots`, label: "Plots" },
-      { url: `/assays/experiments/${experiment_id}/files`, label: "Files" },
-      {
-        url: `/assays/experiments/${experiment_id}/load-sets`,
-        label: "Load sets",
-      },
-    ]);
-
     return () => {
-      unregisterBreadcrumbs();
       unregisterToolbarActions();
-      unregisterTabs();
     };
   }, [
     data?.assay_model_id,
     data?.assay_model_id__name,
     data?.name,
     experiment_id,
-    registerBreadcrumbs,
-    registerTabs,
     registerToolbarAction,
   ]);
 

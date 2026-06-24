@@ -4,13 +4,13 @@ import { hasRoles, useSession } from "../../../features/auth";
 import { useMemo } from "react";
 import CloseIcon from "@grit42/client-library/icons/MinusSquare";
 import OpenIcon from "@grit42/client-library/icons/PlusSquare";
-import { useNavbar } from "./AppShellContext";
+import { useAppShell } from "./AppShellContext";
 import { Button, Tooltip } from "@grit42/client-library/components";
 import styles from "./navbar.module.scss";
 import { classnames } from "@grit42/client-library/utils";
 
 const Sidebar = ({ navItems }: { navItems: NavItem[] }) => {
-  const { open, toggleNavbar } = useNavbar();
+  const { open, toggleNavbar } = useAppShell().navbar;
   const { data: session } = useSession();
   const availableNavItems = useMemo(
     () =>

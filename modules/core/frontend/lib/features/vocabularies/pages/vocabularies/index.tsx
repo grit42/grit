@@ -20,8 +20,10 @@ import { ErrorPage, Spinner } from "@grit42/client-library/components";
 import { useVocabularyColumns } from "../../queries/vocabularies";
 import { useVocabularyItemColumns } from "../../queries/vocabulary_items";
 import VocabulariesTable from "./VocabulariesTable";
+import { useBreadcrumbs } from "../../../../app";
+import { VOCABULARIES_BREADCRUMBS } from "./breadcrumbs";
 
-const VocabulariesAdministrationPage = () => {
+const VocabulariesPage = () => {
   const {
     data: vocabularyColumns,
     isLoading: isVocabularyColumnsLoading,
@@ -30,6 +32,8 @@ const VocabulariesAdministrationPage = () => {
   } = useVocabularyColumns();
 
   useVocabularyItemColumns();
+
+  useBreadcrumbs(VOCABULARIES_BREADCRUMBS);
 
   if (isVocabularyColumnsLoading) return <Spinner />;
 
@@ -40,4 +44,4 @@ const VocabulariesAdministrationPage = () => {
   return <VocabulariesTable />;
 };
 
-export default VocabulariesAdministrationPage;
+export default VocabulariesPage;

@@ -22,31 +22,20 @@ import { Navigate, Outlet, Route, Routes } from "react-router-dom";
 const LazyAssayModelsPage = lazy(() => import("./pages/assay-models"));
 const LazyExperimentsPage = lazy(() => import("./pages/experiments"));
 const LazyDataTablesPage = lazy(() => import("./features/data-tables/pages"));
-const LazyAssaySettingsPage = lazy(() => import("./pages/assays/settings"));
+const LazyAssaySettingsPage = lazy(() => import("./pages/assay-administration"));
 
 const Router = () => {
   return (
     <Routes>
-      <Route path="assay-models">
-        <Route
-          path="settings"
-          element={
-            <AuthGuard permission="admin:assays">
-              <Outlet />
-            </AuthGuard>
-          }
-        >
-          <Route index path="*" element={<LazyAssaySettingsPage />} />
-        </Route>
-        <Route
-          index
-          path="*"
-          element={
-            <AuthGuard permission="read:system">
-              <LazyAssayModelsPage />
-            </AuthGuard>
-          }
-        ></Route>
+      <Route
+        path="assay-models"
+        element={
+          <AuthGuard permission="read:system">
+            <Outlet />
+          </AuthGuard>
+        }
+      >
+        <Route index path="*" element={<LazyAssayModelsPage />} />
       </Route>
       <Route
         path="experiments"
@@ -67,6 +56,16 @@ const Router = () => {
         }
       >
         <Route index path="*" element={<LazyDataTablesPage />} />
+      </Route>
+      <Route
+        path="assay-administration"
+        element={
+          <AuthGuard permission="admin:assays">
+            <Outlet />
+          </AuthGuard>
+        }
+      >
+        <Route index path="*" element={<LazyAssaySettingsPage />} />
       </Route>
       <Route
         index

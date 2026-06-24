@@ -18,7 +18,6 @@
 
 import { Navigate, Route, Routes } from "react-router-dom";
 import { useBreadcrumbs, useTabs } from "../../app";
-import { useEffect } from "react";
 import UsersPage from "./users";
 import UserPage from "./users/user/UserPage";
 import NewUserPage from "./users/user/NewUserPage";
@@ -42,17 +41,8 @@ const BREADCRUMBS = [
 ];
 
 const UserAdministrationPage = () => {
-  const { register: registerBreadcrumbs } = useBreadcrumbs();
-  const { register: registerTabs } = useTabs();
-
-  useEffect(() => {
-    const unregisterBreadcrumbs = registerBreadcrumbs(BREADCRUMBS);
-    const unregisterTabs = registerTabs(TABS);
-    return () => {
-      unregisterBreadcrumbs();
-      unregisterTabs();
-    };
-  }, [registerBreadcrumbs, registerTabs]);
+  useBreadcrumbs(BREADCRUMBS);
+  useTabs(TABS);
 
   return (
     <Routes>

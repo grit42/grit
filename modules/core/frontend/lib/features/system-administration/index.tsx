@@ -23,7 +23,6 @@ import LocationsAdministrationTab from "./locations";
 import UnitsAdministrationTab from "./units";
 import PlatformInformationTab from "./platform-information";
 import { useBreadcrumbs } from "../../app";
-import { useEffect } from "react";
 import styles from "./systemAdministration.module.scss";
 
 const TABS = [
@@ -62,14 +61,7 @@ const SystemAdministrationTabs = () => {
 
 
 const SystemAdministrationPage = () => {
-  const { register: registerBreadcrumbs } = useBreadcrumbs();
-
-  useEffect(() => {
-    const unregisterBreadcrumbs = registerBreadcrumbs(BREADCRUMBS);
-    return () => {
-      unregisterBreadcrumbs();
-    };
-  }, [registerBreadcrumbs]);
+  useBreadcrumbs(BREADCRUMBS);
 
   return (
     <Routes>

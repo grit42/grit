@@ -37,6 +37,11 @@ const Meta: ModuleMeta = {
       name: "Assay Models",
       path: "/assays/assay-models",
     },
+    {
+      identifier: "ASSAYS_ADMINISTRATION",
+      name: "Assay administration",
+      path: "/assays/assay-administration",
+    },
   ],
 };
 

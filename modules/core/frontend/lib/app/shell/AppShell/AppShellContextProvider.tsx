@@ -21,17 +21,14 @@ const AppShellContextProvider = ({ children }: PropsWithChildren) => {
     () => setNavbarOpen((prev) => !prev),
     [setNavbarOpen],
   );
-  const [breadcrumbsItems, setBreadcrumbsItems] = useState<BreadcrumbItem[]>(
+  const [breadcrumbsItems, setBreadcrumbsItems] = useState<BreadcrumbItem[][]>(
     [],
   );
   const [tabs, setTabs] = useState<HeaderTab[][]>([]);
 
   const registerBreadcrumbsItems = useCallback((items: BreadcrumbItem[]) => {
-    setBreadcrumbsItems((prev) => prev.concat(items));
-    return () =>
-      setBreadcrumbsItems((prev) =>
-        prev.filter((item) => !items.includes(item)),
-      );
+    setBreadcrumbsItems((prev) => prev.toSpliced(0, 0, items));
+    return () => setBreadcrumbsItems((prev) => prev.toSpliced(0, 1));
   }, []);
 
   const registerTabs = useCallback((items: HeaderTab[]) => {
@@ -48,7 +45,7 @@ const AppShellContextProvider = ({ children }: PropsWithChildren) => {
         toggleNavbar,
       },
       breadcrumbs: {
-        items: breadcrumbsItems,
+        items: breadcrumbsItems[0],
         register: registerBreadcrumbsItems,
       },
       tabs: {

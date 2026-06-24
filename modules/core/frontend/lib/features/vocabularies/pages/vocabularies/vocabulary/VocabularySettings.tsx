@@ -16,21 +16,23 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Route, Routes } from "react-router-dom";
-import Vocabularies from "./vocabularies";
-import Vocabulary from "./vocabularies/vocabulary";
-import NewVocabulary from "./vocabularies/vocabulary/NewVocabulary";
+import styles from "./vocabulary.module.scss";
+import { useVocabulary, useVocabularyFields } from "../../../queries/vocabularies";
+import VocabularyForm from "./VocabularyForm";
 
-const VocabulariesTab = () => {
+interface Props {
+  vocabularyId: string | number;
+}
+
+const VocabularySettings = ({ vocabularyId }: Props) => {
+  const { data: vocabulary } = useVocabulary(vocabularyId);
+  const { data: vocabularyFields } = useVocabularyFields();
+
   return (
-    <Routes>
-      <Route index element={<Vocabularies />} />
-      <Route path="new" element={<NewVocabulary />} />
-      <Route path=":vocabulary_id">
-        <Route index path="*" element={<Vocabulary />} />
-      </Route>
-    </Routes>
+    <div className={styles.vocabularySettings}>
+      <VocabularyForm fields={vocabularyFields!} vocabulary={vocabulary!} />
+    </div>
   );
 };
 
-export default VocabulariesTab;
+export default VocabularySettings;

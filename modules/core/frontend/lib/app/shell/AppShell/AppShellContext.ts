@@ -1,4 +1,4 @@
-import { createContext, useContext } from "react";
+import { createContext, useContext, useEffect } from "react";
 
 export interface BreadcrumbItem {
   label: string;
@@ -48,6 +48,17 @@ export const AppShellContext =
   createContext<AppShellContextValue>(defaultValue);
 
 export const useAppShell = () => useContext(AppShellContext);
-export const useNavbar = () => useContext(AppShellContext).navbar;
-export const useBreadcrumbs = () => useContext(AppShellContext).breadcrumbs;
-export const useTabs = () => useContext(AppShellContext).tabs;
+
+export const useBreadcrumbs = (breadcrumbs: BreadcrumbItem[]) => {
+  const register = useAppShell().breadcrumbs.register;
+  useEffect(() => {
+    return register(breadcrumbs);
+  }, [breadcrumbs, register]);
+};
+
+export const useTabs = (tabs: HeaderTab[]) => {
+  const register = useAppShell().tabs.register;
+  useEffect(() => {
+    return register(tabs);
+  }, [tabs, register]);
+};
