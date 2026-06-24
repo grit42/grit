@@ -22,7 +22,7 @@ import { useNavigate } from "react-router-dom";
 import { GritColumnDef, Table, useSetupTableState } from "@grit42/table";
 import { ErrorPage } from "@grit42/client-library/components";
 import { ExperimentData } from "../../../../queries/experiments";
-import { CenteredColumnLayout } from "@grit42/client-library/layouts";
+import styles from "../experiment.module.scss";
 
 const LOAD_SET_COLUMNS: GritColumnDef<EntityData>[] = [
   {
@@ -172,24 +172,23 @@ const ExperimentLoadSets = ({ experiment }: { experiment: ExperimentData }) => {
   }
 
   return (
-    <CenteredColumnLayout>
-      <Table<EntityData>
-        loading={isFetching && !isFetchingNextPage}
-        data={flatData}
-        fitContent
-        tableState={tableState}
-        onRowClick={
-          experiment.publication_status_id__name !== "Published"
-            ? (row) => navigate(`/core/load_sets/${row.original.id}`)
-            : undefined
-        }
-        pagination={{
-          fetchNextPage,
-          isFetchingNextPage,
-          totalRows: data?.pages[0]?.total,
-        }}
-      />
-    </CenteredColumnLayout>
+    <Table<EntityData>
+      className={styles.loadSetsTable}
+      loading={isFetching && !isFetchingNextPage}
+      data={flatData}
+      fitContent
+      tableState={tableState}
+      onRowClick={
+        experiment.publication_status_id__name !== "Published"
+          ? (row) => navigate(`/core/load_sets/${row.original.id}`)
+          : undefined
+      }
+      pagination={{
+        fetchNextPage,
+        isFetchingNextPage,
+        totalRows: data?.pages[0]?.total,
+      }}
+    />
   );
 };
 

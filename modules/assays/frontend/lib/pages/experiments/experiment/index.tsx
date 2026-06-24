@@ -25,7 +25,7 @@ import { useBreadcrumbs, useTabs, useToolbar } from "@grit42/core";
 import { downloadFile } from "@grit42/client-library/utils";
 import ExperimentPlots from "./plots";
 import ExperimentLoadSets from "./load-sets";
-import ExperimentFiles from "./files";
+import ExperimentAttachements from "./attachments";
 import Data from "./data";
 import ExperimentDataSheet from "./data/DataSheet";
 import DetailsView from "./details/DetailsView";
@@ -51,8 +51,8 @@ const useExperimentTabs = (experiment?: ExperimentData | null) =>
               label: "Plots",
             },
             {
-              url: `/assays/experiments/${experiment.id}/files`,
-              label: "Files",
+              url: `/assays/experiments/${experiment.id}/attachments`,
+              label: "Attachments",
             },
             {
               url: `/assays/experiments/${experiment.id}/load-sets`,
@@ -127,8 +127,8 @@ const Experiment = () => {
         path="load-sets"
         element={<ExperimentLoadSets experiment={data} />}
       />
-      <Route path="files" element={<ExperimentFiles experiment={data} />} />
-      <Route path="*" element={<Navigate to="details" replace />} />
+      <Route path="attachments" element={<ExperimentAttachements experiment={data} />} />
+      <Route path="*" element={<Navigate to="../details" replace />} />
     </Routes>
   );
 };

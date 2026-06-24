@@ -9,6 +9,7 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useMemo } from "react";
 import Circle1NewIcon from "@grit42/client-library/icons/Circle1New";
+import styles from "./experiments.module.scss"
 
 const ExperimentsTable = () => {
   const canCreateExperiment = useHasPermission("write:assays");
@@ -45,6 +46,7 @@ const ExperimentsTable = () => {
 
   return (
     <Table
+      className={styles.experimentsTable}
       header="Experiments"
       headerActions={
         canCreateExperiment ? (

@@ -3,7 +3,10 @@
 .plotContainer {
   &.withSidebar {
     grid-template-columns: minmax(40ch, 2fr) 8fr !important;
+    gap: theme.$spacing-md;
   }
+  padding-top: theme.$spacing-md;
+  padding-inline: theme.$spacing-md;
 }
 
 .plotSidebar {
@@ -12,12 +15,12 @@
   gap: theme.$spacing-lg;
   grid-auto-rows: min-content;
   overflow-y: auto;
+  border-radius: 0;
 }
 
 .tabs {
   padding-inline: theme.$spacing-lg;
   padding-top: theme.$spacing-lg;
-  margin-bottom: theme.$spacing-lg;
   border-bottom: 1px solid theme.$palette-background-contrast-text;
 
   ul {
