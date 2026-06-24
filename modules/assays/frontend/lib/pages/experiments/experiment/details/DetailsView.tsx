@@ -229,26 +229,11 @@ const ExperimentDetails = ({
 }: {
   experiment: Partial<ExperimentData>;
 }) => {
-  const publishMutation = usePublishExperimentMutation(experiment.id!);
-  const onPublish = async () => {
-    if (!experiment.id) {
-      return;
-    }
-    await publishMutation.mutateAsync();
-  };
-
   return (
     <div className={styles.details}>
       <div className={styles.header}>
         <div className={styles.title}>
           <h1>{experiment.name}</h1>
-          {<Button
-            color="secondary"
-            onClick={onPublish}
-            loading={publishMutation.isPending}
-          >
-            Publish
-          </Button>}
         </div>
         <p>{experiment.description ?? "No description provided"}</p>
       </div>

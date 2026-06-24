@@ -70,7 +70,7 @@ const Data = ({ experiment }: { experiment: ExperimentData }) => {
         label: name,
         url: id.toString(),
       }))}
-      matchPattern="/assays/experiments/:experiment_id/data/:tab"
+      matchPattern="/assays/experiments/:experiment_id/data/:tab/*"
       paramName="tab"
     />
   );

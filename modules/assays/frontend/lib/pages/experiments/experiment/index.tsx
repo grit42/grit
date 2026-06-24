@@ -116,7 +116,7 @@ const Experiment = () => {
       <Route path="details" element={<DetailsView />} />
       <Route path="data" element={<Data experiment={data} />}>
         <Route
-          path=":sheet_id"
+          path=":sheet_id/*"
           element={<ExperimentDataSheet experiment={data} />}
         />
       </Route>

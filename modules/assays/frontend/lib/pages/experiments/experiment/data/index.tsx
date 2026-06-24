@@ -18,12 +18,12 @@
 
 import { RoutedTabs } from "@grit42/client-library/components";
 import { ExperimentData } from "../../../../queries/experiments";
-import styles from "./experimentData.module.scss"
+import styles from "./experimentData.module.scss";
 
 const Data = ({ experiment }: { experiment: ExperimentData }) => {
   return (
     <RoutedTabs
-    tabsClassName={styles.tabs}
+      tabsClassName={styles.tabs}
       tabs={experiment.data_sheets.map(({ name, id }) => ({
         label: name,
         url: id.toString(),
