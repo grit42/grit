@@ -38,6 +38,10 @@ const TABS = [
     url: "synonyms",
     label: "Synonyms",
   },
+  {
+    url: "compound-cv",
+    label: "Compound CV",
+  }
 ];
 
 const CompoundPage = () => {

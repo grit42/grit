@@ -185,6 +185,71 @@ module Grit::Compounds
           disabled: true,
           compound_type_id: nil,
           compound_type_id__name: nil
+        },
+        {
+          name: "smiles",
+          display_name: "Canonical SMILES",
+          type: "string",
+          limit: nil,
+          required: false,
+          unique: false,
+          default: nil,
+          entity: nil,
+          disabled: true,
+          compound_type_id: nil,
+          compound_type_id__name: nil
+        },
+        {
+          name: "inchi",
+          display_name: "InChI",
+          type: "string",
+          limit: nil,
+          required: false,
+          unique: false,
+          default: nil,
+          entity: nil,
+          disabled: true,
+          compound_type_id: nil,
+          compound_type_id__name: nil
+        },
+        {
+          name: "inchikey",
+          display_name: "InChI Key",
+          type: "string",
+          limit: nil,
+          required: false,
+          unique: false,
+          default: nil,
+          entity: nil,
+          disabled: true,
+          compound_type_id: nil,
+          compound_type_id__name: nil
+        },
+        {
+          name: "hba",
+          display_name: "Hydrogen Bond Acceptor Count",
+          type: "integer",
+          limit: nil,
+          required: false,
+          unique: false,
+          default: nil,
+          entity: nil,
+          disabled: true,
+          compound_type_id: nil,
+          compound_type_id__name: nil
+        },
+        {
+          name: "hbd",
+          display_name: "Hydrogen Bond Donor Count",
+          type: "integer",
+          limit: nil,
+          required: false,
+          unique: false,
+          default: nil,
+          entity: nil,
+          disabled: true,
+          compound_type_id: nil,
+          compound_type_id__name: nil
         } ]
       end
 
@@ -245,6 +310,10 @@ module Grit::Compounds
         .select("grit_compounds_molecules__.molweight as molweight")
         .select("grit_compounds_molecules__.logp as logp")
         .select("grit_compounds_molecules__.molformula as molformula")
+        .select("grit_compounds_molecules__.inchi as inchi")
+        .select("grit_compounds_molecules__.inchikey as inchikey")
+        .select("CAST(grit_compounds_molecules__.hba as integer) as hba")
+        .select("CAST(grit_compounds_molecules__.hbd as integer) as hbd")
         .joins("LEFT OUTER JOIN grit_compounds_compound_types grit_compounds_compound_types__ ON grit_compounds_compounds.compound_type_id = grit_compounds_compound_types__.id")
         .joins("LEFT OUTER JOIN grit_core_origins grit_core_origins__ ON grit_compounds_compounds.origin_id = grit_core_origins__.id")
         .joins("LEFT OUTER JOIN grit_compounds_molecules_compounds grit_compounds_molecules_compounds__ ON grit_compounds_compounds.id = grit_compounds_molecules_compounds__.compound_id")
@@ -308,6 +377,10 @@ module Grit::Compounds
       .select("grit_compounds_molecules__.molweight as molweight")
       .select("grit_compounds_molecules__.logp as logp")
       .select("grit_compounds_molecules__.molformula as molformula")
+      .select("grit_compounds_molecules__.inchi as inchi")
+      .select("grit_compounds_molecules__.inchikey as inchikey")
+      .select("CAST(grit_compounds_molecules__.hba as integer) as hba")
+      .select("CAST(grit_compounds_molecules__.hbd as integer) as hbd")
       .joins("LEFT OUTER JOIN grit_compounds_compound_types grit_compounds_compound_types__ ON grit_compounds_compounds.compound_type_id = grit_compounds_compound_types__.id")
       .joins("LEFT OUTER JOIN grit_core_origins grit_core_origins__ ON grit_compounds_compounds.origin_id = grit_core_origins__.id")
       .joins("LEFT OUTER JOIN grit_compounds_molecules_compounds grit_compounds_molecules_compounds__ ON grit_compounds_compounds.id = grit_compounds_molecules_compounds__.compound_id")
@@ -337,5 +410,69 @@ module Grit::Compounds
     def set_number
       self.number = ActiveRecord::Base.connection.execute("SELECT concat('GRIT', LPAD((nextval('public.grit_compounds_compound_seq'::regclass))::text, 7, '0')) as number").first["number"]
     end
+
+  def self.cv(params = nil)
+    raise "compound_id parameter is required" if params.nil? || params[:compound_id].nil?
+    compound_id = params[:compound_id]
+    compound_data_type_id = Grit::Core::DataType.find_by!(
+      table_name: Grit::Compounds::Compound.table_name, is_entity: true
+    ).id
+
+    data_sheet_definitions = Grit::Assays::AssayDataSheetDefinition
+      .where(result: true)
+      .includes(assay_data_sheet_columns: [ :data_type, :unit ]).all
+
+    subqueries = data_sheet_definitions.flat_map do |definition|
+      target_column = definition.assay_data_sheet_columns.find { |col| col.data_type.is_entity && col.data_type_id == compound_data_type_id }
+      next [] if target_column.nil?
+
+      experiment_data_sheet = Grit::Assays::ExperimentDataSheetRecord.sheet_record_klass(definition.id)
+
+      definition.assay_data_sheet_columns
+      .select { |col| %w[integer decimal float].include?(col.data_type.name) }
+      .map do |value_column|
+        experiment_data_sheet.unscoped
+        .select(
+          "data_sources.id AS experiment_data_sheet_record_id",
+          "CAST(data_sources.#{value_column.safe_name} AS double precision) AS value",
+          "#{value_column.id} AS assay_data_sheet_column_id",
+          "#{ActiveRecord::Base.connection.quote(value_column.name)} AS assay_data_sheet_column_id__name",
+          "#{definition.id} AS assay_data_sheet_definition_id",
+          "#{ActiveRecord::Base.connection.quote(definition.name)} AS assay_data_sheet_definition_id__name",
+          "experiments_with_metadata.id AS experiment_id",
+          "experiments_with_metadata.name AS experiment_id__name",
+          "experiments_with_metadata.assay_model_id AS assay_model_id",
+          "experiments_with_metadata.assay_model_id__name AS assay_model_id__name",
+          "#{ActiveRecord::Base.connection.quote(value_column.unit&.abbreviation)} AS unit_id__abbreviation",
+        )
+        .from("#{experiment_data_sheet.table_name} data_sources")
+        .joins("JOIN experiments_with_metadata ON experiments_with_metadata.id = data_sources.experiment_id")
+        .joins("JOIN grit_assays_assay_models assay_models ON assay_models.id = experiments_with_metadata.assay_model_id")
+        .joins("JOIN grit_core_publication_statuses eps ON eps.id = experiments_with_metadata.publication_status_id AND eps.name = 'Published'")
+        .joins("JOIN grit_core_publication_statuses mps ON mps.id = assay_models.publication_status_id AND mps.name = 'Published'")
+        .where("data_sources.#{target_column.safe_name} = ?", compound_id)
+        .to_sql
+      end
+    end
+    return self.none if subqueries.empty?
+
+    union_sql = subqueries.join("\nUNION ALL\n")
+    self.unscoped
+      .with(experiments_with_metadata: Grit::Assays::Experiment.detailed)
+      .select(
+        "ROW_NUMBER() OVER (ORDER BY cv.experiment_data_sheet_record_id, cv.assay_data_sheet_column_id) AS id",
+        "cv.value",
+        "cv.assay_data_sheet_column_id",
+        "cv.assay_data_sheet_column_id__name",
+        "cv.assay_data_sheet_definition_id",
+        "cv.assay_data_sheet_definition_id__name",
+        "cv.experiment_id",
+        "cv.experiment_id__name",
+        "cv.assay_model_id",
+        "cv.assay_model_id__name",
+        "cv.unit_id__abbreviation",
+      )
+      .from("(\n#{union_sql}\n) cv")
+  end
   end
 end

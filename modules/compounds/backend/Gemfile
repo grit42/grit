@@ -19,3 +19,4 @@ gem "rswag-ui", "~> 2.17"
 gem "rack-cors"
 
 gem "grit-core", path: "../../core/backend"
+gem "grit-assays", path: "../../assays/backend"
