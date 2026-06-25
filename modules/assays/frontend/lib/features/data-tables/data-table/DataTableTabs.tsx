@@ -16,38 +16,32 @@
  * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { RoutedTabs } from "@grit42/client-library/components";
+import { useBreadcrumbs, useTabs } from "@grit42/core";
+import { Outlet } from "react-router-dom";
+import { useMemo } from "react";
+import { DataTableData } from "../queries/data_tables";
+import { DATA_TABLE_BREADCRUMBS } from "./breadcrumbs";
 
-const TABS = [
+const TABS = (id: string | number) => [
   {
-    url: "details",
-    label: "Details",
-  },
-  {
-    url: "data",
+    url: `/assays/data_tables/${id}/data`,
     label: "Data",
   },
   {
-    url: "plots",
+    url: `/assays/data_tables/${id}/plots`,
     label: "Plots",
   },
   {
-    url: "entities",
-    label: "Entities",
-  },
-  {
-    url: "columns",
-    label: "Columns",
+    url: `/assays/data_tables/${id}/settings`,
+    label: "Settings",
   },
 ];
 
-const DataTableTabs = () => {
-  return (
-    <RoutedTabs
-      matchPattern="/assays/data_tables/:data_table_id/:tab/*"
-      tabs={TABS}
-    />
-  );
+const DataTableTabs = ({ dataTable }: { dataTable: DataTableData }) => {
+  useTabs(useMemo(() => TABS(dataTable.id), [dataTable.id]));
+  useBreadcrumbs(useMemo(() => DATA_TABLE_BREADCRUMBS(dataTable), [dataTable]));
+
+  return <Outlet />;
 };
 
 export default DataTableTabs;

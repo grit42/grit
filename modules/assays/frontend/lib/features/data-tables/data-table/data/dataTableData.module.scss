@@ -1,13 +1,5 @@
-.dataTableContainer {
-  display: grid;
-  grid-template-columns: 1fr;
-  max-width: 100%;
-  height: 100%;
-  overflow: auto;
-}
+@use "@grit42/client-library/theme.scss";
 
-@media (max-width: 1000px) {
-  .dataTableContainer {
-    min-width: 0;
-  }
+.dataTableDataTable {
+  padding-top: theme.$spacing-md;
 }

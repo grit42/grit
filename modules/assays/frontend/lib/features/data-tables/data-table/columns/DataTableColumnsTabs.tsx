@@ -32,7 +32,7 @@ const TABS = [
 const DataTableColumnsTabs = () => {
   return (
     <RoutedTabs
-      matchPattern="/assays/data_tables/:data_table_id/columns/:tab/*"
+      matchPattern="/assays/data_tables/:data_table_id/settings/columns/:tab/*"
       tabs={TABS}
     />
   );

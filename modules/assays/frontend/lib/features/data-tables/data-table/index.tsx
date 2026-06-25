@@ -26,15 +26,18 @@ import { useDataTable, useDataTableFields } from "../queries/data_tables";
 import DataTableTabs from "./DataTableTabs";
 import { useDataTableEntityColumns } from "../queries/data_table_entities";
 import { useDataTableColumnColumns } from "../queries/data_table_columns";
-import DataTableData from "./data";
+import DataTableDataPage from "./data";
 import DataTablePlots from "./plots";
 import DataTableEntities from "./entities";
 import DataTableDetails from "./details";
-import DataTableColumns from "./columns";
+import DataTableSettingsPage from "./settings";
+import AssayDataSheetDataTableColumns from "./columns/assay_data_sheet_columns";
+import EntityAttributeDataTableColumns from "./columns/entity_attributes";
 
 const DataTablePage = () => {
   const { data_table_id } = useParams() as { data_table_id: string };
   const {
+    data: dataTable,
     isLoading: isDataTableLoading,
     isError: isDataTableError,
     error: dataTableError,
@@ -87,6 +90,7 @@ const DataTablePage = () => {
     return <Spinner />;
 
   if (
+    !dataTable ||
     isRowsError ||
     isColumnsError ||
     isDataTableError ||
@@ -113,14 +117,10 @@ const DataTablePage = () => {
 
   return (
     <Routes>
-      <Route element={<DataTableTabs />}>
-        <Route
-          path="details"
-          element={<DataTableDetails dataTableId={data_table_id} />}
-        />
+      <Route element={<DataTableTabs dataTable={dataTable} />}>
         <Route
           path="data"
-          element={<DataTableData dataTableId={data_table_id} />}
+          element={<DataTableDataPage dataTable={dataTable} />}
         />
         <Route path="plots">
           <Route
@@ -129,19 +129,45 @@ const DataTablePage = () => {
             element={<DataTablePlots dataTableId={data_table_id} />}
           />
         </Route>
-        <Route path="entities">
+        <Route
+          path="settings"
+          element={<DataTableSettingsPage dataTableId={data_table_id} />}
+        >
           <Route
-            index
-            path="*"
-            element={<DataTableEntities dataTableId={data_table_id} />}
+            path="general"
+            element={<DataTableDetails dataTableId={data_table_id} />}
           />
-        </Route>
-        <Route path="columns">
-          <Route
-            index
-            path="*"
-            element={<DataTableColumns dataTableId={data_table_id} />}
-          />
+          <Route path="columns">
+            <Route path="assay">
+              <Route
+                index
+                path="*"
+                element={
+                  <AssayDataSheetDataTableColumns dataTableId={data_table_id} />
+                }
+              />
+            </Route>
+            <Route path="entity">
+              <Route
+                index
+                path="*"
+                element={
+                  <EntityAttributeDataTableColumns
+                    dataTableId={data_table_id}
+                  />
+                }
+              />
+            </Route>
+            <Route index path="*" element={<Navigate to="../assay" replace />} />
+          </Route>
+          <Route path="entities">
+            <Route
+              index
+              path="*"
+              element={<DataTableEntities dataTableId={data_table_id} />}
+            />
+          </Route>
+          <Route index path="*" element={<Navigate to="../general" replace />} />
         </Route>
         <Route index path="*" element={<Navigate to="../data" replace />} />
       </Route>

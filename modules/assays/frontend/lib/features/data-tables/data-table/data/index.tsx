@@ -39,9 +39,11 @@ import {
   ErrorPage,
 } from "@grit42/client-library/components";
 import FullPerspectiveDialog from "./FullPerspectiveDialog";
+import { DataTableData } from "../../queries/data_tables";
+import styles from "./dataTableData.module.scss";
 
 interface Props {
-  dataTableId: string | number;
+  dataTable: DataTableData;
 }
 
 const getExportFileUrl = (
@@ -62,21 +64,20 @@ interface ClickedCellInfo {
   column: string;
 }
 
-const DataTableData = ({ dataTableId }: Props) => {
+const DataTableDataPage = ({ dataTable }: Props) => {
   const registerToolbarActions = useToolbar();
   const navigate = useNavigate();
   const canEditDataTable = useHasPermission("write:analysis");
-
   const [clickedCell, setClickedCell] = useState<ClickedCellInfo | null>(null);
 
   const { data: columns } = useDataTableRowColumns({
-    data_table_id: dataTableId,
+    data_table_id: dataTable.id,
   });
 
   const tableColumns = useTableColumns(columns);
 
   const tableState = useSetupTableState(
-    `data-table-${dataTableId}`,
+    `data-table-${dataTable.id}`,
     tableColumns,
   );
 
@@ -86,13 +87,10 @@ const DataTableData = ({ dataTableId }: Props) => {
     isFetchingNextPage,
     fetchNextPage,
   } = useInfiniteDataTableRows(
-    dataTableId.toString(),
+    dataTable.id.toString(),
     tableState.sorting,
     tableState.filters,
     undefined,
-    {
-      enabled: dataTableId !== "new",
-    },
   );
 
   const flatData = useMemo(
@@ -110,7 +108,7 @@ const DataTableData = ({ dataTableId }: Props) => {
     );
 
     return getExportFileUrl(
-      `/api/grit/assays/data_tables/${dataTableId}/data_table_rows`,
+      `/api/grit/assays/data_tables/${dataTable.id}/data_table_rows`,
       tableState.filters,
       tableState.sorting,
       columnIds,
@@ -120,7 +118,7 @@ const DataTableData = ({ dataTableId }: Props) => {
     tableState.filters,
     tableState.sorting,
     tableState.columnVisibility,
-    dataTableId,
+    dataTable.id,
     tableColumns,
   ]);
 
@@ -147,7 +145,7 @@ const DataTableData = ({ dataTableId }: Props) => {
   }, [
     registerToolbarActions,
     navigateToNew,
-    dataTableId,
+    dataTable.id,
     navigate,
     canEditDataTable,
     exportUrl,
@@ -179,9 +177,11 @@ const DataTableData = ({ dataTableId }: Props) => {
         id={clickedCell?.id}
         onClose={() => setClickedCell(null)}
         columns={tableColumns}
-        dataTableId={dataTableId}
+        dataTableId={dataTable.id}
       />
       <Table
+        className={styles.dataTableDataTable}
+        header={dataTable.name}
         tableState={tableState}
         loading={isRowsLoading && !isFetchingNextPage}
         data={flatData ?? []}
@@ -200,4 +200,4 @@ const DataTableData = ({ dataTableId }: Props) => {
   );
 };
 
-export default DataTableData;
+export default DataTableDataPage;

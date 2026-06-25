@@ -27,7 +27,6 @@ import {
 } from "../../queries/data_table_entities";
 import { Button } from "@grit42/client-library/components";
 import { useQueryClient } from "@grit42/api";
-import { CenteredColumnLayout } from "@grit42/client-library/layouts";
 
 interface Props {
   dataTableId: string | number;
@@ -73,9 +72,7 @@ const DataTableEntitiesTable = ({ dataTableId }: Props) => {
   const navigateToEdit = useCallback(() => navigate("edit"), [navigate]);
 
   return (
-    <CenteredColumnLayout>
       <Table
-        fitContent
         header="Entities"
         tableState={tableState}
         rowActions={canEditDataTable ? ["delete"] : []}
@@ -123,7 +120,6 @@ const DataTableEntitiesTable = ({ dataTableId }: Props) => {
           totalRows: data?.pages[0]?.total,
         }}
       />
-    </CenteredColumnLayout>
   );
 };
 

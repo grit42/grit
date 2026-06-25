@@ -19,6 +19,8 @@
 import { ErrorPage, Spinner } from "@grit42/client-library/components";
 import { useDataTableColumns } from "../queries/data_tables";
 import DataTablesTable from "./DataTablesTable";
+import { useBreadcrumbs } from "@grit42/core";
+import { DATA_TABLES_BREADCRUMBS } from "./breadcrumbs";
 
 const DataTablesPage = () => {
   const {
@@ -27,6 +29,8 @@ const DataTablesPage = () => {
     isError: isDataTableColumnsError,
     error: dataTableColumnsError,
   } = useDataTableColumns();
+
+  useBreadcrumbs(DATA_TABLES_BREADCRUMBS);
 
   if (isDataTableColumnsLoading) return <Spinner />;
 

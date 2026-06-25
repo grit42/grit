@@ -161,7 +161,7 @@ const ExperimentMetadataFilters = ({
   }
 
   if (fields?.length == 0) {
-    return null;
+    return <div />;
   }
 
   const onClose = (id?: number) => {

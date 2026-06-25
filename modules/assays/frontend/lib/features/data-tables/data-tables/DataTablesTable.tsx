@@ -27,7 +27,7 @@ import {
   useDataTableColumns,
 } from "../queries/data_tables";
 import { useTableColumns } from "@grit42/core/utils";
-import { CenteredColumnLayout } from "@grit42/client-library/layouts";
+import styles from "./dataTables.module.scss";
 
 const DataTablesTable = () => {
   const registerToolbarActions = useToolbar();
@@ -84,26 +84,25 @@ const DataTablesTable = () => {
   }
 
   return (
-    <CenteredColumnLayout>
-      <Table
-        tableState={tableState}
-        header="Data Tables"
-        headerActions={
-          canManageDataTable ? (
-            <Button onClick={navigateToNew}>New</Button>
-          ) : undefined
-        }
-        fitContent
-        data={flatData}
-        onRowClick={(row) => navigate(`${row.original.id}`)}
-        loading={isLoading}
-        pagination={{
-          fetchNextPage,
-          isFetchingNextPage,
-          totalRows: data?.pages[0]?.total,
-        }}
-      />
-    </CenteredColumnLayout>
+    <Table
+      className={styles.dataTablesTable}
+      tableState={tableState}
+      header="Data Tables"
+      headerActions={
+        canManageDataTable ? (
+          <Button onClick={navigateToNew}>New</Button>
+        ) : undefined
+      }
+      fitContent
+      data={flatData}
+      onRowClick={(row) => navigate(`${row.original.id}`)}
+      loading={isLoading}
+      pagination={{
+        fetchNextPage,
+        isFetchingNextPage,
+        totalRows: data?.pages[0]?.total,
+      }}
+    />
   );
 };
 
