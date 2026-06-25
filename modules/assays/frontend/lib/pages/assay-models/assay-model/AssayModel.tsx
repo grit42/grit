@@ -16,119 +16,47 @@
  * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import {
-  createSearchParams,
-  useMatch,
-  useNavigate,
-  useParams,
-} from "react-router-dom";
+import { Outlet, useParams } from "react-router-dom";
 import { useAssayModel } from "../../../queries/assay_models";
-import { useEffect, useMemo } from "react";
-import { useToolbar } from "@grit42/core";
-import CogIcon from "@grit42/client-library/icons/Cog";
-import Circle1NewIcon from "@grit42/client-library/icons/Circle1New";
-import { RoutedTabs } from "@grit42/client-library/components";
-import styles from "./assayModel.module.scss";
+import { useMemo } from "react";
+import { useTabs } from "@grit42/core";
+import { useAssayModelBreadcrumbs } from "./breadcrumbs";
 
-const TABS = [
-  {
-    url: "experiments",
-    label: "Experiments",
-  },
-  {
-    url: "data",
-    label: "Data",
-  },
-  {
-    url: "data-sheets",
-    label: "Data sheets",
-  },
-  {
-    url: "metadata",
-    label: "Metadata",
-  },
-];
-
-const AssayModelHeader = () => {
-  const { assay_model_id } = useParams() as { assay_model_id: string };
-  const { data: assay_model } = useAssayModel(assay_model_id);
-
-  if (!assay_model) {
-    return null;
-  }
-
-  return (
-    <div className={styles.assayModelHeader}>
-      <div className={styles.nameAndStatus}>
-        <h2>{assay_model.name}</h2>
-        <em>{assay_model.publication_status_id__name}</em>
-      </div>
-      <p>
-        {assay_model.description?.length
-          ? assay_model.description
-          : "No description provided"}
-      </p>
-    </div>
-  );
-};
+const useAssayModelTabs = (id: string | number) =>
+  useTabs(useMemo(
+    () => [
+      {
+        url: `/assays/assay-models/${id}/experiments`,
+        label: "Experiments",
+      },
+      {
+        url: `/assays/assay-models/${id}/data`,
+        label: "Data",
+      },
+      {
+        url: `/assays/assay-models/${id}/data-sheets`,
+        label: "Data sheets",
+      },
+      {
+        url: `/assays/assay-models/${id}/metadata`,
+        label: "Metadata",
+      },
+    ],
+    [id],
+  ));
 
 const AssayModel = () => {
-  const navigate = useNavigate();
   const { assay_model_id } = useParams() as { assay_model_id: string };
-  const experimentsMatch = useMatch(
-    "/assays/assay-models/:assay_model_id/experiments",
-  );
-  const match = useMatch("/assays/assay-models/:assay_model_id/:tab/*");
-
   const { data: assay_model } = useAssayModel(assay_model_id);
 
-  const registerToolbarActions = useToolbar();
-
-  const manageLink = useMemo(() => {
-    if (!experimentsMatch && match?.params.tab) {
-      return `/assays/assay-models/settings/assay-models/${assay_model_id}/${match.params.tab}`;
-    }
-    return `/assays/assay-models/settings/assay-models/${assay_model_id}/details`;
-  }, [assay_model_id, experimentsMatch, match]);
-
-  useEffect(() => {
-    return registerToolbarActions({
-      actions: [
-        {
-          id: "NEW",
-          icon: <Circle1NewIcon />,
-          label: "New experiment",
-          requiredPermissions: ["write:assays"],
-          onClick: () =>
-            navigate({
-              pathname: "/assays/experiments/new",
-              search: createSearchParams({
-                assay_model_id: assay_model_id,
-              }).toString(),
-            }),
-        },
-        {
-          id: "ASSAY_MODEL_SETTINGS",
-          icon: <CogIcon />,
-          label: "Manage assay model",
-          requiredPermissions: ["admin:assays"],
-          onClick: () => navigate(manageLink),
-        },
-      ],
-    });
-  }, [assay_model_id, manageLink, navigate, registerToolbarActions]);
+  useAssayModelTabs(assay_model_id);
+  useAssayModelBreadcrumbs(assay_model);
 
   if (!assay_model) {
     return null;
   }
 
-  return (
-    <RoutedTabs
-      heading={<AssayModelHeader />}
-      matchPattern="/assays/assay-models/:assay_model_id/:tab/*"
-      tabs={TABS}
-    />
-  );
+  return <Outlet />;
 };
 
 export default AssayModel;

@@ -16,26 +16,22 @@
  * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { useAssayModelColumns } from "../../queries/assay_models";
-import { ErrorPage, Spinner } from "@grit42/client-library/components";
-import AssayModelsTable from "./AssayModelsTable";
-import { useBreadcrumbs } from "@grit42/core";
-import { ASSAY_MODELS_BREADCRUMBS } from "./breadcrumbs";
+@use "@grit42/client-library/theme.scss";
 
-const AssayModelsPage = () => {
-  const { data, isLoading, isError, error } = useAssayModelColumns();
+.tabs {
+  padding-inline: theme.$spacing-lg;
+  padding-top: theme.$spacing-lg;
+  margin-bottom: theme.$spacing-lg;
+  border-bottom: 1px solid theme.$palette-background-contrast-text;
 
-  useBreadcrumbs(ASSAY_MODELS_BREADCRUMBS);
-
-  if (isLoading) {
-    return <Spinner />;
+  ul {
+    margin-bottom: 0 !important;
   }
+}
 
-  if (isError || !data) {
-    return <ErrorPage error={error} />;
-  }
-
-  return <AssayModelsTable />;
-};
-
-export default AssayModelsPage;
+.page {
+  padding-inline: theme.$spacing-lg;
+  gap: theme.$spacing-lg;
+  display: grid;
+  grid-template-rows: min-content 1fr;
+}

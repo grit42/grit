@@ -31,6 +31,7 @@ import {
 } from "react-router-dom";
 import { useMemo } from "react";
 import { useHasPermission } from "@grit42/core";
+import styles from "./assayModelExperiments.module.scss";
 
 const ExperimentsTable = () => {
   const canCreateExperiment = useHasPermission("write:assays");
@@ -55,6 +56,8 @@ const ExperimentsTable = () => {
 
   return (
     <Table
+      header="Experiments"
+      className={styles.assayModelExperimentsTable}
       onRowClick={({ original }) =>
         navigate(`/assays/experiments/${original.id.toString()}/details`)
       }

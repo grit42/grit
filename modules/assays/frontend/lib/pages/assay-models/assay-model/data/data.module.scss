@@ -18,6 +18,17 @@
 
 @use "@grit42/client-library/theme.scss";
 
+.tabs {
+  padding-inline: theme.$spacing-lg;
+  padding-top: theme.$spacing-lg;
+  margin-bottom: theme.$spacing-lg;
+  border-bottom: 1px solid theme.$palette-background-contrast-text;
+
+  ul {
+    margin-bottom: 0 !important;
+  }
+}
+
 .metadataFilters {
   display: grid;
   grid-template-columns: 20vw;

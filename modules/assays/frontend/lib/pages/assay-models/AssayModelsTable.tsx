@@ -24,7 +24,7 @@ import {
 } from "../../queries/assay_models";
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { CenteredColumnLayout } from "@grit42/client-library/layouts";
+import styles from "./assayModels.module.scss";
 
 const DEFAULT_COLUMN_SIZES = {
   name: 200,
@@ -56,10 +56,10 @@ const AssayModelsTable = () => {
   );
 
   return (
-    <CenteredColumnLayout>
       <Table
         disableFooter
         fitContent
+        className={styles.assayModelsTable}
         onRowClick={(row) => navigate(row.original.id.toString())}
         tableState={tableState}
         header="Assay models"
@@ -72,7 +72,6 @@ const AssayModelsTable = () => {
         }}
         noDataMessage={isError ? error : "No published assay models"}
       />
-    </CenteredColumnLayout>
   );
 };
 

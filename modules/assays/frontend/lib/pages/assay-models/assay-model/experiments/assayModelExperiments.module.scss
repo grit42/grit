@@ -5,6 +5,7 @@
   flex-direction: column;
   gap: theme.$spacing;
   margin-bottom: theme.$spacing;
+  width: 100%;
 
   .nameAndStatus {
     display: flex;
@@ -19,12 +20,10 @@
   }
 }
 
-.assayModelPage {
+.container {
   display: grid;
   grid-template-rows: min-content 1fr;
-  height: 100%;
-  width: 100%;
-  max-width: 100%;
-  max-height: 100%;
-  overflow: auto;
+  padding-top: theme.$spacing-xl;
+  padding-inline: theme.$spacing-xl;
+  gap: theme.$spacing;
 }

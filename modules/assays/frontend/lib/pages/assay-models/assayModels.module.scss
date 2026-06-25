@@ -1,6 +1,7 @@
 @use "@grit42/client-library/theme.scss";
 
-.assayModelTable {
-  width: fit-content;
+.assayModelsTable {
+  padding-top: theme.$spacing-xl;
+  padding-inline: theme.$spacing-xl;
   margin-inline: auto;
 }

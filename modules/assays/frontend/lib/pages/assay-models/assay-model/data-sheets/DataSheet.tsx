@@ -25,6 +25,7 @@ import {
 } from "../../../../queries/assay_data_sheet_definitions";
 import DataSheetColumnsTable from "./DataSheetColumnsTable";
 import { PageLayout } from "@grit42/client-library/layouts";
+import styles from "./dataSheets.module.scss";
 
 const DataSheet = ({ assayModelId }: { assayModelId: string }) => {
   const { sheet_id } = useParams() as { sheet_id: string | undefined };
@@ -62,17 +63,14 @@ const DataSheet = ({ assayModelId }: { assayModelId: string }) => {
   }
 
   return (
-    <PageLayout
-      heading={
-        <p>
-          {sheetDefinition.description?.length
-            ? sheetDefinition.description
-            : "No description provided"}
-        </p>
-      }
-    >
+    <div className={styles.page}>
+      <p>
+        {sheetDefinition.description?.length
+          ? sheetDefinition.description
+          : "No description provided"}
+      </p>
       <DataSheetColumnsTable sheetId={sheet_id ?? ""} />
-    </PageLayout>
+    </div>
   );
 };
 
