@@ -16,13 +16,10 @@
  * @grit42/table. If not, see <https://www.gnu.org/licenses/>.
  */
 
-export * from "@tanstack/react-table";
+import useLocalOrStoredState from "../../../useLocalOrStoredState";
 
-export { default as Table } from "./components/Table";
-export { default as DataGrid } from "./data-grid/components/Table";
+function useColumnSizing(id: string, initialSizing = {}, saveState = true) {
+  return useLocalOrStoredState(`${id}_columnsSizing`, initialSizing, saveState);
+}
 
-export { default as useSetupTableState } from "./features/table-state/useSetupTableState";
-
-export * from "./types";
-export * from "./features/column-types";
-export * from "./features/filters";
+export default useColumnSizing;

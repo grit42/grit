@@ -16,13 +16,30 @@
  * @grit42/table. If not, see <https://www.gnu.org/licenses/>.
  */
 
-export * from "@tanstack/react-table";
+import { Filter } from "./types";
 
-export { default as Table } from "./components/Table";
-export { default as DataGrid } from "./data-grid/components/Table";
+export const isValidRegexp = (regex: string | null) => {
+  if (!regex) return false;
+  try {
+    new RegExp(regex, "gm");
+    return true;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (e: unknown) {
+    return false;
+  }
+};
 
-export { default as useSetupTableState } from "./features/table-state/useSetupTableState";
+export const getIsFilterActive = (filter: Filter) => {
+  if (!filter.active) return false;
+  if (filter.operator === "regexp")
+    return isValidRegexp(filter.value as string);
+  return (
+    filter.operator === "empty" ||
+    filter.operator === "not_empty" ||
+    filter.value !== null
+  );
+};
 
-export * from "./types";
-export * from "./features/column-types";
-export * from "./features/filters";
+export const getIsFiltersActive = (filters: Filter[]) => {
+  return filters.map((f) => getIsFilterActive(f)).includes(true);
+};

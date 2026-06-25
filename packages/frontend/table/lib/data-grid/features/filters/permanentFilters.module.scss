@@ -1,0 +1,71 @@
+@use "@grit42/client-library/mixins.scss";
+@use "@grit42/client-library/theme.scss";
+
+.filter {
+  cursor: pointer;
+  &.filterActive {
+    .icon {
+      fill: theme.$palette-secondary-main;
+    }
+  }
+
+  &:hover {
+    .icon {
+      fill: theme.$palette-secondary-main;
+    }
+  }
+}
+
+.popover {
+  border-radius: 0;
+  padding: 0;
+  border-inline-end: 1px solid theme.$palette-primary-dark;
+  overflow: auto;
+  position: relative;
+
+  .toggle {
+    padding: theme.$spacing;
+    position: sticky;
+    top: 0;
+    background-color: theme.$palette-primary-main;
+  border-block-end: 1px solid theme.$palette-primary-dark;
+    z-index: 100;
+  }
+
+  .filters {
+    padding: theme.$spacing theme.$spacing 0 theme.$spacing;
+  }
+
+  .bottomActions {
+    position: sticky;
+    bottom: 0;
+    padding: 0 theme.$spacing;
+  }
+}
+
+.filterInput {
+  margin-bottom: 0.5em;
+  display: grid;
+  grid-template-columns: 250px 150px 250px min-content;
+  gap: theme.$spacing;
+
+  &.filterNotActive {
+    opacity: 0.5;
+  }
+
+  .icons {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    svg {
+      margin-left: 0.75em;
+      position: relative;
+      cursor: pointer;
+
+      &:first-child {
+        margin-left: 0;
+      }
+    }
+  }
+}

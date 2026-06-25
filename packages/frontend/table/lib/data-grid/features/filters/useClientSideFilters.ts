@@ -16,13 +16,28 @@
  * @grit42/table. If not, see <https://www.gnu.org/licenses/>.
  */
 
-export * from "@tanstack/react-table";
+import { useMemo } from "react";
+import { Filter, getIsFiltersActive } from ".";
 
-export { default as Table } from "./components/Table";
-export { default as DataGrid } from "./data-grid/components/Table";
+const getFilteredItems = <T>(data: T[], filters: Filter[]) => {
+  console.log(filters);
+  return data;
+};
 
-export { default as useSetupTableState } from "./features/table-state/useSetupTableState";
+const filterData = <T>(data: T[], filters: Filter[]) => {
+  if (getIsFiltersActive(filters)) return getFilteredItems(data, filters);
+  return data;
+};
 
-export * from "./types";
-export * from "./features/column-types";
-export * from "./features/filters";
+const useClientSideFilters = <T>(
+  enabled: boolean,
+  data: T[],
+  filters: Filter[],
+) => {
+  return useMemo(
+    () => (enabled ? filterData(data, filters) : data),
+    [data, enabled, filters],
+  );
+};
+
+export default useClientSideFilters;

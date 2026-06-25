@@ -16,13 +16,9 @@
  * @grit42/table. If not, see <https://www.gnu.org/licenses/>.
  */
 
-export * from "@tanstack/react-table";
-
-export { default as Table } from "./components/Table";
-export { default as DataGrid } from "./data-grid/components/Table";
-
-export { default as useSetupTableState } from "./features/table-state/useSetupTableState";
-
 export * from "./types";
-export * from "./features/column-types";
-export * from "./features/filters";
+export * from "./utils";
+export { default as Filters } from "./Filters";
+export { default as GenericFilterInput } from "./GenericFilterInput";
+export { default as useClientSideFilters } from "./useClientSideFilters";
+export { default as useFilters } from "./useFilters";
