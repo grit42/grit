@@ -20,7 +20,7 @@ import {
   Filter,
   getIsFilterActive,
   SortingState,
-  Table,
+  DataGrid,
   useSetupTableState,
 } from "@grit42/table";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -40,7 +40,6 @@ import {
 } from "@grit42/client-library/components";
 import FullPerspectiveDialog from "./FullPerspectiveDialog";
 import { DataTableData } from "../../queries/data_tables";
-import styles from "./dataTableData.module.scss";
 
 interface Props {
   dataTable: DataTableData;
@@ -179,9 +178,7 @@ const DataTableDataPage = ({ dataTable }: Props) => {
         columns={tableColumns}
         dataTableId={dataTable.id}
       />
-      <Table
-        className={styles.dataTableDataTable}
-        header={dataTable.name}
+      <DataGrid
         tableState={tableState}
         loading={isRowsLoading && !isFetchingNextPage}
         data={flatData ?? []}

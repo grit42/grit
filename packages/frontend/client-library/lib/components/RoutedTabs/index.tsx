@@ -20,7 +20,6 @@ import React from "react";
 import { Navigate, Outlet, useMatch, useNavigate } from "react-router-dom";
 import Tabs from "../Tabs";
 import ErrorPage from "../ErrorPage";
-import { TabbedLayout } from "../../layouts";
 
 export interface RoutedTab {
   url: string;
@@ -43,6 +42,7 @@ export interface RoutedTabsProps {
   replaceNavigation?: boolean;
   navigationPattern?: "relative-parent" | "relative-sibling";
   findSelectedTab?: (tabs: RoutedTab[], param: string) => number;
+  tabsAtBottom?: boolean;
 }
 
 const RoutedTabs = ({
@@ -50,12 +50,13 @@ const RoutedTabs = ({
   paramName,
   tabs,
   defaultTab,
-  heading,
+  heading = null,
   tabsClassName,
   outletWrapper,
   replaceNavigation = false,
   navigationPattern = "relative-parent",
   findSelectedTab = FIND_SELECTED_TAB,
+  tabsAtBottom = false,
 }: RoutedTabsProps) => {
   const navigate = useNavigate();
   const match = useMatch(matchPattern);
@@ -103,8 +104,27 @@ const RoutedTabs = ({
   const outlet = <Outlet />;
   const wrappedOutlet = outletWrapper ? outletWrapper(outlet) : outlet;
 
+  const rows = ["1fr"];
+  if (tabsAtBottom) {
+    rows.push("min-content")
+  } else {
+    rows.splice(0, 0, "min-content")
+  }
+  if (heading) {
+    rows.splice(0, 0, "min-content")
+  }
+
   return (
-    <TabbedLayout heading={heading}>
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "1fr",
+        gridTemplateRows: rows.join(" "),
+        overflow: "auto",
+      }}
+    >
+      {heading}
+      {tabsAtBottom && wrappedOutlet}
       <Tabs
         selectedTab={selectedTab}
         onTabChange={handleTabChange}
@@ -117,8 +137,8 @@ const RoutedTabs = ({
           disabledMessage: t.disabledMessage,
         }))}
       />
-      {wrappedOutlet}
-    </TabbedLayout>
+      {!tabsAtBottom && wrappedOutlet}
+    </div>
   );
 };
 

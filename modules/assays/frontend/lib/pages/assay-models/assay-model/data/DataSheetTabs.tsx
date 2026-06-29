@@ -73,6 +73,7 @@ const DataSheetTabs = ({
         }))}
         replaceNavigation={true}
         tabsClassName={styles.tabs}
+        tabsAtBottom
       />
     </SidebarLayout>
   );

@@ -1,10 +1,8 @@
 @use "@grit42/client-library/theme.scss";
 
 .tabs {
-  padding-inline: theme.$spacing-lg;
-  padding-top: theme.$spacing-lg;
-  margin-bottom: theme.$spacing-lg;
-  border-bottom: 1px solid theme.$palette-background-contrast-text;
+  padding: theme.$spacing-lg;
+  background-color: theme.$palette-primary-main;
 
   ul {
     margin-bottom: 0 !important;

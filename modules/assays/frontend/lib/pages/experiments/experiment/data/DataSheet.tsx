@@ -33,7 +33,7 @@ import {
   useInfiniteExperimentDataSheetRecords,
 } from "../../../../queries/experiment_data_sheet_records";
 import { useTableColumns } from "@grit42/core/utils";
-import { Table, useSetupTableState } from "@grit42/table";
+import { useSetupTableState, DataGrid } from "@grit42/table";
 import ExperimentDataSheetRecordFormWrapper from "./RecordForm";
 import { useToolbar, useHasPermission } from "@grit42/core";
 import { ExperimentData } from "../../../../queries/experiments";
@@ -97,7 +97,7 @@ const ExperimentDataSheetRecords = ({
   );
 
   return (
-    <Table
+    <DataGrid
       headerActions={
         canCrudRecord ? (
           <Button onClick={() => navigate("records/new")}>New</Button>

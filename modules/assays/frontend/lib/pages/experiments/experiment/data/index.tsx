@@ -31,6 +31,7 @@ const Data = ({ experiment }: { experiment: ExperimentData }) => {
       matchPattern="/assays/experiments/:experiment_id/data/:tab/*"
       paramName="tab"
       navigationPattern="relative-sibling"
+      tabsAtBottom
     />
   );
 };
