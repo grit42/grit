@@ -31,6 +31,7 @@ const TableFooter = <T,>({
   showFilters,
   setShowFilters,
   setShowSettings,
+  actions = null,
 }: {
   loadedRecords?: number;
   totalRecords?: number;
@@ -39,6 +40,7 @@ const TableFooter = <T,>({
   setShowFilters: React.Dispatch<React.SetStateAction<boolean>>;
   showSettings: boolean;
   setShowSettings: React.Dispatch<React.SetStateAction<boolean>>;
+  actions?: React.ReactNode;
 }) => {
   const { filters, setFilters, columnOrder, columns, columnVisibility } =
     useInternalTableState<GritTableState<T>>();
@@ -78,6 +80,7 @@ const TableFooter = <T,>({
         />
       )}
       <div className={styles.spacer} />
+      {actions}
       <span>{message}</span>
       <Button
         size="tiny"

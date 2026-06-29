@@ -59,6 +59,7 @@ const Table = <T,>({
   className,
   disableNoDataMessage,
   noDataMessage,
+  headerActions,
   ...props
 }: TableProps<T>) => {
   const displayDensity = useDisplayDensity();
@@ -391,6 +392,7 @@ const Table = <T,>({
               setShowFilters={setShowFilters}
               showSettings={showSettings}
               setShowSettings={setShowSettings}
+              actions={headerActions}
             />
             <div
               className={classnames(styles.tableContainer)}

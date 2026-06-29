@@ -36,7 +36,9 @@ import { useTableColumns } from "@grit42/core/utils";
 import { useSetupTableState, DataGrid } from "@grit42/table";
 import ExperimentDataSheetRecordFormWrapper from "./RecordForm";
 import { useToolbar, useHasPermission } from "@grit42/core";
+import NewIcon from "@grit42/client-library/icons/Circle1New";
 import { ExperimentData } from "../../../../queries/experiments";
+import styles from "./experimentData.module.scss"
 
 const getRowId = (data: ExperimentDataSheetRecordData) => data.id.toString();
 
@@ -100,7 +102,7 @@ const ExperimentDataSheetRecords = ({
     <DataGrid
       headerActions={
         canCrudRecord ? (
-          <Button onClick={() => navigate("records/new")}>New</Button>
+          <Button size="tiny" icon={<NewIcon height={16} />} onClick={() => navigate("records/new")} className={styles.newButton}>New record</Button>
         ) : undefined
       }
       getRowId={getRowId}

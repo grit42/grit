@@ -190,6 +190,7 @@
 
 .footer {
   padding: theme.$spacing;
+  gap: theme.$spacing;
   min-height: calc(21px + theme.$spacing * 2);
   display: flex;
   align-items: center;
