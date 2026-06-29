@@ -58,6 +58,10 @@ const useExperimentTabs = (experiment?: ExperimentData | null) =>
               url: `/assays/experiments/${experiment.id}/load-sets`,
               label: "Load sets",
             },
+            {
+              url: `/assays/experiments/${experiment.id}/settings`,
+              label: "Settings",
+            },
           ]
         : [],
     [experiment],
@@ -127,7 +131,11 @@ const Experiment = () => {
         path="load-sets"
         element={<ExperimentLoadSets experiment={data} />}
       />
-      <Route path="attachments" element={<ExperimentAttachements experiment={data} />} />
+      <Route
+        path="attachments"
+        element={<ExperimentAttachements experiment={data} />}
+      />
+      <Route path="settings" element={<Details />} />
       <Route path="*" element={<Navigate to="../details" replace />} />
     </Routes>
   );

@@ -6,7 +6,8 @@
   grid-template-columns: auto;
   grid-template-rows: min-content 1fr;
   gap: theme.$spacing;
-  margin-top: theme.$spacing-xl;
+  padding-top: theme.$spacing-xl;
+  padding-inline: theme.$spacing-xl;
 
   .header {
     display: grid;
@@ -28,6 +29,14 @@
   }
 }
 
+.metadataTable {
+  height: min-content;
+  max-height: 50vh;
+  table {
+    border: 1px solid theme.$palette-primary-dark;
+  }
+}
+
 // ======= OLD
 
 .container {
@@ -38,21 +47,19 @@
   display: grid;
   gap: theme.$spacing;
   grid-template-columns: 1fr;
-  overflow: auto;
+  margin-inline: auto;
+  max-width: 960px;
+  padding-top: theme.$spacing-xl;
+  padding-inline: theme.$spacing-xl;
 
   &.withMetadataTemplates {
-    grid-template-columns: min-content 1fr;
+    grid-template-columns: 1fr 1fr;
+    max-width: unset;
   }
 }
 
-.metadataTemplatesTable {
-  width: fit-content;
-}
-
 .form {
-  width: 40vw;
-  min-width: 480px;
-  max-width: 960px;
+  width: 100%;
 }
 
 .formTitle {

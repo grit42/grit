@@ -173,6 +173,7 @@ const ExperimentLoadSets = ({ experiment }: { experiment: ExperimentData }) => {
 
   return (
     <Table<EntityData>
+      header="Load sets"
       className={styles.loadSetsTable}
       loading={isFetching && !isFetchingNextPage}
       data={flatData}

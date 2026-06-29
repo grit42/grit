@@ -4,7 +4,7 @@ import {
   Spinner,
   Surface,
 } from "@grit42/client-library/components";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import {
   EndpointError,
   EndpointErrorErrors,
@@ -15,9 +15,11 @@ import {
   UseMutationOptions,
   useQueryClient,
 } from "@grit42/api";
-import { useDestroyEntityMutation, useHasPermission } from "@grit42/core";
 import styles from "./details.module.scss";
 import { ExperimentData, useExperiment } from "../../../../queries/experiments";
+import { useAssayMetadataDefinitions } from "../../../../queries/assay_metadata_definitions";
+import { useMemo } from "react";
+import { Table } from "@grit42/table";
 
 export const usePublishExperimentMutation = (
   id: string | number,
@@ -117,31 +119,39 @@ export const useDraftExperimentMutation = (
   });
 };
 
-const ExperimentActions = ({
-  experiment,
-}: {
-  experiment: Partial<ExperimentData>;
-}) => {
-  const hasWrite = useHasPermission("write:assays");
-  const navigate = useNavigate();
-  const destroyEntityMutation = useDestroyEntityMutation(
-    "grit/assays/experiments",
+const MetadataTable = ({ experiment }: { experiment: ExperimentData }) => {
+  const metadataDefinitions = useAssayMetadataDefinitions();
+  const metadata = useMemo(
+    () =>
+      metadataDefinitions.data?.map(({ name, safe_name }) => ({
+        name: name,
+        value: experiment[`${safe_name}__name`],
+      })) ?? [],
+    [experiment, metadataDefinitions.data],
   );
 
-  const publishMutation = usePublishExperimentMutation(experiment.id!);
-  const draftMutation = useDraftExperimentMutation(experiment.id!);
+  return (
+    <Table
+      disableFooter
+      className={styles.metadataTable}
+      data={metadata}
+      settings={{
+        disableColumnReorder: true,
+        disableColumnSorting: true,
+        disableVisibilitySettings: true,
+        disableFilters: true,
+        disableColumnSizing: true,
+      }}
+      columns={[
+        { header: "Metadata", accessorKey: "name", id: "name", size: 200 },
+        { header: "Value", accessorKey: "value", id: "value", size: 400 },
+      ]}
+    />
+  );
+};
 
-  const onDelete = async () => {
-    if (
-      !experiment.id ||
-      !window.confirm(
-        `Are you sure you want to delete this Experiment? This action is irreversible`,
-      )
-    )
-      return;
-    await destroyEntityMutation.mutateAsync(experiment.id);
-    navigate("../../..");
-  };
+const ExperimentDetails = ({ experiment }: { experiment: ExperimentData }) => {
+  const publishMutation = usePublishExperimentMutation(experiment.id!);
 
   const onPublish = async () => {
     if (!experiment.id) {
@@ -150,95 +160,25 @@ const ExperimentActions = ({
     await publishMutation.mutateAsync();
   };
 
-  const onDraft = async () => {
-    if (
-      !experiment.id ||
-      !window.confirm(
-        `Are you sure you want to convert this Experiment to draft?`,
-      )
-    ) {
-      return;
-    }
-    await draftMutation.mutateAsync();
-  };
-
-  if (!experiment.id || !hasWrite) {
-    return null;
-  }
-
-  return (
-    <div className={styles.detailsContainer}>
-      {experiment.publication_status_id__name === "Draft" && (
-        <div className={styles.publishSection}>
-          <div className={styles.publishContent}>
-            <h3>Publish this Experiment</h3>
-            <p>
-              Publishing this Experiment will make it available in Data Tables.
-            </p>
-          </div>
-          <Button
-            color="secondary"
-            onClick={onPublish}
-            loading={publishMutation.isPending}
-          >
-            Publish
-          </Button>
-        </div>
-      )}
-      {experiment.publication_status_id__name === "Published" && (
-        <div className={styles.draftSection}>
-          <div className={styles.draftContent}>
-            <h3>Convert this Experiment to Draft</h3>
-            <p>
-              Converting this Experiment to draft will allow you to make changes
-              to its Metadata and Data Sheets Records. It will not be available
-              in Data Tables until it is published again.
-            </p>
-          </div>
-          <Button
-            color="danger"
-            onClick={onDraft}
-            loading={draftMutation.isPending}
-          >
-            Convert to Draft
-          </Button>
-        </div>
-      )}
-      <div className={styles.deleteSection}>
-        <div className={styles.deleteContent}>
-          <h3>Delete this Experiment</h3>
-          <p>
-            Deleting this Experiment will permanently remove it from the
-            database. <b>This action is irreversible.</b>
-          </p>
-        </div>
-        <Button
-          color="danger"
-          onClick={onDelete}
-          loading={destroyEntityMutation.isPending}
-        >
-          Delete
-        </Button>
-      </div>
-    </div>
-  );
-};
-
-const ExperimentDetails = ({
-  experiment,
-}: {
-  experiment: Partial<ExperimentData>;
-}) => {
   return (
     <div className={styles.details}>
       <div className={styles.header}>
         <div className={styles.title}>
           <h1>{experiment.name}</h1>
+          {experiment.publication_status_id__name === "Draft" && (
+            <Button
+              color="secondary"
+              onClick={onPublish}
+              loading={publishMutation.isPending}
+            >
+              Publish
+            </Button>
+          )}
         </div>
         <p>{experiment.description ?? "No description provided"}</p>
       </div>
       <Surface className={styles.body}>
-        <ExperimentActions experiment={experiment} />
+        <MetadataTable experiment={experiment} />
       </Surface>
     </div>
   );

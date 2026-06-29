@@ -364,7 +364,7 @@ const ExperimentForm = ({
     <Form
       form={form}
       className={classnames(styles.container, {
-        [styles.withMetadataTemplates]: !experiment.assay_id,
+        [styles.withMetadataTemplates]: !experiment.id,
       })}
     >
       <Surface className={styles.form}>
