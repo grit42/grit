@@ -18,8 +18,14 @@
 
 import styles from "./header.module.scss";
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { Button, Dropdown } from "@grit42/client-library/components";
 import {
+  Button,
+  ButtonGroup,
+  Dropdown,
+  Tooltip,
+} from "@grit42/client-library/components";
+import {
+  useHasOnOfPermissions,
   useSession,
   useUpdateUserSettingsMutation,
 } from "../../../features/auth";
@@ -30,6 +36,75 @@ import { notifyOnError } from "@grit42/api";
 import { useAppShell } from "./AppShellContext";
 import { classnames } from "@grit42/client-library/utils";
 import { Fragment } from "react/jsx-runtime";
+import { ToolbarActions } from "../../../features/toolbar";
+import { useContext, useEffect, useState } from "react";
+import ToolbarContext from "../../../features/toolbar/ToolbarContext";
+import DesktopExport from "@grit42/client-library/icons/DesktopExport";
+import DesktopImport from "@grit42/client-library/icons/DesktopImport";
+
+const Toolbar = () => {
+  const [
+    {
+      exportItems,
+      importItems,
+      import: importSettings,
+      export: exportSettings,
+    },
+    setActions,
+  ] = useState<ToolbarActions>({
+    actions: [],
+    exportItems: [],
+    importItems: [],
+    import: {},
+    export: {},
+  });
+  const { setRegistrationFunction } = useContext(ToolbarContext);
+  const canImport = useHasOnOfPermissions(importSettings.requiredPermissions ?? [])
+  const canExport = useHasOnOfPermissions(exportSettings.requiredPermissions ?? [])
+
+  useEffect(() => {
+    setRegistrationFunction(setActions);
+    return () =>
+      setRegistrationFunction(() => {
+        return;
+      });
+  }, [setRegistrationFunction]);
+
+  const exportButton = (canExport && exportItems.length) ? (
+    exportItems.length == 1 ? (
+      <Button
+        icon={<DesktopExport height={16} />}
+        size="tiny"
+        onClick={exportItems[0].onClick}
+      />
+    ) : (
+      <Dropdown menuItems={exportItems}>
+        <Button icon={<DesktopExport height={16} />} size="tiny" />
+      </Dropdown>
+    )
+  ) : null;
+
+  const importButton = (canImport && importItems.length) ? (
+    importItems.length == 1 ? (
+      <Button
+        icon={<DesktopImport height={16} />}
+        size="tiny"
+        onClick={importItems[0].onClick}
+      />
+    ) : (
+      <Dropdown menuItems={importItems}>
+        <Button icon={<DesktopImport height={16} />} size="tiny" />
+      </Dropdown>
+    )
+  ) : null;
+
+  return (
+    <ButtonGroup>
+      {exportButton ? <Tooltip content="Export">{exportButton}</Tooltip> : null}
+      {importButton ? <Tooltip content="Import">{importButton}</Tooltip> : null}
+    </ButtonGroup>
+  );
+};
 
 const Header = () => {
   const { breadcrumbs, tabs } = useAppShell();
@@ -80,6 +155,7 @@ const Header = () => {
               </Fragment>
             ))}
         </div>
+        <Toolbar />
         <div className={styles.profile}>
           <Dropdown
             menuItems={[
