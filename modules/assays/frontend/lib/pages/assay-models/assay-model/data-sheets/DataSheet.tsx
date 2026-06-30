@@ -24,7 +24,6 @@ import {
   useAssayDataSheetDefinitions,
 } from "../../../../queries/assay_data_sheet_definitions";
 import DataSheetColumnsTable from "./DataSheetColumnsTable";
-import { PageLayout } from "@grit42/client-library/layouts";
 import styles from "./dataSheets.module.scss";
 
 const DataSheet = ({ assayModelId }: { assayModelId: string }) => {
