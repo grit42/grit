@@ -19,7 +19,10 @@ describe("mergeRanges — prototype-pollution guard (Fix #6)", () => {
 
   it("still spreads values correctly across proper array rows (normal case)", () => {
     const sourceRow = [{ v: "merged", t: "s" }, undefined];
-    const targetRow: (typeof sourceRow[0] | undefined)[] = [undefined, undefined];
+    const targetRow: ((typeof sourceRow)[0] | undefined)[] = [
+      undefined,
+      undefined,
+    ];
 
     const sheet = {
       "!merges": [{ s: { r: 0, c: 0 }, e: { r: 1, c: 1 } }],
