@@ -64,7 +64,12 @@
     }
   },
   "plugins": [
-    "./tools/ruby/src/index.ts",
+    {
+      "plugin": "./tools/ruby/src/index.ts",
+      "options": {
+        "lintTargetName": "rubocop"
+      }
+    },
     {
       "plugin": "@nx/vite/plugin",
       "options": {
