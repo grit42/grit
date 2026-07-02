@@ -6,6 +6,7 @@ import OpenIcon from "@grit42/client-library/icons/PlusSquare";
 import CloseIcon from "@grit42/client-library/icons/MinusSquare";
 import { useAppShell } from "./AppShellContext";
 import { Button } from "@grit42/client-library/components";
+import { useMountTransition } from "@grit42/client-library/hooks";
 import styles from "./navbar.module.scss";
 import { classnames } from "@grit42/client-library/utils";
 import Logo42 from "../../../assets/42-logo.svg";
@@ -13,6 +14,7 @@ import LogoGrit42 from "../../../assets/resized-grit42-logo.svg";
 
 const Sidebar = ({ navItems }: { navItems: NavItem[] }) => {
   const { open, toggleNavbar } = useAppShell().navbar;
+  const { transitionState, showTransition } = useMountTransition(open, 250);
   const { data: session } = useSession();
   const availableNavItems = useMemo(
     () =>
@@ -22,17 +24,29 @@ const Sidebar = ({ navItems }: { navItems: NavItem[] }) => {
     [navItems, session],
   );
 
-  if (!open) {
+  const isMounted = open || showTransition || transitionState === "out";
+
+  if (!isMounted) {
     return null;
   }
 
   return (
-    <div className={styles.menuContainer} onClick={toggleNavbar}>
-      <div className={classnames(styles.navbar, { [styles.open]: open })}>
+    <div
+      className={classnames(styles.menuContainer, {
+        [styles.show]: showTransition,
+      })}
+      onClick={toggleNavbar}
+    >
+      <div
+        className={classnames(styles.navbar, {
+          [styles.open]: isMounted,
+          [styles.show]: showTransition,
+        })}
+      >
         <div className={styles.header}>
           <img
             className={styles.gritLogo}
-            src={open ? LogoGrit42 : Logo42}
+            src={isMounted ? LogoGrit42 : Logo42}
             alt="grit42 logo"
           />
           <Button
@@ -52,11 +66,11 @@ const Sidebar = ({ navItems }: { navItems: NavItem[] }) => {
                   size="tiny"
                   className={classnames(styles.sidebarButton, styles.navLink, {
                     [styles.active]: isActive,
-                    [styles.open]: open,
+                    [styles.open]: isMounted,
                   })}
                 >
                   <OpenIcon />
-                  {open && navItem.name}
+                  {isMounted && navItem.name}
                 </Button>
               )}
             </NavLink>

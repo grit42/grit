@@ -9,8 +9,16 @@ $link-height: calc(24px + theme.$spacing * 2);
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgb(from theme.$palette-background-default r g b / 0.8);
+  background-color: transparent;
   z-index: 10000;
+
+  @media (prefers-reduced-motion: no-preference) {
+    transition: background-color 0.25s ease-in-out;
+  }
+
+  &.show {
+    background-color: rgb(from theme.$palette-background-default r g b / 0.8);
+  }
 }
 
 .navbar {
@@ -28,6 +36,16 @@ $link-height: calc(24px + theme.$spacing * 2);
   background-color: theme.$palette-background-surface;
   border-inline-end: 1px solid
     rgb(from theme.$palette-background-contrast-text r g b / 0.1);
+
+  transform: translateX(-100%);
+
+  @media (prefers-reduced-motion: no-preference) {
+    transition: transform 0.25s ease-in-out;
+  }
+
+  &.show {
+    transform: translateX(0);
+  }
 
   .header {
     display: flex;
@@ -53,7 +71,7 @@ $link-height: calc(24px + theme.$spacing * 2);
   }
 
   &.open {
-    width: 20vw;
+    width: 320px;
     .logoLink {
       .gritLogo {
         margin-inline: unset;
