@@ -1,13 +1,16 @@
-import { NavLink } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import { NavItem } from "../../navigation";
 import { hasRoles, useSession } from "../../../features/auth";
 import { useMemo } from "react";
-import CloseIcon from "@grit42/client-library/icons/MinusSquare";
 import OpenIcon from "@grit42/client-library/icons/PlusSquare";
 import { useAppShell } from "./AppShellContext";
-import { Button, Tooltip } from "@grit42/client-library/components";
+import { Button } from "@grit42/client-library/components";
 import styles from "./navbar.module.scss";
 import { classnames } from "@grit42/client-library/utils";
+import Logo42 from "../../../assets/42-logo.svg";
+import LogoGrit42 from "../../../assets/resized-grit42-logo.svg";
+import FwIcon from "@grit42/client-library/icons/Circle3Forward";
+import BwIcon from "@grit42/client-library/icons/Circle3Backward";
 
 const Sidebar = ({ navItems }: { navItems: NavItem[] }) => {
   const { open, toggleNavbar } = useAppShell().navbar;
@@ -22,27 +25,37 @@ const Sidebar = ({ navItems }: { navItems: NavItem[] }) => {
 
   return (
     <div className={classnames(styles.navbar, { [styles.open]: open })}>
-      <Button onClick={toggleNavbar} size="tiny" className={styles.closeButton}>
-        {open ? <CloseIcon height={16} /> : <OpenIcon height={16} />}
-      </Button>
-      {availableNavItems.map((navItem) => (
-        <NavLink key={navItem.identifier} to={navItem.path}>
-          {({ isActive }) => (
-            <Tooltip content={navItem.name} disabled={open} >
+      <Link to="/" className={styles.logoLink}>
+        <img
+          className={styles.gritLogo}
+          src={open ? LogoGrit42 : Logo42}
+          alt="grit42 logo"
+        />
+      </Link>
+      <div className={styles.divider} />
+      <nav className={styles.nav}>
+        {availableNavItems.map((navItem) => (
+          <NavLink key={navItem.identifier} to={navItem.path}>
+            {({ isActive }) => (
               <Button
                 size="tiny"
-                className={classnames(styles.navLink, {
+                className={classnames(styles.sidebarButton, styles.navLink, {
                   [styles.active]: isActive,
                   [styles.open]: open,
                 })}
               >
-                <OpenIcon height={16} fill={"white"} />
-                {open && <span>{navItem.name}</span>}
+                <OpenIcon />
+                {open && navItem.name}
               </Button>
-            </Tooltip>
-          )}
-        </NavLink>
-      ))}
+            )}
+          </NavLink>
+        ))}
+      </nav>
+      <div className={styles.divider} />
+      <Button onClick={toggleNavbar} size="tiny" className={classnames(styles.sidebarButton, styles.closeButton)}>
+        {open ? <BwIcon /> : <FwIcon />}
+        {open && "Collapse sidebar"}
+      </Button>
     </div>
   );
 };

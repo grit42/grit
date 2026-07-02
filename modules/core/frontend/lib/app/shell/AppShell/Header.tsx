@@ -31,7 +31,6 @@ import {
 } from "../../../features/auth";
 import { useLogoutMutation } from "../../../features/auth/api/mutations";
 import type { UserSettings } from "../../../features/auth";
-import Logo from "../../../assets/grit42-logo.svg";
 import { notifyOnError } from "@grit42/api";
 import { useAppShell } from "./AppShellContext";
 import { classnames } from "@grit42/client-library/utils";
@@ -140,9 +139,9 @@ const Header = () => {
   return (
     <div className={styles.header}>
       <div className={styles.topbar}>
-        <Link to="/">
+        {/* <Link to="/">
           <img className={styles.gritLogo} src={Logo} alt="grit42 logo" />
-        </Link>
+        </Link> */}
 
         <div className={styles.breadcrumbs}>
           {!!breadcrumbs.items?.length &&

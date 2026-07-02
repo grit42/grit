@@ -11,7 +11,6 @@ $header-inactive-link: #a4a4a6;
 .header {
   display: grid;
   grid-auto-rows: auto;
-  gap: theme.$spacing;
   background-color: theme.$palette-background-surface;
   border-block-end: 1px solid
     rgb(from theme.$palette-background-contrast-text r g b / 0.1);
@@ -20,8 +19,9 @@ $header-inactive-link: #a4a4a6;
     display: flex;
     align-items: center;
     gap: theme.$spacing-lg;
-    padding: theme.$spacing-sm;
+    padding: theme.$spacing;
     padding-inline: theme.$spacing-lg;
+    height: calc(2rem + var(--spacing) * 2);
   }
 
   .tabs {
