@@ -85,9 +85,9 @@ export const lightPalette: Palette = {
   ...defaultColors,
 };
 
-export const comfortableSpacing = 7;
+export const comfortableSpacing = 8;
 
-export const compactSpacing = 3.5;
+export const compactSpacing = 4;
 
 export const createTheme = (
   colorScheme: ColorScheme,

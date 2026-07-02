@@ -31,6 +31,7 @@ import {
 } from "../../../features/auth";
 import { useLogoutMutation } from "../../../features/auth/api/mutations";
 import type { UserSettings } from "../../../features/auth";
+import Logo from "../../../assets/42-logo.svg";
 import { notifyOnError } from "@grit42/api";
 import { useAppShell } from "./AppShellContext";
 import { classnames } from "@grit42/client-library/utils";
@@ -40,6 +41,7 @@ import { useContext, useEffect, useState } from "react";
 import ToolbarContext from "../../../features/toolbar/ToolbarContext";
 import DesktopExport from "@grit42/client-library/icons/DesktopExport";
 import DesktopImport from "@grit42/client-library/icons/DesktopImport";
+import OpenIcon from "@grit42/client-library/icons/PlusSquare";
 
 const Toolbar = () => {
   const [
@@ -58,8 +60,12 @@ const Toolbar = () => {
     export: {},
   });
   const { setRegistrationFunction } = useContext(ToolbarContext);
-  const canImport = useHasOnOfPermissions(importSettings.requiredPermissions ?? [])
-  const canExport = useHasOnOfPermissions(exportSettings.requiredPermissions ?? [])
+  const canImport = useHasOnOfPermissions(
+    importSettings.requiredPermissions ?? [],
+  );
+  const canExport = useHasOnOfPermissions(
+    exportSettings.requiredPermissions ?? [],
+  );
 
   useEffect(() => {
     setRegistrationFunction(setActions);
@@ -69,33 +75,35 @@ const Toolbar = () => {
       });
   }, [setRegistrationFunction]);
 
-  const exportButton = (canExport && exportItems.length) ? (
-    exportItems.length == 1 ? (
-      <Button
-        icon={<DesktopExport height={16} />}
-        size="tiny"
-        onClick={exportItems[0].onClick}
-      />
-    ) : (
-      <Dropdown menuItems={exportItems}>
-        <Button icon={<DesktopExport height={16} />} size="tiny" />
-      </Dropdown>
-    )
-  ) : null;
+  const exportButton =
+    canExport && exportItems.length ? (
+      exportItems.length == 1 ? (
+        <Button
+          icon={<DesktopExport height={16} />}
+          size="tiny"
+          onClick={exportItems[0].onClick}
+        />
+      ) : (
+        <Dropdown menuItems={exportItems}>
+          <Button icon={<DesktopExport height={16} />} size="tiny" />
+        </Dropdown>
+      )
+    ) : null;
 
-  const importButton = (canImport && importItems.length) ? (
-    importItems.length == 1 ? (
-      <Button
-        icon={<DesktopImport height={16} />}
-        size="tiny"
-        onClick={importItems[0].onClick}
-      />
-    ) : (
-      <Dropdown menuItems={importItems}>
-        <Button icon={<DesktopImport height={16} />} size="tiny" />
-      </Dropdown>
-    )
-  ) : null;
+  const importButton =
+    canImport && importItems.length ? (
+      importItems.length == 1 ? (
+        <Button
+          icon={<DesktopImport height={16} />}
+          size="tiny"
+          onClick={importItems[0].onClick}
+        />
+      ) : (
+        <Dropdown menuItems={importItems}>
+          <Button icon={<DesktopImport height={16} />} size="tiny" />
+        </Dropdown>
+      )
+    ) : null;
 
   return (
     <ButtonGroup>
@@ -106,7 +114,7 @@ const Toolbar = () => {
 };
 
 const Header = () => {
-  const { breadcrumbs, tabs } = useAppShell();
+  const { breadcrumbs, tabs, navbar } = useAppShell();
   const { data: session } = useSession();
   const navigate = useNavigate();
   const logoutMutation = useLogoutMutation();
@@ -139,9 +147,17 @@ const Header = () => {
   return (
     <div className={styles.header}>
       <div className={styles.topbar}>
-        {/* <Link to="/">
+        <Button
+          onClick={navbar.toggleNavbar}
+          size="tiny"
+          className={classnames(styles.sidebarButton, styles.closeButton)}
+        >
+          <OpenIcon />
+        </Button>
+
+        <Link to="/">
           <img className={styles.gritLogo} src={Logo} alt="grit42 logo" />
-        </Link> */}
+        </Link>
 
         <div className={styles.breadcrumbs}>
           {!!breadcrumbs.items?.length &&

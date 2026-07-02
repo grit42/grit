@@ -3,8 +3,18 @@
 $logo-height: calc(32px + theme.$spacing * 2);
 $link-height: calc(24px + theme.$spacing * 2);
 
+.menuContainer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgb(from theme.$palette-background-default r g b / 0.8);
+  z-index: 10000;
+}
+
 .navbar {
-  grid-area: 1 / 1 / -1 / 2;
+  // grid-area: 1 / 1 / -1 / 2;
 
   height: 100%;
   width: $logo-height;
@@ -19,18 +29,19 @@ $link-height: calc(24px + theme.$spacing * 2);
   border-inline-end: 1px solid
     rgb(from theme.$palette-background-contrast-text r g b / 0.1);
 
-  .logoLink {
-    width: 100%;
-    border-bottom: 1px solid
-      rgb(from theme.$palette-background-contrast-text r g b / 0.1);
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-inline: theme.$spacing;
+  }
 
-    .gritLogo {
-      height: 100%;
-      padding-block: theme.$spacing;
-      padding-inline: theme.$spacing;
-      fill: theme.$palette-secondary-main;
-      margin-inline: auto;
-    }
+  .gritLogo {
+    width: fit-content;
+    height: 100%;
+    padding-block: theme.$spacing;
+    padding-inline: theme.$spacing;
+    fill: theme.$palette-secondary-main;
   }
 
   .nav {
@@ -81,12 +92,27 @@ $link-height: calc(24px + theme.$spacing * 2);
 }
 
 .closeButton {
-  border-top: 1px solid
-    rgb(from theme.$palette-background-contrast-text r g b / 0.1);
+  width: fit-content;
+  background-color: theme.$palette-background-surface !important;
+  padding: theme.$spacing-sm;
 
-    color: rgba(
+  color: rgba(
     from theme.$palette-background-contrast-text r g b / 0.8
   ) !important;
+
+  svg {
+    margin-inline: 0;
+    height: 24px;
+    fill: rgba(
+      from theme.$palette-background-contrast-text r g b / 0.8
+    ) !important;
+  }
+
+  &:hover {
+    background-color: rgb(
+      from theme.$palette-background-contrast-text r g b / 0.1
+    ) !important;
+  }
 }
 
 .navLink {

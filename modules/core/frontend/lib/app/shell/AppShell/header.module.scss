@@ -33,6 +33,31 @@ $header-inactive-link: #a4a4a6;
   }
 }
 
+.closeButton {
+  width: fit-content;
+  background-color: theme.$palette-background-surface !important;
+  padding: theme.$spacing-sm;
+
+  color: rgba(
+    from theme.$palette-background-contrast-text r g b / 0.8
+  ) !important;
+
+  svg {
+    margin-inline: 0;
+    height: 24px;
+    fill: rgba(
+      from theme.$palette-background-contrast-text r g b / 0.8
+    ) !important;
+  }
+
+  &:hover {
+    background-color: rgb(
+      from theme.$palette-background-contrast-text r g b / 0.1
+    ) !important;
+  }
+}
+
+
 .sidebarToggle {
   padding-block: theme.$spacing-sm;
   svg {
@@ -64,8 +89,7 @@ $header-inactive-link: #a4a4a6;
 }
 
 .gritLogo {
-  height: 2.5rem;
-  fill: $dark-secondary-main;
+  height: 2rem;
 }
 
 .right {
