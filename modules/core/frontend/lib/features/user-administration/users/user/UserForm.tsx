@@ -17,7 +17,7 @@
  */
 
 import { Link, useNavigate } from "react-router-dom";
-import { useCallback, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   useForm,
   FormField,
@@ -30,7 +30,6 @@ import {
   FormBanner,
 } from "@grit42/form";
 import { useCreateUpdateUserMutation } from "../mutations";
-import { useDestroyEntityMutation } from "../../../entities";
 import { User } from "../../types";
 import { useSession } from "../../../auth";
 import { useQueryClient } from "@grit42/api";
