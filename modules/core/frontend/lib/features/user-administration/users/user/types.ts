@@ -16,7 +16,7 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { User } from "../../types";
+import { User } from "../types";
 
 export interface UserWithTokens extends User {
   sso_uid?: string;

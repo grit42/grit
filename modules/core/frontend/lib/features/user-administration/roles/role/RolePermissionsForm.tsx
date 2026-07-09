@@ -24,7 +24,7 @@ import {
   useStore,
 } from "@grit42/form";
 import { Checkbox } from "@grit42/client-library/components";
-import { Permission, Role, RolePermission } from "../../types";
+import { Permission, Role, RolePermission } from "../types";
 import { useSetRolePermissions } from "./queries";
 
 const RolePermissionsForm = ({

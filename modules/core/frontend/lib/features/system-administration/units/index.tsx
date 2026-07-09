@@ -16,10 +16,60 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { EntityTabs } from "../../entities";
+import { useEffect, useState } from "react";
+import UnitsTable from "./UnitsTable";
+import styles from "./units.module.scss";
+import { useNavigate } from "react-router-dom";
+import { useToolbar } from "../../toolbar";
+import { Tabs } from "@grit42/client-library/components";
+import UnitLoadSetsTable from "./UnitsLoadSetsTable";
 
-const UnitsAdministrationTab = () => {
-  return <EntityTabs entity="Grit::Core::Unit" />;
+const UnitsPage = () => {
+  const [selectedTab, setSelectedTab] = useState(0);
+  const registerToolbarActions = useToolbar();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    return registerToolbarActions({
+      importItems: [
+        {
+          id: "IMPORT",
+          onClick: () =>
+            navigate(`/core/load_sets/new?entity=Grit::Core::Unit`),
+          text: `Import units`,
+        },
+      ],
+    });
+  }, [navigate, registerToolbarActions]);
+
+  return (
+    <div className={styles.unitsPage}>
+      <h1>Units</h1>
+      <Tabs
+        selectedTab={selectedTab}
+        onTabChange={setSelectedTab}
+        className={styles.unitsTabs}
+        tabs={[
+          {
+            key: "records",
+            name: "Records",
+            panelProps: {
+              className: styles.tabPanel,
+            },
+            panel: <UnitsTable />,
+          },
+          {
+            key: "load_sets",
+            name: "Load sets",
+            panelProps: {
+              className: styles.tabPanel,
+            },
+            panel: <UnitLoadSetsTable />,
+          },
+        ]}
+      />
+    </div>
+  );
 };
 
-export default UnitsAdministrationTab;
+export default UnitsPage;

@@ -16,25 +16,19 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { ModuleMeta } from "../app";
+import { Surface } from "@grit42/client-library/components";
+import styles from "./location.module.scss";
+import LocationForm from "./LocationForm";
 
-const Meta: ModuleMeta = {
-  identifier: "core",
-  rootRoute: "/core",
-  navItems: [
-    {
-      identifier: "VOCABULARIES",
-      name: "Vocabularies",
-      path: "/core/vocabularies",
-      permissions: ["read:system"],
-    },
-    {
-      identifier: "ADMINISTRATION",
-      name: "Administration",
-      path: "/core/administration",
-      permissions: ["admin:system","admin:users"],
-    },
-  ],
+const NewLocationPage = () => {
+  return (
+    <div className={styles.locationPage}>
+      <h1>New location</h1>
+      <Surface className={styles.locationForm}>
+        <LocationForm />
+      </Surface>
+    </div>
+  );
 };
 
-export default Meta;
+export default NewLocationPage;

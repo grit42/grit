@@ -16,25 +16,20 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { ModuleMeta } from "../app";
+import { EntityData } from "../../entities";
 
-const Meta: ModuleMeta = {
-  identifier: "core",
-  rootRoute: "/core",
-  navItems: [
-    {
-      identifier: "VOCABULARIES",
-      name: "Vocabularies",
-      path: "/core/vocabularies",
-      permissions: ["read:system"],
-    },
-    {
-      identifier: "ADMINISTRATION",
-      name: "Administration",
-      path: "/core/administration",
-      permissions: ["admin:system","admin:users"],
-    },
-  ],
-};
-
-export default Meta;
+export interface User extends EntityData {
+  name: string;
+  login: string;
+  email: string;
+  active: boolean;
+  two_factor: boolean;
+  auth_method: string;
+  origin_id: number;
+  origin_id__name: string;
+  location_id: number;
+  location_id__name: string;
+  status_id: number;
+  status_id__name: string;
+  token: string;
+}

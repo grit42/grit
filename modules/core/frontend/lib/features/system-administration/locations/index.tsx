@@ -16,10 +16,60 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { EntityTabs } from "../../entities";
+import { useEffect, useState } from "react";
+import LocationsTable from "./LocationsTable";
+import styles from "./locations.module.scss";
+import { useNavigate } from "react-router-dom";
+import { useToolbar } from "../../toolbar";
+import { Tabs } from "@grit42/client-library/components";
+import LocationLoadSetsTable from "./LocationsLoadSetsTable";
 
-const LocationsAdministrationTab = () => {
-  return <EntityTabs entity="Grit::Core::Location" />;
+const LocationsPage = () => {
+  const [selectedTab, setSelectedTab] = useState(0);
+  const registerToolbarActions = useToolbar();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    return registerToolbarActions({
+      importItems: [
+        {
+          id: "IMPORT",
+          onClick: () =>
+            navigate(`/core/load_sets/new?entity=Grit::Core::Location`),
+          text: `Import locations`,
+        },
+      ],
+    });
+  }, [navigate, registerToolbarActions]);
+
+  return (
+    <div className={styles.locationsPage}>
+      <h1>Locations</h1>
+      <Tabs
+        selectedTab={selectedTab}
+        onTabChange={setSelectedTab}
+        className={styles.locationsTabs}
+        tabs={[
+          {
+            key: "records",
+            name: "Records",
+            panelProps: {
+              className: styles.tabPanel,
+            },
+            panel: <LocationsTable />,
+          },
+          {
+            key: "load_sets",
+            name: "Load sets",
+            panelProps: {
+              className: styles.tabPanel,
+            },
+            panel: <LocationLoadSetsTable />,
+          },
+        ]}
+      />
+    </div>
+  );
 };
 
-export default LocationsAdministrationTab;
+export default LocationsPage;

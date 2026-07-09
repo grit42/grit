@@ -1,0 +1,130 @@
+/**
+ * Copyright 2025 grit42 A/S. <https://grit42.com/>
+ *
+ * This file is part of @grit42/core.
+ *
+ * @grit42/core is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or  any later version.
+ *
+ * @grit42/core is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+import { Link, useNavigate } from "react-router-dom";
+import { useMemo } from "react";
+import { GritColumnDef, Table, useSetupTableState } from "@grit42/table";
+import { EntityData, useInfiniteEntityData } from "../../entities";
+import { Button, ErrorPage } from "@grit42/client-library/components";
+
+const LOCATION_TABLE_COLUMNS: GritColumnDef<EntityData>[] = [
+  {
+    accessorKey: "name",
+    header: "Name",
+    id: "name",
+    type: "string",
+  },
+  {
+    accessorKey: "print_address",
+    header: "Print address",
+    id: "print_address",
+    type: "string",
+  },
+  {
+    accessorKey: "country_id__name",
+    header: "Country",
+    id: "country_id__name",
+    type: "entity",
+    meta: {
+      entity: {
+        full_name: "Grit::Core::Country",
+        name: "Country",
+        path: "grit/core/countries",
+        column: "country_id",
+        display_column: "name",
+        display_column_type: "string",
+        primary_key: "id",
+        primary_key_type: "integer",
+      },
+    },
+  },
+  {
+    accessorKey: "origin_id__name",
+    header: "Origin",
+    id: "origin_id__name",
+    type: "entity",
+    meta: {
+      entity: {
+        full_name: "Grit::Core::Origin",
+        name: "Origin",
+        path: "grit/core/origins",
+        column: "origin_id",
+        display_column: "name",
+        display_column_type: "string",
+        primary_key: "id",
+        primary_key_type: "integer",
+      },
+    },
+  },
+];
+
+export default function LocationsList() {
+  const navigate = useNavigate();
+  const tableState = useSetupTableState<EntityData>(
+    "admin-locations",
+    LOCATION_TABLE_COLUMNS,
+    {
+      saveState: true,
+      settings: {
+        disableColumnReorder: true,
+        disableVisibilitySettings: true,
+      },
+    },
+  );
+
+  const {
+    data,
+    isFetching,
+    isFetchingNextPage,
+    isError,
+    error,
+    fetchNextPage,
+  } = useInfiniteEntityData(
+    "grit/core/locations",
+    tableState.sorting,
+    tableState.filters,
+  );
+
+  const flatData = useMemo(
+    () => data?.pages.flatMap(({ data }) => data) ?? [],
+    [data],
+  );
+
+  if (isError) {
+    return <ErrorPage error={error} />;
+  }
+
+  return (
+    <Table<EntityData>
+      headerActions={
+        <Link to="new">
+          <Button>New</Button>
+        </Link>
+      }
+      tableState={tableState}
+      data={flatData}
+      loading={isFetching && !isFetchingNextPage}
+      onRowClick={(row) => navigate(row.original.id.toString())}
+      pagination={{
+        fetchNextPage,
+        isFetchingNextPage,
+        totalRows: data?.pages[0]?.total,
+      }}
+    />
+  );
+}

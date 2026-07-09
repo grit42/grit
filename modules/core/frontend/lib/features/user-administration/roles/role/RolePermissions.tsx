@@ -17,7 +17,7 @@
  */
 
 import { ErrorPage, Spinner } from "@grit42/client-library/components";
-import { Role } from "../../types";
+import { Role } from "../types";
 import styles from "./role.module.scss";
 import { usePermissions, useRolePermissions } from "./queries";
 import RolePermissionsForm from "./RolePermissionsForm";

@@ -12,7 +12,7 @@ import {
   useEditEntityMutation,
   useEntityData,
 } from "../../../entities";
-import { Permission, Role, RolePermission } from "../../types";
+import { Permission, Role, RolePermission } from "../types";
 
 export const usePermissions = () =>
   useEntityData<Permission>("grit/core/permissions");

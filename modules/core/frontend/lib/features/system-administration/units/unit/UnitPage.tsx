@@ -24,19 +24,18 @@ import {
   Surface,
 } from "@grit42/client-library/components";
 import { useEntityDatum } from "../../../entities";
-import { Role } from "../types";
-import styles from "./role.module.scss";
-import RoleForm from "./RoleForm";
-import RolePermissions from "./RolePermissions";
+import styles from "./unit.module.scss";
+import UnitForm from "./UnitForm";
 import BackIcon from "@grit42/client-library/icons/Circle2Togglebackward";
-import DeleteRole from "./DeleteRole";
+import DeleteUnit from "./DeleteUnit";
+import { Unit } from "../types";
 
-const RolePage = () => {
-  const { role_id } = useParams() as { role_id: string };
+const UnitPage = () => {
+  const { unit_id } = useParams() as { unit_id: string };
 
-  const { data, isLoading, isError, error } = useEntityDatum<Role>(
-    "grit/core/roles",
-    role_id,
+  const { data, isLoading, isError, error } = useEntityDatum<Unit>(
+    "grit/core/units",
+    unit_id,
   );
 
   if (isLoading) {
@@ -48,25 +47,24 @@ const RolePage = () => {
   }
 
   return (
-    <div className={styles.rolePage}>
+    <div className={styles.unitPage}>
       <div className={styles.header}>
-        <Link to="/core/administration/roles">
+        <Link to="/core/administration/units">
           <Button
             variant="transparent"
             size="tiny"
             icon={<BackIcon height={24} fill="white" />}
           ></Button>
         </Link>
-        <h1>{data.system ? "View" : "Edit"} role</h1>
+        <h1>Edit unit</h1>
       </div>
 
-      <Surface className={styles.roleForm}>
-        <RoleForm role={data} />
-        <RolePermissions role={data} />
-        {!data.system && <DeleteRole role={data} />}
+      <Surface className={styles.unitForm}>
+        <UnitForm unit={data} />
+        <DeleteUnit unit={data} />
       </Surface>
     </div>
   );
 };
 
-export default RolePage;
+export default UnitPage;

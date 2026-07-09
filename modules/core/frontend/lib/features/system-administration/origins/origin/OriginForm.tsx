@@ -17,7 +17,6 @@
  */
 
 import { Link, useNavigate } from "react-router-dom";
-import {  useMemo } from "react";
 import {
   useForm,
   FormField,
@@ -26,84 +25,82 @@ import {
   FormFields,
   genericErrorHandler,
 } from "@grit42/form";
-import { Role } from "../types";
-import { useCreateRole, useEditRole } from "./queries";
-import { useQueryClient } from "@grit42/api";
-import styles from "./role.module.scss";
-import InfoIcon from "@grit42/client-library/icons/Information";
 import { Button } from "@grit42/client-library/components";
+import { useQueryClient } from "@grit42/api";
+import { useCreateOrigin, useEditOrigin } from "../mutations";
+import { Origin } from "../types";
 
-const FIELDS = (system: boolean) => [
+const FIELDS = [
   {
     name: "name",
     display_name: "Name",
     type: "string",
     required: true,
-    disabled: system,
   },
   {
-    name: "description",
-    display_name: "Description",
+    name: "domain",
+    display_name: "Domain",
     type: "string",
     required: false,
-    disabled: system,
+  },
+  {
+    name: "status",
+    display_name: "Status",
+    type: "string",
+    required: false,
   },
 ];
 
-function RoleForm({ role }: { role: Partial<Role> }) {
-  const queryClient = useQueryClient();
+function OriginForm({ origin = {} }: { origin?: Partial<Origin> }) {
   const navigate = useNavigate();
 
-  const createRole = useCreateRole();
-  const editRole = useEditRole(role.id ?? 0);
+  const queryClient = useQueryClient();
+  const createOrigin = useCreateOrigin();
+  const editOrigin = useEditOrigin(origin.id ?? 0);
 
   const form = useForm({
-    defaultValues: role,
+    defaultValues: origin,
     onSubmit: genericErrorHandler(async ({ value, formApi }) => {
-      const updatedRole = role.id
-        ? await editRole.mutateAsync(value)
-        : await createRole.mutateAsync(value);
-      if (!role.id) {
-        navigate(`../${updatedRole.id}`, { relative: "path" });
+      const updatedOrigin = origin.id
+        ? await editOrigin.mutateAsync(value)
+        : await createOrigin.mutateAsync(value);
+      if (!origin.id) {
+        navigate(`../${updatedOrigin.id}`, { relative: "path" });
       } else {
         await Promise.all([
           queryClient.invalidateQueries({
-            queryKey: ["entities", "datum", "grit/core/roles"],
+            queryKey: ["entities", "datum", "grit/core/origins"],
           }),
           queryClient.invalidateQueries({
-            queryKey: ["entities", "data", "grit/core/roles"],
+            queryKey: ["entities", "data", "grit/core/origins"],
           }),
           queryClient.invalidateQueries({
-            queryKey: ["entities", "infiniteData", "grit/core/roles"],
+            queryKey: ["entities", "infiniteData", "grit/core/origins"],
           }),
         ]);
-        formApi.reset(updatedRole);
+        formApi.reset(updatedOrigin, {
+          keepDefaultValues: false,
+        });
       }
     }),
   });
 
-  const fields = useMemo(() => FIELDS(role.system ?? false), [role.system]);
-
   return (
     <Form form={form}>
-      {role.system && (
-        <div className={styles.systemRoleBanner}>
-          <InfoIcon height={16}/>
-          <span>This role is a system role and cannot be modified</span>
-        </div>
-      )}
-
       <FormFields columns={1}>
-        {fields.map((f) => (
+        {FIELDS.map((f) => (
           <FormField fieldDef={f} key={f.name} />
         ))}
       </FormFields>
       <FormControls>
-        {!role.id && <Link to="/core/administration/roles"><Button color="primary">Cancel</Button></Link>}
-
+        {!origin.id && (
+          <Link to="/core/administration/origins">
+            <Button color="primary">Cancel</Button>
+          </Link>
+        )}
       </FormControls>
     </Form>
   );
 }
 
-export default RoleForm;
+export default OriginForm;

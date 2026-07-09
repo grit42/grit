@@ -24,19 +24,18 @@ import {
   Surface,
 } from "@grit42/client-library/components";
 import { useEntityDatum } from "../../../entities";
-import { Role } from "../types";
-import styles from "./role.module.scss";
-import RoleForm from "./RoleForm";
-import RolePermissions from "./RolePermissions";
+import styles from "./location.module.scss";
+import LocationForm from "./LocationForm";
 import BackIcon from "@grit42/client-library/icons/Circle2Togglebackward";
-import DeleteRole from "./DeleteRole";
+import DeleteLocation from "./DeleteLocation";
+import { Location } from "../types";
 
-const RolePage = () => {
-  const { role_id } = useParams() as { role_id: string };
+const LocationPage = () => {
+  const { location_id } = useParams() as { location_id: string };
 
-  const { data, isLoading, isError, error } = useEntityDatum<Role>(
-    "grit/core/roles",
-    role_id,
+  const { data, isLoading, isError, error } = useEntityDatum<Location>(
+    "grit/core/locations",
+    location_id,
   );
 
   if (isLoading) {
@@ -48,25 +47,24 @@ const RolePage = () => {
   }
 
   return (
-    <div className={styles.rolePage}>
+    <div className={styles.locationPage}>
       <div className={styles.header}>
-        <Link to="/core/administration/roles">
+        <Link to="/core/administration/locations">
           <Button
             variant="transparent"
             size="tiny"
             icon={<BackIcon height={24} fill="white" />}
           ></Button>
         </Link>
-        <h1>{data.system ? "View" : "Edit"} role</h1>
+        <h1>Edit location</h1>
       </div>
 
-      <Surface className={styles.roleForm}>
-        <RoleForm role={data} />
-        <RolePermissions role={data} />
-        {!data.system && <DeleteRole role={data} />}
+      <Surface className={styles.locationForm}>
+        <LocationForm location={data} />
+        <DeleteLocation location={data} />
       </Surface>
     </div>
   );
 };
 
-export default RolePage;
+export default LocationPage;

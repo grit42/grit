@@ -1,48 +1,48 @@
-import { useQueryClient } from "@grit42/api";
 import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import styles from "./role.module.scss";
+import styles from "./origin.module.scss";
 import { Button } from "@grit42/client-library/components";
-import { Role } from "../types";
-import { useDestroyRole } from "./queries";
+import { useQueryClient } from "@grit42/api";
+import { useDestroyOrigin } from "../mutations";
+import { Origin } from "../types";
 
-const DeleteRole = ({ role }: { role: Partial<Role> }) => {
+const DeleteOrigin = ({ origin }: { origin: Partial<Origin> }) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const destroyRole = useDestroyRole();
+  const destroyOrigin = useDestroyOrigin();
 
   const handleDelete = useCallback(async () => {
-    if (role.id) {
+    if (origin.id) {
       if (
         !window.confirm(
-          `Are you sure you want to delete ${role.name}? This action is irreversible`,
+          `Are you sure you want to delete ${origin.name}? This action is irreversible`,
         )
       )
         return;
 
-      await destroyRole.mutateAsync(role.id);
+      await destroyOrigin.mutateAsync(origin.id);
       await Promise.all([
         queryClient.invalidateQueries({
-          queryKey: ["entities", "datum", "grit/core/roles"],
+          queryKey: ["entities", "datum", "grit/core/origins"],
         }),
         queryClient.invalidateQueries({
-          queryKey: ["entities", "data", "grit/core/roles"],
+          queryKey: ["entities", "data", "grit/core/origins"],
         }),
         queryClient.invalidateQueries({
-          queryKey: ["entities", "infiniteData", "grit/core/roles"],
+          queryKey: ["entities", "infiniteData", "grit/core/origins"],
         }),
       ]);
       navigate("..", { relative: "path" });
     }
-  }, [destroyRole, navigate, queryClient, role.id, role.name]);
+  }, [destroyOrigin, navigate, queryClient, origin.id, origin.name]);
   return (
     <>
       <div className={styles.divider} />
       <div className={styles.actionSection}>
         <div className={styles.actionContent}>
-          <h3>Delete role</h3>
+          <h3>Delete origin</h3>
           <p>
-            Users with this role will loose associated permissions. <b>This action is irreversible.</b>
+            <b>This action is irreversible.</b>
           </p>
         </div>
         <Button onClick={handleDelete} color="danger">
@@ -53,4 +53,4 @@ const DeleteRole = ({ role }: { role: Partial<Role> }) => {
   );
 };
 
-export default DeleteRole;
+export default DeleteOrigin;

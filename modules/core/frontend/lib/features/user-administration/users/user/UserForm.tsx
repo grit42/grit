@@ -30,7 +30,7 @@ import {
   FormBanner,
 } from "@grit42/form";
 import { useCreateUpdateUserMutation } from "../mutations";
-import { User } from "../../types";
+import { User } from "../types";
 import { useSession } from "../../../auth";
 import { useQueryClient } from "@grit42/api";
 import { Session } from "../../../auth/types";

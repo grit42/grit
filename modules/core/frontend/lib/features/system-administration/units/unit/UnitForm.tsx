@@ -17,7 +17,6 @@
  */
 
 import { Link, useNavigate } from "react-router-dom";
-import {  useMemo } from "react";
 import {
   useForm,
   FormField,
@@ -26,84 +25,88 @@ import {
   FormFields,
   genericErrorHandler,
 } from "@grit42/form";
-import { Role } from "../types";
-import { useCreateRole, useEditRole } from "./queries";
-import { useQueryClient } from "@grit42/api";
-import styles from "./role.module.scss";
-import InfoIcon from "@grit42/client-library/icons/Information";
 import { Button } from "@grit42/client-library/components";
+import { useQueryClient } from "@grit42/api";
+import { useCreateUnit, useEditUnit } from "../mutations";
+import { Unit } from "../types";
 
-const FIELDS = (system: boolean) => [
+const FIELDS = [
   {
     name: "name",
     display_name: "Name",
     type: "string",
     required: true,
-    disabled: system,
   },
   {
-    name: "description",
-    display_name: "Description",
+    name: "abbreviation",
+    display_name: "Abbreviation",
+    type: "string",
+    required: true,
+  },
+  {
+    name: "unit_type",
+    display_name: "Unit type",
     type: "string",
     required: false,
-    disabled: system,
+  },
+  {
+    name: "si_unit",
+    display_name: "SI unit",
+    type: "string",
+    required: false,
   },
 ];
 
-function RoleForm({ role }: { role: Partial<Role> }) {
-  const queryClient = useQueryClient();
+function UnitForm({ unit = {} }: { unit?: Partial<Unit> }) {
   const navigate = useNavigate();
 
-  const createRole = useCreateRole();
-  const editRole = useEditRole(role.id ?? 0);
+  const queryClient = useQueryClient();
+  const createUnit = useCreateUnit();
+  const editUnit = useEditUnit(unit.id ?? 0);
 
   const form = useForm({
-    defaultValues: role,
+    defaultValues: unit,
     onSubmit: genericErrorHandler(async ({ value, formApi }) => {
-      const updatedRole = role.id
-        ? await editRole.mutateAsync(value)
-        : await createRole.mutateAsync(value);
-      if (!role.id) {
-        navigate(`../${updatedRole.id}`, { relative: "path" });
+      const updatedUnit = unit.id
+        ? await editUnit.mutateAsync(value)
+        : await createUnit.mutateAsync(value);
+      if (!unit.id) {
+        navigate(`../${updatedUnit.id}`, { relative: "path" });
       } else {
         await Promise.all([
           queryClient.invalidateQueries({
-            queryKey: ["entities", "datum", "grit/core/roles"],
+            queryKey: ["entities", "datum", "grit/core/units"],
           }),
           queryClient.invalidateQueries({
-            queryKey: ["entities", "data", "grit/core/roles"],
+            queryKey: ["entities", "data", "grit/core/units"],
           }),
           queryClient.invalidateQueries({
-            queryKey: ["entities", "infiniteData", "grit/core/roles"],
+            queryKey: ["entities", "infiniteData", "grit/core/units"],
           }),
         ]);
-        formApi.reset(updatedRole);
+        formApi.reset(updatedUnit, {
+          keepDefaultValues: false,
+        });
       }
     }),
   });
 
-  const fields = useMemo(() => FIELDS(role.system ?? false), [role.system]);
-
   return (
     <Form form={form}>
-      {role.system && (
-        <div className={styles.systemRoleBanner}>
-          <InfoIcon height={16}/>
-          <span>This role is a system role and cannot be modified</span>
-        </div>
-      )}
-
       <FormFields columns={1}>
-        {fields.map((f) => (
+        {FIELDS.map((f) => (
           <FormField fieldDef={f} key={f.name} />
         ))}
       </FormFields>
       <FormControls>
-        {!role.id && <Link to="/core/administration/roles"><Button color="primary">Cancel</Button></Link>}
-
+        {!unit.id && (
+          <Link to="/core/administration/units">
+            <Button color="primary">Cancel</Button>
+          </Link>
+        )}
       </FormControls>
     </Form>
   );
 }
 
-export default RoleForm;
+export default UnitForm;

@@ -16,37 +16,11 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { EntityData } from "../entities";
+import { EntityData } from "../../entities";
 
-export interface User extends EntityData {
+export interface Unit extends EntityData {
   name: string;
-  login: string;
-  email: string;
-  active: boolean;
-  two_factor: boolean;
-  auth_method: string;
-  origin_id: number;
-  origin_id__name: string;
-  location_id: number;
-  location_id__name: string;
-  status_id: number;
-  status_id__name: string;
-  token: string;
-}
-
-export interface Role extends EntityData {
-  name: string;
-  description: string;
-  system: boolean;
-}
-
-export interface Permission extends EntityData {
-  name: string;
-  description: string;
-  provides_permissions: number[];
-}
-
-export interface RolePermission extends EntityData {
-  role_id: number;
-  permission_id: number;
+  abbreviation: string;
+  unit_type: string;
+  si_unit: string;
 }

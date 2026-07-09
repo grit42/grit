@@ -24,7 +24,7 @@ import {
   EndpointErrorErrors,
   notifyOnError,
 } from "@grit42/api";
-import { User } from "../types";
+import { User } from "./types";
 import type { AuthToken, ForgotToken, UserSettings } from "../../auth";
 
 export const useCreateUpdateUserMutation = (id: string | number) => {

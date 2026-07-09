@@ -21,6 +21,21 @@ const NAV_ITEMS = [
     group: "Access",
     url: "/core/administration/roles",
   },
+  {
+    label: "Units",
+    group: "System",
+    url: "/core/administration/units",
+  },
+  {
+    label: "Origins",
+    group: "System",
+    url: "/core/administration/origins",
+  },
+  {
+    label: "Locations",
+    group: "System",
+    url: "/core/administration/locations",
+  },
 ];
 
 const AdministrationNav = () => {
