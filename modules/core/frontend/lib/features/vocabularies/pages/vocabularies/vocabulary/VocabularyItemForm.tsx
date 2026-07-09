@@ -36,7 +36,7 @@ import {
   useEditEntityMutation,
 } from "../../../../entities";
 import { useQueryClient } from "@grit42/api";
-import { CenteredSurface } from "@grit42/client-library/layouts";
+import { Button, Surface } from "@grit42/client-library/components";
 
 const VocabularyItemForm = ({
   fields,
@@ -102,7 +102,7 @@ const VocabularyItemForm = ({
   };
 
   return (
-    <CenteredSurface className={styles.vocabularyForm}>
+    <Surface className={styles.vocabularyForm}>
       <Form form={form}>
         <FormFields columns={1}>
           <FormBanner content={form.state.errorMap.onSubmit} />
@@ -112,12 +112,22 @@ const VocabularyItemForm = ({
         </FormFields>
         <FormControls
           onDelete={onDelete}
-          showDelete={!!vocabularyItem.id}
           showCancel
           onCancel={() => navigate("..")}
         />
       </Form>
-    </CenteredSurface>
+      <div className={styles.actionSection}>
+        <div className={styles.actionContent}>
+          <h3>Delete vocabulary item</h3>
+          <p>
+            <b>This action is irreversible.</b>
+          </p>
+        </div>
+        <Button onClick={onDelete} color="danger">
+          Delete
+        </Button>
+      </div>
+    </Surface>
   );
 };
 

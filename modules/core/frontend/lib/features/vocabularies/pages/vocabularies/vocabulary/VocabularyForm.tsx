@@ -18,7 +18,7 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Surface } from "@grit42/client-library/components";
+import { Button, Surface } from "@grit42/client-library/components";
 import { VocabularyData } from "../../../queries/vocabularies";
 import styles from "./vocabulary.module.scss";
 import {
@@ -124,11 +124,19 @@ const VocabularyForm = ({
         </FormFields>
         <FormControls
           onDelete={onDelete}
-          showDelete={!!vocabulary.id && canWrite}
           showCancel={!vocabulary.id}
           onCancel={() => navigate("../items")}
         />
       </Form>
+      {canWrite && <div className={styles.actionSection}>
+        <div className={styles.actionContent}>
+          <h3>Delete vocabulary</h3>
+          <p>
+            All data will be permanently deleted. <b>This action is irreversible.</b>
+          </p>
+        </div>
+        <Button onClick={onDelete} color="danger">Delete</Button>
+      </div>}
     </Surface>
   );
 };

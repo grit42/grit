@@ -38,7 +38,7 @@ const Vocabulary = ({ vocabularyId }: Props) => {
           <h1>{vocabulary?.name}</h1>
           {canAdmin && (
             <Link to="new">
-              <Button>New item</Button>
+              <Button color="secondary">New item</Button>
             </Link>
           )}
         </div>
