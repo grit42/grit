@@ -1,8 +1,9 @@
 @use "@grit42/client-library/theme.scss";
 
 .administration {
-display: grid; grid-template-columns: 15vw 1fr;
-overflow: auto;
+  display: grid;
+  grid-template-columns: 15vw 1fr;
+  overflow: auto;
 }
 
 .nav {
@@ -12,7 +13,7 @@ overflow: auto;
   align-items: stretch;
   overflow: auto;
   background-color: var(--palette-background-default);
-      margin-block: theme.$spacing-md;
+  margin-block: theme.$spacing-md;
   border-inline-end: 1px solid
     rgb(from var(--palette-background-contrast-text) r g b/0.1);
 
@@ -48,6 +49,7 @@ overflow: auto;
           color: theme.$palette-background-contrast-text;
           border-top-right-radius: theme.$border-radius;
           border-bottom-right-radius: theme.$border-radius;
+          border-radius: theme.$border-radius;
 
           .indicator {
             height: 100%;
@@ -63,6 +65,12 @@ overflow: auto;
             .indicator {
               background-color: theme.$palette-secondary-main;
             }
+          }
+
+          &:hover {
+            background-color: rgb(
+              from var(--palette-background-contrast-text) r g b / 0.15
+            );
           }
 
           .navItemLabel {
