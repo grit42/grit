@@ -2,8 +2,7 @@ import { NavLink } from "react-router-dom";
 import { NavItem } from "../../navigation";
 import { hasRoles, useSession } from "../../../features/auth";
 import { useMemo } from "react";
-import OpenIcon from "@grit42/client-library/icons/PlusSquare";
-import CloseIcon from "@grit42/client-library/icons/MinusSquare";
+import CloseIcon from "@grit42/client-library/icons/Cross";
 import { useAppShell } from "./AppShellContext";
 import { Button } from "@grit42/client-library/components";
 import { useMountTransition } from "@grit42/client-library/hooks";
@@ -69,7 +68,6 @@ const Sidebar = ({ navItems }: { navItems: NavItem[] }) => {
                     [styles.open]: isMounted,
                   })}
                 >
-                  <OpenIcon />
                   {isMounted && navItem.name}
                 </Button>
               )}

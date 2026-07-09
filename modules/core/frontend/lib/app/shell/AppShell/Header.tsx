@@ -41,7 +41,7 @@ import { useContext, useEffect, useState } from "react";
 import ToolbarContext from "../../../features/toolbar/ToolbarContext";
 import DesktopExport from "@grit42/client-library/icons/DesktopExport";
 import DesktopImport from "@grit42/client-library/icons/DesktopImport";
-import OpenIcon from "@grit42/client-library/icons/PlusSquare";
+import OpenIcon from "@grit42/client-library/icons/MenuSquare";
 
 const Toolbar = () => {
   const [

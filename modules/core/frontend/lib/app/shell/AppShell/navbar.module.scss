@@ -135,9 +135,10 @@ $link-height: calc(24px + theme.$spacing * 2);
 
 .navLink {
   padding-block: theme.$spacing-md;
-
+  padding-inline: theme.$spacing-lg;
+  font-size: 1rem;
   &.active {
-    font-weight: bolder;
+    font-weight: bold;
     color: theme.$palette-background-contrast-text !important;
     svg {
       fill: theme.$palette-secondary-main !important;
