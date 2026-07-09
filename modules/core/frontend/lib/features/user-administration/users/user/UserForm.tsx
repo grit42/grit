@@ -16,7 +16,7 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useCallback, useMemo, useState } from "react";
 import {
   useForm,
@@ -36,6 +36,7 @@ import { useSession } from "../../../auth";
 import { useQueryClient } from "@grit42/api";
 import { Session } from "../../../auth/types";
 import { EntityFormFieldDef } from "../../../entities/types";
+import { Button } from "@grit42/client-library/components";
 
 function FIELDS(
   id: string,
@@ -139,32 +140,9 @@ export function UserForm({ user, id }: { user: Partial<User>; id: string }) {
   const { data: session } = useSession();
   const [formData, setFormData] = useState<Partial<User>>(user);
   const createUpdateUserMutation = useCreateUpdateUserMutation(id);
-  const destroyUserMutation = useDestroyEntityMutation("/grit/core/users");
   const queryClient = useQueryClient();
 
   const fields = useMemo(() => FIELDS(id, session), [id, session]);
-
-  const handleDelete = useCallback(async () => {
-    if (id && id !== "new") {
-      if (
-        !window.confirm(
-          `Are you sure you want to delete ${user.name} (${user.login})? This action is irreversible`,
-        )
-      )
-        return;
-
-      await Promise.all([
-        queryClient.invalidateQueries({
-          queryKey: ["entities", "datum", "grit/core/users"],
-        }),
-        queryClient.invalidateQueries({
-          queryKey: ["entities", "data", "grit/core/users"],
-        }),
-        await destroyUserMutation.mutateAsync(id),
-      ]);
-      navigate("..", { relative: "path" });
-    }
-  }, [destroyUserMutation, id, navigate, queryClient, user.login, user.name]);
 
   const form = useForm({
     defaultValues: formData,
@@ -199,7 +177,9 @@ export function UserForm({ user, id }: { user: Partial<User>; id: string }) {
           <FormField fieldDef={f} key={f.name} />
         ))}
       </FormFields>
-      <FormControls onDelete={handleDelete} showDelete={id !== "new"} />
+      <FormControls>
+        {id === "new" && <Link to="/core/administration/users"><Button color="primary">Cancel</Button></Link>}
+      </FormControls>
     </Form>
   );
 }

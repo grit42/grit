@@ -13,8 +13,14 @@
   padding-inline: theme.$spacing-xl;
   display: grid;
   grid-template-columns: minmax(100%, 80ch);
-  grid-template-rows: 1fr;
+  grid-template-rows: min-content max-content;
   margin-inline: auto;
+
+  .header {
+    display: flex;
+    align-items: center;
+    gap: theme.$spacing;
+  }
 }
 
 .roleForm {
@@ -35,8 +41,6 @@
     fill: theme.$palette-info-contrast-text;
   }
 }
-
-
 
 .permissions {
   margin-top: theme.$spacing-lg;
@@ -59,3 +63,19 @@
     gap: theme.$spacing-lg;
   }
 }
+
+
+.actionSection {
+  display: grid;
+  grid-template-columns: 1fr max-content;
+  align-items: center;
+  gap: theme.$spacing;
+  margin-block: calc(theme.$spacing * 4);
+
+  .actionContent {
+    display: flex;
+    flex-direction: column;
+    gap: theme.$spacing;
+  }
+}
+

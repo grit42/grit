@@ -16,13 +16,20 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { useParams } from "react-router-dom";
-import { ErrorPage, Spinner, Surface } from "@grit42/client-library/components";
+import { Link, useParams } from "react-router-dom";
+import {
+  Button,
+  ErrorPage,
+  Spinner,
+  Surface,
+} from "@grit42/client-library/components";
 import { useEntityDatum } from "../../../entities";
 import { Role } from "../../types";
 import styles from "./role.module.scss";
 import RoleForm from "./RoleForm";
 import RolePermissions from "./RolePermissions";
+import BackIcon from "@grit42/client-library/icons/Circle2Togglebackward";
+import DeleteRole from "./DeleteRole";
 
 const RolePage = () => {
   const { role_id } = useParams() as { role_id: string };
@@ -42,9 +49,21 @@ const RolePage = () => {
 
   return (
     <div className={styles.rolePage}>
+      <div className={styles.header}>
+        <Link to="/core/administration/roles">
+          <Button
+            variant="transparent"
+            size="tiny"
+            icon={<BackIcon height={24} fill="white" />}
+          ></Button>
+        </Link>
+        <h1>{data.system ? "View" : "Edit"} role</h1>
+      </div>
+
       <Surface className={styles.roleForm}>
         <RoleForm role={data} />
         <RolePermissions role={data} />
+        {!data.system && <DeleteRole role={data} />}
       </Surface>
     </div>
   );

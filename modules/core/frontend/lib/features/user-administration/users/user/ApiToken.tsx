@@ -47,7 +47,7 @@ export function ApiToken({ email, apiToken }: ApiTokenProps) {
   return (
     <>
       <div className={styles.divider} />
-      <h2>API token</h2>
+      <h3>API token</h3>
       {apiToken && <CopyableBlock content={apiToken} />}
       {!apiToken && <p>User does not have an API token yet.</p>}
       <ButtonGroup>

@@ -36,6 +36,12 @@ const ROLE_TABLE_COLUMNS: GritColumnDef<EntityData>[] = [
     type: "string",
     size: 500,
   },
+  {
+    accessorKey: "system",
+    header: "System",
+    id: "system",
+    type: "boolean",
+  },
 ];
 
 export default function RolesList() {

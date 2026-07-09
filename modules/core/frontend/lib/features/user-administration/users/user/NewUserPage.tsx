@@ -23,6 +23,7 @@ import { UserForm } from "./UserForm";
 const NewUserPage = () => {
   return (
     <div className={styles.userPage}>
+      <h1>New user</h1>
       <Surface className={styles.userForm}>
         <div className={styles.formsContainer}>
           <UserForm user={{}} id={"new"} />

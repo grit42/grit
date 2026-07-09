@@ -1,0 +1,75 @@
+@use "@grit42/client-library/theme.scss";
+
+.administration {
+display: grid; grid-template-columns: 15vw 1fr;
+overflow: auto;
+}
+
+.nav {
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  overflow: auto;
+  background-color: var(--palette-background-default);
+      margin-block: theme.$spacing-md;
+  border-inline-end: 1px solid
+    rgb(from var(--palette-background-contrast-text) r g b/0.1);
+
+  .navGroups {
+    list-style: none;
+
+    .navGroup {
+      list-style: none;
+      padding-block: theme.$spacing-lg;
+      margin-inline: theme.$spacing-md;
+      &:not(:last-child) {
+        border-bottom: 1px solid
+          rgb(from var(--palette-background-contrast-text) r g b/0.1);
+      }
+
+      .navGroupHeader {
+        display: block;
+        padding-bottom: theme.$spacing-md;
+        padding-inline-start: calc(4px + theme.$spacing-md);
+        color: rgb(from (theme.$palette-background-contrast-text) r g b / 0.8);
+        font-weight: bold;
+        font-size: 0.75rem;
+      }
+
+      .navGroupItems {
+        list-style: none;
+
+        .navItem {
+          display: grid;
+          grid-template-columns: min-content 1fr;
+          font-weight: bold;
+          font-family: theme.$body-font-family;
+          color: theme.$palette-background-contrast-text;
+          border-top-right-radius: theme.$border-radius;
+          border-bottom-right-radius: theme.$border-radius;
+
+          .indicator {
+            height: 100%;
+            width: theme.$border-radius;
+            border-top-left-radius: theme.$border-radius;
+            border-bottom-left-radius: theme.$border-radius;
+          }
+
+          &.active {
+            background-color: rgb(
+              from var(--palette-background-contrast-text) r g b / 0.1
+            );
+            .indicator {
+              background-color: theme.$palette-secondary-main;
+            }
+          }
+
+          .navItemLabel {
+            padding: theme.$spacing-md;
+          }
+        }
+      }
+    }
+  }
+}

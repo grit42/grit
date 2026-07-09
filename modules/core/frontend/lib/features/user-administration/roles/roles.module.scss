@@ -6,5 +6,5 @@
   display: grid;
   grid-template-columns: minmax(100%, 80ch);
   grid-template-rows: 1fr;
-  margin-inline: auto;
+  overflow: auto;
 }

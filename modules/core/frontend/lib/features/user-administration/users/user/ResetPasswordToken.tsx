@@ -63,7 +63,7 @@ export function ResetPasswordToken({
   return (
     <>
       <div className={styles.divider} />
-      <h2>Reset password link</h2>
+      <h3>Reset password link</h3>
       {forgotToken && <CopyableBlock content={resetPasswordUrl} />}
       <ButtonGroup>
         <Button

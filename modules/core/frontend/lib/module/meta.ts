@@ -29,9 +29,9 @@ const Meta: ModuleMeta = {
       permissions: ["read:system"],
     },
     {
-      identifier: "ADMIN_USERS",
-      name: "User Administration",
-      path: "/core/user-administration",
+      identifier: "ADMINISTRATION",
+      name: "Administration",
+      path: "/core/administration",
       permissions: ["admin:users"],
     },
     {

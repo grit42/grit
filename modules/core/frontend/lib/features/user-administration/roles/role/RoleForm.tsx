@@ -16,8 +16,8 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { useNavigate } from "react-router-dom";
-import { useCallback, useMemo } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import {  useMemo } from "react";
 import {
   useForm,
   FormField,
@@ -27,10 +27,11 @@ import {
   genericErrorHandler,
 } from "@grit42/form";
 import { Role } from "../../types";
-import { useCreateRole, useDestroyRole, useEditRole } from "./queries";
+import { useCreateRole, useEditRole } from "./queries";
 import { useQueryClient } from "@grit42/api";
 import styles from "./role.module.scss";
 import InfoIcon from "@grit42/client-library/icons/Information";
+import { Button } from "@grit42/client-library/components";
 
 const FIELDS = (system: boolean) => [
   {
@@ -55,32 +56,6 @@ function RoleForm({ role }: { role: Partial<Role> }) {
 
   const createRole = useCreateRole();
   const editRole = useEditRole(role.id ?? 0);
-  const destroyRole = useDestroyRole();
-
-  const handleDelete = useCallback(async () => {
-    if (role.id) {
-      if (
-        !window.confirm(
-          `Are you sure you want to delete ${role.name}? This action is irreversible`,
-        )
-      )
-        return;
-
-      await destroyRole.mutateAsync(role.id);
-      await Promise.all([
-        queryClient.invalidateQueries({
-          queryKey: ["entities", "datum", "grit/core/roles"],
-        }),
-        queryClient.invalidateQueries({
-          queryKey: ["entities", "data", "grit/core/roles"],
-        }),
-        queryClient.invalidateQueries({
-          queryKey: ["entities", "infiniteData", "grit/core/roles"],
-        }),
-      ]);
-      navigate("..", { relative: "path" });
-    }
-  }, [destroyRole, navigate, queryClient, role.id, role.name]);
 
   const form = useForm({
     defaultValues: role,
@@ -123,10 +98,10 @@ function RoleForm({ role }: { role: Partial<Role> }) {
           <FormField fieldDef={f} key={f.name} />
         ))}
       </FormFields>
-      <FormControls
-        showDelete={!!role.id && !role.system}
-        onDelete={handleDelete}
-      />
+      <FormControls>
+        {!role.id && <Link to="/core/administration/roles"><Button color="primary">Cancel</Button></Link>}
+
+      </FormControls>
     </Form>
   );
 }

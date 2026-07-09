@@ -48,6 +48,9 @@ const LazyVocabulariesPage = lazy(
 const LazyUserAdministrationPage = lazy(
   () => import("../features/user-administration"),
 );
+const LazyAdministrationRouter = lazy(
+  () => import("../features/administration"),
+);
 const LazySystemAdministrationPage = lazy(
   () => import("../features/system-administration"),
 );
@@ -135,6 +138,10 @@ const Router = () => {
       >
         <Route index path="*" element={<LazyVocabulariesPage />} />
       </Route>
+      <Route
+        path="administration/*"
+        element={<LazyAdministrationRouter />}
+      ></Route>
       <Route
         path="/user-administration/*"
         element={

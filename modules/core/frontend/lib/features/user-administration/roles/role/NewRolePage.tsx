@@ -23,6 +23,7 @@ import RoleForm from "./RoleForm";
 const NewRolePage = () => {
   return (
     <div className={styles.rolePage}>
+      <h1>New role</h1>
       <Surface className={styles.roleForm}>
         <RoleForm role={{}} />
       </Surface>

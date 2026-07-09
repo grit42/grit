@@ -56,7 +56,7 @@ const FormControls = ({
           <div
             style={style}
             className={classnames(styles.controls, {
-              [styles.hidden]: !(isDirty || showDelete || showCancel),
+              [styles.hidden]: !(isDirty || showDelete || showCancel || !!children),
             })}
           >
             <ButtonGroup>

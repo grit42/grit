@@ -52,7 +52,7 @@ export function ActivationToken({
   return (
     <>
       <div className={styles.divider} />
-      <h2>Activation link</h2>
+      <h3>Activation link</h3>
       <CopyableBlock content={activationUrl} />
       <Button
         color="secondary"

@@ -5,8 +5,14 @@
   padding-inline: theme.$spacing-xl;
   display: grid;
   grid-template-columns: minmax(100%, 80ch);
-  grid-template-rows: 1fr;
+  grid-template-rows: min-content max-content;
   margin-inline: auto;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: theme.$spacing;
 }
 
 .userForm {
@@ -20,4 +26,18 @@
   background-color: rgb(
     from var(--palette-background-contrast-text) r g b / 20%
   );
+}
+
+.actionSection {
+  display: grid;
+  grid-template-columns: 1fr max-content;
+  align-items: center;
+  gap: theme.$spacing;
+  margin-block: calc(theme.$spacing * 4);
+
+  .actionContent {
+    display: flex;
+    flex-direction: column;
+    gap: theme.$spacing;
+  }
 }

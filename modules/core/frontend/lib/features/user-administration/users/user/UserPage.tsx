@@ -16,8 +16,13 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { useParams } from "react-router-dom";
-import { ErrorPage, Spinner, Surface } from "@grit42/client-library/components";
+import { Link, useParams } from "react-router-dom";
+import {
+  Button,
+  ErrorPage,
+  Spinner,
+  Surface,
+} from "@grit42/client-library/components";
 import { useEntityDatum } from "../../../entities";
 import { UserWithTokens } from "./types";
 import styles from "./user.module.scss";
@@ -26,6 +31,8 @@ import { ActivationToken } from "./ActivationToken";
 import { ResetPasswordToken } from "./ResetPasswordToken";
 import { ApiToken } from "./ApiToken";
 import { useSession } from "../../../auth";
+import BackIcon from "@grit42/client-library/icons/Circle2Togglebackward";
+import DeleteUser from "./DeleteUser";
 
 const UserPage = () => {
   const { user_id } = useParams() as { user_id: string };
@@ -52,6 +59,16 @@ const UserPage = () => {
 
   return (
     <div className={styles.userPage}>
+      <div className={styles.header}>
+        <Link to="/core/administration/users">
+          <Button
+            variant="transparent"
+            size="tiny"
+            icon={<BackIcon height={24} fill="white" />}
+          ></Button>
+        </Link>
+        <h1>Edit user</h1>
+      </div>
       <Surface className={styles.userForm}>
         <UserForm user={data} id={user_id} />
         {isLocalUser && (
@@ -69,6 +86,7 @@ const UserPage = () => {
           />
         )}
         <ApiToken email={data.email} apiToken={data.single_access_token} />
+        <DeleteUser user={data} id={user_id} />
       </Surface>
     </div>
   );
