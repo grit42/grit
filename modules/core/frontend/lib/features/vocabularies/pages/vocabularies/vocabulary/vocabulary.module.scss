@@ -1,20 +1,26 @@
 @use "@grit42/client-library/theme.scss";
 
 .vocabulary,
+.newVocabulary,
 .vocabularyItem,
 .vocabularySettings,
 .loadSets {
   padding-top: theme.$spacing-xl;
   padding-inline: theme.$spacing-xl;
   display: grid;
-  grid-template-columns: minmax(100%, 80ch);
   grid-template-rows: min-content 1fr;
-  margin-inline: auto;
 }
 
 .vocabularySettings,
 .loadSets {
   grid-template-rows: 1fr;
+}
+
+.vocabularySettings,
+.newVocabulary,
+.vocabularyItem {
+  grid-template-columns: minmax(100%, 80ch);
+  margin-inline: auto;
 }
 
 .vocabularyDetails {

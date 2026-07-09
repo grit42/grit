@@ -98,7 +98,7 @@ const VocabulariesTable = () => {
         headerActions={
           canEditVocabularies ? (
             <Link to="new">
-              <Button>New</Button>
+              <Button color="secondary">New</Button>
             </Link>
           ) : undefined
         }

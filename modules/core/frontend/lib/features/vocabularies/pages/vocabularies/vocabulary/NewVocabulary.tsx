@@ -126,7 +126,8 @@ const NewVocabulary = () => {
   }
 
   return (
-    <div className={styles.vocabularySettings}>
+    <div className={styles.newVocabulary}>
+      <h1>New vocabulary</h1>
       <NewVocabularyForm fields={fields.data} />
     </div>
   );
