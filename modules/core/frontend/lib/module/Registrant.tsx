@@ -20,12 +20,16 @@ import useRegisterEntityColumnTypeDef from "../features/entities/extensions/tabl
 import useRegisterEntityFormInput from "../features/entities/extensions/form";
 import useRegisterDefaultEntityForm from "../features/entities/extensions/entity-form";
 import useRegisterVocabularyItemImporter from "../features/vocabularies/extensions/importer/vocabulary-items";
+import useRegisterAccessAdministrationRoutes from "../features/user-administration";
+import useRegisterSystemAdministrationRoutes from "../features/system-administration";
 
 const Registrant = () => {
   useRegisterEntityColumnTypeDef();
   useRegisterEntityFormInput();
   useRegisterDefaultEntityForm();
   useRegisterVocabularyItemImporter();
+  useRegisterAccessAdministrationRoutes();
+  useRegisterSystemAdministrationRoutes();
 
   return null;
 };

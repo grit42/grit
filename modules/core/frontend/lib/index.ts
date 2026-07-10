@@ -59,6 +59,7 @@ export type {
 } from "./features/entities";
 
 export * from "./features/importer";
+export * from "./features/administration";
 
 export { useToolbar } from "./features/toolbar";
 

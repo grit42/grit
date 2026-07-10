@@ -99,8 +99,7 @@ function RoleForm({ role }: { role: Partial<Role> }) {
         ))}
       </FormFields>
       <FormControls>
-        {!role.id && <Link to="/core/administration/roles"><Button color="primary">Cancel</Button></Link>}
-
+        {!role.id && <Link to=".."><Button color="primary">Cancel</Button></Link>}
       </FormControls>
     </Form>
   );

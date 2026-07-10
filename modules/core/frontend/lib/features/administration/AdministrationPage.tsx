@@ -3,6 +3,7 @@ import { useBreadcrumbs } from "../../app";
 import styles from "./administration.module.scss";
 import { classnames } from "@grit42/client-library/utils";
 import { useMemo } from "react";
+import { useAdministrationContext } from "./AdministrationContext";
 
 interface NavItem {
   label: string;
@@ -10,52 +11,23 @@ interface NavItem {
   url: string;
 }
 
-const NAV_ITEMS = [
-  {
-    label: "Users",
-    group: "Access",
-    url: "/core/administration/users",
-  },
-  {
-    label: "Roles and permissions",
-    group: "Access",
-    url: "/core/administration/roles",
-  },
-  {
-    label: "Units",
-    group: "System",
-    url: "/core/administration/units",
-  },
-  {
-    label: "Origins",
-    group: "System",
-    url: "/core/administration/origins",
-  },
-  {
-    label: "Locations",
-    group: "System",
-    url: "/core/administration/locations",
-  },
-];
-
 const AdministrationNav = () => {
-  const navItems = NAV_ITEMS;
-
+  const { authorizedPages } = useAdministrationContext();
   const { groups, groupedItems } = useMemo(() => {
     const groupedItems: Record<string, NavItem[]> = {};
-    for (const navItem of navItems) {
+    for (const navItem of authorizedPages) {
       const group = groupedItems[navItem.group] ?? [];
       group.push(navItem);
       if (!groupedItems[navItem.group]) groupedItems[navItem.group] = group;
     }
     return { groups: Object.keys(groupedItems), groupedItems };
-  }, [navItems]);
+  }, [authorizedPages]);
 
   return (
     <nav className={styles.nav}>
       <ul className={styles.navGroups}>
         {groups.map((group) => (
-          <li className={styles.navGroup}>
+          <li key={group} className={styles.navGroup}>
             <span className={styles.navGroupHeader}>{group}</span>
             <ul className={styles.navGroupItems}>
               {groupedItems[group].map((d) => (
