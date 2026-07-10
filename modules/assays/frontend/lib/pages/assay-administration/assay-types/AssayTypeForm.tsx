@@ -17,19 +17,10 @@
  */
 
 import { useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
-import { Button, ErrorPage, Spinner } from "@grit42/client-library/components";
-import {
-  AssayTypeData,
-  useAssayType,
-  useAssayTypeFields,
-} from "../../../queries/assay_types";
+import { Link, useNavigate } from "react-router-dom";
+import { AssayTypeData } from "../../../queries/assay_types";
 import { useQueryClient } from "@grit42/api";
-import {
-  useCreateEntityMutation,
-  useDestroyEntityMutation,
-  useEditEntityMutation,
-} from "@grit42/core";
+import { useCreateEntityMutation, useEditEntityMutation } from "@grit42/core";
 import {
   Form,
   FormBanner,
@@ -41,14 +32,27 @@ import {
   getVisibleFieldData,
   useForm,
 } from "@grit42/form";
-import { CenteredSurface } from "@grit42/client-library/layouts";
+import { Button } from "@grit42/client-library/components";
+
+const FIELDS: FormFieldDef[] = [
+  {
+    name: "name",
+    display_name: "Name",
+    type: "string",
+    required: true,
+  },
+  {
+    name: "description",
+    display_name: "Description",
+    type: "text",
+    required: false,
+  },
+];
 
 const AssayTypeForm = ({
-  fields,
-  assayType,
+  assayType = {},
 }: {
-  fields: FormFieldDef[];
-  assayType: Partial<AssayTypeData>;
+  assayType?: Partial<AssayTypeData>;
 }) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -63,16 +67,12 @@ const AssayTypeForm = ({
     assayType.id ?? -1,
   );
 
-  const destroyEntityMutation = useDestroyEntityMutation(
-    "grit/assays/assay_types",
-  );
-
   const form = useForm({
     defaultValues: formData,
     onSubmit: genericErrorHandler(async ({ value: formValue, formApi }) => {
       const value = getVisibleFieldData<Partial<AssayTypeData>>(
         formValue,
-        fields,
+        FIELDS,
       );
       if (!assayType.id) {
         const newEntity = await createEntityMutation.mutateAsync(
@@ -99,62 +99,23 @@ const AssayTypeForm = ({
     }),
   });
 
-  const onDelete = async () => {
-    if (
-      !assayType.id ||
-      !window.confirm(
-        `Are you sure you want to delete this assay type? This action is irreversible`,
-      )
-    )
-      return;
-    await destroyEntityMutation.mutateAsync(assayType.id);
-    navigate("..");
-  };
-
   return (
-    <CenteredSurface>
-      <h2>{`${assayType.id ? "Edit" : "New"} assay type`}</h2>
-      <Form form={form}>
-        <FormFields columns={1}>
-          <FormBanner content={form.state.errorMap.onSubmit} />
-          {fields.map((f) => (
-            <FormField fieldDef={f} key={f.name} />
-          ))}
-        </FormFields>
-        <FormControls
-          onDelete={onDelete}
-          showDelete={!!assayType.id}
-          showCancel
-          cancelLabel={assayType.id ? "Back" : "Cancel"}
-          onCancel={() => navigate("..")}
-        />
-      </Form>
-    </CenteredSurface>
+    <Form form={form}>
+      <FormFields columns={1}>
+        <FormBanner content={form.state.errorMap.onSubmit} />
+        {FIELDS.map((f) => (
+          <FormField fieldDef={f} key={f.name} />
+        ))}
+      </FormFields>
+      <FormControls>
+        {!assayType.id && (
+          <Link to="..">
+            <Button color="primary">Cancel</Button>
+          </Link>
+        )}
+      </FormControls>
+    </Form>
   );
 };
 
-const AssayTypeFormWrapper = () => {
-  const { assay_type_id } = useParams() as { assay_type_id: string };
-
-  const {
-    data: fields,
-    isLoading: isAssayTypeFieldsLoading,
-    isError: isAssayTypeFieldsError,
-    error: assayTypeFieldsError,
-  } = useAssayTypeFields();
-
-  const { data, isLoading, isError, error } = useAssayType(assay_type_id);
-
-  if (isAssayTypeFieldsLoading || isLoading) return <Spinner />;
-  if (isAssayTypeFieldsError || isError || !fields || !data)
-    return (
-      <ErrorPage error={assayTypeFieldsError ?? error}>
-        <Link to="..">
-          <Button>Back</Button>
-        </Link>
-      </ErrorPage>
-    );
-  return <AssayTypeForm fields={fields} assayType={data} />;
-};
-
-export default AssayTypeFormWrapper;
+export default AssayTypeForm;

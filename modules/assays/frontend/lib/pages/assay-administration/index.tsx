@@ -17,7 +17,6 @@
  */
 
 import { Navigate, Outlet, Route, Routes } from "react-router-dom";
-import AssayTypesAdministrationPage from "./assay-types";
 import AssayModelsAdministrationPage from "./assay-models";
 import AssayMetadataDefinitionsAdministrationPage from "./assay-metadata-definitions";
 import ExperimentMetadataTemplatesAdministrationPage from "./experiment-metadata-templates";
@@ -63,9 +62,6 @@ const AssaysAdministrationTab = () => {
           path="*"
           element={<ExperimentMetadataTemplatesAdministrationPage />}
         />
-      </Route>
-      <Route path="assay-types">
-        <Route index path="*" element={<AssayTypesAdministrationPage />} />
       </Route>
       <Route path="assay-models">
         <Route index path="*" element={<AssayModelsAdministrationPage />} />

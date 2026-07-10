@@ -16,15 +16,21 @@
  * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import AssayTypesTable from "./AssayTypesTable";
-import { Route, Routes } from "react-router-dom";
+import { Surface } from "@grit42/client-library/components";
+import AssayTypeForm from "./AssayTypeForm";
+import styles from "./assayTypes.module.scss";
 
-const AssayTypesAdministrationPage = () => {
+const NewAssayTypePage = () => {
   return (
-    <Routes>
-      <Route index element={<AssayTypesTable />} />
-    </Routes>
+    <div className={styles.assayTypePage}>
+      <div className={styles.header}>
+        <h1>New assay type</h1>
+      </div>
+      <Surface className={styles.assayTypeForm}>
+        <AssayTypeForm assayType={{}} />
+      </Surface>
+    </div>
   );
 };
 
-export default AssayTypesAdministrationPage;
+export default NewAssayTypePage;

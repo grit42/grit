@@ -17,14 +17,12 @@
  */
 
 import AssayTypesTable from "./AssayTypesTable";
-import { Route, Routes } from "react-router-dom";
+import styles from "./assayTypes.module.scss";
 
-const AssayTypesAdministrationPage = () => {
-  return (
-    <Routes>
-      <Route index element={<AssayTypesTable />} />
-    </Routes>
-  );
+const AssayTypesPage = () => {
+  return <div className={styles.assayTypesPage}>
+    <AssayTypesTable />
+  </div>;
 };
 
-export default AssayTypesAdministrationPage;
+export default AssayTypesPage;
