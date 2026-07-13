@@ -16,57 +16,105 @@
  * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Table, useSetupTableState } from "@grit42/table";
-import { useCallback, useEffect, useMemo } from "react";
-import { useToolbar } from "@grit42/core";
-import Circle1NewIcon from "@grit42/client-library/icons/Circle1New";
+import { GritColumnDef, Table, useSetupTableState } from "@grit42/table";
+import { useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button, ErrorPage, Spinner } from "@grit42/client-library/components";
-import { useTableColumns } from "@grit42/core/utils";
+import { Button } from "@grit42/client-library/components";
 import {
-  useAssayModelColumns,
+  AssayModelData,
   useInfiniteAssayModels,
 } from "../../../queries/assay_models";
-import { CenteredColumnLayout } from "@grit42/client-library/layouts";
 
-const DEFAULT_COLUMN_SIZES = {
-  name: 200,
-  description: 750,
-} as const;
+const COLUMNS: GritColumnDef<AssayModelData>[] = [
+  {
+    id: "id",
+    accessorKey: "id",
+    header: "Id",
+    type: "integer",
+    defaultVisibility: "hidden",
+  },
+  {
+    id: "created_by",
+    accessorKey: "created_by",
+    header: "Created by",
+    type: "string",
+    defaultVisibility: "hidden",
+  },
+  {
+    id: "created_at",
+    accessorKey: "created_at",
+    header: "Created at",
+    type: "datetime",
+    defaultVisibility: "hidden",
+  },
+  {
+    id: "updated_by",
+    accessorKey: "updated_by",
+    header: "Updated by",
+    type: "string",
+    defaultVisibility: "hidden",
+  },
+  {
+    id: "updated_at",
+    accessorKey: "updated_at",
+    header: "Updated at",
+    type: "datetime",
+    defaultVisibility: "hidden",
+  },
+  {
+    id: "name",
+    accessorKey: "name",
+    header: "Name",
+    type: "string",
+    size: 200,
+  },
+  {
+    id: "description",
+    accessorKey: "description",
+    header: "Description",
+    type: "text",
+    size: 750,
+  },
+  {
+    id: "assay_type_id__name",
+    accessorKey: "assay_type_id__name",
+    header: "Assay type",
+    type: "entity",
+    entity: {
+      full_name: "Grit::Assays::AssayType",
+      name: "AssayType",
+      path: "grit/assays/assay_types",
+      primary_key: "id",
+      primary_key_type: "integer",
+      column: "assay_type_id",
+      display_column: "name",
+      display_column_type: "string",
+    },
+  } as GritColumnDef<AssayModelData>,
+  {
+    id: "publication_status_id__name",
+    accessorKey: "publication_status_id__name",
+    header: "Publication status",
+    type: "entity",
+    entity: {
+      full_name: "Grit::Core::PublicationStatus",
+      name: "PublicationStatus",
+      path: "grit/core/publication_statuses",
+      primary_key: "id",
+      primary_key_type: "integer",
+      column: "publication_status_id",
+      display_column: "name",
+      display_column_type: "string",
+    },
+  } as GritColumnDef<AssayModelData>,
+];
 
 const AssayModelsTable = () => {
-  const registerToolbarActions = useToolbar();
   const navigate = useNavigate();
-  const { data: assayModelColumns } = useAssayModelColumns(undefined, {
-    select: (data) =>
-      data.map((d) => ({
-        ...d,
-        defaultColumnSize:
-          DEFAULT_COLUMN_SIZES[d.name as keyof typeof DEFAULT_COLUMN_SIZES],
-      })),
-  });
-
-  const tableColumns = useTableColumns(assayModelColumns);
 
   const navigateToNew = useCallback(() => navigate("new"), [navigate]);
 
-  useEffect(() => {
-    return registerToolbarActions({
-      actions: [
-        {
-          id: "NEW",
-          icon: <Circle1NewIcon />,
-          label: "New assay model",
-          onClick: navigateToNew,
-        },
-      ],
-    });
-  }, [registerToolbarActions, navigateToNew]);
-
-  const tableState = useSetupTableState(
-    "admin-assay_models-list",
-    tableColumns,
-  );
+  const tableState = useSetupTableState("admin-assay_models-list", COLUMNS);
 
   const {
     data,
@@ -83,41 +131,25 @@ const AssayModelsTable = () => {
   );
 
   return (
-    <CenteredColumnLayout>
-      <Table
-        header="Assay models"
-        tableState={tableState}
-        headerActions={
-          <Button color="secondary" onClick={navigateToNew}>
-            New
-          </Button>
-        }
-        fitContent
-        data={flatData}
-        onRowClick={(row) => navigate(`${row.original.id}`)}
-        loading={isFetching}
-        noDataMessage={isError ? error : undefined}
-        pagination={{
-          fetchNextPage,
-          isFetchingNextPage,
-          totalRows: data?.pages[0]?.total,
-        }}
-      />
-    </CenteredColumnLayout>
+    <Table
+      header="Assay models"
+      tableState={tableState}
+      headerActions={
+        <Button color="secondary" onClick={navigateToNew}>
+          New
+        </Button>
+      }
+      data={flatData}
+      onRowClick={(row) => navigate(`${row.original.id}/details`)}
+      loading={isFetching}
+      noDataMessage={isError ? error : undefined}
+      pagination={{
+        fetchNextPage,
+        isFetchingNextPage,
+        totalRows: data?.pages[0]?.total,
+      }}
+    />
   );
 };
 
-const AssayModelsTableWrapper = () => {
-  const {
-    isLoading: isAssayModelColumnsLoading,
-    isError: isAssayModelColumnsError,
-    error: assayModelColumnsError,
-  } = useAssayModelColumns();
-
-  if (isAssayModelColumnsLoading) return <Spinner />;
-  if (isAssayModelColumnsError)
-    return <ErrorPage error={assayModelColumnsError} />;
-  return <AssayModelsTable />;
-};
-
-export default AssayModelsTableWrapper;
+export default AssayModelsTable;

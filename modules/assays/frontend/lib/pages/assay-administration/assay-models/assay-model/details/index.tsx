@@ -1,19 +1,10 @@
-import {
-  Button,
-  ButtonGroup,
-  ErrorPage,
-  Spinner,
-  useConfirm,
-} from "@grit42/client-library/components";
-import {
-  AssayModelData,
-  useAssayModel,
-  useAssayModelFields,
-} from "../../../../../queries/assay_models";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Button, Surface, useConfirm } from "@grit42/client-library/components";
+import { AssayModelData } from "../../../../../queries/assay_models";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Form,
   FormBanner,
+  FormControls,
   FormField,
   FormFieldDef,
   FormFields,
@@ -35,10 +26,10 @@ import {
   useCreateEntityMutation,
   useEditEntityMutation,
   useDangerousDestroyEntityMutation,
+  EntityFormFieldDef,
 } from "@grit42/core";
 import { useState } from "react";
 import styles from "./details.module.scss";
-import { CenteredSurface } from "@grit42/client-library/layouts";
 import { useAssayModelEditorContext } from "../AssayModelEditorContext";
 
 export const usePublishAssayModelMutation = (
@@ -247,7 +238,6 @@ const AssayModelActions = ({
           }
         />
       )}
-
       {!published && (
         <AssayModelAction
           title="Publish this Assay Model"
@@ -287,6 +277,17 @@ const AssayModelActions = ({
       )}
       {canEdit && (
         <AssayModelAction
+          title="Clone this Assay Model"
+          description={<>Create a copy of this assay model to modify freely.</>}
+          action={
+            <Link to="../clone" relative="path">
+              <Button>Clone</Button>
+            </Link>
+          }
+        />
+      )}
+      {canEdit && (
+        <AssayModelAction
           title="Delete this Assay Model"
           description={
             <>
@@ -309,14 +310,39 @@ const AssayModelActions = ({
   );
 };
 
-const AssayModelForm = ({
-  fields: fieldsFromProps,
-  assayModel,
-}: {
-  fields: FormFieldDef[];
-  assayModel: Partial<AssayModelData>;
-}) => {
-  const { canEdit, dangerousEditMode } = useAssayModelEditorContext();
+const FIELDS: FormFieldDef[] = [
+  {
+    name: "name",
+    display_name: "Name",
+    type: "string",
+    required: true,
+  },
+  {
+    name: "description",
+    display_name: "Description",
+    type: "text",
+    required: false,
+  },
+  {
+    name: "assay_type_id",
+    display_name: "Assay type",
+    type: "entity",
+    entity: {
+      full_name: "Grit::Assays::AssayType",
+      name: "AssayType",
+      path: "grit/assays/assay_types",
+      primary_key: "id",
+      primary_key_type: "integer",
+      column: "assay_type_id",
+      display_column: "name",
+      display_column_type: "string",
+    },
+  } as EntityFormFieldDef,
+];
+
+const AssayModelDetails = () => {
+  const { canEdit, dangerousEditMode, assayModel } =
+    useAssayModelEditorContext();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState<Partial<AssayModelData>>(assayModel);
@@ -330,7 +356,7 @@ const AssayModelForm = ({
     assayModel.id ?? -1,
   );
 
-  const fields = fieldsFromProps.map((f) => ({
+  const fields = FIELDS.map((f) => ({
     ...f,
     disabled: !canEdit,
   }));
@@ -371,8 +397,7 @@ const AssayModelForm = ({
   });
 
   return (
-    <CenteredSurface>
-      {!assayModel.id && <h2>New assay model</h2>}
+    <Surface className={styles.container}>
       <Form form={form}>
         <FormFields columns={1}>
           <FormBanner content={form.state.errorMap.onSubmit} />
@@ -380,73 +405,11 @@ const AssayModelForm = ({
             <FormField fieldDef={f} key={f.name} />
           ))}
         </FormFields>
-        <form.Subscribe
-          selector={(state) => [
-            state.canSubmit,
-            state.isSubmitting,
-            state.isDirty,
-          ]}
-          children={([canSubmit, isSubmitting, isDirty]) => {
-            return (
-              <ButtonGroup>
-                {isDirty && (
-                  <Button
-                    color="secondary"
-                    disabled={!canSubmit}
-                    type="submit"
-                    loading={isSubmitting}
-                  >
-                    Save
-                  </Button>
-                )}
-                {isDirty && (
-                  <Button onClick={() => form.reset()}>Revert changes</Button>
-                )}
-                {!isDirty && (
-                  <Button
-                    onClick={() =>
-                      navigate(assayModel.id ? "../../.." : "../..", {
-                        relative: "path",
-                      })
-                    }
-                  >
-                    {assayModel.id ? "Back" : "Cancel"}
-                  </Button>
-                )}
-                {!isDirty && !!assayModel.id && (
-                  <Link to="../clone" relative="path">
-                    <Button>Clone</Button>
-                  </Link>
-                )}
-              </ButtonGroup>
-            );
-          }}
-        />
+        <FormControls />
       </Form>
-      {assayModel.id && <AssayModelActions assayModel={assayModel} />}
-    </CenteredSurface>
+      <AssayModelActions assayModel={assayModel} />
+    </Surface>
   );
 };
 
-const Details = () => {
-  const { assay_model_id } = useParams() as { assay_model_id: string };
-
-  const {
-    data: fields,
-    isLoading: isAssayModelFieldsLoading,
-    isError: isAssayModelFieldsError,
-    error: assayModelFieldsError,
-  } = useAssayModelFields(undefined, {
-    select: (data) =>
-      data.filter(({ name }) => name !== "publication_status_id"),
-  });
-
-  const { data, isLoading, isError, error } = useAssayModel(assay_model_id);
-
-  if (isAssayModelFieldsLoading || isLoading) return <Spinner />;
-  if (isAssayModelFieldsError || isError || !fields || !data)
-    return <ErrorPage error={assayModelFieldsError ?? error} />;
-  return <AssayModelForm fields={fields} assayModel={data} />;
-};
-
-export default Details;
+export default AssayModelDetails;

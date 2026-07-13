@@ -20,21 +20,7 @@
 
 .assayModelContainer {
   display: grid;
-  height: 100%;
-  align-self: stretch;
-  grid-template-rows: 1fr;
   overflow: auto;
-
-  &.dangerousEditMode {
-    grid-template-rows: min-content 1fr;
-  }
-
-  &.dataSheetLoaderContainer {
-    grid-template-rows: min-content 1fr;
-    &.dangerousEditMode {
-      grid-template-rows: min-content min-content 1fr;
-    }
-  }
 }
 
 .dangerousEditModeBanner {
@@ -48,14 +34,19 @@
   margin-bottom: theme.$spacing-lg;
 }
 
-.header {
-  align-self: baseline;
-  margin-bottom: 0.5em;
-  display: flex;
-  align-items: baseline;
-  gap: theme.$spacing;
+.heading {
+  display: grid;
+  grid-template-columns: 1fr;
+  padding: theme.$spacing-xl;
+  padding-bottom: 0;
+
+  .header {
+    display: flex;
+    align-items: center;
+    gap: theme.$spacing;
+  }
 }
 
-.assayModelFormContainer {
-  width: 960px;
+.tabs {
+  padding-inline: theme.$spacing-xl;
 }

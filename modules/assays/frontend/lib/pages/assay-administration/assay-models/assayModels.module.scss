@@ -1,0 +1,22 @@
+@use "@grit42/client-library/theme.scss";
+
+.assayModelsPage {
+  padding: theme.$spacing-xl;
+  display: grid;
+  overflow: auto;
+}
+
+.newAssayModelPage {
+  padding-top: theme.$spacing-xl;
+  padding-inline: theme.$spacing-xl;
+  display: grid;
+  grid-template-columns: 80ch;
+  grid-template-rows: min-content max-content;
+  margin-inline: auto;
+
+  .header {
+    display: flex;
+    align-items: center;
+    gap: theme.$spacing;
+  }
+}

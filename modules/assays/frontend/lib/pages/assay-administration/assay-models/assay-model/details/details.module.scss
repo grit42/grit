@@ -18,10 +18,14 @@
 
 @use "@grit42/client-library/theme.scss";
 
-.formContainer {
-  // width: 100%;
-  width: 960px;
-  margin-inline: auto;
+.container {
+  display: grid;
+  grid-template-columns: minmax(100%, 80ch);
+  grid-auto-rows: max-content;
+  margin-inline: theme.$spacing-xl;
+  margin-bottom: theme.$spacing-xl;
+  width: auto;
+  justify-self: center;
 }
 
 .actionSection {

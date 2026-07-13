@@ -18,9 +18,12 @@
 
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { AssayTypeData } from "../../../queries/assay_types";
 import { useQueryClient } from "@grit42/api";
-import { useCreateEntityMutation, useEditEntityMutation } from "@grit42/core";
+import {
+  EntityFormFieldDef,
+  useCreateEntityMutation,
+  useEditEntityMutation,
+} from "@grit42/core";
 import {
   Form,
   FormBanner,
@@ -33,6 +36,7 @@ import {
   useForm,
 } from "@grit42/form";
 import { Button } from "@grit42/client-library/components";
+import { AssayModelData } from "../../../queries/assay_models";
 
 const FIELDS: FormFieldDef[] = [
   {
@@ -47,52 +51,72 @@ const FIELDS: FormFieldDef[] = [
     type: "text",
     required: false,
   },
+  {
+    name: "assay_type_id",
+    display_name: "Assay type",
+    type: "entity",
+    entity: {
+      full_name: "Grit::Assays::AssayType",
+      name: "AssayType",
+      path: "grit/assays/assay_types",
+      primary_key: "id",
+      primary_key_type: "integer",
+      column: "assay_type_id",
+      display_column: "name",
+      display_column_type: "string",
+    },
+  } as EntityFormFieldDef,
 ];
 
-const AssayTypeForm = ({
-  assayType = {},
+const AssayModelForm = ({
+  assayModel,
 }: {
-  assayType?: Partial<AssayTypeData>;
+  assayModel: Partial<AssayModelData>;
 }) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [formData, setFormData] = useState<Partial<AssayTypeData>>(assayType);
+  const [formData, setFormData] = useState<
+    Partial<AssayModelData>
+  >(assayModel);
 
-  const createEntityMutation = useCreateEntityMutation<AssayTypeData>(
-    "grit/assays/assay_types",
-  );
+  const createEntityMutation =
+    useCreateEntityMutation<AssayModelData>(
+      "grit/assays/assay_models",
+    );
 
-  const editEntityMutation = useEditEntityMutation<AssayTypeData>(
-    "grit/assays/assay_types",
-    assayType.id ?? -1,
+  const editEntityMutation = useEditEntityMutation<AssayModelData>(
+    "grit/assays/assay_models",
+    assayModel.id ?? -1,
   );
 
   const form = useForm({
     defaultValues: formData,
     onSubmit: genericErrorHandler(async ({ value: formValue, formApi }) => {
-      const value = getVisibleFieldData<Partial<AssayTypeData>>(
+      const value = getVisibleFieldData<Partial<AssayModelData>>(
         formValue,
         FIELDS,
       );
-      if (!assayType.id) {
+      if (!assayModel.id) {
         const newEntity = await createEntityMutation.mutateAsync(
-          value as AssayTypeData,
+          value as AssayModelData,
         );
         queryClient.setQueryData(
           [
             "entities",
             "datum",
-            "grit/assays/assay_types",
+            "grit/assays/assay_models",
             newEntity.id.toString(),
           ],
           newEntity,
         );
         setFormData(newEntity);
         formApi.reset();
-        navigate("..");
+        navigate(`..`);
       } else {
         setFormData(
-          await editEntityMutation.mutateAsync(value as AssayTypeData),
+          await editEntityMutation.mutateAsync(
+            value as AssayModelData,
+          ),
         );
         formApi.reset();
       }
@@ -108,7 +132,7 @@ const AssayTypeForm = ({
         ))}
       </FormFields>
       <FormControls>
-        {!assayType.id && (
+        {!assayModel.id && (
           <Link to="..">
             <Button color="primary">Cancel</Button>
           </Link>
@@ -118,4 +142,4 @@ const AssayTypeForm = ({
   );
 };
 
-export default AssayTypeForm;
+export default AssayModelForm;

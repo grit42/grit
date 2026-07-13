@@ -10,7 +10,7 @@ import {
 import { AssayModelData } from "../../../../queries/assay_models";
 
 interface AssayModelEditorContextValue {
-  assayModel: AssayModelData | null;
+  assayModel: AssayModelData;
   dangerousEditMode: boolean;
   published: boolean;
   canEdit: boolean;
@@ -18,7 +18,7 @@ interface AssayModelEditorContextValue {
 }
 
 const defaultValue: AssayModelEditorContextValue = {
-  assayModel: null,
+  assayModel: {} as AssayModelData,
   dangerousEditMode: false,
   published: false,
   canEdit: true,

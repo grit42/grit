@@ -16,54 +16,22 @@
  * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
  */
 
+import { Link, useMatch, useParams } from "react-router-dom";
 import {
-  Link,
-  Navigate,
-  Outlet,
-  Route,
-  Routes,
-  useMatch,
-  useParams,
-} from "react-router-dom";
-import { Button, ErrorPage, Spinner } from "@grit42/client-library/components";
+  Button,
+  ErrorPage,
+  RoutedTabs,
+  Spinner,
+} from "@grit42/client-library/components";
 import {
   AssayModelData,
   useAssayModel,
 } from "../../../../queries/assay_models";
 import styles from "./assayModel.module.scss";
-import Details from "./details";
-import Metadata from "./metadata";
-import DataSheets from "./data-sheets";
-import DataSheetLoader from "./data-sheet-loader";
-import { classnames } from "@grit42/client-library/utils";
 import AssayModelEditorContextProvider, {
   useAssayModelEditorContext,
 } from "./AssayModelEditorContext";
-import { useBreadcrumbs, useTabs } from "@grit42/core";
-import { useMemo } from "react";
-import { ASSAY_MODEL_BREADCRUMBS } from "./breadcrumbs";
-
-const useAssayModelBreadcrumbs = (assayModel: AssayModelData) =>
-  useMemo(() => ASSAY_MODEL_BREADCRUMBS(assayModel), [assayModel]);
-
-const useAssayModelTabs = ({ id }: AssayModelData) =>
-  useMemo(
-    () => [
-      {
-        url: `/assays/assay-administration/assay-models/${id}/details`,
-        label: "Details",
-      },
-      {
-        url: `/assays/assay-administration/assay-models/${id}/metadata`,
-        label: "Metadata",
-      },
-      {
-        url: `/assays/assay-administration/assay-models/${id}/data-sheets`,
-        label: "Data sheets",
-      },
-    ],
-    [id],
-  );
+import BackIcon from "@grit42/client-library/icons/Circle2Togglebackward";
 
 const AssayModelTabs = ({ assayModel }: { assayModel: AssayModelData }) => {
   const { dangerousEditMode, setDangerousEditMode } =
@@ -75,25 +43,53 @@ const AssayModelTabs = ({ assayModel }: { assayModel: AssayModelData }) => {
 
   const tab = match?.params.tab ?? "details";
 
-  useBreadcrumbs(useAssayModelBreadcrumbs(assayModel));
-  useTabs(useAssayModelTabs(assayModel));
-
   return (
-    <div
-      className={classnames(styles.assayModelContainer, {
-        [styles.dataSheetLoaderContainer]: tab === "data-sheet-loader",
-        [styles.dangerousEditMode]: dangerousEditMode,
-      })}
-    >
-      {dangerousEditMode && (
-        <div className={styles.dangerousEditModeBanner}>
-          <span>You are in dangerous edit mode</span>
-          <Button color="secondary" onClick={() => setDangerousEditMode(false)}>
-            Exit dangerous edit mode
-          </Button>
-        </div>
-      )}
-      <Outlet />
+    <div className={styles.assayModelContainer}>
+      <RoutedTabs
+        tabsClassName={styles.tabs}
+        heading={
+          <div className={styles.heading}>
+            <div className={styles.header}>
+              <Link to="/core/administration/assay-models">
+                <Button
+                  variant="transparent"
+                  size="tiny"
+                  icon={<BackIcon height={24} fill="white" />}
+                ></Button>
+              </Link>
+              <h1>Edit {assayModel.name}</h1>
+            </div>
+            {dangerousEditMode && (
+              <div className={styles.dangerousEditModeBanner}>
+                <span>You are in dangerous edit mode</span>
+                <Button
+                  color="secondary"
+                  onClick={() => setDangerousEditMode(false)}
+                >
+                  Exit dangerous edit mode
+                </Button>
+              </div>
+            )}
+          </div>
+        }
+        tabs={[
+          {
+            url: `details`,
+            label: "Details",
+          },
+          {
+            url: `metadata`,
+            label: "Metadata",
+          },
+          {
+            url: `data-sheets`,
+            label: "Data sheets",
+          },
+        ]}
+        matchPattern={`/core/administration/assay-models/:assay_model_id/:tab/*`}
+        navigationPattern="relative-sibling"
+        paramName="tab"
+      />
     </div>
   );
 };
@@ -101,49 +97,25 @@ const AssayModelTabs = ({ assayModel }: { assayModel: AssayModelData }) => {
 const AssayModel = () => {
   const { assay_model_id } = useParams() as { assay_model_id: string };
 
-  const { data, isLoading, isError, error } = useAssayModel(assay_model_id);
+  const assayModel = useAssayModel(assay_model_id);
 
-  if (isLoading) return <Spinner />;
-  if (isError || !data)
+  if (assayModel.isLoading) {
+    return <Spinner />;
+  }
+
+  if (assayModel.isError || !assayModel.data) {
     return (
-      <ErrorPage error={error}>
-        <Link to="../..">
+      <ErrorPage error={assayModel.error}>
+        <Link to="..">
           <Button>Back</Button>
         </Link>
       </ErrorPage>
     );
-
-  if (assay_model_id === "new") {
-    return <Details />;
   }
 
   return (
-    <AssayModelEditorContextProvider assayModel={data}>
-      <Routes>
-        <Route path="data-sheet-loader">
-          <Route
-            index
-            path="*"
-            element={<DataSheetLoader assayModel={data} />}
-          />
-        </Route>
-        <Route element={<AssayModelTabs assayModel={data} />}>
-          <Route path="details">
-            <Route index path="*" element={<Details />} />
-          </Route>
-          <Route path="metadata">
-            <Route index path="*" element={<Metadata />} />
-          </Route>
-          <Route path="data-sheets">
-            <Route index path="*" element={<DataSheets />} />
-          </Route>
-          <Route
-            index
-            path="*"
-            element={<Navigate to={`../details`} replace />}
-          />
-        </Route>
-      </Routes>
+    <AssayModelEditorContextProvider assayModel={assayModel.data}>
+      <AssayModelTabs assayModel={assayModel.data} />
     </AssayModelEditorContextProvider>
   );
 };

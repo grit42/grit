@@ -26,7 +26,7 @@ const DataSheetLoader = ({ assayModel }: { assayModel: AssayModelData }) => {
     SheetWithColumns[]
   >([]);
 
-  useBreadcrumbs(useDataSheetLoaderBreadcrumbs(assayModel));
+  // useBreadcrumbs(useDataSheetLoaderBreadcrumbs(assayModel));
 
   return (
     <Routes>

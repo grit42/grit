@@ -16,21 +16,13 @@
  * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import AssayModel from "./assay-model";
-import CloneAssayModel from "./assay-model/CloneAssayModel";
 import AssayModelsTable from "./AssayModelsTable";
-import { Route, Routes } from "react-router-dom";
+import styles from "./assayModels.module.scss";
 
-const AssayModelsAdministrationPage = () => {
-  return (
-    <Routes>
-      <Route index element={<AssayModelsTable />} />
-      <Route path=":assay_model_id">
-        <Route path="clone" element={<CloneAssayModel />} />
-        <Route index path="*" element={<AssayModel />} />
-      </Route>
-    </Routes>
-  );
+const AssayMetadataDefinitionsPage = () => {
+  return <div className={styles.assayModelsPage}>
+    <AssayModelsTable />
+  </div>;
 };
 
-export default AssayModelsAdministrationPage;
+export default AssayMetadataDefinitionsPage;

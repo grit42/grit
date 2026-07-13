@@ -10,6 +10,12 @@ import NewAssayMetadataDefinitionPage from "../../pages/assay-administration/ass
 import ExperimentMetadataTemplatesPage from "../../pages/assay-administration/experiment-metadata-templates/ExperimentMetadataTemplatesPage";
 import NewExperimentMetadataTemplatePage from "../../pages/assay-administration/experiment-metadata-templates/NewExperimentMetadataTemplatePage";
 import ExperimentMetadataTemplatePage from "../../pages/assay-administration/experiment-metadata-templates/ExperimentMetadataTemplatePage";
+import AssayModelsPage from "../../pages/assay-administration/assay-models/AssayModelsPage";
+import AssayModel from "../../pages/assay-administration/assay-models/assay-model";
+import NewAssayModelPage from "../../pages/assay-administration/assay-models/NewAssayModelPage";
+import AssayModelDetails from "../../pages/assay-administration/assay-models/assay-model/details";
+import AssayModelMetadataPage from "../../pages/assay-administration/assay-models/assay-model/metadata/AssayModelMetadataPage";
+import AssayMetadataDefinitionSelectorPage from "../../pages/assay-administration/assay-models/assay-model/metadata/AssayModelMetadataSelectorPage";
 
 const useRegisterAssaysAdministrationRoutes = () => {
   const { register } = useAdministrationContext();
@@ -58,6 +64,28 @@ const useRegisterAssaysAdministrationRoutes = () => {
               path=":metadata_template_id"
               element={<ExperimentMetadataTemplatePage />}
             />
+          </Route>
+        ),
+      },
+      {
+        label: "Assay Models",
+        group: "Assays",
+        url: "/core/administration/assay-models",
+        permissions: ["admin:assays"],
+        routes: (
+          <Route key="assays-assay-models" path="assay-models">
+            <Route index element={<AssayModelsPage />} />
+            <Route path="new" element={<NewAssayModelPage />} />
+            <Route path=":assay_model_id" element={<AssayModel />}>
+              <Route path="details" element={<AssayModelDetails />} />
+              <Route path="metadata">
+                <Route index element={<AssayModelMetadataPage />} />
+                <Route
+                  path="edit"
+                  element={<AssayMetadataDefinitionSelectorPage />}
+                />
+              </Route>
+            </Route>
           </Route>
         ),
       },
