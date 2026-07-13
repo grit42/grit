@@ -16,6 +16,7 @@ import NewAssayModelPage from "../../pages/assay-administration/assay-models/New
 import AssayModelDetails from "../../pages/assay-administration/assay-models/assay-model/details";
 import AssayModelMetadataPage from "../../pages/assay-administration/assay-models/assay-model/metadata/AssayModelMetadataPage";
 import AssayMetadataDefinitionSelectorPage from "../../pages/assay-administration/assay-models/assay-model/metadata/AssayModelMetadataSelectorPage";
+import CloneAssayModelPage from "../../pages/assay-administration/assay-models/CloneAssayModelPage";
 
 const useRegisterAssaysAdministrationRoutes = () => {
   const { register } = useAdministrationContext();
@@ -76,6 +77,7 @@ const useRegisterAssaysAdministrationRoutes = () => {
           <Route key="assays-assay-models" path="assay-models">
             <Route index element={<AssayModelsPage />} />
             <Route path="new" element={<NewAssayModelPage />} />
+            <Route path=":assay_model_id/clone" element={<CloneAssayModelPage />} />
             <Route path=":assay_model_id" element={<AssayModel />}>
               <Route path="details" element={<AssayModelDetails />} />
               <Route path="metadata">
@@ -84,6 +86,9 @@ const useRegisterAssaysAdministrationRoutes = () => {
                   path="edit"
                   element={<AssayMetadataDefinitionSelectorPage />}
                 />
+              </Route>
+              <Route path="data-sheets">
+                <Route index element={<>yo</>} />
               </Route>
             </Route>
           </Route>
