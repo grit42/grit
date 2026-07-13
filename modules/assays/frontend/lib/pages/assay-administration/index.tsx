@@ -18,7 +18,6 @@
 
 import { Navigate, Outlet, Route, Routes } from "react-router-dom";
 import AssayModelsAdministrationPage from "./assay-models";
-import AssayMetadataDefinitionsAdministrationPage from "./assay-metadata-definitions";
 import ExperimentMetadataTemplatesAdministrationPage from "./experiment-metadata-templates";
 import { useBreadcrumbs, useTabs } from "@grit42/core";
 import { ASSAYS_ADMINISTRATION_BREADCRUMBS } from "./breadcrumbs";
@@ -49,13 +48,6 @@ const AssaysAdministrationTab = () => {
   return (
     <Routes>
       <Route element={<div style={{ paddingTop: "var(--spacing-xl)",paddingInline: "var(--spacing-xl)" }}><Outlet /></div>}>
-      <Route path="assay-metadata-definitions">
-        <Route
-          index
-          path="*"
-          element={<AssayMetadataDefinitionsAdministrationPage />}
-        />
-      </Route>
       <Route path="experiment-metadata-templates">
         <Route
           index

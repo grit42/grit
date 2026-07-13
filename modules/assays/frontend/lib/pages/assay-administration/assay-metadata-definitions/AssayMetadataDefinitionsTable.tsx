@@ -16,38 +16,95 @@
  * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Table, useSetupTableState } from "@grit42/table";
+import { GritColumnDef, Table, useSetupTableState } from "@grit42/table";
 import { useCallback, useEffect, useMemo } from "react";
 import { useToolbar } from "@grit42/core";
 import Circle1NewIcon from "@grit42/client-library/icons/Circle1New";
 import { useNavigate } from "react-router-dom";
-import { Button, ErrorPage, Spinner } from "@grit42/client-library/components";
-import { useTableColumns } from "@grit42/core/utils";
+import { Button } from "@grit42/client-library/components";
 import {
-  useAssayMetadataDefinitionColumns,
+  AssayMetadataDefinitionData,
   useInfiniteAssayMetadataDefinitions,
 } from "../../../queries/assay_metadata_definitions";
-import { CenteredColumnLayout } from "@grit42/client-library/layouts";
 
-const DEFAULT_COLUMN_SIZES = {
-  name: 200,
-  description: 750,
-} as const;
+const METADATA_DEFINITION_COLUMNS: GritColumnDef<AssayMetadataDefinitionData>[] = [
+  {
+    id: "id",
+    accessorKey: "id",
+    header: "Id",
+    type: "integer",
+    defaultVisibility: "hidden",
+  },
+  {
+    id: "created_by",
+    accessorKey: "created_by",
+    header: "Created by",
+    type: "string",
+    defaultVisibility: "hidden",
+  },
+  {
+    id: "created_at",
+    accessorKey: "created_at",
+    header: "Created at",
+    type: "datetime",
+    defaultVisibility: "hidden",
+  },
+  {
+    id: "updated_by",
+    accessorKey: "updated_by",
+    header: "Updated by",
+    type: "string",
+    defaultVisibility: "hidden",
+  },
+  {
+    id: "updated_at",
+    accessorKey: "updated_at",
+    header: "Updated at",
+    type: "datetime",
+    defaultVisibility: "hidden",
+  },
+  {
+    id: "name",
+    accessorKey: "name",
+    header: "Name",
+    type: "string",
+    size: 200,
+  },
+  {
+    id: "safe_name",
+    accessorKey: "safe_name",
+    header: "Safe name",
+    type: "string",
+    size: 200,
+  },
+  {
+    id: "description",
+    accessorKey: "description",
+    header: "Description",
+    type: "text",
+    size: 750,
+  },
+  {
+    id: "vocabulary_id__name",
+    accessorKey: "vocabulary_id__name",
+    header: "Vocabulary",
+    type: "entity",
+    entity: {
+      full_name: "Grit::Core::Vocabulary",
+      name: "Vocabulary",
+      path: "grit/core/vocabularies",
+      primary_key: "id",
+      primary_key_type: "integer",
+      column: "vocabulary_id",
+      display_column: "name",
+      display_column_type: "string",
+    },
+  } as GritColumnDef<AssayMetadataDefinitionData>,
+];
 
 const AssayMetadataDefinitionsTable = () => {
   const registerToolbarActions = useToolbar();
   const navigate = useNavigate();
-  const { data: assayMetadataDefinitionColumns } =
-    useAssayMetadataDefinitionColumns(undefined, {
-      select: (data) =>
-        data.map((d) => ({
-          ...d,
-          defaultColumnSize:
-            DEFAULT_COLUMN_SIZES[d.name as keyof typeof DEFAULT_COLUMN_SIZES],
-        })),
-    });
-
-  const tableColumns = useTableColumns(assayMetadataDefinitionColumns);
 
   const navigateToNew = useCallback(() => navigate("new"), [navigate]);
 
@@ -64,9 +121,9 @@ const AssayMetadataDefinitionsTable = () => {
     });
   }, [registerToolbarActions, navigateToNew]);
 
-  const tableState = useSetupTableState(
+  const tableState = useSetupTableState<AssayMetadataDefinitionData>(
     "admin-assay_metadata_definitions-list",
-    tableColumns,
+    METADATA_DEFINITION_COLUMNS,
   );
 
   const {
@@ -87,37 +144,21 @@ const AssayMetadataDefinitionsTable = () => {
   );
 
   return (
-    <CenteredColumnLayout>
-      <Table
-        header="Assay metadata definitions"
-        tableState={tableState}
-        headerActions={<Button onClick={navigateToNew}>New</Button>}
-        fitContent
-        data={flatData}
-        onRowClick={(row) => navigate(`${row.original.id}`)}
-        loading={isFetching}
-        noDataMessage={isError ? error : undefined}
-        pagination={{
-          fetchNextPage,
-          isFetchingNextPage,
-          totalRows: data?.pages[0]?.total,
-        }}
-      />
-    </CenteredColumnLayout>
+    <Table
+      header="Metadata definitions"
+      tableState={tableState}
+      headerActions={<Button onClick={navigateToNew}>New</Button>}
+      data={flatData}
+      onRowClick={(row) => navigate(`${row.original.id}`)}
+      loading={isFetching}
+      noDataMessage={isError ? error : undefined}
+      pagination={{
+        fetchNextPage,
+        isFetchingNextPage,
+        totalRows: data?.pages[0]?.total,
+      }}
+    />
   );
 };
 
-const AssayMetadataDefinitionsTableWrapper = () => {
-  const {
-    isLoading: isAssayMetadataDefinitionColumnsLoading,
-    isError: isAssayMetadataDefinitionColumnsError,
-    error: assayMetadataDefinitionColumnsError,
-  } = useAssayMetadataDefinitionColumns();
-
-  if (isAssayMetadataDefinitionColumnsLoading) return <Spinner />;
-  if (isAssayMetadataDefinitionColumnsError)
-    return <ErrorPage error={assayMetadataDefinitionColumnsError} />;
-  return <AssayMetadataDefinitionsTable />;
-};
-
-export default AssayMetadataDefinitionsTableWrapper;
+export default AssayMetadataDefinitionsTable;

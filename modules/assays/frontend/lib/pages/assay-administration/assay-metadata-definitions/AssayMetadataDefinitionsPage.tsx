@@ -16,20 +16,13 @@
  * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import AssayMetadataDefinitionForm from "./AssayMetadataDefinitionForm";
 import AssayMetadataDefinitionsTable from "./AssayMetadataDefinitionsTable";
-import { Route, Routes } from "react-router-dom";
+import styles from "./assayMetadataDefinitions.module.scss";
 
-const AssayMetadataDefinitionsAdministrationPage = () => {
-  return (
-    <Routes>
-      <Route index element={<AssayMetadataDefinitionsTable />} />
-      <Route
-        path="/:assay_metadata_definition_id"
-        element={<AssayMetadataDefinitionForm />}
-      />
-    </Routes>
-  );
+const AssayMetadataDefinitionsPage = () => {
+  return <div className={styles.metadataDefinitionsPage}>
+    <AssayMetadataDefinitionsTable />
+  </div>;
 };
 
-export default AssayMetadataDefinitionsAdministrationPage;
+export default AssayMetadataDefinitionsPage;
