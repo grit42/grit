@@ -7,6 +7,9 @@ import AssayTypePage from "../../pages/assay-administration/assay-types/AssayTyp
 import AssayMetadataDefinitionsPage from "../../pages/assay-administration/assay-metadata-definitions/AssayMetadataDefinitionsPage";
 import AssayMetadataDefinitionPage from "../../pages/assay-administration/assay-metadata-definitions/AssayMetadataDefinitionPage";
 import NewAssayMetadataDefinitionPage from "../../pages/assay-administration/assay-metadata-definitions/NewAssayMetadataDefinitionPage";
+import ExperimentMetadataTemplatesPage from "../../pages/assay-administration/experiment-metadata-templates/ExperimentMetadataTemplatesPage";
+import NewExperimentMetadataTemplatePage from "../../pages/assay-administration/experiment-metadata-templates/NewExperimentMetadataTemplatePage";
+import ExperimentMetadataTemplatePage from "../../pages/assay-administration/experiment-metadata-templates/ExperimentMetadataTemplatePage";
 
 const useRegisterAssaysAdministrationRoutes = () => {
   const { register } = useAdministrationContext();
@@ -35,7 +38,26 @@ const useRegisterAssaysAdministrationRoutes = () => {
           <Route key="assays-metadata-definitions" path="metadata-definitions">
             <Route index element={<AssayMetadataDefinitionsPage />} />
             <Route path="new" element={<NewAssayMetadataDefinitionPage />} />
-            <Route path=":metadata_definition_id" element={<AssayMetadataDefinitionPage />} />
+            <Route
+              path=":metadata_definition_id"
+              element={<AssayMetadataDefinitionPage />}
+            />
+          </Route>
+        ),
+      },
+      {
+        label: "Metadata Templates",
+        group: "Assays",
+        url: "/core/administration/metadata-templates",
+        permissions: ["admin:assays"],
+        routes: (
+          <Route key="assays-metadata-templates" path="metadata-templates">
+            <Route index element={<ExperimentMetadataTemplatesPage />} />
+            <Route path="new" element={<NewExperimentMetadataTemplatePage />} />
+            <Route
+              path=":metadata_template_id"
+              element={<ExperimentMetadataTemplatePage />}
+            />
           </Route>
         ),
       },
@@ -43,4 +65,4 @@ const useRegisterAssaysAdministrationRoutes = () => {
   }, [register]);
 };
 
-export default useRegisterAssaysAdministrationRoutes
+export default useRegisterAssaysAdministrationRoutes;

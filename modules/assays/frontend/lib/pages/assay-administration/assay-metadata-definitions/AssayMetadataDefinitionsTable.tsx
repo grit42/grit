@@ -27,7 +27,7 @@ import {
   useInfiniteAssayMetadataDefinitions,
 } from "../../../queries/assay_metadata_definitions";
 
-const METADATA_DEFINITION_COLUMNS: GritColumnDef<AssayMetadataDefinitionData>[] = [
+const COLUMNS: GritColumnDef<AssayMetadataDefinitionData>[] = [
   {
     id: "id",
     accessorKey: "id",
@@ -123,7 +123,7 @@ const AssayMetadataDefinitionsTable = () => {
 
   const tableState = useSetupTableState<AssayMetadataDefinitionData>(
     "admin-assay_metadata_definitions-list",
-    METADATA_DEFINITION_COLUMNS,
+    COLUMNS,
   );
 
   const {

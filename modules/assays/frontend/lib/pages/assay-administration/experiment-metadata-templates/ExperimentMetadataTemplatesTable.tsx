@@ -16,65 +16,73 @@
  * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Row, Table, useSetupTableState } from "@grit42/table";
-import { useCallback, useEffect, useMemo } from "react";
-import { useToolbar } from "@grit42/core";
-import Circle1NewIcon from "@grit42/client-library/icons/Circle1New";
-import { useLocation, useNavigate } from "react-router-dom";
-import { Button, ErrorPage, Spinner } from "@grit42/client-library/components";
-import { useTableColumns } from "@grit42/core/utils";
+import { GritColumnDef, Table, useSetupTableState } from "@grit42/table";
+import { useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@grit42/client-library/components";
 import {
   ExperimentMetadataTemplateData,
-  useExperimentMetadataTemplateColumns,
   useInfiniteExperimentMetadataTemplates,
 } from "../../../queries/experiment_metadata_templates";
-import { CenteredColumnLayout } from "@grit42/client-library/layouts";
 
-const DEFAULT_COLUMN_SIZES = {
-  name: 200,
-  description: 750,
-} as const;
+const COLUMNS: GritColumnDef<ExperimentMetadataTemplateData>[] = [
+  {
+    id: "id",
+    accessorKey: "id",
+    header: "Id",
+    type: "integer",
+    defaultVisibility: "hidden",
+  },
+  {
+    id: "created_by",
+    accessorKey: "created_by",
+    header: "Created by",
+    type: "string",
+    defaultVisibility: "hidden",
+  },
+  {
+    id: "created_at",
+    accessorKey: "created_at",
+    header: "Created at",
+    type: "datetime",
+    defaultVisibility: "hidden",
+  },
+  {
+    id: "updated_by",
+    accessorKey: "updated_by",
+    header: "Updated by",
+    type: "string",
+    defaultVisibility: "hidden",
+  },
+  {
+    id: "updated_at",
+    accessorKey: "updated_at",
+    header: "Updated at",
+    type: "datetime",
+    defaultVisibility: "hidden",
+  },
+  {
+    id: "name",
+    accessorKey: "name",
+    header: "Name",
+    type: "string",
+    size: 200,
+  },
+  {
+    id: "description",
+    accessorKey: "description",
+    header: "Description",
+    type: "text",
+    size: 750,
+  },
+];
 
-const ExperimentMetadataTemplatesTable = ({
-  onRowClick,
-}: {
-  onRowClick?: (row: Row<ExperimentMetadataTemplateData>) => void;
-}) => {
-  const registerToolbarActions = useToolbar();
+const ExperimentMetadataTemplatesTable = () => {
   const navigate = useNavigate();
-  const { pathname } = useLocation();
-  const { data: experimentMetadataTemplateColumns } =
-    useExperimentMetadataTemplateColumns(undefined, {
-      select: (data) =>
-        data.map((d) => ({
-          ...d,
-          defaultColumnSize:
-            DEFAULT_COLUMN_SIZES[d.name as keyof typeof DEFAULT_COLUMN_SIZES],
-        })),
-    });
-
-  const tableColumns = useTableColumns<ExperimentMetadataTemplateData>(
-    experimentMetadataTemplateColumns,
-  );
-
-  const navigateToNew = useCallback(() => navigate("new"), [navigate]);
-
-  useEffect(() => {
-    return registerToolbarActions({
-      actions: [
-        {
-          id: "NEW",
-          icon: <Circle1NewIcon />,
-          label: "New template",
-          onClick: navigateToNew,
-        },
-      ],
-    });
-  }, [registerToolbarActions, navigateToNew, pathname]);
 
   const tableState = useSetupTableState<ExperimentMetadataTemplateData>(
     "admin-experiment_metadata_templates-list",
-    tableColumns,
+    COLUMNS,
   );
 
   const {
@@ -95,41 +103,21 @@ const ExperimentMetadataTemplatesTable = ({
   );
 
   return (
-    <CenteredColumnLayout>
-      <Table<ExperimentMetadataTemplateData>
-        header="Experiment Metadata Templates"
-        fitContent
-        tableState={tableState}
-        headerActions={<Button onClick={navigateToNew}>New</Button>}
-        onRowClick={onRowClick ?? ((row) => navigate(`${row.original.id}`))}
-        data={flatData}
-        loading={isFetching}
-        noDataMessage={isError ? error : undefined}
-        pagination={{
-          fetchNextPage,
-          isFetchingNextPage,
-          totalRows: data?.pages[0]?.total,
-        }}
-      />
-    </CenteredColumnLayout>
+    <Table<ExperimentMetadataTemplateData>
+      header="Metadata Templates"
+      tableState={tableState}
+      headerActions={<Button onClick={() => navigate("new")}>New</Button>}
+      onRowClick={(row) => navigate(`${row.original.id}`)}
+      data={flatData}
+      loading={isFetching}
+      noDataMessage={isError ? error : undefined}
+      pagination={{
+        fetchNextPage,
+        isFetchingNextPage,
+        totalRows: data?.pages[0]?.total,
+      }}
+    />
   );
 };
 
-const ExperimentMetadataTemplatesTableWrapper = ({
-  onRowClick,
-}: {
-  onRowClick?: (row: Row<ExperimentMetadataTemplateData>) => void;
-}) => {
-  const {
-    isLoading: isExperimentMetadataTemplateColumnsLoading,
-    isError: isExperimentMetadataTemplateColumnsError,
-    error: ExperimentMetadataTemplateColumnsError,
-  } = useExperimentMetadataTemplateColumns();
-
-  if (isExperimentMetadataTemplateColumnsLoading) return <Spinner />;
-  if (isExperimentMetadataTemplateColumnsError)
-    return <ErrorPage error={ExperimentMetadataTemplateColumnsError} />;
-  return <ExperimentMetadataTemplatesTable onRowClick={onRowClick} />;
-};
-
-export default ExperimentMetadataTemplatesTableWrapper;
+export default ExperimentMetadataTemplatesTable;

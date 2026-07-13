@@ -16,20 +16,13 @@
  * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import ExperimentMetadataTemplateForm from "./ExperimentMetadataTemplateForm";
 import ExperimentMetadataTemplatesTable from "./ExperimentMetadataTemplatesTable";
-import { Route, Routes } from "react-router-dom";
+import styles from "./experimentMetadataTemplates.module.scss";
 
-const ExperimentMetadataTemplatesAdministrationPage = () => {
-  return (
-    <Routes>
-      <Route index element={<ExperimentMetadataTemplatesTable />} />
-      <Route
-        path="/:experiment_metadata_template_id"
-        element={<ExperimentMetadataTemplateForm />}
-      />
-    </Routes>
-  );
+const ExperimentMetadataTemplatesPage = () => {
+  return <div className={styles.metadataTemplatesPage}>
+    <ExperimentMetadataTemplatesTable />
+  </div>;
 };
 
-export default ExperimentMetadataTemplatesAdministrationPage;
+export default ExperimentMetadataTemplatesPage;
