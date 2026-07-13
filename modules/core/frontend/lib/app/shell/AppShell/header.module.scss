@@ -78,7 +78,7 @@ $header-inactive-link: #a4a4a6;
 
   .breadcrumb {
     color: theme.$palette-background-contrast-text;
-    padding: theme.$spacing-sm theme.$spacing-md;
+    padding: theme.$spacing-sm;
     border-radius: calc(theme.$spacing-md / 2);
     &:hover {
       background-color: rgba(

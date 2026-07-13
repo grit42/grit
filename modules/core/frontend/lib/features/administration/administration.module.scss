@@ -2,7 +2,7 @@
 
 .administration {
   display: grid;
-  grid-template-columns: 15vw 1fr;
+  grid-template-columns: max-content 1fr;
   overflow: auto;
 }
 
@@ -12,8 +12,8 @@
   flex-direction: column;
   align-items: stretch;
   overflow: auto;
-  background-color: var(--palette-background-default);
-  margin-block: theme.$spacing-md;
+  background-color: var(--palette-background-surface);
+  padding-block: theme.$spacing-md;
   border-inline-end: 1px solid
     rgb(from var(--palette-background-contrast-text) r g b/0.1);
 
@@ -40,12 +40,15 @@
 
       .navGroupItems {
         list-style: none;
+        display: grid;
+        grid-template-rows: 1fr;
+        gap: theme.$spacing-sm;
 
         .navItem {
           display: grid;
           grid-template-columns: min-content 1fr;
           font-weight: bold;
-          font-family: theme.$body-font-family;
+          font-family: theme.$body-font-family !important;
           color: theme.$palette-background-contrast-text;
           border-top-right-radius: theme.$border-radius;
           border-bottom-right-radius: theme.$border-radius;

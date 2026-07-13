@@ -31,18 +31,19 @@ const AdministrationNav = () => {
             <span className={styles.navGroupHeader}>{group}</span>
             <ul className={styles.navGroupItems}>
               {groupedItems[group].map((d) => (
-                <NavLink key={d.url} to={d.url}>
-                  {({ isActive }) => (
-                    <li
-                      className={classnames(styles.navItem, {
+                <li key={d.url}>
+                  <NavLink
+                    to={d.url}
+                    className={({ isActive }) =>
+                      classnames(styles.navItem, {
                         [styles.active]: isActive,
-                      })}
-                    >
-                      <div className={styles.indicator} />
-                      <span className={styles.navItemLabel}>{d.label}</span>
-                    </li>
-                  )}
-                </NavLink>
+                      })
+                    }
+                  >
+                    <div className={styles.indicator} />
+                    <span className={styles.navItemLabel}>{d.label}</span>
+                  </NavLink>
+                </li>
               ))}
             </ul>
           </li>
