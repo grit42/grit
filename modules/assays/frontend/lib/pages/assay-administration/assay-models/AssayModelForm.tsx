@@ -70,8 +70,10 @@ const FIELDS: FormFieldDef[] = [
 
 const AssayModelForm = ({
   assayModel,
+  cancelPath = ".."
 }: {
   assayModel: Partial<AssayModelData>;
+  cancelPath?: string;
 }) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -133,7 +135,7 @@ const AssayModelForm = ({
       </FormFields>
       <FormControls>
         {!assayModel.id && (
-          <Link to="..">
+          <Link to={cancelPath} relative="path">
             <Button color="primary">Cancel</Button>
           </Link>
         )}

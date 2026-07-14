@@ -59,7 +59,7 @@ const CloneAssayModelPage = () => {
         <h1>Clone {assayModel.data?.name ?? "Assay model"}</h1>
       </div>
       <Surface>
-        <AssayModelForm assayModel={data} />
+        <AssayModelForm assayModel={data} cancelPath="../details" />
       </Surface>
     </div>
   );
