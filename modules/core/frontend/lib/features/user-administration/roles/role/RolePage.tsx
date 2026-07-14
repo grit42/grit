@@ -30,8 +30,10 @@ import RoleForm from "./RoleForm";
 import RolePermissions from "./RolePermissions";
 import BackIcon from "@grit42/client-library/icons/Circle2Togglebackward";
 import DeleteRole from "./DeleteRole";
+import { useRoleAdministrationBreadcrumbs } from "../useRoleAdministrationBreadcrumbs";
 
 const RolePage = () => {
+  useRoleAdministrationBreadcrumbs();
   const { role_id } = useParams() as { role_id: string };
 
   const { data, isLoading, isError, error } = useEntityDatum<Role>(

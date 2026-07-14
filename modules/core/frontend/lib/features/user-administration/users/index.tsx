@@ -16,31 +16,12 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
-import Circle1New from "@grit42/client-library/icons/Circle1New";
-import { useToolbar } from "../../toolbar";
 import UsersTable from "./UsersTable";
+import { useUserAdministrationBreadcrumbs } from "./useUserAdministrationBreadcrumbs";
 import styles from "./users.module.scss";
 
 const UsersPage = () => {
-  const navigate = useNavigate();
-  const registerToolbarActions = useToolbar();
-
-  useEffect(() => {
-    return registerToolbarActions({
-      actions: [
-        {
-          id: "NEW_USER",
-          icon: <Circle1New />,
-          label: "New",
-          onClick: () => navigate("new"),
-          requiredPermissions: ["admin:users"],
-        },
-      ],
-    });
-  }, [navigate, registerToolbarActions]);
-
+  useUserAdministrationBreadcrumbs();
   return (
     <div className={styles.usersPage}>
       <UsersTable />

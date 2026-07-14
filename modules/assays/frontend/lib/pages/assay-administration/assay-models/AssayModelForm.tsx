@@ -113,7 +113,7 @@ const AssayModelForm = ({
         );
         setFormData(newEntity);
         formApi.reset();
-        navigate(`..`);
+        navigate(`../${newEntity.id}/details`);
       } else {
         setFormData(
           await editEntityMutation.mutateAsync(

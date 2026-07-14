@@ -7,7 +7,6 @@ import {
 import { GritColumnDef, Table, useSetupTableState } from "@grit42/table";
 import { Link } from "react-router-dom";
 import { useAssayModelEditorContext } from "../AssayModelEditorContext";
-import styles from "./metadata.module.scss";
 
 const getRowId = (data: EntityData) => data.id.toString();
 
@@ -112,7 +111,6 @@ const AssayModelMetadataPage = () => {
   return (
     <Table
       header="Selected metadata definitions"
-      className={styles.metadataTable}
       headerActions={
         canEdit ? (
           <Link to="edit">

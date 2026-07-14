@@ -33,6 +33,9 @@ Grit::Assays::Engine.routes.draw do
 
   resources :assay_data_sheet_columns
   resources :assay_data_sheet_definitions do
+    member do
+      post :clone
+    end
     collection do
       post :create_bulk
     end

@@ -16,13 +16,8 @@
  * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Link, useMatch, useParams } from "react-router-dom";
-import {
-  Button,
-  ErrorPage,
-  RoutedTabs,
-  Spinner,
-} from "@grit42/client-library/components";
+import { Link, Outlet, useParams } from "react-router-dom";
+import { Button, ErrorPage, Spinner } from "@grit42/client-library/components";
 import {
   AssayModelData,
   useAssayModel,
@@ -31,65 +26,63 @@ import styles from "./assayModel.module.scss";
 import AssayModelEditorContextProvider, {
   useAssayModelEditorContext,
 } from "./AssayModelEditorContext";
-import BackIcon from "@grit42/client-library/icons/Circle2Togglebackward";
+import { useMemo } from "react";
+import { useBreadcrumbs, useTabs } from "@grit42/core";
+import { classnames } from "@grit42/client-library/utils";
 
 const AssayModelTabs = ({ assayModel }: { assayModel: AssayModelData }) => {
   const { dangerousEditMode, setDangerousEditMode } =
     useAssayModelEditorContext();
 
-  const match = useMatch(
-    "/assays/assay-administration/assay-models/:assay_model_id/:tab/*",
+  useBreadcrumbs(
+    useMemo(
+      () => [
+        { url: "/core/administration", label: "Administration" },
+        { url: "/core/administration/assay-models", label: "Assay models" },
+        {
+          url: `/core/administration/assay-models/${assayModel.id}/details`,
+          label: assayModel.name,
+        },
+      ],
+      [assayModel],
+    ),
   );
 
-  const tab = match?.params.tab ?? "details";
+  useTabs(
+    useMemo(
+      () => [
+        {
+          url: `/core/administration/assay-models/${assayModel.id}/details`,
+          label: "Details",
+        },
+        {
+          url: `/core/administration/assay-models/${assayModel.id}/data-sheets`,
+          label: "Data sheets",
+        },
+        {
+          url: `/core/administration/assay-models/${assayModel.id}/metadata`,
+          label: "Metadata",
+        },
+      ],
+      [assayModel],
+    ),
+  );
 
   return (
-    <div className={styles.assayModelContainer}>
-      <RoutedTabs
-        tabsClassName={styles.tabs}
-        heading={
-          <div className={styles.heading}>
-            <div className={styles.header}>
-              <Link to="/core/administration/assay-models">
-                <Button
-                  variant="transparent"
-                  size="tiny"
-                  icon={<BackIcon height={24} fill="white" />}
-                ></Button>
-              </Link>
-              <h1>Edit {assayModel.name}</h1>
-            </div>
-            {dangerousEditMode && (
-              <div className={styles.dangerousEditModeBanner}>
-                <span>You are in dangerous edit mode</span>
-                <Button
-                  color="secondary"
-                  onClick={() => setDangerousEditMode(false)}
-                >
-                  Exit dangerous edit mode
-                </Button>
-              </div>
-            )}
-          </div>
-        }
-        tabs={[
-          {
-            url: `details`,
-            label: "Details",
-          },
-          {
-            url: `metadata`,
-            label: "Metadata",
-          },
-          {
-            url: `data-sheets`,
-            label: "Data sheets",
-          },
-        ]}
-        matchPattern={`/core/administration/assay-models/:assay_model_id/:tab/*`}
-        navigationPattern="relative-sibling"
-        paramName="tab"
-      />
+    <div
+      className={classnames(styles.assayModelContainer, {
+        [styles.dangerousEditMode]: dangerousEditMode,
+      })}
+    >
+      {dangerousEditMode && (
+        <div className={styles.dangerousEditModeBanner}>
+          <span>You are in dangerous edit mode</span>
+          <Button color="secondary" onClick={() => setDangerousEditMode(false)}>
+            Exit dangerous edit mode
+          </Button>
+        </div>
+      )}
+      <Outlet />
     </div>
   );
 };

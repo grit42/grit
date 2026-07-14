@@ -18,7 +18,28 @@
 
 @use "@grit42/client-library/theme.scss";
 
-.container {
+.header {
+  display: grid;
+  grid-template-rows: min-content min-content;
+  margin-bottom: theme.$spacing;
+
+  .title {
+    display: flex;
+    align-items: center;
+    gap: theme.$spacing;
+  }
+}
+
+.newDataSheetDefinitionPage {
+  display: grid;
+  grid-template-columns: minmax(100%, 80ch);
+  grid-template-rows: min-content max-content;
+  margin-inline: auto;
+}
+
+.settings {
+  padding-top: theme.$spacing-xl;
+  padding-inline: theme.$spacing-xl;
   display: grid;
   grid-template-columns: minmax(100%, 80ch);
   grid-auto-rows: max-content;

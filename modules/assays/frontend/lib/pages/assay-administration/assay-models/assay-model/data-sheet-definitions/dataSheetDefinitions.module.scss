@@ -1,0 +1,110 @@
+/**
+ * Copyright 2025 grit42 A/S. <https://grit42.com/>
+ *
+ * This file is part of @grit42/assays.
+ *
+ * @grit42/assays is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or  any later version.
+ *
+ * @grit42/assays is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+@use "@grit42/client-library/theme.scss";
+
+.container {
+  display: grid;
+  grid-template-rows: max-content 1fr;
+  overflow: auto;
+  gap: theme.$spacing;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dataSheets {
+  display: grid;
+  grid-template-columns: 1fr;
+  overflow: auto;
+  gap: theme.$spacing;
+
+  &.withTabs {
+    grid-template-columns: max-content 1fr;
+  }
+}
+
+.newDataSheetDefinitionPage {
+  display: grid;
+  grid-template-columns: minmax(100%, 80ch);
+  grid-template-rows: min-content max-content;
+  margin-inline: auto;
+
+  .header {
+    display: flex;
+    align-items: center;
+    gap: theme.$spacing;
+  }
+}
+
+.dataSheetDefinitionPage {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: theme.$spacing;
+
+}
+
+.tabs {
+  overflow: auto;
+
+  .tabContainer {
+    list-style: none;
+    display: grid;
+    gap: theme.$spacing-md;
+
+    a {
+      display: grid;
+      grid-template-columns: min-content 1fr;
+      font-weight: bold;
+      font-family: theme.$body-font-family !important;
+      color: theme.$palette-background-contrast-text;
+      border-top-right-radius: theme.$border-radius;
+      border-bottom-right-radius: theme.$border-radius;
+      border-radius: theme.$border-radius;
+
+      .indicator {
+        height: 100%;
+        width: theme.$border-radius;
+        border-top-left-radius: theme.$border-radius;
+        border-bottom-left-radius: theme.$border-radius;
+      }
+
+      &:global(.active) {
+        background-color: rgb(
+          from var(--palette-background-contrast-text) r g b / 0.1
+        );
+        .indicator {
+          background-color: theme.$palette-secondary-main;
+        }
+      }
+
+      &:hover {
+        background-color: rgb(
+          from var(--palette-background-contrast-text) r g b / 0.15
+        );
+      }
+
+      span {
+        padding: theme.$spacing-md;
+      }
+    }
+  }
+}

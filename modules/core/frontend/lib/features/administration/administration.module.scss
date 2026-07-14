@@ -2,8 +2,12 @@
 
 .administration {
   display: grid;
-  grid-template-columns: max-content 1fr;
+  grid-template-columns: 1fr;
   overflow: auto;
+
+  &.withNav {
+    grid-template-columns: max-content 1fr;
+  }
 }
 
 .nav {

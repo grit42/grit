@@ -36,7 +36,7 @@ const DataSheetTabs = ({ sheetDefinitions, assayModel }: Props) => {
   const navigate = useNavigate();
 
   const match = useMatch(
-    "/assays/assay-administration/assay-models/:assay_model_id/data-sheets/:sheet_id/*",
+    "/core/administration/assay-models/:assay_model_id/data-sheets/:sheet_id/*",
   );
 
   const sheet_id = match?.params.sheet_id ?? 0;
@@ -105,7 +105,7 @@ const DataSheetTabs = ({ sheetDefinitions, assayModel }: Props) => {
 
   return (
     <RoutedTabs
-      matchPattern="/assays/assay-administration/assay-models/:assay_model_id/data-sheets/:sheet_id/*"
+      matchPattern="/core/administration/assay-models/:assay_model_id/data-sheets/:sheet_id/*"
       tabs={tabs}
       replaceNavigation={true}
     />

@@ -1,4 +1,4 @@
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useMatch } from "react-router-dom";
 import { useBreadcrumbs } from "../../app";
 import styles from "./administration.module.scss";
 import { classnames } from "@grit42/client-library/utils";
@@ -58,9 +58,15 @@ const BREADCRUMBS = [{ label: "Administration", url: "/core/administration" }];
 const AdministrationPage = () => {
   useBreadcrumbs(BREADCRUMBS);
 
+  const match = useMatch("/core/administration/:section");
+
   return (
-    <div className={styles.administration}>
-      <AdministrationNav />
+    <div
+      className={classnames(styles.administration, {
+        [styles.withNav]: !!match,
+      })}
+    >
+      {!!match && <AdministrationNav />}
       <Outlet />
     </div>
   );

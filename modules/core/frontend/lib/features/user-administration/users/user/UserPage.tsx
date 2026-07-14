@@ -33,8 +33,10 @@ import { ApiToken } from "./ApiToken";
 import { useSession } from "../../../auth";
 import BackIcon from "@grit42/client-library/icons/Circle2Togglebackward";
 import DeleteUser from "./DeleteUser";
+import { useUserAdministrationBreadcrumbs } from "../useUserAdministrationBreadcrumbs";
 
 const UserPage = () => {
+  useUserAdministrationBreadcrumbs();
   const { user_id } = useParams() as { user_id: string };
   const { data: session } = useSession();
   const serverUrl = session?.server_settings.server_url ?? "";

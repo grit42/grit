@@ -19,8 +19,10 @@
 import { Surface } from "@grit42/client-library/components";
 import styles from "./user.module.scss";
 import { UserForm } from "./UserForm";
+import { useUserAdministrationBreadcrumbs } from "../useUserAdministrationBreadcrumbs";
 
 const NewUserPage = () => {
+  useUserAdministrationBreadcrumbs();
   return (
     <div className={styles.userPage}>
       <h1>New user</h1>
