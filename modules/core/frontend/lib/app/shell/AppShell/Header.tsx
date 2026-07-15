@@ -42,6 +42,7 @@ import ToolbarContext from "../../../features/toolbar/ToolbarContext";
 import DesktopExport from "@grit42/client-library/icons/DesktopExport";
 import DesktopImport from "@grit42/client-library/icons/DesktopImport";
 import OpenIcon from "@grit42/client-library/icons/MenuSquare";
+import { useTheme } from "@grit42/client-library/hooks";
 
 const Toolbar = () => {
   const [
@@ -79,13 +80,18 @@ const Toolbar = () => {
     canExport && exportItems.length ? (
       exportItems.length == 1 ? (
         <Button
-          icon={<DesktopExport height={16} />}
+          icon={<DesktopExport height={24} />}
+          className={styles.importExportButton}
           size="tiny"
           onClick={exportItems[0].onClick}
         />
       ) : (
         <Dropdown menuItems={exportItems}>
-          <Button icon={<DesktopExport height={16} />} size="tiny" />
+          <Button
+            className={styles.importExportButton}
+            icon={<DesktopExport height={24} />}
+            size="tiny"
+          />
         </Dropdown>
       )
     ) : null;
@@ -94,13 +100,18 @@ const Toolbar = () => {
     canImport && importItems.length ? (
       importItems.length == 1 ? (
         <Button
-          icon={<DesktopImport height={16} />}
+          className={styles.importExportButton}
+          icon={<DesktopImport height={24} />}
           size="tiny"
           onClick={importItems[0].onClick}
         />
       ) : (
         <Dropdown menuItems={importItems}>
-          <Button icon={<DesktopImport height={16} />} size="tiny" />
+          <Button
+            className={styles.importExportButton}
+            icon={<DesktopImport height={24} />}
+            size="tiny"
+          />
         </Dropdown>
       )
     ) : null;
@@ -133,10 +144,9 @@ const Header = () => {
     );
   };
 
-  const nextTheme =
-    !session?.settings.theme || session.settings.theme === "dark"
-      ? "light"
-      : "dark";
+  const { colorScheme } = useTheme();
+
+  const nextTheme = colorScheme === "dark" ? "light" : "dark";
 
   const nextDisplayDensity =
     !session?.settings.display_density ||
@@ -156,7 +166,13 @@ const Header = () => {
         </Button>
 
         <Link to="/">
-          <img className={styles.gritLogo} src={Logo} alt="grit42 logo" />
+          <img
+            className={classnames(styles.gritLogo, {
+              [styles.light]: colorScheme === "light",
+            })}
+            src={Logo}
+            alt="grit42 logo"
+          />
         </Link>
 
         <div className={styles.breadcrumbs}>

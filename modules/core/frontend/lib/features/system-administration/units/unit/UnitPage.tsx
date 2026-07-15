@@ -55,7 +55,7 @@ const UnitPage = () => {
           <Button
             variant="transparent"
             size="tiny"
-            icon={<BackIcon height={24} fill="white" />}
+            icon={<BackIcon height={24} fill="var(--palette-background-contrast-text)" />}
           ></Button>
         </Link>
         <h1>Edit unit</h1>

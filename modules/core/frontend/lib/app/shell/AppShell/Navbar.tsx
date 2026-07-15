@@ -5,7 +5,7 @@ import { useMemo } from "react";
 import CloseIcon from "@grit42/client-library/icons/Cross";
 import { useAppShell } from "./AppShellContext";
 import { Button } from "@grit42/client-library/components";
-import { useMountTransition } from "@grit42/client-library/hooks";
+import { useMountTransition, useTheme } from "@grit42/client-library/hooks";
 import styles from "./navbar.module.scss";
 import { classnames } from "@grit42/client-library/utils";
 import Logo42 from "../../../assets/42-logo.svg";
@@ -24,6 +24,8 @@ const Sidebar = ({ navItems }: { navItems: NavItem[] }) => {
         : [],
     [navItems, session],
   );
+
+  const { colorScheme } = useTheme();
 
   const isMounted = open || showTransition || transitionState === "out";
 
@@ -47,7 +49,9 @@ const Sidebar = ({ navItems }: { navItems: NavItem[] }) => {
       >
         <div className={styles.header}>
           <img
-            className={styles.gritLogo}
+            className={classnames(styles.gritLogo, {
+              [styles.light]: colorScheme === "light",
+            })}
             src={isMounted ? LogoGrit42 : Logo42}
             alt="grit42 logo"
           />

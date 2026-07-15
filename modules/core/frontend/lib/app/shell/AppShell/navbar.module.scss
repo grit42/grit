@@ -60,6 +60,9 @@ $link-height: calc(24px + theme.$spacing * 2);
     padding-block: theme.$spacing;
     padding-inline: theme.$spacing;
     fill: theme.$palette-secondary-main;
+    &.light {
+      filter: brightness(0%);
+    }
   }
 
   .nav {
