@@ -1,0 +1,6 @@
+@use "@grit42/client-library/theme.scss";
+
+.compoundsTable {
+  padding-top: theme.$spacing-xl;
+  padding-inline: theme.$spacing-xl;
+}

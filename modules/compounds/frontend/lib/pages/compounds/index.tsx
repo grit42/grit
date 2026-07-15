@@ -56,7 +56,8 @@ import {
   ErrorPage,
   Spinner,
 } from "@grit42/client-library/components";
-
+import styles from "./compounds.module.scss";
+import { useCompoundsBreadcrumbs } from "./breadcrumbs";
 const getExportFileUrl = (
   path: string,
   filters: any,
@@ -314,6 +315,7 @@ const CompoundsTable = () => {
 
   return (
     <Table<CompoundData>
+      className={styles.compoundsTable}
       loading={isFetching && !isFetchingNextPage}
       header="Compounds"
       headerActions={NewButton}
@@ -359,6 +361,7 @@ const CompoundsTable = () => {
 };
 
 const CompoundsPage = () => {
+  useCompoundsBreadcrumbs();
   const { data, isLoading, isError, error } = useCompoundGridMeta();
   const {
     data: compoundTypes,
