@@ -11,6 +11,8 @@ import { classnames } from "@grit42/client-library/utils";
 import Logo42 from "../../../assets/42-logo.svg";
 import LogoGrit42 from "../../../assets/resized-grit42-logo.svg";
 
+const stopEventPropagation = (e: React.MouseEvent) => e.stopPropagation();
+
 const Sidebar = ({ navItems }: { navItems: NavItem[] }) => {
   const { open, toggleNavbar } = useAppShell().navbar;
   const { transitionState, showTransition } = useMountTransition(open, 250);
@@ -41,6 +43,7 @@ const Sidebar = ({ navItems }: { navItems: NavItem[] }) => {
           [styles.open]: isMounted,
           [styles.show]: showTransition,
         })}
+        onClick={stopEventPropagation}
       >
         <div className={styles.header}>
           <img
@@ -59,7 +62,11 @@ const Sidebar = ({ navItems }: { navItems: NavItem[] }) => {
         <div className={styles.divider} />
         <nav className={styles.nav}>
           {availableNavItems.map((navItem) => (
-            <NavLink key={navItem.identifier} to={navItem.path}>
+            <NavLink
+              key={navItem.identifier}
+              to={navItem.path}
+              onClick={toggleNavbar}
+            >
               {({ isActive }) => (
                 <Button
                   size="tiny"
