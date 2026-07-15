@@ -6,6 +6,7 @@ import { AssayModelData } from "../../../../../queries/assay_models";
 import DataSetDefinitionEditor from "./DataSetDefinitionEditor";
 import { useBreadcrumbs } from "@grit42/core";
 import { ASSAY_MODEL_BREADCRUMBS } from "../breadcrumbs";
+import { useAssayModelEditorContext } from "../AssayModelEditorContext";
 
 const useDataSheetLoaderBreadcrumbs = (assayModel: AssayModelData) =>
   useMemo(
@@ -19,14 +20,15 @@ const useDataSheetLoaderBreadcrumbs = (assayModel: AssayModelData) =>
     [assayModel],
   );
 
-const DataSheetLoader = ({ assayModel }: { assayModel: AssayModelData }) => {
+const DataSheetLoader = () => {
+  const { assayModel } = useAssayModelEditorContext();
   const [files, setFiles] = useState<File[]>([]);
   const [sheets, setSheets] = useState<SheetWithOptions[]>([]);
   const [sheetsWithColumns, setSheetsWithColumns] = useState<
     SheetWithColumns[]
   >([]);
 
-  // useBreadcrumbs(useDataSheetLoaderBreadcrumbs(assayModel));
+  useBreadcrumbs(useDataSheetLoaderBreadcrumbs(assayModel));
 
   return (
     <Routes>

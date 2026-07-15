@@ -56,11 +56,11 @@ const DataSheetDefinitionEditor = ({
   const handleSubmit = async () => {
     if (!value) return;
     try {
-      const res = await createSheetDefinitionMutation.mutateAsync({
+      await createSheetDefinitionMutation.mutateAsync({
         ...value,
         dangerous_edit: dangerousEditMode,
       });
-      navigate(`../../data-sheets/${res[0].id}`, { relative: "path" });
+      navigate(`../..`, { relative: "path" });
     } catch (errors: any) {
       if (typeof errors === "string") {
         upsert(errors, { type: "error" });

@@ -26,6 +26,7 @@ import CloneDataSheetDefinitionPage from "../../pages/assay-administration/assay
 import DataSheetColumnPage from "../../pages/assay-administration/assay-models/assay-model/data-sheet-definitions/DataSheetColumnPage";
 import NewDataSheetColumnPage from "../../pages/assay-administration/assay-models/assay-model/data-sheet-definitions/NewDataSheetColumnPage";
 import CloneDataSheetColumnPage from "../../pages/assay-administration/assay-models/assay-model/data-sheet-definitions/CloneDataSheetColumnPage";
+import DataSheetLoader from "../../pages/assay-administration/assay-models/assay-model/data-sheet-loader";
 
 const useRegisterAssaysAdministrationRoutes = () => {
   const { register } = useAdministrationContext();
@@ -99,7 +100,7 @@ const useRegisterAssaysAdministrationRoutes = () => {
                   element={<AssayMetadataDefinitionSelectorPage />}
                 />
               </Route>
-              <Route index path="data-sheets/import" element={"import"} />
+              <Route index path="data-sheets/import/*" element={<DataSheetLoader />} />
               <Route path="data-sheets">
                 <Route index element={<DataSheetDefinitionsPage />} />
                 <Route path="new" element={<NewDataSheetDefinitionPage />} />
