@@ -19,8 +19,10 @@
 import { Surface } from "@grit42/client-library/components";
 import styles from "./unit.module.scss";
 import UnitForm from "./UnitForm";
+import { useUnitAdministrationBreadcrumbs } from "../breadcrumbs";
 
 const NewUnitPage = () => {
+  useUnitAdministrationBreadcrumbs();
   return (
     <div className={styles.unitPage}>
       <h1>New unit</h1>

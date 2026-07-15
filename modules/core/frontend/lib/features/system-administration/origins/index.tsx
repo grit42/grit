@@ -23,12 +23,13 @@ import { useNavigate } from "react-router-dom";
 import { useToolbar } from "../../toolbar";
 import { Tabs } from "@grit42/client-library/components";
 import OriginLoadSetsTable from "./OriginsLoadSetsTable";
+import { useOriginsAdministrationBreadcrumbs } from "./breadcrumbs";
 
 const OriginsPage = () => {
   const [selectedTab, setSelectedTab] = useState(0);
   const registerToolbarActions = useToolbar();
   const navigate = useNavigate();
-
+  useOriginsAdministrationBreadcrumbs();
   useEffect(() => {
     return registerToolbarActions({
       importItems: [

@@ -29,9 +29,11 @@ import OriginForm from "./OriginForm";
 import BackIcon from "@grit42/client-library/icons/Circle2Togglebackward";
 import DeleteOrigin from "./DeleteOrigin";
 import { Origin } from "../types";
+import { useOriginsAdministrationBreadcrumbs } from "../breadcrumbs";
 
 const OriginPage = () => {
   const { origin_id } = useParams() as { origin_id: string };
+  useOriginsAdministrationBreadcrumbs();
 
   const { data, isLoading, isError, error } = useEntityDatum<Origin>(
     "grit/core/origins",

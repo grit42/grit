@@ -29,8 +29,10 @@ import UnitForm from "./UnitForm";
 import BackIcon from "@grit42/client-library/icons/Circle2Togglebackward";
 import DeleteUnit from "./DeleteUnit";
 import { Unit } from "../types";
+import { useUnitAdministrationBreadcrumbs } from "../breadcrumbs";
 
 const UnitPage = () => {
+  useUnitAdministrationBreadcrumbs();
   const { unit_id } = useParams() as { unit_id: string };
 
   const { data, isLoading, isError, error } = useEntityDatum<Unit>(

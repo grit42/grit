@@ -23,11 +23,14 @@ import { useNavigate } from "react-router-dom";
 import { useToolbar } from "../../toolbar";
 import { Tabs } from "@grit42/client-library/components";
 import UnitLoadSetsTable from "./UnitsLoadSetsTable";
+import { useUnitAdministrationBreadcrumbs } from "./breadcrumbs";
 
 const UnitsPage = () => {
   const [selectedTab, setSelectedTab] = useState(0);
   const registerToolbarActions = useToolbar();
   const navigate = useNavigate();
+
+  useUnitAdministrationBreadcrumbs();
 
   useEffect(() => {
     return registerToolbarActions({

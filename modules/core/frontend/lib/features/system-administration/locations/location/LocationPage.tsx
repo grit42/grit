@@ -29,9 +29,11 @@ import LocationForm from "./LocationForm";
 import BackIcon from "@grit42/client-library/icons/Circle2Togglebackward";
 import DeleteLocation from "./DeleteLocation";
 import { Location } from "../types";
+import { useLocationAdministrationBreadcrumbs } from "../breadcrumbs";
 
 const LocationPage = () => {
   const { location_id } = useParams() as { location_id: string };
+  useLocationAdministrationBreadcrumbs();
 
   const { data, isLoading, isError, error } = useEntityDatum<Location>(
     "grit/core/locations",

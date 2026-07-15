@@ -19,8 +19,10 @@
 import { Surface } from "@grit42/client-library/components";
 import styles from "./location.module.scss";
 import LocationForm from "./LocationForm";
+import { useLocationAdministrationBreadcrumbs } from "../breadcrumbs";
 
 const NewLocationPage = () => {
+  useLocationAdministrationBreadcrumbs();
   return (
     <div className={styles.locationPage}>
       <h1>New location</h1>

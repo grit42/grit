@@ -1,5 +1,4 @@
 import { NavLink, Outlet, useMatch } from "react-router-dom";
-import { useBreadcrumbs } from "../../app";
 import styles from "./administration.module.scss";
 import { classnames } from "@grit42/client-library/utils";
 import { useMemo } from "react";
@@ -33,7 +32,7 @@ const AdministrationNav = () => {
               {groupedItems[group].map((d) => (
                 <li key={d.url}>
                   <NavLink
-                    to={d.url}
+                    to={`/core/administration/${d.url}`}
                     className={({ isActive }) =>
                       classnames(styles.navItem, {
                         [styles.active]: isActive,
@@ -53,11 +52,7 @@ const AdministrationNav = () => {
   );
 };
 
-const BREADCRUMBS = [{ label: "Administration", url: "/core/administration" }];
-
 const AdministrationPage = () => {
-  useBreadcrumbs(BREADCRUMBS);
-
   const match = useMatch("/core/administration/:section");
 
   return (

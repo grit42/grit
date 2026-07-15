@@ -19,7 +19,7 @@
 import { Surface } from "@grit42/client-library/components";
 import styles from "./role.module.scss";
 import RoleForm from "./RoleForm";
-import { useRoleAdministrationBreadcrumbs } from "../useRoleAdministrationBreadcrumbs";
+import { useRoleAdministrationBreadcrumbs } from "../breadcrumbs";
 
 const NewRolePage = () => {
   useRoleAdministrationBreadcrumbs();

@@ -30,7 +30,7 @@ import RoleForm from "./RoleForm";
 import RolePermissions from "./RolePermissions";
 import BackIcon from "@grit42/client-library/icons/Circle2Togglebackward";
 import DeleteRole from "./DeleteRole";
-import { useRoleAdministrationBreadcrumbs } from "../useRoleAdministrationBreadcrumbs";
+import { useRoleAdministrationBreadcrumbs } from "../breadcrumbs";
 
 const RolePage = () => {
   useRoleAdministrationBreadcrumbs();

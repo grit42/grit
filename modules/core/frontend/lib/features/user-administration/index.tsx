@@ -17,7 +17,7 @@ const useRegisterAccessAdministrationRoutes = () => {
       {
         label: "Users",
         group: "Access",
-        url: "/core/administration/users",
+        url: "users",
         permissions: ["admin:users"],
         routes: (
           <Route key="core-access-users" path="users">
@@ -30,7 +30,7 @@ const useRegisterAccessAdministrationRoutes = () => {
       {
         label: "Roles and permissions",
         group: "Access",
-        url: "/core/administration/roles",
+        url: "roles",
         permissions: ["admin:users"],
         routes: (
           <Route  key="core-access-roles" path="roles" element={<AuthGuard />}>

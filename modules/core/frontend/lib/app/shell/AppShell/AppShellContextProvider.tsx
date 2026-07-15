@@ -27,8 +27,8 @@ const AppShellContextProvider = ({ children }: PropsWithChildren) => {
   const [tabs, setTabs] = useState<HeaderTab[][]>([]);
 
   const registerBreadcrumbsItems = useCallback((items: BreadcrumbItem[]) => {
-    setBreadcrumbsItems((prev) => prev.toSpliced(0, 0, items));
-    return () => setBreadcrumbsItems((prev) => prev.toSpliced(0, 1));
+    setBreadcrumbsItems([items]);
+    return () => setBreadcrumbsItems([]);
   }, []);
 
   const registerTabs = useCallback((items: HeaderTab[]) => {

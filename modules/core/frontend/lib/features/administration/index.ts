@@ -6,4 +6,6 @@ export {
   default as AdministrationContext,
 } from "./AdministrationContext";
 
-export type { AdministrationPage } from "./AdministrationContext"
+export { useAdministrationBreadcrumbs } from "./breadcrumbs";
+
+export type { AdministrationPage } from "./AdministrationContext";

@@ -33,7 +33,7 @@ import { ApiToken } from "./ApiToken";
 import { useSession } from "../../../auth";
 import BackIcon from "@grit42/client-library/icons/Circle2Togglebackward";
 import DeleteUser from "./DeleteUser";
-import { useUserAdministrationBreadcrumbs } from "../useUserAdministrationBreadcrumbs";
+import { useUserAdministrationBreadcrumbs } from "../breadcrumbs";
 
 const UserPage = () => {
   useUserAdministrationBreadcrumbs();

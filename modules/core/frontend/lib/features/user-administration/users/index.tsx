@@ -17,7 +17,7 @@
  */
 
 import UsersTable from "./UsersTable";
-import { useUserAdministrationBreadcrumbs } from "./useUserAdministrationBreadcrumbs";
+import { useUserAdministrationBreadcrumbs } from "./breadcrumbs";
 import styles from "./users.module.scss";
 
 const UsersPage = () => {

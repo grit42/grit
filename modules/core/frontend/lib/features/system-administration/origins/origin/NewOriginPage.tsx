@@ -19,8 +19,10 @@
 import { Surface } from "@grit42/client-library/components";
 import styles from "./origin.module.scss";
 import OriginForm from "./OriginForm";
+import { useOriginsAdministrationBreadcrumbs } from "../breadcrumbs";
 
 const NewOriginPage = () => {
+  useOriginsAdministrationBreadcrumbs();
   return (
     <div className={styles.originPage}>
       <h1>New origin</h1>

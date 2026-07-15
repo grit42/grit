@@ -19,7 +19,7 @@
 import { Surface } from "@grit42/client-library/components";
 import styles from "./user.module.scss";
 import { UserForm } from "./UserForm";
-import { useUserAdministrationBreadcrumbs } from "../useUserAdministrationBreadcrumbs";
+import { useUserAdministrationBreadcrumbs } from "../breadcrumbs";
 
 const NewUserPage = () => {
   useUserAdministrationBreadcrumbs();

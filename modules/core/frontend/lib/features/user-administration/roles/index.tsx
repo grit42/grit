@@ -18,7 +18,7 @@
 
 import RolesTable from "./RolesTable";
 import styles from "./roles.module.scss";
-import { useRoleAdministrationBreadcrumbs } from "./useRoleAdministrationBreadcrumbs";
+import { useRoleAdministrationBreadcrumbs } from "./breadcrumbs";
 
 const RolesPage = () => {
   useRoleAdministrationBreadcrumbs();
