@@ -17,55 +17,15 @@
  */
 
 import { useMemo } from "react";
-import { useInfiniteEntityData, EntityData } from "@grit42/core";
-import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
+import {
+  useInfiniteEntityData,
+  EntityData,
+  useAdministrationBreadcrumbs,
+} from "@grit42/core";
+import { useNavigate } from "react-router-dom";
 import { GritColumnDef, Table, useSetupTableState } from "@grit42/table";
-import { ErrorPage, RoutedTabs } from "@grit42/client-library/components";
-
-const TABS = [
-  {
-    url: "compound",
-    label: "Compound",
-  },
-  {
-    url: "batch",
-    label: "Batch",
-  },
-];
-
-const CompoundBatchLoadSets = () => {
-  return (
-    <RoutedTabs
-      matchPattern="/compounds/settings/load-sets/:childPath/*"
-      tabs={TABS}
-    />
-  );
-};
-
-const CompoundBatchLoadSetsPage = () => {
-  return (
-    <Routes>
-      <Route element={<CompoundBatchLoadSets />}>
-        <Route
-          path="compound"
-          element={
-            <LoadSetTable
-              name="Compound"
-              full_name="Grit::Compounds::Compound"
-            />
-          }
-        />
-        <Route
-          path="batch"
-          element={
-            <LoadSetTable name="Batch" full_name="Grit::Compounds::Batch" />
-          }
-        />
-        <Route path="*" element={<Navigate to="../compound" replace />} />
-      </Route>
-    </Routes>
-  );
-};
+import { ErrorPage } from "@grit42/client-library/components";
+import styles from "../settings.module.scss";
 
 const LOAD_SET_COLUMNS: GritColumnDef<EntityData>[] = [
   {
@@ -172,7 +132,7 @@ const LOAD_SET_COLUMNS: GritColumnDef<EntityData>[] = [
   },
 ];
 
-const LoadSetTable = ({
+const LoadSetPage = ({
   full_name,
   name,
 }: {
@@ -180,6 +140,18 @@ const LoadSetTable = ({
   name: string;
 }) => {
   const navigate = useNavigate();
+
+  useAdministrationBreadcrumbs(
+    useMemo(
+      () => [
+        {
+          label: `${name} load sets`,
+          url: `${name.toLocaleLowerCase()}-load-sets`,
+        },
+      ],
+      [name],
+    ),
+  );
 
   const tableState = useSetupTableState<EntityData>(
     `${full_name}-list`,
@@ -222,6 +194,7 @@ const LoadSetTable = ({
 
   return (
     <Table<EntityData>
+      className={styles.loadSetsPage}
       loading={isFetching && !isFetchingNextPage}
       header={`${name} load sets`}
       data={flatData}
@@ -236,4 +209,4 @@ const LoadSetTable = ({
   );
 };
 
-export default CompoundBatchLoadSetsPage;
+export default LoadSetPage;

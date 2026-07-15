@@ -18,7 +18,7 @@
 
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { Button, ErrorPage, Spinner } from "@grit42/client-library/components";
+import { Button, ErrorPage, Spinner, Surface } from "@grit42/client-library/components";
 import { useQueryClient } from "@grit42/api";
 import {
   useCreateEntityMutation,
@@ -38,8 +38,9 @@ import {
   getVisibleFieldData,
   useForm,
 } from "@grit42/form";
-import { CenteredSurface } from "@grit42/client-library/layouts";
 import { CompoundTypeData } from "../../../../queries/compounds";
+import styles from "./compoundTypeManager.module.scss";
+import BackIcon from "@grit42/client-library/icons/Circle2Togglebackward";
 
 const CompoundTypeForm = ({
   fields,
@@ -88,12 +89,13 @@ const CompoundTypeForm = ({
         );
         setFormData(newEntity);
         formApi.reset();
-        navigate("../..");
+        navigate("..");
       } else {
         setFormData(
           await editEntityMutation.mutateAsync(value as CompoundTypeData),
         );
         formApi.reset();
+        navigate("..");
       }
     }),
   });
@@ -111,24 +113,42 @@ const CompoundTypeForm = ({
   };
 
   return (
-    <CenteredSurface>
-      <h2>{`${compoundType.id ? "Edit" : "New"} compound type`}</h2>
-      <Form form={form}>
-        <FormFields columns={1}>
-          <FormBanner content={form.state.errorMap.onSubmit} />
-          {fields.map((f) => (
-            <FormField fieldDef={f} key={f.name} />
-          ))}
-        </FormFields>
-        <FormControls
-          onDelete={onDelete}
-          showDelete={!!compoundType.id}
-          showCancel
-          cancelLabel={compoundType.id ? "Back" : "Cancel"}
-          onCancel={() => navigate("..")}
-        />
-      </Form>
-    </CenteredSurface>
+    <div className={styles.formPage}>
+      <div className={styles.header}>
+        {!!compoundType.id && (
+          <Link to="../.." relative="path">
+            <Button
+              variant="transparent"
+              size="tiny"
+              icon={
+                <BackIcon
+                  height={24}
+                  fill="var(--palette-background-contrast-text)"
+                />
+              }
+            ></Button>
+          </Link>
+        )}
+        <h1>{`${compoundType.id ? "Edit" : "New"} compound type`}</h1>
+      </div>
+      <Surface>
+        <Form form={form}>
+          <FormFields>
+            <FormBanner content={form.state.errorMap.onSubmit} />
+            {fields.map((f) => (
+              <FormField fieldDef={f} key={f.name} />
+            ))}
+          </FormFields>
+          <FormControls
+            onDelete={onDelete}
+            showDelete={!!compoundType.id}
+            showCancel={!compoundType.id}
+            cancelLabel="Cancel"
+            onCancel={() => navigate("..")}
+          />
+        </Form>
+      </Surface>
+    </div>
   );
 };
 
