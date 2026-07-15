@@ -18,8 +18,10 @@
 
 import AssayTypesTable from "./AssayTypesTable";
 import styles from "./assayTypes.module.scss";
+import { useAssayTypesAdministrationBreadcrumbs } from "./breadcrumbs";
 
 const AssayTypesPage = () => {
+  useAssayTypesAdministrationBreadcrumbs();
   return <div className={styles.assayTypesPage}>
     <AssayTypesTable />
   </div>;

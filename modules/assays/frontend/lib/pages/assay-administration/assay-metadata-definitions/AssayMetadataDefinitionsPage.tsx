@@ -18,11 +18,15 @@
 
 import AssayMetadataDefinitionsTable from "./AssayMetadataDefinitionsTable";
 import styles from "./assayMetadataDefinitions.module.scss";
+import { useMetadataDefinitionAdministrationBreadcrumbs } from "./breadcrumbs";
 
 const AssayMetadataDefinitionsPage = () => {
-  return <div className={styles.metadataDefinitionsPage}>
-    <AssayMetadataDefinitionsTable />
-  </div>;
+  useMetadataDefinitionAdministrationBreadcrumbs();
+  return (
+    <div className={styles.metadataDefinitionsPage}>
+      <AssayMetadataDefinitionsTable />
+    </div>
+  );
 };
 
 export default AssayMetadataDefinitionsPage;

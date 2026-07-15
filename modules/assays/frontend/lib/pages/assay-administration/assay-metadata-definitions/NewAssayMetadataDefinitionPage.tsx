@@ -17,15 +17,14 @@
  */
 
 import { Link } from "react-router-dom";
-import {
-  Button,
-  Surface,
-} from "@grit42/client-library/components";
+import { Button, Surface } from "@grit42/client-library/components";
 import styles from "./assayMetadataDefinitions.module.scss";
 import BackIcon from "@grit42/client-library/icons/Circle2Togglebackward";
 import AssayMetadataDefinitionForm from "./AssayMetadataDefinitionForm";
+import { useMetadataDefinitionAdministrationBreadcrumbs } from "./breadcrumbs";
 
 const NewAssayMetadataDefinitionPage = () => {
+  useMetadataDefinitionAdministrationBreadcrumbs();
   return (
     <div className={styles.metadataDefinitionPage}>
       <div className={styles.header}>

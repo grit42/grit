@@ -27,11 +27,13 @@ import styles from "./assayModels.module.scss";
 import AssayModelForm from "./AssayModelForm";
 import { useAssayModel } from "../../../queries/assay_models";
 import { useMemo } from "react";
+import { useAssayModelsAdministrationBreadcrumbs } from "./breadcrumbs";
 
 const CloneAssayModelPage = () => {
   const { assay_model_id } = useParams() as { assay_model_id: string };
 
   const assayModel = useAssayModel(assay_model_id);
+  useAssayModelsAdministrationBreadcrumbs(assayModel.data);
 
   const data = useMemo(() => {
     if (!assayModel.data) {

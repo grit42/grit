@@ -21,8 +21,10 @@ import { Button, Surface } from "@grit42/client-library/components";
 import styles from "./assayModels.module.scss";
 import BackIcon from "@grit42/client-library/icons/Circle2Togglebackward";
 import AssayModelForm from "./AssayModelForm";
+import { useAssayModelsAdministrationBreadcrumbs } from "./breadcrumbs";
 
 const NewAssayModelPage = () => {
+  useAssayModelsAdministrationBreadcrumbs();
   return (
     <div className={styles.newAssayModelPage}>
       <div className={styles.header}>

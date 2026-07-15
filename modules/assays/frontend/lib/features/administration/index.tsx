@@ -36,7 +36,7 @@ const useRegisterAssaysAdministrationRoutes = () => {
       {
         label: "Assay types",
         group: "Assays",
-        url: "/core/administration/assay-types",
+        url: "assay-types",
         permissions: ["admin:assays"],
         routes: (
           <Route key="assays-assay-types" path="assay-types">
@@ -49,7 +49,7 @@ const useRegisterAssaysAdministrationRoutes = () => {
       {
         label: "Metadata Definitions",
         group: "Assays",
-        url: "/core/administration/metadata-definitions",
+        url: "metadata-definitions",
         permissions: ["admin:assays"],
         routes: (
           <Route key="assays-metadata-definitions" path="metadata-definitions">
@@ -65,7 +65,7 @@ const useRegisterAssaysAdministrationRoutes = () => {
       {
         label: "Metadata Templates",
         group: "Assays",
-        url: "/core/administration/metadata-templates",
+        url: "metadata-templates",
         permissions: ["admin:assays"],
         routes: (
           <Route key="assays-metadata-templates" path="metadata-templates">
@@ -81,7 +81,7 @@ const useRegisterAssaysAdministrationRoutes = () => {
       {
         label: "Assay Models",
         group: "Assays",
-        url: "/core/administration/assay-models",
+        url: "assay-models",
         permissions: ["admin:assays"],
         routes: (
           <Route key="assays-assay-models" path="assay-models">

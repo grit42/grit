@@ -28,9 +28,11 @@ import AssayTypeForm from "./AssayTypeForm";
 import styles from "./assayTypes.module.scss";
 import BackIcon from "@grit42/client-library/icons/Circle2Togglebackward";
 import DeleteAssayType from "./DeleteAssayType";
+import { useAssayTypesAdministrationBreadcrumbs } from "./breadcrumbs";
 
 const AssayTypePage = () => {
   const { assay_type_id } = useParams() as { assay_type_id: string };
+  useAssayTypesAdministrationBreadcrumbs();
 
   const assayType = useAssayType(assay_type_id);
 

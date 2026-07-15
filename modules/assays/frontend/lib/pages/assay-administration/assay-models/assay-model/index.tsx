@@ -29,6 +29,7 @@ import AssayModelEditorContextProvider, {
 import { useMemo } from "react";
 import { useBreadcrumbs, useTabs } from "@grit42/core";
 import { classnames } from "@grit42/client-library/utils";
+import { useAssayModelsAdministrationBreadcrumbs } from "../breadcrumbs";
 
 const AssayModelTabs = ({ assayModel }: { assayModel: AssayModelData }) => {
   const { dangerousEditMode, setDangerousEditMode } =
@@ -91,6 +92,8 @@ const AssayModel = () => {
   const { assay_model_id } = useParams() as { assay_model_id: string };
 
   const assayModel = useAssayModel(assay_model_id);
+
+  useAssayModelsAdministrationBreadcrumbs(assayModel.data);
 
   if (assayModel.isLoading) {
     return <Spinner />;

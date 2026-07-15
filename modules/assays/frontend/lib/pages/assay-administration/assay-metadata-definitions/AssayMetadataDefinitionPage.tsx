@@ -28,10 +28,13 @@ import BackIcon from "@grit42/client-library/icons/Circle2Togglebackward";
 import DeleteMetadataDefinition from "./DeleteMetadataDefinition";
 import { useAssayMetadataDefinition } from "../../../queries/assay_metadata_definitions";
 import AssayMetadataDefinitionForm from "./AssayMetadataDefinitionForm";
+import { useMetadataDefinitionAdministrationBreadcrumbs } from "./breadcrumbs";
 
 const AssayMetadataDefinitionPage = () => {
-  const { metadata_definition_id } = useParams() as { metadata_definition_id: string };
-
+  const { metadata_definition_id } = useParams() as {
+    metadata_definition_id: string;
+  };
+  useMetadataDefinitionAdministrationBreadcrumbs();
   const metadataDefinition = useAssayMetadataDefinition(metadata_definition_id);
 
   if (metadataDefinition.isLoading) {
@@ -61,8 +64,12 @@ const AssayMetadataDefinitionPage = () => {
         <h1>Edit metadata definition</h1>
       </div>
       <Surface>
-        <AssayMetadataDefinitionForm assayMetadataDefinition={metadataDefinition.data} />
-        <DeleteMetadataDefinition metadataDefinition={metadataDefinition.data} />
+        <AssayMetadataDefinitionForm
+          assayMetadataDefinition={metadataDefinition.data}
+        />
+        <DeleteMetadataDefinition
+          metadataDefinition={metadataDefinition.data}
+        />
       </Surface>
     </div>
   );

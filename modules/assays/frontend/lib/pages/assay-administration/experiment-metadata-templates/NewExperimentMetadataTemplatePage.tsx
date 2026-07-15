@@ -27,10 +27,11 @@ import styles from "./experimentMetadataTemplates.module.scss";
 import BackIcon from "@grit42/client-library/icons/Circle2Togglebackward";
 import { useAssayMetadataDefinitionsWithFields } from "./useAssayMetadataDefinitionsWithFields";
 import ExperimentMetadataTemplateForm from "./ExperimentMetadataTemplateForm";
+import { useMetadataTemplateAdministrationBreadcrumbs } from "./breadcrumbs";
 
 const NewExperimentMetadataTemplatePage = () => {
   const metadataDefinitions = useAssayMetadataDefinitionsWithFields();
-
+  useMetadataTemplateAdministrationBreadcrumbs();
   if (metadataDefinitions.isLoading) {
     return <Spinner />;
   }

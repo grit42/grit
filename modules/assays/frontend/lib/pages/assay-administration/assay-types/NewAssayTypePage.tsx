@@ -19,8 +19,10 @@
 import { Surface } from "@grit42/client-library/components";
 import AssayTypeForm from "./AssayTypeForm";
 import styles from "./assayTypes.module.scss";
+import { useAssayTypesAdministrationBreadcrumbs } from "./breadcrumbs";
 
 const NewAssayTypePage = () => {
+  useAssayTypesAdministrationBreadcrumbs();
   return (
     <div className={styles.assayTypePage}>
       <div className={styles.header}>

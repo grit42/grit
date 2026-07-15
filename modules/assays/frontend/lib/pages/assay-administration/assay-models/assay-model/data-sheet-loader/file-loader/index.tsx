@@ -8,7 +8,7 @@ import {
   useFormInput,
 } from "@grit42/form";
 import { Button } from "@grit42/client-library/components";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import {
   ColumnDefinitionsFromSheetOptions,
@@ -59,9 +59,7 @@ const FileLoader = ({
 
   return (
     <CenteredSurface>
-      <h3 className={styles.header}>
-        Select files to analyse
-      </h3>
+      <h3 className={styles.header}>Select files to analyse</h3>
       <p>
         Select one or more spreadsheets (<em>.xlsx, .ods</em>) or
         delimiter-separated value files (<em>.csv, .tsv</em>)
@@ -92,9 +90,9 @@ const FileLoader = ({
           </form.Field>
         </FormFields>
         <AddFormControl label="Start import">
-          <Button onClick={() => navigate("../../../data-sheets")}>
-            Cancel
-          </Button>
+          <Link to="../.." relative="path">
+            <Button>Cancel</Button>
+          </Link>
         </AddFormControl>
       </Form>
     </CenteredSurface>

@@ -18,11 +18,15 @@
 
 import AssayModelsTable from "./AssayModelsTable";
 import styles from "./assayModels.module.scss";
+import { useAssayModelsAdministrationBreadcrumbs } from "./breadcrumbs";
 
 const AssayMetadataDefinitionsPage = () => {
-  return <div className={styles.assayModelsPage}>
-    <AssayModelsTable />
-  </div>;
+  useAssayModelsAdministrationBreadcrumbs();
+  return (
+    <div className={styles.assayModelsPage}>
+      <AssayModelsTable />
+    </div>
+  );
 };
 
 export default AssayMetadataDefinitionsPage;

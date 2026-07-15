@@ -29,9 +29,11 @@ import DeleteMetadataTemplate from "./DeleteMetadataTemplate";
 import { useExperimentMetadataTemplate } from "../../../queries/experiment_metadata_templates";
 import { useAssayMetadataDefinitionsWithFields } from "./useAssayMetadataDefinitionsWithFields";
 import ExperimentMetadataTemplateForm from "./ExperimentMetadataTemplateForm";
+import { useMetadataTemplateAdministrationBreadcrumbs } from "./breadcrumbs";
 
 const ExperimentMetadataTemplatePage = () => {
   const { metadata_template_id } = useParams() as { metadata_template_id: string };
+  useMetadataTemplateAdministrationBreadcrumbs();
 
   const metadataDefinitions = useAssayMetadataDefinitionsWithFields();
 
