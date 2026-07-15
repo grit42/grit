@@ -4,3 +4,30 @@
   padding-top: theme.$spacing-xl;
   padding-inline: theme.$spacing-xl;
 }
+.moleculeField {
+  grid-column-start: 1;
+  grid-column-end: 3;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-auto-rows: max-content;
+}
+
+.moleculeViewer {
+  height: 300px;
+  width: 100%;
+}
+
+.newCompoundPage {
+  padding-top: theme.$spacing-xl;
+  padding-inline: theme.$spacing-xl;
+  display: grid;
+  grid-template-columns: minmax(100%, 80ch);
+  grid-template-rows: min-content max-content;
+  margin-inline: auto;
+
+  .header {
+    display: flex;
+    align-items: center;
+    gap: theme.$spacing;
+  }
+}

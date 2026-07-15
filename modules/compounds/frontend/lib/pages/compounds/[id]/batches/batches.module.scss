@@ -1,0 +1,14 @@
+@use "@grit42/client-library/theme.scss";
+
+.batchPage {
+  display: grid;
+  grid-template-columns: minmax(100%, 80ch);
+  grid-template-rows: min-content max-content;
+  margin-inline: auto;
+
+  .header {
+    display: flex;
+    align-items: center;
+    gap: theme.$spacing;
+  }
+}

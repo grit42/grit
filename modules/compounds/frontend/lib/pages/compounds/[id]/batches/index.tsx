@@ -22,7 +22,6 @@ import { Link, useLocation, useMatch, useNavigate } from "react-router-dom";
 import { useCompound } from "../../../../queries/compounds";
 import { Table, useSetupTableState } from "@grit42/table";
 import { useToolbar, useHasPermission } from "@grit42/core";
-import Circle1NewIcon from "@grit42/client-library/icons/Circle1New";
 import {
   BatchData,
   useCompoundTypeBatchesColumns,
@@ -145,25 +144,6 @@ const CompoundBatches = ({ id }: Props) => {
           text: "Export compounds",
         },
       ],
-      actions: [
-        {
-          icon: <Circle1NewIcon />,
-          id: "ADD_BATCH",
-          label: "New batch",
-          requiredPermissions: ["write:compounds"],
-          onClick: () =>
-            navigate("/core/entities/Grit::Compounds::Batch/new", {
-              state: {
-                redirect: pathname,
-                initialData: {
-                  compound_id: id,
-                  compound_type_id: compound?.compound_type_id,
-                },
-                title: `Create Batch of ${compound?.name ?? "compound"}`,
-              },
-            }),
-        },
-      ],
     });
   }, [
     registerToolbarActions,
@@ -191,7 +171,7 @@ const CompoundBatches = ({ id }: Props) => {
       headerActions={
         canCrud ? (
           <Link
-            to="/core/entities/Grit::Compounds::Batch/new"
+            to="new"
             state={{
               redirect: pathname,
               initialData: {
@@ -213,7 +193,7 @@ const CompoundBatches = ({ id }: Props) => {
         canCrud
           ? (row) =>
               navigate(
-                `/core/entities/Grit::Compounds::Batch/${row.original.id}`,
+                `${row.original.id}`,
                 {
                   state: {
                     redirect: pathname,

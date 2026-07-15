@@ -16,9 +16,9 @@
  * @grit42/compounds. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { ErrorPage, Spinner } from "@grit42/client-library/components";
+import { Button, ErrorPage, Spinner } from "@grit42/client-library/components";
 import { useCallback, useEffect, useMemo } from "react";
-import { useLocation, useMatch, useNavigate } from "react-router-dom";
+import { Link, useLocation, useMatch, useNavigate } from "react-router-dom";
 import { useCompound } from "../../../../queries/compounds";
 import {
   SynonymData,
@@ -27,8 +27,6 @@ import {
 } from "../../../../queries/synonyms";
 import { Table, useSetupTableState } from "@grit42/table";
 import { useToolbar, useHasPermission } from "@grit42/core";
-import { useDestroySynonym } from "../../../../mutations/synonyms";
-import Circle1NewIcon from "@grit42/client-library/icons/Circle1New";
 import { useTableColumns } from "@grit42/core/utils";
 import { downloadFile } from "@grit42/client-library/utils";
 import { getFilterParams, getSortParams, getURLParams } from "@grit42/api";
@@ -57,8 +55,6 @@ const CompoundSynonyms = ({ id }: Props) => {
   const navigate = useNavigate();
   const registerToolbarActions = useToolbar();
   const { pathname } = useLocation();
-
-  const destroySynonym = useDestroySynonym();
 
   const tableColumns = useTableColumns(columns);
 
@@ -130,24 +126,6 @@ const CompoundSynonyms = ({ id }: Props) => {
       import: {
         requiredPermissions: ["write:compounds"],
       },
-      actions: [
-        {
-          icon: <Circle1NewIcon />,
-          id: "ADD_SYNONYM",
-          label: "New synonym",
-          requiredPermissions: ["write:compounds"],
-          onClick: () =>
-            navigate("/core/entities/Grit::Compounds::Synonym/new", {
-              state: {
-                redirect: pathname,
-                title: `Create Synonym of ${compound?.name ?? "compound"}`,
-                initialData: {
-                  compound_id: id,
-                },
-              },
-            }),
-        },
-      ],
       export: {
         requiredPermissions: ["read:system"],
       },
@@ -184,35 +162,14 @@ const CompoundSynonyms = ({ id }: Props) => {
       data={flatData}
       tableState={tableState}
       getRowId={getRowId}
-      rowActions={canCrud ? ["delete"] : []}
-      onRowClick={
-        canCrud
-          ? (row) =>
-              navigate(
-                `/core/entities/Grit::Compounds::Synonym/${row.original.id}`,
-                {
-                  state: {
-                    redirect: pathname,
-                    title: `Edit Synonym of ${compound?.name ?? "compound"}`,
-                    initialData: {
-                      compound_id: id,
-                    },
-                  },
-                },
-              )
-          : undefined
+      headerActions={
+        canCrud ? (
+          <Link to="new">
+            <Button>New</Button>
+          </Link>
+        ) : undefined
       }
-      onDelete={async (rows) => {
-        if (
-          !window.confirm(
-            `Are you sure you want to delete this Compound? This action is irreversible`,
-          )
-        )
-          return;
-        await destroySynonym.mutateAsync(
-          rows.map(({ original }) => original.id),
-        );
-      }}
+      onRowClick={canCrud ? (row) => navigate(row.id) : undefined}
       pagination={{
         fetchNextPage,
         isFetchingNextPage,

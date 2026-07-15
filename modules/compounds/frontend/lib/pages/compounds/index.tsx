@@ -203,7 +203,7 @@ const CompoundsTable = () => {
         id: t.name,
         text: t.name,
         onClick: () =>
-          navigate("/core/entities/Grit::Compounds::Compound/new", {
+          navigate("new", {
             state: {
               initialData: { compound_type_id: t.id },
               redirectWithId: "/compounds",
