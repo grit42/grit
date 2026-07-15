@@ -21,9 +21,11 @@ import NewDataSheetDefinitionPage from "../../pages/assay-administration/assay-m
 import DataSheetDefinitionPage from "../../pages/assay-administration/assay-models/assay-model/data-sheet-definitions/DataSheetDefinitionPage";
 import DataSheetDefinitionColumnsPage from "../../pages/assay-administration/assay-models/assay-model/data-sheet-definitions/DataSheetColumnsPage";
 import DataSheetDefinitionsPage from "../../pages/assay-administration/assay-models/assay-model/data-sheet-definitions/DataSheetDefinitionsPage";
-import DataSheetDefinitions from "../../pages/assay-administration/assay-models/assay-model/data-sheet-definitions";
 import DataSheetDefinitionSettingsPage from "../../pages/assay-administration/assay-models/assay-model/data-sheet-definitions/DataSheetDefinitionSettings";
 import CloneDataSheetDefinitionPage from "../../pages/assay-administration/assay-models/assay-model/data-sheet-definitions/CloneDataSheetDefinitionPage";
+import DataSheetColumnPage from "../../pages/assay-administration/assay-models/assay-model/data-sheet-definitions/DataSheetColumnPage";
+import NewDataSheetColumnPage from "../../pages/assay-administration/assay-models/assay-model/data-sheet-definitions/NewDataSheetColumnPage";
+import CloneDataSheetColumnPage from "../../pages/assay-administration/assay-models/assay-model/data-sheet-definitions/CloneDataSheetColumnPage";
 
 const useRegisterAssaysAdministrationRoutes = () => {
   const { register } = useAdministrationContext();
@@ -111,6 +113,18 @@ const useRegisterAssaysAdministrationRoutes = () => {
                 >
                   <Route path="columns">
                     <Route index element={<DataSheetDefinitionColumnsPage />} />
+                    <Route
+                      path="new"
+                      element={<NewDataSheetColumnPage />}
+                    />
+                    <Route
+                      path=":data_sheet_column_id/clone"
+                      element={<CloneDataSheetColumnPage />}
+                    />
+                    <Route
+                      path=":data_sheet_column_id"
+                      element={<DataSheetColumnPage />}
+                    />
                   </Route>
                   <Route
                     path="settings"

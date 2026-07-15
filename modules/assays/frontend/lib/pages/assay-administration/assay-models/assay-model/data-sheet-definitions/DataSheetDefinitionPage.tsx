@@ -46,7 +46,7 @@ const DataSheetDefinitionPage = () => {
           <p>{data.data.description ?? "No description provided"}</p>
         </div>
       }
-      matchPattern="/core/administration/assay-models/:assay_model_id/data-sheets/:data_sheet_id/:tab"
+      matchPattern="/core/administration/assay-models/:assay_model_id/data-sheets/:data_sheet_id/:tab/*"
       navigationPattern="relative-sibling"
       paramName="tab"
       tabs={[

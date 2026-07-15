@@ -17,7 +17,6 @@
  */
 
 import { Navigate, Outlet, Route, Routes } from "react-router-dom";
-import AssayModelsAdministrationPage from "./assay-models";
 import { useBreadcrumbs, useTabs } from "@grit42/core";
 import { ASSAYS_ADMINISTRATION_BREADCRUMBS } from "./breadcrumbs";
 
