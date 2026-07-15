@@ -7,5 +7,6 @@ export {
 } from "./AdministrationContext";
 
 export { useAdministrationBreadcrumbs } from "./breadcrumbs";
+export { useAdministrationTabs } from "./tabs"
 
 export type { AdministrationPage } from "./AdministrationContext";
