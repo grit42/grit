@@ -16,12 +16,7 @@
  * @grit42/compounds. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import {
-  ErrorPage,
-  Spinner,
-  RoutedTabs,
-  LoadingPage,
-} from "@grit42/client-library/components";
+import { ErrorPage, LoadingPage } from "@grit42/client-library/components";
 import { Suspense, useMemo } from "react";
 import { Link, Outlet, useParams } from "react-router-dom";
 import { CompoundData, useCompound } from "../../../queries/compounds";

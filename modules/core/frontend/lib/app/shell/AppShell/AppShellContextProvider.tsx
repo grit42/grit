@@ -8,7 +8,7 @@ import {
 import { useLocalStorage } from "@grit42/client-library/hooks";
 
 const AppShellContextProvider = ({ children }: PropsWithChildren) => {
-  const [navbarOpen, setNavbarOpen] = useLocalStorage("navbar-expanded", true);
+  const [navbarOpen, setNavbarOpen] = useLocalStorage("navbar-expanded", false);
   const openNavbar = useCallback(
     () => setNavbarOpen(() => true),
     [setNavbarOpen],
