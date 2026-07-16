@@ -1,4 +1,4 @@
-import { VocabularyData } from "../../../queries/vocabularies";
+import { VocabularyData } from "../../queries/vocabularies";
 import { VOCABULARIES_BREADCRUMBS } from "../breadcrumbs";
 
 export const VOCABULARY_BREADCRUMBS = (vocabulary?: VocabularyData | null) => {

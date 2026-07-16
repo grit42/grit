@@ -18,18 +18,12 @@
 
 import styles from "./vocabulary.module.scss";
 import { Link } from "react-router-dom";
-import { useVocabulary } from "../../../queries/vocabularies";
-import { useHasPermission } from "../../../../auth";
 import { Button } from "@grit42/client-library/components";
 import VocabularyItemsTable from "./VocabularyItemsTable";
+import { useVocabularyContext } from "./vocabularyContext";
 
-interface Props {
-  vocabularyId: string | number;
-}
-
-const Vocabulary = ({ vocabularyId }: Props) => {
-  const canAdmin = useHasPermission("admin:vocabularies");
-  const { data: vocabulary } = useVocabulary(vocabularyId);
+const VocabularyItemsPage = () => {
+  const { vocabulary, canAdmin } = useVocabularyContext();
 
   return (
     <div className={styles.vocabulary}>
@@ -42,11 +36,13 @@ const Vocabulary = ({ vocabularyId }: Props) => {
             </Link>
           )}
         </div>
-        {vocabulary?.description && <p className={styles.description}>{vocabulary?.description}</p>}
+        {vocabulary?.description && (
+          <p className={styles.description}>{vocabulary?.description}</p>
+        )}
       </div>
-      <VocabularyItemsTable vocabularyId={vocabularyId} />
+      <VocabularyItemsTable />
     </div>
   );
 };
 
-export default Vocabulary;
+export default VocabularyItemsPage;

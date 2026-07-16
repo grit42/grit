@@ -16,23 +16,33 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import styles from "./vocabulary.module.scss";
-import { useVocabulary, useVocabularyFields } from "../../../queries/vocabularies";
-import VocabularyForm from "./VocabularyForm";
+import { Button } from "@grit42/client-library/components";
+import { PropsWithChildren } from "react";
+import styles from "./formPage.module.scss";
 
-interface Props {
-  vocabularyId: string | number;
-}
+export type FormPageActionProps<T = unknown> = PropsWithChildren<{
+  title: string;
+  actionLabel: string;
+  onAction: () => Promise<T>;
+}>;
 
-const VocabularySettings = ({ vocabularyId }: Props) => {
-  const { data: vocabulary } = useVocabulary(vocabularyId);
-  const { data: vocabularyFields } = useVocabularyFields();
-
+const FormPageAction = ({
+  children,
+  title,
+  actionLabel,
+  onAction,
+}: FormPageActionProps) => {
   return (
-    <div className={styles.vocabularySettings}>
-      <VocabularyForm fields={vocabularyFields!} vocabulary={vocabulary!} />
+    <div className={styles.actionSection}>
+      <div className={styles.actionContent}>
+        <h3>{title}</h3>
+        {typeof children === "string" ? <p>{children}</p> : children}
+      </div>
+      <Button onClick={onAction} color="danger">
+        {actionLabel}
+      </Button>
     </div>
   );
 };
 
-export default VocabularySettings;
+export default FormPageAction;

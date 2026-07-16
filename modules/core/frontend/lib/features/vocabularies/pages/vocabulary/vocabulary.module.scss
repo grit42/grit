@@ -1,0 +1,33 @@
+@use "@grit42/client-library/theme.scss";
+
+.vocabulary,
+.loadSets {
+  padding-top: theme.$spacing-xl;
+  padding-inline: theme.$spacing-xl;
+  display: grid;
+  grid-template-rows: min-content 1fr;
+}
+
+.loadSets {
+  padding-top: theme.$spacing-xl;
+  padding-inline: theme.$spacing-xl;
+  display: grid;
+  grid-template-rows: 1fr;
+}
+
+.vocabularyDetails {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  justify-self: center;
+
+  .vocabularyDetailsHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .description {
+    margin-block: theme.$spacing;
+  }
+}

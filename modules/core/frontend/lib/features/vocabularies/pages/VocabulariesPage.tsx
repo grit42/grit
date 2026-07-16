@@ -16,30 +16,12 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { ErrorPage, Spinner } from "@grit42/client-library/components";
-import { useVocabularyColumns } from "../../queries/vocabularies";
-import { useVocabularyItemColumns } from "../../queries/vocabulary_items";
 import VocabulariesTable from "./VocabulariesTable";
-import { useBreadcrumbs } from "../../../../app";
+import { useBreadcrumbs } from "../../../app";
 import { VOCABULARIES_BREADCRUMBS } from "./breadcrumbs";
 
 const VocabulariesPage = () => {
-  const {
-    data: vocabularyColumns,
-    isLoading: isVocabularyColumnsLoading,
-    isError: isVocabularyColumnsError,
-    error: vocabularyColumnsError,
-  } = useVocabularyColumns();
-
-  useVocabularyItemColumns();
-
   useBreadcrumbs(VOCABULARIES_BREADCRUMBS);
-
-  if (isVocabularyColumnsLoading) return <Spinner />;
-
-  if (!vocabularyColumns || isVocabularyColumnsError) {
-    return <ErrorPage error={vocabularyColumnsError} />;
-  }
 
   return <VocabulariesTable />;
 };

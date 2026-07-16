@@ -17,11 +17,12 @@
  */
 
 import { useMemo } from "react";
-import { useInfiniteEntityData, EntityData } from "../../../../entities";
+import { useInfiniteEntityData, EntityData } from "../../../entities";
 import { useNavigate } from "react-router-dom";
 import { GritColumnDef, Table, useSetupTableState } from "@grit42/table";
 import { ErrorPage } from "@grit42/client-library/components";
 import styles from "./vocabulary.module.scss";
+import { useVocabularyContext } from "./vocabularyContext";
 
 const LOAD_SET_COLUMNS: GritColumnDef<EntityData>[] = [
   {
@@ -125,11 +126,8 @@ const LOAD_SET_COLUMNS: GritColumnDef<EntityData>[] = [
   },
 ];
 
-const VocabularyLoadSets = ({
-  vocabularyId,
-}: {
-  vocabularyId: string | number;
-}) => {
+const VocabularyLoadSetsPage = () => {
+  const { vocabulary } = useVocabularyContext();
   const navigate = useNavigate();
 
   const tableState = useSetupTableState<EntityData>(
@@ -158,7 +156,7 @@ const VocabularyLoadSets = ({
     tableState.filters,
     {
       scope: "by_vocabulary",
-      vocabulary_id: vocabularyId,
+      vocabulary_id: vocabulary.id,
       entity: "Grit::Core::VocabularyItem",
     },
   );
@@ -190,4 +188,4 @@ const VocabularyLoadSets = ({
   );
 };
 
-export default VocabularyLoadSets;
+export default VocabularyLoadSetsPage;

@@ -16,36 +16,84 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Table, useSetupTableState } from "@grit42/table";
+import { GritColumnDef, Table, useSetupTableState } from "@grit42/table";
 import { useCallback, useEffect, useMemo } from "react";
-import { useToolbar } from "../../../toolbar";
+import { useToolbar } from "../../toolbar";
 import Circle1NewIcon from "@grit42/client-library/icons/Circle1New";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button, ErrorPage } from "@grit42/client-library/components";
-import { useTableColumns } from "../../../../utils";
 import {
   useInfiniteVocabularies,
-  useVocabularyColumns,
-} from "../../queries/vocabularies";
+  VocabularyData,
+} from "../queries/vocabularies";
 import styles from "./vocabularies.module.scss";
-import { useHasPermission } from "../../../auth";
+import { useHasPermission } from "../../auth";
+
+const COLUMNS: GritColumnDef<VocabularyData>[] = [
+  {
+    id: "id",
+    accessorKey: "id",
+    header: "Id",
+    type: "integer",
+    defaultVisibility: "hidden",
+  },
+  {
+    id: "created_by",
+    accessorKey: "created_by",
+    header: "Created by",
+    type: "string",
+    defaultVisibility: "hidden",
+  },
+  {
+    id: "created_at",
+    accessorKey: "created_at",
+    header: "Created at",
+    type: "datetime",
+    defaultVisibility: "hidden",
+  },
+  {
+    id: "updated_by",
+    accessorKey: "updated_by",
+    header: "Updated by",
+    type: "string",
+    defaultVisibility: "hidden",
+  },
+  {
+    id: "updated_at",
+    accessorKey: "updated_at",
+    header: "Updated at",
+    type: "datetime",
+    defaultVisibility: "hidden",
+  },
+  {
+    id: "name",
+    accessorKey: "name",
+    header: "Name",
+    type: "string",
+    size: 250,
+  },
+  {
+    id: "description",
+    accessorKey: "description",
+    header: "Description",
+    type: "text",
+    size: 750,
+  },
+];
+
 
 const VocabulariesTable = () => {
   const registerToolbarActions = useToolbar();
   const navigate = useNavigate();
   const canEditVocabularies = useHasPermission("admin:vocabularies");
   const { pathname } = useLocation();
-  const { data: vocabularyColumns } = useVocabularyColumns();
-
-  const vocabulariesTableColumns = useTableColumns(vocabularyColumns);
 
   const tableState = useSetupTableState(
     "vocabularies-tables",
-    vocabulariesTableColumns,
+    COLUMNS,
     {
       settings: {
         disableColumnReorder: true,
-        disableVisibilitySettings: true,
       },
       initial: {
         sorting: [
