@@ -86,14 +86,13 @@ const ExperimentMetadataTemplateForm = ({
           [
             "entities",
             "datum",
-            "grit/assays/experiment_metadata_templates",
+          "grit/assays/experiment_metadata_templates",
             newEntity.id.toString(),
           ],
           newEntity,
         );
         setFormData(newEntity);
         formApi.reset();
-        navigate("..");
       } else {
         setFormData(
           await editEntityMutation.mutateAsync(
@@ -102,6 +101,7 @@ const ExperimentMetadataTemplateForm = ({
         );
         formApi.reset();
       }
+      navigate("..");
     }),
   });
 

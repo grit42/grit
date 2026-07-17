@@ -89,13 +89,13 @@ const AssayTypeForm = ({
         );
         setFormData(newEntity);
         formApi.reset();
-        navigate("..");
       } else {
         setFormData(
           await editEntityMutation.mutateAsync(value as AssayTypeData),
         );
         formApi.reset();
       }
+      navigate("..");
     }),
   });
 

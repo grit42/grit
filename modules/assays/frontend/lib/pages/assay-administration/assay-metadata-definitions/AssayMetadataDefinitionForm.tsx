@@ -121,7 +121,6 @@ const AssayMetadataDefinitionForm = ({
         );
         setFormData(newEntity);
         formApi.reset();
-        navigate(`..`);
       } else {
         setFormData(
           await editEntityMutation.mutateAsync(
@@ -130,6 +129,7 @@ const AssayMetadataDefinitionForm = ({
         );
         formApi.reset();
       }
+      navigate(`..`);
     }),
   });
 

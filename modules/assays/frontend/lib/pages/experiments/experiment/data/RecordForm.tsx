@@ -24,6 +24,7 @@ import {
   useExperimentDataSheetRecordFields,
 } from "../../../../queries/experiment_data_sheet_records";
 import {
+  FormPage,
   useCreateEntityMutation,
   useDestroyEntityMutation,
   useEditEntityMutation,
@@ -39,7 +40,6 @@ import {
   getVisibleFieldData,
   useForm,
 } from "@grit42/form";
-import { CenteredSurface } from "@grit42/client-library/layouts";
 
 const ExperimentDataSheetRecordForm = ({
   experimentDataSheetId,
@@ -105,24 +105,21 @@ const ExperimentDataSheetRecordForm = ({
   };
 
   return (
-    <CenteredSurface>
-      <h2>{`${experimentDataSheetRecord.id ? "Edit" : "New"} record`}</h2>
-      <Form form={form}>
-        <FormFields>
-          <FormBanner content={form.state.errorMap.onSubmit} />
-          {fields.map((f) => (
-            <FormField fieldDef={f} key={f.name} />
-          ))}
-        </FormFields>
-        <FormControls
-          onDelete={onDelete}
-          showDelete={!!experimentDataSheetRecord.id}
-          showCancel
-          cancelLabel={experimentDataSheetRecord.id ? "Back" : "Cancel"}
-          onCancel={() => navigate("..")}
-        />
-      </Form>
-    </CenteredSurface>
+    <Form form={form}>
+      <FormFields>
+        <FormBanner content={form.state.errorMap.onSubmit} />
+        {fields.map((f) => (
+          <FormField fieldDef={f} key={f.name} />
+        ))}
+      </FormFields>
+      <FormControls
+        onDelete={onDelete}
+        showDelete={!!experimentDataSheetRecord.id}
+        showCancel={!experimentDataSheetRecord.id}
+        cancelLabel={experimentDataSheetRecord.id ? "Back" : "Cancel"}
+        onCancel={() => navigate("..")}
+      />
+    </Form>
   );
 };
 
@@ -157,11 +154,21 @@ const ExperimentDataSheetRecordFormWrapper = () => {
       </ErrorPage>
     );
   return (
-    <ExperimentDataSheetRecordForm
-      fields={fields}
-      experimentDataSheetRecord={data}
-      experimentDataSheetId={sheet_id}
-    />
+    <FormPage
+      header={
+        <FormPage.Header backLink={record_id !== "new"}>
+          {`${record_id !== "new" ? "Edit" : "New"} record`}
+        </FormPage.Header>
+      }
+    >
+      <FormPage.Body>
+        <ExperimentDataSheetRecordForm
+          fields={fields}
+          experimentDataSheetRecord={data}
+          experimentDataSheetId={sheet_id}
+        />
+      </FormPage.Body>
+    </FormPage>
   );
 };
 
