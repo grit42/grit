@@ -21,7 +21,7 @@ import {
   AnalysisData,
   useAnalysisContext,
 } from "../../../../features/analyses";
-import { Grit42QueryBuilder } from "../../../../features/query-builder";
+import { GritQueryBuilder } from "../../../../features/query-builder";
 import { useQueryClient } from "@grit42/api";
 import { Button } from "@grit42/client-library/components";
 import styles from "./filters.module.scss";
@@ -75,7 +75,7 @@ const FiltersPage = () => {
       >
         Save
       </Button>
-      <Grit42QueryBuilder
+      <GritQueryBuilder
         state={filters.builderState}
         setState={filters.setBuilderState}
       />

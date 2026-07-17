@@ -24,19 +24,20 @@ import type {
 } from "@react-awesome-query-builder/ui";
 import { Builder, Query } from "@react-awesome-query-builder/ui";
 import "@react-awesome-query-builder/ui/css/styles.css";
-import "./Grit42QueryBuilder.module.scss";
+import styles from "./gritQueryBuilder.module.scss";
 import type { QueryBuilderState } from "./useQueryBuilderState";
+import { classnames } from "@grit42/client-library/utils";
 
-export interface Grit42QueryBuilderProps {
+export interface GritQueryBuilderProps {
   state: QueryBuilderState;
   setState: React.Dispatch<React.SetStateAction<QueryBuilderState>>;
   className?: string;
 }
 
-export const Grit42QueryBuilder = ({
+export const GritQueryBuilder = ({
   state,
   setState,
-}: Grit42QueryBuilderProps) => {
+}: GritQueryBuilderProps) => {
   const onChange = useCallback(
     (tree: ImmutableTree, config: Config) => {
       setState((prevState) => ({ ...prevState, tree, config }));
@@ -46,7 +47,12 @@ export const Grit42QueryBuilder = ({
 
   const renderBuilder = useCallback(
     (props: BuilderProps) => (
-      <div className="query-builder-container">
+      <div
+        className={classnames(
+          "query-builder-container",
+          styles.queryBuilderContainer,
+        )}
+      >
         <div className="query-builder">
           <Builder {...props} />
         </div>

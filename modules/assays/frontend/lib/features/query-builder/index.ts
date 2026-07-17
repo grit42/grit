@@ -16,8 +16,8 @@
  * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
  */
 
-export { Grit42QueryBuilder } from "./Grit42QueryBuilder";
-export type { Grit42QueryBuilderProps } from "./Grit42QueryBuilder";
+export { GritQueryBuilder } from "./GritQueryBuilder";
+export type { GritQueryBuilderProps } from "./GritQueryBuilder";
 
 export { useQueryBuilderState } from "./useQueryBuilderState";
 export type {
