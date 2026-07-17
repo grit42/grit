@@ -66,6 +66,17 @@ function OriginForm({ origin = {} }: { origin?: Partial<Origin> }) {
         : await createOrigin.mutateAsync(value);
       if (!origin.id) {
         navigate(`../${updatedOrigin.id}`, { relative: "path" });
+        await Promise.all([
+          queryClient.invalidateQueries({
+            queryKey: ["entities", "datum", "grit/core/origins"],
+          }),
+          queryClient.invalidateQueries({
+            queryKey: ["entities", "data", "grit/core/origins"],
+          }),
+          queryClient.invalidateQueries({
+            queryKey: ["entities", "infiniteData", "grit/core/origins"],
+          }),
+        ]);
       } else {
         await Promise.all([
           queryClient.invalidateQueries({
