@@ -31,6 +31,9 @@ const DeleteUser = ({
       queryClient.invalidateQueries({
         queryKey: ["entities", "data", "grit/core/users"],
       }),
+      queryClient.invalidateQueries({
+        queryKey: ["entities", "infiniteData", "grit/core/users"],
+      }),
       await destroyUserMutation.mutateAsync(id),
     ]);
     navigate("..", { relative: "path" });

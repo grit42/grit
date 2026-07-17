@@ -162,6 +162,9 @@ export function UserForm({ user, id }: { user: Partial<User>; id: string }) {
             queryClient.invalidateQueries({
               queryKey: ["entities", "data", "grit/core/users"],
             }),
+            queryClient.invalidateQueries({
+              queryKey: ["entities", "infiniteData", "grit/core/users"],
+            }),
           ]);
         }
       }
@@ -177,7 +180,11 @@ export function UserForm({ user, id }: { user: Partial<User>; id: string }) {
         ))}
       </FormFields>
       <FormControls>
-        {id === "new" && <Link to="/core/administration/users"><Button color="primary">Cancel</Button></Link>}
+        {id === "new" && (
+          <Link to="/core/administration/users">
+            <Button color="primary">Cancel</Button>
+          </Link>
+        )}
       </FormControls>
     </Form>
   );
