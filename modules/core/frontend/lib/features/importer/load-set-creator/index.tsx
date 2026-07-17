@@ -4,7 +4,7 @@ import LoadSetCreatorContextProvider from "./LoadSetCreatorContext";
 import { useLoadSetEntity, useLoadSetFields } from "../api/queries/load_sets";
 import { useLoadSetBlockFields } from "../api/queries/load_set_blocks";
 import LoadSetCreatorStep from "./LoadSetCreatorStep";
-
+import styles from "./loadSetCreator.module.scss";
 const LoadSetCreator = ({ entity }: { entity: string }) => {
   const [searchParams] = useSearchParams();
   const presets = Object.fromEntries(searchParams.entries());
@@ -55,7 +55,9 @@ const LoadSetCreator = ({ entity }: { entity: string }) => {
       loadSetFields={loadSetFields}
       loadSetBlockFields={loadSetBlockFields}
     >
-      <LoadSetCreatorStep />
+      <div className={styles.loadSetCreatorPage}>
+        <LoadSetCreatorStep />
+      </div>
     </LoadSetCreatorContextProvider>
   );
 };

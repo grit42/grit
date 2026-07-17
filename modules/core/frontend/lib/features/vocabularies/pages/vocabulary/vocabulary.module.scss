@@ -6,6 +6,7 @@
   padding-inline: theme.$spacing-xl;
   display: grid;
   grid-template-rows: min-content 1fr;
+  overflow: auto;
 }
 
 .loadSets {

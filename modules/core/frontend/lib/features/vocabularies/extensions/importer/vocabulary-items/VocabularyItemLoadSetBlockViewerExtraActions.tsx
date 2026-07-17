@@ -6,7 +6,7 @@ const VocabularyItemLoadSetBlockViewerExtraActions = ({
   loadSetBlock,
 }: LoadSetBlockViewerExtraActionsProps) => {
   return (
-    <Link to={`/core/vocabularies/${loadSetBlock.vocabulary_id}`}>
+    <Link to={`/core/vocabularies/${loadSetBlock.vocabulary_id}/items`}>
       <Button color="secondary">Go to vocabulary</Button>
     </Link>
   );

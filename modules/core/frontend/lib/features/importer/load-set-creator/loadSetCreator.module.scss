@@ -1,0 +1,7 @@
+@use "@grit42/client-library/theme.scss";
+
+.loadSetCreatorPage {
+    display: grid;
+    overflow: auto;
+    padding: theme.$spacing-xl;
+}
