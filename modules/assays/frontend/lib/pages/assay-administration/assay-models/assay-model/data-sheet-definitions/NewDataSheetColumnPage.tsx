@@ -3,13 +3,16 @@ import {
   Button,
   ErrorPage,
   LoadingPage,
-  Surface,
 } from "@grit42/client-library/components";
-import { EntityFormFieldDef, useCreateEntityMutation } from "@grit42/core";
 import {
-  AddFormControl,
+  EntityFormFieldDef,
+  FormPage,
+  useCreateEntityMutation,
+} from "@grit42/core";
+import {
   Form,
   FormBanner,
+  FormControls,
   FormField,
   FormFieldDef,
   FormFields,
@@ -251,11 +254,11 @@ const DataSheetColumnForm = ({
           </div>
         ))}
       </FormFields>
-      <AddFormControl>
+      <FormControls>
         <Link to="..">
           <Button>Cancel</Button>
         </Link>
-      </AddFormControl>
+      </FormControls>
     </Form>
   );
 };
@@ -282,18 +285,14 @@ const NewDataSheetColumnPage = () => {
   }
 
   return (
-    <div className={styles.dataSheetColumnPage}>
-      <div className={styles.header}>
-        <h1>New column</h1>
-      </div>
-
-      <Surface className={styles.settings}>
+    <FormPage header={<FormPage.Header>New column</FormPage.Header>}>
+      <FormPage.Body>
         <DataSheetColumnForm
           assayDataSheetColumn={{}}
           assayDataSheetColumns={data.data}
         />
-      </Surface>
-    </div>
+      </FormPage.Body>
+    </FormPage>
   );
 };
 

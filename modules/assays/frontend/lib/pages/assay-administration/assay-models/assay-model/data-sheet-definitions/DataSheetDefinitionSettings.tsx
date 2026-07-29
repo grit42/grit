@@ -3,9 +3,13 @@ import {
   Button,
   ErrorPage,
   LoadingPage,
-  Surface,
+  useConfirm,
 } from "@grit42/client-library/components";
-import { useDestroyEntityMutation, useEditEntityMutation } from "@grit42/core";
+import {
+  FormPage,
+  useDangerousDestroyEntityMutation,
+  useEditEntityMutation,
+} from "@grit42/core";
 import {
   Form,
   FormBanner,
@@ -16,7 +20,6 @@ import {
   useForm,
 } from "@grit42/form";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import styles from "./dataSheetDefinition.module.scss";
 import {
   AssayDataSheetDefinitionData,
   useAssayDataSheetDefinition,
@@ -103,22 +106,28 @@ const DeleteDataSheetDefinition = ({
 }: {
   dataSheetDefinition: Partial<AssayDataSheetDefinitionData>;
 }) => {
+  const confirm = useConfirm();
+  const { dangerousEditMode } = useAssayModelEditorContext();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const destroyEntityMutation = useDestroyEntityMutation(
+  const destroyEntityMutation = useDangerousDestroyEntityMutation(
     "grit/assays/assay_data_sheet_definitions",
   );
 
   const handleDelete = useCallback(async () => {
-    if (
-      !window.confirm(
-        `Are you sure you want to delete ${dataSheetDefinition.name}? This action is irreversible`,
-      )
-    ) {
+    const confirmed = await confirm({
+      title: `Delete data sheet ${dataSheetDefinition.name}?`,
+      body: `Are you sure you want to delete this data sheet? This action is irreversible`,
+      challenge: dangerousEditMode ? dataSheetDefinition.name : undefined,
+      danger: true,
+    });
+    if (!confirmed) {
       return;
     }
-
-    await destroyEntityMutation.mutateAsync(dataSheetDefinition.id);
+    await destroyEntityMutation.mutateAsync([
+      dataSheetDefinition.id,
+      dangerousEditMode,
+    ]);
     await Promise.all([
       queryClient.invalidateQueries({
         queryKey: [
@@ -144,43 +153,40 @@ const DeleteDataSheetDefinition = ({
     ]);
     navigate("../..", { relative: "path" });
   }, [
+    confirm,
     dataSheetDefinition.name,
     dataSheetDefinition.id,
+    dangerousEditMode,
     destroyEntityMutation,
     queryClient,
     navigate,
   ]);
 
   return (
-    <>
-      <div className={styles.actionSection}>
-        <div className={styles.actionContent}>
-          <h3>Delete data sheet definition</h3>
-          <p>
-            <b>This action is irreversible.</b>
-          </p>
-        </div>
-        <Button onClick={handleDelete} color="danger">
-          Delete
-        </Button>
-      </div>
-    </>
+    <FormPage.Action
+      title="Delete data sheet definition"
+      actionLabel="Delete"
+      onAction={handleDelete}
+    >
+      <p>
+        <b>This action is irreversible.</b>
+      </p>
+    </FormPage.Action>
   );
 };
 
 const CloneDataSheetDefinition = () => {
   return (
-    <>
-      <div className={styles.actionSection}>
-        <div className={styles.actionContent}>
-          <h3>Clone data sheet definition</h3>
-          <p>Create a copy of this data sheet.</p>
-        </div>
+    <FormPage.Action
+      title="Clone data sheet definition"
+      action={
         <Link to="../clone">
           <Button>Clone</Button>
         </Link>
-      </div>
-    </>
+      }
+    >
+      Create a copy of this data sheet.
+    </FormPage.Action>
   );
 };
 
@@ -206,15 +212,17 @@ const DataSheetDefinitionSettingsPage = () => {
   }
 
   return (
-    <Surface className={styles.settings}>
-      <DataSheetDefinitionSettingsForm dataSheetDefinition={data.data} />
-      {canEdit && (
-        <>
-          <DeleteDataSheetDefinition dataSheetDefinition={data.data} />
-          <CloneDataSheetDefinition />
-        </>
-      )}
-    </Surface>
+    <FormPage>
+      <FormPage.Body>
+        <DataSheetDefinitionSettingsForm dataSheetDefinition={data.data} />
+        {canEdit && (
+          <>
+            <CloneDataSheetDefinition />
+            <DeleteDataSheetDefinition dataSheetDefinition={data.data} />
+          </>
+        )}
+      </FormPage.Body>
+    </FormPage>
   );
 };
 

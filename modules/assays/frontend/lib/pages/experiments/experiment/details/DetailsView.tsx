@@ -126,9 +126,13 @@ const MetadataTable = ({ experiment }: { experiment: ExperimentData }) => {
       metadataDefinitions.data?.map(({ name, safe_name }) => ({
         name: name,
         value: experiment[`${safe_name}__name`],
-      })) ?? [],
+      })).filter(({value}) => !!value) ?? [],
     [experiment, metadataDefinitions.data],
   );
+
+  if (metadata.length === 0) {
+    return <ErrorPage error="No metadata defined" />;
+  }
 
   return (
     <Table

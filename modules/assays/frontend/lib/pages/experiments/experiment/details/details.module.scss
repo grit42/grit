@@ -3,7 +3,7 @@
 .details {
   margin-inline: auto;
   display: grid;
-  grid-template-columns: auto;
+  grid-template-columns: minmax(100%, 80ch);
   grid-template-rows: min-content 1fr;
   gap: theme.$spacing;
   padding-top: theme.$spacing-xl;

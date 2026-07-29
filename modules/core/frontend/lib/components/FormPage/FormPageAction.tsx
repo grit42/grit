@@ -17,13 +17,15 @@
  */
 
 import { Button } from "@grit42/client-library/components";
-import { PropsWithChildren } from "react";
+import { PropsWithChildren, ReactNode } from "react";
 import styles from "./formPage.module.scss";
 
 export type FormPageActionProps<T = unknown> = PropsWithChildren<{
   title: string;
-  actionLabel: string;
-  onAction: () => Promise<T>;
+  actionLabel?: string;
+  onAction?: () => void | T | Promise<T>;
+  action?: ReactNode;
+  actionColor?: "danger" | "primary" | "secondary" | "warning" | undefined;
 }>;
 
 const FormPageAction = ({
@@ -31,6 +33,8 @@ const FormPageAction = ({
   title,
   actionLabel,
   onAction,
+  action,
+  actionColor = "danger",
 }: FormPageActionProps) => {
   return (
     <div className={styles.actionSection}>
@@ -38,9 +42,13 @@ const FormPageAction = ({
         <h3>{title}</h3>
         {typeof children === "string" ? <p>{children}</p> : children}
       </div>
-      <Button onClick={onAction} color="danger">
-        {actionLabel}
-      </Button>
+      {action ? (
+        action
+      ) : (
+        <Button onClick={onAction} color={actionColor}>
+          {actionLabel}
+        </Button>
+      )}
     </div>
   );
 };

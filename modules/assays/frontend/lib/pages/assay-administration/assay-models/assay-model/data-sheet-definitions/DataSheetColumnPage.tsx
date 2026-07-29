@@ -3,12 +3,12 @@ import {
   Button,
   ErrorPage,
   LoadingPage,
-  Surface,
   useConfirm,
 } from "@grit42/client-library/components";
 import {
   EntityFormFieldDef,
-  useDestroyEntityMutation,
+  FormPage,
+  useDangerousDestroyEntityMutation,
   useEditEntityMutation,
 } from "@grit42/core";
 import {
@@ -33,7 +33,6 @@ import {
 } from "../../../../../queries/assay_data_sheet_columns";
 import { toSafeIdentifier } from "@grit42/core/utils";
 import { z } from "zod";
-import BackIcon from "@grit42/client-library/icons/Circle2Togglebackward";
 
 const FIELDS: FormFieldDef[] = [
   {
@@ -277,27 +276,34 @@ const DataSheetColumnForm = ({
     </Form>
   );
 };
+
 const DeleteDataSheetColumn = ({
   dataSheetColumn,
 }: {
   dataSheetColumn: Partial<AssayDataSheetColumnData>;
 }) => {
+  const confirm = useConfirm();
+  const { dangerousEditMode } = useAssayModelEditorContext();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const destroyEntityMutation = useDestroyEntityMutation(
+  const destroyEntityMutation = useDangerousDestroyEntityMutation(
     "grit/assays/assay_data_sheet_columns",
   );
 
   const handleDelete = useCallback(async () => {
-    if (
-      !window.confirm(
-        `Are you sure you want to delete ${dataSheetColumn.name}? This action is irreversible`,
-      )
-    ) {
+    const confirmed = await confirm({
+      title: `Delete column ${dataSheetColumn.name}?`,
+      body: `Are you sure you want to delete this column? This action is irreversible.`,
+      challenge: dangerousEditMode ? dataSheetColumn.name : undefined,
+      danger: true,
+    });
+    if (!confirmed) {
       return;
     }
-
-    await destroyEntityMutation.mutateAsync(dataSheetColumn.id);
+    await destroyEntityMutation.mutateAsync([
+      dataSheetColumn.id,
+      dangerousEditMode,
+    ]);
     await Promise.all([
       queryClient.invalidateQueries({
         queryKey: ["entities", "datum", "grit/assays/assay_data_sheet_columns"],
@@ -315,43 +321,40 @@ const DeleteDataSheetColumn = ({
     ]);
     navigate("..", { relative: "path" });
   }, [
+    confirm,
     dataSheetColumn.name,
     dataSheetColumn.id,
+    dangerousEditMode,
     destroyEntityMutation,
     queryClient,
     navigate,
   ]);
 
   return (
-    <>
-      <div className={styles.actionSection}>
-        <div className={styles.actionContent}>
-          <h3>Delete data sheet column</h3>
-          <p>
-            <b>This action is irreversible.</b>
-          </p>
-        </div>
-        <Button onClick={handleDelete} color="danger">
-          Delete
-        </Button>
-      </div>
-    </>
+    <FormPage.Action
+      title="Delete data sheet column"
+      actionLabel="Delete"
+      onAction={handleDelete}
+    >
+      <p>
+        <b>This action is irreversible.</b>
+      </p>
+    </FormPage.Action>
   );
 };
 
 const CloneDataSheetDefinition = () => {
   return (
-    <>
-      <div className={styles.actionSection}>
-        <div className={styles.actionContent}>
-          <h3>Clone data sheet column</h3>
-          <p>Create a copy of this column.</p>
-        </div>
+    <FormPage.Action
+      title="Clone data sheet column"
+      action={
         <Link to="clone">
           <Button>Clone</Button>
         </Link>
-      </div>
-    </>
+      }
+    >
+      Create a copy of this column.
+    </FormPage.Action>
   );
 };
 
@@ -387,31 +390,20 @@ const DataSheetColumnPage = () => {
   }
 
   return (
-    <div className={styles.dataSheetColumnPage}>
-      <div className={styles.header}>
-        <Link to="..">
-          <Button
-            variant="transparent"
-            size="tiny"
-            icon={<BackIcon height={24} fill="var(--palette-background-contrast-text)" />}
-          ></Button>
-        </Link>
-        <h1>Edit column</h1>
-      </div>
-
-      <Surface className={styles.settings}>
+    <FormPage header={<FormPage.Header backLink>Edit column</FormPage.Header>}>
+      <FormPage.Body>
         <DataSheetColumnForm
           assayDataSheetColumn={dataSheetColumn}
           assayDataSheetColumns={otherDataSheetColumns}
         />
         {canEdit && (
           <>
-            <DeleteDataSheetColumn dataSheetColumn={dataSheetColumn} />
             <CloneDataSheetDefinition />
+            <DeleteDataSheetColumn dataSheetColumn={dataSheetColumn} />
           </>
         )}
-      </Surface>
-    </div>
+      </FormPage.Body>
+    </FormPage>
   );
 };
 

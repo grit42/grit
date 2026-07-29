@@ -40,6 +40,7 @@ import {
   getVisibleFieldData,
   useForm,
 } from "@grit42/form";
+import styles from "./experimentData.module.scss";
 
 const ExperimentDataSheetRecordForm = ({
   experimentDataSheetId,
@@ -154,12 +155,14 @@ const ExperimentDataSheetRecordFormWrapper = () => {
       </ErrorPage>
     );
   return (
+    <div className={styles.recordFormContainer}>
     <FormPage
       header={
         <FormPage.Header backLink={record_id !== "new"}>
           {`${record_id !== "new" ? "Edit" : "New"} record`}
         </FormPage.Header>
       }
+
     >
       <FormPage.Body>
         <ExperimentDataSheetRecordForm
@@ -169,6 +172,7 @@ const ExperimentDataSheetRecordFormWrapper = () => {
         />
       </FormPage.Body>
     </FormPage>
+    </div>
   );
 };
 

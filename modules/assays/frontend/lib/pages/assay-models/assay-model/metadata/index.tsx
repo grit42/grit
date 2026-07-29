@@ -39,6 +39,16 @@ const AssayModelMetadataTable = ({
     tableState.filters,
   );
 
+  if (isModelMetadataError || modelMetadata?.length === 0) {
+    return (
+      <ErrorPage
+        error={
+          modelMetadataError ?? "This assay model does not define any metadata"
+        }
+      />
+    );
+  }
+
   return (
     <Table
       header="Metadata definitions"
@@ -48,10 +58,6 @@ const AssayModelMetadataTable = ({
       fitContent
       disableFooter
       data={modelMetadata}
-      noDataMessage={
-        (isModelMetadataError ? modelMetadataError : undefined) ??
-        "This assay model does not define any metadata"
-      }
     />
   );
 };

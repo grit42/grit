@@ -135,7 +135,7 @@ const AssayModelsTable = () => {
       header="Assay models"
       tableState={tableState}
       headerActions={
-        <Button color="secondary" onClick={navigateToNew}>
+        <Button onClick={navigateToNew}>
           New
         </Button>
       }

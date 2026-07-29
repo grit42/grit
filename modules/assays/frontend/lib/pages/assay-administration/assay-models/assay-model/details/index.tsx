@@ -253,6 +253,18 @@ const AssayModelActions = ({
           }
         />
       )}
+      {canEdit && (
+        <AssayModelAction
+          title="Clone this Assay Model"
+          description={<>Create a copy of this assay model to modify freely.</>}
+          action={
+            <Link to="../clone" relative="path">
+              <Button>Clone</Button>
+            </Link>
+          }
+        />
+      )}
+
       {canEdit && published && (
         <AssayModelAction
           title="Convert this Assay Model to Draft"
@@ -272,17 +284,6 @@ const AssayModelActions = ({
             >
               Convert to Draft
             </Button>
-          }
-        />
-      )}
-      {canEdit && (
-        <AssayModelAction
-          title="Clone this Assay Model"
-          description={<>Create a copy of this assay model to modify freely.</>}
-          action={
-            <Link to="../clone" relative="path">
-              <Button>Clone</Button>
-            </Link>
           }
         />
       )}

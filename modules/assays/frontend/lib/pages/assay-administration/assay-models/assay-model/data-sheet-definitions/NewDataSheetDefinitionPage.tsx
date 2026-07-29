@@ -40,6 +40,7 @@ const FIELDS: FormFieldDef[] = [
 
 const NewDataSheetDefinitionPage = () => {
   const { assayModel } = useAssayModelEditorContext();
+  const { dangerousEditMode } = useAssayModelEditorContext();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const createEntityMutation = useCreateEntityMutation(
@@ -52,6 +53,7 @@ const NewDataSheetDefinitionPage = () => {
       const newEntity = await createEntityMutation.mutateAsync({
         ...value,
         assay_model_id: assayModel.id,
+        dangerous_edit: dangerousEditMode ?? undefined,
       });
       await queryClient.invalidateQueries({
         queryKey: [

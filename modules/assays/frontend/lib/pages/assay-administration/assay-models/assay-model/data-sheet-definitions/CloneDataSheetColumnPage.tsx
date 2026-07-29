@@ -3,13 +3,16 @@ import {
   Button,
   ErrorPage,
   LoadingPage,
-  Surface,
 } from "@grit42/client-library/components";
-import { EntityFormFieldDef, useCreateEntityMutation } from "@grit42/core";
 import {
-  AddFormControl,
+  EntityFormFieldDef,
+  FormPage,
+  useCreateEntityMutation,
+} from "@grit42/core";
+import {
   Form,
   FormBanner,
+  FormControls,
   FormField,
   FormFieldDef,
   FormFields,
@@ -251,11 +254,11 @@ const DataSheetColumnForm = ({
           </div>
         ))}
       </FormFields>
-      <AddFormControl>
-        <Link to="..">
+      <FormControls>
+        <Link to=".." relative="path">
           <Button>Cancel</Button>
         </Link>
-      </AddFormControl>
+      </FormControls>
     </Form>
   );
 };
@@ -290,19 +293,19 @@ const CloneDataSheetColumnPage = () => {
       </ErrorPage>
     );
   }
+
   return (
-    <div className={styles.dataSheetColumnPage}>
-      <div className={styles.header}>
-        <h1>New column</h1>
-      </div>
-      <Surface className={styles.settings}>
+    <FormPage header={<FormPage.Header>New column</FormPage.Header>}>
+      <FormPage.Body>
         <DataSheetColumnForm
           assayDataSheetColumn={dataSheetColumn}
           assayDataSheetColumns={otherDataSheetColumns}
         />
-      </Surface>
-    </div>
+      </FormPage.Body>
+    </FormPage>
   );
+
+
 };
 
 export default CloneDataSheetColumnPage;
