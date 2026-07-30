@@ -158,10 +158,10 @@ const DataTableDataPage = ({ dataTable }: Props) => {
     return (
       <ErrorPage error="Add entities and columns to see data">
         <ButtonGroup>
-          <Link to="../entities/edit">
+          <Link to="../settings/entities/edit">
             <Button>Add entities</Button>
           </Link>
-          <Link to="../columns/assay/select">
+          <Link to="../settings/assay-columns/select">
             <Button>Add columns</Button>
           </Link>
         </ButtonGroup>

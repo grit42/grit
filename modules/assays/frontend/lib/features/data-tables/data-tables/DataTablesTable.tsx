@@ -87,7 +87,7 @@ const DataTablesTable = () => {
     <Table
       className={styles.dataTablesTable}
       tableState={tableState}
-      header="Data Tables"
+      header="Data tables"
       headerActions={
         canManageDataTable ? (
           <Button onClick={navigateToNew}>New</Button>
