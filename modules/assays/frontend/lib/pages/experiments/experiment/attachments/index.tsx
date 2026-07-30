@@ -19,6 +19,7 @@
 import {
   Button,
   ButtonGroup,
+  ErrorPage,
 } from "@grit42/client-library/components";
 import { useQueryClient } from "@grit42/api";
 import {
@@ -98,6 +99,10 @@ const ExperimentAttachements = ({ experiment }: { experiment: ExperimentData }) 
         onClose={() => setIsAdding(false)}
       />
     );
+  }
+
+  if (!canCrudExperiment && data?.length === 0) {
+    return <ErrorPage error="This experiment has no attachments." />
   }
 
   return (

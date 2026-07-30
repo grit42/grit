@@ -386,9 +386,8 @@ const ExperimentForm = ({
           />
         </div>
         <FormControls
-          showCancel
-          cancelLabel={experiment.id ? "Back" : "Cancel"}
-          onCancel={() => navigate(experiment.id ? "../../.." : "../..")}
+          showCancel={!experiment.id}
+          onCancel={() => navigate("../..")}
         />
         {experiment.id && <ExperimentActions experiment={experiment} />}
       </Surface>

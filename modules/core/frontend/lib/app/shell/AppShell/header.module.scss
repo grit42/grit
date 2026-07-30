@@ -30,6 +30,9 @@ $header-inactive-link: #a4a4a6;
     gap: theme.$spacing-lg;
     padding-inline: theme.$spacing-lg;
     padding-bottom: theme.$spacing-sm;
+    padding-block-start: 4px;
+    border-block-start: 1px solid
+      rgb(from theme.$palette-background-contrast-text r g b / 0.1);
   }
 }
 
