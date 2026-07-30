@@ -131,34 +131,29 @@ const DataTablePage = () => {
         </Route>
         <Route
           path="settings"
-          element={<DataTableSettingsPage dataTableId={data_table_id} />}
+          element={<DataTableSettingsPage />}
         >
           <Route
             path="general"
             element={<DataTableDetails dataTableId={data_table_id} />}
           />
-          <Route path="columns">
-            <Route path="assay">
-              <Route
-                index
-                path="*"
-                element={
-                  <AssayDataSheetDataTableColumns dataTableId={data_table_id} />
-                }
-              />
-            </Route>
-            <Route path="entity">
-              <Route
-                index
-                path="*"
-                element={
-                  <EntityAttributeDataTableColumns
-                    dataTableId={data_table_id}
-                  />
-                }
-              />
-            </Route>
-            <Route index path="*" element={<Navigate to="../assay" replace />} />
+          <Route path="assay-columns">
+            <Route
+              index
+              path="*"
+              element={
+                <AssayDataSheetDataTableColumns dataTableId={data_table_id} />
+              }
+            />
+          </Route>
+          <Route path="entity-columns">
+            <Route
+              index
+              path="*"
+              element={
+                <EntityAttributeDataTableColumns dataTableId={data_table_id} />
+              }
+            />
           </Route>
           <Route path="entities">
             <Route
@@ -167,7 +162,11 @@ const DataTablePage = () => {
               element={<DataTableEntities dataTableId={data_table_id} />}
             />
           </Route>
-          <Route index path="*" element={<Navigate to="../general" replace />} />
+          <Route
+            index
+            path="*"
+            element={<Navigate to="../general" replace />}
+          />
         </Route>
         <Route index path="*" element={<Navigate to="../data" replace />} />
       </Route>
