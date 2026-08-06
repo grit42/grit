@@ -80,7 +80,7 @@ const Filters = ({
     if (filteredBy.length === 0) {
       return labelFromProps;
     }
-    if (filteredBy.length <= 2) {
+    if (filteredBy.length <= 4) {
       return `${filteredByLabel} ${filteredBy.join(", ")}`;
     }
     return `${filteredByLabel} ${shortestFilteredBy()} and ${filteredBy.length - 1} other fields`;
