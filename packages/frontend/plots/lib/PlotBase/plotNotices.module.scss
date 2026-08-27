@@ -1,0 +1,36 @@
+.notices {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs, 0.25rem);
+  padding: var(--spacing-sm, 0.5rem) var(--spacing-md, 0.75rem);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+
+  p {
+    display: flex;
+    gap: 0.4375rem;
+    margin: 0;
+    align-items: baseline;
+  }
+}
+
+.count {
+  font-variant-numeric: tabular-nums;
+  flex: none;
+}
+
+/* Data exists and is not drawn. */
+.omitted {
+  color: var(--color-warning, #9a6100);
+}
+
+/* Nothing is drawn at all, which needs saying more loudly than an omission. */
+.empty {
+  color: var(--color-error, #a32f2f);
+  font-weight: 500;
+}
+
+.changed {
+  color: var(--color-text-secondary, #767d8b);
+  font-style: italic;
+}

@@ -114,6 +114,7 @@ const ExperimentPlot = ({ experiment }: Props) => {
           />
           <PlotSettings
             plot={plot.def}
+            data={plotData}
             properties={properties as SourceDataProperties}
             onChange={(def) => {
               setPlot({ ...plot, def });

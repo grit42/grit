@@ -1,20 +1,27 @@
 import "./index.scss";
 import { StrictMode, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { Button, ThemeProvider } from "@grit42/client-library/components";
+import {
+  Button,
+  Select,
+  ThemeProvider,
+} from "@grit42/client-library/components";
 import { Plot, PlotSettings, PlotDefinition } from "@grit42/plots";
-import { sampleData, sampleDataProperties } from "./data";
+import { DATASETS } from "./datasets";
 
-const INITIAL_PLOT: PlotDefinition = {
-  type: "scatter",
-  title: "Concentration (µM) : Response (%)",
-  x: { key: "concentration", label: "Concentration (µM)", axisType: "log" },
-  y: { key: "response", label: "Response (%)", axisType: "linear" },
-  groupBy: ["compound"],
-};
+const DATASET_OPTIONS = DATASETS.map(({ id, label }) => ({
+  value: id,
+  label,
+}));
 
 const Playground = () => {
-  const [plot, setPlot] = useState<PlotDefinition>(INITIAL_PLOT);
+  const [datasetId, setDatasetId] = useState(DATASETS[0].id);
+  const dataset = DATASETS.find((d) => d.id === datasetId) ?? DATASETS[0];
+  const [plots, setPlots] = useState<Record<string, PlotDefinition>>({});
+  const plot = plots[dataset.id] ?? dataset.plot;
+  const setPlot = (next: PlotDefinition) =>
+    setPlots((previous) => ({ ...previous, [dataset.id]: next }));
+
   const [colorScheme, setColorScheme] = useState<"dark" | "light">("dark");
 
   return (
@@ -47,16 +54,27 @@ const Playground = () => {
           >
             Switch to {colorScheme === "dark" ? "light" : "dark"} scheme
           </Button>
+          <Select
+            label="Dataset"
+            options={DATASET_OPTIONS}
+            value={dataset.id}
+            isClearable={false}
+            description={dataset.description}
+            onChange={(id: string) => setDatasetId(id)}
+          />
           <PlotSettings
             plot={plot}
-            properties={sampleDataProperties}
+            data={dataset.data}
+            properties={dataset.properties}
             onChange={setPlot}
           />
         </aside>
         <Plot
           def={plot}
-          data={sampleData}
-          dataProperties={sampleDataProperties}
+          data={dataset.data}
+          dataProperties={dataset.properties}
+          onChange={setPlot}
+          annotationAuthor="playground"
         />
       </div>
     </ThemeProvider>

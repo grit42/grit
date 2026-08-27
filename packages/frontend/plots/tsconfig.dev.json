@@ -27,5 +27,5 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["lib", "src", "vite-env.d.ts"]
+  "include": ["lib", "src", "test/fixtures", "vite-env.d.ts"]
 }

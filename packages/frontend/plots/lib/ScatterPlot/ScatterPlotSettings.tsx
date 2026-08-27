@@ -1,8 +1,8 @@
 import { Select } from "@grit42/client-library/components";
 import { ScatterPlotDefinition, SourceDataProperties } from "../types";
-import { getScatterPlotTitle } from "./utils";
 import {
-  PropertyOption,
+  nextAxisLabel,
+  nextPlotTitle,
   useNumericPropertiesOptions,
   usePropertiesOptions,
 } from "../utils";
@@ -22,28 +22,16 @@ const ScatterPlotSettings = ({
 
   const yAxisOptions = useNumericPropertiesOptions(properties);
 
-  const onXAxisKeyChange = (key: string, option: PropertyOption) => {
-    onChange({
+  const onAxisKeyChange = (axis: "x" | "y") => (key: string) => {
+    const next = {
       ...plot,
-      x: {
-        ...plot.x,
+      [axis]: {
+        ...plot[axis],
         key,
-        label: option.label ?? key,
+        label: nextAxisLabel(plot[axis], key, properties),
       },
-      title: getScatterPlotTitle(key, plot.y.key, properties),
-    });
-  };
-
-  const onYAxisKeyChange = (key: string, option: PropertyOption) => {
-    onChange({
-      ...plot,
-      y: {
-        ...plot.y,
-        key,
-        label: option.label ?? key,
-      },
-      title: getScatterPlotTitle(plot.x.key, key, properties),
-    });
+    };
+    onChange({ ...next, title: nextPlotTitle(plot, next, properties) });
   };
 
   return (
@@ -51,14 +39,14 @@ const ScatterPlotSettings = ({
       <Select
         label="X axis"
         options={xAxisOptions}
-        value={plot.x.key}
-        onChange={onXAxisKeyChange}
+        value={plot.x?.key}
+        onChange={onAxisKeyChange("x")}
       />
       <Select
         label="Y axis"
         options={yAxisOptions}
-        value={plot.y.key}
-        onChange={onYAxisKeyChange}
+        value={plot.y?.key}
+        onChange={onAxisKeyChange("y")}
       />
       <AxesTypeSettings plot={plot} onChange={onChange} />
       <BaseSettings plot={plot} properties={properties} onChange={onChange} />

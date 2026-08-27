@@ -113,6 +113,7 @@ const DataTablePlot = ({ dataTable }: Props) => {
       settings={
         <PlotSettings
           plot={plot.def}
+          data={plotData}
           properties={properties as SourceDataProperties}
           onChange={(def) => {
             setPlot({ ...plot, def });

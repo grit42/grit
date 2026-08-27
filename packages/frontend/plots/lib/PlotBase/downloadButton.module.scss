@@ -1,0 +1,86 @@
+.container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+// Tracks the drawn canvas, whose size is set inline from a ResizeObserver.
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  // The plot underneath stays draggable and zoomable through this layer.
+  pointer-events: none;
+}
+
+.controls {
+  position: absolute;
+  top: 2rem;
+  right: 0.8rem;
+  display: flex;
+  gap: 0.375rem;
+  align-items: center;
+  // Above the Plotly canvas, below any dialog or popover.
+  z-index: 1;
+  pointer-events: auto;
+}
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 20rem;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.error {
+  color: var(--danger-color, #b00020);
+  font-size: 0.85em;
+}
+
+.formats {
+  border: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1rem;
+}
+
+.formats legend {
+  padding: 0 0 0.35rem;
+  font-size: 0.875rem;
+}
+
+.format {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  cursor: pointer;
+}
+
+.stacked {
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.figure {
+  flex: 1 1 auto;
+  min-height: 0;
+  position: relative;
+}

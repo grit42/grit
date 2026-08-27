@@ -984,6 +984,9 @@ importers:
       vite-plugin-lib-inject-css:
         specifier: 'catalog:'
         version: 2.2.2(vite@7.3.5(@types/node@22.19.19)(sass-embedded@1.100.0)(sass@1.100.0)(yaml@2.9.0))
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.8(@types/node@22.19.19)(@vitest/coverage-v8@4.1.8)(happy-dom@20.10.1)(jsdom@25.0.1)(vite@7.3.5(@types/node@22.19.19)(sass-embedded@1.100.0)(sass@1.100.0)(yaml@2.9.0))
 
   packages/frontend/spreadsheet:
     dependencies:
@@ -2791,6 +2794,7 @@ packages:
   '@plotly/mapbox-gl@1.13.4':
     resolution: {integrity: sha512-sR3/Pe5LqT/fhYgp4rT4aSFf1rTsxMbGiH6Hojc7PH36ny5Bn17iVFUjpzycafETURuFbLZUfjODO8LvSI+5zQ==}
     engines: {node: '>=6.4.0'}
+    deprecated: This package is deprecated as of August 2026. plotly.js v4 uses MapLibre for map traces — see https://github.com/maplibre/maplibre-gl-js.
 
   '@plotly/point-cluster@3.1.9':
     resolution: {integrity: sha512-MwaI6g9scKf68Orpr1pHZ597pYx9uP8UEFXLPbsCmuw3a84obwz6pnMXGc90VhgDNeNiLEdlmuK7CPo+5PIxXw==}
@@ -4574,6 +4578,7 @@ packages:
   eslint@9.39.4:
     resolution: {integrity: sha512-XoMjdBOwe/esVgEvLmNsD3IRHkm7fbKIUGvrleloJXUZgDHig2IPWNniv+GwjyJXzuNqVjlr5+4yVUZjycJwfQ==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+    deprecated: This version is no longer supported. Please see https://eslint.org/version-support for other options.
     hasBin: true
     peerDependencies:
       jiti: '*'

@@ -27,10 +27,7 @@ interface PlotEntity<P> {
   plots: Record<string, P>;
 }
 
-interface UsePlotCrudOptions<
-  T extends EntityProperties,
-  P extends { id: string },
-> {
+interface UsePlotCrudOptions<T extends EntityProperties, P extends { id: string }> {
   /** Entity endpoint path, e.g. "grit/assays/data_tables" */
   entityPath: string;
   /** The parent entity holding the plots */
