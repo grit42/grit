@@ -1,5 +1,12 @@
 @use "@grit42/client-library/theme.scss";
 
+.layout {
+  overflow: hidden;
+  &.expanded {
+    grid-template-columns: 1fr 5fr;
+  }
+}
+
 .sidebar {
   flex: 1;
   min-height: 0;

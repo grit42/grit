@@ -25,6 +25,7 @@ import PlotSettings, { type PlotImplementations } from "./PlotSettings";
 import { useColorMap } from "./colors";
 import type { PlotDefinition, PlotSettingsProps } from "./types";
 import styles from "./plotSettingsPanel.module.scss";
+import { classnames } from "@grit42/client-library/utils";
 
 export interface PlotSettingsPanelProps<
   T extends PlotDefinition = PlotDefinition,
@@ -94,7 +95,7 @@ const PlotSettingsPanel = <T extends PlotDefinition>({
     );
 
   return (
-    <SidebarLayout sidebar={sidebar}>
+    <SidebarLayout sidebar={sidebar} className={classnames(styles.layout, {[styles.expanded]: !collapsed})}>
       <div className={styles.plot}>{children}</div>
     </SidebarLayout>
   );
