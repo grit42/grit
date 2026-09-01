@@ -48,11 +48,13 @@
 
   display: grid;
 
-  grid-template-columns: 1fr;
+  grid-template-columns: min-content 1fr;
   grid-template-rows: min-content 1fr;
 }
 
 .appBodyContainer {
+  grid-column: 2 / -1;
+  grid-row: 2 / -1;
   overflow: auto;
   display: grid;
   grid-template-columns: 1fr;

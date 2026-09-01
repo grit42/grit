@@ -22,36 +22,38 @@ $link-height: calc(24px + theme.$spacing * 2);
 }
 
 .navbar {
-  // grid-area: 1 / 1 / -1 / 2;
+  grid-area: 1 / 1 / -1 / 2;
 
   height: 100%;
-  width: $logo-height;
 
+  position: relative;
   display: grid;
   grid-template-columns: 1fr;
-  grid-template-rows: calc($logo-height + 1px) min-content 1fr min-content calc(
-      $link-height + 1px
-    );
+  grid-template-rows: calc($logo-height + 1px) 1fr calc($link-height + 1px);
 
   background-color: theme.$palette-background-surface;
   border-inline-end: 1px solid
     rgb(from theme.$palette-background-contrast-text r g b / 0.1);
 
-  transform: translateX(-100%);
-
   @media (prefers-reduced-motion: no-preference) {
     transition: transform 0.25s ease-in-out;
-  }
-
-  &.show {
-    transform: translateX(0);
   }
 
   .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-inline: theme.$spacing;
+    padding-inline: theme.$spacing;
+    border-block-end: 1px solid
+      rgb(from theme.$palette-background-contrast-text r g b / 0.1);
+  }
+
+  .footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-block-start: 1px solid
+      rgb(from theme.$palette-background-contrast-text r g b / 0.1);
   }
 
   .gritLogo {
@@ -72,9 +74,9 @@ $link-height: calc(24px + theme.$spacing * 2);
     gap: theme.$spacing-sm;
     padding-block: theme.$spacing-md;
   }
+  width: max-content;
 
   &.open {
-    width: 320px;
     .logoLink {
       .gritLogo {
         margin-inline: unset;
@@ -95,14 +97,22 @@ $link-height: calc(24px + theme.$spacing * 2);
   font-weight: normal;
   color: theme.$palette-background-contrast-text !important;
   gap: 0;
-  justify-content: flex-start;
+  justify-content: center;
 
   svg {
-    margin-inline: theme.$spacing;
+    margin: 0;
     height: 24px;
     fill: rgba(
       from theme.$palette-background-contrast-text r g b / 0.8
     ) !important;
+  }
+
+  &.open {
+    justify-content: flex-start;
+
+    svg {
+      margin-inline-end: theme.$spacing;
+    }
   }
 
   &:hover {
@@ -113,9 +123,11 @@ $link-height: calc(24px + theme.$spacing * 2);
 }
 
 .closeButton {
-  width: fit-content;
+  height: 100%;
+  width: 100%;
   background-color: theme.$palette-background-surface !important;
-  padding: theme.$spacing-sm;
+  padding: 0;
+  border-radius: 0;
 
   color: rgba(
     from theme.$palette-background-contrast-text r g b / 0.8
@@ -137,8 +149,7 @@ $link-height: calc(24px + theme.$spacing * 2);
 }
 
 .navLink {
-  padding-block: theme.$spacing-md;
-  padding-inline: theme.$spacing-lg;
+  padding: theme.$spacing-md;
   font-size: 1rem;
   &.active {
     font-weight: bold;

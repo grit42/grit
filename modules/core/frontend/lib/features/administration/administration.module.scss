@@ -16,10 +16,7 @@
   flex-direction: column;
   align-items: stretch;
   overflow: auto;
-  background-color: var(--palette-background-surface);
   padding-block: theme.$spacing-md;
-  border-inline-end: 1px solid
-    rgb(from var(--palette-background-contrast-text) r g b/0.1);
 
   .navGroups {
     list-style: none;
