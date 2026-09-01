@@ -27,7 +27,7 @@ import {
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import styles from "./table.module.scss";
+import styles from "./dataGrid.module.scss";
 
 import TableFooter from "./TableFooter";
 import TableHead from "./TableHead";
@@ -50,6 +50,7 @@ import InternalTableStateContext from "../../features/table-state/InternalTableS
 import useSkipper from "../../useSkipper";
 import PermanentFilters from "../features/filters/PermanentFilters";
 import { ColumnVisibility } from "../features/column-visibility";
+import TableHeader from "./TableHeader";
 
 const FALLBACK_DATA: unknown[] = [];
 const Table = <T,>({
@@ -384,10 +385,8 @@ const Table = <T,>({
               [styles.fitContent]: !!props.fitContent,
             })}
           >
-            <TableFooter
+            <TableHeader
               table={table}
-              loadedRecords={data?.length}
-              totalRecords={props.pagination?.totalRows}
               showFilters={showFilters}
               setShowFilters={setShowFilters}
               showSettings={showSettings}
@@ -428,6 +427,10 @@ const Table = <T,>({
                 />
               </table>
             </div>
+            <TableFooter
+              loadedRecords={data?.length}
+              totalRecords={props.pagination?.totalRows}
+            />
           </div>
           {showSettings && (
             <ColumnVisibility setShowSettings={setShowSettings} />

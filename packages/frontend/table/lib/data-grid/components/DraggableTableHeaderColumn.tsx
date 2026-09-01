@@ -20,7 +20,7 @@ import { flexRender, Header } from "@tanstack/react-table";
 
 import { CSSProperties, useMemo } from "react";
 
-import styles from "./table.module.scss";
+import styles from "./dataGrid.module.scss";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { classnames } from "@grit42/client-library/utils";

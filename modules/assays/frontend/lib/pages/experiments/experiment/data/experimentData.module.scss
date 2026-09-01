@@ -1,7 +1,7 @@
 @use "@grit42/client-library/theme.scss";
 
 .tabs {
-  padding: theme.$spacing-lg;
+  padding: theme.$spacing-md;
   background-color: theme.$palette-primary-main;
 
   ul {

@@ -29,7 +29,7 @@ $link-height: calc(24px + theme.$spacing * 2);
   position: relative;
   display: grid;
   grid-template-columns: 1fr;
-  grid-template-rows: calc($logo-height + 1px) 1fr calc($link-height + 1px);
+  grid-template-rows: auto 1fr auto;
 
   background-color: theme.$palette-background-surface;
   border-inline-end: 1px solid
@@ -40,15 +40,16 @@ $link-height: calc(24px + theme.$spacing * 2);
   }
 
   .header {
+    height: $logo-height;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding-inline: theme.$spacing;
     border-block-end: 1px solid
       rgb(from theme.$palette-background-contrast-text r g b / 0.1);
   }
 
   .footer {
+    height: $logo-height;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -90,10 +91,10 @@ $link-height: calc(24px + theme.$spacing * 2);
 }
 
 .sidebarButton {
-  width: 100%;
-  border-radius: 0;
+  width: stretch;
   background-color: theme.$palette-background-surface !important;
   padding: theme.$spacing-sm;
+  margin-inline: theme.$spacing-sm;
   font-weight: normal;
   color: theme.$palette-background-contrast-text !important;
   gap: 0;
@@ -151,12 +152,16 @@ $link-height: calc(24px + theme.$spacing * 2);
 .navLink {
   padding: theme.$spacing-md;
   font-size: 1rem;
+  font-weight: bold;
   &.active {
-    font-weight: bold;
     color: theme.$palette-background-contrast-text !important;
     svg {
       fill: theme.$palette-secondary-main !important;
     }
+
+    background-color: rgb(
+      from theme.$palette-background-contrast-text r g b / 0.1
+    ) !important;
   }
 
   &:hover {

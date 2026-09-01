@@ -17,6 +17,7 @@
  */
 
 import { ModuleMeta } from "@grit42/core";
+import CompoundIcon from "@grit42/client-library/icons/ViewCompounds";
 
 const Meta: ModuleMeta = {
   identifier: "COMPOUNDS",
@@ -27,6 +28,7 @@ const Meta: ModuleMeta = {
       name: "Compounds",
       path: "/compounds",
       permissions: ["read:system"],
+      icon: CompoundIcon
     },
   ],
 };

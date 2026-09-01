@@ -3,49 +3,10 @@
 .container {
   overflow: auto;
   display: grid;
-  grid-template-rows: min-content 1fr;
+  grid-template-rows: min-content 1fr min-content;
   grid-template-columns: 1fr;
   height: 100%;
   width: 100%;
-}
-
-.header {
-  display: grid;
-  grid-template-columns: max-content 1fr 1fr;
-  margin-bottom: theme.$spacing;
-
-  .title {
-    font-size: 2em;
-    font-family: theme.$title-font-family;
-    color: theme.$palette-background-contrast-text;
-  }
-
-  .rightActions {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-  }
-
-  .leftActions {
-    display: flex;
-    align-items: center;
-
-    &.withTitle {
-      margin-left: theme.$spacing;
-    }
-  }
-
-  .tableMenuTrigger {
-    padding-inline-start: theme.$spacing;
-    svg {
-      height: 100%;
-      fill: rgb(from theme.$palette-primary-contrast-text r g b / 80%);
-
-      &:hover {
-        fill: theme.$palette-primary-contrast-text;
-      }
-    }
-  }
 }
 
 .tableContainer {
@@ -188,12 +149,25 @@
   flex: 1;
 }
 
-.footer {
+.header {
   padding: theme.$spacing;
   gap: theme.$spacing;
   min-height: calc(21px + theme.$spacing * 2);
   display: flex;
   align-items: center;
+  background-color: theme.$palette-primary-main;
+  border-block-end: 1px solid theme.$palette-primary-dark;
+
+  .spacer {
+    flex: 1
+  }
+}
+
+.footer {
+  padding: theme.$spacing-sm;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
   background-color: theme.$palette-primary-main;
   border-block-end: 1px solid theme.$palette-primary-dark;
 

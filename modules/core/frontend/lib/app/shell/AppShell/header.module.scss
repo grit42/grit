@@ -12,8 +12,6 @@ $header-inactive-link: #a4a4a6;
   display: grid;
   grid-auto-rows: auto;
   background-color: theme.$palette-background-surface;
-  border-block-end: 1px solid
-    rgb(from theme.$palette-background-contrast-text r g b / 0.1);
 
   .topbar {
     display: flex;
@@ -21,50 +19,20 @@ $header-inactive-link: #a4a4a6;
     gap: theme.$spacing-lg;
     padding: theme.$spacing;
     padding-inline: theme.$spacing-lg;
-    height: calc(2rem + var(--spacing) * 2);
+    height: calc(32px + theme.$spacing * 2);
+    border-block-end: 1px solid
+      rgb(from theme.$palette-background-contrast-text r g b / 0.1);
   }
 
   .tabs {
     display: flex;
     align-items: center;
-    gap: theme.$spacing-lg;
+    gap: theme.$spacing;
     padding-inline: theme.$spacing-lg;
     padding-bottom: theme.$spacing-sm;
     padding-block-start: 4px;
-    border-block-start: 1px solid
+    border-block-end: 1px solid
       rgb(from theme.$palette-background-contrast-text r g b / 0.1);
-  }
-}
-
-.closeButton {
-  width: fit-content;
-  background-color: theme.$palette-background-surface !important;
-  padding: theme.$spacing-sm;
-
-  color: rgba(
-    from theme.$palette-background-contrast-text r g b / 0.8
-  ) !important;
-
-  svg {
-    margin-inline: 0;
-    height: 24px;
-    fill: rgba(
-      from theme.$palette-background-contrast-text r g b / 0.8
-    ) !important;
-  }
-
-  &:hover {
-    background-color: rgb(
-      from theme.$palette-background-contrast-text r g b / 0.1
-    ) !important;
-  }
-}
-
-.sidebarToggle {
-  padding-block: theme.$spacing-sm;
-  svg {
-    fill: $dark-contrast-text;
-    height: 24px;
   }
 }
 
@@ -81,7 +49,7 @@ $header-inactive-link: #a4a4a6;
   .breadcrumb {
     color: theme.$palette-background-contrast-text;
     padding: theme.$spacing-sm;
-    border-radius: calc(theme.$spacing-md / 2);
+    border-radius: theme.$spacing-sm;
     &:hover {
       background-color: rgba(
         from theme.$palette-background-contrast-text r g b / 0.1
@@ -95,19 +63,6 @@ $header-inactive-link: #a4a4a6;
 
   &.light {
     filter: brightness(0%);
-  }
-}
-
-.right {
-  display: flex;
-  align-items: center;
-  justify-content: space-evenly;
-  gap: 2em;
-  margin-left: auto;
-
-  .marvinIcon {
-    height: calc($navigation-height - 1.5em);
-    fill: $dark-secondary-main !important;
   }
 }
 
@@ -127,6 +82,7 @@ $header-inactive-link: #a4a4a6;
 
 .tab {
   position: relative;
+    padding: theme.$spacing;
   background-color: theme.$palette-background-surface !important;
   &:hover {
     background-color: rgba(

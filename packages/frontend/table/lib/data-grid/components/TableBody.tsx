@@ -19,7 +19,7 @@
 import { Cell, flexRender, Row, Table } from "@tanstack/react-table";
 import { useVirtualizer } from "@tanstack/react-virtual";
 
-import styles from "./table.module.scss";
+import styles from "./dataGrid.module.scss";
 import { useMemo, useRef } from "react";
 import { classnames } from "@grit42/client-library/utils";
 import { Spinner } from "@grit42/client-library/components";

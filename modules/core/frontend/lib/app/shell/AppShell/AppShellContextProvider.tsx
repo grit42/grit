@@ -5,9 +5,10 @@ import {
   BreadcrumbItem,
   HeaderTab,
 } from "./AppShellContext";
+import { useLocalStorage } from "@grit42/client-library/hooks";
 
 const AppShellContextProvider = ({ children }: PropsWithChildren) => {
-  const [navbarOpen, setNavbarOpen] = useState(false);
+  const [navbarOpen, setNavbarOpen] = useLocalStorage("navbar-state", true);
   const openNavbar = useCallback(
     () => setNavbarOpen(() => true),
     [setNavbarOpen],

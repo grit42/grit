@@ -16,35 +16,15 @@
  * @grit42/table. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Table } from "@tanstack/react-table";
-import { Filters } from "../features/filters";
-import useInternalTableState from "../../features/table-state/useInternalTableState";
-import { GritColumnDef, GritTableState } from "../../types";
-import styles from "./table.module.scss";
-import MenuIcon from "@grit42/client-library/icons/Menu";
-import { Button } from "@grit42/client-library/components";
+import styles from "./dataGrid.module.scss";
 
-const TableFooter = <T,>({
+const TableFooter = ({
   loadedRecords,
   totalRecords,
-  table,
-  showFilters,
-  setShowFilters,
-  setShowSettings,
-  actions = null,
 }: {
   loadedRecords?: number;
   totalRecords?: number;
-  table: Table<T>;
-  showFilters: boolean;
-  setShowFilters: React.Dispatch<React.SetStateAction<boolean>>;
-  showSettings: boolean;
-  setShowSettings: React.Dispatch<React.SetStateAction<boolean>>;
-  actions?: React.ReactNode;
 }) => {
-  const { filters, setFilters, columnOrder, columns, columnVisibility } =
-    useInternalTableState<GritTableState<T>>();
-
   let message = "";
   if (
     totalRecords !== undefined &&
@@ -57,38 +37,8 @@ const TableFooter = <T,>({
   }
   return (
     <div className={styles.footer}>
-      {!showFilters && (
-        <Filters
-          columns={
-            columns
-              .filter(({ id }) => columnVisibility[id] ?? true)
-              .sort((a, b) => {
-                const indexA = columnOrder.indexOf(a.id as string);
-                const indexB = columnOrder.indexOf(b.id as string);
-
-                if (indexA < indexB) return -1;
-                if (indexA > indexB) return 1;
-
-                return 0;
-              }) as GritColumnDef[]
-          }
-          filters={filters}
-          setFilters={setFilters}
-          showFilters={showFilters}
-          setShowFilters={setShowFilters}
-          onChange={() => table.setRowSelection({})}
-        />
-      )}
       <div className={styles.spacer} />
-      {actions}
       <span>{message}</span>
-      <Button
-        size="tiny"
-        style={{ padding: "var(--spacing-sm)", height: 24 }}
-        icon={<MenuIcon height={16} />}
-        color="primary"
-        onClick={() => setShowSettings((prev) => !prev)}
-      />
     </div>
   );
 };
