@@ -42,19 +42,15 @@ $link-height: calc(24px + theme.$spacing * 2);
   .header {
     height: $logo-height;
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
-    border-block-end: 1px solid
-      rgb(from theme.$palette-background-contrast-text r g b / 0.1);
   }
 
   .footer {
     height: $logo-height;
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    border-block-start: 1px solid
-      rgb(from theme.$palette-background-contrast-text r g b / 0.1);
+    padding: theme.$spacing;
   }
 
   .gritLogo {
@@ -78,6 +74,10 @@ $link-height: calc(24px + theme.$spacing * 2);
   width: max-content;
 
   &.open {
+    .header {
+      justify-content: flex-start;
+    }
+
     .logoLink {
       .gritLogo {
         margin-inline: unset;
@@ -124,12 +124,10 @@ $link-height: calc(24px + theme.$spacing * 2);
 }
 
 .closeButton {
-  height: 100%;
-  width: 100%;
   background-color: theme.$palette-background-surface !important;
-  padding: 0;
-  border-radius: 0;
-
+  padding: theme.$spacing-sm;
+  flex: 1;
+  justify-content: flex-start;
   color: rgba(
     from theme.$palette-background-contrast-text r g b / 0.8
   ) !important;
