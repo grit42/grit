@@ -16,33 +16,17 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import LocationsTable from "./LocationsTable";
 import styles from "./locations.module.scss";
-import { useNavigate } from "react-router-dom";
-import { useToolbar } from "../../toolbar";
 import { Tabs } from "@grit42/client-library/components";
 import LocationLoadSetsTable from "./LocationsLoadSetsTable";
 import { useLocationAdministrationBreadcrumbs } from "./breadcrumbs";
 
 const LocationsPage = () => {
   const [selectedTab, setSelectedTab] = useState(0);
-  const registerToolbarActions = useToolbar();
-  const navigate = useNavigate();
-  
+
   useLocationAdministrationBreadcrumbs();
-  useEffect(() => {
-    return registerToolbarActions({
-      importItems: [
-        {
-          id: "IMPORT",
-          onClick: () =>
-            navigate(`/core/load_sets/new?entity=Grit::Core::Location`),
-          text: `Import locations`,
-        },
-      ],
-    });
-  }, [navigate, registerToolbarActions]);
 
   return (
     <div className={styles.locationsPage}>

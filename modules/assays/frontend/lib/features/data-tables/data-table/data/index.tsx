@@ -179,6 +179,11 @@ const DataTableDataPage = ({ dataTable }: Props) => {
         dataTableId={dataTable.id}
       />
       <DataGrid
+        headerActions={
+          <Button size="tiny" onClick={() => downloadFile(exportUrl)}>
+            Export
+          </Button>
+        }
         tableState={tableState}
         loading={isRowsLoading && !isFetchingNextPage}
         data={flatData ?? []}

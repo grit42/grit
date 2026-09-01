@@ -82,9 +82,14 @@ export default function OriginsList() {
   return (
     <Table<EntityData>
       headerActions={
-        <Link to="new">
-          <Button>New</Button>
-        </Link>
+        <>
+          <Link to="/core/load_sets/new?entity=Grit::Core::Origin">
+            <Button>Import</Button>
+          </Link>
+          <Link to="new">
+            <Button>New</Button>
+          </Link>
+        </>
       }
       tableState={tableState}
       data={flatData}

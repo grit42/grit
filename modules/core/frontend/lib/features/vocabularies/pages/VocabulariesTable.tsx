@@ -17,10 +17,8 @@
  */
 
 import { GritColumnDef, Table, useSetupTableState } from "@grit42/table";
-import { useCallback, useEffect, useMemo } from "react";
-import { useToolbar } from "../../toolbar";
-import Circle1NewIcon from "@grit42/client-library/icons/Circle1New";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useMemo } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button, ErrorPage } from "@grit42/client-library/components";
 import {
   useInfiniteVocabularies,
@@ -83,10 +81,8 @@ const COLUMNS: GritColumnDef<VocabularyData>[] = [
 
 
 const VocabulariesTable = () => {
-  const registerToolbarActions = useToolbar();
   const navigate = useNavigate();
   const canEditVocabularies = useHasPermission("admin:vocabularies");
-  const { pathname } = useLocation();
 
   const tableState = useSetupTableState(
     "vocabularies-tables",
@@ -117,22 +113,6 @@ const VocabulariesTable = () => {
     () => data?.pages.flatMap(({ data }) => data) ?? [],
     [data],
   );
-
-  const navigateToNew = useCallback(() => navigate("new"), [navigate]);
-
-  useEffect(() => {
-    return registerToolbarActions({
-      actions: [
-        {
-          id: "NEW",
-          icon: <Circle1NewIcon />,
-          label: "New vocabulary",
-          onClick: navigateToNew,
-          disabled: !canEditVocabularies,
-        },
-      ],
-    });
-  }, [registerToolbarActions, navigateToNew, pathname, canEditVocabularies]);
 
   if (isError) {
     return <ErrorPage error={error} />;

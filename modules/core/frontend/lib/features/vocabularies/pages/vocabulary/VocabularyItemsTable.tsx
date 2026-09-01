@@ -24,10 +24,9 @@ import {
   useSetupTableState,
 } from "@grit42/table";
 import styles from "./vocabulary.module.scss";
-import { useEffect, useMemo } from "react";
-import { useToolbar } from "../../../toolbar";
-import { useNavigate } from "react-router-dom";
-import { ErrorPage } from "@grit42/client-library/components";
+import { useMemo } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Button, ErrorPage } from "@grit42/client-library/components";
 import {
   useInfiniteVocabularyItems,
   VocabularyItemData,
@@ -124,7 +123,6 @@ const getExportFileUrl = (
 };
 
 const VocabularyItemsTable = () => {
-  const registerToolbarActions = useToolbar();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { vocabulary, canAdmin } = useVocabularyContext();
@@ -168,36 +166,24 @@ const VocabularyItemsTable = () => {
     vocabulary.id,
   ]);
 
-  useEffect(() => {
-    return registerToolbarActions({
-      importItems: canAdmin
-        ? [
-            {
-              id: "IMPORT ITEMS",
-              text: "Import items",
-              onClick: () =>
-                navigate(
-                  `/core/load_sets/new?entity=Grit::Core::VocabularyItem&vocabulary_id=${vocabulary.id}`,
-                ),
-            },
-          ]
-        : undefined,
-      exportItems: [
-        {
-          id: "EXPORT",
-          onClick: async () => downloadFile(exportUrl),
-          text: `Export items`,
-        },
-      ],
-    });
-  }, [registerToolbarActions, vocabulary.id, navigate, canAdmin, exportUrl]);
-
   if (isError) {
     return <ErrorPage error={error} />;
   }
 
   return (
     <Table
+      headerActions={
+        <>
+          {canAdmin && (
+            <Link
+              to={`/core/load_sets/new?entity=Grit::Core::VocabularyItem&vocabulary_id=${vocabulary.id}`}
+            >
+              <Button>Import</Button>
+            </Link>
+          )}
+          <Button onClick={() => downloadFile(exportUrl)}>Export</Button>
+        </>
+      }
       tableState={tableState}
       loading={isLoading}
       header="Items"

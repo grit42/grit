@@ -17,10 +17,9 @@
  */
 
 import { Table, useSetupTableState } from "@grit42/table";
-import { useCallback, useEffect, useMemo } from "react";
-import { useHasPermission, useToolbar } from "@grit42/core";
-import Circle1NewIcon from "@grit42/client-library/icons/Circle1New";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useCallback, useMemo } from "react";
+import { useHasPermission } from "@grit42/core";
+import { useNavigate } from "react-router-dom";
 import { Button, ErrorPage } from "@grit42/client-library/components";
 import {
   useInfiniteDataTables,
@@ -30,10 +29,8 @@ import { useTableColumns } from "@grit42/core/utils";
 import styles from "./dataTables.module.scss";
 
 const DataTablesTable = () => {
-  const registerToolbarActions = useToolbar();
   const navigate = useNavigate();
   const canManageDataTable = useHasPermission("write:analysis");
-  const { pathname } = useLocation();
   const { data: dataTableColumns } = useDataTableColumns();
 
   const dataTableTableColumns = useTableColumns(dataTableColumns);
@@ -64,20 +61,6 @@ const DataTablesTable = () => {
   );
 
   const navigateToNew = useCallback(() => navigate("new"), [navigate]);
-
-  useEffect(() => {
-    return registerToolbarActions({
-      actions: [
-        {
-          id: "NEW",
-          icon: <Circle1NewIcon />,
-          label: "New Data Table",
-          onClick: navigateToNew,
-          disabled: !canManageDataTable,
-        },
-      ],
-    });
-  }, [registerToolbarActions, navigateToNew, pathname, canManageDataTable]);
 
   if (isError) {
     return <ErrorPage error={error} />;

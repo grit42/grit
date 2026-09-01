@@ -17,9 +17,7 @@
  */
 
 import { GritColumnDef, Table, useSetupTableState } from "@grit42/table";
-import { useCallback, useEffect, useMemo } from "react";
-import { useToolbar } from "@grit42/core";
-import Circle1NewIcon from "@grit42/client-library/icons/Circle1New";
+import { useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@grit42/client-library/components";
 import {
@@ -103,23 +101,10 @@ const COLUMNS: GritColumnDef<AssayMetadataDefinitionData>[] = [
 ];
 
 const AssayMetadataDefinitionsTable = () => {
-  const registerToolbarActions = useToolbar();
   const navigate = useNavigate();
 
   const navigateToNew = useCallback(() => navigate("new"), [navigate]);
 
-  useEffect(() => {
-    return registerToolbarActions({
-      actions: [
-        {
-          id: "NEW",
-          icon: <Circle1NewIcon />,
-          label: "New assay metadata",
-          onClick: navigateToNew,
-        },
-      ],
-    });
-  }, [registerToolbarActions, navigateToNew]);
 
   const tableState = useSetupTableState<AssayMetadataDefinitionData>(
     "admin-assay_metadata_definitions-list",

@@ -16,34 +16,17 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import UnitsTable from "./UnitsTable";
 import styles from "./units.module.scss";
-import { useNavigate } from "react-router-dom";
-import { useToolbar } from "../../toolbar";
 import { Tabs } from "@grit42/client-library/components";
 import UnitLoadSetsTable from "./UnitsLoadSetsTable";
 import { useUnitAdministrationBreadcrumbs } from "./breadcrumbs";
 
 const UnitsPage = () => {
   const [selectedTab, setSelectedTab] = useState(0);
-  const registerToolbarActions = useToolbar();
-  const navigate = useNavigate();
 
   useUnitAdministrationBreadcrumbs();
-
-  useEffect(() => {
-    return registerToolbarActions({
-      importItems: [
-        {
-          id: "IMPORT",
-          onClick: () =>
-            navigate(`/core/load_sets/new?entity=Grit::Core::Unit`),
-          text: `Import units`,
-        },
-      ],
-    });
-  }, [navigate, registerToolbarActions]);
 
   return (
     <div className={styles.unitsPage}>

@@ -112,9 +112,14 @@ export default function LocationsList() {
   return (
     <Table<EntityData>
       headerActions={
-        <Link to="new">
-          <Button>New</Button>
-        </Link>
+        <>
+          <Link to="/core/load_sets/new?entity=Grit::Core::Location">
+            <Button>Import</Button>
+          </Link>
+          <Link to="new">
+            <Button>New</Button>
+          </Link>
+        </>
       }
       tableState={tableState}
       data={flatData}

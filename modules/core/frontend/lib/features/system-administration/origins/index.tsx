@@ -16,32 +16,16 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import OriginsTable from "./OriginsTable";
 import styles from "./origins.module.scss";
-import { useNavigate } from "react-router-dom";
-import { useToolbar } from "../../toolbar";
 import { Tabs } from "@grit42/client-library/components";
 import OriginLoadSetsTable from "./OriginsLoadSetsTable";
 import { useOriginsAdministrationBreadcrumbs } from "./breadcrumbs";
 
 const OriginsPage = () => {
   const [selectedTab, setSelectedTab] = useState(0);
-  const registerToolbarActions = useToolbar();
-  const navigate = useNavigate();
   useOriginsAdministrationBreadcrumbs();
-  useEffect(() => {
-    return registerToolbarActions({
-      importItems: [
-        {
-          id: "IMPORT",
-          onClick: () =>
-            navigate(`/core/load_sets/new?entity=Grit::Core::Origin`),
-          text: `Import origins`,
-        },
-      ],
-    });
-  }, [navigate, registerToolbarActions]);
 
   return (
     <div className={styles.originsPage}>

@@ -88,9 +88,14 @@ export default function UnitsList() {
   return (
     <Table<EntityData>
       headerActions={
-        <Link to="new">
-          <Button>New</Button>
-        </Link>
+        <>
+          <Link to="/core/load_sets/new?entity=Grit::Core::Unit">
+            <Button>Import</Button>
+          </Link>
+          <Link to="new">
+            <Button>New</Button>
+          </Link>
+        </>
       }
       tableState={tableState}
       data={flatData}
