@@ -16,13 +16,12 @@
  * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { Link, Navigate, Route, Routes, useParams } from "react-router-dom";
 import { Button, ErrorPage, Spinner } from "@grit42/client-library/components";
 import Details from "./details";
 import { ExperimentData, useExperiment } from "../../../queries/experiments";
-import { useBreadcrumbs, useTabs, useToolbar } from "@grit42/core";
-import { downloadFile } from "@grit42/client-library/utils";
+import { useBreadcrumbs, useTabs } from "@grit42/core";
 import ExperimentPlots from "./plots";
 import ExperimentLoadSets from "./load-sets";
 import ExperimentAttachements from "./attachments";
@@ -69,37 +68,11 @@ const useExperimentTabs = (experiment?: ExperimentData | null) =>
 
 const Experiment = () => {
   const { experiment_id } = useParams() as { experiment_id: string };
-  const registerToolbarAction = useToolbar();
 
   const { data, isLoading, isError, error } = useExperiment(experiment_id);
 
   useBreadcrumbs(useExperimentBreadcrumbs(data));
   useTabs(useExperimentTabs(data));
-
-  useEffect(() => {
-    if (experiment_id === "new") return;
-    const unregisterToolbarActions = registerToolbarAction({
-      exportItems: [
-        {
-          id: "EXPORT_EXPERIMENT",
-          onClick: async () =>
-            downloadFile(
-              `/api/grit/assays/experiments/${experiment_id}/export`,
-            ),
-          text: "Export experiment",
-        },
-      ],
-    });
-    return () => {
-      unregisterToolbarActions();
-    };
-  }, [
-    data?.assay_model_id,
-    data?.assay_model_id__name,
-    data?.name,
-    experiment_id,
-    registerToolbarAction,
-  ]);
 
   if (isLoading) return <Spinner />;
   if (isError || !data)

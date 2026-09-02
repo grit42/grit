@@ -17,11 +17,11 @@
  */
 
 import { Button, ErrorPage, Spinner } from "@grit42/client-library/components";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { Link, useLocation, useMatch, useNavigate } from "react-router-dom";
 import { useCompound } from "../../../../queries/compounds";
 import { Table, useSetupTableState } from "@grit42/table";
-import { useToolbar, useHasPermission } from "@grit42/core";
+import { useHasPermission } from "@grit42/core";
 import {
   BatchData,
   useCompoundTypeBatchesColumns,
@@ -61,7 +61,6 @@ const CompoundBatches = ({ id }: Props) => {
   const canCrud = useHasPermission("write:compounds");
 
   const navigate = useNavigate();
-  const registerToolbarActions = useToolbar();
   const { pathname } = useLocation();
 
   const destroyBatch = useDestroyBatch();
@@ -121,40 +120,6 @@ const CompoundBatches = ({ id }: Props) => {
     tableState.columnVisibility,
   ]);
 
-  useEffect(() => {
-    return registerToolbarActions({
-      importItems: [
-        {
-          id: "IMPORT_BATCHES",
-          onClick: () =>
-            navigate(`/core/load_sets/new?entity=Grit::Compounds::Batch`),
-          text: "Import batches",
-        },
-      ],
-      import: {
-        requiredPermissions: ["write:compounds"],
-      },
-      export: {
-        requiredPermissions: ["read:system"],
-      },
-      exportItems: [
-        {
-          id: "EXPORT_COMPOUNDS",
-          onClick: async () => downloadFile(exportUrl),
-          text: "Export compounds",
-        },
-      ],
-    });
-  }, [
-    registerToolbarActions,
-    id,
-    pathname,
-    navigate,
-    compound?.compound_type_id,
-    compound?.name,
-    exportUrl,
-  ]);
-
   const flatData = useMemo(
     () => data?.pages.flatMap(({ data }) => data) ?? [],
     [data],
@@ -169,21 +134,29 @@ const CompoundBatches = ({ id }: Props) => {
       loading={isFetching && !isFetchingNextPage}
       header="Batches"
       headerActions={
-        canCrud ? (
-          <Link
-            to="new"
-            state={{
-              redirect: pathname,
-              initialData: {
-                compound_id: id,
-                compound_type_id: compound?.compound_type_id,
-              },
-              title: `Create Batch of ${compound?.name ?? "compound"}`,
-            }}
-          >
-            <Button>New</Button>
-          </Link>
-        ) : undefined
+        <>
+          {canCrud && (
+            <>
+              <Link
+                to="new"
+                state={{
+                  redirect: pathname,
+                  initialData: {
+                    compound_id: id,
+                    compound_type_id: compound?.compound_type_id,
+                  },
+                  title: `Create Batch of ${compound?.name ?? "compound"}`,
+                }}
+              >
+                <Button>New</Button>
+              </Link>
+              <Link to="/core/load_sets/new?entity=Grit::Compounds::Batch">
+                <Button>Import</Button>
+              </Link>
+            </>
+          )}
+          <Button onClick={() => downloadFile(exportUrl)}>Export</Button>
+        </>
       }
       data={flatData}
       tableState={tableState}
@@ -192,19 +165,16 @@ const CompoundBatches = ({ id }: Props) => {
       onRowClick={
         canCrud
           ? (row) =>
-              navigate(
-                `${row.original.id}`,
-                {
-                  state: {
-                    redirect: pathname,
-                    initialData: {
-                      compound_id: id,
-                      compound_type_id: compound?.compound_type_id,
-                    },
-                    title: `Edit Batch of ${compound?.name ?? "compound"}`,
+              navigate(`${row.original.id}`, {
+                state: {
+                  redirect: pathname,
+                  initialData: {
+                    compound_id: id,
+                    compound_type_id: compound?.compound_type_id,
                   },
+                  title: `Edit Batch of ${compound?.name ?? "compound"}`,
                 },
-              )
+              })
           : undefined
       }
       onDelete={async (rows) => {

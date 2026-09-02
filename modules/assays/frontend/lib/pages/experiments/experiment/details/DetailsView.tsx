@@ -1,5 +1,6 @@
 import {
   Button,
+  ButtonGroup,
   ErrorPage,
   Spinner,
   Surface,
@@ -20,6 +21,7 @@ import { ExperimentData, useExperiment } from "../../../../queries/experiments";
 import { useAssayMetadataDefinitions } from "../../../../queries/assay_metadata_definitions";
 import { useMemo } from "react";
 import { Table } from "@grit42/table";
+import { downloadFile } from "@grit42/client-library/utils";
 
 export const usePublishExperimentMutation = (
   id: string | number,
@@ -123,10 +125,12 @@ const MetadataTable = ({ experiment }: { experiment: ExperimentData }) => {
   const metadataDefinitions = useAssayMetadataDefinitions();
   const metadata = useMemo(
     () =>
-      metadataDefinitions.data?.map(({ name, safe_name }) => ({
-        name: name,
-        value: experiment[`${safe_name}__name`],
-      })).filter(({value}) => !!value) ?? [],
+      metadataDefinitions.data
+        ?.map(({ name, safe_name }) => ({
+          name: name,
+          value: experiment[`${safe_name}__name`],
+        }))
+        .filter(({ value }) => !!value) ?? [],
     [experiment, metadataDefinitions.data],
   );
 
@@ -169,15 +173,26 @@ const ExperimentDetails = ({ experiment }: { experiment: ExperimentData }) => {
       <div className={styles.header}>
         <div className={styles.title}>
           <h1>{experiment.name}</h1>
-          {experiment.publication_status_id__name === "Draft" && (
+          <ButtonGroup>
+            {experiment.publication_status_id__name === "Draft" && (
+              <Button
+                color="secondary"
+                onClick={onPublish}
+                loading={publishMutation.isPending}
+              >
+                Publish
+              </Button>
+            )}
             <Button
-              color="secondary"
-              onClick={onPublish}
-              loading={publishMutation.isPending}
+              onClick={() =>
+                downloadFile(
+                  `/api/grit/assays/experiments/${experiment.id}/export`,
+                )
+              }
             >
-              Publish
+              Export
             </Button>
-          )}
+          </ButtonGroup>
         </div>
         <p>{experiment.description ?? "No description provided"}</p>
       </div>

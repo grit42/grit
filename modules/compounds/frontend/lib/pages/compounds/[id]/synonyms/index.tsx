@@ -17,8 +17,8 @@
  */
 
 import { Button, ErrorPage, Spinner } from "@grit42/client-library/components";
-import { useCallback, useEffect, useMemo } from "react";
-import { Link, useLocation, useMatch, useNavigate } from "react-router-dom";
+import { useCallback, useMemo } from "react";
+import { Link, useMatch, useNavigate } from "react-router-dom";
 import { useCompound } from "../../../../queries/compounds";
 import {
   SynonymData,
@@ -26,7 +26,7 @@ import {
   useSynonymsColumns,
 } from "../../../../queries/synonyms";
 import { Table, useSetupTableState } from "@grit42/table";
-import { useToolbar, useHasPermission } from "@grit42/core";
+import { useHasPermission } from "@grit42/core";
 import { useTableColumns } from "@grit42/core/utils";
 import { downloadFile } from "@grit42/client-library/utils";
 import { getFilterParams, getSortParams, getURLParams } from "@grit42/api";
@@ -53,8 +53,6 @@ const CompoundSynonyms = ({ id }: Props) => {
 
   const { data: columns } = useSynonymsColumns();
   const navigate = useNavigate();
-  const registerToolbarActions = useToolbar();
-  const { pathname } = useLocation();
 
   const tableColumns = useTableColumns(columns);
 
@@ -65,8 +63,6 @@ const CompoundSynonyms = ({ id }: Props) => {
       enableColumnOrderReset: true,
     },
   });
-
-  const { data: compound } = useCompound(id);
 
   const {
     data,
@@ -113,39 +109,6 @@ const CompoundSynonyms = ({ id }: Props) => {
     tableState.columnVisibility,
   ]);
 
-  useEffect(() => {
-    return registerToolbarActions({
-      importItems: [
-        {
-          id: "IMPORT_SYNONYMS",
-          onClick: () =>
-            navigate("/core/load_sets/new?entity=Grit::Compounds::Synonym"),
-          text: "Import synonyms",
-        },
-      ],
-      import: {
-        requiredPermissions: ["write:compounds"],
-      },
-      export: {
-        requiredPermissions: ["read:system"],
-      },
-      exportItems: [
-        {
-          id: "EXPORT_COMPOUNDS",
-          onClick: async () => downloadFile(exportUrl),
-          text: "Export compounds",
-        },
-      ],
-    });
-  }, [
-    registerToolbarActions,
-    id,
-    pathname,
-    navigate,
-    compound?.name,
-    exportUrl,
-  ]);
-
   const flatData = useMemo(
     () => data?.pages.flatMap(({ data }) => data) ?? [],
     [data],
@@ -163,11 +126,19 @@ const CompoundSynonyms = ({ id }: Props) => {
       tableState={tableState}
       getRowId={getRowId}
       headerActions={
-        canCrud ? (
-          <Link to="new">
-            <Button>New</Button>
-          </Link>
-        ) : undefined
+        <>
+          {canCrud && (
+            <>
+              <Link to="new">
+                <Button>New</Button>
+              </Link>
+              <Link to="/core/load_sets/new?entity=Grit::Compounds::Synonym">
+                <Button>Import</Button>
+              </Link>
+            </>
+          )}
+          <Button onClick={() => downloadFile(exportUrl)}>Export</Button>
+        </>
       }
       onRowClick={canCrud ? (row) => navigate(row.id) : undefined}
       pagination={{

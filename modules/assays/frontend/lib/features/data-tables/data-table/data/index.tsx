@@ -23,9 +23,8 @@ import {
   DataGrid,
   useSetupTableState,
 } from "@grit42/table";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useToolbar, useHasPermission } from "@grit42/core";
-import { Link, useNavigate } from "react-router-dom";
+import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { useTableColumns } from "@grit42/core/utils";
 import {
   useDataTableRowColumns,
@@ -64,9 +63,6 @@ interface ClickedCellInfo {
 }
 
 const DataTableDataPage = ({ dataTable }: Props) => {
-  const registerToolbarActions = useToolbar();
-  const navigate = useNavigate();
-  const canEditDataTable = useHasPermission("write:analysis");
   const [clickedCell, setClickedCell] = useState<ClickedCellInfo | null>(null);
 
   const { data: columns } = useDataTableRowColumns({
@@ -96,8 +92,6 @@ const DataTableDataPage = ({ dataTable }: Props) => {
     () => rows?.pages.flatMap(({ data }) => data) ?? [],
     [rows],
   );
-
-  const navigateToNew = useCallback(() => navigate("new"), [navigate]);
 
   const exportUrl = useMemo(() => {
     const columnIds = tableState.columnOrder.filter(
@@ -130,25 +124,6 @@ const DataTableDataPage = ({ dataTable }: Props) => {
         .map((c) => c.id),
     [tableColumns],
   );
-
-  useEffect(() => {
-    return registerToolbarActions({
-      exportItems: [
-        {
-          id: "EXPORT",
-          onClick: async () => downloadFile(exportUrl),
-          text: `Export items`,
-        },
-      ],
-    });
-  }, [
-    registerToolbarActions,
-    navigateToNew,
-    dataTable.id,
-    navigate,
-    canEditDataTable,
-    exportUrl,
-  ]);
 
   if (
     !isRowsLoading &&
