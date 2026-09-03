@@ -364,7 +364,7 @@ const ExperimentForm = ({
     <Form
       form={form}
       className={classnames(styles.container, {
-        [styles.withMetadataTemplates]: !experiment.assay_id,
+        [styles.withMetadataTemplates]: !experiment.id,
       })}
     >
       <Surface className={styles.form}>
@@ -386,9 +386,8 @@ const ExperimentForm = ({
           />
         </div>
         <FormControls
-          showCancel
-          cancelLabel={experiment.id ? "Back" : "Cancel"}
-          onCancel={() => navigate(experiment.id ? "../../.." : "../..")}
+          showCancel={!experiment.id}
+          onCancel={() => navigate("../..")}
         />
         {experiment.id && <ExperimentActions experiment={experiment} />}
       </Surface>

@@ -1,0 +1,49 @@
+.section {
+  border-bottom: 1px solid var(--border-color, rgb(128 128 128 / 0.25));
+
+  &:last-of-type {
+    border-bottom: none;
+  }
+}
+
+.summary {
+  cursor: pointer;
+  padding: 0.6rem 0.25rem;
+  font-weight: 600;
+  user-select: none;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+
+  // The default marker is inconsistent across browsers.
+  &::-webkit-details-marker {
+    display: none;
+  }
+
+  &::before {
+    content: "▸";
+    font-size: 0.75em;
+    transition: transform 120ms ease;
+  }
+}
+
+.section[open] > .summary::before {
+  transform: rotate(90deg);
+}
+
+.heading {
+  composes: summary;
+  cursor: default;
+
+  &::before {
+    content: none;
+  }
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0 0.25rem 0.75rem;
+}

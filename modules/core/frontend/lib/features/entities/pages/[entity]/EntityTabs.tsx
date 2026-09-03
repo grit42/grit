@@ -16,35 +16,17 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useEntity } from "../../queries";
-import { useLocation, useNavigate } from "react-router-dom";
 import { ErrorPage, Spinner, Tabs } from "@grit42/client-library/components";
 import styles from "../entities.module.scss";
-import { useToolbar } from "../../../toolbar";
 import { EntityTableWrapper } from "./EntityTable";
 import LoadSetTable from "./LoadSetTable";
 import { PageLayout } from "@grit42/client-library/layouts";
 
 const EntityTabs = ({ entity }: { entity: string }) => {
-  const pathname = useLocation().pathname;
   const { data, isLoading, isError, error } = useEntity(entity);
   const [selectedTab, setSelectedTab] = useState(0);
-
-  const registerToolbarActions = useToolbar();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    return registerToolbarActions({
-      importItems: [
-        {
-          id: "IMPORT",
-          onClick: () => navigate(`/core/load_sets/new?entity=${entity}`),
-          text: `Import ${entity}`,
-        },
-      ],
-    });
-  }, [entity, pathname, data, navigate, registerToolbarActions]);
 
   if (isLoading) {
     return <Spinner />;

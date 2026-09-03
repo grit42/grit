@@ -26,7 +26,7 @@ import {
   useExperimentDataSheetRecordColumns,
 } from "../../../../queries/experiment_data_sheet_records";
 import { useTableColumns } from "@grit42/core/utils";
-import { Filter, Table, useSetupTableState } from "@grit42/table";
+import { Filter, DataGrid, useSetupTableState } from "@grit42/table";
 import { useInfiniteAssayModelDataSheetRecords } from "../../../../queries/assay_models";
 
 const getRowId = (data: ExperimentDataSheetRecordData) => data.id.toString();
@@ -77,7 +77,7 @@ const ExperimentDataSheetRecords = ({
   );
 
   return (
-    <Table
+    <DataGrid
       getRowId={getRowId}
       tableState={tableState}
       onRowClick={({ original }) =>

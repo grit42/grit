@@ -1,0 +1,7 @@
+@use "@grit42/client-library/theme.scss";
+
+.dataTablesTable {
+  padding-top: theme.$spacing-xl;
+  padding-inline: theme.$spacing-xl;
+  margin-inline: auto;
+}

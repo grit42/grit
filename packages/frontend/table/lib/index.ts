@@ -19,6 +19,7 @@
 export * from "@tanstack/react-table";
 
 export { default as Table } from "./components/Table";
+export { default as DataGrid } from "./data-grid/components/Table";
 
 export { default as useSetupTableState } from "./features/table-state/useSetupTableState";
 

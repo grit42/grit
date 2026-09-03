@@ -1,0 +1,97 @@
+/**
+ * Copyright 2025 grit42 A/S. <https://grit42.com/>
+ *
+ * This file is part of @grit42/assays.
+ *
+ * @grit42/assays is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or  any later version.
+ *
+ * @grit42/assays is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+@use "@grit42/client-library/theme.scss";
+
+.assayModelContainer {
+  display: grid;
+  overflow: auto;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+  gap: theme.$spacing-lg;
+  padding: theme.$spacing-xl;
+
+  &.dangerousEditMode {
+    grid-template-rows: max-content 1fr;
+  }
+}
+
+.outletContainer {
+  display: grid;
+  padding-inline: theme.$spacing-xl;
+  padding-bottom: theme.$spacing-xl;
+}
+
+.dangerousEditModeBanner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: rgb(from theme.$palette-error-main r g b / 0.25);
+  border: 2px solid theme.$palette-error-main;
+  border-radius: theme.$border-radius;
+  padding: theme.$spacing-lg;
+}
+
+.heading {
+  display: grid;
+  grid-template-columns: 1fr;
+  padding: theme.$spacing-xl;
+  padding-bottom: 0;
+
+  .header {
+    display: flex;
+    align-items: center;
+    gap: theme.$spacing;
+  }
+}
+
+.tabs {
+  margin-inline: theme.$spacing-xl;
+  border-bottom: 1px solid
+    rgb(from var(--palette-background-contrast-text) r g b / 0.5);
+
+  .tabContainer {
+    list-style: none;
+    display: flex;
+    margin-bottom: -1px;
+
+    a {
+      background-color: transparent;
+      border: 1px solid transparent;
+      border-bottom: 0;
+
+      &:global(.active) {
+        background-color: theme.$palette-background-default;
+        border: 1px solid
+          rgb(from var(--palette-background-contrast-text) r g b / 0.5);
+        border-bottom: 1px solid transparent;
+        border-top-right-radius: theme.$border-radius;
+        border-top-left-radius: theme.$border-radius;
+      }
+    }
+
+    button {
+      background-color: transparent;
+      border: 0;
+      cursor: pointer;
+      padding: theme.$spacing;
+      font-family: theme.$body-font-family !important;
+      font-weight: bold;
+    }
+  }
+}

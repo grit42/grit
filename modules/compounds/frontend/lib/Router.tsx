@@ -19,8 +19,15 @@
 import { AuthGuard } from "@grit42/core";
 import { lazy } from "react";
 import { Navigate, Outlet, Route, Routes } from "react-router-dom";
+import NewBatchPage from "./pages/compounds/[id]/batches/NewBatchPage";
+import BatchPage from "./pages/compounds/[id]/batches/BatchPage";
+import NewSynonymPage from "./pages/compounds/[id]/synonyms/NewSynonymPage";
+import SynonymPage from "./pages/compounds/[id]/synonyms/SynonymPage";
 
 const LazyCompoundsPage = lazy(() => import("./pages/compounds"));
+const LazyNewCompoundPage = lazy(
+  () => import("./pages/compounds/NewCompoundPage"),
+);
 
 const LazyCompoundPage = lazy(() => import("./pages/compounds/[id]"));
 const LazyCompoundDetailsPage = lazy(
@@ -54,6 +61,14 @@ const Router = () => {
             </AuthGuard>
           }
         />
+        <Route
+          path="new"
+          element={
+            <AuthGuard>
+              <LazyNewCompoundPage />
+            </AuthGuard>
+          }
+        />
 
         <Route
           path=":id"
@@ -64,8 +79,16 @@ const Router = () => {
           }
         >
           <Route path="details" element={<LazyCompoundDetailsPage />} />
-          <Route path="batches" element={<LazyCompoundBatchesPage />} />
-          <Route path="synonyms" element={<LazyCompoundSynonymsPage />} />
+          <Route path="batches">
+            <Route index element={<LazyCompoundBatchesPage />} />
+            <Route path="new" element={<NewBatchPage />} />
+            <Route path=":batch_id" element={<BatchPage />} />
+          </Route>
+          <Route path="synonyms">
+            <Route index  element={<LazyCompoundSynonymsPage />} />
+            <Route path="new" element={<NewSynonymPage />} />
+            <Route path=":synonym_id" element={<SynonymPage />} />
+          </Route>
           <Route
             index
             path="*"

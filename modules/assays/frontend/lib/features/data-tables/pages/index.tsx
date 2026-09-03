@@ -19,12 +19,14 @@
 import { Outlet, Route, Routes } from "react-router-dom";
 import DataTables from "../data-tables";
 import DataTable from "../data-table";
+import NewDataTablePage from "../data-table/NewDataTablePage";
 
 const DataTablesTab = () => {
   return (
     <Routes>
       <Route element={<Outlet />}>
         <Route index element={<DataTables />} />
+        <Route path="new" element={<NewDataTablePage />} />
         <Route path=":data_table_id">
           <Route index path="*" element={<DataTable />} />
         </Route>

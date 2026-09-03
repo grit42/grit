@@ -20,12 +20,11 @@ import {
   Filter,
   getIsFilterActive,
   SortingState,
-  Table,
+  DataGrid,
   useSetupTableState,
 } from "@grit42/table";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useToolbar, useHasPermission } from "@grit42/core";
-import { Link, useNavigate } from "react-router-dom";
+import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { useTableColumns } from "@grit42/core/utils";
 import {
   useDataTableRowColumns,
@@ -39,9 +38,10 @@ import {
   ErrorPage,
 } from "@grit42/client-library/components";
 import FullPerspectiveDialog from "./FullPerspectiveDialog";
+import { DataTableData } from "../../queries/data_tables";
 
 interface Props {
-  dataTableId: string | number;
+  dataTable: DataTableData;
 }
 
 const getExportFileUrl = (
@@ -62,21 +62,17 @@ interface ClickedCellInfo {
   column: string;
 }
 
-const DataTableData = ({ dataTableId }: Props) => {
-  const registerToolbarActions = useToolbar();
-  const navigate = useNavigate();
-  const canEditDataTable = useHasPermission("write:analysis");
-
+const DataTableDataPage = ({ dataTable }: Props) => {
   const [clickedCell, setClickedCell] = useState<ClickedCellInfo | null>(null);
 
   const { data: columns } = useDataTableRowColumns({
-    data_table_id: dataTableId,
+    data_table_id: dataTable.id,
   });
 
   const tableColumns = useTableColumns(columns);
 
   const tableState = useSetupTableState(
-    `data-table-${dataTableId}`,
+    `data-table-${dataTable.id}`,
     tableColumns,
   );
 
@@ -86,21 +82,16 @@ const DataTableData = ({ dataTableId }: Props) => {
     isFetchingNextPage,
     fetchNextPage,
   } = useInfiniteDataTableRows(
-    dataTableId.toString(),
+    dataTable.id.toString(),
     tableState.sorting,
     tableState.filters,
     undefined,
-    {
-      enabled: dataTableId !== "new",
-    },
   );
 
   const flatData = useMemo(
     () => rows?.pages.flatMap(({ data }) => data) ?? [],
     [rows],
   );
-
-  const navigateToNew = useCallback(() => navigate("new"), [navigate]);
 
   const exportUrl = useMemo(() => {
     const columnIds = tableState.columnOrder.filter(
@@ -110,7 +101,7 @@ const DataTableData = ({ dataTableId }: Props) => {
     );
 
     return getExportFileUrl(
-      `/api/grit/assays/data_tables/${dataTableId}/data_table_rows`,
+      `/api/grit/assays/data_tables/${dataTable.id}/data_table_rows`,
       tableState.filters,
       tableState.sorting,
       columnIds,
@@ -120,7 +111,7 @@ const DataTableData = ({ dataTableId }: Props) => {
     tableState.filters,
     tableState.sorting,
     tableState.columnVisibility,
-    dataTableId,
+    dataTable.id,
     tableColumns,
   ]);
 
@@ -134,25 +125,6 @@ const DataTableData = ({ dataTableId }: Props) => {
     [tableColumns],
   );
 
-  useEffect(() => {
-    return registerToolbarActions({
-      exportItems: [
-        {
-          id: "EXPORT",
-          onClick: async () => downloadFile(exportUrl),
-          text: `Export items`,
-        },
-      ],
-    });
-  }, [
-    registerToolbarActions,
-    navigateToNew,
-    dataTableId,
-    navigate,
-    canEditDataTable,
-    exportUrl,
-  ]);
-
   if (
     !isRowsLoading &&
     flatData?.length == 0 &&
@@ -161,10 +133,10 @@ const DataTableData = ({ dataTableId }: Props) => {
     return (
       <ErrorPage error="Add entities and columns to see data">
         <ButtonGroup>
-          <Link to="../entities/edit">
+          <Link to="../settings/entities/edit">
             <Button>Add entities</Button>
           </Link>
-          <Link to="../columns/assay/select">
+          <Link to="../settings/assay-columns/select">
             <Button>Add columns</Button>
           </Link>
         </ButtonGroup>
@@ -179,9 +151,14 @@ const DataTableData = ({ dataTableId }: Props) => {
         id={clickedCell?.id}
         onClose={() => setClickedCell(null)}
         columns={tableColumns}
-        dataTableId={dataTableId}
+        dataTableId={dataTable.id}
       />
-      <Table
+      <DataGrid
+        headerActions={
+          <Button size="tiny" onClick={() => downloadFile(exportUrl)}>
+            Export
+          </Button>
+        }
         tableState={tableState}
         loading={isRowsLoading && !isFetchingNextPage}
         data={flatData ?? []}
@@ -200,4 +177,4 @@ const DataTableData = ({ dataTableId }: Props) => {
   );
 };
 
-export default DataTableData;
+export default DataTableDataPage;

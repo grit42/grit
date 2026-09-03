@@ -7,7 +7,7 @@ import {
 import { Table, useSetupTableState } from "@grit42/table";
 import { useTableColumns } from "@grit42/core/utils";
 import { useParams } from "react-router-dom";
-import { CenteredColumnLayout } from "@grit42/client-library/layouts";
+import styles from "./metadataDefinitions.module.scss";
 
 const AssayModelMetadataTable = ({
   columns,
@@ -39,20 +39,26 @@ const AssayModelMetadataTable = ({
     tableState.filters,
   );
 
-  return (
-    <CenteredColumnLayout>
-      <Table
-        loading={isModelMetadataLoading}
-        tableState={tableState}
-        fitContent
-        disableFooter
-        data={modelMetadata}
-        noDataMessage={
-          (isModelMetadataError ? modelMetadataError : undefined) ??
-          "This assay model does not define any metadata"
+  if (isModelMetadataError || modelMetadata?.length === 0) {
+    return (
+      <ErrorPage
+        error={
+          modelMetadataError ?? "This assay model does not define any metadata"
         }
       />
-    </CenteredColumnLayout>
+    );
+  }
+
+  return (
+    <Table
+      header="Metadata definitions"
+      className={styles.metadataDefinitionsTable}
+      loading={isModelMetadataLoading}
+      tableState={tableState}
+      fitContent
+      disableFooter
+      data={modelMetadata}
+    />
   );
 };
 

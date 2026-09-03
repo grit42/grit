@@ -16,36 +16,19 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useEntityColumns, useInfiniteEntityData } from "../../queries";
 import {
   useCreateEntityMutation,
   useDestroyEntityMutation,
 } from "../../mutations";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { getFilterParams, getSortParams, getURLParams } from "@grit42/api";
-import Circle1New from "@grit42/client-library/icons/Circle1New";
 import { Row, Table, useSetupTableState } from "@grit42/table";
 import { EntityData, EntityInfo } from "../../types";
 import { Button, ErrorPage, Spinner } from "@grit42/client-library/components";
-import { useToolbar } from "../../../toolbar";
 import { useTableColumns } from "../../../../utils";
-import { downloadFile } from "@grit42/client-library/utils";
 import { useHasPermission } from "../../../auth";
 import { CenteredColumnLayout } from "@grit42/client-library/layouts";
-
-const getExportFileUrl = (
-  path: string,
-  filters: any,
-  sort: any,
-  columns: string[],
-) => {
-  return `${path}/export?${getURLParams({
-    ...getSortParams(sort ?? []),
-    ...getFilterParams(filters ?? []),
-    columns,
-  })}`;
-};
 
 export const EntityTableWrapper = (props: EntityInfo) => {
   const { isLoading } = useEntityColumns(props.full_name);
@@ -62,7 +45,6 @@ const EntityTable = ({ full_name, path, name, plural }: EntityInfo) => {
   const pathname = useLocation().pathname;
 
   const navigate = useNavigate();
-  const registerToolbarActions = useToolbar();
   const cloneEntityMutation = useCreateEntityMutation(path);
   const destroyEntityMutation = useDestroyEntityMutation(path);
 
@@ -93,63 +75,6 @@ const EntityTable = ({ full_name, path, name, plural }: EntityInfo) => {
       },
     },
   );
-
-  const exportUrl = useMemo(() => {
-    const columnIds = tableState.columnOrder.filter(
-      (c) =>
-        (tableState.columnVisibility[c] ?? true) &&
-        !!tableColumns.find(({ id }) => c === id),
-    );
-
-    return getExportFileUrl(
-      `/api/${path}`,
-      tableState.filters,
-      tableState.sorting,
-      columnIds,
-    );
-  }, [
-    path,
-    tableColumns,
-    tableState.filters,
-    tableState.sorting,
-    tableState.columnOrder,
-    tableState.columnVisibility,
-  ]);
-
-  useEffect(() => {
-    return registerToolbarActions({
-      exportItems: [
-        {
-          id: "EXPORT",
-          onClick: async () => downloadFile(exportUrl),
-          text: `Export ${plural}`,
-        },
-      ],
-      actions: [
-        {
-          id: "NEW_ENTITY",
-          icon: <Circle1New />,
-          label: "New",
-          onClick: () =>
-            navigate(`/core/entities/${full_name}/new`, {
-              state: {
-                redirect: pathname,
-              },
-            }),
-          requiredPermissions: ["admin:system"],
-        },
-      ],
-    });
-  }, [
-    name,
-    full_name,
-    path,
-    plural,
-    pathname,
-    navigate,
-    registerToolbarActions,
-    exportUrl,
-  ]);
 
   const {
     data,

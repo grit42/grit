@@ -18,7 +18,12 @@
 
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { Button, ErrorPage, Spinner } from "@grit42/client-library/components";
+import {
+  Button,
+  ErrorPage,
+  Spinner,
+  Surface,
+} from "@grit42/client-library/components";
 import { useQueryClient } from "@grit42/api";
 import {
   useCreateEntityMutation,
@@ -38,8 +43,9 @@ import {
   getVisibleFieldData,
   useForm,
 } from "@grit42/form";
-import { CenteredSurface } from "@grit42/client-library/layouts";
 import { BatchPropertyData } from "../../../../queries/batches";
+import styles from "./compoundTypeManager.module.scss";
+import BackIcon from "@grit42/client-library/icons/Circle2Togglebackward";
 
 const BatchPropertyForm = ({
   fields,
@@ -50,8 +56,10 @@ const BatchPropertyForm = ({
 }) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [formData, setFormData] =
-    useState<Partial<BatchPropertyData>>(batchProperty);
+  const [formData, setFormData] = useState<Partial<BatchPropertyData>>({
+    required: false,
+    ...batchProperty,
+  });
 
   const createEntityMutation = useCreateEntityMutation<BatchPropertyData>(
     "grit/compounds/batch_properties",
@@ -88,12 +96,13 @@ const BatchPropertyForm = ({
         );
         setFormData(newEntity);
         formApi.reset();
-        navigate("../..");
+        navigate("../..", { relative: "path" });
       } else {
         setFormData(
           await editEntityMutation.mutateAsync(value as BatchPropertyData),
         );
         formApi.reset();
+        navigate("..");
       }
     }),
   });
@@ -111,24 +120,42 @@ const BatchPropertyForm = ({
   };
 
   return (
-    <CenteredSurface>
-      <h2>{`${batchProperty.id ? "Edit" : "New"} batch property`}</h2>
-      <Form form={form}>
-        <FormFields>
-          <FormBanner content={form.state.errorMap.onSubmit} />
-          {fields.map((f) => (
-            <FormField fieldDef={f} key={f.name} />
-          ))}
-        </FormFields>
-        <FormControls
-          onDelete={onDelete}
-          showDelete={!!batchProperty.id}
-          showCancel
-          cancelLabel={batchProperty.id ? "Back" : "Cancel"}
-          onCancel={() => navigate("..")}
-        />
-      </Form>
-    </CenteredSurface>
+    <div className={styles.formPage}>
+      <div className={styles.header}>
+        {!!batchProperty.id && (
+          <Link to="../.." relative="path">
+            <Button
+              variant="transparent"
+              size="tiny"
+              icon={
+                <BackIcon
+                  height={24}
+                  fill="var(--palette-background-contrast-text)"
+                />
+              }
+            ></Button>
+          </Link>
+        )}
+        <h1>{`${batchProperty.id ? "Edit" : "New"} batch property`}</h1>
+      </div>
+      <Surface>
+        <Form form={form}>
+          <FormFields>
+            <FormBanner content={form.state.errorMap.onSubmit} />
+            {fields.map((f) => (
+              <FormField fieldDef={f} key={f.name} />
+            ))}
+          </FormFields>
+          <FormControls
+            onDelete={onDelete}
+            showDelete={!!batchProperty.id}
+            showCancel={!batchProperty.id}
+            cancelLabel="Cancel"
+            onCancel={() => navigate("..")}
+          />
+        </Form>
+      </Surface>
+    </div>
   );
 };
 

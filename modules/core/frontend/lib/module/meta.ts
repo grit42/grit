@@ -17,6 +17,8 @@
  */
 
 import { ModuleMeta } from "../app";
+import VocabularyIcon from "@grit42/client-library/icons/Batches";
+import AdministrationIcon from "@grit42/client-library/icons/UserSettings";
 
 const Meta: ModuleMeta = {
   identifier: "core",
@@ -27,12 +29,14 @@ const Meta: ModuleMeta = {
       name: "Vocabularies",
       path: "/core/vocabularies",
       permissions: ["read:system"],
+      icon: VocabularyIcon
     },
     {
-      identifier: "ADMIN",
+      identifier: "ADMINISTRATION",
       name: "Administration",
       path: "/core/administration",
-      permissions: ["admin:system", "admin:users"],
+      permissions: ["admin:system","admin:users"],
+      icon: AdministrationIcon
     },
   ],
 };

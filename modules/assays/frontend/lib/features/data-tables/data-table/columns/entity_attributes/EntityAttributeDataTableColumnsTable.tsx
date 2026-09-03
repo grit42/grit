@@ -28,7 +28,6 @@ import {
 } from "../../../queries/data_table_columns";
 import { Button } from "@grit42/client-library/components";
 import { useQueryClient } from "@grit42/api";
-import { CenteredColumnLayout } from "@grit42/client-library/layouts";
 
 interface Props {
   dataTableId: string | number;
@@ -92,8 +91,8 @@ const EntityAttributeDataTableColumnsTable = ({ dataTableId }: Props) => {
   );
 
   return (
-    <CenteredColumnLayout>
       <Table
+        header="Entity attribute columns"
         tableState={tableState}
         onRowClick={navigateToEdit}
         rowActions={canEditDataTable ? ["delete"] : []}
@@ -145,7 +144,6 @@ const EntityAttributeDataTableColumnsTable = ({ dataTableId }: Props) => {
           totalRows: data?.pages[0]?.total,
         }}
       />
-    </CenteredColumnLayout>
   );
 };
 

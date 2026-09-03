@@ -1,0 +1,8 @@
+@use "@grit42/client-library/theme.scss";
+
+.settingsPage {
+    padding-top: theme.$spacing-xl;
+    padding-inline: theme.$spacing-xl;
+    display: grid;
+    overflow: auto;
+}

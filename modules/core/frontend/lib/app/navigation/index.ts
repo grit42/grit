@@ -4,4 +4,5 @@ export interface NavItem {
   path: string;
   roles?: string[];
   permissions?: string[];
+  icon?: React.ComponentType<{ height: number }>;
 }

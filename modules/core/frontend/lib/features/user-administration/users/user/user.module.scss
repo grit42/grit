@@ -1,0 +1,43 @@
+@use "@grit42/client-library/theme.scss";
+
+.userPage {
+  padding-top: theme.$spacing-xl;
+  padding-inline: theme.$spacing-xl;
+  display: grid;
+  grid-template-columns: minmax(100%, 80ch);
+  grid-template-rows: min-content max-content;
+  margin-inline: auto;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: theme.$spacing;
+}
+
+.userForm {
+  width: auto;
+}
+
+.divider {
+  margin-top: calc(theme.$spacing * 4);
+  margin-bottom: calc(theme.$spacing * 2);
+  height: 1px;
+  background-color: rgb(
+    from var(--palette-background-contrast-text) r g b / 20%
+  );
+}
+
+.actionSection {
+  display: grid;
+  grid-template-columns: 1fr max-content;
+  align-items: center;
+  gap: theme.$spacing;
+  margin-block: calc(theme.$spacing * 4);
+
+  .actionContent {
+    display: flex;
+    flex-direction: column;
+    gap: theme.$spacing;
+  }
+}

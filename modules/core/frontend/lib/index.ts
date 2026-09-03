@@ -59,6 +59,7 @@ export type {
 } from "./features/entities";
 
 export * from "./features/importer";
+export * from "./features/administration";
 
 export { useToolbar } from "./features/toolbar";
 
@@ -66,7 +67,7 @@ export * from "./features/publication-status";
 
 export * from "./components";
 
-export { App } from "./app";
+export { App, useBreadcrumbs, useTabs } from "./app";
 export type { GritModule, NavItem, ModuleMeta } from "./app";
 
 import CoreModule from "./module";

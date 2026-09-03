@@ -217,7 +217,9 @@ const SortableMultiselect = <T,>({
   };
 
   const onDone = () => {
-    const stillSelected = selected.filter((o) => pendingSelection.has(o.value));
+    const stillSelected = selected.filter((o) =>
+      pendingSelection.has(o.value),
+    );
     const selectedSet = new Set(selected.map((o) => o.value));
     const newlySelected = options.filter(
       (o) => pendingSelection.has(o.value) && !selectedSet.has(o.value),

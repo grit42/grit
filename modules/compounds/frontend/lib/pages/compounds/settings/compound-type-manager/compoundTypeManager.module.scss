@@ -1,3 +1,5 @@
+@use "@grit42/client-library/theme.scss";
+
 .compoundTypeManagerGrid {
   position: relative;
   width: 100%;
@@ -13,6 +15,9 @@
     "a b"
     "a c";
 
+  padding-top: theme.$spacing-xl;
+  padding-inline: theme.$spacing-xl;
+
   .typesTable {
     grid-area: a;
   }
@@ -21,5 +26,20 @@
   }
   .batchPropertiesTable {
     grid-area: c;
+  }
+}
+
+.formPage {
+  padding-top: theme.$spacing-xl;
+  padding-inline: theme.$spacing-xl;
+  display: grid;
+  grid-template-columns: minmax(100%, 80ch);
+  grid-template-rows: min-content max-content;
+  margin-inline: auto;
+
+  .header {
+    display: flex;
+    align-items: center;
+    gap: theme.$spacing;
   }
 }

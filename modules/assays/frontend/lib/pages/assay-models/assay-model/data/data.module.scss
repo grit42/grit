@@ -18,6 +18,19 @@
 
 @use "@grit42/client-library/theme.scss";
 
+.tabs {
+  padding: theme.$spacing-lg;
+  background-color: theme.$palette-primary-main;
+
+  ul {
+    margin-bottom: 0 !important;
+  }
+}
+
+.container {
+  gap: 0;
+}
+
 .metadataFilters {
   display: grid;
   grid-template-columns: 20vw;
@@ -26,6 +39,8 @@
   overflow: auto;
   grid-row-start: 1;
   grid-row-end: -1;
+  border-radius: 0;
+  border-inline-end: 1px solid theme.$palette-primary-dark;
 
   .buttonGroup {
     display: flex;

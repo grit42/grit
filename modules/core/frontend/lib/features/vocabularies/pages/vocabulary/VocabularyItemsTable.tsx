@@ -16,31 +16,98 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Filter, SortingState, Table, useSetupTableState } from "@grit42/table";
+import {
+  Filter,
+  GritColumnDef,
+  SortingState,
+  Table,
+  useSetupTableState,
+} from "@grit42/table";
 import styles from "./vocabulary.module.scss";
-import { useCallback, useEffect, useMemo } from "react";
-import { useToolbar } from "../../../toolbar";
-import Circle1NewIcon from "@grit42/client-library/icons/Circle1New";
+import { useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button, ErrorPage } from "@grit42/client-library/components";
-import { useTableColumns } from "../../../../utils";
 import {
-  useVocabularyItemColumns,
   useInfiniteVocabularyItems,
+  VocabularyItemData,
 } from "../../queries/vocabulary_items";
-import { useDestroyEntityMutation } from "../../../entities";
 import {
   getFilterParams,
   getSortParams,
   getURLParams,
   useQueryClient,
 } from "@grit42/api";
-import { useHasPermission } from "../../../auth";
 import { downloadFile } from "@grit42/client-library/utils";
+import { useVocabularyContext } from "./vocabularyContext";
 
-interface Props {
-  vocabularyId: string | number;
-}
+const COLUMNS: GritColumnDef<VocabularyItemData>[] = [
+  {
+    id: "id",
+    accessorKey: "id",
+    header: "Id",
+    type: "integer",
+    defaultVisibility: "hidden",
+  },
+  {
+    id: "created_by",
+    accessorKey: "created_by",
+    header: "Created by",
+    type: "string",
+    defaultVisibility: "hidden",
+  },
+  {
+    id: "created_at",
+    accessorKey: "created_at",
+    header: "Created at",
+    type: "datetime",
+    defaultVisibility: "hidden",
+  },
+  {
+    id: "updated_by",
+    accessorKey: "updated_by",
+    header: "Updated by",
+    type: "string",
+    defaultVisibility: "hidden",
+  },
+  {
+    id: "updated_at",
+    accessorKey: "updated_at",
+    header: "Updated at",
+    type: "datetime",
+    defaultVisibility: "hidden",
+  },
+  {
+    id: "name",
+    accessorKey: "name",
+    header: "Name",
+    type: "string",
+    size: 250,
+  },
+  {
+    id: "description",
+    accessorKey: "description",
+    header: "Description",
+    type: "text",
+    size: 750,
+  },
+  {
+    id: "vocabulary_id__name",
+    accessorKey: "vocabulary_id__name",
+    header: "Vocabulary",
+    type: "entity",
+    defaultVisibility: "hidden",
+    entity: {
+      full_name: "Grit::Core::Vocabulary",
+      name: "Vocabulary",
+      path: "grit/core/vocabularies",
+      primary_key: "id",
+      primary_key_type: "integer",
+      column: "vocabulary_id",
+      display_column: "name",
+      display_column_type: "string",
+    },
+  } as GritColumnDef<VocabularyItemData>,
+];
 
 const getExportFileUrl = (
   path: string,
@@ -55,40 +122,22 @@ const getExportFileUrl = (
   })}`;
 };
 
-const VocabularyItemsTable = ({ vocabularyId }: Props) => {
-  const registerToolbarActions = useToolbar();
+const VocabularyItemsTable = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const canWrite = useHasPermission("admin:vocabularies");
-
-  const { data: columns } = useVocabularyItemColumns();
-
-  const destroyItemsMutation = useDestroyEntityMutation(
-    "grit/core/vocabulary_items",
-  );
-
-  const tableColumns = useTableColumns(columns);
+  const { vocabulary, canAdmin } = useVocabularyContext();
 
   const tableState = useSetupTableState(
-    `vocabulary-items-${vocabularyId}`,
-    tableColumns,
-    {
-      settings: {
-        enableSelection: true,
-        disableVisibilitySettings: true,
-      },
-    },
+    `vocabulary-items-${vocabulary.id}`,
+    COLUMNS,
   );
 
   const { data, isLoading, isFetchingNextPage, isError, error, fetchNextPage } =
     useInfiniteVocabularyItems(
-      vocabularyId,
+      vocabulary.id,
       tableState.sorting,
       tableState.filters,
       undefined,
-      {
-        enabled: vocabularyId !== "new",
-      },
     );
 
   const flatData = useMemo(
@@ -96,17 +145,15 @@ const VocabularyItemsTable = ({ vocabularyId }: Props) => {
     [data],
   );
 
-  const navigateToNew = useCallback(() => navigate("new"), [navigate]);
-
   const exportUrl = useMemo(() => {
     const columnIds = tableState.columnOrder.filter(
       (c) =>
         (tableState.columnVisibility[c] ?? true) &&
-        !!tableColumns.find(({ id }) => c === id),
+        !!COLUMNS.find(({ id }) => c === id),
     );
 
     return getExportFileUrl(
-      `/api/grit/core/vocabularies/${vocabularyId}/vocabulary_items`,
+      `/api/grit/core/vocabularies/${vocabulary.id}/vocabulary_items`,
       tableState.filters,
       tableState.sorting,
       columnIds,
@@ -116,56 +163,8 @@ const VocabularyItemsTable = ({ vocabularyId }: Props) => {
     tableState.filters,
     tableState.sorting,
     tableState.columnVisibility,
-    vocabularyId,
-    tableColumns,
+    vocabulary.id,
   ]);
-
-  useEffect(() => {
-    return registerToolbarActions({
-      actions: canWrite
-        ? [
-            {
-              id: "NEW",
-              icon: <Circle1NewIcon />,
-              label: "New item",
-              onClick: navigateToNew,
-              disabled: vocabularyId === "new",
-            },
-          ]
-        : undefined,
-      importItems: canWrite
-        ? [
-            {
-              id: "IMPORT ITEMS",
-              text: "Import items",
-              onClick: () =>
-                navigate(
-                  `/core/load_sets/new?entity=Grit::Core::VocabularyItem&vocabulary_id=${vocabularyId}`,
-                ),
-              disabled: vocabularyId === "new",
-            },
-          ]
-        : undefined,
-      exportItems: [
-        {
-          id: "EXPORT",
-          onClick: async () => downloadFile(exportUrl),
-          text: `Export items`,
-        },
-      ],
-    });
-  }, [
-    registerToolbarActions,
-    navigateToNew,
-    vocabularyId,
-    navigate,
-    canWrite,
-    exportUrl,
-  ]);
-
-  if (vocabularyId === "new") {
-    return null;
-  }
 
   if (isError) {
     return <ErrorPage error={error} />;
@@ -173,41 +172,25 @@ const VocabularyItemsTable = ({ vocabularyId }: Props) => {
 
   return (
     <Table
-      tableState={tableState}
-      header={canWrite ? undefined : "Items"}
-      loading={isLoading}
       headerActions={
-        canWrite ? (
-          <Link to="new">
-            <Button>New</Button>
-          </Link>
-        ) : undefined
+        <>
+          {canAdmin && (
+            <Link
+              to={`/core/load_sets/new?entity=Grit::Core::VocabularyItem&vocabulary_id=${vocabulary.id}`}
+            >
+              <Button>Import</Button>
+            </Link>
+          )}
+          <Button onClick={() => downloadFile(exportUrl)}>Export</Button>
+        </>
       }
-      rowActions={canWrite ? ["delete"] : undefined}
-      onDelete={async (rows) => {
-        if (
-          !window.confirm(
-            `Are you sure you want to delete ${
-              rows.length > 1 ? `${rows.length} items` : "this item"
-            }? This action is irreversible`,
-          )
-        )
-          return;
-        await destroyItemsMutation.mutateAsync(
-          rows.map(({ original }) => original.id),
-        );
-        await queryClient.invalidateQueries({
-          queryKey: [
-            "entityData",
-            "grit/core/vocabulary_items",
-            vocabularyId.toString(),
-          ],
-        });
-      }}
+      tableState={tableState}
+      loading={isLoading}
+      header="Items"
       className={styles.typesTable}
-      data={flatData ?? []}
+      data={flatData}
       onRowClick={
-        canWrite
+        canAdmin
           ? (row) => {
               queryClient.setQueryData(
                 [

@@ -1,0 +1,66 @@
+@use "@grit42/client-library/theme.scss";
+
+.appContainer {
+  width: 100vw;
+  height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+  overflow: auto;
+
+  &.loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  ::-webkit-scrollbar-track {
+    background-color: theme.$palette-primary-dark;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: rgb(
+      from theme.$palette-primary-contrast-text r g b / 0.5
+    );
+    border-radius: 1em;
+    &:hover {
+      background-color: rgb(
+        from theme.$palette-primary-contrast-text r g b / 0.8
+      );
+    }
+  }
+
+  ::-webkit-scrollbar-corner {
+    background: theme.$palette-primary-main;
+  }
+}
+
+.authenticatedAppContainer {
+  width: 100%;
+  height: 100vh;
+  max-height: 100vh;
+  position: relative;
+
+  display: grid;
+
+  grid-template-columns: min-content 1fr;
+  grid-template-rows: min-content 1fr;
+}
+
+.appBodyContainer {
+  grid-column: 2 / -1;
+  grid-row: 2 / -1;
+  overflow: auto;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+
+  &.withPadding {
+    padding: calc(theme.$spacing * 2);
+  }
+}

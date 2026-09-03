@@ -1,0 +1,24 @@
+@use "@grit42/client-library/theme.scss";
+
+.tabs {
+  padding: theme.$spacing-md;
+  background-color: theme.$palette-primary-main;
+
+  ul {
+    margin-bottom: 0 !important;
+  }
+}
+
+.newButton {
+  padding: theme.$spacing-sm;
+  height: 24px;
+}
+
+.recordFormContainer {
+  height: 100%;
+  width: 100%;
+  display: grid;
+  margin: auto;
+  overflow: auto;
+  padding-bottom: theme.$spacing-xl;
+}

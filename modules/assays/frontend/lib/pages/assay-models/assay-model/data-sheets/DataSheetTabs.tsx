@@ -19,6 +19,7 @@
 import { useMemo } from "react";
 import { ErrorPage, RoutedTabs } from "@grit42/client-library/components";
 import { AssayDataSheetDefinitionData } from "../../../../queries/assay_data_sheet_definitions";
+import styles from "./dataSheets.module.scss";
 
 interface Props {
   sheetDefinitions: AssayDataSheetDefinitionData[];
@@ -43,6 +44,7 @@ const DataSheetTabs = ({ sheetDefinitions }: Props) => {
       matchPattern="/assays/assay-models/:assay_model_id/data-sheets/:sheet_id"
       tabs={tabs}
       replaceNavigation={true}
+      tabsClassName={styles.tabs}
     />
   );
 };

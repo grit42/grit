@@ -2,12 +2,14 @@
   "name": "@grit42/plots",
   "author": "Jonathan Rebourt, grit42 <jonny@grit42.com>",
   "license": "GPL-3.0-or-later",
-  "version": "0.12.0",
+  "version": "0.7.0",
   "type": "module",
   "scripts": {
     "dev": "vite --port 3002",
     "tsc": "tsc -b",
     "build": "tsc -b ./tsconfig.lib.json && vite build",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "lint": "eslint . --fix",
     "lint:check": "eslint .",
     "format": "prettier . -w --ignore-path ../../../.prettierignore",
@@ -58,6 +60,7 @@
     "vite": "catalog:",
     "vite-plugin-dts": "catalog:",
     "vite-plugin-externalize-deps": "catalog:",
-    "vite-plugin-lib-inject-css": "catalog:"
+    "vite-plugin-lib-inject-css": "catalog:",
+    "vitest": "catalog:"
   }
 }

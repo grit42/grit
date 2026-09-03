@@ -27,14 +27,18 @@ const AxesTypeSettings = <TPlot extends PlotDefinition>({
             },
             {
               value: "log",
-              label: "Log",
+              label: "Log\u2081\u2080",
             },
             {
               value: "category",
               label: "Category",
             },
+            {
+              value: "date",
+              label: "Date",
+            },
           ]}
-          value={plot.x.axisType}
+          value={plot.x?.axisType}
           onChange={onAxisTypeChange("x")}
         />
       )}
@@ -48,7 +52,7 @@ const AxesTypeSettings = <TPlot extends PlotDefinition>({
             },
             {
               value: "log",
-              label: "Log",
+              label: "Log\u2081\u2080",
             },
           ]}
           value={plot.y.axisType}

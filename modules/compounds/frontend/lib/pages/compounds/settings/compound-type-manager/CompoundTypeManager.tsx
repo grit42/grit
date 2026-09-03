@@ -23,15 +23,13 @@ import {
   useCompoundTypes,
 } from "../../../../queries/compounds";
 import styles from "./compoundTypeManager.module.scss";
-import { useEntityColumns, useToolbar } from "@grit42/core";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import Circle1NewIcon from "@grit42/client-library/icons/Circle1New";
+import { useEntityColumns } from "@grit42/core";
+import { useCallback, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@grit42/client-library/components";
 import { useTableColumns } from "@grit42/core/utils";
 
 const CompoundTypeManager = () => {
-  const registerToolbarActions = useToolbar();
   const navigate = useNavigate();
   const [selectedTypes, setSelectedTypes] = useState<number[]>([]);
 
@@ -81,35 +79,6 @@ const CompoundTypeManager = () => {
     (type: string) => () => navigate(`${type}/new`),
     [navigate],
   );
-
-  useEffect(() => {
-    return registerToolbarActions({
-      actions: [
-        {
-          id: "NEW",
-          icon: <Circle1NewIcon />,
-          label: "New...",
-          items: [
-            {
-              id: "TYPE",
-              text: "Compound type",
-              onClick: navigateToNew("compound_types"),
-            },
-            {
-              id: "COMPOUND_PROPERTY",
-              text: "Compound property",
-              onClick: navigateToNew("compound_properties"),
-            },
-            {
-              id: "BATCH_PROPERTY",
-              text: "Batch property",
-              onClick: navigateToNew("batch_properties"),
-            },
-          ],
-        },
-      ],
-    });
-  }, [registerToolbarActions, navigateToNew]);
 
   return (
     <div className={styles.compoundTypeManagerGrid}>

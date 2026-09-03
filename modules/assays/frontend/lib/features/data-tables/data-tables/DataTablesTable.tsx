@@ -17,23 +17,20 @@
  */
 
 import { Table, useSetupTableState } from "@grit42/table";
-import { useCallback, useEffect, useMemo } from "react";
-import { useHasPermission, useToolbar } from "@grit42/core";
-import Circle1NewIcon from "@grit42/client-library/icons/Circle1New";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useCallback, useMemo } from "react";
+import { useHasPermission } from "@grit42/core";
+import { useNavigate } from "react-router-dom";
 import { Button, ErrorPage } from "@grit42/client-library/components";
 import {
   useInfiniteDataTables,
   useDataTableColumns,
 } from "../queries/data_tables";
 import { useTableColumns } from "@grit42/core/utils";
-import { CenteredColumnLayout } from "@grit42/client-library/layouts";
+import styles from "./dataTables.module.scss";
 
 const DataTablesTable = () => {
-  const registerToolbarActions = useToolbar();
   const navigate = useNavigate();
   const canManageDataTable = useHasPermission("write:analysis");
-  const { pathname } = useLocation();
   const { data: dataTableColumns } = useDataTableColumns();
 
   const dataTableTableColumns = useTableColumns(dataTableColumns);
@@ -65,45 +62,30 @@ const DataTablesTable = () => {
 
   const navigateToNew = useCallback(() => navigate("new"), [navigate]);
 
-  useEffect(() => {
-    return registerToolbarActions({
-      actions: [
-        {
-          id: "NEW",
-          icon: <Circle1NewIcon />,
-          label: "New Data Table",
-          onClick: navigateToNew,
-          disabled: !canManageDataTable,
-        },
-      ],
-    });
-  }, [registerToolbarActions, navigateToNew, pathname, canManageDataTable]);
-
   if (isError) {
     return <ErrorPage error={error} />;
   }
 
   return (
-    <CenteredColumnLayout>
-      <Table
-        tableState={tableState}
-        header="Data Tables"
-        headerActions={
-          canManageDataTable ? (
-            <Button onClick={navigateToNew}>New</Button>
-          ) : undefined
-        }
-        fitContent
-        data={flatData}
-        onRowClick={(row) => navigate(`${row.original.id}`)}
-        loading={isLoading}
-        pagination={{
-          fetchNextPage,
-          isFetchingNextPage,
-          totalRows: data?.pages[0]?.total,
-        }}
-      />
-    </CenteredColumnLayout>
+    <Table
+      className={styles.dataTablesTable}
+      tableState={tableState}
+      header="Data tables"
+      headerActions={
+        canManageDataTable ? (
+          <Button onClick={navigateToNew}>New</Button>
+        ) : undefined
+      }
+      fitContent
+      data={flatData}
+      onRowClick={(row) => navigate(`${row.original.id}`)}
+      loading={isLoading}
+      pagination={{
+        fetchNextPage,
+        isFetchingNextPage,
+        totalRows: data?.pages[0]?.total,
+      }}
+    />
   );
 };
 

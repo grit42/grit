@@ -4,25 +4,31 @@ import { FormInputProvider } from "@grit42/form";
 import { ColumnTypeDefProvider } from "@grit42/table";
 import { queryClient, QueryClientProvider } from "@grit42/api";
 import { ConfirmDialogProvider } from "@grit42/client-library/components";
+import { AppShellContextProvider } from "./shell";
+import AdministrationContextProvider from "../features/administration/AdministrationContextProvider";
 
 const Providers = ({ children }: React.PropsWithChildren) => {
   const modules = useModules();
 
   return (
     <QueryClientProvider client={queryClient}>
-      <FormInputProvider>
-        <ColumnTypeDefProvider>
-          <ConfirmDialogProvider>
-            {modules.reduceRight(
-              (acc, module) =>
-                module.Provider
-                  ? createElement(module.Provider, undefined, acc)
-                  : acc,
-              children,
-            )}
-          </ConfirmDialogProvider>
-        </ColumnTypeDefProvider>
-      </FormInputProvider>
+      <AppShellContextProvider>
+        <FormInputProvider>
+          <ColumnTypeDefProvider>
+            <ConfirmDialogProvider>
+              <AdministrationContextProvider>
+                {modules.reduceRight(
+                  (acc, module) =>
+                    module.Provider
+                      ? createElement(module.Provider, undefined, acc)
+                      : acc,
+                  children,
+                )}
+              </AdministrationContextProvider>
+            </ConfirmDialogProvider>
+          </ColumnTypeDefProvider>
+        </FormInputProvider>
+      </AppShellContextProvider>
     </QueryClientProvider>
   );
 };

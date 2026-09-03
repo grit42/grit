@@ -18,9 +18,12 @@
 
 import { Select } from "@grit42/client-library/components";
 import { SourceDataProperties, TimeSeriesPlotDefinition } from "../types";
-import { getTimeSeriesPlotTitle } from "./utils";
 import BaseSettings from "../PlotBase/BaseSettings";
-import { PropertyOption, useNumericPropertiesOptions } from "../utils";
+import {
+  nextAxisLabel,
+  nextPlotTitle,
+  useNumericPropertiesOptions,
+} from "../utils";
 import AxesTypeSettings from "../PlotBase/AxisTypeSettings";
 
 const TimeSeriesPlotSettings = ({
@@ -34,28 +37,16 @@ const TimeSeriesPlotSettings = ({
 }) => {
   const axisOptions = useNumericPropertiesOptions(properties);
 
-  const onXAxisKeyChange = (key: string, option: PropertyOption) => {
-    onChange({
+  const onAxisKeyChange = (axis: "x" | "y") => (key: string) => {
+    const next = {
       ...plot,
-      x: {
-        ...plot.x,
+      [axis]: {
+        ...plot[axis],
         key,
-        label: option.label ?? key,
+        label: nextAxisLabel(plot[axis], key, properties),
       },
-      title: getTimeSeriesPlotTitle(key, plot.y.key, properties),
-    });
-  };
-
-  const onYAxisKeyChange = (key: string, option: PropertyOption) => {
-    onChange({
-      ...plot,
-      y: {
-        ...plot.y,
-        key,
-        label: option.label ?? key,
-      },
-      title: getTimeSeriesPlotTitle(plot.x.key, key, properties),
-    });
+    };
+    onChange({ ...next, title: nextPlotTitle(plot, next, properties) });
   };
 
   return (
@@ -64,13 +55,13 @@ const TimeSeriesPlotSettings = ({
         label="X axis"
         options={axisOptions}
         value={plot.x?.key}
-        onChange={onXAxisKeyChange}
+        onChange={onAxisKeyChange("x")}
       />
       <Select
         label="Y axis"
         options={axisOptions}
         value={plot.y?.key}
-        onChange={onYAxisKeyChange}
+        onChange={onAxisKeyChange("y")}
       />
       <AxesTypeSettings plot={plot} onChange={onChange} />
       <BaseSettings onChange={onChange} plot={plot} properties={properties} />

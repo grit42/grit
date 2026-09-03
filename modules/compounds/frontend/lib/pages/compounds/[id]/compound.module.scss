@@ -1,0 +1,8 @@
+@use "@grit42/client-library/theme.scss";
+
+.compoundPage {
+  display: grid;
+  padding-top: theme.$spacing-xl;
+  padding-inline: theme.$spacing-xl;
+  overflow: auto;
+}

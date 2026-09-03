@@ -1,0 +1,55 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm, 0.5rem);
+}
+
+.at {
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary, #767d8b);
+  font-variant-numeric: tabular-nums;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-sm, 0.5rem);
+}
+
+.none {
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary, #767d8b);
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs, 0.25rem);
+
+  li {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--spacing-sm, 0.5rem);
+  }
+}
+
+.entry {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.text {
+  font-size: 0.8125rem;
+  overflow-wrap: anywhere;
+}
+
+.meta {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary, #767d8b);
+  font-variant-numeric: tabular-nums;
+}

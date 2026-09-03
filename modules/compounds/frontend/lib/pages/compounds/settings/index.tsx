@@ -18,7 +18,6 @@
 
 import { Navigate, Route, Routes } from "react-router-dom";
 import CompoundTypeManager from "./compound-type-manager";
-import CompoundBatchLoadSets from "./load-sets";
 import { RoutedTabs } from "@grit42/client-library/components";
 import styles from "./settings.module.scss";
 import CompoundTypeFormWrapper from "./compound-type-manager/CompoundType";
@@ -63,9 +62,6 @@ const CompoundAdministrationTab = () => {
           path="metadata/batch_properties/:batch_property_id"
           element={<BatchPropertyFormWrapper />}
         />
-        <Route path="load-sets">
-          <Route index path="*" element={<CompoundBatchLoadSets />} />
-        </Route>
         <Route path="*" element={<Navigate to="../metadata" replace />} />
       </Route>
     </Routes>

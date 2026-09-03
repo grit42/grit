@@ -1,19 +1,18 @@
 import { Button } from "@grit42/client-library/components";
 import { Table, useSetupTableState } from "@grit42/table";
 import { useTableColumns } from "@grit42/core/utils";
-import { useHasPermission, useToolbar } from "@grit42/core";
+import { useHasPermission } from "@grit42/core";
 import {
   useExperimentColumns,
   useInfiniteExperiments,
 } from "../../queries/experiments";
 import { Link, useNavigate } from "react-router-dom";
-import { useEffect, useMemo } from "react";
-import Circle1NewIcon from "@grit42/client-library/icons/Circle1New";
+import { useMemo } from "react";
+import styles from "./experiments.module.scss"
 
 const ExperimentsTable = () => {
   const canCreateExperiment = useHasPermission("write:assays");
 
-  const registerToolbarActions = useToolbar();
   const navigate = useNavigate();
   const { data: columns } = useExperimentColumns();
 
@@ -29,22 +28,9 @@ const ExperimentsTable = () => {
     [data],
   );
 
-  useEffect(() => {
-    return registerToolbarActions({
-      actions: [
-        {
-          id: "NEW",
-          icon: <Circle1NewIcon />,
-          label: "New Experiment",
-          onClick: () => navigate("new"),
-          disabled: !canCreateExperiment,
-        },
-      ],
-    });
-  }, [registerToolbarActions, canCreateExperiment, navigate]);
-
   return (
     <Table
+      className={styles.experimentsTable}
       header="Experiments"
       headerActions={
         canCreateExperiment ? (

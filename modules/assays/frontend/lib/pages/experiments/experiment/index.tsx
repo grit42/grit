@@ -16,40 +16,63 @@
  * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { useEffect } from "react";
+import { useMemo } from "react";
 import { Link, Navigate, Route, Routes, useParams } from "react-router-dom";
 import { Button, ErrorPage, Spinner } from "@grit42/client-library/components";
 import Details from "./details";
-import { useExperiment } from "../../../queries/experiments";
-import ExperimentDataSheet from "./data-sheet";
-import { useToolbar } from "@grit42/core";
-import { downloadFile } from "@grit42/client-library/utils";
+import { ExperimentData, useExperiment } from "../../../queries/experiments";
+import { useBreadcrumbs, useTabs } from "@grit42/core";
 import ExperimentPlots from "./plots";
 import ExperimentLoadSets from "./load-sets";
-import ExperimentTabs from "./ExperimentTabs";
-import ExperimentFiles from "./files";
+import ExperimentAttachements from "./attachments";
+import Data from "./data";
+import ExperimentDataSheet from "./data/DataSheet";
+import DetailsView from "./details/DetailsView";
+import { EXPERIMENT_BREADCRUMBS } from "./breadcrumbs";
+
+const useExperimentBreadcrumbs = (experiment?: ExperimentData | null) =>
+  useMemo(() => EXPERIMENT_BREADCRUMBS(experiment), [experiment]);
+const useExperimentTabs = (experiment?: ExperimentData | null) =>
+  useMemo(
+    () =>
+      experiment
+        ? [
+            {
+              url: `/assays/experiments/${experiment.id}/details`,
+              label: "Details",
+            },
+            {
+              url: `/assays/experiments/${experiment.id}/data`,
+              label: "Data",
+            },
+            {
+              url: `/assays/experiments/${experiment.id}/plots`,
+              label: "Plots",
+            },
+            {
+              url: `/assays/experiments/${experiment.id}/attachments`,
+              label: "Attachments",
+            },
+            {
+              url: `/assays/experiments/${experiment.id}/load-sets`,
+              label: "Load sets",
+            },
+            {
+              url: `/assays/experiments/${experiment.id}/settings`,
+              label: "Settings",
+            },
+          ]
+        : [],
+    [experiment],
+  );
 
 const Experiment = () => {
   const { experiment_id } = useParams() as { experiment_id: string };
-  const registerToolbarAction = useToolbar();
 
   const { data, isLoading, isError, error } = useExperiment(experiment_id);
 
-  useEffect(() => {
-    if (experiment_id === "new") return;
-    return registerToolbarAction({
-      exportItems: [
-        {
-          id: "EXPORT_EXPERIMENT",
-          onClick: async () =>
-            downloadFile(
-              `/api/grit/assays/experiments/${experiment_id}/export`,
-            ),
-          text: "Export experiment",
-        },
-      ],
-    });
-  }, [experiment_id, registerToolbarAction]);
+  useBreadcrumbs(useExperimentBreadcrumbs(data));
+  useTabs(useExperimentTabs(data));
 
   if (isLoading) return <Spinner />;
   if (isError || !data)
@@ -67,29 +90,26 @@ const Experiment = () => {
 
   return (
     <Routes>
-      <Route element={<ExperimentTabs experiment={data} />}>
-        <Route path="details" element={<Details />} />
-        <Route path="sheets/:sheet_id">
-          <Route
-            index
-            path="*"
-            element={<ExperimentDataSheet dataSheets={data.data_sheets} />}
-          />
-        </Route>
-        <Route path="plots">
-          <Route
-            index
-            path="*"
-            element={<ExperimentPlots experiment={data} />}
-          />
-        </Route>
+      <Route path="details" element={<DetailsView />} />
+      <Route path="data" element={<Data experiment={data} />}>
         <Route
-          path="load-sets"
-          element={<ExperimentLoadSets experiment={data} />}
+          path=":sheet_id/*"
+          element={<ExperimentDataSheet experiment={data} />}
         />
-        <Route path="files" element={<ExperimentFiles experiment={data} />} />
-        <Route path="*" element={<Navigate to="../details" replace />} />
       </Route>
+      <Route path="plots">
+        <Route index path="*" element={<ExperimentPlots experiment={data} />} />
+      </Route>
+      <Route
+        path="load-sets"
+        element={<ExperimentLoadSets experiment={data} />}
+      />
+      <Route
+        path="attachments"
+        element={<ExperimentAttachements experiment={data} />}
+      />
+      <Route path="settings" element={<Details />} />
+      <Route path="*" element={<Navigate to="../details" replace />} />
     </Routes>
   );
 };

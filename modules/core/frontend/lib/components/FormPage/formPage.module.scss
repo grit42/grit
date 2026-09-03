@@ -1,0 +1,30 @@
+@use "@grit42/client-library/theme.scss";
+
+.formPage {
+  padding-top: theme.$spacing-xl;
+  padding-inline: theme.$spacing-xl;
+  margin-inline: auto;
+  display: grid;
+  grid-template-columns: minmax(100%, 80ch);
+  grid-template-rows: max-content max-content;
+}
+
+.actionSection {
+  display: grid;
+  grid-template-columns: 1fr max-content;
+  align-items: center;
+  gap: theme.$spacing;
+  margin-block: calc(theme.$spacing * 4);
+
+  .actionContent {
+    display: flex;
+    flex-direction: column;
+    gap: theme.$spacing;
+  }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: theme.$spacing;
+}

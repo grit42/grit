@@ -1,0 +1,22 @@
+@use "@grit42/client-library/theme.scss";
+
+.originsPage {
+  padding-top: theme.$spacing-xl;
+  padding-inline: theme.$spacing-xl;
+  display: grid;
+  grid-template-columns: minmax(100%, 80ch);
+  grid-template-rows: min-content 1fr;
+  overflow: auto;
+}
+
+.originsTabs {
+  display: grid;
+  grid-template-rows: min-content 1fr;
+  max-height: 100%;
+  height: 100%;
+  overflow-y: auto;
+
+  .tabPanel {
+    overflow: auto;
+  }
+}

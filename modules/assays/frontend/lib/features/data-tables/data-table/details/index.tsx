@@ -127,7 +127,7 @@ const DataTableDetails = ({ dataTableId }: Props) => {
     await queryClient.invalidateQueries({
       queryKey: ["entities", "data", "grit/assays/data_tables"],
     });
-    navigate("../..");
+    navigate("/assays/data_tables");
   };
 
   return (

@@ -20,6 +20,8 @@ import { Navigate, Outlet, Route, Routes } from "react-router-dom";
 
 import { lazy } from "react";
 import { AuthGuard, NoAuthGuard } from "../features/auth";
+import { AdministrationRoutes } from "../features/administration";
+
 const LazyAuthenticatePage = lazy(() => import("../features/auth/pages/login"));
 const LazyTwoFactorAuthenticatePage = lazy(
   () => import("../features/auth/pages/two-factor"),
@@ -42,11 +44,8 @@ const LazyEntityDetailsPage = lazy(
   () => import("../features/entities/pages/[entity]/[id]"),
 );
 
-const LazyVocabulariesPage = lazy(
+const LazyVocabulariesRoutes = lazy(
   () => import("../features/vocabularies/pages"),
-);
-const LazyAdministrationPage = lazy(
-  () => import("../features/administration/pages"),
 );
 const LazyAccountPage = lazy(
   () => import("../features/auth/pages/account-settings"),
@@ -130,18 +129,9 @@ const Router = () => {
           </AuthGuard>
         }
       >
-        <Route index path="*" element={<LazyVocabulariesPage />} />
+        <Route index path="*" element={<LazyVocabulariesRoutes />} />
       </Route>
-      <Route
-        path="/administration"
-        element={
-          <AuthGuard permissions={["admin:system", "admin:users"]}>
-            <Outlet />
-          </AuthGuard>
-        }
-      >
-        <Route index path="*" element={<LazyAdministrationPage />} />
-      </Route>
+      {AdministrationRoutes}
       <Route
         path="/account"
         element={

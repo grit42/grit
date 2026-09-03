@@ -64,6 +64,51 @@ module Grit::Assays
       render json: { success: false, errors: e.to_s }, status: :internal_server_error
     end
 
+    def clone
+      AssayDataSheetDefinition.transaction do
+        source_sheet = AssayDataSheetDefinition.find(params[:id])
+
+        permitted_params = params.permit(self.permitted_params)
+        @record = AssayDataSheetDefinition.new(permitted_params)
+
+        if !@record.save
+          render json: { success: false, errors: @record.errors }, status: :unprocessable_entity
+          return
+        end
+
+        errors = []
+
+        source_sheet.assay_data_sheet_columns.each_with_index do |source_column, columnIndex|
+          begin
+            column_attrs = source_column.attributes.slice("name", "safe_name", "description", "sort", "required", "data_type_id", "unit_id")
+            assay_data_sheet_column = @record.assay_data_sheet_columns.create(column_attrs)
+            if assay_data_sheet_column.errors
+              assay_data_sheet_column.errors.each do |e|
+                errors.push("Sheet #{sheetIndex} column #{columnIndex} #{e.attribute}: #{e.message}")
+              end
+            end
+          rescue StandardError => e
+            logger.warn e.to_s
+            logger.warn e.backtrace.join("\n")
+            errors["form"] ||= []
+            errors["form"].push e.to_s
+          end
+        end
+
+        unless errors.blank?
+          render json: { success: false, errors: errors.join(". ") }, status: :unprocessable_entity
+          raise ActiveRecord::Rollback
+        end
+        render json: { success: true, data: @record }, status: :created, location: @record
+      end
+    rescue ActiveRecord::RecordNotFound => e
+      logger.info e.to_s
+      logger.info e.backtrace.join("\n")
+      render json: { success: false, errors: e.to_s }, status: :not_found
+    rescue StandardError => e
+      render json: { success: false, errors: e.to_s }, status: :internal_server_error
+    end
+
     private
 
     def permitted_params

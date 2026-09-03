@@ -1,0 +1,179 @@
+/**
+ * Copyright 2025 grit42 A/S. <https://grit42.com/>
+ *
+ * This file is part of @grit42/assays.
+ *
+ * @grit42/assays is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or  any later version.
+ *
+ * @grit42/assays is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { Button, ErrorPage, Spinner } from "@grit42/client-library/components";
+import {
+  ExperimentDataSheetRecordData,
+  useExperimentDataSheetRecord,
+  useExperimentDataSheetRecordFields,
+} from "../../../../queries/experiment_data_sheet_records";
+import {
+  FormPage,
+  useCreateEntityMutation,
+  useDestroyEntityMutation,
+  useEditEntityMutation,
+} from "@grit42/core";
+import {
+  Form,
+  FormBanner,
+  FormControls,
+  FormField,
+  FormFieldDef,
+  FormFields,
+  genericErrorHandler,
+  getVisibleFieldData,
+  useForm,
+} from "@grit42/form";
+import styles from "./experimentData.module.scss";
+
+const ExperimentDataSheetRecordForm = ({
+  experimentDataSheetId,
+  fields,
+  experimentDataSheetRecord,
+}: {
+  experimentDataSheetId: number | string;
+  fields: FormFieldDef[];
+  experimentDataSheetRecord: Partial<ExperimentDataSheetRecordData>;
+}) => {
+  const { experiment_id } = useParams() as { experiment_id: string };
+  const navigate = useNavigate();
+
+  const createEntityMutation =
+    useCreateEntityMutation<ExperimentDataSheetRecordData>(
+      `grit/assays/assay_data_sheet_definitions/${experimentDataSheetId}/experiment_data_sheet_records`,
+    );
+
+  const editEntityMutation =
+    useEditEntityMutation<ExperimentDataSheetRecordData>(
+      `grit/assays/assay_data_sheet_definitions/${experimentDataSheetId}/experiment_data_sheet_records`,
+      experimentDataSheetRecord.id ?? -1,
+    );
+
+  const destroyEntityMutation = useDestroyEntityMutation(
+    `grit/assays/assay_data_sheet_definitions/${experimentDataSheetId}/experiment_data_sheet_records`,
+  );
+
+  const form = useForm({
+    defaultValues: experimentDataSheetRecord,
+    onSubmit: genericErrorHandler(async ({ value: formValue }) => {
+      const value = {
+        ...getVisibleFieldData<Partial<ExperimentDataSheetRecordData>>(
+          formValue,
+          fields,
+        ),
+        experiment_id,
+        data_sheet_id: experimentDataSheetId,
+      };
+      if (!experimentDataSheetRecord.id) {
+        await createEntityMutation.mutateAsync(
+          value as ExperimentDataSheetRecordData,
+        );
+      } else {
+        await editEntityMutation.mutateAsync(
+          value as ExperimentDataSheetRecordData,
+        );
+      }
+      navigate("..");
+    }),
+  });
+
+  const onDelete = async () => {
+    if (
+      !experimentDataSheetRecord.id ||
+      !window.confirm(
+        `Are you sure you want to delete this experimentDataSheetRecord? This action is irreversible`,
+      )
+    )
+      return;
+    await destroyEntityMutation.mutateAsync(experimentDataSheetRecord.id);
+    navigate("..");
+  };
+
+  return (
+    <Form form={form}>
+      <FormFields>
+        <FormBanner content={form.state.errorMap.onSubmit} />
+        {fields.map((f) => (
+          <FormField fieldDef={f} key={f.name} />
+        ))}
+      </FormFields>
+      <FormControls
+        onDelete={onDelete}
+        showDelete={!!experimentDataSheetRecord.id}
+        showCancel={!experimentDataSheetRecord.id}
+        cancelLabel={experimentDataSheetRecord.id ? "Back" : "Cancel"}
+        onCancel={() => navigate("..")}
+      />
+    </Form>
+  );
+};
+
+const ExperimentDataSheetRecordFormWrapper = () => {
+  const { record_id, sheet_id } = useParams() as {
+    record_id: string;
+    sheet_id: string;
+  };
+
+  const {
+    data: fields,
+    isLoading: isExperimentDataSheetRecordFieldsLoading,
+    isError: isExperimentDataSheetRecordFieldsError,
+    error: experimentDataSheetRecordFieldsError,
+  } = useExperimentDataSheetRecordFields(sheet_id, undefined, {
+    select: (data) =>
+      data.filter(({ name }) => name !== "experiment_data_sheet_id"),
+  });
+
+  const { data, isLoading, isError, error } = useExperimentDataSheetRecord(
+    record_id,
+    sheet_id,
+  );
+
+  if (isExperimentDataSheetRecordFieldsLoading || isLoading) return <Spinner />;
+  if (isExperimentDataSheetRecordFieldsError || isError || !fields || !data)
+    return (
+      <ErrorPage error={experimentDataSheetRecordFieldsError ?? error}>
+        <Link to="..">
+          <Button>Back</Button>
+        </Link>
+      </ErrorPage>
+    );
+  return (
+    <div className={styles.recordFormContainer}>
+    <FormPage
+      header={
+        <FormPage.Header backLink={record_id !== "new"}>
+          {`${record_id !== "new" ? "Edit" : "New"} record`}
+        </FormPage.Header>
+      }
+
+    >
+      <FormPage.Body>
+        <ExperimentDataSheetRecordForm
+          fields={fields}
+          experimentDataSheetRecord={data}
+          experimentDataSheetId={sheet_id}
+        />
+      </FormPage.Body>
+    </FormPage>
+    </div>
+  );
+};
+
+export default ExperimentDataSheetRecordFormWrapper;

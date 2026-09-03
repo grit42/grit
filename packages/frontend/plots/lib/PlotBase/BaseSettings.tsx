@@ -24,11 +24,14 @@ const BaseSettings = <TPlot extends PlotDefinition>({
   plot,
   onChange,
   properties,
+  show = {},
 }: {
   plot: TPlot;
   properties: SourceDataProperties;
   onChange: (plot: TPlot) => void;
+  show?: { groupBy?: boolean; facetBy?: boolean };
 }) => {
+  const { groupBy = true, facetBy = true } = show;
   const options = usePropertiesOptions(properties);
 
   const onPropChange = (key: string) => (value: string[]) => {
@@ -40,18 +43,22 @@ const BaseSettings = <TPlot extends PlotDefinition>({
 
   return (
     <>
-      <SortableMultiselect
-        label="Group by"
-        options={options}
-        value={plot.groupBy ?? []}
-        onChange={onPropChange("groupBy")}
-      />
-      <SortableMultiselect
-        label="Facet by"
-        options={options}
-        value={plot.facetBy ?? []}
-        onChange={onPropChange("facetBy")}
-      />
+      {groupBy && (
+        <SortableMultiselect
+          label="Group by"
+          options={options}
+          value={plot.groupBy ?? []}
+          onChange={onPropChange("groupBy")}
+        />
+      )}
+      {facetBy && (
+        <SortableMultiselect
+          label="Facet by"
+          options={options}
+          value={plot.facetBy ?? []}
+          onChange={onPropChange("facetBy")}
+        />
+      )}
     </>
   );
 };

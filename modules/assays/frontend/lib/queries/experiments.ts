@@ -175,7 +175,7 @@ export const useExperimentAttachedFiles = (
 ) => {
   return useQuery({
     queryKey: [
-      "experiment_attached_files",
+      "experiment_attachments",
       experimentId,
       sort ?? [],
       filter ?? [],

@@ -9,3 +9,5 @@
 **/test-results/
 **/playwright/.auth/
 **/coverage/
+packages/frontend/plots/test/fixtures/send.ts
+modules/sdtm/frontend/test/fixtures/subjects.ts

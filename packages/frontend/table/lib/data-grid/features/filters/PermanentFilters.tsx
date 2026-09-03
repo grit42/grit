@@ -1,0 +1,255 @@
+/**
+ * Copyright 2025 grit42 A/S. <https://grit42.com/>
+ *
+ * This file is part of @grit42/table.
+ *
+ * @grit42/table is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or  any later version.
+ *
+ * @grit42/table is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * @grit42/table. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+import { PropsWithChildren, SetStateAction, useMemo } from "react";
+import { GritColumnDef, GritTypedColumnDef } from "../../../types";
+import {
+  Button,
+  Option,
+  Select,
+  Surface,
+} from "@grit42/client-library/components";
+import styles from "./permanentFilters.module.scss";
+import DeleteIcon from "@grit42/client-library/icons/Delete";
+import PreviewIcon from "@grit42/client-library/icons/Preview";
+import NoPreviewIcon from "@grit42/client-library/icons/NoPreview";
+import { Filter, FilterOperator } from "./types";
+import { getLeafColumnsWithGroupLabels } from "../../../utils";
+import CloseIcon from "@grit42/client-library/icons/Circle1Close";
+import { useColumnTypeDefs } from "../../../features/column-types";
+
+interface Props {
+  filters: Filter[];
+  setFilters: React.Dispatch<React.SetStateAction<Filter[]>>;
+  columns: GritColumnDef<unknown, unknown>[];
+  onChange?: (filters: Filter[]) => void;
+  label?: string;
+  filteredByLabel?: string;
+  setShowFilters: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+const FilterItem = ({
+  columnOptions,
+  columns,
+  filter,
+  onChange,
+  children,
+}: PropsWithChildren<{
+  columnOptions: Option<string>[];
+  columns: GritTypedColumnDef[];
+  filter: Filter;
+  onChange: (changedFilter: Filter) => void;
+}>) => {
+  const column = useMemo(
+    () => columns.find((c) => c.id === filter.column),
+    [filter, columns],
+  );
+
+  const columnTypeDefs = useColumnTypeDefs();
+  const columnTypeDef = columnTypeDefs[column?.type ?? "default"];
+
+  const operators = useMemo(() => {
+    if (column && typeof columnTypeDef.filter.operators === "function") {
+      return columnTypeDef.filter.operators(column, columnTypeDefs);
+    }
+    return (columnTypeDef.filter.operators ??
+      columnTypeDefs.default.filter.operators) as FilterOperator[];
+  }, [column, columnTypeDef.filter, columnTypeDefs]);
+
+  const operatorOptions = useMemo(
+    () => operators.map(({ id, name }) => ({ value: id, label: name ?? id })),
+    [operators],
+  );
+
+  const InputComponent = useMemo(
+    () => columnTypeDef.filter.input,
+    [columnTypeDef.filter.input],
+  );
+
+  const onSelectColumn = (columnId: string) => {
+    const newColumn = columns.find((c) => c.id === columnId);
+    if (!column || !newColumn) return;
+    onChange(
+      columnTypeDefs[newColumn?.type ?? "default"].filter.getNewFilter(
+        newColumn,
+        columnTypeDefs,
+      ),
+    );
+  };
+
+  const onSelectOperator = (operator: string) => {
+    if (!column) return;
+    onChange(
+      columnTypeDef.filter.updateFilterForOperator(
+        filter,
+        column,
+        operator,
+        columnTypeDefs,
+      ),
+    );
+  };
+
+  return (
+    <div className={styles.filterInput}>
+      <Select
+        options={columnOptions}
+        value={filter.column}
+        onChange={onSelectColumn}
+        disabled={filter.active ? false : true}
+      />
+      <Select
+        options={operatorOptions}
+        value={filter.operator}
+        onChange={onSelectOperator}
+        disabled={filter.active ? false : true}
+      />
+      {column ? (
+        <InputComponent
+          key={filter.id + filter.column}
+          filter={filter}
+          column={column}
+          onChange={onChange}
+        />
+      ) : (
+        "No input component for this column type"
+      )}
+      {children}
+    </div>
+  );
+};
+
+const PermanentFilters = ({
+  filters,
+  setFilters,
+  columns,
+  onChange,
+  setShowFilters,
+}: Props) => {
+  const columnTypeDefs = useColumnTypeDefs();
+
+  const setFiltersAndOnChange = (e: SetStateAction<Filter[]>) => {
+    setFilters((prev) => {
+      const next = (typeof e === "function" ? e(prev) : e) as Filter[];
+      if (onChange) onChange(next);
+      return next;
+    });
+  };
+
+  const leafColumns = useMemo(
+    () => getLeafColumnsWithGroupLabels(columns),
+    [columns],
+  );
+
+  const columnOptions = useMemo(
+    () =>
+      leafColumns.map((column) => ({
+        value: column.id,
+        label: column.header as string,
+      })),
+    [leafColumns],
+  );
+
+  const toggleFilter = (index: number) => {
+    setFiltersAndOnChange((prev) =>
+      prev.toSpliced(index, 1, {
+        ...prev[index],
+        active: !prev[index].active,
+      }),
+    );
+  };
+
+  const removeFilter = (index: number) => {
+    setFiltersAndOnChange((prev) => prev.toSpliced(index, 1));
+  };
+
+  const addFilter = () => {
+    setFiltersAndOnChange((prev) => [
+      ...prev,
+      columnTypeDefs[leafColumns[0].type ?? "default"].filter.getNewFilter(
+        leafColumns[0],
+        columnTypeDefs,
+      ),
+    ]);
+  };
+
+  return (
+    <Surface className={styles.popover}>
+      <div className={styles.toggle}>
+        <Button
+          style={{ padding: "var(--spacing-sm)", height: 24 }}
+          size="tiny"
+          icon={<CloseIcon height={16} />}
+          onClick={() => setShowFilters(false)}
+        >
+          Filters
+        </Button>
+      </div>
+      <div className={styles.filters}>
+        {filters.length === 0 && <p>No filter conditions are applied.</p>}
+
+        {filters.map((filter, index) => {
+          return (
+            <FilterItem
+              columns={leafColumns}
+              columnOptions={columnOptions}
+              filter={filter}
+              onChange={(changedFilter) =>
+                setFiltersAndOnChange(
+                  filters.toSpliced(index, 1, changedFilter),
+                )
+              }
+              key={filter.id}
+            >
+              <div className={styles.icons}>
+                {filter.active ? (
+                  <PreviewIcon
+                    fill="var(--palette-primary-contrast-text)"
+                    height={14}
+                    onClick={() => toggleFilter(index)}
+                    focusable={true}
+                  />
+                ) : (
+                  <NoPreviewIcon
+                    fill="var(--palette-primary-contrast-text)"
+                    height={14}
+                    onClick={() => toggleFilter(index)}
+                    focusable={true}
+                  />
+                )}
+                <DeleteIcon
+                  fill="var(--palette-primary-contrast-text)"
+                  onClick={() => removeFilter(index)}
+                  height={17}
+                  focusable={true}
+                />
+              </div>
+            </FilterItem>
+          );
+        })}
+      </div>
+
+      <div className={styles.bottomActions}>
+        <Button size="small" variant="transparent" onClick={addFilter}>
+          + Add condition
+        </Button>
+      </div>
+    </Surface>
+  );
+};
+
+export default PermanentFilters;

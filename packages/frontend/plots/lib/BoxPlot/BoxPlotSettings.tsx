@@ -1,7 +1,6 @@
 import { Select } from "@grit42/client-library/components";
 import { BoxPlotDefinition, SourceDataProperties } from "../types";
-import { getBoxPlotTitle } from "./utils";
-import { PropertyOption, usePropertiesOptions } from "../utils";
+import { nextAxisLabel, nextPlotTitle, usePropertiesOptions } from "../utils";
 import AxesTypeSettings from "../PlotBase/AxisTypeSettings";
 import BaseSettings from "../PlotBase/BaseSettings";
 
@@ -16,16 +15,12 @@ const BoxPlotSettings = ({
 }) => {
   const axisOptions = usePropertiesOptions(properties);
 
-  const onYAxisKeyChange = (key: string, option: PropertyOption) => {
-    onChange({
+  const onYAxisKeyChange = (key: string) => {
+    const next = {
       ...plot,
-      y: {
-        ...plot.y,
-        key,
-        label: option.label ?? key,
-      },
-      title: getBoxPlotTitle(key, plot.groupBy ?? [], properties),
-    });
+      y: { ...plot.y, key, label: nextAxisLabel(plot.y, key, properties) },
+    };
+    onChange({ ...next, title: nextPlotTitle(plot, next, properties) });
   };
 
   return (
@@ -33,7 +28,7 @@ const BoxPlotSettings = ({
       <Select
         label="Y axis"
         options={axisOptions}
-        value={plot.y.key}
+        value={plot.y?.key}
         onChange={onYAxisKeyChange}
       />
       <AxesTypeSettings axes="y" plot={plot} onChange={onChange} />

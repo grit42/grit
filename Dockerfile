@@ -92,6 +92,7 @@ RUN BUNDLE_WITHOUT="local ${BUNDLE_WITHOUT}" bundle install
 
 # Install application gems including gems from source and their dependencies
 COPY --parents ./modules/**/backend/**/* /rails
+COPY --parents ./packages/backend/**/* /rails
 RUN bundle install && \
     rm -rf ~/.bundle/ "${BUNDLE_PATH}"/ruby/*/cache "${BUNDLE_PATH}"/ruby/*/bundler/gems/*/.git
 
@@ -105,6 +106,7 @@ FROM base
 COPY --from=build "${BUNDLE_PATH}" "${BUNDLE_PATH}"
 COPY --from=build ${APP_WORKDIR} ${APP_WORKDIR}
 COPY --from=build /rails/modules /rails/modules
+COPY --from=build /rails/packages /rails/packages
 COPY --from=frontend /workspace/apps/${APP}/client/dist ${APP_WORKDIR}/public
 COPY --from=docs /docs/build ${APP_WORKDIR}/public/docs
 

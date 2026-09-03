@@ -16,7 +16,16 @@
  * @grit42/compounds. If not, see <https://www.gnu.org/licenses/>.
  */
 
+@use "@grit42/client-library/theme.scss";
+
 .header {
   padding-bottom: var(--spacing);
   color: var(--palette-secondary-main);
+}
+
+.loadSetsPage {
+  display: grid;
+  padding-top: theme.$spacing-xl;
+  padding-inline: theme.$spacing-xl;
+  overflow: auto;
 }

@@ -16,21 +16,50 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Outlet, Route, Routes } from "react-router-dom";
-import Vocabularies from "./vocabularies";
-import Vocabulary from "./vocabulary";
+import { Route, Routes } from "react-router-dom";
+import { AuthGuard } from "../../auth";
+import VocabulariesPage from "./VocabulariesPage";
+import NewVocabularyPage from "./NewVocabularyPage";
+import VocabularyPage from "./vocabulary/VocabularyPage";
+import VocabularyItemsPage from "./vocabulary/VocabularyItemsPage";
+import NewVocabularyItemPage from "./vocabulary/vocabulary-item/NewVocabularyItemPage";
+import VocabularyItemPage from "./vocabulary/vocabulary-item/VocabularyItemPage";
+import VocabularyLoadSetsPage from "./vocabulary/VocabularyLoadSetsPage";
+import VocabularySettingsPage from "./vocabulary/VocabularySettingsPage";
 
-const VocabulariesTab = () => {
+const VocabulariesRoutes = () => {
   return (
     <Routes>
-      <Route element={<Outlet />}>
-        <Route index element={<Vocabularies />} />
-        <Route path=":vocabulary_id">
-          <Route index path="*" element={<Vocabulary />} />
+      <Route index element={<VocabulariesPage />} />
+      <Route path="new" element={<NewVocabularyPage />} />
+      <Route path=":vocabulary_id" element={<VocabularyPage />}>
+        <Route path="items">
+          <Route
+            index
+            element={<VocabularyItemsPage />}
+          />
+          <Route path="new" element={<NewVocabularyItemPage />} />
+          <Route path=":vocabulary_item_id" element={<VocabularyItemPage />} />
         </Route>
+        <Route
+          path="load-sets"
+          element={
+            <AuthGuard permission="admin:vocabularies">
+              <VocabularyLoadSetsPage />
+            </AuthGuard>
+          }
+        />
+        <Route
+          path="settings"
+          element={
+            <AuthGuard permission="admin:vocabularies">
+              <VocabularySettingsPage />
+            </AuthGuard>
+          }
+        />
       </Route>
     </Routes>
   );
 };
 
-export default VocabulariesTab;
+export default VocabulariesRoutes;

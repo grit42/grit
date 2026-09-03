@@ -17,32 +17,15 @@
  */
 
 import { useAssayModelColumns } from "../../queries/assay_models";
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useToolbar } from "@grit42/core";
-import CogIcon from "@grit42/client-library/icons/Cog";
 import { ErrorPage, Spinner } from "@grit42/client-library/components";
 import AssayModelsTable from "./AssayModelsTable";
+import { useBreadcrumbs } from "@grit42/core";
+import { ASSAY_MODELS_BREADCRUMBS } from "./breadcrumbs";
 
 const AssayModelsPage = () => {
-  const navigate = useNavigate();
-  const registerToolbarActions = useToolbar();
-
   const { data, isLoading, isError, error } = useAssayModelColumns();
 
-  useEffect(() => {
-    return registerToolbarActions({
-      actions: [
-        {
-          id: "ASSAY_MODEL_SETTINGS",
-          icon: <CogIcon />,
-          label: "Manage assay models",
-          requiredPermissions: ["admin:assays"],
-          onClick: () => navigate("/assays/assay-models/settings/assay-models"),
-        },
-      ],
-    });
-  }, [navigate, registerToolbarActions]);
+  useBreadcrumbs(ASSAY_MODELS_BREADCRUMBS);
 
   if (isLoading) {
     return <Spinner />;

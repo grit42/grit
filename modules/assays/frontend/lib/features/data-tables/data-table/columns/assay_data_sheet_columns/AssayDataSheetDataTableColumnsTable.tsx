@@ -28,7 +28,6 @@ import {
 } from "../../../queries/data_table_columns";
 import { Button } from "@grit42/client-library/components";
 import { useQueryClient } from "@grit42/api";
-import { CenteredColumnLayout } from "@grit42/client-library/layouts";
 
 interface Props {
   dataTableId: string | number;
@@ -134,8 +133,8 @@ const AssayDataSheetDataTableColumnsTable = ({ dataTableId }: Props) => {
   );
 
   return (
-    <CenteredColumnLayout>
       <Table
+        header="Assay columns"
         tableState={tableState}
         onRowClick={navigateToEdit}
         rowActions={canEditDataTable ? ["delete"] : []}
@@ -187,7 +186,6 @@ const AssayDataSheetDataTableColumnsTable = ({ dataTableId }: Props) => {
           totalRows: data?.pages[0]?.total,
         }}
       />
-    </CenteredColumnLayout>
   );
 };
 

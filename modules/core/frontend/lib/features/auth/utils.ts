@@ -59,6 +59,7 @@ export const hasOneOfPermissions = (
   permissions: string[],
 ) => {
   if (!session) return false;
+  if (!permissions.length) return true;
   return (
     new Set(session.permissions).intersection(new Set(permissions)).size > 0
   );

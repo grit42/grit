@@ -1,37 +1,34 @@
-.vocabulary {
-  width: 100%;
-  max-width: 100%;
-  height: 100%;
-  max-height: 100%;
+@use "@grit42/client-library/theme.scss";
 
-  display: grid;
-  gap: 1rem;
-  grid-template-columns: 480px auto;
-}
-
-.vocabularyTabs {
+.vocabulary,
+.loadSets {
+  padding-top: theme.$spacing-xl;
+  padding-inline: theme.$spacing-xl;
   display: grid;
   grid-template-rows: min-content 1fr;
-  max-height: 100%;
-  height: 100%;
-  overflow-y: auto;
-}
-
-.vocabularyForm {
-  width: 100%;
-}
-
-.vocabularyItemForm {
-  width: 100%;
-}
-
-.vocabularyTabsContainer {
-  max-height: 100%;
-  height: 100%;
   overflow: auto;
-  width: 100%;
 }
 
-.tabPanel {
-  overflow-y: auto;
+.loadSets {
+  padding-top: theme.$spacing-xl;
+  padding-inline: theme.$spacing-xl;
+  display: grid;
+  grid-template-rows: 1fr;
+}
+
+.vocabularyDetails {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  justify-self: center;
+
+  .vocabularyDetailsHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .description {
+    margin-block: theme.$spacing;
+  }
 }

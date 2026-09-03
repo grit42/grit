@@ -18,3 +18,5 @@
 
 export { useLocalStorage, useLocalStorageChanges } from "./useLocalStorage";
 export { useTheme, useDisplayDensity, usePalette } from "./theme";
+export { default as useMountTransition } from "./useMountTransition";
+export type { TransitionState } from "./useMountTransition";

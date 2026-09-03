@@ -1,0 +1,36 @@
+@use "@grit42/client-library/theme.scss";
+
+.layout {
+  overflow: hidden;
+  &.expanded {
+    grid-template-columns: 1fr 5fr;
+  }
+}
+
+.sidebar {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px;
+}
+
+.header {
+  display: grid;
+  justify-items: end;
+  margin-bottom: theme.$spacing-sm;
+}
+
+.collapsedStrip {
+  display: grid;
+  justify-items: center;
+  gap: theme.$spacing-sm;
+  padding-top: theme.$spacing-sm;
+}
+
+.plot {
+  height: 100%;
+  min-height: 0;
+}

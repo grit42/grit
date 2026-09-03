@@ -1,0 +1,170 @@
+@use "@grit42/client-library/theme.scss";
+
+$logo-height: calc(32px + theme.$spacing * 2);
+$link-height: calc(24px + theme.$spacing * 2);
+
+.menuContainer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: transparent;
+  z-index: 10000;
+
+  @media (prefers-reduced-motion: no-preference) {
+    transition: background-color 0.25s ease-in-out;
+  }
+
+  &.show {
+    background-color: rgb(from theme.$palette-background-default r g b / 0.8);
+  }
+}
+
+.navbar {
+  grid-area: 1 / 1 / -1 / 2;
+
+  height: 100%;
+
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto 1fr auto;
+
+  background-color: theme.$palette-background-surface;
+  border-inline-end: 1px solid
+    rgb(from theme.$palette-background-contrast-text r g b / 0.1);
+
+  @media (prefers-reduced-motion: no-preference) {
+    transition: transform 0.25s ease-in-out;
+  }
+
+  .header {
+    height: $logo-height;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .footer {
+    height: $logo-height;
+    display: flex;
+    align-items: center;
+    padding: theme.$spacing;
+  }
+
+  .gritLogo {
+    width: fit-content;
+    height: 100%;
+    padding-block: theme.$spacing;
+    padding-inline: theme.$spacing;
+    fill: theme.$palette-secondary-main;
+    &.light {
+      filter: brightness(0%);
+    }
+  }
+
+  .nav {
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    gap: theme.$spacing-sm;
+    padding-block: theme.$spacing-md;
+  }
+  width: max-content;
+
+  &.open {
+    .header {
+      justify-content: flex-start;
+    }
+
+    .logoLink {
+      .gritLogo {
+        margin-inline: unset;
+      }
+    }
+  }
+}
+
+.divider {
+  width: 100%;
+}
+
+.sidebarButton {
+  width: stretch;
+  background-color: theme.$palette-background-surface !important;
+  padding: theme.$spacing-sm;
+  margin-inline: theme.$spacing-sm;
+  font-weight: normal;
+  color: theme.$palette-background-contrast-text !important;
+  gap: 0;
+  justify-content: center;
+
+  svg {
+    margin: 0;
+    height: 24px;
+    fill: rgba(
+      from theme.$palette-background-contrast-text r g b / 0.8
+    ) !important;
+  }
+
+  &.open {
+    justify-content: flex-start;
+
+    svg {
+      margin-inline-end: theme.$spacing;
+    }
+  }
+
+  &:hover {
+    background-color: rgb(
+      from theme.$palette-background-contrast-text r g b / 0.1
+    ) !important;
+  }
+}
+
+.closeButton {
+  background-color: theme.$palette-background-surface !important;
+  padding: theme.$spacing-sm;
+  flex: 1;
+  justify-content: flex-start;
+  color: rgba(
+    from theme.$palette-background-contrast-text r g b / 0.8
+  ) !important;
+
+  svg {
+    margin-inline: 0;
+    height: 24px;
+    fill: rgba(
+      from theme.$palette-background-contrast-text r g b / 0.8
+    ) !important;
+  }
+
+  &:hover {
+    background-color: rgb(
+      from theme.$palette-background-contrast-text r g b / 0.1
+    ) !important;
+  }
+}
+
+.navLink {
+  padding: theme.$spacing-md;
+  font-size: 1rem;
+  font-weight: bold;
+  &.active {
+    color: theme.$palette-background-contrast-text !important;
+    svg {
+      fill: theme.$palette-secondary-main !important;
+    }
+
+    background-color: rgb(
+      from theme.$palette-background-contrast-text r g b / 0.1
+    ) !important;
+  }
+
+  &:hover {
+    background-color: rgb(
+      from theme.$palette-background-contrast-text r g b / 0.1
+    ) !important;
+  }
+}

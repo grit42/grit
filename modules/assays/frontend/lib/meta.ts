@@ -17,6 +17,9 @@
  */
 
 import { ModuleMeta } from "@grit42/core";
+import ExperimentIcon from "@grit42/client-library/icons/Experiment";
+import AssayModelIcon from "@grit42/client-library/icons/Templates";
+import DataTableIcon from "@grit42/client-library/icons/Report";
 
 const Meta: ModuleMeta = {
   identifier: "ASSAYS",
@@ -26,16 +29,19 @@ const Meta: ModuleMeta = {
       identifier: "EXPERIMENTS",
       name: "Experiments",
       path: "/assays/experiments",
+      icon: ExperimentIcon,
     },
     {
       identifier: "DATA_TABLES",
       name: "Data Tables",
       path: "/assays/data_tables",
+      icon: DataTableIcon,
     },
     {
       identifier: "ASSAY_MODELS",
       name: "Assay Models",
       path: "/assays/assay-models",
+      icon: AssayModelIcon,
     },
   ],
 };

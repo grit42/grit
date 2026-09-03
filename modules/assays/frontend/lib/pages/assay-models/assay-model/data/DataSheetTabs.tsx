@@ -22,7 +22,7 @@ import { AssayDataSheetDefinitionData } from "../../../../queries/assay_data_she
 import ExperimentMetadataFilters from "./ExperimentMetadataFilters";
 import { SidebarLayout } from "@grit42/client-library/layouts";
 import { useAssayMetadataDefinitions } from "../../../../queries/assay_metadata_definitions";
-
+import styles from "./data.module.scss";
 interface Props {
   sheetDefinitions: AssayDataSheetDefinitionData[];
   metadataFilters: Record<string, number[]>;
@@ -53,6 +53,7 @@ const DataSheetTabs = ({
 
   return (
     <SidebarLayout
+      className={styles.container}
       collapsed={
         isMetadataDefinitionsLoading || metadataDefinitions?.length === 0
       }
@@ -71,6 +72,8 @@ const DataSheetTabs = ({
           label: sheetDefinition.name,
         }))}
         replaceNavigation={true}
+        tabsClassName={styles.tabs}
+        tabsAtBottom
       />
     </SidebarLayout>
   );

@@ -18,6 +18,7 @@
 
 import { RowData } from "@grit42/table";
 import useRegisterExperimentDataSheetRecordImporter from "./extensions/importer";
+import useRegisterAssaysAdministrationRoutes from "./features/administration";
 
 declare module "@grit42/table" {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -30,6 +31,7 @@ declare module "@grit42/table" {
 
 const Registrant = () => {
   useRegisterExperimentDataSheetRecordImporter();
+  useRegisterAssaysAdministrationRoutes();
   return null;
 };
 
