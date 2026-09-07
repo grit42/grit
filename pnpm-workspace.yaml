@@ -4,8 +4,39 @@ overrides:
   esbuild: ">=0.28.1"
   form-data: ">=4.0.6"
   file-type: ">=21.3.1"
-  js-yaml: ">=4.1.2"
+  js-yaml: ">=4.3.2"
   piscina: ">=4.9.3"
+  brace-expansion: ">=5.0.9"
+  nanoid: ">=3.3.18"
+  fast-uri: ">=3.1.7"
+  immutable: ">=5.1.9"
+  browserslist: ">=4.28.8"
+  postcss: ">=8.5.26"
+  axios: ">=1.18.0"
+
+# Supply-chain hardening: reject exotic (non-registry) sub-dependency
+# sources, wait 7 days before resolving newly-published versions, and never
+# let a lockfile update silently downgrade these settings.
+blockExoticSubdeps: true
+minimumReleaseAge: 10080
+minimumReleaseAgeExclude:
+  # Bundled by browserslist; ships near-daily data updates, so a 7-day
+  # cutoff would perpetually flag whatever version browserslist currently
+  # resolves to. Excluded by name (not pinned) so this doesn't recur.
+  - electron-to-chromium
+trustPolicy: no-downgrade
+trustPolicyExclude:
+  # Long-established, extremely widely-used transitive deps (semver is THE
+  # canonical semver library; detect-port/undici-types are small common
+  # utilities pulled in via nx/@types/node). The flagged "downgrade" is
+  # because the version pinned in our lockfile predates npm provenance/
+  # trusted-publisher adoption, not evidence of an actual takeover — the
+  # same false-positive is publicly reported against other unquestionably
+  # legitimate packages (e.g. tailwindcss) on this same new pnpm feature.
+  # Re-check this list whenever `pnpm update` touches any of these.
+  - "semver@6.3.1"
+  - "detect-port@1.6.1"
+  - "undici-types@6.21.0"
 
 packages:
   - apps/grit/client
@@ -35,7 +66,7 @@ catalog:
   "@types/react-dom": ^19.2.3
   "@vitejs/plugin-react": ^5.1.4
   autoprefixer: ^10.4.24
-  axios: ^1.13.5
+  axios: ^1.20.0
   eslint: ^9.39.3
   eslint-import-resolver-typescript: ^4.4.4
   eslint-plugin-import-x: ^4.16.1
@@ -46,7 +77,7 @@ catalog:
   prettier: ^3.8.1
   react: ^19.2.4
   react-dom: ^19.2.4
-  react-router-dom: ^7.13.1
+  react-router-dom: ^7.18.3
   sass-embedded: "^1.100.0"
   typescript: ~5.9.3
   typescript-eslint: ^8.56.1
@@ -60,3 +91,16 @@ catalog:
 
 onlyBuiltDependencies:
   - lefthook
+
+# GHSA IDs to dismiss from `pnpm audit` (CI: security.yml). Only add an entry
+# once you've confirmed the vulnerable code path isn't reachable from our
+# usage (e.g. a build-time-only tool, a feature we don't invoke) — and note
+# why below. Prefer bumping the package via `overrides` above when a patched
+# release exists; reserve this list for cases with no non-breaking fix.
+auditConfig:
+  ignoreGhsas:
+    # Zip-Slip in nx's self-hosted remote cache — we don't use that feature.
+    - GHSA-vp3h-ghgh-jr7g
+    # Permissive CORS on the `nx graph` dev server — never run in CI or
+    # anywhere network-reachable.
+    - GHSA-g2r8-wvmj-jf5w

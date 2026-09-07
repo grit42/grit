@@ -1,0 +1,5 @@
+# CVE/advisory IDs to dismiss from `bundle-audit check` (CI: security.yml).
+# Only add an entry once you've confirmed the vulnerable code path in that
+# gem isn't reachable from our usage (e.g. a feature of the gem we never call,
+# a dev-only tool). Add a comment above each ID with the advisory link and reason.
+ignore: []
