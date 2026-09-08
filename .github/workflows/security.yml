@@ -1,8 +1,6 @@
 name: Security Audit
 
 on:
-  schedule:
-    - cron: "0 8 * * 1"
   pull_request:
     branches: [main]
   workflow_dispatch:

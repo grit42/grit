@@ -2,4 +2,12 @@
 # Only add an entry once you've confirmed the vulnerable code path in that
 # gem isn't reachable from our usage (e.g. a feature of the gem we never call,
 # a dev-only tool). Add a comment above each ID with the advisory link and reason.
-ignore: []
+ignore:
+  # GHSA-xr9x-r78c-5hrm / CVE-2026-66066 — arbitrary file read + possible RCE
+  # via ActiveStorage variant processing (untrusted uploads reaching libvips
+  # without disabling "unfuzzed" loaders). Verified not reachable here:
+  # config.active_storage.variant_processor = :disabled repo-wide (main app
+  # and all module test dummies), and zero .variant(/.preview( calls exist
+  # anywhere in the Ruby codebase. Re-check this dismissal if that config or
+  # any .variant/.preview usage is ever added.
+  - GHSA-xr9x-r78c-5hrm
