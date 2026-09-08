@@ -119,8 +119,6 @@ export const RefMoleculeViewer = ({
   height = 300,
   moleculeContainerClassname,
 }: RefMoleculeViewerProps) => {
-  const [molSvg, setMolSvg] = useState<string | null>(null);
-
   const options = useMemo(
     () => ({
       autoCrop: true,
@@ -129,9 +127,10 @@ export const RefMoleculeViewer = ({
     [moleculeToSvgOptions],
   );
 
-  useEffect(() => {
-    setMolSvg(molecule.toSVG(width, height, molecule.toSmarts(), options));
-  }, [molecule, height, width, options]);
+  const molSvg = useMemo(
+    () => molecule.toSVG(width, height, molecule.toSmarts(), options),
+    [molecule, width, height, options],
+  );
 
   if (!molecule) return null;
   if (!molSvg) return <Spinner size={16} />;

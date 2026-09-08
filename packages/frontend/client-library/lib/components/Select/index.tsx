@@ -199,6 +199,7 @@ const Select = <T,>({
   useEffect(() => {
     const option = getOptionFromValue(value);
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSelected(option);
 
     if (!Array.isArray(option)) {
