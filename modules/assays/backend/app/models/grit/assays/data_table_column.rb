@@ -160,13 +160,20 @@ AND GRIT_ASSAYS_ASSAY_DATA_SHEET_COLUMNS.DATA_TYPE_ID <> #{data_table.entity_dat
     end
 
     def entity_attribute_query(query)
-      query = query.select("#{self.safe_name}_join.#{entity_attribute_name} as #{self.safe_name}")
       entity_klass = data_table.entity_data_type.model
       entity_property = entity_klass.entity_properties.find { |p| p[:name] == entity_attribute_name }
+      raise "Entity attribute '#{entity_attribute_name}' does not exist" if entity_property.nil?
+
+      # Use the matched property's own name (from the internal entity_properties
+      # list) rather than the raw entity_attribute_name column value when
+      # building SQL below, now that it's confirmed to match a known property.
+      safe_attribute_name = entity_property[:name]
+
+      query = query.select("#{self.safe_name}_join.#{safe_attribute_name} as #{self.safe_name}")
       if entity_property[:type] == "entity"
         foreign_klass = entity_property[:entity][:full_name].constantize
         foreign_klass_display_properties = foreign_klass.display_properties
-        query = query.select("#{self.safe_name}_join.#{entity_attribute_name}__#{foreign_klass_display_properties[0][:name]} as #{self.safe_name}__#{foreign_klass_display_properties[0][:name]}")
+        query = query.select("#{self.safe_name}_join.#{safe_attribute_name}__#{foreign_klass_display_properties[0][:name]} as #{self.safe_name}__#{foreign_klass_display_properties[0][:name]}")
       end
       subquery = self.data_table.entity_data_type.model_scope.select("\"#{data_table.entity_data_type.table_name}\".id as target_id")
         column_join = <<-SQL

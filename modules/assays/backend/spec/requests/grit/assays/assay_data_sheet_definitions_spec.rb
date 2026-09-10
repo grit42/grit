@@ -88,5 +88,56 @@ module Grit::Assays
     # Note: Full CRUD testing for AssayDataSheetDefinitions is complex due to
     # publication status constraints. Sheet definitions are typically created
     # as part of assay model creation via the assay_models_controller.
+
+    # --- create_bulk mass-assignment protection ---
+
+    describe "POST create_bulk" do
+      let(:string_type) { create(:grit_core_data_type, :string) }
+
+      before { login_as(admin) }
+
+      it "creates sheets and columns from permitted attributes" do
+        post "/api/grit/assays/assay_data_sheet_definitions/create_bulk", params: {
+          sheets: [
+            {
+              name: "Results", assay_model_id: draft_model.id, result: true, sort: 1,
+              columns: [
+                { name: "Value", safe_name: "value", data_type_id: string_type.id, sort: 1 }
+              ]
+            }
+          ]
+        }, as: :json
+
+        expect(response).to have_http_status(:ok)
+        json = JSON.parse(response.body)
+        expect(json["success"]).to be true
+
+        sheet = AssayDataSheetDefinition.find(json["data"][0]["id"])
+        expect(sheet.name).to eq("Results")
+        expect(sheet.assay_data_sheet_columns.sole.safe_name).to eq("value")
+      end
+
+      it "ignores attributes outside the permitted allowlist instead of mass-assigning them" do
+        post "/api/grit/assays/assay_data_sheet_definitions/create_bulk", params: {
+          sheets: [
+            {
+              name: "Results", assay_model_id: draft_model.id, result: true, sort: 1,
+              created_by: "attacker",
+              columns: [
+                { name: "Value", safe_name: "value", data_type_id: string_type.id, sort: 1, created_by: "attacker" }
+              ]
+            }
+          ]
+        }, as: :json
+
+        expect(response).to have_http_status(:ok)
+        json = JSON.parse(response.body)
+        expect(json["success"]).to be true
+
+        sheet = AssayDataSheetDefinition.find(json["data"][0]["id"])
+        expect(sheet.created_by).not_to eq("attacker")
+        expect(sheet.assay_data_sheet_columns.sole.created_by).not_to eq("attacker")
+      end
+    end
   end
 end

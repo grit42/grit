@@ -22,7 +22,6 @@ module Grit::Assays
     include Grit::Core::Controller::DangerousEdit
 
     def create_bulk
-      params.permit!
       errors = []
       sheets = []
       AssayDataSheetDefinition.transaction do
@@ -30,7 +29,7 @@ module Grit::Assays
           begin
             columns = sheet["columns"]
             sheet.delete("columns")
-            assay_data_sheet_definition = AssayDataSheetDefinition.create(sheet.slice("name", "description", "assay_model_id", "result", "sort"))
+            assay_data_sheet_definition = AssayDataSheetDefinition.create(sheet.permit("name", "description", "assay_model_id", "result", "sort"))
             sheets.push(assay_data_sheet_definition)
             unless assay_data_sheet_definition.errors.blank?
               assay_data_sheet_definition.errors.each do |e|
@@ -38,7 +37,7 @@ module Grit::Assays
               end
             else
               columns.each_with_index do |column, columnIndex|
-                assay_data_sheet_column = assay_data_sheet_definition.assay_data_sheet_columns.create(column.slice("name", "safe_name", "description", "sort", "required", "data_type_id", "unit_id"))
+                assay_data_sheet_column = assay_data_sheet_definition.assay_data_sheet_columns.create(column.permit("name", "safe_name", "description", "sort", "required", "data_type_id", "unit_id"))
                 if assay_data_sheet_column.errors
                   assay_data_sheet_column.errors.each do |e|
                     errors.push({ message: e.message, path: [ "sheets", sheetIndex, "columns", columnIndex, e.attribute ] })
