@@ -42,25 +42,19 @@ module Grit::Core::Controller::Readable
     end
 
     def filter_and_sort_active_record_relation(scope, filter, sort)
-      select_values_map = scope.select_values.each_with_object({}) do |v, memo|
-        alias_column = /^(?<value>.+) (as|AS) (?<alias>.+)$/.match(v)
-        if alias_column
-          memo[alias_column[:alias]] = alias_column[:value]
-        else
-          memo[v.split(".")[1]] = v
-        end
-      end
-
+      columns = select_values_map(scope)
 
       default_order_values = scope.order_values
       scope = scope.unscope(:order)
       sort.each do |sort_item|
-        scope = scope.order(ActiveRecord::Base.send(:sanitize_sql_array, [ "#{select_values_map[sort_item["property"]]} #{sort_direction(sort_item["direction"])} NULLS LAST" ]))
+        column = select_value_for(columns, sort_item["property"])
+        scope = scope.order(ActiveRecord::Base.send(:sanitize_sql_array, [ "#{column} #{sort_direction(sort_item["direction"])} NULLS LAST" ]))
       end
       scope.order_values = [ *scope.order_values, *default_order_values ]
 
       filter.each do |filter_item|
-        scope = scope.where(Grit::Core::FilterProvider.execute(filter_item["type"], filter_item["operator"], select_values_map[filter_item["property"]], filter_item["value"]))
+        column = select_value_for(columns, filter_item["property"])
+        scope = scope.where(Grit::Core::FilterProvider.execute(filter_item["type"], filter_item["operator"], column, filter_item["value"]))
       end
       scope
     end
@@ -170,6 +164,31 @@ module Grit::Core::Controller::Readable
 
     def quote_sort_property(property)
       ActiveRecord::Base.connection.quote_column_name(property.to_s)
+    end
+
+    # Maps the property names sent by the client onto the SQL expressions they
+    # are selected as. Identifiers may be quoted (dynamic schema tables quote
+    # every column and alias they select), so keys are stored unquoted.
+    def select_values_map(scope)
+      scope.select_values.each_with_object({}) do |select_value, memo|
+        sql = select_value.to_s
+        aliased = /\A(?<expression>.+)\s+AS\s+(?<alias>.+)\z/i.match(sql)
+        if aliased
+          memo[unquote_identifier(aliased[:alias])] = aliased[:expression]
+        else
+          memo[unquote_identifier(sql.split(".").last)] = sql
+        end
+      end
+    end
+
+    def unquote_identifier(identifier)
+      identifier.to_s.strip.delete_prefix('"').delete_suffix('"')
+    end
+
+    def select_value_for(columns, property)
+      columns.fetch(unquote_identifier(property)) do
+        raise ArgumentError, "Unknown property '#{property}'"
+      end
     end
 
     def get_model(params)
