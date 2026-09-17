@@ -1,0 +1,104 @@
+{
+  "ignored_warnings": [
+    {
+      "warning_type": "SQL Injection",
+      "warning_code": 0,
+      "fingerprint": "1e67d773246b5f4aeb77c185ed51ed6db042696a463978d6c47b49e25043b30d",
+      "check_name": "SQL",
+      "message": "Possible SQL injection",
+      "file": "app/models/grit/assays/experiment_metadata_template.rb",
+      "line": 64,
+      "confidence": "Weak",
+      "note": "self.table_name and md.safe_name are interpolated, not raw user input. safe_name is validated on every model that has it (format: /\\A[a-z_]{2}/ and /\\A[a-z0-9_]*\\z/, length 3-30), so it cannot contain SQL metacharacters. table_name is Rails schema reflection, defined in source code, not reachable via HTTP. Reviewed 2026-09-10."
+    },
+    {
+      "warning_type": "SQL Injection",
+      "warning_code": 0,
+      "fingerprint": "4712588a0d2353689f5e1bf24298c02b7c96e49e8d82f8e3d1f2a2ffc521e28b",
+      "check_name": "SQL",
+      "message": "Possible SQL injection",
+      "file": "app/models/grit/assays/experiment.rb",
+      "line": 102,
+      "confidence": "Weak",
+      "note": "Same pattern as experiment_metadata_template.rb:64 - self.table_name (schema reflection) and md.safe_name (format-validated identifier). Reviewed 2026-09-10."
+    },
+    {
+      "warning_type": "SQL Injection",
+      "warning_code": 0,
+      "fingerprint": "50a64b496e1f148a941b82a376fea8554ff032b04426dc8daef41992bc944db9",
+      "check_name": "SQL",
+      "message": "Possible SQL injection",
+      "file": "app/models/grit/assays/data_table_column.rb",
+      "line": 226,
+      "confidence": "Weak",
+      "note": "self.safe_name is format-validated (/\\A[a-z_]{2}/, /\\A[a-z0-9_]*\\z/, length 3-30) on DataTableColumn; no SQL metacharacters possible through normal validated writes. Reviewed 2026-09-10."
+    },
+    {
+      "warning_type": "SQL Injection",
+      "warning_code": 0,
+      "fingerprint": "78a7413ae51365f72621ce8524e8e2f219fc6ddc6203195554f59e982daf9c01",
+      "check_name": "SQL",
+      "message": "Possible SQL injection",
+      "file": "app/models/grit/assays/data_table_column.rb",
+      "line": 269,
+      "confidence": "Weak",
+      "note": "Same as data_table_column.rb:226 - self.safe_name is format-validated. Reviewed 2026-09-10."
+    },
+    {
+      "warning_type": "SQL Injection",
+      "warning_code": 0,
+      "fingerprint": "7b2b231aa921f168536a93433fe06c40b8e32995511b7d73c49c5fd5581552ce",
+      "check_name": "SQL",
+      "message": "Possible SQL injection",
+      "file": "app/models/grit/assays/assay_data_sheet_definition.rb",
+      "line": 69,
+      "confidence": "Weak",
+      "note": "column.safe_name is format-validated (see AssayDataSheetColumn model). column.data_type.table_name is not user-editable - DataTypesController has no create/update action, DataType rows are system-configured only. Reviewed 2026-09-10."
+    },
+    {
+      "warning_type": "SQL Injection",
+      "warning_code": 0,
+      "fingerprint": "9ec1b3be65c1b6dbaec3fd4cdc4c3dad0f4831d0533758a87ae1581d104e435f",
+      "check_name": "SQL",
+      "message": "Possible SQL injection",
+      "file": "app/models/grit/assays/data_table_column.rb",
+      "line": 184,
+      "confidence": "Weak",
+      "note": "Fixed 2026-09-10 (commit e0271e0f): entity_attribute_name is now validated against entity_klass.entity_properties before use, and the SQL uses the matched property's own name (schema-derived, from db_properties) rather than the raw column value. Previously this was the one real gap in the safe_name cluster - entity_attribute_name had no format validator. See spec/models/grit/assays/data_table_column_spec.rb for a regression test with an injection-shaped payload."
+    },
+    {
+      "warning_type": "SQL Injection",
+      "warning_code": 0,
+      "fingerprint": "d0e8bd7625bdb7f57105e874dbdbd6a36e473b7131a6218bbfac08d79a7c6cf7",
+      "check_name": "SQL",
+      "message": "Possible SQL injection",
+      "file": "app/models/grit/assays/data_table_column.rb",
+      "line": 206,
+      "confidence": "Weak",
+      "note": "assay_data_sheet_column.data_type.table_name is not user-editable (no create/update action on DataTypesController). assay_data_sheet_column.safe_name and self.safe_name are format-validated. Reviewed 2026-09-10."
+    },
+    {
+      "warning_type": "File Access",
+      "warning_code": 16,
+      "fingerprint": "d7c626b429767ed1d87abdc22d24e6d573b92228a80af26a774b877523e4f214",
+      "check_name": "SendFile",
+      "message": "Model attribute used in file name",
+      "file": "app/controllers/grit/assays/experiments_controller.rb",
+      "line": 98,
+      "confidence": "Weak",
+      "note": "experiment[:name] is passed through .gsub(/[\\/\\\\:*?\"<>|\\r\\n]/, \"_\") before use, stripping path separators and CRLF - no path traversal or header injection possible. Reviewed 2026-09-10."
+    },
+    {
+      "warning_type": "File Access",
+      "warning_code": 16,
+      "fingerprint": "e4ab5b783a2597afa60f1472d9dc5290a4f175adc95778af2c3a5640a9607a56",
+      "check_name": "SendFile",
+      "message": "Model attribute used in file name",
+      "file": "app/controllers/grit/assays/experiment_attachments_controller.rb",
+      "line": 177,
+      "confidence": "Weak",
+      "note": "Same as experiments_controller.rb:98 - name is sanitized via the same .gsub before use. Reviewed 2026-09-10."
+    }
+  ],
+  "brakeman_version": "8.0.5"
+}
