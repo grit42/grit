@@ -91,6 +91,38 @@ module Grit
         ActiveRecord::SchemaDumper.ignore_tables << /^lsb_.*$/
         ActiveRecord::SchemaDumper.ignore_tables << /^raw_lsb_.*$/
       end
+
+      rake_tasks do
+        # `ignore_tables` above only reaches tables pg_dump can see on the search
+        # path, which is every dynamic table built the old way — `lsb_<id>` and
+        # friends all live in `public`. The DynamicSchema concerns put theirs in a
+        # schema of their own instead, where that filter cannot reach them, and
+        # pg_dump with no restriction would write every one of them into
+        # structure.sql the next time anyone migrated a database that had some.
+        #
+        # Excluded by name rather than dumped by `dump_schemas = "public"`:
+        # restricting the dump makes pg_dump emit `CREATE SCHEMA public`, which
+        # then fails to reload under the `ON_ERROR_STOP=1` psql runs with.
+        #
+        # Only schemas matching a declared `dynamic_schema_prefix` are excluded,
+        # so a schema some migration created on purpose still gets dumped.
+        desc "Keep runtime dynamic schemas out of the structure dump"
+        task exclude_dynamic_schemas: :environment do
+          # The prefixes are declared in model class bodies, which are not loaded
+          # yet in an environment that does not eager load.
+          Rails.application.eager_load!
+
+          prefixes = Grit::Core::Model::DynamicSchema::SchemaDefinition.schema_prefixes
+          next if prefixes.empty?
+
+          flags = Array(ActiveRecord::Tasks::DatabaseTasks.structure_dump_flags)
+          ActiveRecord::Tasks::DatabaseTasks.structure_dump_flags =
+            flags | prefixes.map { |prefix| "--exclude-schema=#{prefix}_*" }
+        end
+
+        # Everything that writes structure.sql funnels through here.
+        Rake::Task["db:schema:dump"].enhance([ "exclude_dynamic_schemas" ]) if Rake::Task.task_defined?("db:schema:dump")
+      end
     end
   end
 end
