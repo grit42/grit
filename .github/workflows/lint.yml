@@ -1,0 +1,81 @@
+name: Lint
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  frontend-lint:
+    name: Frontend Lint (ESLint, Prettier, TypeScript)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build packages
+        run: pnpm exec nx run-many -t build --all
+
+      - name: Lint
+        run: pnpm exec nx run-many -t lint:check --all
+
+      - name: Prettier
+        if: always()
+        run: pnpm exec nx run-many -t format:check --all
+
+      - name: TypeScript
+        if: always()
+        run: pnpm exec nx run-many -t typecheck --all
+
+  ruby-lint:
+    name: Ruby Lint (RuboCop)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1
+        with:
+          ruby-version: 3.4.9
+          bundler-cache: true
+          working-directory: apps/grit/server
+          bundler-opts: --with local
+
+      - name: RuboCop (server)
+        working-directory: apps/grit/server
+        run: bundle exec rubocop
+
+      - name: Install dependencies (core)
+        working-directory: modules/core/backend
+        run: bundle install
+
+      - name: RuboCop (core)
+        working-directory: modules/core/backend
+        run: bundle exec rubocop
+
+      - name: Install dependencies (assays)
+        working-directory: modules/assays/backend
+        run: bundle install
+
+      - name: RuboCop (assays)
+        working-directory: modules/assays/backend
+        run: bundle exec rubocop
+
+      - name: Install dependencies (compounds)
+        working-directory: modules/compounds/backend
+        run: bundle install
+
+      - name: RuboCop (compounds)
+        working-directory: modules/compounds/backend
+        run: bundle exec rubocop

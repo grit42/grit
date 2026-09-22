@@ -23,6 +23,7 @@ export default defineConfig(
     rules: {
       ...reactHooks.configs.recommended.rules,
       "@typescript-eslint/no-explicit-any": "warn",
+      "import-x/no-unresolved": ["error", { ignore: ["^@grit42/"] }],
     },
     languageOptions: {
       globals: globals.browser,
