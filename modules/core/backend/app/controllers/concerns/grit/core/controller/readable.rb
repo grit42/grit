@@ -88,10 +88,6 @@ module Grit::Core::Controller::Readable
       @record_count = @record_count.values.sum unless @record_count.is_a? Integer
       @records = limit.to_i != -1 ? query.limit(limit).offset(offset) : query.all
       render json: { success: true, data: @records, cursor: offset.to_i + @records.length, total: @record_count }
-    rescue StandardError => e
-      logger.info e.to_s
-      logger.info e.backtrace.join("\n")
-      render json: { success: false, errors: e.to_s }, status: :internal_server_error
     end
 
     def csv_from_query(query)
