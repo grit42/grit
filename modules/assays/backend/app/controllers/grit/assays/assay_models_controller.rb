@@ -21,6 +21,11 @@ module Grit::Assays
     include Grit::Core::GritEntityController
     include Grit::Core::Controller::DangerousEdit
 
+    before_action :check_read, only: [ :export, :export_all ]
+    before_action :check_write, only: [ :import ]
+
+    MAX_IMPORT_FILE_SIZE = 25.megabytes
+
     def create
       AssayModel.transaction do
         permitted_params = params.permit(self.permitted_params)
@@ -219,6 +224,48 @@ module Grit::Assays
         render json: { success: false, errors: e.to_s }, status: :internal_server_error
         raise ActiveRecord::Rollback
       end
+    end
+
+    def export
+      record = AssayModel.find(params[:assay_model_id])
+      dump = [ Grit::Assays::AssayModelDump.export_assay_model(record) ]
+      send_data JSON.pretty_generate(dump),
+                filename: "#{record.name.parameterize}.json",
+                type: "application/json",
+                disposition: "attachment"
+    rescue ActiveRecord::RecordNotFound => e
+      render json: { success: false, errors: e.to_s }, status: :not_found
+    end
+
+    def export_all
+      dump = AssayModel.all.map { |record| Grit::Assays::AssayModelDump.export_assay_model(record) }
+      send_data JSON.pretty_generate(dump),
+                filename: "assay_models.json",
+                type: "application/json",
+                disposition: "attachment"
+    end
+
+    def import
+      if request.content_length.to_i > MAX_IMPORT_FILE_SIZE
+        render json: { success: false, errors: "File too large" }, status: :payload_too_large
+        return
+      end
+
+      uploaded = params.require(:file)
+      dump = JSON.parse(uploaded.read)
+      raise "File must contain a list of assay models" unless dump.is_a?(Array)
+
+      imported = ActiveRecord::Base.transaction do
+        dump.map { |assay_model_attrs| Grit::Assays::AssayModelDump.import_assay_model(assay_model_attrs) }
+      end
+
+      render json: { success: true, data: imported }, status: :created
+    rescue JSON::ParserError => e
+      render json: { success: false, errors: "Invalid JSON file: #{e.message}" }, status: :unprocessable_entity
+    rescue StandardError => e
+      logger.info e.to_s
+      logger.info e.backtrace.join("\n")
+      render json: { success: false, errors: e.to_s }, status: :unprocessable_entity
     end
 
     private

@@ -17,6 +17,7 @@ import AssayModelDetails from "../../pages/assay-administration/assay-models/ass
 import AssayModelMetadataPage from "../../pages/assay-administration/assay-models/assay-model/metadata/AssayModelMetadataPage";
 import AssayMetadataDefinitionSelectorPage from "../../pages/assay-administration/assay-models/assay-model/metadata/AssayModelMetadataSelectorPage";
 import CloneAssayModelPage from "../../pages/assay-administration/assay-models/CloneAssayModelPage";
+import ImportAssayModelPage from "../../pages/assay-administration/assay-models/ImportAssayModelPage";
 import NewDataSheetDefinitionPage from "../../pages/assay-administration/assay-models/assay-model/data-sheet-definitions/NewDataSheetDefinitionPage";
 import DataSheetDefinitionPage from "../../pages/assay-administration/assay-models/assay-model/data-sheet-definitions/DataSheetDefinitionPage";
 import DataSheetDefinitionColumnsPage from "../../pages/assay-administration/assay-models/assay-model/data-sheet-definitions/DataSheetColumnsPage";
@@ -87,6 +88,7 @@ const useRegisterAssaysAdministrationRoutes = () => {
           <Route key="assays-assay-models" path="assay-models">
             <Route index element={<AssayModelsPage />} />
             <Route path="new" element={<NewAssayModelPage />} />
+            <Route path="import" element={<ImportAssayModelPage />} />
             <Route
               path=":assay_model_id/clone"
               element={<CloneAssayModelPage />}

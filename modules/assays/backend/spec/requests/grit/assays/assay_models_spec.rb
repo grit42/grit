@@ -337,6 +337,176 @@ module Grit::Assays
       end
     end
 
+    # --- Export / Import ---
+
+    def upload_for(dump)
+      tmp = Tempfile.new([ "assay_dump", ".json" ])
+      tmp.write(JSON.generate(dump))
+      tmp.rewind
+      Rack::Test::UploadedFile.new(tmp.path, "application/json", true)
+    end
+
+    describe "export" do
+      before { login_as(admin) }
+
+      it "returns a JSON dump with no ids, embedding referenced vocabularies" do
+        vocabulary = create(:grit_core_vocabulary, :with_items)
+        metadata_definition = create(:grit_assays_assay_metadata_definition, vocabulary: vocabulary)
+        model = create(:grit_assays_assay_model, :draft, assay_type: biochemical)
+        create(:grit_assays_assay_model_metadatum, assay_model: model, assay_metadata_definition: metadata_definition)
+        sheet = create(:grit_assays_assay_data_sheet_definition, assay_model: model)
+        create(:grit_assays_assay_data_sheet_column, assay_data_sheet_definition: sheet, data_type: integer_type)
+
+        get "/api/grit/assays/assay_models/#{model.id}/export", as: :json
+
+        expect(response).to have_http_status(:success)
+        expect(response.content_type).to include("application/json")
+        dump = JSON.parse(response.body)
+        expect(dump).to be_a(Array)
+        expect(dump.length).to eq(1)
+
+        exported = dump.first
+        expect(exported["name"]).to eq(model.name)
+        expect(exported).not_to have_key("id")
+        expect(exported["assay_data_sheet_definitions"].first["assay_data_sheet_columns"].first).not_to have_key("id")
+
+        exported_vocabulary = exported["assay_model_metadata"].first["assay_metadata_definition"]["vocabulary"]
+        expect(exported_vocabulary["name"]).to eq(vocabulary.name)
+        expect(exported_vocabulary["vocabulary_items"].length).to eq(2)
+      end
+
+      it "returns 404 for an unknown assay model" do
+        get "/api/grit/assays/assay_models/999999999/export", as: :json
+        expect(response).to have_http_status(:not_found)
+      end
+    end
+
+    describe "export_all" do
+      before { login_as(admin) }
+
+      it "returns a JSON dump of every assay model" do
+        model_one = create(:grit_assays_assay_model, :draft, assay_type: biochemical)
+        model_two = create(:grit_assays_assay_model, :draft, assay_type: biochemical)
+
+        get "/api/grit/assays/assay_models/export_all", as: :json
+
+        expect(response).to have_http_status(:success)
+        expect(response.content_type).to include("application/json")
+        dump = JSON.parse(response.body)
+        expect(dump).to be_a(Array)
+        expect(dump.length).to eq(AssayModel.count)
+        expect(dump.map { |a| a["name"] }).to include(model_one.name, model_two.name)
+      end
+
+      it "returns an empty array when there are no assay models" do
+        AssayModel.destroy_all
+        get "/api/grit/assays/assay_models/export_all", as: :json
+
+        expect(response).to have_http_status(:success)
+        expect(JSON.parse(response.body)).to eq([])
+      end
+    end
+
+    describe "import" do
+      before { login_as(admin) }
+
+      it "creates a new assay model from a previously exported dump, reusing shared references instead of duplicating them" do
+        vocabulary = create(:grit_core_vocabulary, :with_items)
+        metadata_definition = create(:grit_assays_assay_metadata_definition, vocabulary: vocabulary)
+        model = create(:grit_assays_assay_model, :draft, assay_type: biochemical)
+        create(:grit_assays_assay_model_metadatum, assay_model: model, assay_metadata_definition: metadata_definition)
+
+        get "/api/grit/assays/assay_models/#{model.id}/export", as: :json
+        dump = JSON.parse(response.body)
+        dump.first["name"] = "Imported Copy"
+
+        expect {
+          post "/api/grit/assays/assay_models/import", params: { file: upload_for(dump) }
+        }.to change(AssayModel, :count).by(1)
+          .and change(AssayType, :count).by(0)
+          .and change(Grit::Core::Vocabulary, :count).by(0)
+          .and change(AssayMetadataDefinition, :count).by(0)
+
+        expect(response).to have_http_status(:created)
+        json = JSON.parse(response.body)
+        expect(json["success"]).to be true
+
+        imported = AssayModel.find(json["data"].first["id"])
+        expect(imported.id).not_to eq(model.id)
+        expect(imported.name).to eq("Imported Copy")
+        expect(imported.assay_type).to eq(biochemical)
+        expect(imported.publication_status.name).to eq("Draft")
+        expect(imported.assay_model_metadata.first.assay_metadata_definition).to eq(metadata_definition)
+      end
+
+      it "publishes the imported model and creates its dynamic data sheet tables when the source was published" do
+        dump = [ {
+          "name" => "Published Import #{SecureRandom.hex(4)}",
+          "description" => nil,
+          "assay_type" => { "name" => biochemical.name, "description" => biochemical.description },
+          "publication_status" => "Published",
+          "assay_model_metadata" => [],
+          "assay_data_sheet_definitions" => [ {
+            "name" => "Sheet", "description" => nil, "result" => false, "sort" => 0,
+            "assay_data_sheet_columns" => [ {
+              "name" => "Value", "safe_name" => "value", "description" => nil, "sort" => 0,
+              "required" => false, "data_type" => integer_type.name, "data_type_vocabulary" => nil, "unit" => nil
+            } ]
+          } ],
+          "experiment_metadata_templates" => []
+        } ]
+
+        post "/api/grit/assays/assay_models/import", params: { file: upload_for(dump) }
+
+        expect(response).to have_http_status(:created)
+        imported = AssayModel.find(JSON.parse(response.body)["data"].first["id"])
+        expect(imported.publication_status.name).to eq("Published")
+        sheet = imported.assay_data_sheet_definitions.first
+        expect(ActiveRecord::Base.connection.table_exists?(sheet.table_name)).to be true
+
+        post "/api/grit/assays/assay_models/#{imported.id}/draft", as: :json
+      end
+
+      it "returns 422 and commits nothing for an invalid JSON file" do
+        tmp = Tempfile.new([ "bad", ".json" ])
+        tmp.write("not json")
+        tmp.rewind
+        file = Rack::Test::UploadedFile.new(tmp.path, "application/json", true)
+
+        expect {
+          post "/api/grit/assays/assay_models/import", params: { file: file }
+        }.not_to change(AssayModel, :count)
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(JSON.parse(response.body)["success"]).to be false
+      end
+
+      it "returns 422 and commits nothing when a referenced data type doesn't exist" do
+        dump = [ {
+          "name" => "Bad Reference Import",
+          "description" => nil,
+          "assay_type" => { "name" => biochemical.name, "description" => biochemical.description },
+          "publication_status" => "Draft",
+          "assay_model_metadata" => [],
+          "assay_data_sheet_definitions" => [ {
+            "name" => "Sheet", "description" => nil, "result" => false, "sort" => 0,
+            "assay_data_sheet_columns" => [ {
+              "name" => "Value", "safe_name" => "value", "description" => nil, "sort" => 0,
+              "required" => false, "data_type" => "totally_bogus_type", "data_type_vocabulary" => nil, "unit" => nil
+            } ]
+          } ],
+          "experiment_metadata_templates" => []
+        } ]
+
+        expect {
+          post "/api/grit/assays/assay_models/import", params: { file: upload_for(dump) }
+        }.not_to change(AssayModel, :count)
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(JSON.parse(response.body)["success"]).to be false
+      end
+    end
+
     # --- Authentication ---
 
     describe "authentication" do

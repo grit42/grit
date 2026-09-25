@@ -19,7 +19,8 @@
 import { GritColumnDef, Table, useSetupTableState } from "@grit42/table";
 import { useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@grit42/client-library/components";
+import { Button, Dropdown } from "@grit42/client-library/components";
+import { downloadFile } from "@grit42/client-library/utils";
 import {
   AssayModelData,
   useInfiniteAssayModels,
@@ -113,6 +114,11 @@ const AssayModelsTable = () => {
   const navigate = useNavigate();
 
   const navigateToNew = useCallback(() => navigate("new"), [navigate]);
+  const navigateToImport = useCallback(() => navigate("import"), [navigate]);
+  const exportAll = useCallback(
+    () => downloadFile("/api/grit/assays/assay_models/export_all"),
+    [],
+  );
 
   const tableState = useSetupTableState("admin-assay_models-list", COLUMNS);
 
@@ -135,9 +141,17 @@ const AssayModelsTable = () => {
       header="Assay models"
       tableState={tableState}
       headerActions={
-        <Button onClick={navigateToNew}>
-          New
-        </Button>
+        <>
+          <Dropdown
+            menuItems={[
+              { id: "IMPORT", text: "Import", onClick: navigateToImport },
+              { id: "EXPORT_ALL", text: "Export all", onClick: exportAll },
+            ]}
+          >
+            <Button variant="transparent">Import / Export</Button>
+          </Dropdown>
+          <Button onClick={navigateToNew}>New</Button>
+        </>
       }
       data={flatData}
       onRowClick={(row) => navigate(`${row.original.id}/details`)}
