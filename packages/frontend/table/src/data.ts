@@ -64,8 +64,8 @@ export const sampleDataProperties: GritColumnDef<SampleRow>[] = [
     accessorKey: "description",
     header: "Description",
     type: "text",
-    size: 280,
-    description: "Free text notes (nullable)",
+    flex: 1,
+    description: "Free text notes (nullable) — flex column, fills remaining width",
   },
   {
     id: "concentration_um",

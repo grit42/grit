@@ -11,7 +11,9 @@
     "lint": "eslint . --fix",
     "lint:check": "eslint .",
     "format": "prettier . -w --ignore-path ../../../.prettierignore",
-    "format:check": "prettier . -c --ignore-path ../../../.prettierignore"
+    "format:check": "prettier . -c --ignore-path ../../../.prettierignore",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "exports": {
     ".": {
@@ -46,6 +48,8 @@
   },
   "devDependencies": {
     "@eslint/js": "catalog:",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.0.0",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
@@ -56,6 +60,7 @@
     "eslint-plugin-react-refresh": "catalog:",
     "glob": "catalog:",
     "globals": "catalog:",
+    "jsdom": "^25.0.0",
     "react": "catalog:",
     "react-dom": "catalog:",
     "typescript": "catalog:",
@@ -63,6 +68,7 @@
     "vite": "catalog:",
     "vite-plugin-dts": "catalog:",
     "vite-plugin-externalize-deps": "catalog:",
-    "vite-plugin-lib-inject-css": "catalog:"
+    "vite-plugin-lib-inject-css": "catalog:",
+    "vitest": "catalog:"
   }
 }

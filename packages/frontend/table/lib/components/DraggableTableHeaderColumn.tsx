@@ -28,6 +28,7 @@ import IconArrowUp from "@grit42/client-library/icons/IconArrowUp";
 import IconArrowDown from "@grit42/client-library/icons/IconArrowDown";
 import { GritColumnDef, TableStateSettings } from "../types";
 import useInternalTableState from "../features/table-state/useInternalTableState";
+import getCellSizeStyle from "./getCellSizeStyle";
 
 const DraggableTableHeaderColumn = <T,>({
   header,
@@ -70,8 +71,10 @@ const DraggableTableHeaderColumn = <T,>({
     ),
     transition: "width transform 0.2s ease-in-out",
     whiteSpace: "nowrap",
-    width: `calc(var(--header-${header?.id}-size) * 1px)`,
-    maxWidth: `calc(var(--header-${header?.id}-size) * 1px)`,
+    ...getCellSizeStyle(
+      `--header-${header?.id}-size`,
+      (header.column.columnDef as GritColumnDef).flex,
+    ),
     zIndex: isDragging ? 1 : 0,
     borderInlineEnd: nextToPlaceholder ? "none" : undefined,
   };

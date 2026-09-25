@@ -38,7 +38,7 @@ const ASSAY_TYPE_TABLE_COLUMNS: GritColumnDef<AssayTypeData>[] = [
     header: "Description",
     id: "description",
     type: "string",
-    size: 750,
+    flex: 1,
   },
 ];
 

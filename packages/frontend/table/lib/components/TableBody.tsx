@@ -24,10 +24,16 @@ import { useMemo, useRef } from "react";
 import { classnames } from "@grit42/client-library/utils";
 import { Spinner } from "@grit42/client-library/components";
 import { useDisplayDensity } from "@grit42/client-library/hooks";
-import { GritTypedColumnDef, TableProps, TableStateSettings } from "../types";
+import {
+  GritColumnDef,
+  GritTypedColumnDef,
+  TableProps,
+  TableStateSettings,
+} from "../types";
 import { getIsFiltersActive } from "../features/filters";
 import useInternalTableState from "../features/table-state/useInternalTableState";
 import Marvin03Meh from "@grit42/client-library/icons/Marvin03Meh";
+import getCellSizeStyle from "./getCellSizeStyle";
 
 type Props<T> = Pick<
   TableProps<T>,
@@ -66,6 +72,7 @@ const TableCell = <T,>({
   const isColumnClickable =
     onCellClick !== undefined &&
     onCellClick[0].includes(cell.column.id as keyof T);
+  const flex = (cell.column.columnDef as GritColumnDef).flex;
   return (
     <td
       ref={cellRef}
@@ -89,15 +96,15 @@ const TableCell = <T,>({
       className={classnames({
         [styles.clickable]: isColumnClickable,
       })}
-      style={{
-        width: `calc(var(--col-${cell.column.id}-size) * 1px)`,
-      }}
+      style={getCellSizeStyle(`--col-${cell.column.id}-size`, flex)}
     >
       <div
         className={styles.cellContentContainer}
         style={{
           textAlign: isNumericType ? "end" : undefined,
-          width: `calc(var(--col-${cell.column.id}-size) * 1px - var(--spacing) / 2)`,
+          width: flex
+            ? "calc(100% - var(--spacing) / 2)"
+            : `calc(var(--col-${cell.column.id}-size) * 1px - var(--spacing) / 2)`,
         }}
       >
         {flexRender(cell.column.columnDef.cell, cell.getContext())}

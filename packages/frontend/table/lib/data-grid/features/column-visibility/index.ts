@@ -17,5 +17,5 @@
  */
 
 export { default as ColumnVisibility } from "./ColumnVisibility";
-export * from "./utils";
-export { default as useColumnVisibility } from "./useColumnVisibility";
+export * from "../../../features/column-visibility/utils";
+export { default as useColumnVisibility } from "../../../features/column-visibility/useColumnVisibility";

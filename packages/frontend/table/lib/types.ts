@@ -45,6 +45,13 @@ export type GritColumnDefBase<
   defaultVisibility?: "visible" | "hidden";
   header?: StringOrTemplateHeader<TData, TValue>;
   meta?: GritColumnMeta<TData, TValue>;
+  /**
+   * Make this column share the table's remaining horizontal space instead of
+   * using a fixed pixel `size`, similar to CSS `flex-grow` (e.g. `flex: 1`).
+   * Takes precedence over `size` when both are set, and disables drag-resize
+   * for this column. `minSize`/`size` still bound the column's minimum width.
+   */
+  flex?: number;
 };
 
 export type GritDisplayColumnDef<
