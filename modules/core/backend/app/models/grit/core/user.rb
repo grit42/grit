@@ -147,10 +147,11 @@ module Grit::Core
 
       self.foreign_keys.each do |foreign_key, memo|
         foreign_key_model = Grit::Core::EntityMapper.table_to_model_name(foreign_key.to_table).constantize
-        query = query.joins("LEFT OUTER JOIN #{foreign_key.to_table} #{foreign_key.to_table}__ ON #{foreign_key.to_table}__.#{foreign_key.options[:primary_key]} = #{self.table_name}.#{foreign_key.options[:column]}")
+        join_alias = "#{foreign_key.options[:column]}__"
+        query = query.joins("LEFT OUTER JOIN #{foreign_key.to_table} #{join_alias} ON #{join_alias}.#{foreign_key.options[:primary_key]} = #{self.table_name}.#{foreign_key.options[:column]}")
         foreign_key_model.display_properties.each do |property|
           next if @no_show.include?(foreign_key.options[:column])
-          query = query.select("#{foreign_key.to_table}__.#{property[:name]} as #{foreign_key.options[:column]}__#{property[:name]}")
+          query = query.select("#{join_alias}.#{property[:name]} as #{foreign_key.options[:column]}__#{property[:name]}")
         end
       end
       query
