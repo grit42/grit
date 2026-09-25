@@ -5,6 +5,7 @@ import {
   Spinner,
   useConfirm,
 } from "@grit42/client-library/components";
+import { downloadFile } from "@grit42/client-library/utils";
 import {
   AssayModelData,
   useAssayModel,
@@ -263,6 +264,21 @@ const AssayModelActions = ({
           }
         />
       )}
+      <AssayModelAction
+        title="Export this Assay Model"
+        description="Download this Assay Model's definition (type, metadata, data sheets, vocabularies) as a JSON file, which can be imported into another Grit installation."
+        action={
+          <Button
+            onClick={() =>
+              downloadFile(
+                `/api/grit/assays/assay_models/${assayModel.id}/export`,
+              )
+            }
+          >
+            Export
+          </Button>
+        }
+      />
       {canEdit && published && (
         <AssayModelAction
           title="Convert this Assay Model to Draft"

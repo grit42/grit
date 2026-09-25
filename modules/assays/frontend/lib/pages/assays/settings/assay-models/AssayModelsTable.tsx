@@ -21,7 +21,13 @@ import { useCallback, useEffect, useMemo } from "react";
 import { useToolbar } from "@grit42/core";
 import Circle1NewIcon from "@grit42/client-library/icons/Circle1New";
 import { useNavigate } from "react-router-dom";
-import { Button, ErrorPage, Spinner } from "@grit42/client-library/components";
+import {
+  Button,
+  Dropdown,
+  ErrorPage,
+  Spinner,
+} from "@grit42/client-library/components";
+import { downloadFile } from "@grit42/client-library/utils";
 import { useTableColumns } from "@grit42/core/utils";
 import {
   useAssayModelColumns,
@@ -49,6 +55,11 @@ const AssayModelsTable = () => {
   const tableColumns = useTableColumns(assayModelColumns);
 
   const navigateToNew = useCallback(() => navigate("new"), [navigate]);
+  const navigateToImport = useCallback(() => navigate("import"), [navigate]);
+  const exportAll = useCallback(
+    () => downloadFile("/api/grit/assays/assay_models/export_all"),
+    [],
+  );
 
   useEffect(() => {
     return registerToolbarActions({
@@ -88,9 +99,19 @@ const AssayModelsTable = () => {
         header="Assay models"
         tableState={tableState}
         headerActions={
-          <Button color="secondary" onClick={navigateToNew}>
-            New
-          </Button>
+          <>
+            <Dropdown
+              menuItems={[
+                { id: "IMPORT", text: "Import", onClick: navigateToImport },
+                { id: "EXPORT_ALL", text: "Export all", onClick: exportAll },
+              ]}
+            >
+              <Button variant="transparent">Import / Export</Button>
+            </Dropdown>
+            <Button color="secondary" onClick={navigateToNew}>
+              New
+            </Button>
+          </>
         }
         fitContent
         data={flatData}

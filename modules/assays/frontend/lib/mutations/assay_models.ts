@@ -23,7 +23,50 @@ import {
   EndpointError,
   EndpointSuccess,
   notifyOnError,
+  useQueryClient,
 } from "@grit42/api";
+import { AssayModelData } from "../queries/assay_models";
+
+export const useImportAssayModelsMutation = (
+  mutationOptions: UseMutationOptions<AssayModelData[], string, FormData> = {},
+) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ["importAssayModels"],
+    mutationFn: async (data: FormData) => {
+      const response = await request<
+        EndpointSuccess<AssayModelData[]>,
+        EndpointError<string>
+      >("grit/assays/assay_models/import", {
+        method: "POST",
+        data,
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      if (!response.success) {
+        throw response.errors;
+      }
+
+      return response.data;
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["entities", "data", "grit/assays/assay_models"],
+          refetchType: "all",
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["entities", "infiniteData", "grit/assays/assay_models"],
+          refetchType: "all",
+        }),
+      ]);
+    },
+    onError: notifyOnError,
+    ...mutationOptions,
+  });
+};
 
 export const useUpdateAssayModelMetadata = (
   id: string | number,
