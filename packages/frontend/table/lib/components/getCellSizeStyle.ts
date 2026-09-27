@@ -26,6 +26,18 @@ import { CSSProperties } from "react";
  * Flex columns grow/shrink to share the table's remaining width, like CSS
  * `flex-grow`, instead of using a fixed pixel width; they still fall back to
  * their size CSS var as a `minWidth` so they never collapse below it.
+ *
+ * Non-flex columns explicitly disable `flex-shrink` (the CSS default is `1`,
+ * i.e. shrinkable). Without this, once a row's declared column widths add up
+ * to more than the table's available width, every column — not just the
+ * flex one — gets proportionally shrunk by the browser's flex-shrink
+ * algorithm. `<thead>`'s row and each `<tbody>` row are independent flex
+ * formatting contexts, so tiny differences in how each resolves that
+ * weighted shrink calculation compound across many columns into visible
+ * header/body misalignment. Pinning fixed columns to their exact width and
+ * letting only the flex column absorb any slack (positive or negative, up
+ * to horizontal scrolling) keeps every row's layout identical and
+ * deterministic.
  */
 export default function getCellSizeStyle(
   sizeVar: string,
@@ -41,5 +53,6 @@ export default function getCellSizeStyle(
   return {
     width: `calc(var(${sizeVar}) * 1px)`,
     maxWidth: `calc(var(${sizeVar}) * 1px)`,
+    flexShrink: 0,
   };
 }

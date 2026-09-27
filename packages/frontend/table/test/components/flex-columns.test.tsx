@@ -54,7 +54,7 @@ describe.each([
     expect(flexHeader?.style.flex).toBe("1 1 0px");
     expect(flexHeader?.style.width).toBe("");
     expect(fixedHeader?.style.width).toBe("calc(var(--header-id-size) * 1px)");
-    expect(fixedHeader?.style.flex).toBe("");
+    expect(fixedHeader?.style.flexShrink).toBe("0");
   });
 
   it("disables drag-resize on the flex column but not the fixed column", () => {

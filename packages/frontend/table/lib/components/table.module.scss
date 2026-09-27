@@ -64,6 +64,14 @@
 
   table {
     display: grid;
+    // Plain "1fr" is shorthand for minmax(auto, 1fr): the "auto" minimum
+    // still lets the track grow to fit its content's intrinsic size,
+    // ignoring the 1fr cap ("grid blowout") — with a flex-grow descendant
+    // this let the track balloon past the table's own width instead of
+    // being bounded by it, verified via computed styles: the table's own
+    // box stayed at its real width while gridTemplateColumns resolved far
+    // larger. minmax(0, 1fr) removes that implicit minimum entirely.
+    grid-template-columns: minmax(0, 1fr);
     font-size: 12px;
 
     &.compact {
@@ -75,6 +83,14 @@
 
   thead {
     display: grid;
+    // Same "grid blowout" issue as the outer <table> (see its comment
+    // above), fixed independently here: thead's in-flow <tr> (unlike
+    // tbody's, which is out-of-flow/absolutely positioned) directly
+    // contributes to thead's own implicit column's auto-sizing, letting it
+    // grow wider than <table>'s bounded width even after that fix — which
+    // desyncs the sticky header from the body below it, worse the further
+    // you scroll right.
+    grid-template-columns: minmax(0, 1fr);
     position: sticky;
     top: 0;
     z-index: 1;
@@ -149,6 +165,12 @@
 
   tbody {
     display: grid;
+    // Explicit for the same reason as <table>/<thead> above — currently
+    // stays bounded anyway since its <tr> children are absolutely
+    // positioned (out-of-flow content doesn't contribute to a grid
+    // container's own auto-sizing), but that's an implicit, fragile
+    // invariant not worth relying on silently.
+    grid-template-columns: minmax(0, 1fr);
     position: relative;
 
     &.emptyTable {
@@ -162,6 +184,12 @@
     tr {
       display: flex;
       position: absolute;
+      // Absolutely positioned with no left/right set, so width would
+      // otherwise shrink-to-fit its content instead of filling the table —
+      // harmless for fixed-width columns (their pixel widths are explicit
+      // either way), but it leaves flex columns (`flex: 1 1 0px`) nothing to
+      // grow into, so they collapse back to their own row's content width.
+      width: 100%;
       min-height: 3em;
 
       &.emphasized {

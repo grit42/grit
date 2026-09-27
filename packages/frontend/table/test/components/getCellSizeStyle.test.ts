@@ -20,17 +20,19 @@ import { describe, it, expect } from "vitest";
 import getCellSizeStyle from "../../lib/components/getCellSizeStyle";
 
 describe("getCellSizeStyle", () => {
-  it("returns a fixed width/maxWidth pair for a non-flex column", () => {
+  it("returns a fixed width/maxWidth pair with shrink disabled for a non-flex column", () => {
     expect(getCellSizeStyle("--col-name-size")).toEqual({
       width: "calc(var(--col-name-size) * 1px)",
       maxWidth: "calc(var(--col-name-size) * 1px)",
+      flexShrink: 0,
     });
   });
 
-  it("returns a fixed width/maxWidth pair when flex is 0", () => {
+  it("returns a fixed width/maxWidth pair with shrink disabled when flex is 0", () => {
     expect(getCellSizeStyle("--col-name-size", 0)).toEqual({
       width: "calc(var(--col-name-size) * 1px)",
       maxWidth: "calc(var(--col-name-size) * 1px)",
+      flexShrink: 0,
     });
   });
 
