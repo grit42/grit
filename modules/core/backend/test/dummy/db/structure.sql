@@ -699,7 +699,8 @@ CREATE TABLE public.test_entities (
     datetime timestamp(6) without time zone,
     date date,
     "boolean" boolean,
-    user_id bigint
+    user_id bigint,
+    second_user_id bigint
 );
 
 
@@ -1262,6 +1263,13 @@ CREATE UNIQUE INDEX index_test_entities_on_name ON public.test_entities USING bt
 
 
 --
+-- Name: index_test_entities_on_second_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_test_entities_on_second_user_id ON public.test_entities USING btree (second_user_id);
+
+
+--
 -- Name: index_test_entities_on_user_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1609,6 +1617,11 @@ ALTER TABLE ONLY public.test_column_definitions
 
 ALTER TABLE ONLY public.test_table_definitions
     ADD CONSTRAINT test_table_definitions_schema_definition_id FOREIGN KEY (schema_definition_id) REFERENCES public.test_schema_definitions(id);
+-- Name: test_entities test_second; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.test_entities
+    ADD CONSTRAINT test_second FOREIGN KEY (second_user_id) REFERENCES public.grit_core_users(id);
 
 
 --
@@ -1618,6 +1631,7 @@ ALTER TABLE ONLY public.test_table_definitions
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20260925120000'),
 ('20260918110216'),
 ('20260917101500'),
 ('20260510051017'),
