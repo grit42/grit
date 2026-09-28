@@ -48,10 +48,11 @@ Grit::Assays::Engine.routes.draw do
     post :update_metadata
     post :publish
     post :draft
-    get :export
     collection do
+      get :export_options
+      get :export
+      post :import_preview
       post :import
-      get :export_all
     end
   end
   resources :assay_types

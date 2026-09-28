@@ -1,0 +1,152 @@
+/**
+ * Copyright 2025 grit42 A/S. <https://grit42.com/>
+ *
+ * This file is part of @grit42/assays.
+ *
+ * @grit42/assays is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or  any later version.
+ *
+ * @grit42/assays is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+@use "@grit42/client-library/theme.scss";
+
+.sections {
+  display: flex;
+  flex-direction: column;
+  gap: theme.$spacing-lg;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: theme.$spacing-sm;
+
+  .sectionHeader {
+    display: flex;
+    align-items: center;
+    gap: theme.$spacing;
+    cursor: pointer;
+
+    h3 {
+      margin: 0;
+    }
+  }
+
+  .count {
+    margin-left: auto;
+    opacity: 0.7;
+    font-size: 0.9em;
+  }
+
+  .empty {
+    margin: 0;
+    opacity: 0.7;
+  }
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 30vh;
+  overflow: auto;
+  border: 1px solid
+    color-mix(in srgb, theme.$palette-background-contrast-text 15%, transparent);
+  border-radius: theme.$border-radius;
+
+  li + li {
+    border-top: 1px solid
+      color-mix(
+        in srgb,
+        theme.$palette-background-contrast-text 10%,
+        transparent
+      );
+  }
+}
+
+.item {
+  display: flex;
+  align-items: flex-start;
+  gap: theme.$spacing;
+  padding: theme.$spacing-sm theme.$spacing;
+  cursor: pointer;
+
+  &[data-disabled] {
+    cursor: default;
+    opacity: 0.65;
+  }
+
+  .itemContent {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .itemTitle {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: theme.$spacing-sm;
+    font-weight: 500;
+  }
+
+  .itemDescription,
+  .itemDetail {
+    font-size: 0.9em;
+    opacity: 0.8;
+  }
+
+  .itemProblem {
+    font-size: 0.9em;
+    color: theme.$palette-error-main;
+  }
+}
+
+.badge {
+  font-size: 0.75em;
+  font-weight: 500;
+  padding: 1px 6px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  white-space: nowrap;
+
+  &[data-variant="success"] {
+    color: theme.$palette-success-main;
+  }
+
+  &[data-variant="warning"] {
+    color: theme.$palette-warning-main;
+  }
+
+  &[data-variant="error"] {
+    color: theme.$palette-error-main;
+  }
+}
+
+.dialogBody {
+  display: flex;
+  flex-direction: column;
+  gap: theme.$spacing-lg;
+  min-width: min(70ch, 90vw);
+}
+
+.controls {
+  display: flex;
+  justify-content: flex-end;
+  gap: theme.$spacing;
+}
+
+.fileSummary {
+  display: flex;
+  align-items: center;
+  gap: theme.$spacing;
+}

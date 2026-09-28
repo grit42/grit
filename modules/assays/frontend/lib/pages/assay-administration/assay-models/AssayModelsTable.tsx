@@ -17,10 +17,10 @@
  */
 
 import { GritColumnDef, Table, useSetupTableState } from "@grit42/table";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button, Dropdown } from "@grit42/client-library/components";
-import { downloadFile } from "@grit42/client-library/utils";
+import ExportAssayModelsDialog from "./transfer/ExportAssayModelsDialog";
 import {
   AssayModelData,
   useInfiniteAssayModels,
@@ -115,10 +115,7 @@ const AssayModelsTable = () => {
 
   const navigateToNew = useCallback(() => navigate("new"), [navigate]);
   const navigateToImport = useCallback(() => navigate("import"), [navigate]);
-  const exportAll = useCallback(
-    () => downloadFile("/api/grit/assays/assay_models/export_all"),
-    [],
-  );
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
 
   const tableState = useSetupTableState("admin-assay_models-list", COLUMNS);
 
@@ -137,32 +134,41 @@ const AssayModelsTable = () => {
   );
 
   return (
-    <Table
-      header="Assay models"
-      tableState={tableState}
-      headerActions={
-        <>
-          <Dropdown
-            menuItems={[
-              { id: "IMPORT", text: "Import", onClick: navigateToImport },
-              { id: "EXPORT_ALL", text: "Export all", onClick: exportAll },
-            ]}
-          >
-            <Button variant="transparent">Import / Export</Button>
-          </Dropdown>
-          <Button onClick={navigateToNew}>New</Button>
-        </>
-      }
-      data={flatData}
-      onRowClick={(row) => navigate(`${row.original.id}/details`)}
-      loading={isFetching}
-      noDataMessage={isError ? error : undefined}
-      pagination={{
-        fetchNextPage,
-        isFetchingNextPage,
-        totalRows: data?.pages[0]?.total,
-      }}
-    />
+    <>
+      <Table
+        header="Assay models"
+        tableState={tableState}
+        headerActions={
+          <>
+            <Dropdown
+              menuItems={[
+                { id: "IMPORT", text: "Import", onClick: navigateToImport },
+                {
+                  id: "EXPORT",
+                  text: "Export...",
+                  onClick: () => setIsExportDialogOpen(true),
+                },
+              ]}
+            >
+              <Button variant="transparent">Import / Export</Button>
+            </Dropdown>
+            <Button onClick={navigateToNew}>New</Button>
+          </>
+        }
+        data={flatData}
+        onRowClick={(row) => navigate(`${row.original.id}/details`)}
+        loading={isFetching}
+        noDataMessage={isError ? error : undefined}
+        pagination={{
+          fetchNextPage,
+          isFetchingNextPage,
+          totalRows: data?.pages[0]?.total,
+        }}
+      />
+      {isExportDialogOpen && (
+        <ExportAssayModelsDialog onClose={() => setIsExportDialogOpen(false)} />
+      )}
+    </>
   );
 };
 

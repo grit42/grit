@@ -21,8 +21,8 @@ module Grit::Assays
     include Grit::Core::GritEntityController
     include Grit::Core::Controller::DangerousEdit
 
-    before_action :check_read, only: [ :export, :export_all ]
-    before_action :check_write, only: [ :import ]
+    before_action :check_read, only: [ :export_options, :export ]
+    before_action :check_write, only: [ :import_preview, :import ]
 
     MAX_IMPORT_FILE_SIZE = 25.megabytes
 
@@ -226,52 +226,102 @@ module Grit::Assays
       end
     end
 
+    # Everything that can be picked in the export dialog. For each assay model, the templates
+    # that set defaults for its metadata are listed so the UI can suggest them alongside it.
+    def export_options
+      template_ids_by_assay_model = ExperimentMetadataTemplateMetadatum
+        .joins("INNER JOIN #{AssayModelMetadatum.table_name} amm ON amm.assay_metadata_definition_id = #{ExperimentMetadataTemplateMetadatum.table_name}.assay_metadata_definition_id")
+        .distinct
+        .pluck("amm.assay_model_id", :experiment_metadata_template_id)
+        .group_by(&:first)
+        .transform_values { |pairs| pairs.map(&:last) }
+
+      render json: {
+        success: true,
+        data: {
+          assay_models: AssayModel.includes(:publication_status).order(:name).map do |record|
+            {
+              id: record.id,
+              name: record.name,
+              description: record.description,
+              publication_status: record.publication_status.name,
+              experiment_metadata_template_ids: template_ids_by_assay_model.fetch(record.id, [])
+            }
+          end,
+          vocabularies: Grit::Core::Vocabulary.order(:name).map { |record| record.slice(:id, :name, :description) },
+          experiment_metadata_templates: ExperimentMetadataTemplate.order(:name).map { |record| record.slice(:id, :name, :description) }
+        }
+      }
+    end
+
+    # Ids are passed as comma-separated lists: assay_model_ids, vocabulary_ids, experiment_metadata_template_ids.
     def export
-      record = AssayModel.find(params[:assay_model_id])
-      dump = [ Grit::Assays::AssayModelDump.export_assay_model(record) ]
-      send_data JSON.pretty_generate(dump),
-                filename: "#{record.name.parameterize}.json",
-                type: "application/json",
-                disposition: "attachment"
-    rescue ActiveRecord::RecordNotFound => e
-      render json: { success: false, errors: e.to_s }, status: :not_found
-    end
+      assay_models = AssayModel.where(id: id_list(:assay_model_ids)).order(:name).to_a
+      vocabularies = Grit::Core::Vocabulary.where(id: id_list(:vocabulary_ids)).order(:name).to_a
+      templates = ExperimentMetadataTemplate.where(id: id_list(:experiment_metadata_template_ids)).order(:name).to_a
 
-    def export_all
-      dump = AssayModel.all.map { |record| Grit::Assays::AssayModelDump.export_assay_model(record) }
-      send_data JSON.pretty_generate(dump),
-                filename: "assay_models.json",
-                type: "application/json",
-                disposition: "attachment"
-    end
-
-    def import
-      if request.content_length.to_i > MAX_IMPORT_FILE_SIZE
-        render json: { success: false, errors: "File too large" }, status: :payload_too_large
+      if assay_models.empty? && vocabularies.empty? && templates.empty?
+        render json: { success: false, errors: "Nothing selected for export" }, status: :unprocessable_entity
         return
       end
 
-      uploaded = params.require(:file)
-      dump = JSON.parse(uploaded.read)
-      raise "File must contain a list of assay models" unless dump.is_a?(Array)
-
-      imported = ActiveRecord::Base.transaction do
-        dump.map { |assay_model_attrs| Grit::Assays::AssayModelDump.import_assay_model(assay_model_attrs) }
+      dump = Grit::Assays::AssayModelDump.export(assay_models: assay_models, vocabularies: vocabularies, experiment_metadata_templates: templates)
+      filename = if assay_models.one? && vocabularies.empty? && templates.empty?
+        assay_models.first.name.parameterize
+      else
+        "grit_assays_export_#{Time.now.strftime('%Y%m%d%H%M%S')}"
       end
 
-      render json: { success: true, data: imported }, status: :created
-    rescue JSON::ParserError => e
-      render json: { success: false, errors: "Invalid JSON file: #{e.message}" }, status: :unprocessable_entity
-    rescue StandardError => e
-      logger.info e.to_s
-      logger.info e.backtrace.join("\n")
-      render json: { success: false, errors: e.to_s }, status: :unprocessable_entity
+      send_data JSON.pretty_generate(dump),
+                filename: "#{filename}.json",
+                type: "application/json",
+                disposition: "attachment"
+    end
+
+    def import_preview
+      with_uploaded_dump do |dump|
+        render json: { success: true, data: Grit::Assays::AssayModelDump.preview(dump) }
+      end
+    end
+
+    # Expects the same file as import_preview plus a "selection" JSON param:
+    # { "assay_models": [names], "vocabularies": [names], "experiment_metadata_templates": [names] }
+    def import
+      with_uploaded_dump do |dump|
+        selection = JSON.parse(params.require(:selection))
+        raise "Invalid selection" unless selection.is_a?(Hash)
+
+        imported = Grit::Assays::AssayModelDump.import(dump, selection)
+        render json: {
+          success: true,
+          data: imported.transform_values { |records| records.map { |record| record.slice(:id, :name) } }
+        }, status: :created
+      end
     end
 
     private
 
       def permitted_params
         %i[ name description assay_type_id ]
+      end
+
+      def id_list(key)
+        params[key].to_s.split(",").map(&:strip).reject(&:blank?)
+      end
+
+      def with_uploaded_dump
+        if request.content_length.to_i > MAX_IMPORT_FILE_SIZE
+          render json: { success: false, errors: "File too large" }, status: :payload_too_large
+          return
+        end
+
+        yield JSON.parse(params.require(:file).read)
+      rescue JSON::ParserError => e
+        render json: { success: false, errors: "Invalid JSON file: #{e.message}" }, status: :unprocessable_entity
+      rescue StandardError => e
+        logger.info e.to_s
+        logger.info e.backtrace.join("\n")
+        render json: { success: false, errors: e.to_s }, status: :unprocessable_entity
       end
   end
 end
