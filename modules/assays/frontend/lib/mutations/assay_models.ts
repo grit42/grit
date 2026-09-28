@@ -25,43 +25,91 @@ import {
   notifyOnError,
   useQueryClient,
 } from "@grit42/api";
-import { AssayModelData } from "../queries/assay_models";
+import {
+  AssayModelImportPreview,
+  AssayModelImportResult,
+} from "../queries/assay_models";
 
+const postImportFile = async <T>(path: string, data: FormData) => {
+  const response = await request<EndpointSuccess<T>, EndpointError<string>>(
+    path,
+    {
+      method: "POST",
+      data,
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    },
+  );
+
+  if (!response.success) {
+    throw response.errors;
+  }
+
+  return response.data;
+};
+
+/**
+ * Uploads an export file and returns what importing each of its entries would do,
+ * without writing anything. Expects a FormData with a "file" entry.
+ */
+export const usePreviewAssayModelImportMutation = (
+  mutationOptions: UseMutationOptions<
+    AssayModelImportPreview,
+    string,
+    FormData
+  > = {},
+) => {
+  return useMutation({
+    mutationKey: ["previewAssayModelImport"],
+    mutationFn: (data: FormData) =>
+      postImportFile<AssayModelImportPreview>(
+        "grit/assays/assay_models/import_preview",
+        data,
+      ),
+    onError: notifyOnError,
+    ...mutationOptions,
+  });
+};
+
+/**
+ * Expects a FormData with the "file" entry previewed earlier and a "selection" entry
+ * holding the JSON-encoded AssayModelImportSelection.
+ */
 export const useImportAssayModelsMutation = (
-  mutationOptions: UseMutationOptions<AssayModelData[], string, FormData> = {},
+  mutationOptions: UseMutationOptions<
+    AssayModelImportResult,
+    string,
+    FormData
+  > = {},
 ) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationKey: ["importAssayModels"],
-    mutationFn: async (data: FormData) => {
-      const response = await request<
-        EndpointSuccess<AssayModelData[]>,
-        EndpointError<string>
-      >("grit/assays/assay_models/import", {
-        method: "POST",
+    mutationFn: (data: FormData) =>
+      postImportFile<AssayModelImportResult>(
+        "grit/assays/assay_models/import",
         data,
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-
-      if (!response.success) {
-        throw response.errors;
-      }
-
-      return response.data;
-    },
+      ),
     onSuccess: async () => {
-      await Promise.all([
-        queryClient.invalidateQueries({
-          queryKey: ["entities", "data", "grit/assays/assay_models"],
-          refetchType: "all",
-        }),
-        queryClient.invalidateQueries({
-          queryKey: ["entities", "infiniteData", "grit/assays/assay_models"],
-          refetchType: "all",
-        }),
-      ]);
+      await Promise.all(
+        [
+          "grit/assays/assay_models",
+          "grit/assays/assay_types",
+          "grit/assays/assay_metadata_definitions",
+          "grit/assays/experiment_metadata_templates",
+          "grit/core/vocabularies",
+        ].flatMap((path) => [
+          queryClient.invalidateQueries({
+            queryKey: ["entities", "data", path],
+            refetchType: "all",
+          }),
+          queryClient.invalidateQueries({
+            queryKey: ["entities", "infiniteData", path],
+            refetchType: "all",
+          }),
+        ]),
+      );
     },
     onError: notifyOnError,
     ...mutationOptions,

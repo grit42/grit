@@ -17,18 +17,110 @@
 #++
 
 module Grit::Assays
-  # Exports/imports Assay Model definitions (type, metadata, data sheet structure,
-  # vocabularies, experiment metadata templates) as plain hashes with no ids, so a dump can be
-  # moved between databases. Used by both the export/import controller actions on
-  # AssayModelsController and the apps/grit/server/script/AssayExportImport/*.rb CLI scripts.
+  # Exports/imports Assay Model definitions (type, metadata, data sheet structure), vocabularies
+  # and experiment metadata templates as plain hashes with no ids, so a dump can be moved between
+  # databases. Used by the export/import controller actions on AssayModelsController and by the
+  # apps/grit/server/script/AssayExportImport/*.rb CLI scripts.
   #
-  # Vocabularies (and their items) referenced by a metadata definition or by a vocabulary-backed
-  # data sheet column are embedded in full and created in the target database if they don't
-  # already exist there (matched/reused by name otherwise), and so is anything they back:
-  # Assay Metadata Definitions and Experiment Metadata Templates. Unit and Publication Status
-  # are matched by name/abbreviation and are expected to already exist in the target database —
-  # import raises if one of those is missing.
+  # A dump is a hash with three independently selectable sections:
+  #
+  #   { "format" => "grit-assays-export", "version" => 2,
+  #     "assay_models" => [...], "vocabularies" => [...], "experiment_metadata_templates" => [...] }
+  #
+  # Each entry is self-contained: an assay model or template embeds the vocabularies (and
+  # metadata definitions) it depends on, which are created in the target database if they don't
+  # exist there yet (matched/reused by name otherwise, adding any missing vocabulary items). Unit,
+  # Data Type and Publication Status are matched by name/abbreviation and must already exist.
+  #
+  # Import never creates a duplicate: every entry is identified by its (unique) name, and a
+  # selected entry that already exists in the target database is rejected. Version 1 dumps (a bare
+  # array of assay models with embedded templates) are still accepted, see .normalize.
   class AssayModelDump
+    FORMAT = "grit-assays-export"
+    VERSION = 2
+
+    SECTIONS = {
+      "assay_models" => { model: "Grit::Assays::AssayModel", label: "Assay model" },
+      "vocabularies" => { model: "Grit::Core::Vocabulary", label: "Vocabulary" },
+      "experiment_metadata_templates" => { model: "Grit::Assays::ExperimentMetadataTemplate", label: "Experiment metadata template" }
+    }.freeze
+
+    def self.export(assay_models: [], vocabularies: [], experiment_metadata_templates: [])
+      {
+        "format" => FORMAT,
+        "version" => VERSION,
+        "assay_models" => assay_models.map { |assay_model| export_assay_model(assay_model) },
+        "vocabularies" => vocabularies.map { |vocabulary| export_vocabulary(vocabulary) },
+        "experiment_metadata_templates" => experiment_metadata_templates.map { |template| export_experiment_metadata_template(template) }
+      }
+    end
+
+    # Templates that assign a default value for one of this assay model's metadata definitions.
+    # Such a template may also cover definitions of other assay models — templates are exported
+    # and imported as a whole, not sliced per model.
+    def self.related_experiment_metadata_templates(assay_model)
+      Grit::Assays::ExperimentMetadataTemplate
+        .joins(:experiment_metadata_template_metadata)
+        .where(experiment_metadata_template_metadata: { assay_metadata_definition_id: assay_model.assay_model_metadata.select(:assay_metadata_definition_id) })
+        .distinct
+    end
+
+    # Returns a version 2 dump hash, converting a version 1 dump (bare array of assay models,
+    # each embedding its templates) and dropping entries whose name appears twice in a section.
+    def self.normalize(dump)
+      if dump.is_a?(Array)
+        dump = {
+          "assay_models" => dump.map { |attrs| attrs.except("experiment_metadata_templates") },
+          "vocabularies" => [],
+          "experiment_metadata_templates" => dump.flat_map { |attrs| Array(attrs["experiment_metadata_templates"]) }
+        }
+      end
+      raise "File is not a Grit assays export" unless dump.is_a?(Hash) && SECTIONS.keys.any? { |section| dump.key?(section) }
+
+      SECTIONS.keys.to_h do |section|
+        entries = Array(dump[section])
+        raise "Invalid entry in '#{section}'" unless entries.all? { |attrs| attrs.is_a?(Hash) && attrs["name"].present? }
+        [ section, entries.uniq { |attrs| attrs["name"] } ]
+      end
+    end
+
+    # Describes what importing each entry of the dump would do, without writing anything:
+    # whether it is already installed (and so can't be imported), which of its dependencies
+    # would be created or reused, and problems that would make its import fail.
+    def self.preview(dump)
+      dump = normalize(dump)
+      {
+        "assay_models" => dump["assay_models"].map { |attrs| preview_assay_model(attrs) },
+        "vocabularies" => dump["vocabularies"].map { |attrs| preview_vocabulary(attrs) },
+        "experiment_metadata_templates" => dump["experiment_metadata_templates"].map { |attrs| preview_experiment_metadata_template(attrs) }
+      }
+    end
+
+    # Names of every entry that can be imported (not installed, no problems), in the shape
+    # .import expects as its selection.
+    def self.importable_selection(dump)
+      preview(dump).transform_values do |entries|
+        entries.reject { |entry| entry["installed"] || entry["problems"].any? }.map { |entry| entry["name"] }
+      end
+    end
+
+    # Imports the entries named in selection ({ section => [names] }) inside a single transaction.
+    # Raises if a selected name is not in the dump or already exists in the target database.
+    def self.import(dump, selection)
+      dump = normalize(dump)
+      selected = SECTIONS.keys.to_h do |section|
+        [ section, Array(selection[section]).uniq.map { |name| selected_entry!(dump, section, name) } ]
+      end
+      raise "Nothing selected for import" if selected.values.all?(&:empty?)
+
+      ActiveRecord::Base.transaction do
+        vocabularies = selected["vocabularies"].map { |attrs| import_vocabulary!(attrs) }
+        assay_models = selected["assay_models"].map { |attrs| import_assay_model(attrs) }
+        templates = selected["experiment_metadata_templates"].map { |attrs| import_experiment_metadata_template(attrs) }
+        { "assay_models" => assay_models, "vocabularies" => vocabularies, "experiment_metadata_templates" => templates }
+      end
+    end
+
     def self.export_assay_model(assay_model)
       {
         "name" => assay_model.name,
@@ -36,8 +128,7 @@ module Grit::Assays
         "assay_type" => export_assay_type(assay_model.assay_type),
         "publication_status" => assay_model.publication_status.name,
         "assay_model_metadata" => assay_model.assay_model_metadata.map { |metadatum| export_assay_model_metadatum(metadatum) },
-        "assay_data_sheet_definitions" => assay_model.assay_data_sheet_definitions.map { |definition| export_assay_data_sheet_definition(definition) },
-        "experiment_metadata_templates" => export_experiment_metadata_templates(assay_model)
+        "assay_data_sheet_definitions" => assay_model.assay_data_sheet_definitions.map { |definition| export_assay_data_sheet_definition(definition) }
       }
     end
 
@@ -59,6 +150,8 @@ module Grit::Assays
 
       Array(attrs["assay_model_metadata"]).each { |metadatum_attrs| import_assay_model_metadatum(assay_model, metadatum_attrs) }
       Array(attrs["assay_data_sheet_definitions"]).each { |definition_attrs| import_assay_data_sheet_definition(assay_model, definition_attrs) }
+      # Version 1 dumps embed templates in the assay model; .normalize lifts them out, but keep
+      # accepting them here for callers passing a raw version 1 entry.
       Array(attrs["experiment_metadata_templates"]).each { |template_attrs| import_experiment_metadata_template(template_attrs) }
 
       if attrs["publication_status"] == "Published"
@@ -145,23 +238,10 @@ module Grit::Assays
       }
     end
 
-    # Any template that assigns a default value for one of this assay model's metadata
-    # definitions is pulled in, even if the same template also covers definitions that belong to
-    # other assay models — the template is exported/imported as a whole, not sliced per model.
-    def self.export_experiment_metadata_templates(assay_model)
-      definition_ids = assay_model.assay_model_metadata.map(&:assay_metadata_definition_id)
-      return [] if definition_ids.empty?
-
-      Grit::Assays::ExperimentMetadataTemplate
-        .joins(:experiment_metadata_template_metadata)
-        .where(experiment_metadata_template_metadata: { assay_metadata_definition_id: definition_ids })
-        .distinct
-        .map { |template| export_experiment_metadata_template(template) }
-    end
     private_class_method :export_assay_type, :export_vocabulary_item, :export_vocabulary, :vocabulary_for_data_type,
       :export_assay_metadata_definition, :export_assay_model_metadatum, :export_assay_data_sheet_column,
       :export_assay_data_sheet_definition, :export_experiment_metadata_template_metadatum,
-      :export_experiment_metadata_template, :export_experiment_metadata_templates
+      :export_experiment_metadata_template
 
     def self.find_publication_status!(name)
       Grit::Core::PublicationStatus.find_by(name: name) || raise("Publication status '#{name}' not found in target database")
@@ -258,5 +338,90 @@ module Grit::Assays
     private_class_method :find_publication_status!, :find_data_type!, :find_unit!, :import_vocabulary!,
       :import_or_find_assay_metadata_definition, :import_assay_model_metadatum, :import_assay_data_sheet_definition,
       :import_experiment_metadata_template_metadatum, :import_experiment_metadata_template
+
+    def self.selected_entry!(dump, section, name)
+      config = SECTIONS.fetch(section)
+      attrs = dump[section].find { |entry| entry["name"] == name }
+      raise "#{config[:label]} '#{name}' is not in the file" if attrs.nil?
+      raise "#{config[:label]} '#{name}' already exists" if config[:model].constantize.exists?(name: name)
+      attrs
+    end
+
+    def self.dependency(kind, name, installed, note = nil)
+      { "kind" => kind, "name" => name, "installed" => installed, "note" => note }
+    end
+
+    def self.vocabulary_dependency(vocabulary_attrs)
+      vocabulary = Grit::Core::Vocabulary.find_by(name: vocabulary_attrs.fetch("name"))
+      missing = vocabulary ? missing_vocabulary_items(vocabulary, vocabulary_attrs) : []
+      note = "#{missing.size} missing item(s) will be added: #{missing.join(', ')}" if missing.any?
+      dependency("Vocabulary", vocabulary_attrs["name"], vocabulary.present?, note)
+    end
+
+    def self.missing_vocabulary_items(vocabulary, vocabulary_attrs)
+      Array(vocabulary_attrs["vocabulary_items"]).map { |item| item["name"] } - vocabulary.vocabulary_items.pluck(:name)
+    end
+
+    def self.metadata_definition_dependencies(definition_attrs)
+      installed = Grit::Assays::AssayMetadataDefinition.exists?(safe_name: definition_attrs.fetch("safe_name"))
+      [
+        dependency("Metadata definition", definition_attrs["name"], installed),
+        vocabulary_dependency(definition_attrs.fetch("vocabulary"))
+      ]
+    end
+
+    def self.preview_entry(section, attrs, dependencies: [], problems: [], extra: {})
+      {
+        "name" => attrs["name"],
+        "description" => attrs["description"],
+        "installed" => SECTIONS.fetch(section)[:model].constantize.exists?(name: attrs["name"]),
+        "dependencies" => dependencies.uniq { |dep| [ dep["kind"], dep["name"] ] },
+        "problems" => problems.uniq
+      }.merge(extra)
+    end
+
+    def self.preview_assay_model(attrs)
+      assay_type_name = attrs.dig("assay_type", "name")
+      dependencies = [ dependency("Assay type", assay_type_name, Grit::Assays::AssayType.exists?(name: assay_type_name)) ]
+      problems = []
+
+      Array(attrs["assay_model_metadata"]).each do |metadatum_attrs|
+        dependencies.concat(metadata_definition_dependencies(metadatum_attrs.fetch("assay_metadata_definition")))
+      end
+
+      Array(attrs["assay_data_sheet_definitions"]).flat_map { |sheet| Array(sheet["assay_data_sheet_columns"]) }.each do |column_attrs|
+        if column_attrs["data_type_vocabulary"]
+          dependencies << vocabulary_dependency(column_attrs["data_type_vocabulary"])
+        elsif !Grit::Core::DataType.exists?(name: column_attrs["data_type"])
+          problems << "Data type '#{column_attrs['data_type']}' not found"
+        end
+        if column_attrs["unit"].present? && !Grit::Core::Unit.exists?(abbreviation: column_attrs["unit"])
+          problems << "Unit '#{column_attrs['unit']}' not found"
+        end
+      end
+
+      preview_entry("assay_models", attrs, dependencies: dependencies, problems: problems, extra: {
+        "assay_type" => assay_type_name,
+        "publication_status" => attrs["publication_status"]
+      })
+    end
+
+    def self.preview_vocabulary(attrs)
+      vocabulary = Grit::Core::Vocabulary.find_by(name: attrs["name"])
+      preview_entry("vocabularies", attrs, extra: {
+        "item_count" => Array(attrs["vocabulary_items"]).size,
+        "missing_items" => vocabulary ? missing_vocabulary_items(vocabulary, attrs) : []
+      })
+    end
+
+    def self.preview_experiment_metadata_template(attrs)
+      dependencies = Array(attrs["experiment_metadata_template_metadata"]).flat_map do |metadatum_attrs|
+        metadata_definition_dependencies(metadatum_attrs.fetch("assay_metadata_definition"))
+      end
+      preview_entry("experiment_metadata_templates", attrs, dependencies: dependencies)
+    end
+    private_class_method :selected_entry!, :dependency, :vocabulary_dependency, :missing_vocabulary_items,
+      :metadata_definition_dependencies, :preview_entry, :preview_assay_model, :preview_vocabulary,
+      :preview_experiment_metadata_template
   end
 end

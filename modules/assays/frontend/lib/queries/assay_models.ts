@@ -29,6 +29,10 @@ import {
   URLParams,
   UndefinedInitialDataInfiniteOptions,
   PaginatedEndpointSuccess,
+  request,
+  EndpointSuccess,
+  EndpointError,
+  useQuery,
 } from "@grit42/api";
 import { Filter, SortingState } from "@grit42/table";
 import { FormFieldDef } from "@grit42/form";
@@ -138,3 +142,87 @@ export const useInfiniteAssayModelDataSheetRecords = (
     queryOptions,
   );
 };
+
+export interface AssayModelExportOption {
+  id: number;
+  name: string;
+  description: string | null;
+  publication_status: string;
+  experiment_metadata_template_ids: number[];
+}
+
+export interface ExportOption {
+  id: number;
+  name: string;
+  description: string | null;
+}
+
+export interface AssayModelExportOptions {
+  assay_models: AssayModelExportOption[];
+  vocabularies: ExportOption[];
+  experiment_metadata_templates: ExportOption[];
+}
+
+export const useAssayModelExportOptions = (
+  queryOptions: Partial<UseQueryOptions<AssayModelExportOptions, string>> = {},
+) => {
+  return useQuery({
+    queryKey: ["assayModelExportOptions"],
+    queryFn: async (): Promise<AssayModelExportOptions> => {
+      const response = await request<
+        EndpointSuccess<AssayModelExportOptions>,
+        EndpointError
+      >("grit/assays/assay_models/export_options");
+
+      if (!response.success) {
+        throw response.errors;
+      }
+
+      return response.data;
+    },
+    staleTime: 0,
+    ...queryOptions,
+  });
+};
+
+export type AssayModelTransferSection =
+  | "assay_models"
+  | "vocabularies"
+  | "experiment_metadata_templates";
+
+export interface ImportPreviewDependency {
+  kind: string;
+  name: string;
+  installed: boolean;
+  note: string | null;
+}
+
+export interface ImportPreviewEntry {
+  name: string;
+  description: string | null;
+  installed: boolean;
+  dependencies: ImportPreviewDependency[];
+  problems: string[];
+}
+
+export interface AssayModelImportPreview {
+  assay_models: (ImportPreviewEntry & {
+    assay_type: string;
+    publication_status: string;
+  })[];
+  vocabularies: (ImportPreviewEntry & {
+    item_count: number;
+    missing_items: string[];
+  })[];
+  experiment_metadata_templates: ImportPreviewEntry[];
+}
+
+export type AssayModelImportSelection = Record<
+  AssayModelTransferSection,
+  string[]
+>;
+
+export type AssayModelImportResult = Record<
+  AssayModelTransferSection,
+  { id: number; name: string }[]
+>;

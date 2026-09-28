@@ -17,7 +17,7 @@
  */
 
 import { Table, useSetupTableState } from "@grit42/table";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useToolbar } from "@grit42/core";
 import Circle1NewIcon from "@grit42/client-library/icons/Circle1New";
 import { useNavigate } from "react-router-dom";
@@ -27,13 +27,13 @@ import {
   ErrorPage,
   Spinner,
 } from "@grit42/client-library/components";
-import { downloadFile } from "@grit42/client-library/utils";
 import { useTableColumns } from "@grit42/core/utils";
 import {
   useAssayModelColumns,
   useInfiniteAssayModels,
 } from "../../../../queries/assay_models";
 import { CenteredColumnLayout } from "@grit42/client-library/layouts";
+import ExportAssayModelsDialog from "./transfer/ExportAssayModelsDialog";
 
 const DEFAULT_COLUMN_SIZES = {
   name: 200,
@@ -56,10 +56,7 @@ const AssayModelsTable = () => {
 
   const navigateToNew = useCallback(() => navigate("new"), [navigate]);
   const navigateToImport = useCallback(() => navigate("import"), [navigate]);
-  const exportAll = useCallback(
-    () => downloadFile("/api/grit/assays/assay_models/export_all"),
-    [],
-  );
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
 
   useEffect(() => {
     return registerToolbarActions({
@@ -103,7 +100,11 @@ const AssayModelsTable = () => {
             <Dropdown
               menuItems={[
                 { id: "IMPORT", text: "Import", onClick: navigateToImport },
-                { id: "EXPORT_ALL", text: "Export all", onClick: exportAll },
+                {
+                  id: "EXPORT",
+                  text: "Export...",
+                  onClick: () => setIsExportDialogOpen(true),
+                },
               ]}
             >
               <Button variant="transparent">Import / Export</Button>
@@ -124,6 +125,9 @@ const AssayModelsTable = () => {
           totalRows: data?.pages[0]?.total,
         }}
       />
+      {isExportDialogOpen && (
+        <ExportAssayModelsDialog onClose={() => setIsExportDialogOpen(false)} />
+      )}
     </CenteredColumnLayout>
   );
 };

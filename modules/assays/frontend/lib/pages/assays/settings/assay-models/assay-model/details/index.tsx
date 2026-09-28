@@ -5,7 +5,7 @@ import {
   Spinner,
   useConfirm,
 } from "@grit42/client-library/components";
-import { downloadFile } from "@grit42/client-library/utils";
+import ExportAssayModelsDialog from "../../transfer/ExportAssayModelsDialog";
 import {
   AssayModelData,
   useAssayModel,
@@ -164,6 +164,7 @@ const AssayModelActions = ({
   assayModel: Partial<AssayModelData>;
 }) => {
   const confirm = useConfirm();
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
   const { canEdit, dangerousEditMode, setDangerousEditMode, published } =
     useAssayModelEditorContext();
   const navigate = useNavigate();
@@ -266,19 +267,17 @@ const AssayModelActions = ({
       )}
       <AssayModelAction
         title="Export this Assay Model"
-        description="Download this Assay Model's definition (type, metadata, data sheets, vocabularies) as a JSON file, which can be imported into another Grit installation."
+        description="Download this Assay Model's definition (type, metadata, data sheets, vocabularies) and related experiment metadata templates as a JSON file, which can be imported into another Grit installation. You can adjust what is included before downloading."
         action={
-          <Button
-            onClick={() =>
-              downloadFile(
-                `/api/grit/assays/assay_models/${assayModel.id}/export`,
-              )
-            }
-          >
-            Export
-          </Button>
+          <Button onClick={() => setIsExportDialogOpen(true)}>Export</Button>
         }
       />
+      {isExportDialogOpen && (
+        <ExportAssayModelsDialog
+          initialAssayModelIds={[Number(assayModel.id)]}
+          onClose={() => setIsExportDialogOpen(false)}
+        />
+      )}
       {canEdit && published && (
         <AssayModelAction
           title="Convert this Assay Model to Draft"
