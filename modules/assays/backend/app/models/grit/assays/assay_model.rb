@@ -35,7 +35,7 @@ module Grit::Assays
     entity_crud_with read: [ "read:system" ], write: [ "admin:assays" ]
 
     def self.published(params)
-      self.detailed(params).where("grit_core_publication_statuses__.name = 'Published'")
+      self.detailed(params).where("publication_status_id__.name = 'Published'")
     end
 
     def create_tables
