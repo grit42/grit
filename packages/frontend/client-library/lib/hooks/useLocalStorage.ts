@@ -17,7 +17,7 @@
  */
 
 import superjson from "superjson";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import useEventCallback from "./useEventCallback";
 import useEventListener from "./useEventListener";
 
@@ -57,6 +57,24 @@ export function useLocalStorage<T>(
   // Pass initial state function to useState so logic is only executed once
   const [storedValue, setStoredValue] = useState<T>(readValue);
 
+  /*
+   * The latest value, for resolving a functional update against.
+   *
+   * `setValue` is an event callback, so its closure holds the value from the
+   * last *committed* render. A functional update resolved against that closure
+   * sees stale state whenever two updates happen in one handler — the second
+   * computes from the same starting point as the first and silently discards
+   * it. That is a data-loss bug rather than a staleness nuisance: a caller
+   * writing two keys of one stored object kept only the second.
+   *
+   * Updated synchronously by the setter below, so a sequence of updates within
+   * one tick composes. Not written during render: every path that calls
+   * `setStoredValue` - the setter, the mount effect and the storage listener -
+   * updates this alongside it, so there is nothing for a render-time write to
+   * catch up on.
+   */
+  const latest = useRef<T>(storedValue);
+
   // Return a wrapped version of useState's setter function that ...
   // ... persists the new value to localStorage.
   const setValue: React.Dispatch<React.SetStateAction<T>> = useEventCallback(
@@ -71,9 +89,11 @@ export function useLocalStorage<T>(
 
       try {
         // Allow value to be a function so we have the same API as useState
-        const newValue = value instanceof Function ? value(storedValue) : value;
+        const newValue =
+          value instanceof Function ? value(latest.current) : value;
 
         // Save state
+        latest.current = newValue;
         setStoredValue(newValue);
 
         // Save to local storage
@@ -90,7 +110,9 @@ export function useLocalStorage<T>(
   );
 
   useEffect(() => {
-    setStoredValue(readValue());
+    const next = readValue();
+    latest.current = next;
+    setStoredValue(next);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -99,7 +121,9 @@ export function useLocalStorage<T>(
       if ((event as StorageEvent)?.key && (event as StorageEvent).key !== key) {
         return;
       }
-      setStoredValue(readValue());
+      const next = readValue();
+      latest.current = next;
+      setStoredValue(next);
     },
     [key, readValue],
   );

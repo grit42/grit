@@ -46,13 +46,13 @@ export const numberFormat = (
       text: (value) =>
         Number.isFinite(value)
           ? String(Number(value.toPrecision(AUTOMATIC_SIGNIFICANT_FIGURES)))
-          : "—",
+          : "-",
     };
   }
 
   const places = Math.min(Math.max(Math.floor(decimals), 0), 10);
   return {
     spec: `.${places}f`,
-    text: (value) => (Number.isFinite(value) ? value.toFixed(places) : "—"),
+    text: (value) => (Number.isFinite(value) ? value.toFixed(places) : "-"),
   };
 };

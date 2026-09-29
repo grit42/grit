@@ -1,4 +1,5 @@
 .notices {
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xs, 0.25rem);
@@ -28,6 +29,11 @@
 .empty {
   color: var(--color-error, #a32f2f);
   font-weight: 500;
+}
+
+/* The figure states what it did, and nothing is wrong. */
+.info {
+  color: var(--color-text-secondary, #767d8b);
 }
 
 .changed {

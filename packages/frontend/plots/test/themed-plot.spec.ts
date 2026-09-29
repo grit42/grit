@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import {
+  figureClick,
   buildExportOptions,
   buildThemedAxes,
 } from "../lib/PlotBase/ThemedPlot";
@@ -156,5 +157,18 @@ describe("buildExportOptions", () => {
       format: "webp",
       filename: undefined,
     });
+  });
+});
+
+describe("figureClick", () => {
+  test("passes the figure's click action through ordinarily", () => {
+    const onClick = () => {};
+    expect(figureClick(false, onClick)).toBe(onClick);
+  });
+
+  test("withdraws it while a note is being placed", () => {
+    // Otherwise the click placing a note also removed a study, or gathered a
+    // combination, underneath it.
+    expect(figureClick(true, () => {})).toBeUndefined();
   });
 });

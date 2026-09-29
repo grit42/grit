@@ -11,10 +11,14 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  scrollbar-gutter: stable;
   display: flex;
   flex-direction: column;
   gap: 4px;
   padding: 4px;
+  width: 18rem;
+  max-width: 100%;
+  overflow-wrap: break-word;
 }
 
 .header {
@@ -33,4 +37,6 @@
 .plot {
   height: 100%;
   min-height: 0;
+  min-width: 0;
+  max-width: 100%;
 }

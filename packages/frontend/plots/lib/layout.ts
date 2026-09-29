@@ -84,6 +84,22 @@ export const composeAxes = ({
     };
   }, {});
 
+  /*
+   * One scale for every panel: Plotly's own `matches`, so zooming one panel
+   * moves them all. Only the facet grid's own axes, numbered 1 to `facets` -
+   * a plot with strips or trees on further axes must not have those tied in.
+   */
+  if (def.sharedScales && facets > 1) {
+    for (let panel = 2; panel <= facets; panel += 1) {
+      for (const orientation of ["x", "y"] as const) {
+        const key = `${orientation}axis${panel}`;
+        if (composed[key]) {
+          composed[key] = { ...composed[key], matches: orientation };
+        }
+      }
+    }
+  }
+
   if (titles === false) return composed;
 
   const explicit = typeof titles === "object" ? titles : {};

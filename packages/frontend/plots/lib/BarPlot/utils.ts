@@ -35,6 +35,7 @@ import {
   StatMarker,
 } from "../types";
 import { seriesPattern } from "../constants";
+import { categoryRange } from "../axes";
 import { numberFormat } from "../format";
 import { buildFacets, nullish, ungroupedLabel } from "../utils";
 
@@ -217,7 +218,7 @@ export const buildBar = (
       tickmode: "array",
       tickvals: categories.map((_, i) => i),
       ticktext: categories,
-      range: [-0.5, Math.max(categories.length - 0.5, 0.5)],
+      ...categoryRange(categories.length),
       zeroline: false,
     };
     axes[`yaxis${axis}`] = {};
@@ -303,7 +304,7 @@ export const buildBar = (
             // The same shape the time series uses, so a group reads the same
             // whichever plot type it is being looked at in.
             hoverTemplate:
-              `<b>${series} — ${summaryLabel}</b>` +
+              `<b>${series} - ${summaryLabel}</b>` +
               `<br>${xLabel}: %{customdata[0]}<br>${yLabel}: %{y:${fmt.spec}}` +
               STAT_HOVER_SUFFIX,
           }),

@@ -19,7 +19,12 @@
 import { resolveDisplay } from "./displayMode";
 import { supportsTickRange } from "./axes";
 import type { PlotDefinition, SourceData } from "./types";
-import { MAX_FACETS, countFacets, facetLabels } from "./utils";
+import {
+  MAX_FACETS,
+  countFacets,
+  facetLabels,
+  hiddenFacetLabels,
+} from "./utils";
 
 /**
  * Something the figure did not draw, said in the figure's own words.
@@ -36,8 +41,11 @@ export interface PlotNotice {
    * `omitted` — data exists but is not drawn.
    * `empty` — nothing is drawn at all, and why.
    * `warning` — drawn, but something about it should be read with care.
+   * `info` — the figure did something worth stating, and nothing is wrong.
+   *   Kept apart from `warning` so that "here is what I did" does not read as
+   *   "be careful"; it is also excluded from the running omitted total.
    */
-  kind: "omitted" | "empty" | "warning";
+  kind: "omitted" | "empty" | "warning" | "info";
   reason: string;
   count?: number;
 }
@@ -105,6 +113,37 @@ export const plotNotices = ({
         });
       }
     }
+  }
+
+  const cluster = (
+    def as { cluster?: { x?: boolean; y?: boolean; dendrogram?: boolean } }
+  ).cluster;
+  if (
+    cluster &&
+    cluster.dendrogram !== false &&
+    (cluster.x || cluster.y) &&
+    countFacets(data, def) > 1
+  ) {
+    notices.push({
+      kind: "info",
+      reason:
+        "The dendrogram is drawn for a single panel only" +
+        'Narrow "Panels shown" to one, or stop faceting, to see it.',
+    });
+  }
+
+  const hidden = hiddenFacetLabels(data, def);
+  if (hidden.length > 0) {
+    const named = hidden.slice(0, NAMED_OMISSIONS).join(", ");
+    const rest =
+      hidden.length > NAMED_OMISSIONS
+        ? ` and ${hidden.length - NAMED_OMISSIONS} more`
+        : "";
+    notices.push({
+      kind: "omitted",
+      count: hidden.length,
+      reason: `panels hidden by the panel selection: ${named}${rest}.`,
+    });
   }
 
   const wanted = countFacets(data, def);

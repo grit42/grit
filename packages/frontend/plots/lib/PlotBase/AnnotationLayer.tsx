@@ -25,9 +25,9 @@ export interface AnnotationPoint {
   x: number | string;
   y: number | string;
   axis?: string;
+  xaxis?: string;
 }
 
-/** Adding a note to a figure. */
 const AnnotationLayer = ({
   annotating,
   onAnnotatingChange,
@@ -51,14 +51,18 @@ const AnnotationLayer = ({
 
   return (
     <>
-      <Button
-        size="tiny"
-        variant={"filled"}
-        aria-pressed={annotating}
-        onClick={() => onAnnotatingChange(!annotating)}
-      >
-        {annotating ? "Click the plot" : "Add note"}
-      </Button>
+      {annotating && (
+        <div className={styles.hint} role="status">
+          <span>Click where the note belongs.</span>
+          <Button
+            size="tiny"
+            variant="transparent"
+            onClick={() => onAnnotatingChange(false)}
+          >
+            Cancel
+          </Button>
+        </div>
+      )}
       <Dialog isOpen={pending !== null} onClose={close} title="Add a note">
         {pending !== null && (
           <div className={styles.form}>
@@ -112,8 +116,8 @@ export const AnnotationList = ({
   if (!annotations.length)
     return (
       <span className={styles.none}>
-        No notes yet. Use “Add note” above the figure, then click where the note
-        belongs.
+        No notes yet. Use the note button in the figure&apos;s toolbar, then
+        click where the note belongs.
       </span>
     );
 
@@ -125,7 +129,7 @@ export const AnnotationList = ({
             <span className={styles.text}>{annotation.text}</span>
             <span className={styles.meta}>
               at {String(annotation.x)}, {String(annotation.y)}
-              {annotation.author ? ` — ${annotation.author}` : ""}
+              {annotation.author ? `: ${annotation.author}` : ""}
             </span>
           </div>
           <Button

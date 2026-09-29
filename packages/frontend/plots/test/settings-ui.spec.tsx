@@ -6,6 +6,7 @@ import { describe, expect, test } from "vitest";
 import { createRoot } from "react-dom/client";
 import { act, createElement } from "react";
 import PlotSettings, { PLOT_IMPLEMENTATIONS } from "../lib/PlotSettings";
+import BaseSettings from "../lib/PlotBase/BaseSettings";
 import type {
   PlotDefinition,
   SourceData,
@@ -365,5 +366,50 @@ describe("the notes section", () => {
     expect(
       (received as { annotations?: { id: string }[] }).annotations,
     ).toEqual([{ id: "note-2", text: "Balance recalibrated", x: 9, y: 12 }]);
+  });
+});
+
+/** X6: one switch for one scale across facet panels, where a plot opts in. */
+describe("the panel scales switch", () => {
+  const faceted = { ...plot, facetBy: ["compound"] };
+  const rows = [
+    { concentration: 1, response: 2, compound: "A" },
+    { concentration: 3, response: 4, compound: "B" },
+  ];
+  const mount = async (
+    def: PlotDefinition,
+    show: Record<string, boolean>,
+    data: SourceData = rows,
+  ) => {
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+    await act(async () => {
+      createRoot(host).render(
+        createElement(BaseSettings, {
+          plot: def,
+          properties,
+          data,
+          onChange: () => {},
+          show,
+        }),
+      );
+    });
+    return host.textContent ?? "";
+  };
+
+  test("is offered where the plot opts in and there are panels", async () => {
+    expect(await mount(faceted, { sharedScales: true })).toContain(
+      "Panel scales",
+    );
+  });
+
+  test("is not offered to a plot that does not opt in", async () => {
+    expect(await mount(faceted, {})).not.toContain("Panel scales");
+  });
+
+  test("is not offered with a single panel", async () => {
+    expect(await mount(plot, { sharedScales: true })).not.toContain(
+      "Panel scales",
+    );
   });
 });

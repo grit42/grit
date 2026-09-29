@@ -6,7 +6,7 @@ import { buildTimeSeries } from "../lib/TimeSeriesPlot/utils";
 import { buildScatter } from "../lib/ScatterPlot/utils";
 import { buildBox } from "../lib/BoxPlot/utils";
 import { buildBar } from "../lib/BarPlot/utils";
-import { buildFacets, facetLabels } from "../lib/utils";
+import { buildFacets, facetLabels, inDeclaredOrder } from "../lib/utils";
 import { boxStats } from "../lib/math";
 import type { ColorMap } from "../lib/colors";
 import type {
@@ -14,7 +14,9 @@ import type {
   BoxPlotDefinition,
   ScatterPlotDefinition,
   TimeSeriesPlotDefinition,
+  PlotDefinition,
   PlotHooks,
+  SourceData,
 } from "../lib/types";
 import { sendBodyWeights } from "./fixtures/send";
 import { asTrace } from "./traceFields";
@@ -975,5 +977,122 @@ describe("facet ordering", () => {
     const facets = buildFacets(yearRows as never, facetDef);
     expect(facets.map((f) => f.data.length)).toEqual([1, 1, 1]);
     expect(facets.map((f) => f.data[0]!.value)).toEqual([2, 3, 1]);
+  });
+});
+
+/**
+ * The panel order, where the alphabet is the wrong authority.
+ *
+ * Panels are sorted by their label, which is right for a year or a specimen
+ * and wrong wherever the labels carry a convention the alphabet does not know:
+ * split by sex, `F` sorts before `M` and every figure leads with the females.
+ *
+ * The convention belongs to whoever knows what the values mean, so it is
+ * passed in rather than guessed here.
+ */
+describe("facetOrder", () => {
+  const rows: SourceData = [
+    { sex: "F", value: 1 },
+    { sex: "M", value: 2 },
+    { sex: "U", value: 3 },
+  ];
+  const def = (facetOrder?: string[]) =>
+    ({
+      type: "scatter",
+      title: "t",
+      x: { key: "value", axisType: "linear" },
+      y: { key: "value", axisType: "linear" },
+      facetBy: ["sex"],
+      ...(facetOrder ? { facetOrder } : {}),
+    }) as PlotDefinition;
+
+  test("sorts by label when no order is given", () => {
+    expect(facetLabels(rows, def())).toEqual(["F", "M", "U"]);
+  });
+
+  test("uses the given order", () => {
+    expect(facetLabels(rows, def(["M", "F"]))).toEqual(["M", "F", "U"]);
+  });
+
+  test("keeps an unlisted panel, rather than dropping it", () => {
+    // A partial or stale order must not hide a panel.
+    expect(facetLabels(rows, def(["M"]))).toEqual(["M", "F", "U"]);
+  });
+
+  test("ignores a label the data does not hold", () => {
+    expect(facetLabels(rows, def(["ZZZ", "M"]))).toEqual(["M", "F", "U"]);
+  });
+
+  test("reaches buildFacets, not only the label list", () => {
+    const facets = buildFacets(rows, def(["M", "F"]));
+    expect(facets.map((one) => one.label)).toEqual(["M", "F", "U"]);
+  });
+});
+
+/** The one ordering rule behind `facetOrder` and `seriesOrder`. */
+describe("inDeclaredOrder", () => {
+  test("puts the listed labels first, in the caller's order", () => {
+    expect(inDeclaredOrder(["F", "M", "U"], ["M", "F"])).toEqual([
+      "M",
+      "F",
+      "U",
+    ]);
+  });
+
+  test("keeps a label the order forgot, and ignores one naming nothing", () => {
+    expect(inDeclaredOrder(["B", "A"], ["Z", "B"])).toEqual(["B", "A"]);
+  });
+
+  test("sorts numerically without an order, and drops duplicates", () => {
+    expect(inDeclaredOrder(["10", "2", "2"])).toEqual(["2", "10"]);
+  });
+});
+
+describe("buildTimeSeries series order", () => {
+  const rows = [
+    { day: 1, value: 1, grp: "F" },
+    { day: 1, value: 2, grp: "M" },
+  ];
+  const names = (order?: string[]) =>
+    buildTimeSeries(
+      rows as never,
+      {
+        ...timeSeries,
+        x: { key: "day", axisType: "linear" },
+        y: { key: "value", axisType: "linear" },
+        groupBy: ["grp"],
+        seriesOrder: order,
+      },
+      colorMap,
+    )
+      .traces.map((trace) => (trace as { name?: string }).name)
+      .filter((name): name is string => name === "M" || name === "F");
+
+  test("draws the series in the declared order", () => {
+    expect([...new Set(names(["M", "F"]))]).toEqual(["M", "F"]);
+  });
+
+  test("falls back to the alphabet", () => {
+    expect([...new Set(names())]).toEqual(["F", "M"]);
+  });
+});
+
+describe("buildTimeSeries study-day axis", () => {
+  test("ticks whole days", () => {
+    const rows = [
+      { day: 1, value: 1, grp: "M" },
+      { day: 8, value: 2, grp: "M" },
+    ];
+    const { axes } = buildTimeSeries(
+      rows as never,
+      {
+        ...timeSeries,
+        x: { key: "day", axisType: "linear" },
+        y: { key: "value", axisType: "linear" },
+        groupBy: ["grp"],
+      },
+      colorMap,
+    );
+    expect(axes.xaxis1).toMatchObject({ tickmode: "linear", dtick: 1 });
   });
 });

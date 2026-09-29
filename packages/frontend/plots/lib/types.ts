@@ -88,6 +88,19 @@ export interface PlotAnnotation {
   y: number | string;
   /** Which panel it belongs to, for a faceted figure. Absent means the first. */
   axis?: string;
+  /**
+   * The x axis of the subplot it was placed on.
+   * 
+   * Heatmap strips and Upset plot is not a subplot pair of xN by yN but e.g. (x, y2)
+   * It is used to place notes correctly.
+   */
+  xaxis?: string;
+  /**
+   * Which figure of a composite view the note belongs to - a view drawing
+   * several figures from one definition, as the paired control chart and
+   * distribution do, one pair per panel. Absent in a single figure.
+   */
+  scope?: string;
   author?: string;
   created?: string;
 }
@@ -98,6 +111,7 @@ export interface PlotAppearanceOptions {
   zeroLines?: boolean;
   fontSize?: number;
   decimals?: number;
+  tickAngle?: 0 | -45 | -90;
 }
 
 export type PlotDefinitionType =
@@ -109,25 +123,29 @@ export type PlotDefinitionType =
   | "controlChart"
   | "comparison"
   | "heatmap"
-  | "histogram";
+  | "histogram"
+  | "upset";
+
+export interface PlotAxis {
+  key: string;
+  label?: string;
+  axisType: AxisType;
+  ticks?: AxisTickOptions;
+  categories?: string[];
+  categoriesPerPanel?: boolean;
+}
 
 export interface PlotDefinitionBase {
   title: string;
   type: PlotDefinitionType;
-  x: {
-    key: string;
-    label?: string;
-    axisType: AxisType;
-    ticks?: AxisTickOptions;
-  };
-  y: {
-    key: string;
-    label?: string;
-    axisType: AxisType;
-    ticks?: AxisTickOptions;
-  };
+  x: PlotAxis;
+  y: PlotAxis;
   facetBy?: string[];
+  facetOnly?: string[];
+  facetOrder?: string[];
+  sharedScales?: boolean;
   groupBy?: string[];
+  seriesOrder?: string[];
   seriesLabel?: string;
   annotations?: PlotAnnotation[];
   palette?: ColorPreset;
@@ -159,11 +177,22 @@ export interface ViolinPlotDefinition extends PlotDefinitionBase {
 
 export type ControlLineMode = "none" | "mean" | "lcl-ucl" | "all";
 
+export type ControlLimit = "mean" | "median" | "sd1" | "sd2" | "sd3";
+
+export type ControlOutlierRule = "none" | "sd1" | "sd2" | "sd3";
+
 /** Implemented in `modules/sdtm`; see `PlotDefinitionType`. */
 export interface ControlChartPlotDefinition extends PlotDefinitionBase {
   type: "controlChart";
   /** Defaults to `all`. */
   controlLines?: ControlLineMode;
+  /**
+   * The limits drawn, any of them. Supersedes `controlLines`, which a
+   * definition saved before this may still carry and which is read where
+   * `limits` is absent. Empty draws none.
+   */
+  limits?: ControlLimit[];
+  outliers?: ControlOutlierRule;
 }
 export interface PlotBracket {
   id: string;
@@ -183,22 +212,42 @@ export interface ComparisonPlotDefinition extends PlotDefinitionBase {
 export type HeatmapAggregate = "count" | "sum" | "mean";
 
 export interface HeatmapBand {
-  /** Column whose value labels each x category. */
+  /** Column whose value labels each category of the band's axis. */
   key: string;
   label?: string;
   colors?: Record<string, string>;
   /** A fuller value for the hover, when the cell shows a short code. */
   hoverKey?: string;
+  size?: number;
 }
 
 /** Implemented in `modules/sdtm`; see `PlotDefinitionType`. */
 export interface HeatmapPlotDefinition extends PlotDefinitionBase {
   type: "heatmap";
-  /** Column aggregated into each cell. Omitted counts the rows. */
-  z?: { key?: string; aggregate?: HeatmapAggregate; label?: string };
+  z?: {
+    key?: string;
+    aggregate?: HeatmapAggregate;
+    label?: string;
+    min?: number;
+    max?: number;
+    suffix?: string;
+  };
   triangle?: "lower" | "full";
   annotate?: boolean;
   bands?: HeatmapBand[];
+  rowBands?: HeatmapBand[];
+  rowBandSide?: "left" | "right";
+  gaps?: { x?: number[]; y?: number[] };
+  /**
+   * Order categories by similarity instead of as given.
+   */
+  cluster?: {
+    x?: boolean;
+    y?: boolean;
+    /** How clusters are merged. */
+    linkage?: "ward" | "average" | "complete";
+    dendrogram?: boolean;
+  };
 }
 
 /** Implemented in `modules/sdtm`; see `PlotDefinitionType`. */
@@ -206,7 +255,39 @@ export interface HistogramPlotDefinition extends PlotDefinitionBase {
   type: "histogram";
   bins?: number;
   controlLines?: ControlLineMode;
+  /** As on the control chart: the limits drawn, superseding `controlLines`. */
+  limits?: ControlLimit[];
   orientation?: "h" | "v";
+  density?: boolean;
+}
+
+export type UpsetTier = "complete" | "extended" | "incomplete";
+
+/** Implemented in `modules/sdtm`; see `PlotDefinitionType`. */
+export interface UpsetPlotDefinition extends PlotDefinitionBase {
+  type: "upset";
+  /**
+   * What is being counted — studies, subjects — for the size axis and the
+   * notices. `y` labels the axis naming the *sets*, so it cannot serve both.
+   */
+  entityLabel?: string;
+  /** Column holding how many entities share the combination. */
+  sizeKey?: string;
+  /** Column holding 1 where the set belongs to the combination, else 0. */
+  memberKey?: string;
+  /** Column holding an `UpsetTier`, when the bars are classified. */
+  tierKey?: string;
+  /** Combinations of fewer than this many sets are not drawn. */
+  minDegree?: number;
+  /** Ceiling on how many combinations are drawn. Defaults to 40. */
+  maxCombinations?: number;
+  /**  Draw the reader's gathered combinations as one bar. */
+  mergeSelected?: boolean;
+  /** Defaults to `size`, the conventional ordering. */
+  sortBy?: "size" | "degree";
+  /** The per-set totals alongside the matrix. Defaults to drawn. */
+  setSizes?: boolean;
+  tierColors?: Partial<Record<UpsetTier, string>>;
 }
 
 export type PlotDefinition =
@@ -218,7 +299,8 @@ export type PlotDefinition =
   | ControlChartPlotDefinition
   | ComparisonPlotDefinition
   | HeatmapPlotDefinition
-  | HistogramPlotDefinition;
+  | HistogramPlotDefinition
+  | UpsetPlotDefinition;
 
 export interface PlotHooks {
   /** Orders the x categories, given any row belonging to one. */

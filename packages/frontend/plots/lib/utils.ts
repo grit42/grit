@@ -261,8 +261,12 @@ export const buildFacets = (
   // `Object.values` and `facetLabels` disagreed whenever the facet values were
   // integer-like — a study year or day — and the "panels not drawn" notice
   // then named panels that had in fact been drawn.
+  // A chosen subset, where the reader has narrowed it.
+  const chosen = def.facetOnly?.length ? new Set(def.facetOnly) : null;
+
   const facets = new Map<string, RawPlotFacet>();
   for (const label of facetLabels(data, def)) {
+    if (chosen && !chosen.has(label)) continue;
     facets.set(label, { key: label, label, data: [] });
   }
   for (const datum of data) {
@@ -282,13 +286,36 @@ export const facetLabels = (
   for (const datum of data) {
     keys.add(def.facetBy.map((column) => datum[column]).join(" "));
   }
-  return [...keys].sort((a, b) =>
+
+  return inDeclaredOrder([...keys], def.facetOrder);
+};
+
+export const inDeclaredOrder = (
+  labels: readonly string[],
+  order?: readonly string[],
+): string[] => {
+  const sorted = [...new Set(labels)].sort((a, b) =>
     a.localeCompare(b, undefined, { numeric: true }),
   );
+  if (!order?.length) return sorted;
+
+  const present = new Set(sorted);
+  const listed = order.filter((label) => present.has(label));
+  const seen = new Set(listed);
+  return [...listed, ...sorted.filter((label) => !seen.has(label))];
 };
 
 export const countFacets = (data: SourceData, def: PlotDefinition): number =>
   facetLabels(data, def).length;
+
+export const hiddenFacetLabels = (
+  data: SourceData,
+  def: PlotDefinition,
+): string[] => {
+  if (!def.facetOnly?.length) return [];
+  const chosen = new Set(def.facetOnly);
+  return facetLabels(data, def).filter((label) => !chosen.has(label));
+};
 
 export interface PropertyOption {
   label: string;

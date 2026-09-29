@@ -154,7 +154,13 @@ export const buildHoverMatrix = ({
     byRow.set(y, row);
   }
 
+  // A cell with no datum still gets one entry per key, rather than a bare
+  // null. Plotly resolves `%{customdata[0]}` against whatever sits in the
+  // cell, so a null there makes every index in the template unresolvable and
+  // logs a warning per key on hover — and a coverage heatmap is mostly gaps.
+  const blank = keys.map(() => null);
+
   return yCategories.map((y) =>
-    xCategories.map((x) => byRow.get(y)?.get(x) ?? null),
+    xCategories.map((x) => byRow.get(y)?.get(x) ?? blank),
   );
 };

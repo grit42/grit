@@ -128,7 +128,15 @@ describe("withDerivedLabels", () => {
 
   test("re-derives a customised title on a plot-type change", () => {
     const next = { ...custom, type: "box" } as BoxPlotDefinition;
-    expect(withDerivedLabels(next, PROPERTIES).title).toBe("Body weight");
+    // A box reads "{y} by {x}", the same form as bar, violin and comparison.
+    // This expected the bare measurement, which is what box titles were
+    // before they were brought into line with the others — so the assertion
+    // went stale rather than the behaviour going wrong. What it is really
+    // testing survives: the customised title is re-derived, not preserved.
+    expect(withDerivedLabels(next, PROPERTIES).title).toBe(
+      "Body weight by Study day",
+    );
+    expect(withDerivedLabels(next, PROPERTIES).title).not.toBe(custom.title);
   });
 
   /**

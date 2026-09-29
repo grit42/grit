@@ -205,6 +205,122 @@ const maxBinCount = (
   return Math.max(0, ...counts);
 };
 
+export interface KdeOptions {
+  bandwidth?: number;
+  points?: number;
+  extend?: number;
+}
+
+export interface KdeCurve {
+  x: number[];
+  y: number[];
+  bandwidth: number;
+}
+
+/**
+ * Silverman's rule of thumb, taking the narrower of the standard deviation and
+ * a robust spread so one outlier cannot flatten the whole curve.
+ */
+const silverman = (values: number[]): number => {
+  const n = values.length;
+  const sorted = [...values].sort((a, b) => a - b);
+  const [q1, q3] = quantileSeq(sorted, [0.25, 0.75], true) as [number, number];
+  const spread = Number(std(values));
+  const iqr = (q3 - q1) / 1.34;
+  const scale = Math.min(spread, iqr > 0 ? iqr : spread);
+  return 0.9 * (scale > 0 ? scale : spread) * Math.pow(n, -1 / 5);
+};
+
+/**
+ * A Gaussian kernel density estimate over `values`.
+ *
+ * Returns nothing where there is no distribution to describe: fewer than two
+ * values, or every value identical, in which case the density is a spike no
+ * curve represents honestly.
+ */
+export const kde = (
+  input: number[],
+  { bandwidth, points = 128, extend = 3 }: KdeOptions = {},
+): KdeCurve | null => {
+  const values = toFiniteNumbers(input);
+  if (values.length < 2) return null;
+
+  const lo = Math.min(...values);
+  const hi = Math.max(...values);
+  if (!(hi > lo)) return null;
+
+  const h = bandwidth ?? silverman(values);
+  if (!Number.isFinite(h) || h <= 0) return null;
+
+  const from = lo - extend * h;
+  const to = hi + extend * h;
+  const step = (to - from) / (points - 1);
+  const norm = 1 / (values.length * h * Math.sqrt(2 * Math.PI));
+
+  const x: number[] = [];
+  const y: number[] = [];
+  for (let i = 0; i < points; i++) {
+    const at = from + i * step;
+    let sum = 0;
+    for (const value of values) {
+      const z = (at - value) / h;
+      sum += Math.exp(-0.5 * z * z);
+    }
+    x.push(at);
+    y.push(sum * norm);
+  }
+
+  return { x, y, bandwidth: h };
+};
+
+/**
+ * Rescale a density so it can be drawn over a histogram of counts.
+ *
+ * A density integrates to 1 while a histogram counts observations, so an
+ * unscaled curve is a flat line along the axis.
+ */
+export const densityToCounts = (
+  curve: KdeCurve,
+  count: number,
+  binWidth: number,
+): KdeCurve => ({
+  ...curve,
+  y: curve.y.map((density) => density * count * binWidth),
+});
+
+/** The adjusted Fisher-Pearson coefficient */
+export const skewness = (input: number[]): number | null => {
+  const values = toFiniteNumbers(input);
+  const n = values.length;
+  if (n < 3) return null;
+
+  const m = Number(mean(values));
+  const squared = values.reduce((sum, value) => sum + (value - m) ** 2, 0);
+  const cubed = values.reduce((sum, value) => sum + (value - m) ** 3, 0);
+  if (squared === 0) return null;
+
+  const deviation = Math.sqrt(squared / n);
+  if (!Number.isFinite(deviation) || deviation === 0) return null;
+
+  const g1 = cubed / n / deviation ** 3;
+  const adjusted = (Math.sqrt(n * (n - 1)) / (n - 2)) * g1;
+  return Number.isFinite(adjusted) ? adjusted : null;
+};
+
+export const quantilesOf = (
+  input: number[],
+  probabilities: readonly number[],
+): (number | null)[] => {
+  const values = toFiniteNumbers(input);
+  if (!values.length) return probabilities.map(() => null);
+
+  const sorted = [...values].sort((a, b) => a - b);
+  return probabilities.map((probability) => {
+    const value = quantileSeq(sorted, probability, true);
+    return typeof value === "number" && Number.isFinite(value) ? value : null;
+  });
+};
+
 export interface Stats {
   nSamples: number;
   minValue: number;

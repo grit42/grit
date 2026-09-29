@@ -270,15 +270,27 @@ const SortableMultiselect = <T,>({
           </DndContext>
         )}
 
-        <Button
-          size="tiny"
-          variant="transparent"
-          className={styles.addButton}
-          disabled={disabled}
-          onClick={openDialog}
-        >
-          {buttonLabel}
-        </Button>
+        <div className={styles.actions}>
+          <Button
+            size="tiny"
+            variant="transparent"
+            className={styles.addButton}
+            disabled={disabled}
+            onClick={openDialog}
+          >
+            {buttonLabel}
+          </Button>
+          {selected.length > 1 && (
+            <Button
+              size="tiny"
+              variant="transparent"
+              disabled={disabled}
+              onClick={() => emit([])}
+            >
+              Clear
+            </Button>
+          )}
+        </div>
       </div>
 
       <InputError error={error} />

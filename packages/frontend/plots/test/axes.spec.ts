@@ -11,6 +11,10 @@ import {
   buildAppearanceAxis,
   buildAppearanceLayout,
   buildAxisTicks,
+  categoryRange,
+  countStep,
+  countTicks,
+  wholeNumberTicks,
   niceRange,
   supportsTickRange,
   logTicks,
@@ -431,5 +435,62 @@ describe("minor ticks on a log axis", () => {
 
   test("stays bounded over an extreme range", () => {
     expect(minorsOf([1e-200, 1e200])).toBeLessThan(30);
+  });
+});
+
+describe("categoryRange", () => {
+  test("gives half a cell beyond the first and last category", () => {
+    expect(categoryRange(3)).toEqual({ range: [-0.5, 2.5], autorange: false });
+  });
+
+  test("still spans one cell with nothing to draw", () => {
+    expect(categoryRange(0).range).toEqual([-0.5, 0.5]);
+  });
+
+  test("is stated, so a placed note cannot widen it", () => {
+    expect(categoryRange(5).autorange).toBe(false);
+  });
+});
+
+/** An axis of counts never puts a tick between two whole things counted. */
+describe("countStep", () => {
+  test("steps by one on a short axis", () => {
+    expect(countStep(2.4)).toBe(1);
+    expect(countStep(0)).toBe(1);
+  });
+
+  test("steps by 1, 2 or 5 of a power of ten on a long one", () => {
+    expect(countStep(12)).toBe(5);
+    expect(countStep(40)).toBe(10);
+    expect(countStep(80)).toBe(20);
+    expect(countStep(230)).toBe(50);
+  });
+
+  test("gives Plotly a linear axis from zero", () => {
+    expect(countTicks(4)).toEqual({ tickmode: "linear", tick0: 0, dtick: 1 });
+  });
+});
+
+/** Study days and years are whole, so their ticks are too. */
+describe("wholeNumberTicks", () => {
+  test("ticks whole numbers over an axis of them", () => {
+    expect(wholeNumberTicks([2016, 2019, 2023])).toEqual({
+      tickmode: "linear",
+      tick0: 0,
+      dtick: 1,
+    });
+    expect(wholeNumberTicks([-7, 30, 119])?.dtick).toBe(20);
+  });
+
+  test("leaves a fractional axis to Plotly", () => {
+    expect(wholeNumberTicks([1, 1.5])).toBeUndefined();
+    expect(wholeNumberTicks([])).toBeUndefined();
+  });
+
+  test("gives way to ticks the reader set", () => {
+    expect(
+      wholeNumberTicks([1, 2], { mode: "count", count: 3 }),
+    ).toBeUndefined();
+    expect(wholeNumberTicks([1, 2], { mode: "auto" })?.dtick).toBe(1);
   });
 });
