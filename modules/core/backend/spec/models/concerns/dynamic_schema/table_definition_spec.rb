@@ -1440,6 +1440,35 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
   end
 
   # ==========================================================================
+  # Column names Rails reads as its own
+  # ==========================================================================
+
+  describe "column names Rails reads as its own" do
+    let(:table) { Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: schema) }
+    let(:integer_type) { create(:grit_core_data_type, :integer) }
+
+    it "stores and reads back a value in a column named type" do
+      Grit::ColumnDefinition.create!(identifier: "type", name: "Type", data_type: string_type, table_definition: table)
+
+      table.record_klass.create!(type: "x")
+
+      expect(table.record_klass.detailed.first.type).to eq("x")
+      expect(table.record_klass.first.type).to eq("x")
+    end
+
+    it "does not lock optimistically on a column named lock_version" do
+      Grit::ColumnDefinition.create!(identifier: "lock_version", name: "Lock version", data_type: integer_type, table_definition: table)
+
+      row = table.record_klass.create!(lock_version: 5)
+      stale = table.record_klass.find(row.id)
+      row.update!(owner_id: admin.id)
+
+      expect(row.reload.lock_version).to eq(5)
+      expect { stale.update!(owner_id: nil) }.not_to raise_error
+    end
+  end
+
+  # ==========================================================================
   # Row stamping
   # ==========================================================================
 

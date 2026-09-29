@@ -603,6 +603,8 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
     column_definitions = self.ordered_column_definitions
     klass = Class.new(ActiveRecord::Base) do
       self.table_name = table_definition.table_name
+      self.inheritance_column = nil
+      self.lock_optimistically = false
       @table_definition = table_definition
       @column_definitions = column_definitions
       before_save :set_updater
