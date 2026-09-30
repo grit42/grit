@@ -1,7 +1,7 @@
 # Standalone script — thin CLI wrapper around Grit::Assays::AssayModelDump (the same service
 # the "Export"/"Import" buttons on the Assay Model admin screens call). Exports Assay Model
-# definitions (type, metadata, data sheet structure, vocabularies), vocabularies and experiment
-# metadata templates to JSON with no ids, so the dump can be imported into a different database
+# definitions (type, metadata, data sheet structure, vocabularies), assay types, metadata
+# definitions, vocabularies and experiment metadata templates to JSON with no ids, so the dump can be imported into a different database
 # via script/assay_import.rb.
 #
 # Usage (from apps/grit/server):
@@ -20,6 +20,8 @@ dump = if ENV["ASSAY_MODEL_ID"].present?
 else
   Grit::Assays::AssayModelDump.export(
     assay_models: Grit::Assays::AssayModel.order(:name).to_a,
+    assay_types: Grit::Assays::AssayType.order(:name).to_a,
+    assay_metadata_definitions: Grit::Assays::AssayMetadataDefinition.order(:name).to_a,
     vocabularies: Grit::Core::Vocabulary.order(:name).to_a,
     experiment_metadata_templates: Grit::Assays::ExperimentMetadataTemplate.order(:name).to_a
   )
@@ -28,5 +30,5 @@ end
 FileUtils.mkdir_p(File.dirname(output))
 File.write(output, JSON.pretty_generate(dump))
 
-puts "Exported #{dump['assay_models'].size} assay model(s), #{dump['vocabularies'].size} vocabular(ies) " \
-  "and #{dump['experiment_metadata_templates'].size} experiment metadata template(s) to #{output}"
+counts = dump.except("format", "version").map { |section, entries| "#{entries.size} #{section}" }
+puts "Exported #{counts.join(', ')} to #{output}"

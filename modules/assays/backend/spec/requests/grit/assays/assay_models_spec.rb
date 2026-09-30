@@ -363,9 +363,15 @@ module Grit::Assays
       }
     end
 
-    def dump_with(assay_models: [], vocabularies: [], experiment_metadata_templates: [])
+    def dump_with(assay_models: [], assay_types: [], assay_metadata_definitions: [], vocabularies: [], experiment_metadata_templates: [])
       { "format" => "grit-assays-export", "version" => 2, "assay_models" => assay_models,
+        "assay_types" => assay_types, "assay_metadata_definitions" => assay_metadata_definitions,
         "vocabularies" => vocabularies, "experiment_metadata_templates" => experiment_metadata_templates }
+    end
+
+    def metadata_definition_dump(name, safe_name, vocabulary_name: "Definition Vocabulary")
+      { "name" => name, "safe_name" => safe_name, "description" => nil,
+        "vocabulary" => { "name" => vocabulary_name, "description" => nil, "vocabulary_items" => [ { "name" => "v1" } ] } }
     end
 
     def import_dump(dump, selection)
@@ -392,6 +398,8 @@ module Grit::Assays
         exported_model = data["assay_models"].find { |m| m["id"] == model.id }
         expect(exported_model["experiment_metadata_template_ids"]).to eq([ template.id ])
         expect(data["vocabularies"].map { |v| v["id"] }).to include(vocabulary.id)
+        expect(data["assay_types"].map { |t| t["id"] }).to include(biochemical.id)
+        expect(data["assay_metadata_definitions"].map { |d| d["id"] }).to include(metadata_definition.id)
         expect(data["experiment_metadata_templates"].map { |t| t["id"] }).to include(template.id, unrelated_template.id)
       end
     end
@@ -427,6 +435,22 @@ module Grit::Assays
         exported_vocabulary = exported["assay_model_metadata"].first["assay_metadata_definition"]["vocabulary"]
         expect(exported_vocabulary["name"]).to eq(vocabulary.name)
         expect(exported_vocabulary["vocabulary_items"].length).to eq(2)
+      end
+
+      it "exports standalone assay types and metadata definitions, including unused ones" do
+        unused_type = create(:grit_assays_assay_type, name: "Unused Type", description: "never used")
+        definition = create(:grit_assays_assay_metadata_definition, vocabulary: create(:grit_core_vocabulary, :with_items))
+
+        get "/api/grit/assays/assay_models/export",
+          params: { assay_type_ids: unused_type.id.to_s, assay_metadata_definition_ids: definition.id.to_s }
+
+        expect(response).to have_http_status(:success)
+        dump = JSON.parse(response.body)
+        expect(dump["assay_models"]).to eq([])
+        expect(dump["assay_types"]).to eq([ { "name" => "Unused Type", "description" => "never used" } ])
+        exported_definition = dump["assay_metadata_definitions"].first
+        expect(exported_definition).to include("name" => definition.name, "safe_name" => definition.safe_name)
+        expect(exported_definition["vocabulary"]["vocabulary_items"].length).to eq(2)
       end
 
       it "returns 422 when nothing is selected" do
@@ -470,6 +494,35 @@ module Grit::Assays
         expect(vocabularies[existing_vocabulary.name]["installed"]).to be true
         expect(vocabularies[existing_vocabulary.name]["missing_items"]).to eq([ "brand new item" ])
         expect(vocabularies["New Vocabulary"]["installed"]).to be false
+      end
+
+      it "flags installed assay types and metadata definitions (by name or safe name) and differing assay type descriptions" do
+        biochemical.update!(description: "installed description")
+        create(:grit_assays_assay_metadata_definition, name: "Installed Definition", safe_name: "installed_def",
+          vocabulary: create(:grit_core_vocabulary, :with_items))
+        model_dump = minimal_assay_model_dump("New Model")
+        model_dump["assay_type"]["description"] = "file description"
+        dump = dump_with(
+          assay_models: [ model_dump ],
+          assay_types: [ { "name" => biochemical.name, "description" => nil }, { "name" => "New Type", "description" => nil } ],
+          assay_metadata_definitions: [
+            metadata_definition_dump("Installed Definition", "other_safe_name"),
+            metadata_definition_dump("Other Name", "installed_def"),
+            metadata_definition_dump("New Definition", "new_def")
+          ]
+        )
+
+        post "/api/grit/assays/assay_models/import_preview", params: { file: upload_for(dump) }
+
+        expect(response).to have_http_status(:success)
+        data = JSON.parse(response.body)["data"]
+        expect(data["assay_types"].map { |t| [ t["name"], t["installed"] ] }).to eq([ [ biochemical.name, true ], [ "New Type", false ] ])
+        expect(data["assay_metadata_definitions"].map { |d| [ d["name"], d["installed"] ] })
+          .to eq([ [ "Installed Definition", true ], [ "Other Name", true ], [ "New Definition", false ] ])
+        new_definition = data["assay_metadata_definitions"].last
+        expect(new_definition["dependencies"]).to include(include("kind" => "Vocabulary", "name" => "Definition Vocabulary", "installed" => false))
+        assay_type_dependency = data["assay_models"].first["dependencies"].find { |d| d["kind"] == "Assay type" }
+        expect(assay_type_dependency["note"]).to include("description differs")
       end
 
       it "accepts version 1 dumps (a bare array of assay models with embedded templates)" do
@@ -553,6 +606,51 @@ module Grit::Assays
           .and change(AssayMetadataDefinition, :count).by(1)
 
         expect(response).to have_http_status(:created)
+      end
+
+      it "imports selected standalone assay types and metadata definitions, and assay models reuse them" do
+        model_dump = minimal_assay_model_dump("Model Using New Type")
+        model_dump["assay_type"] = { "name" => "Brand New Type", "description" => "from file" }
+        model_dump["assay_model_metadata"] = [ { "assay_metadata_definition" => metadata_definition_dump("New Definition", "new_def") } ]
+        dump = dump_with(
+          assay_models: [ model_dump ],
+          assay_types: [ { "name" => "Brand New Type", "description" => "from file" }, { "name" => "Unused Type", "description" => nil } ],
+          assay_metadata_definitions: [ metadata_definition_dump("New Definition", "new_def") ]
+        )
+
+        expect {
+          import_dump(dump, {
+            "assay_models" => [ "Model Using New Type" ],
+            "assay_types" => [ "Brand New Type", "Unused Type" ],
+            "assay_metadata_definitions" => [ "New Definition" ]
+          })
+        }.to change(AssayType, :count).by(2)
+          .and change(AssayMetadataDefinition, :count).by(1)
+          .and change(AssayModel, :count).by(1)
+
+        expect(response).to have_http_status(:created)
+        data = JSON.parse(response.body)["data"]
+        expect(data["assay_types"].map { |t| t["name"] }).to eq([ "Brand New Type", "Unused Type" ])
+        expect(data["assay_metadata_definitions"].map { |d| d["name"] }).to eq([ "New Definition" ])
+        imported = AssayModel.find_by!(name: "Model Using New Type")
+        expect(imported.assay_type.description).to eq("from file")
+        expect(imported.assay_model_metadata.first.assay_metadata_definition.safe_name).to eq("new_def")
+      end
+
+      it "rejects an existing assay type or metadata definition selected for import" do
+        create(:grit_assays_assay_metadata_definition, safe_name: "taken_def", vocabulary: create(:grit_core_vocabulary, :with_items))
+        dump = dump_with(
+          assay_types: [ { "name" => biochemical.name, "description" => nil } ],
+          assay_metadata_definitions: [ metadata_definition_dump("Fresh Name", "taken_def") ]
+        )
+
+        import_dump(dump, { "assay_types" => [ biochemical.name ] })
+        expect(response).to have_http_status(:unprocessable_entity)
+
+        expect {
+          import_dump(dump, { "assay_metadata_definitions" => [ "Fresh Name" ] })
+        }.not_to change(AssayMetadataDefinition, :count)
+        expect(response).to have_http_status(:unprocessable_entity)
       end
 
       it "publishes the imported model and creates its dynamic data sheet tables when the source was published" do

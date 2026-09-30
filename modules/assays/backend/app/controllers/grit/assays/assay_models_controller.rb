@@ -248,25 +248,33 @@ module Grit::Assays
               experiment_metadata_template_ids: template_ids_by_assay_model.fetch(record.id, [])
             }
           end,
+          assay_types: AssayType.order(:name).map { |record| record.slice(:id, :name, :description) },
+          assay_metadata_definitions: AssayMetadataDefinition.order(:name).map { |record| record.slice(:id, :name, :description) },
           vocabularies: Grit::Core::Vocabulary.order(:name).map { |record| record.slice(:id, :name, :description) },
           experiment_metadata_templates: ExperimentMetadataTemplate.order(:name).map { |record| record.slice(:id, :name, :description) }
         }
       }
     end
 
-    # Ids are passed as comma-separated lists: assay_model_ids, vocabulary_ids, experiment_metadata_template_ids.
+    # Ids are passed as comma-separated lists: assay_model_ids, assay_type_ids,
+    # assay_metadata_definition_ids, vocabulary_ids, experiment_metadata_template_ids.
     def export
-      assay_models = AssayModel.where(id: id_list(:assay_model_ids)).order(:name).to_a
-      vocabularies = Grit::Core::Vocabulary.where(id: id_list(:vocabulary_ids)).order(:name).to_a
-      templates = ExperimentMetadataTemplate.where(id: id_list(:experiment_metadata_template_ids)).order(:name).to_a
+      records = {
+        assay_models: AssayModel.where(id: id_list(:assay_model_ids)).order(:name).to_a,
+        assay_types: AssayType.where(id: id_list(:assay_type_ids)).order(:name).to_a,
+        assay_metadata_definitions: AssayMetadataDefinition.where(id: id_list(:assay_metadata_definition_ids)).order(:name).to_a,
+        vocabularies: Grit::Core::Vocabulary.where(id: id_list(:vocabulary_ids)).order(:name).to_a,
+        experiment_metadata_templates: ExperimentMetadataTemplate.where(id: id_list(:experiment_metadata_template_ids)).order(:name).to_a
+      }
 
-      if assay_models.empty? && vocabularies.empty? && templates.empty?
+      if records.values.all?(&:empty?)
         render json: { success: false, errors: "Nothing selected for export" }, status: :unprocessable_entity
         return
       end
 
-      dump = Grit::Assays::AssayModelDump.export(assay_models: assay_models, vocabularies: vocabularies, experiment_metadata_templates: templates)
-      filename = if assay_models.one? && vocabularies.empty? && templates.empty?
+      dump = Grit::Assays::AssayModelDump.export(**records)
+      assay_models = records[:assay_models]
+      filename = if assay_models.one? && records.except(:assay_models).values.all?(&:empty?)
         assay_models.first.name.parameterize
       else
         "grit_assays_export_#{Time.now.strftime('%Y%m%d%H%M%S')}"

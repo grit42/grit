@@ -20,6 +20,7 @@ import { useMemo, useState } from "react";
 import { Button, Dialog, Spinner } from "@grit42/client-library/components";
 import { downloadFile } from "@grit42/client-library/utils";
 import {
+  ASSAY_MODEL_TRANSFER_SECTIONS,
   AssayModelExportOptions,
   AssayModelTransferSection,
   useAssayModelExportOptions,
@@ -32,6 +33,14 @@ type Selection = Record<AssayModelTransferSection, string[]>;
 const ids = (records: { id: number }[]) =>
   records.map(({ id }) => id.toString());
 
+const EXPORT_ID_PARAMS: Record<AssayModelTransferSection, string> = {
+  assay_models: "assay_model_ids",
+  assay_types: "assay_type_ids",
+  assay_metadata_definitions: "assay_metadata_definition_ids",
+  vocabularies: "vocabulary_ids",
+  experiment_metadata_templates: "experiment_metadata_template_ids",
+};
+
 /**
  * Without initialAssayModelIds everything is preselected. With them, only those assay models
  * and the experiment metadata templates that set defaults for their metadata are.
@@ -41,17 +50,20 @@ const initialSelection = (
   initialAssayModelIds?: number[],
 ): Selection => {
   if (!initialAssayModelIds) {
-    return {
-      assay_models: ids(options.assay_models),
-      vocabularies: ids(options.vocabularies),
-      experiment_metadata_templates: ids(options.experiment_metadata_templates),
-    };
+    return Object.fromEntries(
+      ASSAY_MODEL_TRANSFER_SECTIONS.map((section) => [
+        section,
+        ids(options[section]),
+      ]),
+    ) as Selection;
   }
   const assayModels = options.assay_models.filter(({ id }) =>
     initialAssayModelIds.includes(id),
   );
   return {
     assay_models: ids(assayModels),
+    assay_types: [],
+    assay_metadata_definitions: [],
     vocabularies: [],
     experiment_metadata_templates: [
       ...new Set(
@@ -108,18 +120,21 @@ const ExportSelection = ({
     }));
   };
 
-  const selectedCount =
-    selection.assay_models.length +
-    selection.vocabularies.length +
-    selection.experiment_metadata_templates.length;
+  const setSection = (section: AssayModelTransferSection) => (keys: string[]) =>
+    setSelection((prev) => ({ ...prev, [section]: keys }));
+
+  const selectedCount = ASSAY_MODEL_TRANSFER_SECTIONS.reduce(
+    (count, section) => count + selection[section].length,
+    0,
+  );
 
   const onExport = () => {
-    const params = new URLSearchParams({
-      assay_model_ids: selection.assay_models.join(","),
-      vocabulary_ids: selection.vocabularies.join(","),
-      experiment_metadata_template_ids:
-        selection.experiment_metadata_templates.join(","),
-    });
+    const params = new URLSearchParams(
+      ASSAY_MODEL_TRANSFER_SECTIONS.map((section) => [
+        EXPORT_ID_PARAMS[section],
+        selection[section].join(","),
+      ]),
+    );
     downloadFile(`/api/grit/assays/assay_models/export?${params.toString()}`);
     onClose();
   };
@@ -140,6 +155,28 @@ const ExportSelection = ({
           emptyMessage="No assay models"
         />
         <SelectionSection
+          title="Assay types"
+          items={options.assay_types.map((assayType) => ({
+            key: assayType.id.toString(),
+            name: assayType.name,
+            description: assayType.description,
+          }))}
+          selected={selection.assay_types}
+          onChange={setSection("assay_types")}
+          emptyMessage="No assay types"
+        />
+        <SelectionSection
+          title="Metadata definitions"
+          items={options.assay_metadata_definitions.map((definition) => ({
+            key: definition.id.toString(),
+            name: definition.name,
+            description: definition.description,
+          }))}
+          selected={selection.assay_metadata_definitions}
+          onChange={setSection("assay_metadata_definitions")}
+          emptyMessage="No metadata definitions"
+        />
+        <SelectionSection
           title="Vocabularies"
           items={options.vocabularies.map((vocabulary) => ({
             key: vocabulary.id.toString(),
@@ -147,9 +184,7 @@ const ExportSelection = ({
             description: vocabulary.description,
           }))}
           selected={selection.vocabularies}
-          onChange={(vocabularies) =>
-            setSelection((prev) => ({ ...prev, vocabularies }))
-          }
+          onChange={setSection("vocabularies")}
           emptyMessage="No vocabularies"
         />
         <SelectionSection
@@ -170,17 +205,13 @@ const ExportSelection = ({
             };
           })}
           selected={selection.experiment_metadata_templates}
-          onChange={(experiment_metadata_templates) =>
-            setSelection((prev) => ({
-              ...prev,
-              experiment_metadata_templates,
-            }))
-          }
+          onChange={setSection("experiment_metadata_templates")}
           emptyMessage="No experiment metadata templates"
         />
         <p className={styles.itemDetail}>
-          Vocabularies used by the selected assay models and templates are
-          always included with them, whether or not they are selected above.
+          The assay types, metadata definitions and vocabularies used by the
+          selected assay models, metadata definitions and templates are always
+          included with them, whether or not they are selected above.
         </p>
       </div>
       <div className={styles.controls}>

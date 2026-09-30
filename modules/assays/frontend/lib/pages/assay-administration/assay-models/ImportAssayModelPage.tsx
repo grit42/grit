@@ -40,8 +40,10 @@ import {
   usePreviewAssayModelImportMutation,
 } from "../../../mutations/assay_models";
 import {
+  ASSAY_MODEL_TRANSFER_SECTIONS,
   AssayModelImportPreview,
   AssayModelImportSelection,
+  AssayModelTransferSection,
   ImportPreviewEntry,
 } from "../../../queries/assay_models";
 import SelectionSection, {
@@ -54,6 +56,22 @@ const isImportable = (entry: ImportPreviewEntry) =>
 
 const importableNames = (entries: ImportPreviewEntry[]) =>
   entries.filter(isImportable).map(({ name }) => name);
+
+const SECTION_LABELS: Record<AssayModelTransferSection, string> = {
+  assay_models: "assay model(s)",
+  assay_types: "assay type(s)",
+  assay_metadata_definitions: "metadata definition(s)",
+  vocabularies: "vocabular(ies)",
+  experiment_metadata_templates: "experiment metadata template(s)",
+};
+
+const sumOverSections = (
+  count: (section: AssayModelTransferSection) => number,
+) =>
+  ASSAY_MODEL_TRANSFER_SECTIONS.reduce(
+    (total, section) => total + count(section),
+    0,
+  );
 
 const toSelectionItem = (
   entry: ImportPreviewEntry,
@@ -178,48 +196,36 @@ const SelectionStep = ({
 }) => {
   const navigate = useNavigate();
   const importMutation = useImportAssayModelsMutation();
-  const [selection, setSelection] = useState<AssayModelImportSelection>(() => ({
-    assay_models: importableNames(preview.assay_models),
-    vocabularies: importableNames(preview.vocabularies),
-    experiment_metadata_templates: importableNames(
-      preview.experiment_metadata_templates,
-    ),
-  }));
+  const [selection, setSelection] = useState<AssayModelImportSelection>(
+    () =>
+      Object.fromEntries(
+        ASSAY_MODEL_TRANSFER_SECTIONS.map((section) => [
+          section,
+          importableNames(preview[section]),
+        ]),
+      ) as AssayModelImportSelection,
+  );
 
-  const selectedCount =
-    selection.assay_models.length +
-    selection.vocabularies.length +
-    selection.experiment_metadata_templates.length;
-  const totalCount =
-    preview.assay_models.length +
-    preview.vocabularies.length +
-    preview.experiment_metadata_templates.length;
-  const importableCount =
-    importableNames(preview.assay_models).length +
-    importableNames(preview.vocabularies).length +
-    importableNames(preview.experiment_metadata_templates).length;
+  const selectedCount = sumOverSections((section) => selection[section].length);
+  const totalCount = sumOverSections((section) => preview[section].length);
+  const importableCount = sumOverSections(
+    (section) => importableNames(preview[section]).length,
+  );
 
   const onImport = async () => {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("selection", JSON.stringify(selection));
     const result = await importMutation.mutateAsync(formData);
-    const counts = [
-      [result.assay_models.length, "assay model(s)"],
-      [result.vocabularies.length, "vocabular(ies)"],
-      [
-        result.experiment_metadata_templates.length,
-        "experiment metadata template(s)",
-      ],
-    ]
-      .filter(([count]) => count)
-      .map(([count, label]) => `${count} ${label}`);
+    const counts = ASSAY_MODEL_TRANSFER_SECTIONS.filter(
+      (section) => result[section].length > 0,
+    ).map((section) => `${result[section].length} ${SECTION_LABELS[section]}`);
     toast.success(`Imported ${counts.join(", ")}`);
     navigate("..", { relative: "path" });
   };
 
   const setSection =
-    (section: keyof AssayModelImportSelection) => (names: string[]) =>
+    (section: AssayModelTransferSection) => (names: string[]) =>
       setSelection((prev) => ({ ...prev, [section]: names }));
 
   return (
@@ -253,6 +259,31 @@ const SelectionStep = ({
             )}
             selected={selection.assay_models}
             onChange={setSection("assay_models")}
+          />
+        )}
+        {preview.assay_types.length > 0 && (
+          <SelectionSection
+            title="Assay types"
+            items={preview.assay_types.map((entry) => toSelectionItem(entry))}
+            selected={selection.assay_types}
+            onChange={setSection("assay_types")}
+          />
+        )}
+        {preview.assay_metadata_definitions.length > 0 && (
+          <SelectionSection
+            title="Metadata definitions"
+            items={preview.assay_metadata_definitions.map((entry) =>
+              toSelectionItem(entry, {
+                details: (
+                  <div className={transferStyles.itemDetail}>
+                    Safe name: {entry.safe_name} · Vocabulary:{" "}
+                    {entry.vocabulary}
+                  </div>
+                ),
+              }),
+            )}
+            selected={selection.assay_metadata_definitions}
+            onChange={setSection("assay_metadata_definitions")}
           />
         )}
         {preview.vocabularies.length > 0 && (
