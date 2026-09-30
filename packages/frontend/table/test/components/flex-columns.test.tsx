@@ -26,6 +26,7 @@ interface Row {
   id: number;
   name: string;
   description: string;
+  notes: string;
 }
 
 const columns: GritColumnDef<Row>[] = [
@@ -39,7 +40,27 @@ const columns: GritColumnDef<Row>[] = [
   },
 ];
 
-const data: Row[] = [{ id: 1, name: "Alpha", description: "First row" }];
+const twoFlexColumns: GritColumnDef<Row>[] = [
+  { accessorKey: "id", id: "id", header: "ID", type: "number", size: 80 },
+  {
+    accessorKey: "description",
+    id: "description",
+    header: "Description",
+    type: "string",
+    flex: 1,
+  },
+  {
+    accessorKey: "notes",
+    id: "notes",
+    header: "Notes",
+    type: "string",
+    flex: 2,
+  },
+];
+
+const data: Row[] = [
+  { id: 1, name: "Alpha", description: "First row", notes: "Some notes" },
+];
 
 describe.each([
   ["Table", Table],
@@ -72,5 +93,21 @@ describe.each([
       fixedHeader?.querySelector('[class*="resizer"]'),
     ).toBeInTheDocument();
     expect(container).toBeInTheDocument();
+  });
+
+  it("gives two flex columns distinct flex-grow ratios matching their declared flex values", () => {
+    render(
+      <Component header="Rows" columns={twoFlexColumns} data={data} />,
+    );
+
+    const descriptionHeader = screen.getByText("Description").closest("th");
+    const notesHeader = screen.getByText("Notes").closest("th");
+
+    // flex: "<grow> <shrink> <basis>" — a column with flex:2 should get twice
+    // the flex-grow of a column with flex:1, so CSS splits available space
+    // 1/3 vs 2/3 between them (verified visually in the dev playground,
+    // since jsdom doesn't do real layout and can't confirm actual pixels).
+    expect(descriptionHeader?.style.flex).toBe("1 1 0px");
+    expect(notesHeader?.style.flex).toBe("2 2 0px");
   });
 });

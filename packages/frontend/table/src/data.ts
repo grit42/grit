@@ -112,8 +112,9 @@ export const sampleDataProperties: GritColumnDef<SampleRow>[] = [
     accessorKey: "homepage",
     header: "Reference",
     type: "url",
-    size: 220,
-    description: "External reference URL (nullable)",
+    flex: 2,
+    description:
+      "External reference URL (nullable) — flex column, twice the ratio of Description",
   },
   {
     id: "record",
