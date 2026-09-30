@@ -218,6 +218,26 @@
   flex: 1;
 }
 
+.editableCell {
+  display: grid;
+  grid-template-columns: 1fr min-content;
+  align-items: center;
+  width: 100%;
+
+  .checkbox {
+    margin: auto;
+  }
+
+  .menuIcon {
+    fill: rgb(from theme.$palette-primary-contrast-text r g b / 50%);
+    cursor: pointer;
+
+    &:hover {
+      fill: theme.$palette-primary-contrast-text;
+    }
+  }
+}
+
 .footer {
   padding: theme.$spacing;
   min-height: calc(21px + theme.$spacing * 2);

@@ -49,7 +49,8 @@ export const sampleDataProperties: GritColumnDef<SampleRow>[] = [
     header: "Project",
     type: "string",
     size: 130,
-    description: "Therapeutic area the compound belongs to",
+    editable: true,
+    description: "Therapeutic area the compound belongs to — editable",
   },
   {
     id: "status",
@@ -57,7 +58,8 @@ export const sampleDataProperties: GritColumnDef<SampleRow>[] = [
     header: "Status",
     type: "string",
     size: 120,
-    description: "Current lifecycle status",
+    editable: true,
+    description: "Current lifecycle status — editable",
   },
   {
     id: "description",
@@ -105,7 +107,8 @@ export const sampleDataProperties: GritColumnDef<SampleRow>[] = [
     header: "Active",
     type: "boolean",
     size: 80,
-    description: "Whether the compound is in active use",
+    editable: true,
+    description: "Whether the compound is in active use — editable",
   },
   {
     id: "homepage",

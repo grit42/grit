@@ -34,6 +34,7 @@ import { getIsFiltersActive } from "../features/filters";
 import useInternalTableState from "../features/table-state/useInternalTableState";
 import Marvin03Meh from "@grit42/client-library/icons/Marvin03Meh";
 import getCellSizeStyle from "./getCellSizeStyle";
+import EditableCell from "./EditableCell";
 
 type Props<T> = Pick<
   TableProps<T>,
@@ -44,6 +45,7 @@ type Props<T> = Pick<
   | "noDataMessage"
   | "disableNoDataMessage"
   | "emphasizedRows"
+  | "editable"
 > & {
   data: T[];
   table: Table<T>;
@@ -56,10 +58,13 @@ const TableCell = <T,>({
   data,
   cell,
   row,
-}: Pick<Props<T>, "onCellClick" | "data"> & {
+  table,
+  editable,
+}: Pick<Props<T>, "onCellClick" | "data" | "editable"> & {
   data: T[];
   cell: Cell<T, unknown>;
   row: Row<T>;
+  table: Table<T>;
 }) => {
   const isNumericType = useMemo(
     () =>
@@ -107,7 +112,11 @@ const TableCell = <T,>({
             : `calc(var(--col-${cell.column.id}-size) * 1px - var(--spacing) / 2)`,
         }}
       >
-        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+        {editable && (cell.column.columnDef as GritColumnDef).editable ? (
+          <EditableCell cell={cell} table={table} />
+        ) : (
+          flexRender(cell.column.columnDef.cell, cell.getContext())
+        )}
       </div>
     </td>
   );
@@ -124,6 +133,7 @@ const TableBody = <T,>({
   noDataMessage,
   settings,
   emphasizedRows,
+  editable,
 }: Props<T>) => {
   const displayDensity = useDisplayDensity();
 
@@ -195,6 +205,8 @@ const TableBody = <T,>({
                   key={cell.id}
                   cell={cell}
                   row={row}
+                  table={table}
+                  editable={editable}
                   onCellClick={onCellClick}
                   data={data}
                 />

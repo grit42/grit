@@ -26,6 +26,7 @@ import {
 import ColumnTypeDefProviderContext from "./ColumnTypeDefProviderContext";
 import { GritColumnDef, GritTypedColumnDef } from "../../types";
 import GenericFilterInput from "../filters/GenericFilterInput";
+import GenericEditInput from "./GenericEditInput";
 import { generateUniqueID } from "@grit42/client-library/utils";
 import { ColumnTypeDef, ColumnTypeDefs } from "./types";
 import { Filter, FilterOperator } from "../filters";
@@ -119,6 +120,9 @@ const stringTextUrlColumnTypeDef: ColumnTypeDef = {
     getNewFilter,
     input: GenericFilterInput,
   },
+  edit: {
+    input: GenericEditInput,
+  },
 };
 
 const numbersDatesColumnTypeDef: ColumnTypeDef = {
@@ -138,6 +142,9 @@ const numbersDatesColumnTypeDef: ColumnTypeDef = {
     getNewFilter,
     input: GenericFilterInput,
   },
+  edit: {
+    input: GenericEditInput,
+  },
 };
 
 const booleanColumnTypeDef: ColumnTypeDef = {
@@ -150,6 +157,9 @@ const booleanColumnTypeDef: ColumnTypeDef = {
     updateFilterForOperator,
     getNewFilter,
     input: GenericFilterInput,
+  },
+  edit: {
+    input: GenericEditInput,
   },
 };
 

@@ -134,6 +134,7 @@ const Table = <T,>({
                   noDataMessage={noDataMessage}
                   disableNoDataMessage={disableNoDataMessage}
                   emphasizedRows={props.emphasizedRows}
+                  editable={props.editable}
                 />
               </table>
             </div>

@@ -20,6 +20,7 @@ import {
   getCoreRowModel,
   getExpandedRowModel,
   getSortedRowModel,
+  Row,
   RowSelectionState,
   Updater,
   useReactTable,
@@ -258,6 +259,57 @@ export default function useTableCore<T>(
     tableState.filters,
   );
 
+  // `updateData`/`updateRows` are the only way an editable cell or the
+  // "Propagate..." menu changes anything — both are pure notifications via
+  // `onCellsEdit`. This hook never persists a change itself or keeps its own
+  // copy of `data`; the caller is responsible for saving (through the
+  // edited entity's own endpoint) and passing updated `data` back down,
+  // which re-syncs each editable cell's displayed value.
+  const onCellsEdit = props.onCellsEdit;
+
+  const updateData = useCallback(
+    (
+      rowIndex: number,
+      columnId: keyof T,
+      value: unknown,
+      entityData?: unknown,
+      type?: string,
+      entityType?: string,
+    ) => {
+      if (!onCellsEdit) return;
+      const row = displayData[rowIndex];
+      if (!row) return;
+      onCellsEdit([
+        { row, column: columnId, value, entityData, type, entityType },
+      ]);
+    },
+    [onCellsEdit, displayData],
+  );
+
+  const updateRows = useCallback(
+    (
+      rows: Row<T>[],
+      columnId: keyof T,
+      value: unknown,
+      entityData?: unknown,
+      type?: string,
+      entityType?: string,
+    ) => {
+      if (!onCellsEdit) return;
+      onCellsEdit(
+        rows.map(({ original: row }) => ({
+          row,
+          column: columnId,
+          value,
+          entityData,
+          type,
+          entityType,
+        })),
+      );
+    },
+    [onCellsEdit],
+  );
+
   const table = useReactTable({
     enableSorting: settings?.disableColumnSorting ? false : true,
     defaultColumn: {
@@ -296,6 +348,10 @@ export default function useTableCore<T>(
       : setColumnOrder,
     onSortingChange: settings?.disableColumnSorting ? undefined : setSorting,
     onExpandedChange: setExpandedRows,
+    meta: {
+      updateData,
+      updateRows,
+    },
     getCoreRowModel: getCoreRowModel(),
     getExpandedRowModel: getExpandedRowModel(),
     getSortedRowModel: getSortedRowModel(),

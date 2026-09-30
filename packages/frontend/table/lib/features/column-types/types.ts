@@ -21,6 +21,23 @@ import { GritTypedColumnDef } from "../../types";
 import { Filter, FilterOperator } from "../filters";
 import type { FilterInputProps } from "../filters";
 
+/**
+ * Props for a type's editable-cell input component, registered via
+ * `edit.input` on a `ColumnTypeDef`. Mirrors `FilterInputProps`'s shape:
+ * the component is a controlled input over `value`, calling `onChange`
+ * with the new value (and, for entity-like types, the resolved record as
+ * `entityData`) on every change — committing (e.g. on blur) is the
+ * component's own responsibility, matching how each input type naturally
+ * commits (immediately for a checkbox/entity selector, on blur for text).
+ */
+export interface EditCellInputProps<T = unknown> {
+  id: string;
+  value: unknown;
+  row: T;
+  column: GritTypedColumnDef;
+  onChange: (value: unknown, entityData?: unknown) => void;
+}
+
 export interface ColumnTypeDef {
   filter: {
     updateFilterForColumn: (
@@ -46,6 +63,28 @@ export interface ColumnTypeDef {
           columnTypeDefs: ColumnTypeDefs,
         ) => FilterOperator[]);
     input: ComponentType<FilterInputProps>;
+  };
+  /**
+   * Optional: how a column of this type renders as an editable cell. Not
+   * every type needs to be editable — columns whose type has no `edit`
+   * definition registered render read-only even with `editable: true`.
+   */
+  edit?: {
+    input: ComponentType<EditCellInputProps>;
+    /**
+     * Used by the "Propagate..." menu to resolve a cell's current display
+     * value into the `{value, entityData}` pair to write to other rows.
+     * Defaults to using the raw value unchanged — entity-like types
+     * override this to re-fetch the full record (mirroring how their
+     * `edit.input` resolves a selection), since `@grit42/table` itself has
+     * no notion of how to look up an entity by its display value.
+     */
+    resolvePropagatedValue?: (
+      value: unknown,
+      column: GritTypedColumnDef,
+    ) =>
+      | { value: unknown; entityData?: unknown }
+      | Promise<{ value: unknown; entityData?: unknown }>;
   };
   column?: Partial<GritTypedColumnDef>;
 }
