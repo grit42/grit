@@ -159,6 +159,8 @@ export interface ExportOption {
 
 export interface AssayModelExportOptions {
   assay_models: AssayModelExportOption[];
+  assay_types: ExportOption[];
+  assay_metadata_definitions: ExportOption[];
   vocabularies: ExportOption[];
   experiment_metadata_templates: ExportOption[];
 }
@@ -185,10 +187,16 @@ export const useAssayModelExportOptions = (
   });
 };
 
+export const ASSAY_MODEL_TRANSFER_SECTIONS = [
+  "assay_models",
+  "assay_types",
+  "assay_metadata_definitions",
+  "vocabularies",
+  "experiment_metadata_templates",
+] as const;
+
 export type AssayModelTransferSection =
-  | "assay_models"
-  | "vocabularies"
-  | "experiment_metadata_templates";
+  (typeof ASSAY_MODEL_TRANSFER_SECTIONS)[number];
 
 export interface ImportPreviewDependency {
   kind: string;
@@ -209,6 +217,11 @@ export interface AssayModelImportPreview {
   assay_models: (ImportPreviewEntry & {
     assay_type: string;
     publication_status: string;
+  })[];
+  assay_types: ImportPreviewEntry[];
+  assay_metadata_definitions: (ImportPreviewEntry & {
+    safe_name: string;
+    vocabulary: string;
   })[];
   vocabularies: (ImportPreviewEntry & {
     item_count: number;

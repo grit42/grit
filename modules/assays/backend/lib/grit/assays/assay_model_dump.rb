@@ -22,18 +22,21 @@ module Grit::Assays
   # databases. Used by the export/import controller actions on AssayModelsController and by the
   # apps/grit/server/script/AssayExportImport/*.rb CLI scripts.
   #
-  # A dump is a hash with three independently selectable sections:
+  # A dump is a hash with independently selectable sections:
   #
   #   { "format" => "grit-assays-export", "version" => 2,
-  #     "assay_models" => [...], "vocabularies" => [...], "experiment_metadata_templates" => [...] }
+  #     "assay_models" => [...], "assay_types" => [...], "assay_metadata_definitions" => [...],
+  #     "vocabularies" => [...], "experiment_metadata_templates" => [...] }
   #
   # Each entry is self-contained: an assay model or template embeds the vocabularies (and
   # metadata definitions) it depends on, which are created in the target database if they don't
-  # exist there yet (matched/reused by name otherwise, adding any missing vocabulary items). Unit,
+  # exist there yet (matched/reused by name otherwise, adding any missing vocabulary items). The
+  # assay types and metadata definitions sections cover the ones no assay model uses. Unit,
   # Data Type and Publication Status are matched by name/abbreviation and must already exist.
   #
-  # Import never creates a duplicate: every entry is identified by its (unique) name, and a
-  # selected entry that already exists in the target database is rejected. Version 1 dumps (a bare
+  # Import never creates a duplicate: every entry is identified by its (unique) name — metadata
+  # definitions also by safe name — and a selected entry that already exists in the target
+  # database is rejected. Version 1 dumps (a bare
   # array of assay models with embedded templates) are still accepted, see .normalize.
   class AssayModelDump
     FORMAT = "grit-assays-export"
@@ -41,15 +44,19 @@ module Grit::Assays
 
     SECTIONS = {
       "assay_models" => { model: "Grit::Assays::AssayModel", label: "Assay model" },
+      "assay_types" => { model: "Grit::Assays::AssayType", label: "Assay type" },
+      "assay_metadata_definitions" => { model: "Grit::Assays::AssayMetadataDefinition", label: "Metadata definition" },
       "vocabularies" => { model: "Grit::Core::Vocabulary", label: "Vocabulary" },
       "experiment_metadata_templates" => { model: "Grit::Assays::ExperimentMetadataTemplate", label: "Experiment metadata template" }
     }.freeze
 
-    def self.export(assay_models: [], vocabularies: [], experiment_metadata_templates: [])
+    def self.export(assay_models: [], assay_types: [], assay_metadata_definitions: [], vocabularies: [], experiment_metadata_templates: [])
       {
         "format" => FORMAT,
         "version" => VERSION,
         "assay_models" => assay_models.map { |assay_model| export_assay_model(assay_model) },
+        "assay_types" => assay_types.map { |assay_type| export_assay_type(assay_type) },
+        "assay_metadata_definitions" => assay_metadata_definitions.map { |definition| export_assay_metadata_definition(definition) },
         "vocabularies" => vocabularies.map { |vocabulary| export_vocabulary(vocabulary) },
         "experiment_metadata_templates" => experiment_metadata_templates.map { |template| export_experiment_metadata_template(template) }
       }
@@ -91,6 +98,8 @@ module Grit::Assays
       dump = normalize(dump)
       {
         "assay_models" => dump["assay_models"].map { |attrs| preview_assay_model(attrs) },
+        "assay_types" => dump["assay_types"].map { |attrs| preview_entry("assay_types", attrs) },
+        "assay_metadata_definitions" => dump["assay_metadata_definitions"].map { |attrs| preview_assay_metadata_definition(attrs) },
         "vocabularies" => dump["vocabularies"].map { |attrs| preview_vocabulary(attrs) },
         "experiment_metadata_templates" => dump["experiment_metadata_templates"].map { |attrs| preview_experiment_metadata_template(attrs) }
       }
@@ -113,11 +122,20 @@ module Grit::Assays
       end
       raise "Nothing selected for import" if selected.values.all?(&:empty?)
 
+      # Dependencies first, so assay models and templates reuse what this import just created.
       ActiveRecord::Base.transaction do
         vocabularies = selected["vocabularies"].map { |attrs| import_vocabulary!(attrs) }
+        assay_types = selected["assay_types"].map { |attrs| import_assay_type(attrs) }
+        definitions = selected["assay_metadata_definitions"].map { |attrs| import_or_find_assay_metadata_definition(attrs) }
         assay_models = selected["assay_models"].map { |attrs| import_assay_model(attrs) }
         templates = selected["experiment_metadata_templates"].map { |attrs| import_experiment_metadata_template(attrs) }
-        { "assay_models" => assay_models, "vocabularies" => vocabularies, "experiment_metadata_templates" => templates }
+        {
+          "assay_models" => assay_models,
+          "assay_types" => assay_types,
+          "assay_metadata_definitions" => definitions,
+          "vocabularies" => vocabularies,
+          "experiment_metadata_templates" => templates
+        }
       end
     end
 
@@ -255,6 +273,10 @@ module Grit::Assays
       Grit::Core::Unit.find_by(abbreviation: abbreviation) || raise("Unit '#{abbreviation}' not found in target database")
     end
 
+    def self.import_assay_type(attrs)
+      Grit::Assays::AssayType.create!(name: attrs.fetch("name"), description: attrs["description"])
+    end
+
     def self.import_vocabulary!(vocabulary_attrs)
       vocabulary = Grit::Core::Vocabulary.find_or_create_by!(name: vocabulary_attrs.fetch("name")) do |record|
         record.description = vocabulary_attrs["description"]
@@ -335,7 +357,7 @@ module Grit::Assays
 
       template
     end
-    private_class_method :find_publication_status!, :find_data_type!, :find_unit!, :import_vocabulary!,
+    private_class_method :find_publication_status!, :find_data_type!, :find_unit!, :import_assay_type, :import_vocabulary!,
       :import_or_find_assay_metadata_definition, :import_assay_model_metadatum, :import_assay_data_sheet_definition,
       :import_experiment_metadata_template_metadatum, :import_experiment_metadata_template
 
@@ -343,8 +365,14 @@ module Grit::Assays
       config = SECTIONS.fetch(section)
       attrs = dump[section].find { |entry| entry["name"] == name }
       raise "#{config[:label]} '#{name}' is not in the file" if attrs.nil?
-      raise "#{config[:label]} '#{name}' already exists" if config[:model].constantize.exists?(name: name)
+      raise "#{config[:label]} '#{name}' already exists" if installed?(section, attrs)
       attrs
+    end
+
+    def self.installed?(section, attrs)
+      scope = SECTIONS.fetch(section)[:model].constantize
+      return scope.where(name: attrs["name"]).or(scope.where(safe_name: attrs["safe_name"])).exists? if section == "assay_metadata_definitions"
+      scope.exists?(name: attrs["name"])
     end
 
     def self.dependency(kind, name, installed, note = nil)
@@ -374,7 +402,7 @@ module Grit::Assays
       {
         "name" => attrs["name"],
         "description" => attrs["description"],
-        "installed" => SECTIONS.fetch(section)[:model].constantize.exists?(name: attrs["name"]),
+        "installed" => installed?(section, attrs),
         "dependencies" => dependencies.uniq { |dep| [ dep["kind"], dep["name"] ] },
         "problems" => problems.uniq
       }.merge(extra)
@@ -382,7 +410,9 @@ module Grit::Assays
 
     def self.preview_assay_model(attrs)
       assay_type_name = attrs.dig("assay_type", "name")
-      dependencies = [ dependency("Assay type", assay_type_name, Grit::Assays::AssayType.exists?(name: assay_type_name)) ]
+      assay_type = Grit::Assays::AssayType.find_by(name: assay_type_name)
+      assay_type_note = "its description differs from the one in the file and will be kept" if assay_type && assay_type.description.to_s != attrs.dig("assay_type", "description").to_s
+      dependencies = [ dependency("Assay type", assay_type_name, assay_type.present?, assay_type_note) ]
       problems = []
 
       Array(attrs["assay_model_metadata"]).each do |metadatum_attrs|
@@ -414,13 +444,19 @@ module Grit::Assays
       })
     end
 
+    def self.preview_assay_metadata_definition(attrs)
+      preview_entry("assay_metadata_definitions", attrs,
+        dependencies: [ vocabulary_dependency(attrs.fetch("vocabulary")) ],
+        extra: { "safe_name" => attrs["safe_name"], "vocabulary" => attrs.dig("vocabulary", "name") })
+    end
+
     def self.preview_experiment_metadata_template(attrs)
       dependencies = Array(attrs["experiment_metadata_template_metadata"]).flat_map do |metadatum_attrs|
         metadata_definition_dependencies(metadatum_attrs.fetch("assay_metadata_definition"))
       end
       preview_entry("experiment_metadata_templates", attrs, dependencies: dependencies)
     end
-    private_class_method :selected_entry!, :dependency, :vocabulary_dependency, :missing_vocabulary_items,
+    private_class_method :selected_entry!, :installed?, :preview_assay_metadata_definition, :dependency, :vocabulary_dependency, :missing_vocabulary_items,
       :metadata_definition_dependencies, :preview_entry, :preview_assay_model, :preview_vocabulary,
       :preview_experiment_metadata_template
   end
