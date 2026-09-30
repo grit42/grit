@@ -118,7 +118,8 @@ const RoutedTabs = ({
     <div
       style={{
         display: "grid",
-        gridTemplateColumns: "1fr",
+        // Not a bare "1fr": that track cannot shrink below its content.
+        gridTemplateColumns: "minmax(0, 1fr)",
         gridTemplateRows: rows.join(" "),
         overflow: "auto",
       }}
