@@ -115,7 +115,7 @@ RSpec.describe "DynamicSchema::ColumnDefinition concern", type: :model do
 
       definition.destroy!
 
-      expect(own_table.record_klass.new).not_to respond_to(:a_column)
+      expect(own_table.record_klass.new.has_attribute?("a_column")).to be(false)
     end
   end
 
@@ -203,7 +203,7 @@ RSpec.describe "DynamicSchema::ColumnDefinition concern", type: :model do
       definition.update!(data_type: integer_type)
 
       expect(column(table.table_name, "a_column").sql_type).to eq("bigint")
-      expect(table.record_klass.first.a_column).to eq(42)
+      expect(table.record_klass.first["a_column"]).to eq(42)
     end
 
     it "refuses a conversion the existing rows cannot survive" do
@@ -347,22 +347,82 @@ RSpec.describe "DynamicSchema::ColumnDefinition concern", type: :model do
   end
 
   # ==========================================================================
-  # A column identifier becomes a method, which the other two never do
+  # A column identifier never becomes a method
   # ==========================================================================
 
-  describe "identifiers that collide with ActiveRecord" do
-    # Moved here from ValidIdentifier, where it also applied to schema and table
-    # identifiers that can never shadow anything.
-    it "rejects a name that collides with an ActiveRecord::Base instance method" do
-      record = Grit::ColumnDefinition.new(identifier: "save", name: "X", data_type: string_type, table_definition: table)
+  describe "identifiers that name ActiveRecord methods" do
+    # `record_klass` defines no method per column, so a column may take the name
+    # of any method a record has: one Rails would refuse with
+    # DangerousAttributeError (`save`, `create_or_update`), one it would generate
+    # a clashing method from (`valid?` for `valid`, `mutations_before_last_save`
+    # for `mutations`), one assignment or serialization would otherwise call
+    # (`attributes=`, `record_timestamps=`, `destroy`), or one only Kernel
+    # defines (`format`, `send`).
+    identifiers = %w[save valid attribute attributes destroy format send create_or_update mutations record_timestamps]
+    values = identifiers.index_with { |identifier| "#{identifier} value" }
 
-      expect(record).not_to be_valid
-      expect(record.errors[:identifier]).to include("conflicts with a method every record already has and cannot be used as identifier")
+    def create_columns(identifiers)
+      identifiers.each do |identifier|
+        Grit::ColumnDefinition.create!(identifier: identifier, name: identifier.humanize, data_type: string_type, table_definition: table)
+      end
     end
 
-    # The message is separate from the reserved-keyword one because the two say
-    # different things and are fixed differently.
-    it "keeps the reserved-keyword message for a base column" do
+    identifiers.each do |identifier|
+      it "accepts #{identifier}" do
+        record = Grit::ColumnDefinition.new(identifier: identifier, name: "X", data_type: string_type, table_definition: table)
+
+        expect(record).to be_valid
+      end
+    end
+
+    it "stores and reads back a value in each column" do
+      create_columns(identifiers)
+
+      row = table.record_klass.create!(values)
+
+      expect(row.reload.attributes.slice(*identifiers)).to eq(values)
+    end
+
+    it "updates each column" do
+      create_columns(identifiers)
+      row = table.record_klass.create!
+      updated = identifiers.index_with { |identifier| "#{identifier} updated" }
+
+      row.update!(updated)
+
+      expect(row.reload.attributes.slice(*identifiers)).to eq(updated)
+    end
+
+    # Scope attributes skip `assign_attributes` and are assigned one by one,
+    # through the same setter lookup.
+    it "assigns each column from the scope it is created through" do
+      create_columns(identifiers)
+
+      row = table.record_klass.where(values).create!
+
+      expect(row.reload.attributes.slice(*identifiers)).to eq(values)
+    end
+
+    # Serialization reads each attribute with `send` by default, which on the
+    # `destroy` column would destroy the row.
+    it "serializes each column without calling the method it shares a name with" do
+      create_columns(identifiers)
+      row = table.record_klass.create!(values)
+
+      expect(row.as_json.slice(*identifiers)).to eq(values)
+      expect(table.record_klass.exists?(row.id)).to be(true)
+    end
+
+    it "reads each column for validation without calling the method it shares a name with" do
+      create_columns(identifiers)
+      row = table.record_klass.create!(values)
+
+      expect(row.read_attribute_for_validation(:destroy)).to eq("destroy value")
+      expect(table.record_klass.exists?(row.id)).to be(true)
+    end
+
+    # The base columns are the table's own, so they stay reserved.
+    it "keeps refusing a base column" do
       record = Grit::ColumnDefinition.new(identifier: "created_at", name: "X", data_type: string_type, table_definition: table)
 
       expect(record).not_to be_valid

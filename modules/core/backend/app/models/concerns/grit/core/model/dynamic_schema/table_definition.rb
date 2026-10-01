@@ -598,6 +598,18 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
   #     stands. Held across calls it loads once, and a rename or a `sort` change on
   #     a column — neither of which runs any DDL — would leave `entity_properties`
   #     describing the definition as it was.
+  #
+  # The class has no method named after any column: columns are reached through
+  # `record[:name]`, `read_attribute` and `write_attribute` only. A column
+  # identifier is user input, and as a method it either collides with one Rails
+  # defines — `save`, or `valid` through the `valid?` Rails would generate,
+  # refused with DangerousAttributeError — or quietly replaces one it does not,
+  # such as Kernel's `format`. `id` keeps its methods; Rails defines those
+  # itself, whatever the columns.
+  #
+  # Three of the overrides below are Rails internals rather than public API.
+  # Each is pinned by a spec in column_definition_spec.rb or
+  # table_definition_spec.rb that fails if a Rails upgrade stops calling it.
   def record_klass
     table_definition = self
     column_definitions = self.ordered_column_definitions
@@ -609,11 +621,49 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
       @column_definitions = column_definitions
       before_save :set_updater
 
+      # Where Rails generates the reader, writer, dirty and query methods of
+      # every column, on first instantiation and again from `method_missing`.
+      def self.define_attribute_methods
+        false
+      end
+
       def set_updater
         current_user_login = Grit::Core::User.current.login
-        self.created_by = current_user_login if self.new_record?
-        self.updated_by = current_user_login
+        self["created_by"] = current_user_login if self.new_record?
+        self["updated_by"] = current_user_login
       end
+
+      # Both default to `send(name)`, which with no attribute methods calls
+      # whatever method the column shares its name with: `as_json` on a row
+      # with a `destroy` column would destroy the row. `has_attribute?` asks the
+      # loaded attributes rather than the table's columns, so the
+      # `<name>__<display>` aliases `detailed` selects are read the same way.
+      def read_attribute_for_serialization(name)
+        has_attribute?(name) ? read_attribute(name) : super
+      end
+
+      def read_attribute_for_validation(name)
+        has_attribute?(name) ? read_attribute(name) : super
+      end
+
+      # What `method_missing` and `respond_to?` ask before resolving
+      # `record.name` to a column. Without this, `record.name` would still work
+      # whenever nothing else is called `name`, so whether it did would depend on
+      # which methods Ruby, Rails and grit happen to define.
+      def attribute_method?(attr_name)
+        attr_name == "id"
+      end
+
+      # Every assignment — `new`, `create`, `update`, `assign_attributes`, and
+      # the scope attributes of `where(...).create` — ends here, and by default
+      # calls `public_send("#{name}=")`: for a column named `attributes`, that
+      # is `attributes=`.
+      def _assign_attribute(name, value)
+        return super unless self.class.has_attribute?(name)
+        write_attribute(name, value)
+      end
+
+      private :attribute_method?, :_assign_attribute
 
       def self.detailed(params = nil)
         quoted_table_name = @table_definition.quoted_table_name

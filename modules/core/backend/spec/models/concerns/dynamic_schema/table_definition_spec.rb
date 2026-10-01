@@ -943,7 +943,7 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
     it "returns rows through detailed" do
       table.record_klass.create!(owner_id: admin.id)
       row = table.record_klass.detailed.first
-      expect(row.owner_id).to eq(admin.id)
+      expect(row["owner_id"]).to eq(admin.id)
     end
 
     it "lists the column in entity_properties" do
@@ -1073,8 +1073,8 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
 
         row = owned.record_klass.detailed.first
 
-        expect(row.owner_id).to eq(admin.id)
-        expect(row.owner_id__login).to eq(admin.login)
+        expect(row["owner_id"]).to eq(admin.id)
+        expect(row["owner_id__login"]).to eq(admin.login)
       end
 
       # Every grid column entity_columns advertises has to be in the select list,
@@ -1192,8 +1192,8 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
 
       row = alt.record_klass.detailed.first
 
-      expect(row.owner_login).to eq(admin.login)
-      expect(row.owner_login__login).to eq(admin.login)
+      expect(row["owner_login"]).to eq(admin.login)
+      expect(row["owner_login__login"]).to eq(admin.login)
     end
 
     # `character varying` is what pg_dump, structure.sql and the catalog call it,
@@ -1336,8 +1336,8 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
 
       row = table.record_klass.detailed.first
 
-      expect(row.ref_col).to eq(admin.id)
-      expect(row.ref_col__login).to eq(admin.login)
+      expect(row["ref_col"]).to eq(admin.id)
+      expect(row["ref_col__login"]).to eq(admin.login)
     end
 
     it "describes the column as an entity reference" do
@@ -1452,8 +1452,8 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
 
       table.record_klass.create!(type: "x")
 
-      expect(table.record_klass.detailed.first.type).to eq("x")
-      expect(table.record_klass.first.type).to eq("x")
+      expect(table.record_klass.detailed.first["type"]).to eq("x")
+      expect(table.record_klass.first["type"]).to eq("x")
     end
 
     it "does not lock optimistically on a column named lock_version" do
@@ -1463,7 +1463,7 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
       stale = table.record_klass.find(row.id)
       row.update!(owner_id: admin.id)
 
-      expect(row.reload.lock_version).to eq(5)
+      expect(row.reload["lock_version"]).to eq(5)
       expect { stale.update!(owner_id: nil) }.not_to raise_error
     end
   end
@@ -1478,8 +1478,8 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
     it "stamps the current user on create" do
       row = table.record_klass.create!
 
-      expect(row.created_by).to eq(admin.login)
-      expect(row.updated_by).to eq(admin.login)
+      expect(row["created_by"]).to eq(admin.login)
+      expect(row["updated_by"]).to eq(admin.login)
     end
 
     it "leaves created_by alone on update" do
@@ -1489,8 +1489,52 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
 
       row.update!(owner_id: admin.id)
 
-      expect(row.created_by).to eq(admin.login)
-      expect(row.updated_by).to eq(other.login)
+      expect(row["created_by"]).to eq(admin.login)
+      expect(row["updated_by"]).to eq(other.login)
+    end
+  end
+
+  # ==========================================================================
+  # Columns are attributes, never methods
+  # ==========================================================================
+
+  describe "record_klass attribute access" do
+    let(:table) { Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: schema) }
+
+    it "defines no method for a column" do
+      klass = table.record_klass
+      row = klass.create!(owner_id: admin.id)
+
+      expect(klass.method_defined?(:owner_id)).to be(false)
+      expect(klass.method_defined?(:owner_id=)).to be(false)
+      expect(klass.method_defined?(:owner_id_changed?)).to be(false)
+      expect(row).not_to respond_to(:owner_id)
+      expect { row.owner_id }.to raise_error(NoMethodError)
+      expect(row["owner_id"]).to eq(admin.id)
+    end
+
+    it "keeps the methods Rails defines for id" do
+      row = table.record_klass.create!
+
+      expect(row.id).to be_present
+      expect(row.id_previously_changed?).to be(true)
+    end
+
+    it "assigns a column from the scope it is created through" do
+      row = table.record_klass.where(owner_id: admin.id).create!
+
+      expect(row.reload["owner_id"]).to eq(admin.id)
+    end
+
+    it "still refuses unpermitted parameters" do
+      params = ActionController::Parameters.new(owner_id: admin.id)
+
+      expect { table.record_klass.new(params) }.to raise_error(ActiveModel::ForbiddenAttributesError)
+      expect(table.record_klass.new(params.permit(:owner_id))["owner_id"]).to eq(admin.id)
+    end
+
+    it "still refuses an attribute the table does not have" do
+      expect { table.record_klass.new(not_a_column: 1) }.to raise_error(ActiveModel::UnknownAttributeError)
     end
   end
 

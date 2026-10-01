@@ -24,7 +24,6 @@ module Grit::Core::Model::DynamicSchema::ColumnDefinition
     belongs_to :data_type, class_name: "Grit::Core::DataType"
     class_attribute :table_definition_association
 
-    validate :identifier_not_active_record_method
     validate :identifier_not_implementation_column
     validate :identifier_unique_in_table
     validate :table_definition_unchanged
@@ -46,13 +45,6 @@ module Grit::Core::Model::DynamicSchema::ColumnDefinition
   #     raise "Cannot modify a published data set" if published?
   #   end
   def check_can_modify
-  end
-
-  def identifier_not_active_record_method
-    return unless identifier_changed?
-    return if identifier.blank?
-    return unless ActiveRecord::Base.instance_methods.include?(identifier.to_sym)
-    errors.add(:identifier, "conflicts with a method every record already has and cannot be used as identifier")
   end
 
   def identifier_not_implementation_column

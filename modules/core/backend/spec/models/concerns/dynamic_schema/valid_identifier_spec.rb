@@ -119,12 +119,13 @@ RSpec.describe "DynamicSchema::ValidIdentifier concern", type: :model do
     end
 
     # The ActiveRecord-method blacklist used to live here and so applied to all
-    # three. It only ever made sense for columns, which become attribute methods
-    # on `record_klass`; a schema and a table become PostgreSQL object names and
-    # shadow nothing. `ActiveRecord::Base.instance_methods` carries every public
+    # three. A schema and a table become PostgreSQL object names and shadow
+    # nothing, and `ActiveRecord::Base.instance_methods` carries every public
     # method of Object besides — `display`, `hash`, `inspect`, `freeze`, `then` —
     # so applied here it rejected perfectly good names for a reason a user could
-    # neither see nor act on. It lives in ColumnDefinition now.
+    # neither see nor act on. Columns no longer need it either: `record_klass`
+    # defines no method per column, so there is nothing for a name to collide
+    # with.
     %w[display hash save].each do |method_name|
       it "lets a schema take #{method_name.inspect}, which names no PostgreSQL object" do
         expect(build_with_identifier(:schema, method_name)).to be_valid
