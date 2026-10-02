@@ -224,8 +224,11 @@
   align-items: center;
   width: 100%;
 
-  .checkbox {
-    margin: auto;
+  // The client-library Checkbox has `aspect-ratio: 1 / 1`, so stretching it
+  // across the `1fr` track (the grid default) blows it up to the column
+  // width. Keep it at its intrinsic size, like the row selection checkbox.
+  > input[type="checkbox"] {
+    justify-self: center;
   }
 
   .menuIcon {
