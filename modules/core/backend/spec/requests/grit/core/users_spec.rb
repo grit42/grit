@@ -202,6 +202,83 @@ RSpec.describe "Users API", type: :request do
     end
   end
 
+  describe "role assignment" do
+    let(:extra_role) { create(:grit_core_role) }
+    let(:other_admin) { create(:grit_core_user, :with_administrator_role) }
+
+    def role_ids_of(user)
+      Grit::Core::UserRole.where(user_id: user.id).pluck(:role_id).sort
+    end
+
+    it "admin should assign a new role to itself" do
+      role_ids = admin.role_ids + [ extra_role.id ]
+      patch "/api/grit/core/users/#{admin.id}", params: { role_ids: role_ids }, as: :json
+
+      expect(response).to have_http_status(:success)
+      expect(role_ids_of(admin)).to eq(role_ids.sort)
+    end
+
+    it "admin should assign a new role to itself when role ids are strings" do
+      role_ids = admin.role_ids + [ extra_role.id ]
+      patch "/api/grit/core/users/#{admin.id}", params: { role_ids: role_ids.map(&:to_s) }, as: :json
+
+      expect(response).to have_http_status(:success)
+      expect(role_ids_of(admin)).to eq(role_ids.sort)
+    end
+
+    it "admin should assign a new role to another user without duplicating roles" do
+      role_ids = notadmin.role_ids + [ extra_role.id ]
+      patch "/api/grit/core/users/#{notadmin.id}", params: { role_ids: role_ids }, as: :json
+
+      expect(response).to have_http_status(:success)
+      expect(role_ids_of(notadmin)).to eq(role_ids.sort)
+    end
+
+    it "admin should remove a role from a user" do
+      Grit::Core::UserRole.create!(user_id: notadmin.id, role_id: extra_role.id)
+
+      patch "/api/grit/core/users/#{notadmin.id}", params: { role_ids: [ extra_role.id ] }, as: :json
+
+      expect(response).to have_http_status(:success)
+      expect(role_ids_of(notadmin)).to eq([ extra_role.id ])
+    end
+
+    it "should not duplicate roles when the same roles are assigned repeatedly" do
+      role_ids = admin.role_ids + [ extra_role.id ]
+      2.times do
+        patch "/api/grit/core/users/#{admin.id}", params: { role_ids: role_ids }, as: :json
+        expect(response).to have_http_status(:success)
+      end
+
+      expect(role_ids_of(admin)).to eq(role_ids.sort)
+    end
+
+    it "should leave roles untouched when no role ids are sent" do
+      role_ids = role_ids_of(notadmin)
+      patch "/api/grit/core/users/#{notadmin.id}", params: { name: "Still has roles" }, as: :json
+
+      expect(response).to have_http_status(:success)
+      expect(role_ids_of(notadmin)).to eq(role_ids)
+    end
+
+    it "should not strip the Administrator role from the admin user" do
+      login_as(other_admin)
+      patch "/api/grit/core/users/#{admin.id}", params: { role_ids: [ extra_role.id ] }, as: :json
+
+      expect(response).not_to have_http_status(:success)
+      expect(role_ids_of(admin)).to include(Grit::Core::Role.find_by(name: "Administrator").id)
+    end
+
+    it "should not apply role changes when the user update fails" do
+      role_ids = role_ids_of(notadmin)
+      patch "/api/grit/core/users/#{notadmin.id}",
+            params: { role_ids: role_ids + [ extra_role.id ], email: "not an email" }, as: :json
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(role_ids_of(notadmin)).to eq(role_ids)
+    end
+  end
+
   describe "show scoping" do
     it "admin should show user for user admin scope" do
       get "/api/grit/core/users/#{notadmin.id}", params: "scope=user_administration"

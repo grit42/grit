@@ -35,17 +35,17 @@ const MoleculeEditor = ({ molecule, onDone, fragment = false }: Props) => {
   const moleculeRef = useRef<Molecule>(molecule);
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonContainerRef = useRef<HTMLDivElement>(null);
-  const [initialMolfile, setInitialMolfile] = useState<string>(
-    moleculeRef.current.toMolfile(),
+  const [initialMolfile, setInitialMolfile] = useState<string>(() =>
+    molecule.toMolfile(),
   );
-  const [molfile, setMolfile] = useState<string>(
-    moleculeRef.current.getMolweight() > 0 ? initialMolfile : "",
+  const [molfile, setMolfile] = useState<string>(() =>
+    molecule.getMolweight() > 0 ? molecule.toMolfile() : "",
   );
-  const [smiles, setSmiles] = useState<string>(
-    fragment ? moleculeRef.current.toSmarts() : moleculeRef.current.toSmiles(),
+  const [smiles, setSmiles] = useState<string>(() =>
+    fragment ? molecule.toSmarts() : molecule.toSmiles(),
   );
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/purity
   const editorKey = useMemo(() => Date.now().toString(), [initialMolfile]);
 
   const [{ width, height }, setSize] = useState<{

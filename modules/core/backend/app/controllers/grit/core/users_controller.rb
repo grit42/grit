@@ -46,20 +46,19 @@ module Grit::Core
 
     def update
       permitted_params = params.permit([ :name, :email, :origin_id, :location_id, :two_factor, :active, role_ids: [] ])
+      user_params = permitted_params.except(:role_ids)
 
       @record = Grit::Core::User.find(params[:id])
 
-      if permitted_params[:role_ids]
-        @record.user_roles.each do |user_role|
-          user_role.destroy unless permitted_params[:role_ids].include?(user_role.role_id)
-        end
-        permitted_params[:role_ids].each do |role_id|
-          @record.user_roles << Grit::Core::UserRole.new(role_id: role_id, user_id: @record.id)
-        end
-        @record.save!
+      updated = false
+      Grit::Core::User.transaction do
+        sync_user_roles(@record, permitted_params[:role_ids]) unless permitted_params[:role_ids].nil?
+
+        updated = @record.update(user_params)
+        raise ActiveRecord::Rollback unless updated
       end
 
-      if @record.update(permitted_params)
+      if updated
         scope = get_scope(params[:scope] || "detailed", params)
         @record = scope.find(params[:id])
         render json: { success: true, data: @record }
@@ -321,6 +320,22 @@ module Grit::Core
     end
 
     private
+
+      def sync_user_roles(record, role_ids)
+        requested_role_ids = Array(role_ids).map(&:to_i).uniq
+        user_roles = record.user_roles.reload.to_a
+
+        (requested_role_ids - user_roles.map(&:role_id)).each do |role_id|
+          Grit::Core::UserRole.create!(user_id: record.id, role_id: role_id)
+        end
+
+        user_roles.each do |user_role|
+          user_role.destroy! if !requested_role_ids.include?(user_role.role_id)
+        end
+
+        record.user_roles.reset
+        record.roles.reset
+      end
 
       def require_no_user
         return unless current_user

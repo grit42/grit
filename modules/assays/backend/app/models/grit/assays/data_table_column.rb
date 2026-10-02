@@ -39,9 +39,9 @@ module Grit::Assays
 
     def self.detailed(params = {})
       self.detailed_scope(params)
-        .joins("LEFT OUTER JOIN grit_assays_assay_data_sheet_definitions ON grit_assays_assay_data_sheet_definitions.id = grit_assays_assay_data_sheet_columns__.assay_data_sheet_definition_id")
+        .joins("LEFT OUTER JOIN grit_assays_assay_data_sheet_definitions ON grit_assays_assay_data_sheet_definitions.id = assay_data_sheet_column_id__.assay_data_sheet_definition_id")
         .joins("LEFT OUTER JOIN grit_assays_assay_models ON grit_assays_assay_models.id = grit_assays_assay_data_sheet_definitions.assay_model_id")
-        .joins("LEFT OUTER JOIN grit_core_data_types ON grit_core_data_types.id = grit_assays_assay_data_sheet_columns__.data_type_id")
+        .joins("LEFT OUTER JOIN grit_core_data_types ON grit_core_data_types.id = assay_data_sheet_column_id__.data_type_id")
         .select("grit_assays_assay_data_sheet_definitions.id as assay_data_sheet_definition_id")
         .select("grit_assays_assay_data_sheet_definitions.name as assay_data_sheet_definition_id__name")
         .select("grit_assays_assay_models.id as assay_model_id")
@@ -55,7 +55,7 @@ module Grit::Assays
       params = params.as_json
       raise "'data_table_id' is required" if params["data_table_id"].nil?
       query = self.detailed(params)
-        .joins("LEFT OUTER JOIN grit_assays_assay_data_sheet_definitions ON grit_assays_assay_data_sheet_definitions.id = grit_assays_assay_data_sheet_columns__.assay_data_sheet_definition_id")
+        .joins("LEFT OUTER JOIN grit_assays_assay_data_sheet_definitions ON grit_assays_assay_data_sheet_definitions.id = assay_data_sheet_column_id__.assay_data_sheet_definition_id")
         .joins("LEFT OUTER JOIN grit_assays_assay_models ON grit_assays_assay_models.id = grit_assays_assay_data_sheet_definitions.assay_model_id")
         .select("grit_assays_assay_data_sheet_definitions.id as assay_data_sheet_definition_id")
         .select("grit_assays_assay_data_sheet_definitions.name as assay_data_sheet_definition_id__name")
@@ -80,12 +80,12 @@ module Grit::Assays
       raise "'data_table_id' is required" if params["data_table_id"].nil?
       data_table = DataTable.find(params["data_table_id"])
 
-      AssayDataSheetColumn.detailed.where("grit_assays_assay_data_sheet_definitions__.result IS TRUE")
-        .joins("JOIN grit_assays_assay_models grit_assays_assay_models__ ON grit_assays_assay_models__.id = grit_assays_assay_data_sheet_definitions__.assay_model_id")
+      AssayDataSheetColumn.detailed.where("assay_data_sheet_definition_id__.result IS TRUE")
+        .joins("JOIN grit_assays_assay_models grit_assays_assay_models__ ON grit_assays_assay_models__.id = assay_data_sheet_definition_id__.assay_model_id")
         .joins("JOIN grit_core_publication_statuses gaamps on gaamps.id = grit_assays_assay_models__.publication_status_id and gaamps.name = 'Published'")
         .select("grit_assays_assay_models__.id as assay_model_id")
         .select("grit_assays_assay_models__.name as assay_model_id__name")
-        .reorder("grit_assays_assay_data_sheet_definitions__.assay_model_id ASC", "grit_assays_assay_data_sheet_definitions__.sort ASC NULLS LAST", "grit_assays_assay_data_sheet_definitions__.id ASC", "grit_assays_assay_data_sheet_columns.sort ASC NULLS LAST")
+        .reorder("assay_data_sheet_definition_id__.assay_model_id ASC", "assay_data_sheet_definition_id__.sort ASC NULLS LAST", "assay_data_sheet_definition_id__.id ASC", "grit_assays_assay_data_sheet_columns.sort ASC NULLS LAST")
         .joins <<-SQL
 JOIN GRIT_ASSAYS_ASSAY_DATA_SHEET_COLUMNS GRIT_ASSAYS_ASSAY_DATA_SHEET_COLUMNS__SOURCE_DATA_TYPE ON GRIT_ASSAYS_ASSAY_DATA_SHEET_COLUMNS__SOURCE_DATA_TYPE.ASSAY_DATA_SHEET_DEFINITION_ID = GRIT_ASSAYS_ASSAY_DATA_SHEET_COLUMNS.ASSAY_DATA_SHEET_DEFINITION_ID
 AND GRIT_ASSAYS_ASSAY_DATA_SHEET_COLUMNS__SOURCE_DATA_TYPE.DATA_TYPE_ID = #{data_table.entity_data_type_id}

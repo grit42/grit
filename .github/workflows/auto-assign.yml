@@ -12,8 +12,9 @@ jobs:
       pull-requests: write
     steps:
     - name: 'Auto-assign issue'
-      uses: pozil/auto-assign-issue@v1
+      uses: pozil/auto-assign-issue@e0a56afd8846954587b00fff254caf1ec918554e # v1
       with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           assignees: jonny-grit42
           numOfAssignee: 1
+          issueNumber: ${{ github.event.issue.number || github.event.pull_request.number }}
