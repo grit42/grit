@@ -980,16 +980,7 @@ describe("facet ordering", () => {
   });
 });
 
-/**
- * The panel order, where the alphabet is the wrong authority.
- *
- * Panels are sorted by their label, which is right for a year or a specimen
- * and wrong wherever the labels carry a convention the alphabet does not know:
- * split by sex, `F` sorts before `M` and every figure leads with the females.
- *
- * The convention belongs to whoever knows what the values mean, so it is
- * passed in rather than guessed here.
- */
+/** A declared panel order, for conventions the alphabet does not know (M before F). */
 describe("facetOrder", () => {
   const rows: SourceData = [
     { sex: "F", value: 1 },

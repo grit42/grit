@@ -1,12 +1,4 @@
-/**
- * Keeping the canvas the size of its box.
- *
- * Worth its own tests because the fault it fixes is invisible to every other
- * test here: the builders were right, the layout was right, and the figure was
- * still drawn for a box it no longer had. What can be asserted is the wiring -
- * that a box change reaches Plotly's own refit, that an unchanged size does
- * not, and that nothing re-renders to make it happen.
- */
+/** Keeping the canvas the size of its box: a box change reaches Plotly's refit, an unchanged size does not. */
 import { describe, expect, test, vi } from "vitest";
 import { observeBoxSize, refitPlot } from "../lib/PlotBase/resize";
 
@@ -28,13 +20,7 @@ const fakeObserver = () => {
   };
 };
 
-/**
- * A stand-in for `requestAnimationFrame` that really cancels.
- *
- * It has to: the first version of this harness stubbed `unschedule` out, so
- * the coalescing test was measuring the stub rather than the code and reported
- * three refits for one frame.
- */
+/** A stand-in for `requestAnimationFrame` that really cancels. */
 const harness = () => {
   const observer = fakeObserver();
   const onResize = vi.fn();
@@ -74,8 +60,7 @@ describe("observeBoxSize", () => {
   });
 
   test("ignores a notification that reports the same size", () => {
-    // A `ResizeObserver` can fire for a change that rounds to nothing, and a
-    // refit per notification is how a figure ends up redrawing continuously.
+    // A change that rounds to nothing must not refit.
     const { observer, onResize, frame } = harness();
     observer.fire(800, 400);
     frame();
@@ -123,13 +108,7 @@ describe("observeBoxSize", () => {
 
 describe("refitPlot", () => {
   test("calls the graph div's own responsive handler", () => {
-    /*
-     * Plotly attaches `_responsiveChartHandler` whenever `responsive` is set,
-     * and it is exactly `if (!isHidden(gd)) Plots.resize(gd)`. Using it needs
-     * no module at all, and brings the hidden-plot check with it - which
-     * matters, because a closed tab panel is `display: none` and refitting a
-     * figure nobody is looking at would draw it at zero.
-     */
+    // Plotly's own handler, which skips a hidden plot.
     const handler = vi.fn();
     const div = { _responsiveChartHandler: handler } as unknown as HTMLElement;
     refitPlot(div);

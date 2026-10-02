@@ -26,24 +26,14 @@ import {
   hiddenFacetLabels,
 } from "./utils";
 
-/**
- * Something the figure did not draw, said in the figure's own words.
- *
- * Exclusions recorded by a domain validator answer "which records failed a
- * rule". These answer a different question the figure was silent about:
- * what the *plotting* layer dropped because a scale could not hold it, a
- * range did not reach it, or there was no room for its panel. A figure that
- * shows less than the data and does not admit it is the failure mode these
- * exist to close.
- */
+/** Something the figure did not draw */
 export interface PlotNotice {
   /**
    * `omitted` — data exists but is not drawn.
    * `empty` — nothing is drawn at all, and why.
    * `warning` — drawn, but something about it should be read with care.
    * `info` — the figure did something worth stating, and nothing is wrong.
-   *   Kept apart from `warning` so that "here is what I did" does not read as
-   *   "be careful"; it is also excluded from the running omitted total.
+   *   Not counted in the omitted total.
    */
   kind: "omitted" | "empty" | "warning" | "info";
   reason: string;

@@ -211,14 +211,10 @@ describe("outlierTrace", () => {
   /** 100 sits far beyond 1.5*IQR of 1..9, so it is the sole outlier. */
   const values = [1, 2, 3, 4, 5, 6, 7, 8, 9, 100];
 
-  /*
-   * Reported: outliers drawn over a violin's translucent fill were sometimes
-   * hard to read, because their colour was only checked against the page.
-   */
+  // An outlier's colour is checked against the violin's fill as well as the page.
   test("chooses a colour that reads on its group's fill as well as the page", () => {
     const withPage = { ...colorMap, bgColor: "#ffffff" } as unknown as ColorMap;
-    // A light yellow reads poorly on white, and worse on its own tinted fill;
-    // the colour is checked against both, not the page alone.
+    // A light yellow reads poorly on white, and worse on its own tinted fill.
     const colour = (
       outlierTrace({
         values,

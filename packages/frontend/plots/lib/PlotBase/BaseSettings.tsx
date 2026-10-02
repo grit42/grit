@@ -32,10 +32,7 @@ const BaseSettings = <TPlot extends PlotDefinition>({
   properties: SourceDataProperties;
   onChange: (plot: TPlot) => void;
   data?: SourceData;
-  /**
-   * `sharedScales` is off unless a plot opts in: only a plot whose facet
-   * panels are the grid's own axes 1 to n can share them (see `composeAxes`).
-   */
+  /** Offer `sharedScales`: only where the facet panels are axes 1 to n. */
   show?: { groupBy?: boolean; facetBy?: boolean; sharedScales?: boolean };
 }) => {
   const { groupBy = true, facetBy = true, sharedScales = false } = show;

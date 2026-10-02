@@ -196,13 +196,8 @@ describe("placing a note from a click", () => {
   });
 
   test("records both axes of a subplot whose axes do not pair", () => {
-    /*
-     * The cause of the misplaced notes on Domain coverage and the UpSet. A row
-     * strip is (x3, y1) and the UpSet's bars (x, y2): recording only the y and
-     * deriving the x from it (y1 -> x1, y2 -> x2) put the note on another
-     * subplot's axis - across the strip onto the matrix, or onto the UpSet's
-     * set-size axis at the canvas edge.
-     */
+    // A row strip is (x3, y1) and an UpSet's bars (x, y2): an x derived from
+    // the y would land the note on another subplot.
     const div = withDragLayer(
       [
         { subplot: "xy", left: 0, top: 0 },
@@ -311,10 +306,7 @@ describe("placing a note from a click", () => {
   });
 });
 
-/**
- * A composite view - several figures from one definition, as the paired
- * control chart and distribution are - keeps each figure's notes its own.
- */
+/** A composite view, several figures from one definition, keeps each figure's notes its own. */
 describe("notes in a composite view", () => {
   const onM = note({ id: "m", scope: "M:chart" });
   const onF = note({ id: "f", scope: "F:chart" });

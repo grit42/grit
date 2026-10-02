@@ -161,11 +161,6 @@ describe("the settings sections", () => {
     expect(resetIn(styled).disabled).toBe(false);
   });
 
-  /**
-   * A warning, never a block. The configuration stays selectable because the
-   * data behind a saved plot can change after the fact, and because the user
-   * may be mid-way through a series of edits that ends up valid.
-   */
   test("warns about a column the plot type cannot use", async () => {
     const host = await render({
       ...plot,
@@ -369,7 +364,7 @@ describe("the notes section", () => {
   });
 });
 
-/** X6: one switch for one scale across facet panels, where a plot opts in. */
+/** One switch for one scale across facet panels, where a plot opts in. */
 describe("the panel scales switch", () => {
   const faceted = { ...plot, facetBy: ["compound"] };
   const rows = [

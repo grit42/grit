@@ -72,5 +72,4 @@ export * from "./displayMode";
 export * from "./constants";
 export * from "./utils";
 export * from "./math";
-export * from "./cluster";
 export * from "./colors";

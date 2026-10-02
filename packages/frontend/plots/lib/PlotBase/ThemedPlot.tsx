@@ -38,7 +38,7 @@ import styles from "./downloadButton.module.scss";
 
 const AXIS_KEY_RE = /^[xy]axis\d*$/;
 
-/** * The figure's own click action, withdrawn while a note is being placed. */
+/** The figure's own click action, withdrawn while a note is being placed. */
 export const figureClick = <T,>(annotating: boolean, onClick: T | undefined) =>
   annotating ? undefined : onClick;
 
@@ -168,8 +168,7 @@ const ThemedPlot = ({
   const [pending, setPending] = useState<AnnotationPoint | null>(null);
   const canAnnotate = typeof onAnnotationsChange === "function";
 
-  // Plotly only listens to *window* resize, so every other way this figure's
-  // box can change is handled here.
+  // Plotly only follows the window; follow the figure's own box too.
   useEffect(() => {
     const box = figureRef.current;
     if (!box || !graphDiv) return;
@@ -214,8 +213,6 @@ const ThemedPlot = ({
     paper_bgcolor: colorMap.bgColor,
     plot_bgcolor: colorMap.bgColor,
     showlegend: true,
-    // Drag is off while a note is being placed: with pan on, the click that
-    // places the note is indistinguishable from the start of a drag.
     dragmode: annotating ? false : "pan",
     autosize: true,
     modebar: {

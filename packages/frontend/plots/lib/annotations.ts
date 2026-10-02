@@ -165,11 +165,7 @@ export const pointFromClick = (
   return null;
 };
 
-/**
- * The notes one figure of a composite view draws: those scoped to it, and -
- * for the view's first figure only - any saved before notes carried a scope,
- * so none go missing.
- */
+/** One figure's notes in a composite view; unscoped notes go to the first figure. */
 export const annotationsIn = (
   annotations: readonly PlotAnnotation[] | undefined,
   scope: string,

@@ -26,7 +26,6 @@ import type { ColorMap } from "./colors";
 import type { PlotDefinition, SourceData } from "./types";
 import { axisTitleFor, buildFacetGrid, withAxisTitles } from "./utils";
 
-/** Axes whose type and ticks come from the definition. */
 export type ScaleAxis = "x" | "y";
 
 export const composeAxes = ({
@@ -49,10 +48,6 @@ export const composeAxes = ({
   scaleAxes?: ScaleAxis[];
   /** Axis titles, or `false` where the plot labels its axes itself. */
   titles?: boolean | { x?: string; y?: string };
-  /**
-   * The rows being drawn. Only a log axis uses them, to decide whether it
-   * spans enough decades to label one per decade.
-   */
   data?: SourceData;
 }): Record<string, Partial<LayoutAxis>> => {
   const scaled = (axis: ScaleAxis) => scaleAxes.includes(axis);
@@ -84,11 +79,7 @@ export const composeAxes = ({
     };
   }, {});
 
-  /*
-   * One scale for every panel: Plotly's own `matches`, so zooming one panel
-   * moves them all. Only the facet grid's own axes, numbered 1 to `facets` -
-   * a plot with strips or trees on further axes must not have those tied in.
-   */
+  // One scale for every panel via `matches`, on the facet grid's axes only.
   if (def.appearance?.xTickLabels === false) {
     for (let panel = 1; panel <= Math.max(facets, 1); panel += 1) {
       for (const key of panel === 1 ? ["xaxis", "xaxis1"] : [`xaxis${panel}`]) {

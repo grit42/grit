@@ -1,7 +1,4 @@
-/**
- * *Add note* and *Download* as buttons in Plotly's toolbar, where they cannot
- * cover a long title or a legend as the overlaid buttons did.
- */
+/** *Add note* and *Download* as buttons in Plotly's toolbar. */
 import { describe, expect, test } from "vitest";
 import {
   DOWNLOAD_ICON,

@@ -1,4 +1,4 @@
- 
+/* eslint-disable */
 // GENERATED FILE — do not edit by hand. Regenerate with:
 //   node packages/frontend/plots/test/fixtures/generate-send-fixtures.mjs
 //

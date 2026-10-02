@@ -167,8 +167,7 @@ describe("figureClick", () => {
   });
 
   test("withdraws it while a note is being placed", () => {
-    // Otherwise the click placing a note also removed a study, or gathered a
-    // combination, underneath it.
+    // So the click placing a note does not also act on the figure.
     expect(figureClick(true, () => {})).toBeUndefined();
   });
 });

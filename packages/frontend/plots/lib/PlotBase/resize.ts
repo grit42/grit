@@ -1,40 +1,35 @@
 /**
- * Keeping the drawn figure the size of its box.
+ * Copyright 2025 grit42 A/S. <https://grit42.com/>
  *
- * Plotly does not do this by itself. `responsive: true` adds exactly one
- * listener, on **window** (`plot_api.js`), and react-plotly's
- * `useResizeHandler` does the same — so every other way a figure's box can
- * change leaves the canvas at the width it last saw: the settings sidebar
- * collapsing, a table folding away, rows leaving a matrix, a scrollbar
- * appearing.
+ * This file is part of @grit42/plots.
  *
- * Two symptoms follow. Plotly's toolbar sits out to the right of the figure,
- * because it is placed against the box while the canvas no longer fills it. And a figure needs a horizontal
- * scroll, because it is still drawn for a box it no longer has.
+ * @grit42/plots is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or  any later version.
  *
- * So the box is observed here, with **no re-render**, and that is what makes
- * it safe. A size held in React state would re-render the figure on every
- * change, and where a layout has two solutions that loop oscillates. Instead
- * the refit is called imperatively and the box is sized by CSS, so refitting
- * cannot change the box that was observed.
+ * @grit42/plots is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * @grit42/plots. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+/**
+ * Keeps a drawn figure the size of its box. Plotly's `responsive` only listens
+ * to the window, so a sidebar collapsing or a table folding away would leave
+ * the canvas at its old size. The box is observed without re-rendering, so a
+ * refit cannot feed back into the box it measured.
  */
 
 /** A Plotly graph div, which carries its own refit function. */
 type GraphDiv = HTMLElement & { _responsiveChartHandler?: () => void };
 
 /**
- * Redraw a plot at its container's size.
- *
- * Plotly attaches `_responsiveChartHandler` to the graph div whenever
- * `responsive` is set — `function () { if (!Lib.isHidden(gd)) Plots.resize(gd) }`
- * — so the div carries the exact function wanted, with a hidden-plot check for
- * free. That matters here: a closed tab panel is `display: none`, and refitting
- * a figure nobody is looking at would draw it at zero.
- *
- * Preferred over importing `Plots.resize` because it needs no module at all.
- * The import stays as a fallback for a plot built without `responsive`, and is
- * dynamic because `PlotBase` lazy-loads react-plotly to keep Plotly out of the
- * initial bundle — a static import would undo that.
+ * Redraw a plot at its container's size: through the graph div's own
+ * `_responsiveChartHandler`, which skips a hidden plot, else a lazily imported
+ * `Plots.resize` (kept dynamic so Plotly stays out of the initial bundle).
  */
 export const refitPlot = (graphDiv: HTMLElement): void => {
   const own = (graphDiv as GraphDiv)._responsiveChartHandler;
@@ -48,18 +43,13 @@ export const refitPlot = (graphDiv: HTMLElement): void => {
       const resize = Plots?.resize ?? bundled?.Plots?.resize;
       if (resize && graphDiv.isConnected) resize(graphDiv);
     })
-    .catch(() => {
-      // A figure drawn at the wrong size is a cosmetic fault; it must not
-      // become an unhandled rejection.
-    });
+    // A missed refit is cosmetic; never an unhandled rejection.
+    .catch(() => {});
 };
 
 /**
- * Call `onResize` whenever a box changes size, once per frame at most.
- *
- * Coalesced into a frame and skipped when the rounded size is unchanged, so a
- * run of identical notifications costs one refit — and a sub-pixel jitter costs
- * none. Returns the teardown.
+ * Call `onResize` when a box changes size: at most once a frame, and not for a
+ * sub-pixel change. Returns the teardown.
  */
 export const observeBoxSize = (
   box: Element,
