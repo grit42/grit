@@ -160,7 +160,6 @@ const ThemedPlot = ({
 }: ThemedPlotProps) => {
   const derived = useColorMap(palette);
   const colorMap = colorMapProp ?? derived;
-  const dedicatedButton = (exportOptions?.control ?? "button") === "button";
   const [graphDiv, setGraphDiv] = useState<HTMLElement | null>(null);
   const figureRef = useRef<HTMLDivElement | null>(null);
   const [downloadOpen, setDownloadOpen] = useState(false);
@@ -215,11 +214,8 @@ const ThemedPlot = ({
     showlegend: true,
     dragmode: annotating ? false : "pan",
     autosize: true,
-    modebar: {
-      remove: dedicatedButton
-        ? ["lasso2d", "select2d", "toImage"]
-        : ["lasso2d", "select2d"],
-    },
+    // Plotly's own camera gives way to the Download button below.
+    modebar: { remove: ["lasso2d", "select2d", "toImage"] },
 
     ...layoutWithoutAxes,
 
@@ -269,7 +265,7 @@ const ThemedPlot = ({
         canAnnotate,
         annotating,
         onToggleNote: () => setAnnotating((was) => !was),
-        canDownload: dedicatedButton && graphDiv !== null,
+        canDownload: graphDiv !== null,
         onDownload: () => setDownloadOpen(true),
       }),
       ...(config?.modeBarButtonsToAdd ?? []),
@@ -338,15 +334,13 @@ const ThemedPlot = ({
           />
         )}
       </div>
-      {dedicatedButton && (
-        <DownloadDialog
-          isOpen={downloadOpen}
-          onClose={() => setDownloadOpen(false)}
-          graphDiv={graphDiv}
-          title={title}
-          options={exportOptions}
-        />
-      )}
+      <DownloadDialog
+        isOpen={downloadOpen}
+        onClose={() => setDownloadOpen(false)}
+        graphDiv={graphDiv}
+        title={title}
+        options={exportOptions}
+      />
     </div>,
   );
 };

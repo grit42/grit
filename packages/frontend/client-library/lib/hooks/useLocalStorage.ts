@@ -17,7 +17,7 @@
  */
 
 import superjson from "superjson";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import useEventCallback from "./useEventCallback";
 import useEventListener from "./useEventListener";
 
@@ -95,13 +95,6 @@ export function useLocalStorage<T>(
     },
   );
 
-  useEffect(() => {
-    const next = readValue();
-    latest.current = next;
-    setStoredValue(next);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   const handleStorageChange = useCallback(
     (event: StorageEvent | CustomEvent) => {
       if ((event as StorageEvent)?.key && (event as StorageEvent).key !== key) {
@@ -114,11 +107,9 @@ export function useLocalStorage<T>(
     [key, readValue],
   );
 
-  // this only works for other documents, not the current one
+  // The browser fires `storage` in other tabs only; `local-storage` is
+  // dispatched by `setValue` for this one.
   useEventListener("storage", handleStorageChange);
-
-  // this is a custom event, triggered in writeValueToLocalStorage
-  // See: useLocalStorage()
   useEventListener("local-storage", handleStorageChange);
 
   return [storedValue, setValue];
@@ -136,10 +127,7 @@ export function useLocalStorageChanges<T>(
     if (callback) callback(readLocalStorageValue<T | null>(id, null));
   };
 
-  // this only works for other documents, not the current one
+  // As in useLocalStorage: other tabs, then this one.
   useEventListener("storage", handleStorageChange);
-
-  // this is a custom event, triggered in writeValueToLocalStorage
-  // See: useLocalStorage()
   useEventListener("local-storage", handleStorageChange);
 }

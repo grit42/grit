@@ -1,11 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { composite, readableOn, rgba, type ColorMap } from "../lib/colors";
 import { SYMBOLS } from "../lib/constants";
-import {
-  errorValue,
-  shouldShowIndividual,
-  shouldShowMean,
-} from "../lib/displayMode";
+import { errorValue } from "../lib/displayMode";
 import {
   boxStatsHoverTrace,
   errorBand,
@@ -145,18 +141,6 @@ describe("errorBar", () => {
 });
 
 describe("displayMode", () => {
-  test("individual observations show for 'individual' and 'both'", () => {
-    expect(shouldShowIndividual("individual")).toBe(true);
-    expect(shouldShowIndividual("both")).toBe(true);
-    expect(shouldShowIndividual("mean")).toBe(false);
-  });
-
-  test("summaries show for 'mean' and 'both'", () => {
-    expect(shouldShowMean("mean")).toBe(true);
-    expect(shouldShowMean("both")).toBe(true);
-    expect(shouldShowMean("individual")).toBe(false);
-  });
-
   test("errorValue selects the requested dispersion measure", () => {
     const stats = { std: 4, sem: 2 };
     expect(errorValue("sd", stats)).toBe(4);

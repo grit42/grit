@@ -263,37 +263,6 @@ describe("buildTimeSeries display options", () => {
   });
 });
 
-describe("buildTimeSeries legacy display mode", () => {
-  const names = (def: Partial<TimeSeriesPlotDefinition>) =>
-    build(def).traces.map((t) => String(asTrace(t).name));
-
-  test("'both' draws individuals alongside the mean", () => {
-    const legacy = names({ display: { mode: "both" } });
-    expect(legacy.filter((n) => n.endsWith("observations"))).toHaveLength(3);
-    expect(legacy).toContain("Treatment 1");
-  });
-
-  test("'individual' draws observations without a summary", () => {
-    const legacy = names({ display: { mode: "individual" } });
-    expect(legacy.filter((n) => n.endsWith("observations"))).toHaveLength(3);
-    expect(legacy.join()).not.toContain("±");
-  });
-
-  test("'mean' now draws the mean instead of nothing", () => {
-    expect(build({ display: { mode: "mean" } }).traces.length).toBeGreaterThan(
-      0,
-    );
-  });
-
-  test("an explicit marker list still wins over the mode", () => {
-    const legacy = names({
-      display: { mode: "both", statMarkers: ["median"] },
-    });
-    expect(legacy.filter((n) => n.endsWith("observations"))).toHaveLength(3);
-    expect(legacy).toContain("Treatment 1");
-  });
-});
-
 describe("buildScatter", () => {
   const scatter: ScatterPlotDefinition = {
     type: "scatter",

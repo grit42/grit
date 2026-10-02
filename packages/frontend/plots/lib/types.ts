@@ -11,8 +11,6 @@ export type SourceDataProperty = {
 };
 export type SourceDataProperties = SourceDataProperty[];
 
-export type DisplayMode = "individual" | "mean" | "both";
-
 export type ErrorBarMode = "sd" | "sem" | "none";
 
 export type StatMarker = "mean" | "median";
@@ -24,27 +22,14 @@ export interface PlotDisplayOptions {
   statMarkers?: StatMarker[];
   errorBars?: ErrorBarMode;
   errorStyle?: ErrorBarStyle;
-  /**
-   * @deprecated Read on load and translated by `resolveDisplay`, so plots
-   * saved before the split keep rendering. Never written.
-   */
-  mode?: DisplayMode;
 }
 
 export type PlotExportFormat = "svg" | "png" | "jpeg" | "webp";
-
-/**
- * `modebar` is Plotly's own icon, which only appears on hover and is easy to
- * miss. `button` replaces it with a visible Download button that asks for a
- * filename and format first.
- */
-export type PlotExportControl = "modebar" | "button";
 
 export interface PlotExportOptions {
   format?: PlotExportFormat;
   filename?: string;
   scale?: number;
-  control?: PlotExportControl;
 }
 /**
  * How tick positions are chosen.
@@ -159,8 +144,6 @@ export interface ViolinPlotDefinition extends PlotDefinitionBase {
   type: "violin";
 }
 
-export type ControlLineMode = "none" | "mean" | "lcl-ucl" | "all";
-
 export type ControlLimit = "mean" | "median" | "sd1" | "sd2" | "sd3";
 
 export type ControlOutlierRule = "none" | "sd1" | "sd2" | "sd3";
@@ -168,8 +151,7 @@ export type ControlOutlierRule = "none" | "sd1" | "sd2" | "sd3";
 /** Implemented in `modules/sdtm`; see `PlotDefinitionType`. */
 export interface ControlChartPlotDefinition extends PlotDefinitionBase {
   type: "controlChart";
-  controlLines?: ControlLineMode;
-  /** The limits drawn; empty draws none. Supersedes `controlLines`, still read where absent. */
+  /** The limits drawn; empty draws none. */
   limits?: ControlLimit[];
   outliers?: ControlOutlierRule;
 }
@@ -229,8 +211,7 @@ export interface HeatmapPlotDefinition extends PlotDefinitionBase {
 export interface HistogramPlotDefinition extends PlotDefinitionBase {
   type: "histogram";
   bins?: number;
-  controlLines?: ControlLineMode;
-  /** As on the control chart: the limits drawn, superseding `controlLines`. */
+  /** As on the control chart: the limits drawn. */
   limits?: ControlLimit[];
   orientation?: "h" | "v";
   density?: boolean;
