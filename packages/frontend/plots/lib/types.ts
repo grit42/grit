@@ -90,7 +90,7 @@ export interface PlotAnnotation {
   axis?: string;
   /**
    * The x axis of the subplot it was placed on.
-   * 
+   *
    * Heatmap strips and Upset plot is not a subplot pair of xN by yN but e.g. (x, y2)
    * It is used to place notes correctly.
    */
@@ -271,22 +271,14 @@ export interface UpsetPlotDefinition extends PlotDefinitionBase {
    * notices. `y` labels the axis naming the *sets*, so it cannot serve both.
    */
   entityLabel?: string;
-  /** Column holding how many entities share the combination. */
   sizeKey?: string;
-  /** Column holding 1 where the set belongs to the combination, else 0. */
   memberKey?: string;
-  /** Column holding an `UpsetTier`, when the bars are classified. */
   tierKey?: string;
-  /** Combinations of fewer than this many sets are not drawn. */
   minDegree?: number;
-  /** Ceiling on how many combinations are drawn. Defaults to 40. */
   maxCombinations?: number;
-  /**  Draw the reader's gathered combinations as one bar. */
   mergeSelected?: boolean;
-  /** Defaults to `size`, the conventional ordering. */
   sortBy?: "size" | "degree";
-  /** The per-set totals alongside the matrix. Defaults to drawn. */
-  setSizes?: boolean;
+  setSizes?: boolean | "subjects";
   tierColors?: Partial<Record<UpsetTier, string>>;
 }
 
