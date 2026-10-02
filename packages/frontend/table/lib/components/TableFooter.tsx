@@ -21,9 +21,11 @@ import styles from "./table.module.scss";
 const TableFooter = ({
   loadedRecords,
   totalRecords,
+  status,
 }: {
   loadedRecords?: number;
   totalRecords?: number;
+  status?: React.ReactNode;
 }) => {
   let message = "";
   if (
@@ -35,7 +37,12 @@ const TableFooter = ({
   } else if (loadedRecords !== undefined) {
     message = `${loadedRecords} records`;
   }
-  return <div className={styles.footer}>{message}</div>;
+  return (
+    <div className={styles.footer}>
+      <span className={styles.footerStatus}>{status}</span>
+      <span>{message}</span>
+    </div>
+  );
 };
 
 export default TableFooter;

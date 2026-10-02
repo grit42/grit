@@ -141,6 +141,7 @@ const Table = <T,>({
             <TableFooter
               loadedRecords={props.data?.length}
               totalRecords={props.pagination?.totalRows}
+              status={props.footerStatus}
             />
           </div>
           {showSettings && (

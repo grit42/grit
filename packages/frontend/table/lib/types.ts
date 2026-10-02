@@ -437,6 +437,13 @@ interface DefaultTableProps<T> {
   disableFooter?: boolean;
 
   /**
+   * Shown at the left of the footer, e.g. the save state of an editable
+   * table ("Saving...", "Saved 14:32") - `onCellsEdit` doesn't persist
+   * anything itself, so only the caller knows when a change is saved.
+   */
+  footerStatus?: React.ReactNode;
+
+  /**
    * Rows to emphasize in the manner of columns matching filters
    */
   emphasizedRows?: Record<string, boolean>;

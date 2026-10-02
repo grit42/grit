@@ -21,9 +21,11 @@ import styles from "./dataGrid.module.scss";
 const TableFooter = ({
   loadedRecords,
   totalRecords,
+  status,
 }: {
   loadedRecords?: number;
   totalRecords?: number;
+  status?: React.ReactNode;
 }) => {
   let message = "";
   if (
@@ -37,6 +39,7 @@ const TableFooter = ({
   }
   return (
     <div className={styles.footer}>
+      <span className={styles.footerStatus}>{status}</span>
       <div className={styles.spacer} />
       <span>{message}</span>
     </div>

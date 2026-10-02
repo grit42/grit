@@ -246,10 +246,15 @@
   min-height: calc(21px + theme.$spacing * 2);
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
+  gap: theme.$spacing;
   background-color: theme.$palette-primary-main;
   border-bottom-left-radius: theme.$border-radius;
   border-bottom-right-radius: theme.$border-radius;
+}
+
+.footerStatus {
+  opacity: 0.7;
 }
 
 .resizer {
