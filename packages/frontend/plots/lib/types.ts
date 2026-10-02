@@ -133,6 +133,7 @@ export interface PlotAxis {
   ticks?: AxisTickOptions;
   categories?: string[];
   categoriesPerPanel?: boolean;
+  labelKey?: string;
 }
 
 export interface PlotDefinitionBase {
