@@ -112,6 +112,7 @@ export interface PlotAppearanceOptions {
   fontSize?: number;
   decimals?: number;
   tickAngle?: 0 | -45 | -90;
+  xTickLabels?: boolean;
 }
 
 export type PlotDefinitionType =

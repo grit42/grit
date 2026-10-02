@@ -62,6 +62,7 @@ const StyleSettings = <TPlot extends PlotDefinition>({
     frame?: boolean;
     zeroLines?: boolean;
     tickAngle?: boolean;
+    xLabels?: boolean;
   };
 }) => {
   const {
@@ -71,6 +72,7 @@ const StyleSettings = <TPlot extends PlotDefinition>({
     frame: showFrame = true,
     zeroLines: showZeroLines = true,
     tickAngle: showTickAngle = false,
+    xLabels: showXLabels = false,
   } = show;
   const colorMap = useColorMap(plot.palette);
   const appearance = plot.appearance ?? {};
@@ -119,6 +121,24 @@ const StyleSettings = <TPlot extends PlotDefinition>({
             setAppearance({
               ...appearance,
               tickAngle: value === "auto" ? undefined : value,
+            })
+          }
+        />
+      )}
+      {showXLabels && (
+        <Select
+          label="X labels"
+          options={[
+            { label: "Shown", value: "shown" },
+            { label: "Hidden", value: "hidden" },
+          ]}
+          value={appearance.xTickLabels === false ? "hidden" : "shown"}
+          isClearable={false}
+          description="The tick labels along the bottom. Hiding them gives long labels' room back to the figure; the hover still names each one."
+          onChange={(value: string) =>
+            setAppearance({
+              ...appearance,
+              xTickLabels: value === "hidden" ? false : undefined,
             })
           }
         />

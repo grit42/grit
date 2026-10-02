@@ -29,6 +29,7 @@ import {
 export const PLOT_CAPABILITIES = [
   "annotations",
   "tickAngle",
+  "xLabels",
   "xTicks",
   "yTicks",
   "axisLabels",
@@ -320,6 +321,7 @@ const PlotSettings = ({
               frame: can("frame"),
               zeroLines: can("zeroLines"),
               tickAngle: can("tickAngle"),
+              xLabels: can("xLabels"),
             }}
           />
         </Section>

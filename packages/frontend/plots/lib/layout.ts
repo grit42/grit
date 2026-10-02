@@ -89,6 +89,16 @@ export const composeAxes = ({
    * moves them all. Only the facet grid's own axes, numbered 1 to `facets` -
    * a plot with strips or trees on further axes must not have those tied in.
    */
+  if (def.appearance?.xTickLabels === false) {
+    for (let panel = 1; panel <= Math.max(facets, 1); panel += 1) {
+      for (const key of panel === 1 ? ["xaxis", "xaxis1"] : [`xaxis${panel}`]) {
+        if (composed[key]) {
+          composed[key] = { ...composed[key], showticklabels: false };
+        }
+      }
+    }
+  }
+
   if (def.sharedScales && facets > 1) {
     for (let panel = 2; panel <= facets; panel += 1) {
       for (const orientation of ["x", "y"] as const) {

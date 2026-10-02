@@ -80,3 +80,36 @@ describe("composeAxes shared scales", () => {
     expect(axes.xaxis1?.matches).toBeUndefined();
   });
 });
+
+describe("composeAxes hidden x labels", () => {
+  const hidden = {
+    ...def(),
+    appearance: { xTickLabels: false },
+  } as PlotDefinition;
+
+  test("hides the facet grid's x labels and leaves the rest", () => {
+    const axes = composeAxes({
+      def: hidden,
+      axes: { ...axesFor(2, ["xaxis3"]), xaxis1: { showticklabels: true } },
+      facets: 2,
+      colorMap,
+      titles: false,
+    });
+    expect(axes.xaxis1?.showticklabels).toBe(false);
+    expect(axes.xaxis2?.showticklabels).toBe(false);
+    expect(axes.yaxis1?.showticklabels).toBeUndefined();
+    // A strip's axis, beyond the grid, keeps its labels.
+    expect(axes.xaxis3?.showticklabels).toBeUndefined();
+  });
+
+  test("shows them by default", () => {
+    const axes = composeAxes({
+      def: def(),
+      axes: axesFor(1),
+      facets: 1,
+      colorMap,
+      titles: false,
+    });
+    expect(axes.xaxis1?.showticklabels).toBeUndefined();
+  });
+});
