@@ -1,7 +1,9 @@
 import { describe, expect, test } from "vitest";
 import {
   CATEGORICAL_COLORS,
-  HEATMAP_SCALES,
+  MIN_SCALE_CONTRAST,
+  SEQUENTIAL_SCHEMES,
+  sequentialScale,
   composite,
   contrastRatio,
   contrastingText,
@@ -104,16 +106,38 @@ describe("contrast", () => {
 });
 
 describe("heatmap scales", () => {
+  const surfaces = { light: "#ffffff", dark: "#1d2532" } as const;
+
   test.each(["default", "muted", "bright"] as const)(
-    "%s spans a readable range in both schemes",
+    "%s starts clear of the surface and stands out more as it rises",
     (preset) => {
-      for (const scheme of ["dark", "light"] as const) {
-        const { low, high } = HEATMAP_SCALES[preset][scheme];
-        const span = Math.abs(relativeLuminance(high) - relativeLuminance(low));
-        expect(span).toBeGreaterThan(0.3);
+      for (const scheme of ["light", "dark"] as const) {
+        const scale = sequentialScale(
+          SEQUENTIAL_SCHEMES[preset],
+          surfaces[scheme],
+          scheme === "dark",
+        );
+        const low = scale[0]![1];
+        const high = scale[scale.length - 1]![1];
+        expect(contrastRatio(low, surfaces[scheme])).toBeGreaterThanOrEqual(
+          MIN_SCALE_CONTRAST,
+        );
+        expect(contrastRatio(high, surfaces[scheme])).toBeGreaterThan(
+          contrastRatio(low, surfaces[scheme]),
+        );
+        expect(scale[0]![0]).toBe(0);
+        expect(scale[scale.length - 1]![0]).toBe(1);
       }
     },
   );
+
+  test("runs light to dark on a light surface and reversed on a dark one", () => {
+    const iridescent = SEQUENTIAL_SCHEMES.default;
+    const light = sequentialScale(iridescent, surfaces.light, false);
+    const dark = sequentialScale(iridescent, surfaces.dark, true);
+    expect(light[light.length - 1]![1]).toBe(iridescent[iridescent.length - 1]);
+    expect(dark[dark.length - 1]![1]).toBe(iridescent[0]);
+  });
 });
 
 describe("categorical colours", () => {

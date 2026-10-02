@@ -232,6 +232,7 @@ export interface HeatmapPlotDefinition extends PlotDefinitionBase {
     min?: number;
     max?: number;
     suffix?: string;
+    bins?: number | number[];
   };
   triangle?: "lower" | "full";
   annotate?: boolean;
