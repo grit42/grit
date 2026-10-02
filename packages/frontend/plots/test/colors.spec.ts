@@ -156,6 +156,15 @@ describe("categorical colours", () => {
       expect(relativeLuminance(color)).toBeGreaterThan(0.15);
     }
   });
+
+  test("each strip colour stands clear of its own surface", () => {
+    for (const color of CATEGORICAL_COLORS.light) {
+      expect(contrastRatio(color, "#ffffff")).toBeGreaterThanOrEqual(1.8);
+    }
+    for (const color of CATEGORICAL_COLORS.dark) {
+      expect(contrastRatio(color, "#1d2532")).toBeGreaterThanOrEqual(3);
+    }
+  });
 });
 
 /**

@@ -326,26 +326,25 @@ const heatmapColors = (preset: ColorPreset, surface: string, dark: boolean) => {
   };
 };
 
+/** Annotation-strip colours, after Paul Tol's qualitative schemes */
 export const CATEGORICAL_COLORS = {
   dark: [
-    "#56B4E9",
-    "#E69F00",
-    "#009E73",
-    "#F0E442",
-    "#CC79A7",
-    "#0072B2",
-    "#D55E00",
-    "#BBBBBB",
+    "#77AADD",
+    "#FFAABB",
+    "#44BB99",
+    "#EEDD88",
+    "#99DDFF",
+    "#EE8866",
+    "#DDDDDD",
   ],
   light: [
-    "#2E7BA6",
-    "#B87F00",
-    "#00785A",
-    "#9A8F00",
-    "#A65783",
-    "#00568A",
-    "#A64A00",
-    "#6E6E6E",
+    "#4477AA",
+    "#EE6677",
+    "#228833",
+    "#CCBB44",
+    "#66CCEE",
+    "#AA3377",
+    "#BBBBBB",
   ],
 } as const;
 
