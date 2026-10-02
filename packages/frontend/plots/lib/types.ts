@@ -11,9 +11,6 @@ export type SourceDataProperty = {
 };
 export type SourceDataProperties = SourceDataProperty[];
 
-export type DisplayMode = "individual" | "mean" | "both";
-
-/** Which dispersion measure error bars represent. */
 export type ErrorBarMode = "sd" | "sem" | "none";
 
 export type StatMarker = "mean" | "median";
@@ -25,28 +22,14 @@ export interface PlotDisplayOptions {
   statMarkers?: StatMarker[];
   errorBars?: ErrorBarMode;
   errorStyle?: ErrorBarStyle;
-  /**
-   * @deprecated Read on load and translated by `resolveDisplay`, so plots
-   * saved before the split keep rendering. Never written.
-   */
-  mode?: DisplayMode;
 }
 
-/** Image formats Plotly's download button can produce. */
 export type PlotExportFormat = "svg" | "png" | "jpeg" | "webp";
-
-/**
- * `modebar` is Plotly's own icon, which only appears on hover and is easy to
- * miss. `button` replaces it with a visible Download button that asks for a
- * filename and format first.
- */
-export type PlotExportControl = "modebar" | "button";
 
 export interface PlotExportOptions {
   format?: PlotExportFormat;
   filename?: string;
   scale?: number;
-  control?: PlotExportControl;
 }
 /**
  * How tick positions are chosen.
@@ -63,19 +46,13 @@ export interface PlotExportOptions {
 export type TickMode = "auto" | "count" | "spacing" | "range";
 
 export interface AxisTickOptions {
-  /** Defaults to `auto`. */
   mode?: TickMode;
-  /** Upper bound on tick count for `count`. See `TickMode`. */
   count?: number;
-  /** Exact step between ticks for `spacing`. Decades on a log axis. */
   spacing?: number;
   /**
-   * Bounds for `range`. Rounded outward to round numbers so ticks land on even
-   * values, so the drawn range is usually wider than what is given here.
-   */
+   * Bounds for `range`. */
   min?: number;
   max?: number;
-  /** Unlabelled ticks between the labelled ones. */
   minor?: boolean;
 }
 
@@ -83,11 +60,14 @@ export interface PlotAnnotation {
   /** Stable across edits, so the settings list can address one of them. */
   id: string;
   text: string;
-  /** Data coordinates, so the note stays on the observation it refers to. */
   x: number | string;
   y: number | string;
   /** Which panel it belongs to, for a faceted figure. Absent means the first. */
   axis?: string;
+  /** The x axis it was placed on, where subplots do not pair xN with yN. */
+  xaxis?: string;
+  /** The figure of a composite view the note belongs to; absent in a single figure. */
+  scope?: string;
   author?: string;
   created?: string;
 }
@@ -98,6 +78,8 @@ export interface PlotAppearanceOptions {
   zeroLines?: boolean;
   fontSize?: number;
   decimals?: number;
+  tickAngle?: 0 | -45 | -90;
+  xTickLabels?: boolean;
 }
 
 export type PlotDefinitionType =
@@ -109,25 +91,30 @@ export type PlotDefinitionType =
   | "controlChart"
   | "comparison"
   | "heatmap"
-  | "histogram";
+  | "histogram"
+  | "upset";
+
+export interface PlotAxis {
+  key: string;
+  label?: string;
+  axisType: AxisType;
+  ticks?: AxisTickOptions;
+  categories?: string[];
+  categoriesPerPanel?: boolean;
+  labelKey?: string;
+}
 
 export interface PlotDefinitionBase {
   title: string;
   type: PlotDefinitionType;
-  x: {
-    key: string;
-    label?: string;
-    axisType: AxisType;
-    ticks?: AxisTickOptions;
-  };
-  y: {
-    key: string;
-    label?: string;
-    axisType: AxisType;
-    ticks?: AxisTickOptions;
-  };
+  x: PlotAxis;
+  y: PlotAxis;
   facetBy?: string[];
+  facetOnly?: string[];
+  facetOrder?: string[];
+  sharedScales?: boolean;
   groupBy?: string[];
+  seriesOrder?: string[];
   seriesLabel?: string;
   annotations?: PlotAnnotation[];
   palette?: ColorPreset;
@@ -157,17 +144,19 @@ export interface ViolinPlotDefinition extends PlotDefinitionBase {
   type: "violin";
 }
 
-export type ControlLineMode = "none" | "mean" | "lcl-ucl" | "all";
+export type ControlLimit = "mean" | "median" | "sd1" | "sd2" | "sd3";
+
+export type ControlOutlierRule = "none" | "sd1" | "sd2" | "sd3";
 
 /** Implemented in `modules/sdtm`; see `PlotDefinitionType`. */
 export interface ControlChartPlotDefinition extends PlotDefinitionBase {
   type: "controlChart";
-  /** Defaults to `all`. */
-  controlLines?: ControlLineMode;
+  /** The limits drawn; empty draws none. */
+  limits?: ControlLimit[];
+  outliers?: ControlOutlierRule;
 }
 export interface PlotBracket {
   id: string;
-  /** Category labels, matched against the values on the x axis. */
   group1: string;
   group2: string;
   text: string;
@@ -183,30 +172,67 @@ export interface ComparisonPlotDefinition extends PlotDefinitionBase {
 export type HeatmapAggregate = "count" | "sum" | "mean";
 
 export interface HeatmapBand {
-  /** Column whose value labels each x category. */
   key: string;
   label?: string;
   colors?: Record<string, string>;
-  /** A fuller value for the hover, when the cell shows a short code. */
   hoverKey?: string;
+  size?: number;
 }
 
 /** Implemented in `modules/sdtm`; see `PlotDefinitionType`. */
 export interface HeatmapPlotDefinition extends PlotDefinitionBase {
   type: "heatmap";
-  /** Column aggregated into each cell. Omitted counts the rows. */
-  z?: { key?: string; aggregate?: HeatmapAggregate; label?: string };
+  z?: {
+    key?: string;
+    aggregate?: HeatmapAggregate;
+    label?: string;
+    min?: number;
+    max?: number;
+    suffix?: string;
+    bins?: number | number[];
+  };
   triangle?: "lower" | "full";
   annotate?: boolean;
   bands?: HeatmapBand[];
+  rowBands?: HeatmapBand[];
+  rowBandSide?: "left" | "right";
+  gaps?: { x?: number[]; y?: number[] };
+  /** Order categories by similarity instead of as given. */
+  cluster?: {
+    x?: boolean;
+    y?: boolean;
+    /** How clusters are merged. */
+    linkage?: "ward" | "average" | "complete";
+    dendrogram?: boolean;
+  };
 }
 
 /** Implemented in `modules/sdtm`; see `PlotDefinitionType`. */
 export interface HistogramPlotDefinition extends PlotDefinitionBase {
   type: "histogram";
   bins?: number;
-  controlLines?: ControlLineMode;
+  /** As on the control chart: the limits drawn. */
+  limits?: ControlLimit[];
   orientation?: "h" | "v";
+  density?: boolean;
+}
+
+export type UpsetTier = "complete" | "extended" | "incomplete";
+
+/** Implemented in `modules/sdtm`; see `PlotDefinitionType`. */
+export interface UpsetPlotDefinition extends PlotDefinitionBase {
+  type: "upset";
+  /** What is counted (studies, subjects), for the size axis and the notices. */
+  entityLabel?: string;
+  sizeKey?: string;
+  memberKey?: string;
+  tierKey?: string;
+  minDegree?: number;
+  maxCombinations?: number;
+  mergeSelected?: boolean;
+  sortBy?: "size" | "degree";
+  setSizes?: boolean | "subjects";
+  tierColors?: Partial<Record<UpsetTier, string>>;
 }
 
 export type PlotDefinition =
@@ -218,7 +244,8 @@ export type PlotDefinition =
   | ControlChartPlotDefinition
   | ComparisonPlotDefinition
   | HeatmapPlotDefinition
-  | HistogramPlotDefinition;
+  | HistogramPlotDefinition
+  | UpsetPlotDefinition;
 
 export interface PlotHooks {
   /** Orders the x categories, given any row belonging to one. */
@@ -231,10 +258,6 @@ export interface PlotSettingsProps<T extends PlotDefinition = PlotDefinition> {
   plot: T;
   properties: SourceDataProperties;
   onChange: (plot: T) => void;
-  /**
-   * The rows the plot will draw, used only to warn about configurations the
-   * data cannot support — a log axis over values that include zero, say.
-   */
   data?: SourceData;
 }
 

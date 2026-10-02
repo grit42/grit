@@ -6,7 +6,7 @@ import { buildTimeSeries } from "../lib/TimeSeriesPlot/utils";
 import { buildScatter } from "../lib/ScatterPlot/utils";
 import { buildBox } from "../lib/BoxPlot/utils";
 import { buildBar } from "../lib/BarPlot/utils";
-import { buildFacets, facetLabels } from "../lib/utils";
+import { buildFacets, facetLabels, inDeclaredOrder } from "../lib/utils";
 import { boxStats } from "../lib/math";
 import type { ColorMap } from "../lib/colors";
 import type {
@@ -14,7 +14,9 @@ import type {
   BoxPlotDefinition,
   ScatterPlotDefinition,
   TimeSeriesPlotDefinition,
+  PlotDefinition,
   PlotHooks,
+  SourceData,
 } from "../lib/types";
 import { sendBodyWeights } from "./fixtures/send";
 import { asTrace } from "./traceFields";
@@ -258,37 +260,6 @@ describe("buildTimeSeries display options", () => {
       display: { showIndividual: true, statMarkers: [] },
     }).traces;
     expect(traces).toHaveLength(3);
-  });
-});
-
-describe("buildTimeSeries legacy display mode", () => {
-  const names = (def: Partial<TimeSeriesPlotDefinition>) =>
-    build(def).traces.map((t) => String(asTrace(t).name));
-
-  test("'both' draws individuals alongside the mean", () => {
-    const legacy = names({ display: { mode: "both" } });
-    expect(legacy.filter((n) => n.endsWith("observations"))).toHaveLength(3);
-    expect(legacy).toContain("Treatment 1");
-  });
-
-  test("'individual' draws observations without a summary", () => {
-    const legacy = names({ display: { mode: "individual" } });
-    expect(legacy.filter((n) => n.endsWith("observations"))).toHaveLength(3);
-    expect(legacy.join()).not.toContain("±");
-  });
-
-  test("'mean' now draws the mean instead of nothing", () => {
-    expect(build({ display: { mode: "mean" } }).traces.length).toBeGreaterThan(
-      0,
-    );
-  });
-
-  test("an explicit marker list still wins over the mode", () => {
-    const legacy = names({
-      display: { mode: "both", statMarkers: ["median"] },
-    });
-    expect(legacy.filter((n) => n.endsWith("observations"))).toHaveLength(3);
-    expect(legacy).toContain("Treatment 1");
   });
 });
 
@@ -975,5 +946,113 @@ describe("facet ordering", () => {
     const facets = buildFacets(yearRows as never, facetDef);
     expect(facets.map((f) => f.data.length)).toEqual([1, 1, 1]);
     expect(facets.map((f) => f.data[0]!.value)).toEqual([2, 3, 1]);
+  });
+});
+
+/** A declared panel order, for conventions the alphabet does not know (M before F). */
+describe("facetOrder", () => {
+  const rows: SourceData = [
+    { sex: "F", value: 1 },
+    { sex: "M", value: 2 },
+    { sex: "U", value: 3 },
+  ];
+  const def = (facetOrder?: string[]) =>
+    ({
+      type: "scatter",
+      title: "t",
+      x: { key: "value", axisType: "linear" },
+      y: { key: "value", axisType: "linear" },
+      facetBy: ["sex"],
+      ...(facetOrder ? { facetOrder } : {}),
+    }) as PlotDefinition;
+
+  test("sorts by label when no order is given", () => {
+    expect(facetLabels(rows, def())).toEqual(["F", "M", "U"]);
+  });
+
+  test("uses the given order", () => {
+    expect(facetLabels(rows, def(["M", "F"]))).toEqual(["M", "F", "U"]);
+  });
+
+  test("keeps an unlisted panel, rather than dropping it", () => {
+    // A partial or stale order must not hide a panel.
+    expect(facetLabels(rows, def(["M"]))).toEqual(["M", "F", "U"]);
+  });
+
+  test("ignores a label the data does not hold", () => {
+    expect(facetLabels(rows, def(["ZZZ", "M"]))).toEqual(["M", "F", "U"]);
+  });
+
+  test("reaches buildFacets, not only the label list", () => {
+    const facets = buildFacets(rows, def(["M", "F"]));
+    expect(facets.map((one) => one.label)).toEqual(["M", "F", "U"]);
+  });
+});
+
+/** The one ordering rule behind `facetOrder` and `seriesOrder`. */
+describe("inDeclaredOrder", () => {
+  test("puts the listed labels first, in the caller's order", () => {
+    expect(inDeclaredOrder(["F", "M", "U"], ["M", "F"])).toEqual([
+      "M",
+      "F",
+      "U",
+    ]);
+  });
+
+  test("keeps a label the order forgot, and ignores one naming nothing", () => {
+    expect(inDeclaredOrder(["B", "A"], ["Z", "B"])).toEqual(["B", "A"]);
+  });
+
+  test("sorts numerically without an order, and drops duplicates", () => {
+    expect(inDeclaredOrder(["10", "2", "2"])).toEqual(["2", "10"]);
+  });
+});
+
+describe("buildTimeSeries series order", () => {
+  const rows = [
+    { day: 1, value: 1, grp: "F" },
+    { day: 1, value: 2, grp: "M" },
+  ];
+  const names = (order?: string[]) =>
+    buildTimeSeries(
+      rows as never,
+      {
+        ...timeSeries,
+        x: { key: "day", axisType: "linear" },
+        y: { key: "value", axisType: "linear" },
+        groupBy: ["grp"],
+        seriesOrder: order,
+      },
+      colorMap,
+    )
+      .traces.map((trace) => (trace as { name?: string }).name)
+      .filter((name): name is string => name === "M" || name === "F");
+
+  test("draws the series in the declared order", () => {
+    expect([...new Set(names(["M", "F"]))]).toEqual(["M", "F"]);
+  });
+
+  test("falls back to the alphabet", () => {
+    expect([...new Set(names())]).toEqual(["F", "M"]);
+  });
+});
+
+describe("buildTimeSeries study-day axis", () => {
+  test("ticks whole days", () => {
+    const rows = [
+      { day: 1, value: 1, grp: "M" },
+      { day: 8, value: 2, grp: "M" },
+    ];
+    const { axes } = buildTimeSeries(
+      rows as never,
+      {
+        ...timeSeries,
+        x: { key: "day", axisType: "linear" },
+        y: { key: "value", axisType: "linear" },
+        groupBy: ["grp"],
+      },
+      colorMap,
+    );
+    expect(axes.xaxis1).toMatchObject({ tickmode: "linear", dtick: 1 });
   });
 });

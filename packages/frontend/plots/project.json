@@ -7,6 +7,15 @@
           "target": "build"
         }
       ]
+    },
+    "typecheck": {
+      "command": "tsc --noEmit -p tsconfig.test.json",
+      "options": {
+        "cwd": "{projectRoot}"
+      },
+      "inputs": ["source", "testSource"],
+      "dependsOn": ["^build"],
+      "cache": true
     }
   }
 }

@@ -217,9 +217,7 @@ const SortableMultiselect = <T,>({
   };
 
   const onDone = () => {
-    const stillSelected = selected.filter((o) =>
-      pendingSelection.has(o.value),
-    );
+    const stillSelected = selected.filter((o) => pendingSelection.has(o.value));
     const selectedSet = new Set(selected.map((o) => o.value));
     const newlySelected = options.filter(
       (o) => pendingSelection.has(o.value) && !selectedSet.has(o.value),
@@ -270,15 +268,27 @@ const SortableMultiselect = <T,>({
           </DndContext>
         )}
 
-        <Button
-          size="tiny"
-          variant="transparent"
-          className={styles.addButton}
-          disabled={disabled}
-          onClick={openDialog}
-        >
-          {buttonLabel}
-        </Button>
+        <div className={styles.actions}>
+          <Button
+            size="tiny"
+            variant="transparent"
+            className={styles.addButton}
+            disabled={disabled}
+            onClick={openDialog}
+          >
+            {buttonLabel}
+          </Button>
+          {selected.length > 1 && (
+            <Button
+              size="tiny"
+              variant="transparent"
+              disabled={disabled}
+              onClick={() => emit([])}
+            >
+              Clear
+            </Button>
+          )}
+        </div>
       </div>
 
       <InputError error={error} />

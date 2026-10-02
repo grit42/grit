@@ -26,36 +26,28 @@ import {
   withDerivedLabels,
 } from "./utils";
 
-export type PlotCapability =
-  | "annotations"
-  | "xTicks"
-  | "yTicks"
-  /** The axes carry titles the definition can set. */
-  | "axisLabels"
-  /** Mean or median as the summary the plot draws. */
-  | "summary"
-  /** Whether more than one summary can be drawn at once. */
-  | "multipleSummaries"
-  /** Which dispersion the error bars measure. */
-  | "errorBars"
-  /** Dispersion as a shaded band instead of bars; needs a continuous x. */
-  | "errorBand"
-  /** Whether the raw observations are drawn. */
-  | "individual"
-  /** A column to join each subject's observations into a line. */
-  | "individualBy"
-  | "palette"
-  /** Font size, gridlines, a frame, zero lines: each drawn only if declared. */
-  | "fontSize"
-  | "gridlines"
-  | "frame"
-  | "zeroLines";
+export const PLOT_CAPABILITIES = [
+  "annotations",
+  "tickAngle",
+  "xLabels",
+  "xTicks",
+  "yTicks",
+  "axisLabels",
+  "summary",
+  "multipleSummaries",
+  "errorBars",
+  "errorBand",
+  "individual",
+  "individualBy",
+  "palette",
+  "fontSize",
+  "gridlines",
+  "frame",
+  "zeroLines",
+] as const;
 
-/**
- * Every type that draws at data coordinates can carry a note at one. A heatmap
- * is the exception: its axes are category names, so a note has no position on
- * it that survives a re-order.
- */
+export type PlotCapability = (typeof PLOT_CAPABILITIES)[number];
+
 const STYLE_CAPABILITIES = [
   "palette",
   "fontSize",
@@ -328,6 +320,8 @@ const PlotSettings = ({
               gridlines: can("gridlines"),
               frame: can("frame"),
               zeroLines: can("zeroLines"),
+              tickAngle: can("tickAngle"),
+              xLabels: can("xLabels"),
             }}
           />
         </Section>

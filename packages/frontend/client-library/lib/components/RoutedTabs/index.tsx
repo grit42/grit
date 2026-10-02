@@ -106,19 +106,19 @@ const RoutedTabs = ({
 
   const rows = ["1fr"];
   if (tabsAtBottom) {
-    rows.push("min-content")
+    rows.push("min-content");
   } else {
-    rows.splice(0, 0, "min-content")
+    rows.splice(0, 0, "min-content");
   }
   if (heading) {
-    rows.splice(0, 0, "min-content")
+    rows.splice(0, 0, "min-content");
   }
 
   return (
     <div
       style={{
         display: "grid",
-        gridTemplateColumns: "1fr",
+        gridTemplateColumns: "minmax(0, 1fr)",
         gridTemplateRows: rows.join(" "),
         overflow: "auto",
       }}

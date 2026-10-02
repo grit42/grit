@@ -40,9 +40,10 @@ export const annotationShapes = (
     text: annotation.text,
     x: forAxis(annotation.x, scales?.x),
     y: forAxis(annotation.y, scales?.y),
-    xref: (annotation.axis
-      ? `${annotation.axis.replace("y", "x")}`
-      : "x") as Partial<Annotations>["xref"],
+    xref: (annotation.xaxis ??
+      (annotation.axis
+        ? annotation.axis.replace("y", "x")
+        : "x")) as Partial<Annotations>["xref"],
     yref: (annotation.axis ?? "y") as Partial<Annotations>["yref"],
     showarrow: true,
     arrowhead: 6,
@@ -96,7 +97,12 @@ export const pointFromClick = (
   graphDiv: HTMLElement,
   clientX: number,
   clientY: number,
-): { x: number | string; y: number | string; axis?: string } | null => {
+): {
+  x: number | string;
+  y: number | string;
+  axis?: string;
+  xaxis?: string;
+} | null => {
   const layout = (graphDiv as unknown as { _fullLayout?: ResolvedLayout })
     ._fullLayout;
   if (!layout) return null;
@@ -133,6 +139,7 @@ export const pointFromClick = (
       x: axes.xa.p2d(clientX - rect.left),
       y: axes.ya.p2d(clientY - rect.top),
       axis: axes.ya._id,
+      xaxis: axes.xa._id,
     };
   }
 
@@ -151,8 +158,33 @@ export const pointFromClick = (
       x: xa.p2d(px - xa._offset),
       y: ya.p2d(py - ya._offset),
       axis: ya._id,
+      xaxis: xa._id,
     };
   }
 
   return null;
 };
+
+/** One figure's notes in a composite view; unscoped notes go to the first figure. */
+export const annotationsIn = (
+  annotations: readonly PlotAnnotation[] | undefined,
+  scope: string,
+  { first = false }: { first?: boolean } = {},
+): PlotAnnotation[] =>
+  (annotations ?? []).filter(
+    (annotation) =>
+      annotation.scope === scope || (first && annotation.scope === undefined),
+  );
+
+export const withAnnotationsIn = (
+  annotations: readonly PlotAnnotation[] | undefined,
+  scope: string,
+  next: readonly PlotAnnotation[],
+  { first = false }: { first?: boolean } = {},
+): PlotAnnotation[] => [
+  ...(annotations ?? []).filter(
+    (annotation) =>
+      annotation.scope !== scope && !(first && annotation.scope === undefined),
+  ),
+  ...next.map((annotation) => ({ ...annotation, scope })),
+];

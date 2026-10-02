@@ -54,7 +54,13 @@ const PlotNotices = ({ notices }: { notices: PlotNotice[] }) => {
       {notices.map((notice, index) => (
         <p
           key={`${notice.kind}-${index}`}
-          className={notice.kind === "empty" ? styles.empty : styles.omitted}
+          className={
+            notice.kind === "empty"
+              ? styles.empty
+              : notice.kind === "info"
+                ? styles.info
+                : styles.omitted
+          }
         >
           {notice.count !== undefined && (
             <b className={styles.count}>{notice.count}</b>
@@ -67,7 +73,7 @@ const PlotNotices = ({ notices }: { notices: PlotNotice[] }) => {
           {omitted > previous
             ? `${omitted - previous} more left out than a moment ago`
             : `${previous - omitted} fewer left out than a moment ago`}
-          {previous === 0 && " — nothing was left out before this change"}
+          {previous === 0 && " - nothing was left out before this change"}
         </p>
       )}
     </div>

@@ -42,6 +42,7 @@ export * from "./TimeSeriesPlot";
 export { default as Plot } from "./Plot";
 export { default as PlotSettings } from "./PlotSettings";
 export { default as PlotSettingsPanel } from "./PlotSettingsPanel";
+export { default as PlotShell } from "./PlotShell";
 export * from "./PlotSettings";
 
 export { default as Section } from "./PlotBase/Section";
@@ -58,6 +59,7 @@ export * from "./axes";
 export * from "./layout";
 export * from "./format";
 export * from "./notices";
+export { default as PlotNotices } from "./PlotBase/PlotNotices";
 export * from "./annotations";
 
 export type * from "./types";

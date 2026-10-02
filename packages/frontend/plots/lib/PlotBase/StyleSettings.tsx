@@ -31,11 +31,21 @@ const PALETTE_OPTIONS: { label: string; value: ColorPreset }[] = [
 
 const DECIMAL_OPTIONS: { label: string; value: number | "auto" }[] = [
   { label: "Automatic", value: "auto" },
-  { label: "0 — whole numbers", value: 0 },
+  { label: "0: whole numbers", value: 0 },
   { label: "1", value: 1 },
   { label: "2", value: 2 },
   { label: "3", value: 3 },
   { label: "4", value: 4 },
+];
+
+const TICK_ANGLE_OPTIONS: {
+  label: string;
+  value: PlotAppearanceOptions["tickAngle"] | "auto";
+}[] = [
+  { label: "Automatic", value: "auto" },
+  { label: "Flat", value: 0 },
+  { label: "Angled", value: -45 },
+  { label: "Upright", value: -90 },
 ];
 
 const StyleSettings = <TPlot extends PlotDefinition>({
@@ -51,6 +61,8 @@ const StyleSettings = <TPlot extends PlotDefinition>({
     gridlines?: boolean;
     frame?: boolean;
     zeroLines?: boolean;
+    tickAngle?: boolean;
+    xLabels?: boolean;
   };
 }) => {
   const {
@@ -59,6 +71,8 @@ const StyleSettings = <TPlot extends PlotDefinition>({
     gridlines: showGridlines = true,
     frame: showFrame = true,
     zeroLines: showZeroLines = true,
+    tickAngle: showTickAngle = false,
+    xLabels: showXLabels = false,
   } = show;
   const colorMap = useColorMap(plot.palette);
   const appearance = plot.appearance ?? {};
@@ -94,6 +108,39 @@ const StyleSettings = <TPlot extends PlotDefinition>({
           placeholder="Default"
           description="Titles, labels, and ticks scale."
           onCommit={(fontSize) => setAppearance({ ...appearance, fontSize })}
+        />
+      )}
+      {showTickAngle && (
+        <Select
+          label="Label angle"
+          options={TICK_ANGLE_OPTIONS}
+          value={appearance.tickAngle ?? "auto"}
+          isClearable={false}
+          description="How far the category labels are turned. Automatic decides from how many have to fit."
+          onChange={(value: PlotAppearanceOptions["tickAngle"] | "auto") =>
+            setAppearance({
+              ...appearance,
+              tickAngle: value === "auto" ? undefined : value,
+            })
+          }
+        />
+      )}
+      {showXLabels && (
+        <Select
+          label="X labels"
+          options={[
+            { label: "Shown", value: "shown" },
+            { label: "Hidden", value: "hidden" },
+          ]}
+          value={appearance.xTickLabels === false ? "hidden" : "shown"}
+          isClearable={false}
+          description="The tick labels along the bottom. Hiding them gives long labels' room back to the figure; the hover still names each one."
+          onChange={(value: string) =>
+            setAppearance({
+              ...appearance,
+              xTickLabels: value === "hidden" ? false : undefined,
+            })
+          }
         />
       )}
       <Select

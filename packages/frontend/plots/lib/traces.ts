@@ -24,7 +24,7 @@
  * markers — live with that plot type in its module instead.
  */
 import type { Data, Datum, ScatterData } from "plotly.js";
-import { type ColorMap, readableOn, rgba } from "./colors";
+import { type ColorMap, composite, readableOn, rgba } from "./colors";
 import { countText, numberFormat, type NumberFormat } from "./format";
 import { buildHoverTemplate, type HoverRow } from "./hover";
 import { type BoxStats, boxStats, randomJitter, toFiniteNumbers } from "./math";
@@ -313,6 +313,8 @@ export const boxStatsHoverTrace = ({
   });
 };
 
+const OUTLIER_FILL_ALPHA = 1;
+
 export const outlierTrace = ({
   format,
   values,
@@ -354,7 +356,16 @@ export const outlierTrace = ({
     x: outliers.map(() => xIndex + jitterValue()),
     y: outliers,
     mode: "markers",
-    color: readableOn(color ?? colorMap.markerFill, colorMap.bgColor),
+    color: readableOn(color ?? colorMap.markerFill, [
+      composite(
+        rgba({
+          color: color ?? colorMap.markerFill,
+          alpha: OUTLIER_FILL_ALPHA,
+        }),
+        colorMap.bgColor,
+      ),
+      colorMap.bgColor,
+    ]),
     colorMap,
     marker: { symbol: "circle-open", size: 7, line: { width: 2 } },
     legendgroup: label,
