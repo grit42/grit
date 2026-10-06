@@ -36,20 +36,23 @@ module Grit::Core::Model::DynamicSchema::SchemaDefinition
   RESERVED_SCHEMA_NAMES = %w[public information_schema].freeze
   RESERVED_SCHEMA_NAME_PREFIX = "pg_"
 
-  # Every prefix any includer has declared, in declaration order. Nothing in the
-  # concern reads it; it is there for `structure.sql`, which is dumped by pg_dump
-  # and would otherwise carry every schema these definitions have built in
-  # whatever database was dumped. See
+  # Every prefix declared in `config.grit.dynamic_schema_prefixes`, each held to
+  # the rules `dynamic_schema_prefix` checks. They are there for `structure.sql`,
+  # which is dumped by pg_dump and would otherwise carry every schema these
+  # definitions have built in whatever database was dumped. See
   # `Grit::Core::Engine::ExcludeDynamicSchemasFromStructureDump`, which turns each
-  # entry into an `--exclude-schema` pattern.
-  #
-  # Kept here because only the concern knows what has been declared, and appended
-  # to from `SchemaPrefixWriter` so that a direct `self.schema_prefix =` registers
-  # too.
-  SCHEMA_PREFIXES = Set.new
-
+  # into an `--exclude-schema` pattern.
   def self.schema_prefixes
-    SCHEMA_PREFIXES
+    Grit::Core::Engine.config.grit.dynamic_schema_prefixes.map do |prefix|
+      prefix = prefix.to_s
+      check_schema_prefix!(prefix)
+      prefix
+    end
+  end
+
+  def self.check_schema_prefix!(prefix)
+    raise ArgumentError, "Dynamic schema prefix #{prefix.inspect} should start with two lowercase letters or underscores and contain only lowercase letters, numbers and underscores" unless IDENTIFIER_FORMAT.match?(prefix)
+    raise ArgumentError, "Dynamic schema prefix #{prefix.inspect} is #{prefix.bytesize} bytes; at most #{MAX_SCHEMA_PREFIX_LENGTH}, so that a #{prefix}_<schema> schema name survives PostgreSQL's 63 byte limit" if prefix.bytesize > MAX_SCHEMA_PREFIX_LENGTH
   end
 
   # Prepended to the includer's singleton class so that a direct
@@ -58,21 +61,25 @@ module Grit::Core::Model::DynamicSchema::SchemaDefinition
   # onto the singleton, so a `def self.schema_prefix=` in `included do` would
   # replace it outright with no `super` left to reach; prepending puts this one
   # ahead of it instead.
+  #
+  # A prefix missing from `config.grit.dynamic_schema_prefixes` is refused: the
+  # structure dump would not know to leave its schemas out.
   module SchemaPrefixWriter
     def schema_prefix=(prefix)
       # nil is how the attribute starts and how it is unset; nothing to check.
       return super if prefix.nil?
       prefix = prefix.to_s
-      raise ArgumentError, "Dynamic schema prefix #{prefix.inspect} should start with two lowercase letters or underscores and contain only lowercase letters, numbers and underscores" unless IDENTIFIER_FORMAT.match?(prefix)
-      raise ArgumentError, "Dynamic schema prefix #{prefix.inspect} is #{prefix.bytesize} bytes; at most #{MAX_SCHEMA_PREFIX_LENGTH}, so that a #{prefix}_<schema> schema name survives PostgreSQL's 63 byte limit" if prefix.bytesize > MAX_SCHEMA_PREFIX_LENGTH
-      SCHEMA_PREFIXES << prefix
+      Grit::Core::Model::DynamicSchema::SchemaDefinition.check_schema_prefix!(prefix)
+      unless Grit::Core::Model::DynamicSchema::SchemaDefinition.schema_prefixes.include?(prefix)
+        raise ArgumentError, "Dynamic schema prefix #{prefix.inspect} is not declared; add it to config.grit.dynamic_schema_prefixes in the engine or app that defines #{name}"
+      end
       super(prefix)
     end
   end
 
   included do
     class_attribute :table_definitions_association, default: nil
-    class_attribute :schema_prefix, default: nil
+    class_attribute :schema_prefix, default: nil, instance_writer: false
     singleton_class.prepend(SchemaPrefixWriter)
     class_attribute :before_drop_tables_callbacks, default: [].freeze
     class_attribute :after_create_tables_callbacks, default: [].freeze
@@ -82,7 +89,7 @@ module Grit::Core::Model::DynamicSchema::SchemaDefinition
 
     before_save :check_can_modify
 
-    after_create :create_schema
+    after_create :claim_schema
     after_update :rename_schema
 
     before_destroy :check_can_modify
@@ -111,6 +118,15 @@ module Grit::Core::Model::DynamicSchema::SchemaDefinition
 
   def schema_name
     schema_name_for
+  end
+
+  # The schema this definition's saved row resolves to, or nil before it has
+  # one. What the drop paths name rather than `schema_name`, which follows the
+  # identifier in memory: after a rename `schema_name_available` refused, that
+  # is another definition's identifier, and DROP SCHEMA cascades.
+  def schema_name_in_database
+    saved_identifier = identifier_in_database
+    schema_name_for(saved_identifier) unless saved_identifier.nil?
   end
 
   def schema_exists?
@@ -153,8 +169,19 @@ module Grit::Core::Model::DynamicSchema::SchemaDefinition
     ActiveRecord::Base.connection.create_schema(schema_name, if_not_exists: true)
   end
 
+  # What a new definition creates its schema with: `create_schema` without
+  # `if_not_exists`. A schema that is already there at this point belongs to
+  # something `schema_name_available` could not see, such as a definition from
+  # another includer created concurrently, which resolves to the same name and
+  # has not committed yet. Adopting it would let `drop_schema` CASCADE over
+  # that definition's tables. PostgreSQL raising here rolls the create back.
+  def claim_schema
+    ActiveRecord::Base.connection.create_schema(schema_name)
+  end
+
   def drop_schema
-    ActiveRecord::Base.connection.drop_schema(schema_name, if_exists: true)
+    name = schema_name_in_database
+    ActiveRecord::Base.connection.drop_schema(name, if_exists: true) unless name.nil?
   end
 
   def rename_schema
@@ -175,8 +202,10 @@ module Grit::Core::Model::DynamicSchema::SchemaDefinition
   end
 
   def drop_tables
-    run_before_drop_tables_callbacks
-    self.table_definitions.each(&:drop_table)
+    ActiveRecord::Base.transaction do
+      run_before_drop_tables_callbacks
+      self.table_definitions.each(&:drop_table)
+    end
   end
 
   def run_before_drop_tables_callbacks

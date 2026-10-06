@@ -126,6 +126,25 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
     table_name_for
   end
 
+  # The table this definition's saved row resolves to, or nil before it has one:
+  # its saved identifier, under the schema its saved schema definition names. What
+  # the drop paths name rather than `table_name`, which follows what is in memory.
+  # An identifier or `schema_definition_id` that validation refused, or a schema
+  # definition carrying a refused identifier of its own, would each point a DROP
+  # at another definition's table.
+  def table_name_in_database
+    saved_identifier = identifier_in_database
+    return if saved_identifier.nil?
+    schema_name = schema_definition_in_database&.schema_name_in_database
+    table_name_for(schema_name, saved_identifier) unless schema_name.nil?
+  end
+
+  def schema_definition_in_database
+    foreign_key = self.class.schema_definition_id
+    return schema_definition unless attribute_changed?(foreign_key)
+    association(self.schema_definition_association).klass.unscoped.find_by(id: attribute_in_database(foreign_key))
+  end
+
   def table_exists?
     ActiveRecord::Base.connection.table_exists?(table_name)
   end
@@ -156,6 +175,8 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
       errors.add(:identifier, "is already taken: another definition resolves to the table #{table_name}")
     elsif table_exists?
       errors.add(:identifier, "is already taken: the table #{table_name} already exists")
+    elsif relation_name_taken_in_schema?(identifier)
+      errors.add(:identifier, "is already taken: #{table_name} is the name of an index, sequence or view")
     end
   end
 
@@ -294,6 +315,11 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
         errors.add(:base, "Implementation column #{identifier.inspect} is #{identifier.bytesize} bytes; at most #{MAX_IDENTIFIER_LENGTH}")
       elsif Grit::Core::Model::DynamicSchema::ValidIdentifier::DEFAULT_RESERVED_IDENTIFIERS.include?(identifier)
         errors.add(:base, "Implementation column #{identifier.inspect} is a base column of every dynamic table")
+      elsif Grit::Core::Model::DynamicSchema::ValidIdentifier::SYSTEM_COLUMN_NAMES.include?(identifier)
+        errors.add(:base, "Implementation column #{identifier.inspect} is a PostgreSQL system column name")
+      elsif identifier.index("__", 1)
+        # See `ColumnDefinition#identifier_not_display_column_alias`.
+        errors.add(:base, "Implementation column #{identifier.inspect} should not contain a double underscore, which names the display columns of an entity column")
       else
         validate_implementation_column_shape(column, identifier)
       end
@@ -357,19 +383,45 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
     columns = ordered_column_definitions.to_a
     ActiveRecord::Base.transaction do
       schema_definition.create_schema
-      # `_uses_legacy_table_name: true` skips exactly one check, and only that
-      # one: `validate_table_length!`, which measures the whole `<schema>.<table>`
-      # string — dot and schema included — against PostgreSQL's *per identifier*
-      # limit. Rails whitelists this option in `validate_create_table_options!`
-      # as the opt-out.
-      connection.create_table table_name, id: false, if_not_exists: true, _uses_legacy_table_name: true do |t|
-        create_base_columns t
-        create_implementation_columns t
-        create_dynamic_columns t, columns
+      if table_exists?
+        check_existing_table_columns! columns
+      else
+        # `_uses_legacy_table_name: true` skips exactly one check, and only that
+        # one: `validate_table_length!`, which measures the whole `<schema>.<table>`
+        # string — dot and schema included — against PostgreSQL's *per identifier*
+        # limit. Rails whitelists this option in `validate_create_table_options!`
+        # as the opt-out.
+        connection.create_table table_name, id: false, _uses_legacy_table_name: true do |t|
+          create_base_columns t
+          create_implementation_columns t
+          create_dynamic_columns t, columns
+        end
       end
       create_foreign_keys columns
     end
     refresh_schema!
+  end
+
+  # What `create_table` does in place of building a table that is already there.
+  # Re-running it over this definition's own table is supported (a second
+  # publish, `create_tables` over tables built on create), but a table under the
+  # name may be one an includer adopted, one left behind by a definition deleted
+  # without its callbacks, or this definition's own, built before an
+  # implementation column was declared. Taken on as it stands, a missing column is
+  # a PG::UndefinedColumn on every read through `detailed`, and a column the
+  # definition does not describe belongs to whoever built the table. Names only.
+  def check_existing_table_columns!(columns)
+    expected = Grit::Core::Model::DynamicSchema::ValidIdentifier::DEFAULT_RESERVED_IDENTIFIERS +
+      implementation_column_definitions.map { |column| column[:identifier].to_s } +
+      columns.map(&:identifier)
+    actual = ActiveRecord::Base.connection.columns(table_name).map(&:name)
+    missing = expected - actual
+    unexpected = actual - expected
+    return if missing.empty? && unexpected.empty?
+    differences = []
+    differences.push("missing #{missing.join(", ")}") if missing.any?
+    differences.push("not described by the definition: #{unexpected.join(", ")}") if unexpected.any?
+    raise "Cannot create #{table_name}: a table with other columns already exists (#{differences.join("; ")})"
   end
 
   def create_base_columns(t)
@@ -393,22 +445,24 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
   end
 
   def create_dynamic_column_foreign_keys(columns = ordered_column_definitions)
-    connection = ActiveRecord::Base.connection
     columns.each do |column|
-      next unless column.data_type.is_entity
-      target_column = DEFAULT_FOREIGN_KEY_TARGET_COLUMN
-      connection.add_foreign_key table_name, column.data_type.table_name, column: column.identifier, primary_key: target_column, name: foreign_key_name(column.identifier, target_column), if_not_exists: true
+      add_column_foreign_key column.identifier, column.data_type.table_name if column.data_type.is_entity
     end
   end
 
   def create_implementation_column_foreign_keys
-    connection = ActiveRecord::Base.connection
     implementation_column_definitions.each do |column|
       foreign_key = column[:foreign_key]
       next unless foreign_key
-      target_column = implementation_column_target_column(column)
-      connection.add_foreign_key table_name, foreign_key[:table_name], column: column[:identifier], primary_key: target_column, name: foreign_key_name(column[:identifier], target_column), if_not_exists: true
+      add_column_foreign_key column[:identifier], foreign_key[:table_name], implementation_column_target_column(column)
     end
+  end
+
+  # Every foreign key on a dynamic table is added through here, so each one is
+  # named the way `foreign_key_name` composes it, which is the name
+  # `rename_foreign_key_for_column` renames from.
+  def add_column_foreign_key(column_identifier, target_table_name, target_column = DEFAULT_FOREIGN_KEY_TARGET_COLUMN)
+    ActiveRecord::Base.connection.add_foreign_key table_name, target_table_name, column: column_identifier, primary_key: target_column, name: foreign_key_name(column_identifier, target_column), if_not_exists: true
   end
 
   def implementation_column_target_column(column)
@@ -450,8 +504,10 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
   end
 
   def drop_table
-    ActiveRecord::Base.connection.drop_table table_name, if_exists: true
-    refresh_schema!
+    name = table_name_in_database
+    return if name.nil?
+    ActiveRecord::Base.connection.drop_table name, if_exists: true
+    refresh_schema! name
   end
 
   # The name of the primary key index on `qualified_table_name`, or nil if the
@@ -488,7 +544,7 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
     return if previous_index_name.blank?
     target = "#{identifier}_pkey"
     return if previous_index_name == target
-    return if index_name_taken_in_schema?(target)
+    return if relation_name_taken_in_schema?(target)
     connection = ActiveRecord::Base.connection
     connection.execute(<<~SQL.squish)
       ALTER INDEX #{connection.quote_table_name("#{schema_definition.schema_name}.#{previous_index_name}")}
@@ -496,15 +552,17 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
     SQL
   end
 
-  def index_name_taken_in_schema?(index_name)
+  # Of any kind, not just the kind about to be named: tables, indexes, sequences
+  # and views share one name space per schema, so an index cannot be renamed onto
+  # a table's name, nor a table created under an index's.
+  def relation_name_taken_in_schema?(name)
     connection = ActiveRecord::Base.connection
     connection.select_value(<<~SQL.squish).present?
       SELECT 1
-      FROM pg_class index_class
-      JOIN pg_namespace ON pg_namespace.oid = index_class.relnamespace
+      FROM pg_class
+      JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace
       WHERE pg_namespace.nspname = #{connection.quote(schema_definition.schema_name)}
-        AND index_class.relname = #{connection.quote(index_name)}
-        AND index_class.relkind IN ('i', 'I')
+        AND pg_class.relname = #{connection.quote(name)}
     SQL
   end
 
@@ -514,7 +572,11 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
     return if previous_table_name == table_name
 
     connection = ActiveRecord::Base.connection
-    return if connection.table_exists?(table_name)
+    # Nothing to move when the table was never materialised, or has moved
+    # already. A relation already under the new name is not this table, and is
+    # left for PostgreSQL to refuse, as `rename_schema` does: skipping the rename
+    # would commit the definition pointing at it, with its own table stranded
+    # under the old name.
     return unless connection.table_exists?(previous_table_name)
 
     previous_index_name = primary_key_index_name(previous_table_name)
@@ -606,7 +668,7 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
   # such as Kernel's `format`. `id` keeps its methods; Rails defines those
   # itself, whatever the columns.
   #
-  # Three of the overrides below are Rails internals rather than public API.
+  # Four of the overrides below are Rails internals rather than public API.
   # Each is pinned by a spec in column_definition_spec.rb or
   # table_definition_spec.rb that fails if a Rails upgrade stops calling it.
   def record_klass
@@ -625,6 +687,16 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
       def self.define_attribute_methods
         false
       end
+
+      def self.timestamp_attributes_for_create
+        [ "created_at" ]
+      end
+
+      def self.timestamp_attributes_for_update
+        [ "updated_at" ]
+      end
+
+      private_class_method :timestamp_attributes_for_create, :timestamp_attributes_for_update
 
       def set_updater
         current_user_login = Grit::Core::User.current.login
@@ -723,7 +795,6 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
       # implementation column can say otherwise.
       def self.select_entity_display_columns(query, name, target_table_name, entity_klass, target_column = DEFAULT_FOREIGN_KEY_TARGET_COLUMN)
         display_properties = entity_klass.display_properties
-        return query if display_properties.nil?
         connection = ActiveRecord::Base.connection
         table_alias = "#{name}__entities"
         quoted_column = connection.quote_column_name(name)

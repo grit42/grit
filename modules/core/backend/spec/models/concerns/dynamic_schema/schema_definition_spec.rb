@@ -32,6 +32,12 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
     ActiveRecord::Base.connection
   end
 
+  # For an example whose class declares a prefix the dummy app does not.
+  def declare_schema_prefix(prefix)
+    declared = Grit::Core::Engine.config.grit.dynamic_schema_prefixes
+    allow(Grit::Core::Engine.config.grit).to receive(:dynamic_schema_prefixes).and_return(declared + [ prefix ])
+  end
+
   # T1 — instance methods live in the module body, so an includer can name its
   # association `table_definitions` (the concern's own accessor name) without
   # the accessor recursing into itself.
@@ -291,6 +297,25 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
       expect { schema.create_tables }.to raise_error("boom")
       expect(schema.created_ran).to eq([])
     end
+
+    # Fails the second drop rather than a named table: the association has no
+    # order, and failing the one dropped first would leave nothing to roll back.
+    it "drops all of the tables or none of them" do
+      schema = Grit::SchemaDefinition.create!(identifier: "grp", name: "Schema")
+      Grit::TableDefinition.create!(identifier: "one", name: "One", schema_definition: schema)
+      Grit::TableDefinition.create!(identifier: "two", name: "Two", schema_definition: schema)
+      drops = 0
+      allow_any_instance_of(Grit::TableDefinition).to receive(:drop_table).and_wrap_original do |original, *args|
+        drops += 1
+        raise "boom" if drops == 2
+        original.call(*args)
+      end
+
+      expect { schema.drop_tables }.to raise_error("boom")
+
+      expect(connection.table_exists?("test_grp.one")).to be(true)
+      expect(connection.table_exists?("test_grp.two")).to be(true)
+    end
   end
 
   # ==========================================================================
@@ -356,6 +381,29 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
       expect(connection.table_exists?("test_grp.one")).to be(false)
       expect(connection.schema_exists?("test_grp")).to be(true)
     end
+
+    # The drop names what the saved row resolves to. After a refused rename the
+    # identifier in memory is the other definition's, and the drop cascades.
+    it "drops its own schema, not the one a refused rename names" do
+      schema = Grit::SchemaDefinition.create!(identifier: "grp", name: "Schema")
+      other = Grit::SchemaDefinition.create!(identifier: "other", name: "Other")
+      Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: other)
+
+      expect(schema.update(identifier: "other")).to be(false)
+      schema.destroy!
+
+      expect(connection.schema_exists?("test_grp")).to be(false)
+      expect(connection.table_exists?("test_other.tbl")).to be(true)
+    end
+
+    # Destroy callbacks run on a record that was never saved.
+    it "drops nothing when destroyed before it was saved" do
+      Grit::SchemaDefinition.create!(identifier: "other", name: "Other")
+
+      Grit::SchemaDefinition.new(identifier: "other", name: "Clash").destroy
+
+      expect(connection.schema_exists?("test_other")).to be(true)
+    end
   end
 
   # ==========================================================================
@@ -385,6 +433,20 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
 
       expect { schema.create_schema }.not_to raise_error
       expect(schema.schema_exists?).to be(true)
+    end
+
+    # Stands in for two creates racing, which `schema_name_available` cannot see:
+    # skipping validation is how a definition reaches its `after_create` while
+    # another one's schema is already there.
+    it "is not adopted from something else on create" do
+      connection.create_schema("test_grp")
+      connection.create_table("test_grp.theirs")
+
+      schema = Grit::SchemaDefinition.new(identifier: "grp", name: "Schema")
+
+      expect { schema.save!(validate: false) }.to raise_error(ActiveRecord::StatementInvalid, /already exists/)
+      expect(Grit::SchemaDefinition.where(identifier: "grp")).not_to exist
+      expect(connection.table_exists?("test_grp.theirs")).to be(true)
     end
 
     it "goes with the definition on destroy" do
@@ -429,11 +491,14 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
   # across them. So the catalog is consulted.
   #
   # But the catalog alone is not enough, which is what the sibling check below is
-  # for: it only knows what exists *now*. A schema dropped out of band, or two
-  # creates racing, leaves it seeing nothing while a sibling row already owns the
-  # name — and `create_schema` passes `if_not_exists: true`, so the second
-  # definition adopts the first's schema without a word. Destroying either then
-  # runs DROP SCHEMA ... CASCADE over the other's tables.
+  # for: it only knows what exists *now*. A schema dropped out of band leaves it
+  # seeing nothing while a sibling row still owns the name, and the new
+  # definition would create the schema afresh and share it with that row.
+  # Destroying either then runs DROP SCHEMA ... CASCADE over the other's tables.
+  #
+  # Two creates racing get past both checks: neither row is committed and neither
+  # schema exists when they validate. That one is caught on create instead, by
+  # `claim_schema` refusing a schema that is already there.
   # ==========================================================================
 
   describe "schema_name_available" do
@@ -500,6 +565,7 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
     # Compared on the resolved name, not on the identifier: a subclass may declare
     # a different prefix, and then the same identifier is a different schema.
     it "allows a sibling identifier that resolves to another schema" do
+      declare_schema_prefix("othr")
       klass = Class.new(Grit::SchemaDefinition) do
         def self.name = "OtherPrefixSchemaDefinition"
         dynamic_schema_prefix "othr"
@@ -638,6 +704,12 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
       }.to raise_error(ArgumentError, /at most 32/)
     end
 
+    it "cannot be set on a single record" do
+      expect(Grit::SchemaDefinition.new).not_to respond_to(:schema_prefix=)
+      expect { Grit::SchemaDefinition.new(identifier: "x", name: "X", schema_prefix: "foo") }
+        .to raise_error(ActiveModel::UnknownAttributeError)
+    end
+
     # The macro is optional and `schema_prefix` defaults to nil, so a class that
     # forgets it used to build `_<identifier>` schemas — which `schema_name_available`
     # waves through, and which the structure-dump exclusion cannot see either,
@@ -670,11 +742,36 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
       }.to raise_error(ArgumentError, /lowercase letters/)
     end
 
+    # Its schemas would be dumped into structure.sql, which only excludes the
+    # prefixes in config.
+    it "rejects a prefix missing from config.grit.dynamic_schema_prefixes" do
+      expect {
+        Class.new(ApplicationRecord) do
+          def self.name = "UndeclaredPrefixSchemaDefinition"
+          self.table_name = "test_schema_definitions"
+          include Grit::Core::Model::DynamicSchema::SchemaDefinition
+          dynamic_schema_prefix "undeclared"
+        end
+      }.to raise_error(ArgumentError, /"undeclared" is not declared; add it to config\.grit\.dynamic_schema_prefixes in the engine or app that defines UndeclaredPrefixSchemaDefinition/)
+    end
+
+    it "accepts a prefix declared in config" do
+      declare_schema_prefix("declared")
+
+      klass = Class.new(Grit::SchemaDefinition) do
+        def self.name = "DeclaredPrefixSchemaDefinition"
+        dynamic_schema_prefix "declared"
+      end
+
+      expect(klass.new(identifier: "grp", name: "Schema").schema_name).to eq("declared_grp")
+    end
+
     # A maximum prefix and a maximum identifier compose to exactly 63 bytes,
     # PostgreSQL's limit for one identifier, and have to reach the catalog whole.
     it "accepts a prefix at the limit and names a schema with it" do
       max_prefix = Grit::Core::Model::DynamicSchema::SchemaDefinition::MAX_SCHEMA_PREFIX_LENGTH
       max_identifier = Grit::Core::Model::DynamicSchema::ValidIdentifier::MAX_IDENTIFIER_LENGTH
+      declare_schema_prefix("p" * max_prefix)
       klass = Class.new(Grit::SchemaDefinition) do
         def self.name = "WidestSchemaDefinition"
         dynamic_schema_prefix "p" * Grit::Core::Model::DynamicSchema::SchemaDefinition::MAX_SCHEMA_PREFIX_LENGTH

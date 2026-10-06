@@ -25,6 +25,8 @@ module Grit::Core::Model::DynamicSchema::ColumnDefinition
     class_attribute :table_definition_association
 
     validate :identifier_not_implementation_column
+    validate :identifier_not_system_column
+    validate :identifier_not_display_column_alias
     validate :identifier_unique_in_table
     validate :table_definition_unchanged
     validate :columns_count_within_limit, on: :create
@@ -53,6 +55,25 @@ module Grit::Core::Model::DynamicSchema::ColumnDefinition
     return if definition.nil?
     return unless definition.implementation_column_definitions.any? { |column| column[:identifier].to_s == identifier }
     errors.add(:identifier, "is reserved by this table and cannot be used as identifier")
+  end
+
+  # Not caught by `identifier_taken_on_physical_table?`, which only sees the
+  # columns a table was built with: PostgreSQL would refuse the name at DDL time.
+  def identifier_not_system_column
+    return if identifier.blank? || !identifier_changed?
+    return unless Grit::Core::Model::DynamicSchema::ValidIdentifier::SYSTEM_COLUMN_NAMES.include?(identifier)
+    errors.add(:identifier, "is a PostgreSQL system column name and cannot be used as identifier")
+  end
+
+  # `detailed` selects each display property of an entity column `<name>` as
+  # `<name>__<display property>`. A column named like one of those would come back
+  # twice under one name, and a sort or filter on it would act on the entity's
+  # column instead. A leading `__` is allowed: `<name>` is at least two characters,
+  # so no alias starts with one.
+  def identifier_not_display_column_alias
+    return if identifier.blank? || !identifier_changed?
+    return unless identifier.index("__", 1)
+    errors.add(:identifier, "should not contain a double underscore, which names the display columns of an entity column")
   end
 
   # Note: an includer should also add a unique index on `[<table>_id, identifier]`
@@ -94,8 +115,22 @@ module Grit::Core::Model::DynamicSchema::ColumnDefinition
     errors.add(:base, "A table cannot have more than #{limit} columns")
   end
 
+  # nil until the includer calls `belongs_to_table_definition`, so that every
+  # validation reading it is skipped, as the ones checking
+  # `table_definition_association` are, rather than raising
+  # AssociationNotFoundError.
   def table_definition
+    return if self.class.table_definition_association.nil?
     association(self.table_definition_association).reader
+  end
+
+  # The table definition this column's saved row belongs to. See
+  # `TableDefinition#schema_definition_in_database`.
+  def table_definition_in_database
+    return if self.class.table_definition_association.nil?
+    foreign_key = self.class.table_definition_id
+    return table_definition unless attribute_changed?(foreign_key)
+    association(self.table_definition_association).klass.unscoped.find_by(id: attribute_in_database(foreign_key))
   end
 
   def quoted_identifier
@@ -112,10 +147,13 @@ module Grit::Core::Model::DynamicSchema::ColumnDefinition
   def create_column
     return unless table_definition.table_exists?
     connection = ActiveRecord::Base.connection
+    # A NOT NULL column with no default fails on any existing row, with a
+    # PG::NotNullViolation rather than the message `alter_column` gives.
+    raise "Cannot require column with empty values" if required && connection.select_value("SELECT 1 FROM #{table_definition.quoted_table_name} LIMIT 1")
 
     connection.add_column table_definition.table_name, identifier, data_type.sql_name, null: !required
     table_definition.refresh_schema!
-    connection.add_foreign_key table_definition.table_name, data_type.table_name, column: identifier, primary_key: foreign_key_target_column, name: table_definition.foreign_key_name(identifier, foreign_key_target_column), if_not_exists: true if data_type.is_entity
+    table_definition.add_column_foreign_key identifier, data_type.table_name, foreign_key_target_column if data_type.is_entity
   end
 
   def alter_column
@@ -139,7 +177,7 @@ module Grit::Core::Model::DynamicSchema::ColumnDefinition
         connection.remove_foreign_key table_definition.table_name, column: column.identifier, if_exists: true
 
         connection.change_column table_definition.table_name, column.identifier, column.data_type.sql_name, using: "#{connection.quote_column_name(column.identifier)}::text::#{column.data_type.sql_name}"
-        connection.add_foreign_key table_definition.table_name, column.data_type.table_name, column: column.identifier, primary_key: foreign_key_target_column, name: table_definition.foreign_key_name(column.identifier, foreign_key_target_column), if_not_exists: true if column.data_type.is_entity
+        table_definition.add_column_foreign_key column.identifier, column.data_type.table_name, foreign_key_target_column if column.data_type.is_entity
         table_definition.refresh_schema!
       rescue ActiveRecord::InvalidForeignKey
         raise "Failed to convert #{previous_data_type.name} to #{column.data_type.name} because of conflicts in existing rows"
@@ -155,10 +193,18 @@ module Grit::Core::Model::DynamicSchema::ColumnDefinition
     end
   end
 
+  # By the names saved in the database, as `TableDefinition#drop_table` does: a
+  # rename `identifier_unique_in_table` refused leaves another column's name in
+  # `identifier`.
   def drop_column
-    return unless table_definition.table_exists?
-    ActiveRecord::Base.connection.remove_column table_definition.table_name, identifier, if_exists: true
-    table_definition.refresh_schema!
+    saved_identifier = identifier_in_database
+    definition = table_definition_in_database
+    return if saved_identifier.nil? || definition.nil?
+    table_name = definition.table_name_in_database
+    connection = ActiveRecord::Base.connection
+    return if table_name.nil? || !connection.table_exists?(table_name)
+    connection.remove_column table_name, saved_identifier, if_exists: true
+    definition.refresh_schema! table_name
   end
 
   class_methods do

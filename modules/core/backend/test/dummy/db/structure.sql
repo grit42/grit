@@ -1612,16 +1612,19 @@ ALTER TABLE ONLY public.test_column_definitions
 
 
 --
--- Name: test_table_definitions test_table_definitions_schema_definition_id; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.test_table_definitions
-    ADD CONSTRAINT test_table_definitions_schema_definition_id FOREIGN KEY (schema_definition_id) REFERENCES public.test_schema_definitions(id);
 -- Name: test_entities test_second; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.test_entities
     ADD CONSTRAINT test_second FOREIGN KEY (second_user_id) REFERENCES public.grit_core_users(id);
+
+
+--
+-- Name: test_table_definitions test_table_definitions_schema_definition_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.test_table_definitions
+    ADD CONSTRAINT test_table_definitions_schema_definition_id FOREIGN KEY (schema_definition_id) REFERENCES public.test_schema_definitions(id);
 
 
 --

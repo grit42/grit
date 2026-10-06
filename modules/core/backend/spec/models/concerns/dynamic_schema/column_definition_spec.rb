@@ -196,6 +196,22 @@ RSpec.describe "DynamicSchema::ColumnDefinition concern", type: :model do
       expect { definition.update!(required: true) }.to raise_error("Cannot require column with empty values")
     end
 
+    it "refuses to add a required column to a table that has rows" do
+      table.record_klass.create!
+
+      expect {
+        Grit::ColumnDefinition.create!(identifier: "a_column", name: "A", data_type: string_type, table_definition: table, required: true)
+      }.to raise_error("Cannot require column with empty values")
+      expect(Grit::ColumnDefinition.where(identifier: "a_column")).not_to exist
+      expect(column(table.table_name, "a_column")).to be_nil
+    end
+
+    it "adds a required column to a table with no rows" do
+      Grit::ColumnDefinition.create!(identifier: "a_column", name: "A", data_type: string_type, table_definition: table, required: true)
+
+      expect(column(table.table_name, "a_column").null).to be(false)
+    end
+
     it "converts a string column to an integer, casting the values through text" do
       definition = Grit::ColumnDefinition.create!(identifier: "a_column", name: "A", data_type: string_type, table_definition: table)
       table.record_klass.create!(a_column: "42")
@@ -504,6 +520,59 @@ RSpec.describe "DynamicSchema::ColumnDefinition concern", type: :model do
   end
 
   # ==========================================================================
+  # Dropping a column
+  #
+  # The drop names what the saved row resolves to. A refused change leaves
+  # another column's or another table's name in memory.
+  # ==========================================================================
+
+  describe "drop_column" do
+    it "drops its own column, not the one a refused rename names" do
+      definition = Grit::ColumnDefinition.create!(identifier: "a_column", name: "A", data_type: string_type, table_definition: table)
+      Grit::ColumnDefinition.create!(identifier: "b_column", name: "B", data_type: string_type, table_definition: table)
+
+      expect(definition.update(identifier: "b_column")).to be(false)
+      definition.destroy!
+
+      expect(column(table.table_name, "a_column")).to be_nil
+      expect(column(table.table_name, "b_column")).not_to be_nil
+    end
+
+    it "drops its own column after a refused move to another table" do
+      other = Grit::TableDefinition.create!(identifier: "other", name: "Other", schema_definition: schema)
+      definition = Grit::ColumnDefinition.create!(identifier: "a_column", name: "A", data_type: string_type, table_definition: table)
+      Grit::ColumnDefinition.create!(identifier: "a_column", name: "A", data_type: string_type, table_definition: other)
+
+      expect(definition.update(table_definition: other)).to be(false)
+      definition.destroy!
+
+      expect(column("test_grp.tbl", "a_column")).to be_nil
+      expect(column("test_grp.other", "a_column")).not_to be_nil
+    end
+
+    it "drops its own column when its table definition carries a refused rename" do
+      other = Grit::TableDefinition.create!(identifier: "other", name: "Other", schema_definition: schema)
+      definition = Grit::ColumnDefinition.create!(identifier: "a_column", name: "A", data_type: string_type, table_definition: table)
+      Grit::ColumnDefinition.create!(identifier: "a_column", name: "A", data_type: string_type, table_definition: other)
+
+      expect(table.update(identifier: "other")).to be(false)
+      definition.destroy!
+
+      expect(column("test_grp.tbl", "a_column")).to be_nil
+      expect(column("test_grp.other", "a_column")).not_to be_nil
+    end
+
+    # Destroy callbacks run on a record that was never saved.
+    it "drops nothing when destroyed before it was saved" do
+      Grit::ColumnDefinition.create!(identifier: "a_column", name: "A", data_type: string_type, table_definition: table)
+
+      Grit::ColumnDefinition.new(identifier: "a_column", name: "Clash", data_type: string_type, table_definition: table).destroy
+
+      expect(column(table.table_name, "a_column")).not_to be_nil
+    end
+  end
+
+  # ==========================================================================
   # Column count ceiling
   # ==========================================================================
 
@@ -622,6 +691,58 @@ RSpec.describe "DynamicSchema::ColumnDefinition concern", type: :model do
   describe "association helpers" do
     it "names the foreign key column after the association" do
       expect(Grit::ColumnDefinition.table_definition_id).to eq(:table_definition_id)
+    end
+  end
+
+  describe "an includer that has not declared belongs_to_table_definition" do
+    let(:klass) do
+      Class.new(ApplicationRecord) do
+        def self.name = "UndeclaredTableColumnDefinition"
+        self.table_name = "test_column_definitions"
+        include Grit::Core::Model::DynamicSchema::ColumnDefinition
+      end
+    end
+
+    it "skips the validations that need the table rather than raising" do
+      definition = klass.new(identifier: "a_column", name: "A", data_type: string_type)
+
+      expect { definition.valid? }.not_to raise_error
+      expect(definition.table_definition).to be_nil
+    end
+  end
+
+  # PostgreSQL gives every table these, and refuses them as column names.
+  describe "system column names" do
+    %w[tableoid xmin cmin xmax cmax ctid].each do |identifier|
+      it "rejects #{identifier}" do
+        definition = Grit::ColumnDefinition.new(identifier: identifier, name: "X", data_type: string_type, table_definition: table)
+
+        expect(definition).not_to be_valid
+        expect(definition.errors[:identifier].join).to include("system column")
+      end
+    end
+
+    it "rejects a rename onto one" do
+      definition = Grit::ColumnDefinition.create!(identifier: "a_column", name: "A", data_type: string_type, table_definition: table)
+
+      expect(definition.update(identifier: "xmin")).to be(false)
+      expect(column(table.table_name, "a_column")).to be_present
+    end
+  end
+
+  # `detailed` names an entity column's display properties `<column>__<property>`.
+  describe "display column aliases" do
+    it "rejects an identifier containing a double underscore" do
+      definition = Grit::ColumnDefinition.new(identifier: "owner__name", name: "Owner name", data_type: string_type, table_definition: table)
+
+      expect(definition).not_to be_valid
+      expect(definition.errors[:identifier].join).to include("double underscore")
+    end
+
+    it "allows a leading double underscore, which no alias can start with" do
+      definition = Grit::ColumnDefinition.new(identifier: "__notes", name: "Notes", data_type: string_type, table_definition: table)
+
+      expect(definition).to be_valid
     end
   end
 end

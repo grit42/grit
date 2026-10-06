@@ -35,6 +35,12 @@ module Grit::Core::Model::DynamicSchema::ValidIdentifier
   #   self.reserved_identifiers += %w[experiment_id]
   DEFAULT_RESERVED_IDENTIFIERS = %w[id created_at created_by updated_at updated_by].freeze
 
+  # Columns PostgreSQL gives every table, which no column may be named after. Not
+  # in `DEFAULT_RESERVED_IDENTIFIERS`, which counts and describes the base columns
+  # every dynamic table is built with, and not checked for schemas or tables,
+  # which may take these names.
+  SYSTEM_COLUMN_NAMES = %w[tableoid xmin cmin xmax cmax ctid].freeze
+
   included do
     class_attribute :reserved_identifiers, default: DEFAULT_RESERVED_IDENTIFIERS
 

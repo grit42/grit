@@ -146,6 +146,32 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
       expect(connection.table_exists?("test_grp.two")).to be(true)
     end
 
+    # Re-running is for the definition's own table. One standing under the name
+    # without the columns the definition describes is someone else's, or was
+    # built before an implementation column was declared; either way `detailed`
+    # would select columns it does not have.
+    it "refuses to take on a table missing columns the definition describes" do
+      klass = Class.new(Grit::TableDefinition) do
+        def self.name = "ShapeCheckedTableDefinition"
+
+        def create_table_on_create?
+          false
+        end
+      end
+      table = klass.create!(identifier: "dfr", name: "Deferred", schema_definition: schema)
+      connection.execute("CREATE TABLE test_grp.dfr (id bigint PRIMARY KEY)")
+
+      expect { table.create_table }.to raise_error(/test_grp\.dfr: .*missing created_at, created_by, updated_at, updated_by, owner_id/)
+      expect(connection.columns("test_grp.dfr").map(&:name)).to eq([ "id" ])
+    end
+
+    it "refuses to take on a table with columns the definition does not describe" do
+      table = Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: schema)
+      connection.execute("ALTER TABLE test_grp.tbl ADD COLUMN stray text")
+
+      expect { table.create_table }.to raise_error(/not described by the definition: stray/)
+    end
+
     it "defers creation when create_table_on_create? is overridden to false" do
       klass = Class.new(Grit::TableDefinition) do
         def self.name = "DeferredTableDefinition"
@@ -167,10 +193,10 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
   # T15 — one definition per physical table name
   # ==========================================================================
 
-  # What makes `create_table`'s `if_not_exists: true` safe. Without these, two
-  # definitions resolving to one name silently share a physical table and its
-  # rows, and `after_destroy :drop_table` on either takes the other's data with
-  # it, with no error anywhere.
+  # What makes `create_table` safe to re-run over a table already there. Without
+  # these, two definitions resolving to one name silently share a physical table
+  # and its rows, and `after_destroy :drop_table` on either takes the other's
+  # data with it, with no error anywhere.
   describe "unique table names (T15)" do
     it "rejects a duplicate identifier within one schema, leaving the first table alone" do
       Grit::TableDefinition.create!(identifier: "tbl", name: "One", schema_definition: schema)
@@ -214,9 +240,9 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
     end
 
     # A table no definition row claims — one a migration built, one left behind by
-    # a row deleted without its callbacks. `create_table`'s `if_not_exists: true`
-    # would skip the column list whole and leave the definition describing a shape
-    # the table does not have, and `drop_table` would take the table on destroy.
+    # a row deleted without its callbacks. `create_table` builds nothing over a
+    # table already there, so the definition would take it on, and `drop_table`
+    # would take the table on destroy.
     it "refuses to adopt a table already standing under the name" do
       connection.execute("CREATE TABLE #{schema.schema_name}.orphan (id bigint PRIMARY KEY)")
 
@@ -227,8 +253,8 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
       expect(connection.columns("test_grp.orphan").map(&:name)).to eq([ "id" ])
     end
 
-    # Same hole through the rename path: `rename_table` returns when the target
-    # name is taken, which left the definition pointing at the standing table.
+    # Same hole through the rename path, caught here rather than as a
+    # PG::DuplicateTable out of `rename_table`.
     it "refuses to rename onto a table already standing under the new name" do
       connection.execute("CREATE TABLE #{schema.schema_name}.orphan (id bigint PRIMARY KEY)")
       table = Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: schema)
@@ -237,6 +263,26 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
       expect(table.errors[:identifier].join).to match(/the table test_grp\.orphan already exists/)
       expect(connection.table_exists?("test_grp.tbl")).to be(true)
       expect(connection.columns("test_grp.orphan").map(&:name)).to eq([ "id" ])
+    end
+
+    # Tables and indexes share one name space per schema, so `table_exists?`
+    # alone let these through to a PG::DuplicateTable from the DDL.
+    it "refuses a table named after an index in the schema" do
+      Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: schema)
+
+      clash = Grit::TableDefinition.new(identifier: "tbl_pkey", name: "Clash", schema_definition: schema)
+
+      expect(clash).not_to be_valid
+      expect(clash.errors[:identifier].join).to match(/test_grp\.tbl_pkey is the name of an index/)
+    end
+
+    it "refuses to rename onto the name of an index in the schema" do
+      Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: schema)
+      other = Grit::TableDefinition.create!(identifier: "other", name: "Other", schema_definition: schema)
+
+      expect(other.update(identifier: "tbl_pkey")).to be(false)
+      expect(other.errors[:identifier].join).to match(/is the name of an index/)
+      expect(connection.table_exists?("test_grp.other")).to be(true)
     end
 
     # The probe sits after the early returns, so a definition that has already
@@ -250,9 +296,9 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
     end
 
     # An includer that genuinely has to take over a standing table says so, and
-    # owns what follows: `create_table` skips a table that is already there, so
-    # the table has to have the shape the definition describes already — here it
-    # does not, and `create_foreign_keys` would fail on the missing column.
+    # owns what follows: `create_table` builds nothing over a table that is
+    # already there, so the table has to have the columns the definition
+    # describes already — here it does not, and `create_table` would refuse it.
     it "lets an includer override the check to adopt" do
       connection.execute("CREATE TABLE #{schema.schema_name}.orphan (id bigint PRIMARY KEY)")
       klass = Class.new(Grit::TableDefinition) do
@@ -397,6 +443,21 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
       expect(connection.table_exists?("test_grp.new_tbl")).to be(true)
     end
 
+    # Stands in for whatever gets past `identifier_unique_in_schema`: a table
+    # created after validation ran. Skipping the rename would commit the
+    # definition pointing at that table, with its own stranded under the old name.
+    it "raises rather than pointing the definition at a table already under the new name" do
+      table = Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: schema)
+      connection.execute("CREATE TABLE test_grp.orphan (id bigint PRIMARY KEY)")
+
+      table.identifier = "orphan"
+
+      expect { table.save!(validate: false) }.to raise_error(ActiveRecord::StatementInvalid, /already exists/)
+      expect(table.reload.identifier).to eq("tbl")
+      expect(connection.table_exists?("test_grp.tbl")).to be(true)
+      expect(connection.columns("test_grp.orphan").map(&:name)).to eq([ "id" ])
+    end
+
     # The same collision the rename exists to clean up, arriving from the other
     # side. `b` renamed to `c` leaves a `b_pkey` index sitting on table `c`; `a`
     # renamed to `b` then wants that name. Renaming into it unconditionally raises
@@ -428,6 +489,18 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
 
       expect(primary_key_index_name("test_grp.bee")).to eq("ay_pkey")
       expect(primary_key_index_name("test_grp.cee")).to eq("bee_pkey")
+    end
+
+    # The canonical name held by a table rather than an index. The two share one
+    # name space, so it is just as taken.
+    it "leaves the index alone when a table holds its canonical name" do
+      Grit::TableDefinition.create!(identifier: "foo_pkey", name: "Foo pkey", schema_definition: schema)
+      table = Grit::TableDefinition.create!(identifier: "bar", name: "Bar", schema_definition: schema)
+
+      expect { table.update!(identifier: "foo") }.not_to raise_error
+
+      expect(connection.table_exists?("test_grp.foo")).to be(true)
+      expect(primary_key_index_name("test_grp.foo")).to eq("bar_pkey")
     end
   end
 
@@ -692,6 +765,36 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
 
       expect(table).not_to be_valid
       expect(table.errors[:base].join).to match(/base column of every dynamic table/)
+    end
+
+    it "invalidates a record whose implementation column takes a system column name" do
+      klass = Class.new(Grit::TableDefinition) do
+        def self.name = "SystemNameImplementationColumnTableDefinition"
+
+        def implementation_column_definitions
+          [ { identifier: "xmin", data_type_name: "bigint" } ]
+        end
+      end
+
+      table = klass.new(identifier: "tbl", name: "Table", schema_definition: schema)
+
+      expect(table).not_to be_valid
+      expect(table.errors[:base].join).to match(/system column name/)
+    end
+
+    it "invalidates a record whose implementation column contains a double underscore" do
+      klass = Class.new(Grit::TableDefinition) do
+        def self.name = "AliasImplementationColumnTableDefinition"
+
+        def implementation_column_definitions
+          [ { identifier: "owner__name", data_type_name: "bigint" } ]
+        end
+      end
+
+      table = klass.new(identifier: "tbl", name: "Table", schema_definition: schema)
+
+      expect(table).not_to be_valid
+      expect(table.errors[:base].join).to match(/double underscore/)
     end
 
     it "invalidates a record that declares one implementation column twice" do
@@ -1403,6 +1506,52 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
       expect(connection.table_exists?("test_grp.two")).to be(false)
     end
 
+    # The drop names what the saved row resolves to. A refused change leaves
+    # another definition's name in memory, and DROP TABLE would take its table.
+    it "drops its own table, not the one a refused rename names" do
+      table = Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: schema)
+      Grit::TableDefinition.create!(identifier: "other", name: "Other", schema_definition: schema)
+
+      expect(table.update(identifier: "other")).to be(false)
+      table.destroy!
+
+      expect(connection.table_exists?("test_grp.tbl")).to be(false)
+      expect(connection.table_exists?("test_grp.other")).to be(true)
+    end
+
+    it "drops its own table after a refused move to another schema" do
+      other_schema = Grit::SchemaDefinition.create!(identifier: "other", name: "Other")
+      table = Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: schema)
+      Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: other_schema)
+
+      expect(table.update(schema_definition: other_schema)).to be(false)
+      table.destroy!
+
+      expect(connection.table_exists?("test_grp.tbl")).to be(false)
+      expect(connection.table_exists?("test_other.tbl")).to be(true)
+    end
+
+    it "drops its own table when its schema definition carries a refused rename" do
+      other_schema = Grit::SchemaDefinition.create!(identifier: "other", name: "Other")
+      table = Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: schema)
+      Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: other_schema)
+
+      expect(schema.update(identifier: "other")).to be(false)
+      table.destroy!
+
+      expect(connection.table_exists?("test_grp.tbl")).to be(false)
+      expect(connection.table_exists?("test_other.tbl")).to be(true)
+    end
+
+    # Destroy callbacks run on a record that was never saved.
+    it "drops nothing when destroyed before it was saved" do
+      Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: schema)
+
+      Grit::TableDefinition.new(identifier: "tbl", name: "Clash", schema_definition: schema).destroy
+
+      expect(connection.table_exists?("test_grp.tbl")).to be(true)
+    end
+
     # `dependent: :delete_all`, not `:destroy`. Destroying each column definition
     # would run its `before_destroy :drop_column` — one ALTER TABLE DROP COLUMN
     # and one pool-wide `refresh_schema!` apiece — immediately before the DROP
@@ -1465,6 +1614,17 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
 
       expect(row.reload["lock_version"]).to eq(5)
       expect { stale.update!(owner_id: nil) }.not_to raise_error
+    end
+
+    it "does not stamp columns named created_on or updated_on" do
+      Grit::ColumnDefinition.create!(identifier: "created_on", name: "Created on", data_type: string_type, table_definition: table)
+      Grit::ColumnDefinition.create!(identifier: "updated_on", name: "Updated on", data_type: string_type, table_definition: table)
+
+      row = table.record_klass.create!(updated_on: "x")
+      row.update!(owner_id: admin.id)
+
+      expect(row.reload["created_on"]).to be_nil
+      expect(row["updated_on"]).to eq("x")
     end
   end
 

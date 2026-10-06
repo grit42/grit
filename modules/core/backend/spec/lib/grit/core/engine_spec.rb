@@ -45,25 +45,16 @@ RSpec.describe "Grit::Core::Engine structure dump" do
     captured
   end
 
-  # `dynamic_schema_prefix` registers from a model class body, so in an environment
-  # that does not eager load there is nothing to exclude until the class is loaded.
-  # That is what `EagerLoadBeforeSchemaDump` is for, and what the examples driving
-  # `structure_dump` directly have to stand in for.
-  before(:each) { Grit::SchemaDefinition }
-
   it "is installed on the adapter task" do
     expect(ActiveRecord::Tasks::PostgreSQLDatabaseTasks.ancestors)
       .to include(Grit::Core::Engine::ExcludeDynamicSchemasFromStructureDump)
   end
 
-  # `Grit::SchemaDefinition` declares `dynamic_schema_prefix "test"`.
+  # The dummy app declares `config.grit.dynamic_schema_prefixes << "test"`.
   it "excludes every declared prefix" do
     expect(dump_flags { nil }).to include("--exclude-schema=test_*")
   end
 
-  # Asserted by inclusion, never by equality: `SCHEMA_PREFIXES` is a process-wide
-  # Set that every includer ever defined has added itself to, this suite's
-  # throwaway classes included.
   it "keeps the flags the caller passed" do
     flags = dump_flags { [ "--no-tablespaces" ] }
 
@@ -91,58 +82,32 @@ RSpec.describe "Grit::Core::Engine structure dump" do
     expect(flags.count("--exclude-schema=test_*")).to eq(1)
   end
 
+  it "keeps a flag the caller repeats" do
+    flags = dump_flags { [ "-T", "a", "-T", "b" ] }
+
+    expect(flags.each_cons(4).to_a).to include([ "-T", "a", "-T", "b" ])
+  end
+
   it "leaves the dump alone when nothing has declared a prefix" do
-    allow(Grit::Core::Model::DynamicSchema::SchemaDefinition).to receive(:schema_prefixes).and_return(Set.new)
+    allow(Grit::Core::Engine.config.grit).to receive(:dynamic_schema_prefixes).and_return([])
 
     expect(dump_flags { nil }).not_to include(a_string_matching(/--exclude-schema/))
   end
 
-  describe "eager loading" do
-    it "is installed on DatabaseTasks" do
-      expect(ActiveRecord::Tasks::DatabaseTasks.singleton_class.ancestors)
-        .to include(Grit::Core::Engine::EagerLoadBeforeSchemaDump)
-    end
+  # Read from config, so the dump needs no model loaded first. It used to
+  # collect them from model class bodies, and so had to eager load the whole
+  # app before every structure dump in development.
+  it "reads the prefixes from config, without eager loading" do
+    allow(Grit::Core::Engine.config.grit).to receive(:dynamic_schema_prefixes).and_return([ "zz" ])
+    expect(Rails.application).not_to receive(:eager_load!)
 
-    # Every dump funnels through `dump_schema`, including `db:prepare`, which
-    # reaches it without going through a rake task at all. Eager loading here
-    # rather than inside `structure_dump` keeps it outside `with_temporary_pool`,
-    # which re-establishes the connection at the database being dumped.
-    #
-    # Stopped at `schema_dump_path`, which is the gate after the two the prepend
-    # itself checks: `dump_schema` returns there, so nothing shells out to pg_dump,
-    # and the eager load has already had its chance.
-    def dump_schema(format, schema_dump: true)
-      db_config = ActiveRecord::Base.connection_db_config
-      allow(db_config).to receive(:schema_dump).and_return(schema_dump)
-      allow(ActiveRecord::Tasks::DatabaseTasks).to receive(:schema_dump_path).and_return(nil)
-      ActiveRecord::Tasks::DatabaseTasks.dump_schema(db_config, format)
-    end
+    expect(dump_flags { nil }).to include("--exclude-schema=zz_*")
+  end
 
-    it "eager loads before the dump, so the prefixes are registered" do
-      expect(Rails.application).to receive(:eager_load!)
+  # A `*` or `?` would widen the pattern past the prefix's own schemas.
+  it "refuses a malformed prefix in config" do
+    allow(Grit::Core::Engine.config.grit).to receive(:dynamic_schema_prefixes).and_return([ "zz*" ])
 
-      dump_schema(:sql)
-    end
-
-    # The prefixes are only ever read by `ExcludeDynamicSchemasFromStructureDump`,
-    # which patches `PostgreSQLDatabaseTasks#structure_dump` — the `:sql` branch.
-    # `SchemaDumper` sees only what is on the search path, and a dynamic schema
-    # never is. A ruby-format filter would need this back.
-    it "does not eager load for a ruby dump" do
-      expect(Rails.application).not_to receive(:eager_load!)
-
-      dump_schema(:ruby)
-    end
-
-    # Guarded rather than paid unconditionally: a replica config with
-    # `schema_dump: false` would otherwise eager load the whole application on
-    # every `db:migrate`, and in development — where `eager_load` is off and so
-    # never exercised — one NameError in app code would raise out of `db:migrate`
-    # after the migrations had already committed.
-    it "does not eager load when the config dumps no schema" do
-      expect(Rails.application).not_to receive(:eager_load!)
-
-      dump_schema(:sql, schema_dump: false)
-    end
+    expect { dump_flags { nil } }.to raise_error(ArgumentError, /lowercase letters/)
   end
 end
