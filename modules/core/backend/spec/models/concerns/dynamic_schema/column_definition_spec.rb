@@ -544,6 +544,79 @@ RSpec.describe "DynamicSchema::ColumnDefinition concern", type: :model do
       expect(definition.table_definition.physical_column_count).to eq(250)
       expect(definition).not_to be_valid
     end
+
+    # The stubs above stand a plain Array in for the association, so they never
+    # reach ActiveRecord's own `size`, which counts the new records sitting in the
+    # association's target on top of the persisted ones. A column built through
+    # the association is one of those, so it used to count itself and the
+    # ceiling fell one short. These go through the real association instead,
+    # with the ceiling lowered so the table can be filled for real: room for two
+    # dynamic columns on top of the five base and one implementation columns.
+    context "through the real association" do
+      before do
+        stub_const("Grit::Core::Model::DynamicSchema::TableDefinition::MAX_COLUMNS", 8)
+      end
+
+      def attributes_for(identifier)
+        { identifier: identifier, name: identifier.humanize, data_type: string_type }
+      end
+
+      # A fresh instance, so that what `table` has cached of the association
+      # does not decide which branch of `size` runs.
+      def fresh_table
+        Grit::TableDefinition.find(table.id)
+      end
+
+      it "admits the last column built through an unloaded association" do
+        table.column_definitions.create!(attributes_for("first"))
+        owner = fresh_table
+
+        definition = owner.column_definitions.build(attributes_for("last"))
+
+        expect(owner.column_definitions).not_to be_loaded
+        expect(definition).to be_valid
+      end
+
+      it "admits the last column built through a loaded association" do
+        table.column_definitions.create!(attributes_for("first"))
+        owner = fresh_table
+        owner.column_definitions.load
+
+        expect(owner.column_definitions.build(attributes_for("last"))).to be_valid
+      end
+
+      it "admits the last column built standalone" do
+        table.column_definitions.create!(attributes_for("first"))
+
+        expect(Grit::ColumnDefinition.new(**attributes_for("last"), table_definition: fresh_table)).to be_valid
+      end
+
+      it "refuses a column past the ceiling however it is built" do
+        table.column_definitions.create!(attributes_for("first"))
+        table.column_definitions.create!(attributes_for("second"))
+
+        expect(fresh_table.column_definitions.build(attributes_for("third"))).not_to be_valid
+        expect(Grit::ColumnDefinition.new(**attributes_for("third"), table_definition: fresh_table)).not_to be_valid
+      end
+
+      # Each new column is validated with its unsaved siblings in the target, so
+      # each has to count the others but not itself.
+      it "admits a batch that fills the table exactly" do
+        owner = fresh_table
+        owner.column_definitions.build(attributes_for("first"))
+        owner.column_definitions.build(attributes_for("second"))
+
+        expect { owner.save! }.to change { Grit::ColumnDefinition.where(table_definition_id: table.id).count }.from(0).to(2)
+      end
+
+      it "refuses a batch that overflows the table" do
+        owner = fresh_table
+        %w[first second third].each { |identifier| owner.column_definitions.build(attributes_for(identifier)) }
+
+        expect(owner).not_to be_valid
+        expect(owner.column_definitions.map { |definition| definition.errors[:base].join }).to all(match(/cannot have more than 8 columns/))
+      end
+    end
   end
 
   describe "association helpers" do

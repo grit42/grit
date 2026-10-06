@@ -90,7 +90,7 @@ module Grit::Core::Model::DynamicSchema::ColumnDefinition
     definition = table_definition
     return if definition.nil?
     limit = Grit::Core::Model::DynamicSchema::TableDefinition::MAX_COLUMNS
-    return if definition.physical_column_count < limit
+    return if definition.physical_column_count(excluding: self) < limit
     errors.add(:base, "A table cannot have more than #{limit} columns")
   end
 

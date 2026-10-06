@@ -335,14 +335,13 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
   # Every column the physical table has, or will have once it is materialised: the
   # base columns, the declared implementation columns and the dynamic ones. What
   # `ColumnDefinition#columns_count_within_limit` measures against `MAX_COLUMNS`.
-  #
-  # `size` rather than `count`: this is reached from an `on: :create` validation,
-  # and `count` queries even when the association is already loaded — 200 extra
-  # round trips to import a 200-column sheet.
-  def physical_column_count
-    Grit::Core::Model::DynamicSchema::ValidIdentifier::DEFAULT_RESERVED_IDENTIFIERS.length +
+  def physical_column_count(excluding: nil)
+    columns = column_definitions
+    count = Grit::Core::Model::DynamicSchema::ValidIdentifier::DEFAULT_RESERVED_IDENTIFIERS.length +
       implementation_column_definitions.length +
-      column_definitions.size
+      columns.size
+    count -= 1 if excluding && columns.include?(excluding)
+    count
   end
 
   # Whether creating the definition should materialise its table straight away.
