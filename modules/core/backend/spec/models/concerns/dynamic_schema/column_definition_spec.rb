@@ -46,14 +46,14 @@ RSpec.describe "DynamicSchema::ColumnDefinition concern", type: :model do
 
   # The includer's association shares the concern's accessor name, `table_definition`,
   # which must not recurse into itself.
-  describe "natural-name association (T1)" do
+  describe "natural-name association" do
     it "reads the association rather than recursing" do
       definition = Grit::ColumnDefinition.create!(identifier: "a_column", name: "A", data_type: string_type, table_definition: table)
       expect(definition.table_definition).to eq(table)
     end
   end
 
-  describe "check_can_modify default guard (T2)" do
+  describe "check_can_modify default guard" do
     it "allows create, update and destroy" do
       definition = Grit::ColumnDefinition.create!(identifier: "a_column", name: "A", data_type: string_type, table_definition: table)
       expect(definition.update(name: "Renamed")).to be(true)
@@ -96,7 +96,7 @@ RSpec.describe "DynamicSchema::ColumnDefinition concern", type: :model do
     end
   end
 
-  describe "the physical column (T7)" do
+  describe "the physical column" do
     it "is added to the table under the definition's id" do
       definition = Grit::ColumnDefinition.create!(identifier: "a_column", name: "A", data_type: string_type, table_definition: table)
 
@@ -116,7 +116,7 @@ RSpec.describe "DynamicSchema::ColumnDefinition concern", type: :model do
     end
   end
 
-  describe "foreign key constraint naming (T8)" do
+  describe "foreign key constraint naming" do
     def foreign_key_names
       connection.foreign_keys(table.physical_table_name).map(&:name)
     end
@@ -146,7 +146,7 @@ RSpec.describe "DynamicSchema::ColumnDefinition concern", type: :model do
     end
   end
 
-  describe "blank identifier (T11)" do
+  describe "blank identifier" do
     it "reports an invalid record rather than raising" do
       definition = Grit::ColumnDefinition.create!(identifier: "a_column", name: "A", data_type: string_type, table_definition: table)
 

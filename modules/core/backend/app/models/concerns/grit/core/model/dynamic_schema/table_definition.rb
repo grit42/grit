@@ -21,9 +21,6 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
   include Grit::Core::Model::DynamicSchema::ValidIdentifier
   include Grit::Core::Model::DynamicSchema::Refusal
 
-  MAX_IDENTIFIER_LENGTH = Grit::Core::Model::DynamicSchema::ValidIdentifier::MAX_IDENTIFIER_LENGTH
-  IDENTIFIER_FORMAT = Grit::Core::Model::DynamicSchema::ValidIdentifier::IDENTIFIER_FORMAT
-
   # Foreign keys point at `id` unless declared otherwise.
   DEFAULT_FOREIGN_KEY_TARGET_COLUMN = "id"
 

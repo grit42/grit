@@ -39,7 +39,7 @@ RSpec.describe "DynamicSchema::ValidIdentifier concern", type: :model do
     end
   end
 
-  describe "shared validations (T14)" do
+  describe "shared validations" do
     %i[schema table column].each do |model|
       context "on #{model} definitions" do
         it "requires an identifier" do
@@ -89,7 +89,7 @@ RSpec.describe "DynamicSchema::ValidIdentifier concern", type: :model do
     end
   end
 
-  describe "reserved identifiers (T14)" do
+  describe "reserved identifiers" do
     it "defaults to the columns every dynamic table has" do
       expect(Grit::ColumnDefinition.reserved_identifiers)
         .to eq(%w[id created_at created_by updated_at updated_by])

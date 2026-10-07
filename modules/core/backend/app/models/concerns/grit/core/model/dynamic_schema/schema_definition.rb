@@ -31,11 +31,10 @@ module Grit::Core::Model::DynamicSchema::SchemaDefinition
   include Grit::Core::Model::DynamicSchema::ValidIdentifier
   include Grit::Core::Model::DynamicSchema::Refusal
 
-  MAX_IDENTIFIER_LENGTH = Grit::Core::Model::DynamicSchema::ValidIdentifier::MAX_IDENTIFIER_LENGTH
-  IDENTIFIER_FORMAT = Grit::Core::Model::DynamicSchema::ValidIdentifier::IDENTIFIER_FORMAT
-
   # `<prefix>_<identifier>` must fit PostgreSQL's 63-byte identifier limit.
-  MAX_SCHEMA_PREFIX_LENGTH = 63 - (1 + MAX_IDENTIFIER_LENGTH)
+  # `ValidIdentifier` is written in full: an included concern's constants are
+  # not reachable from a concern's body.
+  MAX_SCHEMA_PREFIX_LENGTH = 63 - (1 + Grit::Core::Model::DynamicSchema::ValidIdentifier::MAX_IDENTIFIER_LENGTH)
 
   # Schemas PostgreSQL or grit's static tables own; `pg_*` is reserved wholesale.
   RESERVED_SCHEMA_NAMES = %w[public information_schema].freeze
@@ -52,7 +51,7 @@ module Grit::Core::Model::DynamicSchema::SchemaDefinition
   end
 
   def self.check_schema_prefix!(prefix)
-    raise ArgumentError, "Dynamic schema prefix #{prefix.inspect} should start with two lowercase letters or underscores and contain only lowercase letters, numbers and underscores" unless IDENTIFIER_FORMAT.match?(prefix)
+    raise ArgumentError, "Dynamic schema prefix #{prefix.inspect} should start with two lowercase letters or underscores and contain only lowercase letters, numbers and underscores" unless Grit::Core::Model::DynamicSchema::ValidIdentifier::IDENTIFIER_FORMAT.match?(prefix)
     raise ArgumentError, "Dynamic schema prefix #{prefix.inspect} is #{prefix.bytesize} bytes; at most #{MAX_SCHEMA_PREFIX_LENGTH}, so that a #{prefix}_<schema> schema name survives PostgreSQL's 63 byte limit" if prefix.bytesize > MAX_SCHEMA_PREFIX_LENGTH
   end
 

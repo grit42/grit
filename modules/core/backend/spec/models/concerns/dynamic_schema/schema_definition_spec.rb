@@ -66,7 +66,7 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
 
   # The includer's association shares the concern's accessor name, `table_definitions`,
   # which must not recurse into itself.
-  describe "natural-name association (T1)" do
+  describe "natural-name association" do
     it "reads the association rather than recursing" do
       expect(schema.table_definitions.to_a).to eq([])
     end
@@ -102,7 +102,7 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
     end
   end
 
-  describe "check_can_modify default guard (T2)" do
+  describe "check_can_modify default guard" do
     it "allows create, update and destroy" do
       expect(schema.update(name: "Renamed")).to be(true)
       expect { schema.destroy! }.not_to raise_error
@@ -205,7 +205,7 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
     end
   end
 
-  describe "blank identifier (T11)" do
+  describe "blank identifier" do
     it "reports an invalid record rather than raising" do
       expect { schema.update(identifier: nil) }.not_to raise_error
       expect(schema.errors[:identifier]).to include("can't be blank")

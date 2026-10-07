@@ -64,7 +64,7 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
 
   # An includer can name its associations after the concern's own accessors
   # (`column_definitions`, `schema_definition`) without them recursing.
-  describe "natural-name associations (T1)" do
+  describe "natural-name associations" do
     it "reads the associations rather than recursing" do
       table = Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: schema)
       expect(table.schema_definition).to eq(schema)
@@ -81,7 +81,7 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
     end
   end
 
-  describe "check_can_modify default guard (T2)" do
+  describe "check_can_modify default guard" do
     it "allows create, update and destroy" do
       table = Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: schema)
       expect(table.update(name: "Renamed")).to be(true)
@@ -137,7 +137,7 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
   end
 
   # Lets a plain includer that declares no implementation columns still create its table.
-  describe "implementation_column_definitions default (T3)" do
+  describe "implementation_column_definitions default" do
     it "defaults to an empty array" do
       klass = Class.new(ApplicationRecord) do
         def self.name = "Grit::PlainTableDefinition"
@@ -182,7 +182,7 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
     end
   end
 
-  describe "unique table identifiers (T15)" do
+  describe "unique table identifiers" do
     it "rejects a duplicate identifier within one schema" do
       Grit::TableDefinition.create!(identifier: "tbl", name: "One", schema_definition: schema)
 
@@ -319,7 +319,7 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
     end
   end
 
-  describe "record_klass and the schema cache (T7)" do
+  describe "record_klass and the schema cache" do
     def warm_schema_cache(table_name)
       ActiveRecord::Base.connection_pool.schema_cache.columns(table_name).map(&:name)
     end
@@ -419,7 +419,7 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
     end
   end
 
-  describe "constraint naming (T8)" do
+  describe "constraint naming" do
     # `<name>_<id in hex, zero-padded to 63 bytes>_<suffix>`.
     def padded(name, id, suffix)
       hex = id.to_s(16)
@@ -502,7 +502,7 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
     end
   end
 
-  describe "identifier byte budget (T9)" do
+  describe "identifier byte budget" do
     it "invalidates a record whose implementation column identifier is malformed" do
       klass = Class.new(Grit::TableDefinition) do
         def self.name = "BadImplementationColumnTableDefinition"
@@ -805,7 +805,7 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
     end
   end
 
-  describe "implementation columns in detailed and entity_properties (T12)" do
+  describe "implementation columns in detailed and entity_properties" do
     let(:table) { Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: schema) }
 
     it "creates the column and its foreign key" do
@@ -1078,7 +1078,7 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
     end
   end
 
-  describe "deterministic column order (T13)" do
+  describe "deterministic column order" do
     let(:table) { Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: schema) }
 
     # Created back to front so that relying on insertion or heap order (what an unordered
