@@ -108,7 +108,7 @@ class Grit::Core::Model::DynamicSchema::DynamicRecord < ActiveRecord::Base
     column_definitions.each do |column|
       query = query.select("#{quoted_table_name}.#{ActiveRecord::Base.connection.quote_column_name(column.identifier)}")
       next unless column.data_type.is_entity
-      query = select_entity_display_columns(query, column.identifier, column.data_type.table_name, column.data_type.model)
+      query = select_entity_display_columns(query, column.identifier, column.data_type.table_name, column.data_type.model, column.foreign_key_target_column)
     end
     query
   end

@@ -129,7 +129,7 @@ module Grit::Core::Model::DynamicSchema::SchemaDefinition
   # Renames the draft to readable names in one transaction, after validating
   # every definition. Raises one CommitError listing every problem.
   def commit!
-    in_schema_transaction do
+    in_schema_transaction("commit #{committed_schema_name}") do
       raise Grit::Core::Model::DynamicSchema::CommitError, "#{committed_schema_name} is already committed" if committed?
       tables = table_definitions.includes(table_definitions.klass.column_definitions_association => :data_type).to_a
       messages = commit_errors(tables)
@@ -155,7 +155,7 @@ module Grit::Core::Model::DynamicSchema::SchemaDefinition
 
   # The inverse of `commit!`.
   def revert_to_draft!
-    in_schema_transaction do
+    in_schema_transaction("revert #{committed_schema_name} to draft") do
       raise Grit::Core::Model::DynamicSchema::CommitError, "#{draft_schema_name} is not committed" unless committed?
       if ActiveRecord::Base.connection.schema_exists?(draft_schema_name)
         raise Grit::Core::Model::DynamicSchema::CommitError, "Could not revert #{committed_schema_name} to draft: the schema #{draft_schema_name} already exists"
@@ -225,23 +225,30 @@ module Grit::Core::Model::DynamicSchema::SchemaDefinition
 
   # A savepoint, so a failed non-bang call rolls back inside a caller's
   # transaction. Restores `committed_at` in memory on failure, since a rollback
-  # doesn't. `check_can_modify` sees the locked row.
-  def in_schema_transaction
+  # doesn't; an `ActiveRecord::Rollback` raised in the block fails too, as the
+  # savepoint would otherwise swallow it (one raised inside a nested joinable
+  # `transaction` block in a callback never reaches here: that is Rails').
+  # `check_can_modify` sees the locked row.
+  def in_schema_transaction(action)
     if new_record? || has_changes_to_save?
       raise Grit::Core::Model::DynamicSchema::CommitError, "Save #{self.class.model_name.human.downcase} #{identifier} before committing or reverting it"
     end
     committed_at_before = committed_at
-    self.class.transaction(requires_new: true) do
-      lock!
-      committed_at_before = committed_at
-      check_can_modify!
-      yield
+    begin
+      self.class.transaction(requires_new: true) do
+        lock!
+        committed_at_before = committed_at
+        check_can_modify!
+        yield
+      rescue ActiveRecord::Rollback
+        raise Grit::Core::Model::DynamicSchema::CommitError, "Could not #{action}: a callback raised ActiveRecord::Rollback"
+      end
+    rescue StandardError
+      self.committed_at = committed_at_before
+      clear_attribute_changes([ :committed_at ])
+      raise
     end
     self
-  rescue StandardError
-    self.committed_at = committed_at_before
-    clear_attribute_changes([ :committed_at ])
-    raise
   end
 
   # Cleared after, as the non-bang forms copy the messages back onto `errors`.

@@ -621,6 +621,27 @@ RSpec.describe "DynamicSchema::ColumnDefinition concern", type: :model do
 
       expect(column(table_name, "c#{definition.id}")).to be_nil
     end
+
+    # Dropped after the row, as the table's is: an includer's before_destroy,
+    # declared after the macros, still sees the column.
+    it "keeps the column until the row is deleted" do
+      klass = Class.new(Grit::ColumnDefinition) do
+        def self.name = "Grit::LateCheckColumnDefinition"
+
+        before_destroy { seen.push(ActiveRecord::Base.connection.column_exists?(table_definition.physical_table_name, draft_column_name)) }
+
+        def seen
+          @seen ||= []
+        end
+      end
+      definition = klass.create!(identifier: "a_column", name: "A", data_type: string_type, table_definition: table)
+
+      definition.destroy!
+
+      expect(definition.seen).to eq([ true ])
+      expect(column(table.physical_table_name, "c#{definition.id}")).to be_nil
+      expect(Grit::ColumnDefinition.where(id: definition.id)).not_to exist
+    end
   end
 
   describe "column count guard" do

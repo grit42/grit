@@ -668,6 +668,22 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
       expect(committed_klass(typed).entity_properties.find { |p| p[:name] == "blob_col" }[:type]).to eq("text")
     end
 
+    # `type:` names a grit property type; it is not a way past the check above.
+    it "invalidates an implementation column whose declared type names no grit type" do
+      klass = Class.new(Grit::TableDefinition) do
+        def self.name = "BadDeclaredTypeImplementationColumnTableDefinition"
+
+        def implementation_column_definitions
+          [ { identifier: "blob_col", data_type_name: "jsonb", type: "jsonb" } ]
+        end
+      end
+
+      table = klass.new(identifier: "tbl", name: "Table", schema_definition: schema)
+
+      expect(table).not_to be_valid
+      expect(table.errors[:base].join).to match(/type "jsonb", which is not one of/)
+    end
+
     it "accepts every spelling the type map knows" do
       Grit::Core::Model::DynamicSchema::TableDefinition::IMPLEMENTATION_COLUMN_TYPES.each_key do |spelling|
         klass = Class.new(Grit::TableDefinition) do
@@ -1095,6 +1111,18 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
       expect(sql).to include(%(LEFT OUTER JOIN "grit_core_users" "ref_col__" ON "ref_col__"."id" = #{table.quoted_physical_table_name}."ref_col"))
       expect(sql).to include(%(AS "ref_col__name"))
       expect(sql).to include(%(AS "ref_col__login"))
+    end
+
+    # The join follows the column the foreign key was built on, which
+    # `ColumnDefinition#foreign_key_target_column` lets an includer change.
+    it "joins on the column foreign_key_target_column names" do
+      klass = committed_klass(table)
+      allow(klass.column_definitions.find { |column| column.identifier == "ref_col" })
+        .to receive(:foreign_key_target_column).and_return("email")
+
+      sql = klass.detailed.to_sql
+
+      expect(sql).to include(%(LEFT OUTER JOIN "grit_core_users" "ref_col__" ON "ref_col__"."email" = #{table.quoted_physical_table_name}."ref_col"))
     end
 
     it "reads the joined values off a row" do

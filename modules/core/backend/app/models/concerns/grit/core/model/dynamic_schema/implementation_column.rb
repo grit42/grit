@@ -86,13 +86,16 @@ Grit::Core::Model::DynamicSchema::ImplementationColumn = Data.define(
   end
 
   # An unmapped `data_type_name` (`jsonb`, `inet`, ...) needs an explicit
-  # `type:`, or the UI gets a property type it cannot render.
+  # `type:`, or the UI gets a property type it cannot render; `type:` itself
+  # must name one for the same reason.
   def shape_problems
     property_types = Grit::Core::Model::DynamicSchema::TableDefinition::GRIT_PROPERTY_TYPES
     problems = []
     problems.push("is missing a data_type_name") if data_type_name.empty?
     problems.push("is declared as an entity but carries no entity definition") if type == "entity" && entity.nil?
-    unless type || data_type_name.empty? || property_types.include?(property_type)
+    if type
+      problems.push("has type #{type.inspect}, which is not one of #{property_types.join(", ")}") unless property_types.include?(type)
+    elsif !data_type_name.empty? && !property_types.include?(property_type)
       problems.push("has data_type_name #{data_type_name.inspect}, which is not one of #{property_types.join(", ")}; declare the grit property type with type:")
     end
     problems.push("has a foreign key with no table_name") if foreign_key && foreign_key.table_name.empty?

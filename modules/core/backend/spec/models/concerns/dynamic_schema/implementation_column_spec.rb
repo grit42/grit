@@ -85,5 +85,12 @@ RSpec.describe Grit::Core::Model::DynamicSchema::ImplementationColumn do
         /missing a data_type_name/, /carries no entity definition/, /foreign key with no table_name/
       )
     end
+
+    # `type:` is checked too: it names the grit type the UI renders.
+    it "reports a type that is not a grit property type" do
+      expect(described_class.new(identifier: "meta", data_type_name: "jsonb", type: "sting").problems)
+        .to contain_exactly(/type "sting", which is not one of/)
+      expect(described_class.new(identifier: "meta", data_type_name: "jsonb", type: "text").problems).to eq([])
+    end
   end
 end

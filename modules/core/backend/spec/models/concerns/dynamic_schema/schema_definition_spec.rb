@@ -471,6 +471,41 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
         expect(own.reload).not_to be_committed
         expect(connection.schema_exists?("test_#{own.id}")).to be(true)
       end
+
+      # The savepoint would swallow a Rollback and leave `committed_at` set in memory.
+      it "fails the commit when an after_schema_commit callback raises ActiveRecord::Rollback" do
+        rolling_back = Class.new(Grit::SchemaDefinition) do
+          def self.name = "RollingBackSchemaDefinition"
+          after_schema_commit { raise ActiveRecord::Rollback }
+        end
+        own = rolling_back.create!(identifier: "rbk", name: "Rolled back")
+        own_table = create_table(schema_definition: own)
+
+        expect { own.commit! }
+          .to raise_error(Grit::Core::Model::DynamicSchema::CommitError, /Could not commit test_rbk: a callback raised ActiveRecord::Rollback/)
+
+        expect(own).not_to be_committed
+        expect(own.reload).not_to be_committed
+        expect(connection.schema_exists?("test_#{own.id}")).to be(true)
+        expect(connection.schema_exists?("test_rbk")).to be(false)
+        expect { own_table.record_klass }.to raise_error(/is a draft/)
+      end
+
+      it "returns false from commit inside a caller's transaction when a callback rolls back" do
+        rolling_back = Class.new(Grit::SchemaDefinition) do
+          def self.name = "RollingBackSchemaDefinition"
+          after_schema_commit { raise ActiveRecord::Rollback }
+        end
+        own = rolling_back.create!(identifier: "rbk", name: "Rolled back")
+
+        ActiveRecord::Base.transaction do
+          expect(own.commit).to be(false)
+          expect(own.errors[:base].join).to match(/Could not commit test_rbk: a callback raised ActiveRecord::Rollback/)
+          expect(connection.select_value("SELECT 1")).to eq(1)
+        end
+
+        expect(own).not_to be_committed
+      end
     end
   end
 
@@ -548,6 +583,36 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
       own.revert_to_draft!
 
       expect(own.seen).to eq([ [ :before, "test_rvt" ], [ :after, "test_#{own.id}" ] ])
+    end
+
+    it "leaves the schema committed when an after_schema_revert callback raises ActiveRecord::Rollback" do
+      klass = Class.new(Grit::SchemaDefinition) do
+        def self.name = "RollingBackRevertSchemaDefinition"
+        after_schema_revert { raise ActiveRecord::Rollback }
+      end
+      own = klass.create!(identifier: "rbr", name: "Rolled back")
+      create_table(schema_definition: own)
+      own.commit!
+
+      expect { own.revert_to_draft! }
+        .to raise_error(Grit::Core::Model::DynamicSchema::CommitError, /Could not revert test_rbr to draft: a callback raised ActiveRecord::Rollback/)
+
+      expect(own).to be_committed
+      expect(own.reload).to be_committed
+      expect(connection.schema_exists?("test_rbr")).to be(true)
+      expect(connection.table_exists?("test_rbr.measures")).to be(true)
+    end
+
+    # The guard raises before anything is locked, and must not touch `committed_at` in memory.
+    it "refuses a definition with unsaved changes and leaves it committed in memory" do
+      schema.commit!
+      schema.name = "Unsaved"
+
+      expect { schema.revert_to_draft! }.to raise_error(Grit::Core::Model::DynamicSchema::CommitError, /Save/)
+
+      expect(schema).to be_committed
+      expect(schema.name).to eq("Unsaved")
+      expect(connection.schema_exists?("test_grp")).to be(true)
     end
 
     it "returns false from revert_to_draft and reports what stopped it" do

@@ -40,7 +40,7 @@ module Grit::Core::Model::DynamicSchema::ColumnDefinition
     # On the table's cascade its drop takes the column; see `Refusal`.
     before_destroy :refuse_unless_can_modify, unless: :destroyed_by_parent_definition?
     before_destroy :refuse_unless_schema_draft, unless: :destroyed_by_parent_definition?
-    before_destroy :drop_column, unless: :destroyed_by_parent_definition?
+    after_destroy :drop_column, unless: :destroyed_by_parent_definition?
   end
 
   # nil until the includer calls `belongs_to_table_definition`, so validations
