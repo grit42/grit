@@ -310,7 +310,12 @@ module Grit::Core::Model::DynamicSchema::SchemaDefinition
       self.schema_prefix = prefix
     end
 
+    # `dependent: :destroy`, so includers' table callbacks run; the concern's own
+    # guard, draft check and DROP TABLE are skipped, as DROP SCHEMA ... CASCADE
+    # takes the tables. Reset first, as the cascade destroys the target as
+    # loaded, which may predate tables added since.
     def has_many_table_definitions(table_definitions_association)
+      before_destroy { association(table_definitions_association).reset }
       has_many table_definitions_association, dependent: :destroy
       self.table_definitions_association = table_definitions_association
     end

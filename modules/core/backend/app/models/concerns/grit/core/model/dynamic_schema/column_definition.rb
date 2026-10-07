@@ -41,9 +41,10 @@ module Grit::Core::Model::DynamicSchema::ColumnDefinition
 
     after_create :create_column
     after_update :alter_column
-    before_destroy :refuse_unless_can_modify
-    before_destroy :check_schema_draft
-    before_destroy :drop_column
+    # On a cascade the table's drop takes the column; see `Refusal`.
+    before_destroy :refuse_unless_can_modify, unless: :destroyed_by_association
+    before_destroy :check_schema_draft, unless: :destroyed_by_association
+    before_destroy :drop_column, unless: :destroyed_by_association
   end
 
   # Whether saving touches the physical column. `name`, `description` and

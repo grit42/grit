@@ -89,7 +89,8 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
 
     after_create :create_table
 
-    before_destroy :refuse_unless_can_modify
+    # On a cascade the schema's drop takes the table; see `Refusal`.
+    before_destroy :refuse_unless_can_modify, unless: :destroyed_by_association
     before_destroy :check_schema_draft, unless: :destroyed_by_association
     after_destroy :drop_table, unless: :destroyed_by_association
   end
@@ -687,9 +688,14 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
   end
 
   class_methods do
+    # `dependent: :destroy`, so includers' column callbacks run; the concern's
+    # own guard, draft check and DROP COLUMN are skipped, as the table's drop
+    # takes the columns. The cascade destroys the target as loaded, which
+    # `size` loads empty before the first column; reset so it reads the rows.
     def has_many_column_definitions(column_definitions_association)
       self.column_definitions_association = column_definitions_association
-      has_many self.column_definitions_association, dependent: :delete_all
+      before_destroy { association(column_definitions_association).reset }
+      has_many self.column_definitions_association, dependent: :destroy
     end
 
     def belongs_to_schema_definition(schema_definition_association)

@@ -22,8 +22,17 @@
 #   - Save: guards are validations, so `valid?` agrees with `save`, and `save!`
 #     raises RecordInvalid.
 #   - Destroy: Rails has no validation step, so guards are `before_destroy`
-#     callbacks; `destroy!` raises RecordNotDestroyed carrying their messages.
+#     callbacks; `destroy!` raises RecordNotDestroyed carrying their messages
+#     rather than Rails' "Failed to destroy <class> with id=<id>".
 #   - Commit and revert: `SchemaDefinition` raises CommitError.
+#
+# A cascade consults only the guard of the record `destroy` was called on: a
+# schema's tables and a table's columns skip their guards, draft checks and DDL
+# under `destroyed_by_association`, the parent's drop taking them with it, as
+# commit and revert consult the schema's guard alone. Includers' own callbacks
+# on them still run; when one aborts, the parent's `destroy` returns false with
+# the reason on the child's `errors`, and `destroy!` raises the child's
+# RecordNotDestroyed.
 module Grit::Core::Model::DynamicSchema::Refusal
   extend ActiveSupport::Concern
 
@@ -36,10 +45,24 @@ module Grit::Core::Model::DynamicSchema::Refusal
     before_destroy -> { errors.clear }, prepend: true
   end
 
-  # Runs before every save and destroy; a no-op for includers to override (call
-  # `super`). Refuse by adding to `errors`, throwing :abort to skip what follows.
+  # Runs before every save and every destroy but a cascaded one; a no-op for
+  # includers to override (call `super`). Refuse by adding to `errors`, throwing :abort to skip what follows.
   # Structural changes to a committed schema are refused regardless.
   def check_can_modify
+  end
+
+  # In a savepoint, so that a refusal after DDL has run (an includer's callback
+  # declared after the macros, a child aborting the cascade) rolls it back:
+  # Rails' own rollback is a no-op inside a caller's transaction. A cascaded
+  # child is covered by its parent's.
+  def destroy
+    return super if destroyed_by_association
+    destroyed = false
+    self.class.transaction(requires_new: true) do
+      destroyed = super
+      raise ActiveRecord::Rollback unless destroyed
+    end
+    destroyed
   end
 
   def destroy!

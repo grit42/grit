@@ -574,14 +574,66 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
       expect(Grit::TableDefinition.where(id: table.id)).not_to exist
     end
 
+    # Its tables and columns skip the committed-schema check on the way out.
     it "drops a committed schema with its tables" do
       table = create_table
+      column = create_column(table)
       schema.commit!
 
       schema.destroy!
 
       expect(connection.schema_exists?("test_grp")).to be(false)
       expect(Grit::TableDefinition.where(id: table.id)).not_to exist
+      expect(Grit::ColumnDefinition.where(id: column.id)).not_to exist
+    end
+
+    # `dependent: :destroy` destroys the association as loaded, here before the table existed.
+    it "drops tables added after its association was loaded" do
+      expect(schema.table_definitions.size).to eq(0)
+      table = create_table
+
+      schema.destroy!
+
+      expect(Grit::TableDefinition.where(id: table.id)).not_to exist
+    end
+
+    # Only the schema's guard is consulted, as at commit; see `Refusal`.
+    it "drops tables and columns whose own guards would refuse" do
+      table = create_table
+      column = create_column(table)
+      allow_any_instance_of(Grit::TableDefinition).to receive(:check_can_modify) { |definition| definition.errors.add(:base, "table locked") }
+      allow_any_instance_of(Grit::ColumnDefinition).to receive(:check_can_modify) { |definition| definition.errors.add(:base, "column locked") }
+
+      expect(schema.destroy).to be_truthy
+      expect(connection.schema_exists?("test_#{schema.id}")).to be(false)
+      expect(Grit::TableDefinition.where(id: table.id)).not_to exist
+      expect(Grit::ColumnDefinition.where(id: column.id)).not_to exist
+    end
+
+    # Rails' own rollback is a no-op inside a caller's transaction, so `destroy` takes a
+    # savepoint: an abort after DROP SCHEMA must still undo it.
+    it "rolls back the drop when aborted after it, inside a caller's transaction" do
+      klass = Class.new(Grit::SchemaDefinition) do
+        def self.name = "LateAbortSchemaDefinition"
+
+        # Declared after the macros, so it runs after the drop and the cascade.
+        before_destroy do
+          errors.add(:base, "kept")
+          throw :abort
+        end
+      end
+      own = klass.create!(identifier: "lte", name: "Late")
+      table = create_table(schema_definition: own)
+
+      ActiveRecord::Base.transaction do
+        expect(own.destroy).to be(false)
+      end
+
+      expect(own.errors[:base]).to eq([ "kept" ])
+      expect(Grit::SchemaDefinition.where(id: own.id)).to exist
+      expect(Grit::TableDefinition.where(id: table.id)).to exist
+      expect(connection.schema_exists?("test_#{own.id}")).to be(true)
+      expect(connection.table_exists?(table.table_name)).to be(true)
     end
 
     it "runs before_schema_drop with the tables intact" do

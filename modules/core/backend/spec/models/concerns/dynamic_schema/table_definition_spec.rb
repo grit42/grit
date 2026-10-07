@@ -1208,8 +1208,7 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
       expect(connection.table_exists?(table.table_name)).to be(true)
     end
 
-    # Uses `dependent: :delete_all`: `:destroy` would run each column's `drop_column` just
-    # before the DROP TABLE.
+    # Columns cascade with `destroy` but skip `drop_column`: the DROP TABLE takes them.
     it "drops no columns on its way to dropping the table" do
       table = Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: schema)
       Grit::ColumnDefinition.create!(identifier: "one_col", name: "One", data_type: string_type, table_definition: table)
@@ -1229,6 +1228,33 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
       expect(statements.grep(/ALTER TABLE .* DROP COLUMN/i)).to be_empty
       expect(connection.table_exists?(table_name)).to be(false)
       expect(Grit::ColumnDefinition.where(table_definition_id: table.id)).to be_empty
+    end
+
+    # Only the table's guard is consulted on its way out; see `Refusal`.
+    it "drops columns whose own guard would refuse" do
+      table = Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: schema)
+      column = Grit::ColumnDefinition.create!(identifier: "one_col", name: "One", data_type: string_type, table_definition: table)
+      allow_any_instance_of(Grit::ColumnDefinition).to receive(:check_can_modify) { |definition| definition.errors.add(:base, "column locked") }
+
+      expect(table.destroy).to be_truthy
+      expect(Grit::ColumnDefinition.where(id: column.id)).not_to exist
+    end
+
+    # So that includers' column callbacks run.
+    it "destroys its column definitions one by one" do
+      table = Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: schema)
+      ids = %w[one_col two_col].map do |identifier|
+        Grit::ColumnDefinition.create!(identifier: identifier, name: identifier.humanize, data_type: string_type, table_definition: table).id
+      end
+      destroyed = []
+      allow_any_instance_of(Grit::ColumnDefinition).to receive(:destroy!).and_wrap_original do |original, *args|
+        destroyed << original.receiver.id
+        original.call(*args)
+      end
+
+      table.destroy!
+
+      expect(destroyed).to match_array(ids)
     end
 
     it "still drops a column when only its definition is destroyed" do
