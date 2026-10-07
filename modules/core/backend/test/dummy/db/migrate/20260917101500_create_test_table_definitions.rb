@@ -1,8 +1,4 @@
-# Backing tables for the dummy models that exercise the
-# Grit::Core::Model::DynamicSchema concerns (Grit::SchemaDefinition,
-# Grit::TableDefinition, Grit::ColumnDefinition). Mirrors the column layout the
-# concerns expect from an includer: the grit base column quartet plus
-# `identifier` / `name` / `sort`, and foreign keys between the three levels.
+# Tables for the dummy DynamicSchema includers, laid out as the concerns expect.
 class CreateTestTableDefinitions < ActiveRecord::Migration[8.1]
   def change
     create_table :test_schema_definitions, id: false do |t|

@@ -19,10 +19,8 @@
 
 require "rails_helper"
 
-# Tests for the DynamicSchema::ValidIdentifier concern, which owns the rules all
-# three of SchemaDefinition, TableDefinition and ColumnDefinition hold their
-# `identifier` to. Exercised through all three dummy models, since the point of
-# the concern is that there is one copy of the rules rather than three.
+# One copy of the identifier rules for the schema, table and column definition concerns,
+# so exercised through all three dummy models.
 RSpec.describe "DynamicSchema::ValidIdentifier concern", type: :model do
   let(:admin) { create(:grit_core_user, :admin, :with_administrator_role) }
   let(:schema) { Grit::SchemaDefinition.create!(identifier: "grp", name: "Schema") }
@@ -33,8 +31,6 @@ RSpec.describe "DynamicSchema::ValidIdentifier concern", type: :model do
     set_current_user(admin)
   end
 
-  # Each includer, with a block that builds an unsaved record carrying the given
-  # identifier. SchemaDefinition needs nothing else; the other two need a parent.
   def build_with_identifier(model, identifier)
     case model
     when :schema then Grit::SchemaDefinition.new(identifier: identifier, name: "X")
@@ -42,10 +38,6 @@ RSpec.describe "DynamicSchema::ValidIdentifier concern", type: :model do
     when :column then Grit::ColumnDefinition.new(identifier: identifier, name: "X", data_type: string_type, table_definition: table)
     end
   end
-
-  # ==========================================================================
-  # T14 — the shared validations live here, once
-  # ==========================================================================
 
   describe "shared validations (T14)" do
     %i[schema table column].each do |model|
@@ -88,9 +80,6 @@ RSpec.describe "DynamicSchema::ValidIdentifier concern", type: :model do
           expect(record.errors[:identifier]).to include("should contain only lowercase letters, numbers and underscores")
         end
 
-        # There used to be a fifth, looser /\A[a-zA-Z0-9_]*\z/ validation in this
-        # concern on top of the four each includer declared for itself, so a
-        # single bad character produced two messages saying the same thing.
         it "reports one message, not two, for one bad character" do
           record = build_with_identifier(model, "ab-cd")
           expect(record).not_to be_valid
@@ -99,10 +88,6 @@ RSpec.describe "DynamicSchema::ValidIdentifier concern", type: :model do
       end
     end
   end
-
-  # ==========================================================================
-  # T14 — reserved identifiers are a class_attribute an includer extends
-  # ==========================================================================
 
   describe "reserved identifiers (T14)" do
     it "defaults to the columns every dynamic table has" do
@@ -118,14 +103,8 @@ RSpec.describe "DynamicSchema::ValidIdentifier concern", type: :model do
       end
     end
 
-    # The ActiveRecord-method blacklist used to live here and so applied to all
-    # three. A schema and a table become PostgreSQL object names and shadow
-    # nothing, and `ActiveRecord::Base.instance_methods` carries every public
-    # method of Object besides — `display`, `hash`, `inspect`, `freeze`, `then` —
-    # so applied here it rejected perfectly good names for a reason a user could
-    # neither see nor act on. Columns no longer need it either: `record_klass`
-    # defines no method per column, so there is nothing for a name to collide
-    # with.
+    # Method names are allowed: schema and table identifiers only name PostgreSQL objects,
+    # and `record_klass` defines no method per column.
     %w[display hash save].each do |method_name|
       it "lets a schema take #{method_name.inspect}, which names no PostgreSQL object" do
         expect(build_with_identifier(:schema, method_name)).to be_valid
@@ -136,16 +115,12 @@ RSpec.describe "DynamicSchema::ValidIdentifier concern", type: :model do
       end
     end
 
-    # Core used to hardcode "experiment_id", which is an assays concept and has
-    # no business in the core module.
     it "no longer reserves the assays-specific experiment_id" do
       expect(build_with_identifier(:column, "experiment_id")).to be_valid
     end
 
-    # `reserved_identifiers` is static, so it cannot know what the table this
-    # column belongs to adds on top of the base columns. Without a check against
-    # the table's own implementation columns, this passes validation and then
-    # raises PG::DuplicateColumn from inside `after_create :create_column`.
+    # `reserved_identifiers` is static, so the table's own implementation columns are
+    # checked separately.
     it "rejects an identifier the table already uses for an implementation column" do
       record = build_with_identifier(:column, "owner_id")
 
@@ -163,8 +138,7 @@ RSpec.describe "DynamicSchema::ValidIdentifier concern", type: :model do
       expect(reserving).not_to be_valid
       expect(reserving.errors[:identifier]).to include("is a reserved keyword and cannot be used as identifier")
 
-      # The default is frozen and replaced rather than mutated, so neither the
-      # parent nor the other two concerns see the addition.
+      # `+=` replaces the frozen default rather than mutating it, so no other class sees it.
       expect(Grit::ColumnDefinition.reserved_identifiers).not_to include("experiment_id")
       expect(Grit::TableDefinition.reserved_identifiers).not_to include("experiment_id")
       expect(Grit::SchemaDefinition.reserved_identifiers).not_to include("experiment_id")

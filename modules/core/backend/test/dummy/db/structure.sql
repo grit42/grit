@@ -716,7 +716,8 @@ CREATE TABLE public.test_schema_definitions (
     updated_at timestamp(6) without time zone,
     identifier character varying NOT NULL,
     name character varying,
-    sort integer
+    sort integer,
+    committed_at timestamp(6) without time zone
 );
 
 
@@ -1634,6 +1635,7 @@ ALTER TABLE ONLY public.test_table_definitions
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261007090000'),
 ('20260925120000'),
 ('20260918110216'),
 ('20260917101500'),

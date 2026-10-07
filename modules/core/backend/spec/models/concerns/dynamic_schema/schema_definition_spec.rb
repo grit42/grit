@@ -17,12 +17,16 @@
 # @grit42/core. If not, see <https://www.gnu.org/licenses/>.
 
 
+
 require "rails_helper"
 
-# Tests for the DynamicSchema::SchemaDefinition concern, exercised through the
-# Grit::SchemaDefinition dummy model.
+# Exercised through the Grit::SchemaDefinition dummy model. Real DDL runs; PostgreSQL's
+# transactional DDL lets `use_transactional_fixtures` roll it back per example.
 RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
   let(:admin) { create(:grit_core_user, :admin, :with_administrator_role) }
+  let(:string_type) { create(:grit_core_data_type, :string) }
+  let(:entity_type) { create(:grit_core_data_type, :entity) }
+  let(:schema) { Grit::SchemaDefinition.create!(identifier: "grp", name: "Schema") }
 
   before(:each) do
     set_current_user(admin)
@@ -32,32 +36,49 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
     ActiveRecord::Base.connection
   end
 
+  def column_names(table_name)
+    connection.columns(table_name).map(&:name)
+  end
+
+  def primary_key_index_name(table_name)
+    connection.select_value(<<~SQL.squish)
+      SELECT index_class.relname
+      FROM pg_index
+      JOIN pg_class index_class ON index_class.oid = pg_index.indexrelid
+      WHERE pg_index.indrelid = #{connection.quote(connection.quote_table_name(table_name))}::regclass
+        AND pg_index.indisprimary
+    SQL
+  end
+
   # For an example whose class declares a prefix the dummy app does not.
   def declare_schema_prefix(prefix)
     declared = Grit::Core::Engine.config.grit.dynamic_schema_prefixes
     allow(Grit::Core::Engine.config.grit).to receive(:dynamic_schema_prefixes).and_return(declared + [ prefix ])
   end
 
-  # T1 — instance methods live in the module body, so an includer can name its
-  # association `table_definitions` (the concern's own accessor name) without
-  # the accessor recursing into itself.
+  def create_table(identifier = "measures", schema_definition: schema)
+    Grit::TableDefinition.create!(identifier: identifier, name: identifier.humanize, schema_definition: schema_definition)
+  end
+
+  def create_column(table, identifier = "label", data_type: string_type)
+    Grit::ColumnDefinition.create!(identifier: identifier, name: identifier.humanize, data_type: data_type, table_definition: table)
+  end
+
+  # The includer's association shares the concern's accessor name, `table_definitions`,
+  # which must not recurse into itself.
   describe "natural-name association (T1)" do
     it "reads the association rather than recursing" do
-      schema = Grit::SchemaDefinition.create!(identifier: "grp", name: "Schema")
       expect(schema.table_definitions.to_a).to eq([])
     end
 
     it "sees table definitions added to the association" do
-      schema = Grit::SchemaDefinition.create!(identifier: "grp", name: "Schema")
-      table = Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: schema)
+      table = create_table
       expect(schema.table_definitions.reload.to_a).to eq([ table ])
     end
   end
 
-  # T2 — check_can_modify is a no-op by default, and overridable via `super`.
   describe "check_can_modify default guard (T2)" do
     it "allows create, update and destroy" do
-      schema = Grit::SchemaDefinition.create!(identifier: "grp", name: "Schema")
       expect(schema.update(name: "Renamed")).to be(true)
       expect { schema.destroy! }.not_to raise_error
     end
@@ -76,457 +97,485 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
     end
   end
 
-  # ==========================================================================
-  # T10 — callback lists and destroy wiring
-  # ==========================================================================
-
-  describe "table callbacks (T10)" do
-    def callback_klass(name, &body)
-      Class.new(Grit::SchemaDefinition) do
-        define_singleton_method(:name) { name }
-        class_eval(&body)
-      end
-    end
-
-    it "does not share callback lists between includers" do
-      first = callback_klass("Grit::FirstSchemaDefinition") do
-        before_drop_tables :note_first
-        after_create_tables :note_first_created
-
-        def note_first; end
-        def note_first_created; end
-      end
-
-      second = callback_klass("Grit::SecondSchemaDefinition") do
-        before_drop_tables :note_second
-
-        def note_second; end
-      end
-
-      expect(first.before_drop_tables_callbacks).to eq([ :note_first ])
-      expect(second.before_drop_tables_callbacks).to eq([ :note_second ])
-      expect(Grit::SchemaDefinition.before_drop_tables_callbacks).to eq([])
-      expect(Grit::SchemaDefinition.after_create_tables_callbacks).to eq([])
-    end
-
-    it "appends rather than replacing" do
-      klass = callback_klass("Grit::AppendingSchemaDefinition") do
-        before_drop_tables :first_hook
-        before_drop_tables :second_hook
-
-        def first_hook; end
-        def second_hook; end
-      end
-
-      expect(klass.before_drop_tables_callbacks).to eq([ :first_hook, :second_hook ])
-    end
-
-    it "runs after_create_tables callbacks from create_tables" do
-      klass = callback_klass("Grit::AfterCreateSchemaDefinition") do
-        after_create_tables :record_created
-
-        def record_created
-          (@calls ||= []) << :created
-        end
-
-        attr_reader :calls
-      end
-
-      schema = klass.create!(identifier: "grp", name: "Schema")
-      Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: schema)
-      schema.create_tables
-
-      expect(schema.calls).to eq([ :created ])
-    end
-
-    it "runs before_drop_tables callbacks on destroy, while the tables still exist" do
-      klass = callback_klass("Grit::BeforeDropSchemaDefinition") do
-        before_drop_tables :record_tables
-
-        def record_tables
-          @seen = table_definitions.map(&:table_name)
-        end
-
-        attr_reader :seen
-      end
-
-      schema = klass.create!(identifier: "grp", name: "Schema")
-      Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: schema)
-      expect(ActiveRecord::Base.connection.table_exists?("test_grp.tbl")).to be(true)
-
-      schema.destroy!
-
-      expect(schema.seen).to eq([ "test_grp.tbl" ])
-      expect(ActiveRecord::Base.connection.table_exists?("test_grp.tbl")).to be(false)
-    end
-
-    it "drops the tables on destroy even with no callbacks registered" do
-      schema = Grit::SchemaDefinition.create!(identifier: "grp", name: "Schema")
-      Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: schema)
-
-      schema.destroy!
-
-      expect(ActiveRecord::Base.connection.table_exists?("test_grp.tbl")).to be(false)
-    end
-  end
-
-  # ==========================================================================
-  # T11 — blank identifier on update
-  # ==========================================================================
-
   describe "blank identifier (T11)" do
     it "reports an invalid record rather than raising" do
-      schema = Grit::SchemaDefinition.create!(identifier: "grp", name: "Schema")
-
       expect { schema.update(identifier: nil) }.not_to raise_error
       expect(schema.errors[:identifier]).to include("can't be blank")
     end
   end
 
-  # ==========================================================================
-  # create_tables / drop_tables as a schema-level operation
-  #
-  # T5 made deferring creation supported, which is what `create_tables` is for:
-  # build the whole schema's definitions first, materialise them in one go once
-  # the schema is settled. Note that `create_tables` calls `create_table`
-  # unconditionally — `create_table_on_create?` guards the `after_create` hook
-  # only, and does not veto an explicit request.
-  # ==========================================================================
-
-  describe "create_tables and drop_tables" do
-    let(:deferred_klass) do
-      Class.new(Grit::TableDefinition) do
-        def self.name = "Grit::DeferredSchemaTableDefinition"
-
-        def create_table_on_create?
-          false
-        end
-      end
+  describe "a draft" do
+    it "lives in a schema named after its id" do
+      expect(schema).not_to be_committed
+      expect(schema.schema_name).to eq("test_#{schema.id}")
+      expect(schema.draft_schema_name).to eq("test_#{schema.id}")
+      expect(schema.committed_schema_name).to eq("test_grp")
+      expect(schema.schema_exists?).to be(true)
+      expect(connection.schema_exists?("test_grp")).to be(false)
     end
 
-    it "materialises a schema of deferred definitions in one go" do
-      schema = Grit::SchemaDefinition.create!(identifier: "grp", name: "Schema")
-      deferred_klass.create!(identifier: "one", name: "One", schema_definition: schema)
-      deferred_klass.create!(identifier: "two", name: "Two", schema_definition: schema)
-      expect(ActiveRecord::Base.connection.table_exists?("test_grp.one")).to be(false)
+    it "touches nothing in the database when its identifier changes" do
+      table = create_table
 
-      schema.create_tables
+      schema.update!(identifier: "new_grp")
 
-      expect(ActiveRecord::Base.connection.table_exists?("test_grp.one")).to be(true)
-      expect(ActiveRecord::Base.connection.table_exists?("test_grp.two")).to be(true)
+      expect(schema.schema_name).to eq("test_#{schema.id}")
+      expect(connection.table_exists?(table.table_name)).to be(true)
+      expect(connection.schema_exists?("test_new_grp")).to be(false)
     end
 
-    it "creates a deferred table even though create_table_on_create? is false" do
-      schema = Grit::SchemaDefinition.create!(identifier: "grp", name: "Schema")
-      table = deferred_klass.create!(identifier: "one", name: "One", schema_definition: schema)
-
-      schema.create_tables
-
-      expect(ActiveRecord::Base.connection.table_exists?(table.table_name)).to be(true)
-    end
-
-    it "drops the tables without destroying their definitions" do
-      schema = Grit::SchemaDefinition.create!(identifier: "grp", name: "Schema")
-      table = Grit::TableDefinition.create!(identifier: "one", name: "One", schema_definition: schema)
-
-      schema.drop_tables
-
-      expect(ActiveRecord::Base.connection.table_exists?("test_grp.one")).to be(false)
-      expect(table.reload).to be_persisted
-    end
-
-    it "is safe to run either way round more than once" do
-      schema = Grit::SchemaDefinition.create!(identifier: "grp", name: "Schema")
-      Grit::TableDefinition.create!(identifier: "one", name: "One", schema_definition: schema)
-
-      expect {
-        schema.create_tables
-        schema.drop_tables
-        schema.drop_tables
-        schema.create_tables
-      }.not_to raise_error
-
-      expect(ActiveRecord::Base.connection.table_exists?("test_grp.one")).to be(true)
-    end
-
-    # One transaction for the whole schema. Each `TableDefinition#create_table`
-    # opens its own, which joins this one rather than committing on its own, so a
-    # publish that dies half way leaves nothing behind — not six tables committed,
-    # four missing and `after_create_tables_callbacks` unrun while the definition
-    # still says it published.
-    # `table_definitions` re-instantiates its rows as Grit::TableDefinition, so a
-    # subclass override of `create_table` never runs from here. The failure has to
-    # be installed on the class the association builds.
-    def fail_create_table_for(identifier)
-      allow_any_instance_of(Grit::TableDefinition).to receive(:create_table).and_wrap_original do |original, *args|
-        raise "boom" if original.receiver.identifier == identifier
-        original.call(*args)
-      end
-    end
-
-    it "materialises all of the tables or none of them" do
-      schema = Grit::SchemaDefinition.create!(identifier: "grp", name: "Schema")
-      deferred_klass.create!(identifier: "one", name: "One", schema_definition: schema)
-      deferred_klass.create!(identifier: "two", name: "Two", schema_definition: schema)
-      fail_create_table_for("two")
-
-      expect { schema.create_tables }.to raise_error("boom")
-
-      expect(connection.table_exists?("test_grp.one")).to be(false)
-      expect(connection.table_exists?("test_grp.two")).to be(false)
-    end
-
-    it "does not run the after_create_tables callbacks when a table fails" do
-      klass = Class.new(Grit::SchemaDefinition) do
-        def self.name = "PartialCreateSchemaDefinition"
-        after_create_tables :record_created
-
-        def created_ran
-          @created_ran ||= []
-        end
-
-        def record_created
-          created_ran.push(:created)
-        end
-      end
-
-      schema = klass.create!(identifier: "grp", name: "Schema")
-      deferred_klass.create!(identifier: "one", name: "One", schema_definition: schema)
-      fail_create_table_for("one")
-
-      expect { schema.create_tables }.to raise_error("boom")
-      expect(schema.created_ran).to eq([])
-    end
-
-    # Fails the second drop rather than a named table: the association has no
-    # order, and failing the one dropped first would leave nothing to roll back.
-    it "drops all of the tables or none of them" do
-      schema = Grit::SchemaDefinition.create!(identifier: "grp", name: "Schema")
-      Grit::TableDefinition.create!(identifier: "one", name: "One", schema_definition: schema)
-      Grit::TableDefinition.create!(identifier: "two", name: "Two", schema_definition: schema)
-      drops = 0
-      allow_any_instance_of(Grit::TableDefinition).to receive(:drop_table).and_wrap_original do |original, *args|
-        drops += 1
-        raise "boom" if drops == 2
-        original.call(*args)
-      end
-
-      expect { schema.drop_tables }.to raise_error("boom")
-
-      expect(connection.table_exists?("test_grp.one")).to be(true)
-      expect(connection.table_exists?("test_grp.two")).to be(true)
+    # The name derives from the id, so an existing schema under it belongs to something else.
+    it "does not adopt a schema that is already there" do
+      expect { schema.create_schema }.to raise_error(ActiveRecord::StatementInvalid, /already exists/)
     end
   end
 
-  # ==========================================================================
-  # Destroying a schema definition
-  #
-  # `DROP SCHEMA ... CASCADE` — which is what `drop_schema` emits, `if_exists`
-  # toggling only the IF EXISTS — removes every table in the schema by itself. The
-  # `dependent: :destroy` on the table definitions issues a DROP TABLE apiece on
-  # top of that, which is worth keeping for the `check_can_modify` guard it runs.
-  # A third pass, from `drop_tables` registered as a `before_destroy`, is not.
-  # ==========================================================================
+  describe "commit!" do
+    let!(:table) { create_table }
+    let!(:label) { create_column(table) }
+    let!(:reference) { create_column(table, "ref_col", data_type: entity_type) }
 
-  describe "destroy" do
-    it "drops each table once, not once per callback path" do
-      schema = Grit::SchemaDefinition.create!(identifier: "grp", name: "Schema")
-      Grit::TableDefinition.create!(identifier: "one", name: "One", schema_definition: schema)
-      Grit::TableDefinition.create!(identifier: "two", name: "Two", schema_definition: schema)
+    it "moves the schema, its tables and their dynamic columns to their identifiers" do
+      draft_table_name = table.table_name
 
-      dropped = []
-      allow(connection).to receive(:drop_table).and_wrap_original do |original, table_name, **options|
-        dropped.push(table_name)
-        original.call(table_name, **options)
+      schema.commit!
+
+      expect(schema).to be_committed
+      expect(schema.schema_name).to eq("test_grp")
+      expect(table.table_name).to eq("test_grp.measures")
+      expect(connection.schema_exists?("test_#{schema.id}")).to be(false)
+      expect(connection.table_exists?(draft_table_name)).to be(false)
+      expect(column_names("test_grp.measures"))
+        .to eq(%w[id created_by created_at updated_by updated_at owner_id label ref_col])
+    end
+
+    it "keeps the data" do
+      insert_draft_row(table, label: "first", ref_col: admin.id)
+
+      schema.commit!
+
+      row = table.record_klass.first
+      expect(row["label"]).to eq("first")
+      expect(row["ref_col"]).to eq(admin.id)
+    end
+
+    it "takes whatever identifiers the draft settled on" do
+      table.update!(identifier: "readings")
+      label.update!(identifier: "title")
+      schema.update!(identifier: "lab")
+
+      schema.commit!
+
+      expect(column_names("test_lab.readings")).to include("title")
+    end
+
+    # Draft names are unique per definition and never valid identifiers, so identifiers can
+    # trade places with nothing physical in the way.
+    it "commits identifiers that traded places in the draft" do
+      other = create_table("other")
+      insert_draft_row(table, label: "mine")
+      table.update!(identifier: "spare")
+      other.update!(identifier: "measures")
+      table.update!(identifier: "other")
+
+      schema.commit!
+
+      expect(Grit::TableDefinition.find(table.id).record_klass.first["label"]).to eq("mine")
+      expect(connection.table_exists?("test_grp.measures")).to be(true)
+      expect(connection.table_exists?("test_grp.other")).to be(true)
+    end
+
+    it "renames no constraint or index" do
+      foreign_keys = connection.foreign_keys(table.table_name).map(&:name).sort
+
+      schema.commit!
+
+      expect(connection.foreign_keys("test_grp.measures").map(&:name).sort).to eq(foreign_keys)
+      expect(foreign_keys).to eq([ "c#{reference.id}_id", "owner_id_id" ])
+      expect(primary_key_index_name("test_grp.measures")).to eq("t#{table.id}_pkey")
+    end
+
+    # Tables and indexes share a namespace per schema, so a readable `<table>_pkey` index
+    # name would block a table of that name.
+    it "commits a table named like another table's primary key index" do
+      create_table("measures_pkey")
+
+      expect { schema.commit! }.not_to raise_error
+      expect(connection.table_exists?("test_grp.measures_pkey")).to be(true)
+    end
+
+    it "refuses a schema that is already committed" do
+      schema.commit!
+
+      expect { schema.commit! }
+        .to raise_error(Grit::Core::Model::DynamicSchema::CommitError, /test_grp is already committed/)
+    end
+
+    # Unlike the id-based names, anything (a migration, another includer) may have created it.
+    it "refuses when the readable schema name is taken" do
+      connection.create_schema("test_grp")
+
+      expect { schema.commit! }
+        .to raise_error(Grit::Core::Model::DynamicSchema::CommitError, /the schema test_grp already exists/)
+      expect(schema.reload).not_to be_committed
+      expect(connection.table_exists?(table.table_name)).to be(true)
+    end
+
+    # Per-record validations only check an identifier when it changes, but code
+    # can change the rules under a saved one.
+    it "validates every identifier again, changed or not" do
+      allow_any_instance_of(Grit::ColumnDefinition).to receive(:reserved_identifiers)
+        .and_return(Grit::Core::Model::DynamicSchema::ValidIdentifier::DEFAULT_RESERVED_IDENTIFIERS + [ "label" ])
+
+      expect { schema.commit! }
+        .to raise_error(Grit::Core::Model::DynamicSchema::CommitError, /Column measures\.label: Identifier is a reserved keyword/)
+    end
+
+    it "reports every problem at once" do
+      connection.create_schema("test_grp")
+      allow_any_instance_of(Grit::ColumnDefinition).to receive(:reserved_identifiers)
+        .and_return(Grit::Core::Model::DynamicSchema::ValidIdentifier::DEFAULT_RESERVED_IDENTIFIERS + [ "label" ])
+
+      expect { schema.commit! }.to raise_error(Grit::Core::Model::DynamicSchema::CommitError) { |error|
+        expect(error.messages).to include(/the schema test_grp already exists/, /Column measures\.label/)
+      }
+    end
+
+    it "refuses a definition with unsaved changes" do
+      schema.name = "Unsaved"
+
+      expect { schema.commit! }.to raise_error(Grit::Core::Model::DynamicSchema::CommitError, /Save/)
+    end
+
+    # Fails after the schema has moved, so that there is something to undo.
+    def fail_table_renames
+      allow_any_instance_of(Grit::TableDefinition).to receive(:rename_physical_objects!)
+        .and_raise(ActiveRecord::StatementInvalid, "PG::InternalError: ERROR:  boom")
+    end
+
+    it "rolls everything back when a rename fails" do
+      fail_table_renames
+
+      expect { schema.commit! }
+        .to raise_error(Grit::Core::Model::DynamicSchema::CommitError, /Could not commit test_grp: PG::InternalError: ERROR:  boom/)
+      expect(schema.reload).not_to be_committed
+      expect(connection.schema_exists?("test_#{schema.id}")).to be(true)
+      expect(connection.schema_exists?("test_grp")).to be(false)
+      expect(connection.table_exists?(table.table_name)).to be(true)
+    end
+
+    # `committed_at` is set in memory before the after callbacks and a rollback doesn't reset
+    # it; left set, `record_klass` would point at tables that were never renamed.
+    it "leaves the definition in memory a draft when the commit fails" do
+      klass = Class.new(Grit::SchemaDefinition) do
+        def self.name = "FailingAfterCommitSchemaDefinition"
+        after_schema_commit { raise "boom" }
       end
+      own = klass.create!(identifier: "fail", name: "Failing")
+      own_table = create_table(schema_definition: own)
+
+      expect { own.commit! }.to raise_error("boom")
+
+      expect(own).not_to be_committed
+      expect(own.reload).not_to be_committed
+      expect { own_table.record_klass }.to raise_error(/is a draft/)
+    end
+
+    # Runs in its own savepoint, so the non-bang form, which swallows the error, leaves no
+    # half commit in the caller's transaction.
+    it "rolls back on its own inside a caller's transaction" do
+      fail_table_renames
+
+      ActiveRecord::Base.transaction do
+        expect(schema.commit).to be(false)
+        expect(connection.schema_exists?("test_#{schema.id}")).to be(true)
+        expect(connection.schema_exists?("test_grp")).to be(false)
+        expect(connection.select_value("SELECT 1")).to eq(1)
+      end
+    end
+
+    describe "commit" do
+      it "returns true on success" do
+        expect(schema.commit).to be(true)
+        expect(schema).to be_committed
+      end
+
+      it "returns false and reports what stopped it" do
+        connection.create_schema("test_grp")
+
+        expect(schema.commit).to be(false)
+        expect(schema.errors[:base].join).to match(/the schema test_grp already exists/)
+      end
+    end
+
+    describe "callbacks" do
+      let(:klass) do
+        Class.new(Grit::SchemaDefinition) do
+          def self.name = "CallbackSchemaDefinition"
+
+          before_schema_commit :note_before
+          after_schema_commit :note_after
+
+          def seen
+            @seen ||= []
+          end
+
+          def note_before
+            seen.push([ :before, schema_name ])
+          end
+
+          def note_after
+            seen.push([ :after, schema_name ])
+          end
+        end
+      end
+
+      it "runs around the renames" do
+        own = klass.create!(identifier: "cbk", name: "Callbacks")
+
+        own.commit!
+
+        expect(own.seen).to eq([ [ :before, "test_#{own.id}" ], [ :after, "test_cbk" ] ])
+      end
+
+      it "does not share them with other includers" do
+        klass
+        expect(Grit::SchemaDefinition._schema_commit_callbacks.map(&:filter)).to be_empty
+      end
+
+      it "aborts the commit when a before_schema_commit callback throws :abort" do
+        aborting = Class.new(Grit::SchemaDefinition) do
+          def self.name = "AbortingSchemaDefinition"
+          before_schema_commit { throw :abort }
+        end
+        own = aborting.create!(identifier: "abt", name: "Aborted")
+
+        expect { own.commit! }.to raise_error(Grit::Core::Model::DynamicSchema::CommitError, /aborted/)
+        expect(own.reload).not_to be_committed
+        expect(connection.schema_exists?("test_#{own.id}")).to be(true)
+      end
+    end
+  end
+
+  describe "revert_to_draft!" do
+    let!(:table) { create_table }
+    let!(:label) { create_column(table) }
+
+    it "moves everything back to its id-based name and keeps the data" do
+      row_id = insert_draft_row(table, label: "first")
+      schema.commit!
+
+      schema.revert_to_draft!
+
+      expect(schema).not_to be_committed
+      expect(schema.schema_name).to eq("test_#{schema.id}")
+      expect(table.table_name).to eq("test_#{schema.id}.t#{table.id}")
+      expect(column_names(table.table_name)).to include("c#{label.id}")
+      expect(connection.schema_exists?("test_grp")).to be(false)
+      expect(draft_value(table, row_id, :label)).to eq("first")
+      expect { table.record_klass }.to raise_error(/is a draft/)
+    end
+
+    it "leaves the definition in memory committed when the revert fails" do
+      schema.commit!
+      allow_any_instance_of(Grit::TableDefinition).to receive(:rename_physical_objects!)
+        .and_raise(ActiveRecord::StatementInvalid, "PG::InternalError: ERROR:  boom")
+
+      expect { schema.revert_to_draft! }.to raise_error(Grit::Core::Model::DynamicSchema::CommitError, /boom/)
+
+      expect(schema).to be_committed
+      expect(connection.table_exists?("test_grp.measures")).to be(true)
+    end
+
+    it "lets the structure change and be committed again" do
+      insert_draft_row(table, label: "first")
+      schema.commit!
+      schema.revert_to_draft!
+
+      label.reload.update!(identifier: "title")
+      create_column(table, "notes")
+      schema.commit!
+
+      expect(column_names("test_grp.measures")).to include("title", "notes")
+      expect(table.record_klass.first["title"]).to eq("first")
+    end
+
+    it "refuses a draft" do
+      expect { schema.revert_to_draft! }
+        .to raise_error(Grit::Core::Model::DynamicSchema::CommitError, /is not committed/)
+    end
+
+    it "refuses when the draft schema name is taken" do
+      schema.commit!
+      connection.create_schema("test_#{schema.id}")
+
+      expect { schema.revert_to_draft! }
+        .to raise_error(Grit::Core::Model::DynamicSchema::CommitError, /the schema test_#{schema.id} already exists/)
+      expect(schema.reload).to be_committed
+    end
+
+    it "runs before_schema_revert and after_schema_revert around the renames" do
+      klass = Class.new(Grit::SchemaDefinition) do
+        def self.name = "RevertCallbackSchemaDefinition"
+
+        before_schema_revert { seen.push([ :before, schema_name ]) }
+        after_schema_revert { seen.push([ :after, schema_name ]) }
+
+        def seen
+          @seen ||= []
+        end
+      end
+      own = klass.create!(identifier: "rvt", name: "Revert")
+      own.commit!
+
+      own.revert_to_draft!
+
+      expect(own.seen).to eq([ [ :before, "test_rvt" ], [ :after, "test_#{own.id}" ] ])
+    end
+
+    it "returns false from revert_to_draft and reports what stopped it" do
+      expect(schema.revert_to_draft).to be(false)
+      expect(schema.errors[:base].join).to match(/is not committed/)
+    end
+  end
+
+  # A committed schema is named after its identifier.
+  describe "the identifier of a committed schema" do
+    before(:each) { schema.commit! }
+
+    it "cannot change" do
+      expect(schema.update(identifier: "other")).to be(false)
+      expect(schema.errors[:identifier].join).to match(/cannot be changed while test_grp is committed/)
+      expect(connection.schema_exists?("test_grp")).to be(true)
+    end
+
+    # Simulates a request racing the commit, which loaded the definition while still a draft.
+    it "is checked against the locked row rather than memory" do
+      stale = Grit::SchemaDefinition.find(schema.id)
+      stale.committed_at = nil
+      stale.clear_attribute_changes([ :committed_at ])
+
+      expect(stale.update(identifier: "other")).to be(false)
+      expect(schema.reload.identifier).to eq("grp")
+    end
+
+    it "leaves the name free to change" do
+      expect(schema.update(name: "Renamed")).to be(true)
+    end
+  end
+
+  # Destroying a definition drops its schema with CASCADE, draft or committed.
+  describe "destroy" do
+    it "drops a draft schema with its tables" do
+      table = create_table
 
       schema.destroy!
 
-      expect(dropped).to contain_exactly("test_grp.one", "test_grp.two")
+      expect(connection.schema_exists?("test_#{schema.id}")).to be(false)
+      expect(Grit::TableDefinition.where(id: table.id)).not_to exist
     end
 
-    # The callbacks are why `drop_tables` was on the destroy path at all; they
-    # still have to run, and still while the tables are there to be read.
-    it "still runs the before_drop_tables callbacks, with the tables intact" do
+    it "drops a committed schema with its tables" do
+      table = create_table
+      schema.commit!
+
+      schema.destroy!
+
+      expect(connection.schema_exists?("test_grp")).to be(false)
+      expect(Grit::TableDefinition.where(id: table.id)).not_to exist
+    end
+
+    it "runs before_schema_drop with the tables intact" do
       klass = Class.new(Grit::SchemaDefinition) do
-        def self.name = "DestroyCallbackSchemaDefinition"
-        before_drop_tables :note_tables
+        def self.name = "DropCallbackSchemaDefinition"
+
+        before_schema_drop :note_tables
 
         def seen
           @seen ||= []
         end
 
         def note_tables
-          seen.push(ActiveRecord::Base.connection.table_exists?("test_grp.one"))
+          seen.concat(table_definitions.map { |table| ActiveRecord::Base.connection.table_exists?(table.table_name) })
         end
       end
+      own = klass.create!(identifier: "drp", name: "Drop")
+      create_table(schema_definition: own)
 
-      schema = klass.create!(identifier: "grp", name: "Schema")
-      Grit::TableDefinition.create!(identifier: "one", name: "One", schema_definition: schema)
+      own.destroy!
 
-      schema.destroy!
-
-      expect(schema.seen).to eq([ true ])
-      expect(connection.schema_exists?("test_grp")).to be(false)
+      expect(own.seen).to eq([ true ])
+      expect(connection.schema_exists?("test_#{own.id}")).to be(false)
     end
 
-    # `drop_tables` stays a public, callable thing — it is half of the
-    # create_tables/drop_tables pair — it simply is not what destroy runs.
-    it "leaves drop_tables usable on its own" do
-      schema = Grit::SchemaDefinition.create!(identifier: "grp", name: "Schema")
-      Grit::TableDefinition.create!(identifier: "one", name: "One", schema_definition: schema)
+    it "is aborted by a before_schema_drop callback that throws :abort" do
+      klass = Class.new(Grit::SchemaDefinition) do
+        def self.name = "KeptSchemaDefinition"
+        before_schema_drop { throw :abort }
+      end
+      own = klass.create!(identifier: "kpt", name: "Kept")
 
-      schema.drop_tables
-
-      expect(connection.table_exists?("test_grp.one")).to be(false)
-      expect(connection.schema_exists?("test_grp")).to be(true)
+      expect(own.destroy).to be(false)
+      expect(connection.schema_exists?("test_#{own.id}")).to be(true)
+      expect(Grit::SchemaDefinition.where(id: own.id)).to exist
     end
 
-    # The drop names what the saved row resolves to. After a refused rename the
-    # identifier in memory is the other definition's, and the drop cascades.
-    it "drops its own schema, not the one a refused rename names" do
-      schema = Grit::SchemaDefinition.create!(identifier: "grp", name: "Schema")
+    # A refused rename leaves the other definition's identifier in memory, and DROP SCHEMA
+    # cascades, so the drop must use the locked row's.
+    it "drops its own committed schema, not the one a refused rename names" do
       other = Grit::SchemaDefinition.create!(identifier: "other", name: "Other")
-      Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: other)
+      create_table(schema_definition: other)
+      other.commit!
+      schema.commit!
 
       expect(schema.update(identifier: "other")).to be(false)
       schema.destroy!
 
       expect(connection.schema_exists?("test_grp")).to be(false)
-      expect(connection.table_exists?("test_other.tbl")).to be(true)
+      expect(connection.table_exists?("test_other.measures")).to be(true)
     end
 
     # Destroy callbacks run on a record that was never saved.
     it "drops nothing when destroyed before it was saved" do
-      Grit::SchemaDefinition.create!(identifier: "other", name: "Other")
+      schema
 
-      Grit::SchemaDefinition.new(identifier: "other", name: "Clash").destroy
+      Grit::SchemaDefinition.new(identifier: "grp", name: "Clash").destroy
 
-      expect(connection.schema_exists?("test_other")).to be(true)
+      expect(connection.schema_exists?("test_#{schema.id}")).to be(true)
     end
   end
-
-  # ==========================================================================
-  # the schema itself
-  # ==========================================================================
-
-  describe "the schema" do
-    it "is created with the definition" do
-      schema = Grit::SchemaDefinition.create!(identifier: "grp", name: "Schema")
-
-      expect(schema.schema_name).to eq("test_grp")
-      expect(schema.schema_exists?).to be(true)
-    end
-
-    # Eagerly, even when the tables are deferred: an empty schema costs nothing,
-    # and it means `create_table` never has to wonder whether its schema is there.
-    it "is created even when table creation is deferred" do
-      klass = Class.new(Grit::SchemaDefinition) do
-        def self.name = "EmptySchemaDefinition"
-      end
-
-      expect(klass.create!(identifier: "grp", name: "Schema").schema_exists?).to be(true)
-    end
-
-    it "is created idempotently" do
-      schema = Grit::SchemaDefinition.create!(identifier: "grp", name: "Schema")
-
-      expect { schema.create_schema }.not_to raise_error
-      expect(schema.schema_exists?).to be(true)
-    end
-
-    # Stands in for two creates racing, which `schema_name_available` cannot see:
-    # skipping validation is how a definition reaches its `after_create` while
-    # another one's schema is already there.
-    it "is not adopted from something else on create" do
-      connection.create_schema("test_grp")
-      connection.create_table("test_grp.theirs")
-
-      schema = Grit::SchemaDefinition.new(identifier: "grp", name: "Schema")
-
-      expect { schema.save!(validate: false) }.to raise_error(ActiveRecord::StatementInvalid, /already exists/)
-      expect(Grit::SchemaDefinition.where(identifier: "grp")).not_to exist
-      expect(connection.table_exists?("test_grp.theirs")).to be(true)
-    end
-
-    it "goes with the definition on destroy" do
-      schema = Grit::SchemaDefinition.create!(identifier: "grp", name: "Schema")
-      Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: schema)
-
-      schema.destroy!
-
-      expect(connection.schema_exists?("test_grp")).to be(false)
-    end
-
-    # `drop_tables` is the unpublish hook; the schema is the definition's, and
-    # only the definition going away takes it.
-    it "survives drop_tables" do
-      schema = Grit::SchemaDefinition.create!(identifier: "grp", name: "Schema")
-      Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: schema)
-
-      schema.drop_tables
-
-      expect(connection.table_exists?("test_grp.tbl")).to be(false)
-      expect(schema.schema_exists?).to be(true)
-    end
-
-    it "is rebuilt by create_tables when it is not there" do
-      schema = Grit::SchemaDefinition.create!(identifier: "grp", name: "Schema")
-      Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: schema)
-      connection.drop_schema("test_grp", if_exists: true)
-
-      schema.create_tables
-
-      expect(schema.schema_exists?).to be(true)
-      expect(connection.table_exists?("test_grp.tbl")).to be(true)
-    end
-  end
-
-  # ==========================================================================
-  # schema names are database-wide
-  #
-  # Unlike a table name under the old prefix scheme, a PostgreSQL schema name is
-  # not scoped to the definition table the row came from — two includers compete
-  # for one namespace, and no uniqueness validation or unique index can see
-  # across them. So the catalog is consulted.
-  #
-  # But the catalog alone is not enough, which is what the sibling check below is
-  # for: it only knows what exists *now*. A schema dropped out of band leaves it
-  # seeing nothing while a sibling row still owns the name, and the new
-  # definition would create the schema afresh and share it with that row.
-  # Destroying either then runs DROP SCHEMA ... CASCADE over the other's tables.
-  #
-  # Two creates racing get past both checks: neither row is committed and neither
-  # schema exists when they validate. That one is caught on create instead, by
-  # `claim_schema` refusing a schema that is already there.
-  # ==========================================================================
 
   describe "schema_name_available" do
-    it "rejects an identifier whose schema already exists" do
-      Grit::SchemaDefinition.create!(identifier: "grp", name: "Schema")
+    it "rejects an identifier a sibling holds" do
+      schema
 
       clash = Grit::SchemaDefinition.new(identifier: "grp", name: "Twin")
 
       expect(clash).not_to be_valid
-      expect(clash.errors[:identifier].join).to include("test_grp")
+      expect(clash.errors[:identifier].join).to match(/another definition resolves to the schema test_grp/)
     end
 
-    it "rejects a schema created out of band by anything else" do
-      connection.create_schema("test_taken", if_not_exists: true)
+    it "refuses to rename onto an identifier a sibling holds" do
+      schema
+      other = Grit::SchemaDefinition.create!(identifier: "oth", name: "Other")
 
-      clash = Grit::SchemaDefinition.new(identifier: "taken", name: "Taken")
+      expect(other.update(identifier: "grp")).to be(false)
+      expect(other.errors[:identifier].join).to match(/another definition resolves to the schema/)
+    end
 
-      expect(clash).not_to be_valid
-      expect(clash.errors[:identifier].join).to include("already exists")
+    # Only checked on commit: a draft lives under a name nothing else can hold.
+    it "does not consult the catalog for a draft" do
+      connection.create_schema("test_taken")
+
+      expect(Grit::SchemaDefinition.new(identifier: "taken", name: "Taken")).to be_valid
     end
 
     it "rejects an identifier resolving onto a schema PostgreSQL reserves" do
       klass = Class.new(Grit::SchemaDefinition) do
         def self.name = "UnprefixedSchemaDefinition"
-        self.schema_prefix = nil
 
-        def schema_name_for(schema_definition_identifier = nil)
-          (schema_definition_identifier || identifier).to_s
+        def committed_schema_name
+          identifier.to_s
         end
       end
 
@@ -535,48 +584,22 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
     end
 
     it "leaves a definition alone when its identifier is not moving" do
-      schema = Grit::SchemaDefinition.create!(identifier: "grp", name: "Schema")
-
       expect(schema.update(name: "Renamed")).to be(true)
     end
 
-    # The case the catalog cannot see. Without the sibling check both rows resolve
-    # to test_grp, and `schema.destroy` takes the survivor's tables with it.
-    it "rejects an identifier a sibling owns even with the schema gone" do
-      Grit::SchemaDefinition.create!(identifier: "grp", name: "Schema")
-      connection.drop_schema("test_grp", if_exists: true)
-
-      clash = Grit::SchemaDefinition.new(identifier: "grp", name: "Twin")
-
-      expect(connection.schema_exists?("test_grp")).to be(false)
-      expect(clash).not_to be_valid
-      expect(clash.errors[:identifier].join).to match(/another definition resolves to the schema test_grp/)
-    end
-
-    it "refuses to rename onto an identifier a sibling owns" do
-      Grit::SchemaDefinition.create!(identifier: "grp", name: "Schema")
-      other = Grit::SchemaDefinition.create!(identifier: "oth", name: "Other")
-      connection.drop_schema("test_grp", if_exists: true)
-
-      expect(other.update(identifier: "grp")).to be(false)
-      expect(other.errors[:identifier].join).to match(/another definition resolves to the schema/)
-    end
-
-    # Compared on the resolved name, not on the identifier: a subclass may declare
-    # a different prefix, and then the same identifier is a different schema.
+    # Compared on the resolved name: under another prefix the same identifier is another schema.
     it "allows a sibling identifier that resolves to another schema" do
       declare_schema_prefix("othr")
       klass = Class.new(Grit::SchemaDefinition) do
         def self.name = "OtherPrefixSchemaDefinition"
         dynamic_schema_prefix "othr"
       end
-      Grit::SchemaDefinition.create!(identifier: "grp", name: "Schema")
+      schema
 
       expect(klass.new(identifier: "grp", name: "Elsewhere")).to be_valid
     end
 
-    # Belt and braces for the race the validation cannot close on its own; the
-    # concern tells includers to add this index and the dummy migration has one.
+    # Closes the race the validation can't; the concern tells includers to add this index.
     it "is backed by a unique index on identifier" do
       index_names = connection.indexes("test_schema_definitions").select(&:unique).map { |i| Array(i.columns) }
 
@@ -584,93 +607,8 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
     end
   end
 
-  # ==========================================================================
-  # rename_schema
-  # ==========================================================================
-
-  describe "rename_schema" do
-    it "does nothing when the identifier did not change" do
-      schema = Grit::SchemaDefinition.create!(identifier: "grp", name: "Schema")
-      Grit::TableDefinition.create!(identifier: "one", name: "One", schema_definition: schema)
-
-      schema.update!(name: "Renamed")
-
-      expect(connection.table_exists?("test_grp.one")).to be(true)
-    end
-
-    # One ALTER SCHEMA, rather than a rename per table: the tables are not named
-    # after the schema, so they come along without being touched.
-    it "carries the schema's tables to the new name" do
-      schema = Grit::SchemaDefinition.create!(identifier: "grp", name: "Schema")
-      Grit::TableDefinition.create!(identifier: "one", name: "One", schema_definition: schema)
-      Grit::TableDefinition.create!(identifier: "two", name: "Two", schema_definition: schema)
-
-      schema.update!(identifier: "new_grp")
-
-      expect(connection.schema_exists?("test_grp")).to be(false)
-      expect(connection.table_exists?("test_grp.one")).to be(false)
-      expect(connection.table_exists?("test_new_grp.one")).to be(true)
-      expect(connection.table_exists?("test_new_grp.two")).to be(true)
-    end
-
-    it "leaves the schema cache describing the tables at their new name" do
-      schema = Grit::SchemaDefinition.create!(identifier: "grp", name: "Schema")
-      table = Grit::TableDefinition.create!(identifier: "one", name: "One", schema_definition: schema)
-      # Warm the cache under the old name.
-      expect(table.record_klass.column_names).to include("id")
-
-      schema.update!(identifier: "new_grp")
-
-      expect(table.reload.record_klass.column_names).to include("id")
-      expect(table.record_klass.count).to eq(0)
-    end
-
-    # The collision this used to have to reason about table by table — a schema
-    # rename moves every table at once, so no table definition is saved and none
-    # of their validations run. It is caught one level up now, because the schema
-    # name itself is taken.
-    it "refuses a rename onto a schema that already exists" do
-      schema = Grit::SchemaDefinition.create!(identifier: "grp", name: "Schema")
-      other = Grit::SchemaDefinition.create!(identifier: "other", name: "Other")
-      Grit::TableDefinition.create!(identifier: "one", name: "One", schema_definition: schema)
-      Grit::TableDefinition.create!(identifier: "one", name: "One", schema_definition: other)
-
-      expect(schema.update(identifier: "other")).to be(false)
-      expect(schema.errors[:identifier].join).to include("test_other")
-
-      expect(connection.table_exists?("test_grp.one")).to be(true)
-      expect(connection.table_exists?("test_other.one")).to be(true)
-    end
-
-    it "allows a rename onto a name nothing holds" do
-      schema = Grit::SchemaDefinition.create!(identifier: "grp", name: "Schema")
-      other = Grit::SchemaDefinition.create!(identifier: "other", name: "Other")
-      Grit::TableDefinition.create!(identifier: "one", name: "One", schema_definition: schema)
-      Grit::TableDefinition.create!(identifier: "two", name: "Two", schema_definition: other)
-
-      expect(schema.update(identifier: "third")).to be(true)
-      expect(connection.table_exists?("test_third.one")).to be(true)
-      expect(connection.table_exists?("test_other.two")).to be(true)
-    end
-
-    it "is a no-op when the schema was never materialised" do
-      schema = Grit::SchemaDefinition.create!(identifier: "grp", name: "Schema")
-      connection.drop_schema("test_grp", if_exists: true)
-
-      expect { schema.update!(identifier: "new_grp") }.not_to raise_error
-      expect(schema.reload.identifier).to eq("new_grp")
-    end
-  end
-
-  # ==========================================================================
-  # the schema prefix
-  #
-  # Validated at class-definition time rather than on save: an over-long prefix
-  # would otherwise only show up as a truncated schema name inside the
-  # `after_create`, leaving a definition row behind pointing at the wrong schema.
-  # ==========================================================================
-
   describe "dynamic_schema_prefix" do
+    # Otherwise it would only show up on commit, as a truncated schema name.
     it "rejects an over-long prefix at class definition time" do
       expect {
         Class.new(ApplicationRecord) do
@@ -682,8 +620,8 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
       }.to raise_error(ArgumentError, /at most 32/)
     end
 
-    # `class_attribute` hands out a public writer whether or not anyone uses the
-    # macro, so the checks have to sit on the writer rather than on the macro.
+    # `class_attribute` defines a public writer whether or not the macro is used, so the
+    # checks live on the writer.
     it "applies the same checks to a direct schema_prefix assignment" do
       expect {
         Class.new(ApplicationRecord) do
@@ -710,12 +648,9 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
         .to raise_error(ActiveModel::UnknownAttributeError)
     end
 
-    # The macro is optional and `schema_prefix` defaults to nil, so a class that
-    # forgets it used to build `_<identifier>` schemas — which `schema_name_available`
-    # waves through, and which the structure-dump exclusion cannot see either,
-    # because nothing ever registered a prefix for it. Caught on the record rather
-    # than at class-definition time, which is the one check `SchemaPrefixWriter`
-    # cannot make: the macro may simply never run.
+    # Without the macro `schema_prefix` is nil and schemas would be `_<id>`, invisible to the
+    # structure-dump exclusion. Checked on the record, since the class-time check only runs
+    # when the macro does.
     it "refuses to save an includer that never declared a prefix" do
       klass = Class.new(ApplicationRecord) do
         def self.name = "Grit::PrefixlessSchemaDefinition"
@@ -723,12 +658,11 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
         include Grit::Core::Model::DynamicSchema::SchemaDefinition
       end
 
-      schema = klass.new(identifier: "grp", name: "Schema")
+      prefixless = klass.new(identifier: "grp", name: "Schema")
 
-      expect(schema).not_to be_valid
-      expect(schema.errors[:base].join).to match(/must declare a dynamic_schema_prefix/)
-      expect(schema.save).to be(false)
-      expect(ActiveRecord::Base.connection.schema_exists?("_grp")).to be(false)
+      expect(prefixless).not_to be_valid
+      expect(prefixless.errors[:base].join).to match(/must declare a dynamic_schema_prefix/)
+      expect(prefixless.save).to be(false)
     end
 
     it "rejects a malformed prefix at class definition time" do
@@ -742,8 +676,7 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
       }.to raise_error(ArgumentError, /lowercase letters/)
     end
 
-    # Its schemas would be dumped into structure.sql, which only excludes the
-    # prefixes in config.
+    # structure.sql only excludes the prefixes in config, so its schemas would be dumped.
     it "rejects a prefix missing from config.grit.dynamic_schema_prefixes" do
       expect {
         Class.new(ApplicationRecord) do
@@ -763,12 +696,14 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
         dynamic_schema_prefix "declared"
       end
 
-      expect(klass.new(identifier: "grp", name: "Schema").schema_name).to eq("declared_grp")
+      own = klass.create!(identifier: "grp", name: "Schema")
+      expect(own.schema_name).to eq("declared_#{own.id}")
+      expect(own.committed_schema_name).to eq("declared_grp")
     end
 
-    # A maximum prefix and a maximum identifier compose to exactly 63 bytes,
-    # PostgreSQL's limit for one identifier, and have to reach the catalog whole.
-    it "accepts a prefix at the limit and names a schema with it" do
+    # Max prefix + `_` + max identifier is exactly 63 bytes, PostgreSQL's identifier limit;
+    # the name must reach the catalog untruncated.
+    it "accepts a prefix at the limit and commits a schema with it" do
       max_prefix = Grit::Core::Model::DynamicSchema::SchemaDefinition::MAX_SCHEMA_PREFIX_LENGTH
       max_identifier = Grit::Core::Model::DynamicSchema::ValidIdentifier::MAX_IDENTIFIER_LENGTH
       declare_schema_prefix("p" * max_prefix)
@@ -777,11 +712,12 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
         dynamic_schema_prefix "p" * Grit::Core::Model::DynamicSchema::SchemaDefinition::MAX_SCHEMA_PREFIX_LENGTH
       end
 
-      schema = klass.create!(identifier: "g" * max_identifier, name: "Schema")
+      widest = klass.create!(identifier: "g" * max_identifier, name: "Schema")
+      widest.commit!
 
-      expect(schema.schema_name.bytesize).to eq(63)
-      expect(schema.schema_name).to eq("#{'p' * max_prefix}_#{'g' * max_identifier}")
-      expect(connection.schema_names).to include(schema.schema_name)
+      expect(widest.schema_name.bytesize).to eq(63)
+      expect(widest.schema_name).to eq("#{'p' * max_prefix}_#{'g' * max_identifier}")
+      expect(connection.schema_names).to include(widest.schema_name)
     end
   end
 end

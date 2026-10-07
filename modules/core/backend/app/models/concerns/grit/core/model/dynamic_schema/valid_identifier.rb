@@ -16,12 +16,8 @@
 # grit-core. If not, see <https://www.gnu.org/licenses/>.
 #++
 
-# The rules every dynamic-schema identifier is held to, in one place: a schema's,
-# a table's and a column's identifier each become a PostgreSQL identifier of its
-# own, so they all have to be lowercase and free of anything PostgreSQL would
-# need quoting for.
-#
-# Included by all three of SchemaDefinition, TableDefinition and ColumnDefinition.
+# Identifier rules shared by schema, table and column definitions: each
+# identifier becomes an unquoted PostgreSQL name.
 module Grit::Core::Model::DynamicSchema::ValidIdentifier
   extend ActiveSupport::Concern
 
@@ -29,16 +25,11 @@ module Grit::Core::Model::DynamicSchema::ValidIdentifier
 
   IDENTIFIER_FORMAT = /\A[a-z_]{2}[a-z0-9_]*\z/
 
-  # Names a dynamic column may not take because every dynamic table has them
-  # already.
-  #
-  #   self.reserved_identifiers += %w[experiment_id]
+  # The base columns of every dynamic table. Extend per includer with
+  # `self.reserved_identifiers += %w[...]`.
   DEFAULT_RESERVED_IDENTIFIERS = %w[id created_at created_by updated_at updated_by].freeze
 
-  # Columns PostgreSQL gives every table, which no column may be named after. Not
-  # in `DEFAULT_RESERVED_IDENTIFIERS`, which counts and describes the base columns
-  # every dynamic table is built with, and not checked for schemas or tables,
-  # which may take these names.
+  # Columns PostgreSQL adds to every table; checked for columns only.
   SYSTEM_COLUMN_NAMES = %w[tableoid xmin cmin xmax cmax ctid].freeze
 
   included do
@@ -49,12 +40,21 @@ module Grit::Core::Model::DynamicSchema::ValidIdentifier
     validates :identifier, format: { with: /\A[a-z_]{2}/, message: "should start with two lowercase letters or underscores" }
     validates :identifier, format: { with: /\A[a-z0-9_]*\z/, message: "should contain only lowercase letters, numbers and underscores" }
     validate :identifier_not_conflict
+    after_validation :explain_committed_identifier
   end
 
+  # Runs on every save: code may reserve an identifier after it was saved.
   def identifier_not_conflict
-    return unless identifier_changed?
     return if identifier.blank?
     return unless reserved_identifiers.include?(identifier)
     errors.add("identifier", "is a reserved keyword and cannot be used as identifier")
+  end
+
+  # A committed definition whose identifier code has since made invalid can
+  # only be fixed after a revert; say so.
+  def explain_committed_identifier
+    return if errors[:identifier].empty? || new_record? || identifier_changed?
+    return unless committed?
+    errors.add(:base, "The schema is committed: revert it to draft to change the identifier")
   end
 end

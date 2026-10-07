@@ -32,72 +32,72 @@ module Grit::Core::Model::DynamicSchema::ColumnDefinition
     validate :columns_count_within_limit, on: :create
 
     before_save :check_can_modify
+    before_save :check_schema_draft, if: :structural_change?
     after_create :create_column
     after_update :alter_column
     before_destroy :check_can_modify
+    before_destroy :check_schema_draft
     before_destroy :drop_column
   end
 
-  # Guard run before every save and before destroy. A no-op by default so that
-  # includers are free to create, update and destroy definitions. Override it
-  # to forbid modification once the schema is in use, e.g.:
-  #
-  #   def check_can_modify
-  #     super
-  #     raise "Cannot modify a published data set" if published?
-  #   end
+  # Runs before every save and destroy; a no-op for includers to override (call
+  # `super`). Structural changes to a committed schema are refused regardless.
   def check_can_modify
   end
 
+  # Whether saving touches the physical column. `name`, `description` and
+  # `sort` can change at any time.
+  def structural_change?
+    return true if new_record?
+    return true if identifier_changed? || data_type_id_changed? || required_changed?
+    return false if self.class.table_definition_association.nil?
+    attribute_changed?(self.class.table_definition_id)
+  end
+
+  # See `TableDefinition#check_schema_draft`.
+  def check_schema_draft
+    schema = table_definition_in_database&.schema_definition_in_database
+    return if schema.nil? || schema.new_record?
+    locked = schema.locked_copy
+    return unless locked&.committed?
+    errors.add(:base, "#{locked.committed_schema_name} is committed: revert it to draft to change its structure")
+    throw :abort
+  end
+
   def identifier_not_implementation_column
-    return if identifier.blank? || !identifier_changed?
+    return if identifier.blank?
     definition = table_definition
     return if definition.nil?
     return unless definition.implementation_column_definitions.any? { |column| column[:identifier].to_s == identifier }
     errors.add(:identifier, "is reserved by this table and cannot be used as identifier")
   end
 
-  # Not caught by `identifier_taken_on_physical_table?`, which only sees the
-  # columns a table was built with: PostgreSQL would refuse the name at DDL time.
+  # PostgreSQL would only refuse these at commit.
   def identifier_not_system_column
-    return if identifier.blank? || !identifier_changed?
+    return if identifier.blank?
     return unless Grit::Core::Model::DynamicSchema::ValidIdentifier::SYSTEM_COLUMN_NAMES.include?(identifier)
     errors.add(:identifier, "is a PostgreSQL system column name and cannot be used as identifier")
   end
 
-  # `detailed` selects each display property of an entity column `<name>` as
-  # `<name>__<display property>`. A column named like one of those would come back
-  # twice under one name, and a sort or filter on it would act on the entity's
-  # column instead. A leading `__` is allowed: `<name>` is at least two characters,
-  # so no alias starts with one.
+  # `detailed` names an entity column's display columns `<name>__<property>`. A
+  # leading `__` is fine: no alias starts with one.
   def identifier_not_display_column_alias
-    return if identifier.blank? || !identifier_changed?
+    return if identifier.blank?
     return unless identifier.index("__", 1)
     errors.add(:identifier, "should not contain a double underscore, which names the display columns of an entity column")
   end
 
-  # Note: an includer should also add a unique index on `[<table>_id, identifier]`
+  # Among the table's definitions only; the catalog is not consulted. Includers
+  # should back it with a unique index on `[<table>_id, identifier]`.
   def identifier_unique_in_table
     return if self.class.table_definition_association.nil?
     return if identifier.blank?
     foreign_key = self.class.table_definition_id
     return if self[foreign_key].blank?
-    return unless new_record? || identifier_changed? || attribute_changed?(foreign_key)
     klass = self.class.base_class
     scope = klass.unscoped.where(foreign_key => self[foreign_key], identifier: identifier)
     scope = scope.where.not(id: id) if persisted?
-    if scope.exists?
-      errors.add(:identifier, "is already taken by another column of this table")
-    elsif identifier_taken_on_physical_table?
-      errors.add(:identifier, "is already taken: the column #{identifier} already exists on #{table_definition.table_name}")
-    end
-  end
-
-  def identifier_taken_on_physical_table?
-    return false if errors[:identifier].any?
-    definition = table_definition
-    return false if definition.nil? || !definition.table_exists?
-    ActiveRecord::Base.connection.column_exists?(definition.table_name, identifier)
+    errors.add(:identifier, "is already taken by another column of this table") if scope.exists?
   end
 
   def table_definition_unchanged
@@ -115,96 +115,93 @@ module Grit::Core::Model::DynamicSchema::ColumnDefinition
     errors.add(:base, "A table cannot have more than #{limit} columns")
   end
 
-  # nil until the includer calls `belongs_to_table_definition`, so that every
-  # validation reading it is skipped, as the ones checking
-  # `table_definition_association` are, rather than raising
-  # AssociationNotFoundError.
+  # nil until the includer calls `belongs_to_table_definition`, so validations
+  # skip rather than raise.
   def table_definition
     return if self.class.table_definition_association.nil?
     association(self.table_definition_association).reader
   end
 
-  # The table definition this column's saved row belongs to. See
-  # `TableDefinition#schema_definition_in_database`.
+  # See `TableDefinition#schema_definition_in_database`.
   def table_definition_in_database
     return if self.class.table_definition_association.nil?
     foreign_key = self.class.table_definition_id
-    return table_definition unless attribute_changed?(foreign_key)
+    return table_definition if new_record? || !attribute_changed?(foreign_key)
     association(self.table_definition_association).klass.unscoped.find_by(id: attribute_in_database(foreign_key))
   end
 
-  def quoted_identifier
-    ActiveRecord::Base.connection.quote_column_name(identifier)
+  def committed?
+    !!table_definition&.committed?
   end
 
-  # The column an entity reference points at. Split out so that both the create
-  # and the convert path name their constraint after the same thing the
-  # constraint actually references.
+  # The column's name in a draft. Not a valid identifier, so nothing else can
+  # hold it; a commit renames it to the identifier.
+  def draft_column_name
+    "c#{id}"
+  end
+
+  # The column an entity foreign key references.
   def foreign_key_target_column
     Grit::Core::Model::DynamicSchema::TableDefinition::DEFAULT_FOREIGN_KEY_TARGET_COLUMN
   end
 
+  # Column DDL only runs in a draft (`check_schema_draft`), so it uses draft
+  # names.
   def create_column
-    return unless table_definition.table_exists?
+    definition = table_definition
     connection = ActiveRecord::Base.connection
-    # A NOT NULL column with no default fails on any existing row, with a
-    # PG::NotNullViolation rather than the message `alter_column` gives.
-    raise "Cannot require column with empty values" if required && connection.select_value("SELECT 1 FROM #{table_definition.quoted_table_name} LIMIT 1")
+    table_name = definition.draft_table_name
+    # Friendlier than the PG::NotNullViolation PostgreSQL would raise.
+    raise "Cannot require column with empty values" if required && connection.select_value("SELECT 1 FROM #{connection.quote_table_name(table_name)} LIMIT 1")
 
-    connection.add_column table_definition.table_name, identifier, data_type.sql_name, null: !required
-    table_definition.refresh_schema!
-    table_definition.add_column_foreign_key identifier, data_type.table_name, foreign_key_target_column if data_type.is_entity
+    connection.add_column table_name, draft_column_name, data_type.sql_name, null: !required
+    definition.add_column_foreign_key draft_column_name, data_type.table_name, foreign_key_target_column if data_type.is_entity
   end
 
+  # Only `required` and the type reach the table: a draft column is named after
+  # its id.
   def alter_column
-    return unless table_definition.table_exists?
-    column = self
+    return unless required_previously_changed? || data_type_id_previously_changed?
+    definition = table_definition
     connection = ActiveRecord::Base.connection
-    if identifier_previously_changed?
-      connection.rename_column table_definition.table_name, column.identifier_previously_was, column.identifier
-      table_definition.rename_foreign_key_for_column(column.identifier)
-      table_definition.refresh_schema!
-    end
+    table_name = definition.draft_table_name
+    quoted_table_name = connection.quote_table_name(table_name)
+    column_name = draft_column_name
+    quoted_column_name = connection.quote_column_name(column_name)
+
     if required_previously_changed?
-      raise "Cannot require column with empty values" if column.required && table_definition.record_klass.where(identifier => nil).count().positive?
-      connection.change_column_null table_definition.table_name, column.identifier, !column.required
-      table_definition.refresh_schema!
+      raise "Cannot require column with empty values" if required && connection.select_value("SELECT 1 FROM #{quoted_table_name} WHERE #{quoted_column_name} IS NULL LIMIT 1")
+      connection.change_column_null table_name, column_name, !required
     end
+
     if data_type_id_previously_changed?
       previous_data_type = Grit::Core::DataType.find(data_type_id_previously_was)
-      raise "Failed to convert #{previous_data_type.name} to #{column.data_type.name} because of conflicts in existing rows" if (previous_data_type.is_entity || column.data_type.is_entity) && table_definition.record_klass.count(identifier).positive?
+      # Entity ids mean nothing as another type, or as another entity type's ids
+      # (two vocabularies share one table).
+      if (previous_data_type.is_entity || data_type.is_entity) && connection.select_value("SELECT 1 FROM #{quoted_table_name} WHERE #{quoted_column_name} IS NOT NULL LIMIT 1")
+        raise "Failed to convert #{previous_data_type.name} to #{data_type.name} because of conflicts in existing rows"
+      end
       begin
-        connection.remove_foreign_key table_definition.table_name, column: column.identifier, if_exists: true
-
-        connection.change_column table_definition.table_name, column.identifier, column.data_type.sql_name, using: "#{connection.quote_column_name(column.identifier)}::text::#{column.data_type.sql_name}"
-        table_definition.add_column_foreign_key column.identifier, column.data_type.table_name, foreign_key_target_column if column.data_type.is_entity
-        table_definition.refresh_schema!
+        connection.remove_foreign_key table_name, column: column_name, if_exists: true
+        connection.change_column table_name, column_name, data_type.sql_name, using: "#{quoted_column_name}::text::#{data_type.sql_name}"
+        definition.add_column_foreign_key column_name, data_type.table_name, foreign_key_target_column if data_type.is_entity
       rescue ActiveRecord::InvalidForeignKey
-        raise "Failed to convert #{previous_data_type.name} to #{column.data_type.name} because of conflicts in existing rows"
+        raise "Failed to convert #{previous_data_type.name} to #{data_type.name} because of conflicts in existing rows"
       rescue ActiveRecord::StatementInvalid => e
-        raise "Failed to convert #{previous_data_type.name} to #{column.data_type.name} because of conflicts in existing rows" if /invalid input syntax for type/.match?(e.to_s)
-        # Bare `raise`, not `raise e.to_s`, which would rebuild the failure as a
-        # RuntimeError carrying the message and nothing else. Everything a caller
-        # has to tell a deadlock, a lock timeout or a NOT NULL violation apart —
-        # the class, the cause, the backtrace — lives on the original, and a
-        # rescue on ActiveRecord::Deadlocked stops matching without it.
+        raise "Failed to convert #{previous_data_type.name} to #{data_type.name} because of conflicts in existing rows" if /invalid input syntax for type/.match?(e.to_s)
+        # Re-raise the original, keeping its class (e.g. Deadlocked) and backtrace.
         raise
       end
     end
   end
 
-  # By the names saved in the database, as `TableDefinition#drop_table` does: a
-  # rename `identifier_unique_in_table` refused leaves another column's name in
-  # `identifier`.
+  # Destroy callbacks also run on unsaved records, which have no column.
   def drop_column
-    saved_identifier = identifier_in_database
+    return if id.nil?
     definition = table_definition_in_database
-    return if saved_identifier.nil? || definition.nil?
-    table_name = definition.table_name_in_database
-    connection = ActiveRecord::Base.connection
-    return if table_name.nil? || !connection.table_exists?(table_name)
-    connection.remove_column table_name, saved_identifier, if_exists: true
-    definition.refresh_schema! table_name
+    schema = definition&.schema_definition_in_database
+    return if schema.nil?
+    ActiveRecord::Base.connection.remove_column "#{schema.draft_schema_name}.#{definition.draft_table_identifier}", draft_column_name, if_exists: true
   end
 
   class_methods do

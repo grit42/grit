@@ -22,13 +22,10 @@ module Grit
       isolate_namespace Grit::Core
       config.generators.api_only = true
 
-      # Every schema prefix a `DynamicSchema::SchemaDefinition` includer uses,
-      # declared by the engine or app that defines the includer:
+      # Schema prefixes used by `DynamicSchema::SchemaDefinition` includers,
+      # declared by the engine or app defining them:
       #
       #   config.grit.dynamic_schema_prefixes << "ds"
-      #
-      # Read by `ExcludeDynamicSchemasFromStructureDump` below. `dynamic_schema_prefix`
-      # refuses a prefix that is not listed here.
       config.grit = ActiveSupport::OrderedOptions.new
       config.grit.dynamic_schema_prefixes = []
 
@@ -102,28 +99,15 @@ module Grit
         ActiveRecord::SchemaDumper.ignore_tables << /^raw_lsb_.*$/
       end
 
-      # Keeps DynamicSchema schemas out of structure.sql. They are off the search
-      # path, so `ignore_tables` cannot reach them, and pg_dump would otherwise
-      # dump every one in the database.
-      #
-      # Excluded rather than dumping only `public`: `dump_schemas = "public"`
-      # makes pg_dump emit `CREATE SCHEMA public`, which fails to reload.
-      #
-      # Each prefix in `config.grit.dynamic_schema_prefixes` excludes the whole
-      # `<prefix>_*` namespace, so no migration may create a schema under it: it
-      # would drop out of structure.sql. Excluding only the schemas definitions
-      # own would mean querying the database being dumped. The prefixes come from
-      # config so that a dump never has to load a model.
-      #
-      # Hooked on `PostgreSQLDatabaseTasks#structure_dump` because every dump path
-      # reaches it (`db:schema:dump`, `db:migrate:<name>`, `db:prepare`, ...), and
-      # it takes the flags as an argument, so nothing global is mutated.
+      # Keeps DynamicSchema schemas out of structure.sql by excluding each
+      # `<prefix>_*` namespace (so migrations must not create schemas there).
+      # Dumping only `public` instead would emit an unloadable `CREATE SCHEMA
+      # public`. Hooked on `structure_dump`, which every dump task reaches.
       module ExcludeDynamicSchemasFromStructureDump
         def structure_dump(filename, extra_flags)
           prefixes = Grit::Core::Model::DynamicSchema::SchemaDefinition.schema_prefixes
           return super if prefixes.empty?
-          # Not `|`: a union would also collapse the caller's own repeated flags,
-          # turning `-T a -T b` into `-T a b`.
+          # Not `|`, which would also collapse the caller's repeated flags.
           flags = Array(extra_flags)
           super(filename, flags + (prefixes.map { |prefix| "--exclude-schema=#{prefix}_*" } - flags))
         end

@@ -23,39 +23,15 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
   MAX_IDENTIFIER_LENGTH = Grit::Core::Model::DynamicSchema::ValidIdentifier::MAX_IDENTIFIER_LENGTH
   IDENTIFIER_FORMAT = Grit::Core::Model::DynamicSchema::ValidIdentifier::IDENTIFIER_FORMAT
 
-  # The column a foreign key points at when nothing says otherwise. Every dynamic
-  # table and every grit entity table is keyed on `id`, so this is what a
-  # constraint name's second half almost always is.
+  # Foreign keys point at `id` unless declared otherwise.
   DEFAULT_FOREIGN_KEY_TARGET_COLUMN = "id"
 
-  # `implementation_column_definitions` describes its columns by SQL type;
-  # `entity_properties` describes them by grit property type. Anything not
-  # listed is passed through as-is.
-  #
-  # The inverse of `Grit::Core::DataType#sql_name`, which is the forward map and
-  # rewrites exactly three things: integer (and every entity type) to bigint,
-  # string to varchar, datetime to timestamp without time zone. Only those three
-  # need inverting — `text`, `decimal`, `date` and `boolean` are each their own
-  # grit data type *and* their own SQL type, so the passthrough below is already
-  # right for them. Mapping "text" to "string" would demote a multiline input to
-  # a single-line one.
-  #
-  # Not derived from the DataType table, because the inverse is genuinely
-  # ambiguous: `bigint` is the sql_name of `integer` and of every entity type.
-  #
-  # Keyed on *spellings*, not on canonical types, and an unlisted spelling is
-  # passed through — which is why the PostgreSQL names sit here next to the ones
-  # `sql_name` emits. `implementation_column_definitions` is hand-written, and
-  # anyone reading a column's type out of structure.sql, pg_dump or the catalog
-  # finds `character varying` and `timestamp without time zone`, never `varchar`.
-  # Which is also why the catalog spellings of types `sql_name` never emits are
-  # here: pg_catalog says `numeric`, not `decimal`, and `bool`, not `boolean`.
-  #
-  # A spelling that falls through and is not already a grit property type reaches
-  # the UI as a type no form field and no grid cell renderer matches — a blank
-  # cell with no editor. Because this map can never cover every type PostgreSQL
-  # has, `validate_implementation_column_shape` rejects what falls through rather
-  # than letting it get that far.
+  # Maps the SQL types `implementation_column_definitions` declares to grit
+  # property types; unlisted spellings pass through. The inverse of
+  # `DataType#sql_name` (which only rewrites integer/entity, string and
+  # datetime), plus catalog spellings (`character varying`, `numeric`, `bool`).
+  # Anything else must declare `type:`; see
+  # `validate_implementation_column_property_type`.
   IMPLEMENTATION_COLUMN_TYPES = {
     "bigint" => "integer",
     "int8" => "integer",
@@ -80,14 +56,10 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
     "timestamptz" => "datetime"
   }.freeze
 
-  # The property types the UI can render: the non-entity data types `db/seeds.rb`
-  # seeds, plus `entity`. A constant rather than a query on `Grit::Core::DataType`
-  # because a validation must not depend on whether the seeds have been run.
+  # Property types the UI renders. A constant so validations don't depend on seeds.
   GRIT_PROPERTY_TYPES = %w[string text integer decimal date datetime boolean entity].freeze
 
-  # How many columns a dynamic table may have. PostgreSQL's own ceiling is 1600;
-  # this is far lower because the grid stops being usable long before that.
-  # Enforced from `ColumnDefinition#columns_count_within_limit`.
+  # Far below PostgreSQL's 1600: the grid stops being usable long before.
   MAX_COLUMNS = 250
 
   included do
@@ -95,54 +67,60 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
     class_attribute :schema_definition_association, default: nil
 
     before_save :check_can_modify
-    after_create :create_table, if: :create_table_on_create?
-    after_update :rename_table
+    before_save :check_schema_draft, if: :structural_change?
+    after_create :create_table
     before_destroy :check_can_modify
-    after_destroy :drop_table
+
+    before_destroy :check_schema_draft, unless: :destroyed_by_association
+    after_destroy :drop_table, unless: :destroyed_by_association
 
     validate :implementation_column_definitions_valid
     validate :identifier_unique_in_schema
     validate :schema_definition_unchanged
   end
 
-  # Guard run before every save and before destroy. A no-op by default so that
-  # includers are free to create, update and destroy definitions. Override it
-  # to forbid modification once the schema is in use, e.g.:
-  #
-  #   def check_can_modify
-  #     super
-  #     raise "Cannot modify a published data set" if published?
-  #   end
+  # Runs before every save and destroy; a no-op for includers to override (call
+  # `super`). Structural changes to a committed schema are refused regardless.
   def check_can_modify
   end
 
-  def table_name_for(schema_name = nil, table_identifier = nil)
-    schema_name ||= self.schema_definition.schema_name
-    table_identifier ||= self.identifier
-    "#{schema_name}.#{table_identifier}"
+  # Whether saving touches the physical table; `name` and `sort` can change any time.
+  def structural_change?
+    return new_record? || identifier_changed? if self.class.schema_definition_association.nil?
+    new_record? || identifier_changed? || attribute_changed?(self.class.schema_definition_id)
   end
 
+  # Refuses a structural change while the schema is committed
+  def check_schema_draft
+    return if self.class.schema_definition_association.nil?
+    schema = schema_definition_in_database
+    return if schema.nil? || schema.new_record?
+    locked = schema.locked_copy
+    return unless locked&.committed?
+    errors.add(:base, "#{locked.committed_schema_name} is committed: revert it to draft to change its structure")
+    throw :abort
+  end
+
+  def committed?
+    !!schema_definition&.committed?
+  end
+
+  # The table's name in a draft; not a valid identifier, so nothing else can hold it.
+  def draft_table_identifier
+    "t#{id}"
+  end
+
+  def draft_table_name
+    "#{schema_definition.draft_schema_name}.#{draft_table_identifier}"
+  end
+
+  def committed_table_name
+    "#{schema_definition.committed_schema_name}.#{identifier}"
+  end
+
+  # The current physical name.
   def table_name
-    table_name_for
-  end
-
-  # The table this definition's saved row resolves to, or nil before it has one:
-  # its saved identifier, under the schema its saved schema definition names. What
-  # the drop paths name rather than `table_name`, which follows what is in memory.
-  # An identifier or `schema_definition_id` that validation refused, or a schema
-  # definition carrying a refused identifier of its own, would each point a DROP
-  # at another definition's table.
-  def table_name_in_database
-    saved_identifier = identifier_in_database
-    return if saved_identifier.nil?
-    schema_name = schema_definition_in_database&.schema_name_in_database
-    table_name_for(schema_name, saved_identifier) unless schema_name.nil?
-  end
-
-  def schema_definition_in_database
-    foreign_key = self.class.schema_definition_id
-    return schema_definition unless attribute_changed?(foreign_key)
-    association(self.schema_definition_association).klass.unscoped.find_by(id: attribute_in_database(foreign_key))
+    committed? ? committed_table_name : draft_table_name
   end
 
   def table_exists?
@@ -161,23 +139,24 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
     association(self.schema_definition_association).reader
   end
 
+  # The schema the saved row belongs to: a refused move stays in memory, and
+  # destroy doesn't validate.
+  def schema_definition_in_database
+    foreign_key = self.class.schema_definition_id
+    return schema_definition if new_record? || !attribute_changed?(foreign_key)
+    association(self.schema_definition_association).klass.unscoped.find_by(id: attribute_in_database(foreign_key))
+  end
+
+  # Among the schema's definitions only; the catalog is not consulted.
   def identifier_unique_in_schema
     return if self.class.schema_definition_association.nil?
     return if identifier.blank?
     foreign_key = self.class.schema_definition_id
     return if self[foreign_key].blank?
-    return unless new_record? || identifier_changed? || attribute_changed?(foreign_key)
-    return if schema_definition.nil?
     klass = self.class.base_class
     scope = klass.unscoped.where(foreign_key => self[foreign_key], identifier: identifier)
     scope = scope.where.not(id: id) if persisted?
-    if scope.exists?
-      errors.add(:identifier, "is already taken: another definition resolves to the table #{table_name}")
-    elsif table_exists?
-      errors.add(:identifier, "is already taken: the table #{table_name} already exists")
-    elsif relation_name_taken_in_schema?(identifier)
-      errors.add(:identifier, "is already taken: #{table_name} is the name of an index, sequence or view")
-    end
+    errors.add(:identifier, "is already taken by another table of this schema") if scope.exists?
   end
 
   def schema_definition_unchanged
@@ -195,67 +174,42 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
     definitions.order(Arel.sql("#{klass.quoted_table_name}.sort ASC NULLS LAST"), id: :asc)
   end
 
-  # Columns every table built from this definition gets, on top of the base
-  # columns (`id`, `created_by`, `created_at`, `updated_by`, `updated_at`) and
-  # the user-defined ones described by `column_definitions`. Empty by default;
-  # override in the includer to return an Array of Hashes:
+  # Columns every table gets on top of the base and dynamic ones. Override to
+  # return an Array of Hashes:
   #
-  #   identifier:     String, the column name
-  #   data_type_name: String, the SQL type ("bigint", "varchar", ...)
+  #   identifier:     the column name
+  #   data_type_name: the SQL type ("bigint", "varchar", ...)
   #   required:       truthy => NOT NULL
-  #   foreign_key:    optional Hash, { table_name: "grit_core_users" }, adds a
-  #                   foreign key from this column to that table's `id`. Pass
-  #                   `primary_key:` as well to point it at another column; that
-  #                   column's name is the second half of the constraint name
-  #   writable:       truthy => the column appears in `entity_fields`; see
-  #                   `implementation_column_writable?`
-  #   presented_when: optional Symbol, a keyword that has to be passed truthy to
-  #                   `entity_properties` for the column to be described at all;
-  #                   see `implementation_column_presented?`
-  #   display_name:   optional String, defaults to the humanised identifier
-  #   description:    optional String
-  #   type:           optional String, the grit property type, defaulting to
-  #                   IMPLEMENTATION_COLUMN_TYPES' reading of `data_type_name`.
-  #                   "entity" also wants an `entity:` Hash of the shape
-  #                   `DataType#entity_definition` returns
-  #   default_hidden: truthy => the grid hides the column until asked
+  #   foreign_key:    optional { table_name:, primary_key: "id" }
+  #   writable:       truthy => listed in `entity_fields`
+  #   presented_when: optional keyword `entity_properties` must be passed truthy
+  #                   for the column to be described
+  #   display_name:   optional, defaults to the humanised identifier
+  #   description:    optional
+  #   type:           optional grit property type, defaults to the
+  #                   IMPLEMENTATION_COLUMN_TYPES reading of `data_type_name`;
+  #                   "entity" also needs an `entity:` Hash (see
+  #                   `DataType#entity_definition`)
+  #   default_hidden: truthy => hidden in the grid by default
   #
-  # This list describes the *physical* table, so it must not vary with the
-  # keywords callers pass to `entity_properties` / `entity_fields` /
-  # `entity_columns` — `presented_when` is how a column is hidden from those
-  # without being dropped from the table. e.g.
-  #
-  #   def implementation_column_definitions
-  #     [ { identifier: "experiment_id", data_type_name: "bigint", required: true,
-  #         writable: true, presented_when: :with_experiment_id,
-  #         foreign_key: { table_name: "grit_assays_experiments" } } ]
-  #   end
+  # Describes the physical table, so it must not depend on `entity_properties`
+  # keywords. Changes need a migration: see `add_implementation_column`.
   def implementation_column_definitions
     []
   end
 
-  # Whether `entity_properties(**args)` — and so `entity_fields` and
-  # `entity_columns` — should describe this column at all. The physical column is
-  # there either way; this only decides whether callers are told about it.
-  # `presented_when: :with_experiment_id` describes the column only when that
-  # keyword is passed truthy. Override for anything richer.
+  # Whether `entity_properties(**args)` describes the column; it exists either way.
   def implementation_column_presented?(column, **args)
     gate = column[:presented_when]
     gate.nil? || !!args[gate.to_sym]
   end
 
-  # Implementation columns are read-only by default: the implementation that
-  # declared them owns their values, the same way `set_updater` and the database
-  # defaults own the base columns. `writable: true` hands that ownership to the
-  # caller — a loader writing `experiment_id` from its load-set block, say.
+  # Read-only unless declared `writable: true`: the implementation owns the values.
   def implementation_column_writable?(column)
     !!column[:writable]
   end
 
-  # Property descriptions for the columns `implementation_column_definitions`
-  # adds. An instance method rather than one on the anonymous `record_klass`, so
-  # that an includer can override it and call `super`; a singleton method on an
-  # anonymous class is out of reach.
+  # An instance method so includers can override it with `super`.
   def implementation_column_properties(**args)
     implementation_column_definitions.filter_map do |column|
       next unless implementation_column_presented?(column, **args)
@@ -273,8 +227,7 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
     end
   end
 
-  # The properties `entity_fields` refuses to hand out as writable fields: the
-  # base columns, plus every implementation column that has not opted in.
+  # Base columns, plus implementation columns not declared `writable`.
   def read_only_property_names
     Grit::Core::Model::DynamicSchema::ValidIdentifier::DEFAULT_RESERVED_IDENTIFIERS +
       implementation_column_definitions
@@ -282,16 +235,8 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
         .map { |column| column[:identifier].to_s }
   end
 
-  # `implementation_column_definitions` is a hand-written Hash that reaches the
-  # database without passing through any of the `identifier` validations, so it is
-  # checked here instead — against the same rules, and against the same byte
-  # budget the schema prefix is held to.
-  # Duplicates are checked and recorded before the branch chain, not inside it.
-  # `seen.push` on the final branch only would mean an identifier that trips an
-  # earlier check never registers, so its repeat goes unreported and the developer
-  # discovers the duplicate only after fixing the length — two round trips for one
-  # declaration. Each identifier is reported once however many times it repeats,
-  # and a repeat is not re-validated.
+  # Declarations skip the `identifier` validations, so they are checked here
+  # against the same rules. Each duplicate is reported once.
   def implementation_column_definitions_valid
     seen = []
     reported_duplicates = []
@@ -343,12 +288,8 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
     errors.add(:base, "Implementation column #{identifier.inspect} would need the foreign key constraint #{name.inspect}, which is #{name.bytesize} bytes; PostgreSQL truncates at #{limit}")
   end
 
-  # A column whose `data_type_name` is not one `IMPLEMENTATION_COLUMN_TYPES` can
-  # read has to say what it is. `jsonb`, `inet`, a domain type — PostgreSQL has
-  # hundreds, and the map covers the handful `sql_name` emits plus their catalog
-  # spellings. Without this the column is built correctly and then described to
-  # the UI as a property type nothing renders: a blank cell with no editor, and
-  # nothing anywhere saying why. An explicit `type:` is the way to use one.
+  # An unmapped `data_type_name` (`jsonb`, `inet`, ...) needs an explicit
+  # `type:`, or the UI gets a property type it cannot render.
   def validate_implementation_column_property_type(column, identifier)
     return if column[:type].present?
     data_type_name = column[:data_type_name].to_s
@@ -358,9 +299,7 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
     errors.add(:base, "Implementation column #{identifier.inspect} has data_type_name #{data_type_name.inspect}, which is not one of #{GRIT_PROPERTY_TYPES.join(", ")}; declare the grit property type with type:")
   end
 
-  # Every column the physical table has, or will have once it is materialised: the
-  # base columns, the declared implementation columns and the dynamic ones. What
-  # `ColumnDefinition#columns_count_within_limit` measures against `MAX_COLUMNS`.
+  # Base, implementation and dynamic columns: what `MAX_COLUMNS` limits.
   def physical_column_count(excluding: nil)
     columns = column_definitions
     count = Grit::Core::Model::DynamicSchema::ValidIdentifier::DEFAULT_RESERVED_IDENTIFIERS.length +
@@ -370,58 +309,14 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
     count
   end
 
-  # Whether creating the definition should materialise its table straight away.
-  # True by default; override to return false and call `create_table` yourself
-  # (or `SchemaDefinition#create_tables`) at whatever point the schema is
-  # considered settled, e.g. a publish step.
-  def create_table_on_create?
-    true
-  end
-
+  # Table DDL only runs in a draft (`check_schema_draft`), so it uses draft names.
   def create_table
-    connection = ActiveRecord::Base.connection
-    columns = ordered_column_definitions.to_a
-    ActiveRecord::Base.transaction do
-      schema_definition.create_schema
-      if table_exists?
-        check_existing_table_columns! columns
-      else
-        # `_uses_legacy_table_name: true` skips exactly one check, and only that
-        # one: `validate_table_length!`, which measures the whole `<schema>.<table>`
-        # string — dot and schema included — against PostgreSQL's *per identifier*
-        # limit. Rails whitelists this option in `validate_create_table_options!`
-        # as the opt-out.
-        connection.create_table table_name, id: false, _uses_legacy_table_name: true do |t|
-          create_base_columns t
-          create_implementation_columns t
-          create_dynamic_columns t, columns
-        end
-      end
-      create_foreign_keys columns
+    # Skips Rails' length check, which measures `<schema>.<table>` as a whole.
+    ActiveRecord::Base.connection.create_table draft_table_name, id: false, _uses_legacy_table_name: true do |t|
+      create_base_columns t
+      create_implementation_columns t
     end
-    refresh_schema!
-  end
-
-  # What `create_table` does in place of building a table that is already there.
-  # Re-running it over this definition's own table is supported (a second
-  # publish, `create_tables` over tables built on create), but a table under the
-  # name may be one an includer adopted, one left behind by a definition deleted
-  # without its callbacks, or this definition's own, built before an
-  # implementation column was declared. Taken on as it stands, a missing column is
-  # a PG::UndefinedColumn on every read through `detailed`, and a column the
-  # definition does not describe belongs to whoever built the table. Names only.
-  def check_existing_table_columns!(columns)
-    expected = Grit::Core::Model::DynamicSchema::ValidIdentifier::DEFAULT_RESERVED_IDENTIFIERS +
-      implementation_column_definitions.map { |column| column[:identifier].to_s } +
-      columns.map(&:identifier)
-    actual = ActiveRecord::Base.connection.columns(table_name).map(&:name)
-    missing = expected - actual
-    unexpected = actual - expected
-    return if missing.empty? && unexpected.empty?
-    differences = []
-    differences.push("missing #{missing.join(", ")}") if missing.any?
-    differences.push("not described by the definition: #{unexpected.join(", ")}") if unexpected.any?
-    raise "Cannot create #{table_name}: a table with other columns already exists (#{differences.join("; ")})"
+    create_implementation_column_foreign_keys
   end
 
   def create_base_columns(t)
@@ -438,252 +333,94 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
     end
   end
 
-  def create_dynamic_columns(t, columns = ordered_column_definitions)
+  def create_implementation_column_foreign_keys(columns = implementation_column_definitions, table_name: draft_table_name)
     columns.each do |column|
-      t.column column.identifier, column.data_type.sql_name, null: !column.required
-    end
-  end
-
-  def create_dynamic_column_foreign_keys(columns = ordered_column_definitions)
-    columns.each do |column|
-      add_column_foreign_key column.identifier, column.data_type.table_name if column.data_type.is_entity
-    end
-  end
-
-  def create_implementation_column_foreign_keys
-    implementation_column_definitions.each do |column|
       foreign_key = column[:foreign_key]
       next unless foreign_key
-      add_column_foreign_key column[:identifier], foreign_key[:table_name], implementation_column_target_column(column)
+      add_column_foreign_key column[:identifier], foreign_key[:table_name], implementation_column_target_column(column), table_name: table_name
     end
   end
 
-  # Every foreign key on a dynamic table is added through here, so each one is
-  # named the way `foreign_key_name` composes it, which is the name
-  # `rename_foreign_key_for_column` renames from.
-  def add_column_foreign_key(column_identifier, target_table_name, target_column = DEFAULT_FOREIGN_KEY_TARGET_COLUMN)
-    ActiveRecord::Base.connection.add_foreign_key table_name, target_table_name, column: column_identifier, primary_key: target_column, name: foreign_key_name(column_identifier, target_column), if_not_exists: true
+  # Why `add_implementation_column` cannot add `column` to this table, or nil.
+  def implementation_column_addition_problem(column)
+    errors.clear
+    implementation_column_definitions_valid
+    return errors.full_messages.join("; ") if errors.any?
+    if column_definitions.exists?(identifier: column[:identifier].to_s)
+      return "a column definition is already identified #{column[:identifier]}"
+    end
+    return if physical_column_count <= MAX_COLUMNS
+    "the table would have more than #{MAX_COLUMNS} columns"
+  end
+
+  # Foreign keys are named after the column they are on (`c<id>` or the
+  # implementation identifier), so commits and reverts never rename them.
+  def add_column_foreign_key(column_name, target_table_name, target_column = DEFAULT_FOREIGN_KEY_TARGET_COLUMN, table_name: draft_table_name)
+    ActiveRecord::Base.connection.add_foreign_key table_name, target_table_name, column: column_name, primary_key: target_column, name: foreign_key_name(column_name, target_column), if_not_exists: true
   end
 
   def implementation_column_target_column(column)
     (column.dig(:foreign_key, :primary_key) || DEFAULT_FOREIGN_KEY_TARGET_COLUMN).to_s
   end
 
-  def create_foreign_keys(columns = ordered_column_definitions)
-    create_implementation_column_foreign_keys
-    create_dynamic_column_foreign_keys columns
-  end
-
-  def foreign_key_name(column_identifier, target_column = DEFAULT_FOREIGN_KEY_TARGET_COLUMN)
-    name = "#{column_identifier}_#{target_column}"
+  def foreign_key_name(column_name, target_column = DEFAULT_FOREIGN_KEY_TARGET_COLUMN)
+    name = "#{column_name}_#{target_column}"
     limit = ActiveRecord::Base.connection.max_identifier_length
     raise ArgumentError, "Foreign key name #{name.inspect} is #{name.bytesize} bytes; PostgreSQL truncates at #{limit}" if name.bytesize > limit
     name
   end
 
-  def foreign_key_for_column(column_identifier)
-    ActiveRecord::Base.connection.foreign_keys(table_name)
-      .find { |fk| Array(fk.column).map(&:to_s) == [ column_identifier.to_s ] }
-  end
-
-  def rename_foreign_key(from_name, to_name)
-    return to_name if from_name == to_name
-    connection = ActiveRecord::Base.connection
-    connection.execute(<<~SQL.squish)
-      ALTER TABLE #{connection.quote_table_name(table_name)}
-      RENAME CONSTRAINT #{connection.quote_column_name(from_name)}
-                     TO #{connection.quote_column_name(to_name)}
-    SQL
-    to_name
-  end
-
-  def rename_foreign_key_for_column(column_identifier)
-    foreign_key = foreign_key_for_column(column_identifier)
-    return nil if foreign_key.nil?
-    rename_foreign_key(foreign_key.name, foreign_key_name(column_identifier, foreign_key.primary_key))
-  end
-
+  # Destroy callbacks also run on unsaved records, which have no table.
   def drop_table
-    name = table_name_in_database
-    return if name.nil?
-    ActiveRecord::Base.connection.drop_table name, if_exists: true
-    refresh_schema! name
+    return if id.nil?
+    schema = schema_definition_in_database
+    return if schema.nil?
+    ActiveRecord::Base.connection.drop_table "#{schema.draft_schema_name}.#{draft_table_identifier}", if_exists: true
   end
 
-  # The name of the primary key index on `qualified_table_name`, or nil if the
-  # table has none. Resolved from the catalog rather than composed as
-  # `<table>_pkey`, because PostgreSQL auto-disambiguates that name when it is
-  # already taken: a table created while an earlier table's index still held the
-  # name carries `<table>_pkey1` instead.
-  def primary_key_index_name(qualified_table_name)
+  # Renames the table and its dynamic columns between draft and committed names,
+  # inside `schema_name` (the committed schema name either way). Raw SQL, as
+  # `rename_table` would also rename the id-named primary key index.
+  def rename_physical_objects!(schema_name, to:)
+    raise ArgumentError, "to: should be :committed or :draft, not #{to.inspect}" unless %i[committed draft].include?(to)
+    committing = to == :committed
     connection = ActiveRecord::Base.connection
-    connection.select_value(<<~SQL.squish)
-      SELECT index_class.relname
-      FROM pg_index
-      JOIN pg_class index_class ON index_class.oid = pg_index.indexrelid
-      WHERE pg_index.indrelid = #{connection.quote(connection.quote_table_name(qualified_table_name))}::regclass
-        AND pg_index.indisprimary
-    SQL
-  end
-
-  # PostgreSQL names the index behind a primary key `<table>_pkey` and leaves it
-  # alone across a RENAME, so after a rename the index still carries the table's
-  # former name — and the next table to take that name gets a disambiguated
-  # `<table>_pkey1`. `connection.rename_table` would have fixed this, but
-  # it resolves the index through the search path, and our table names are
-  # schema-qualified, so it finds nothing and skips the step in silence.
-  # Renaming into a name something else already holds is the same collision this
-  # method exists to clean up, arriving from the other side: rename `b` to `c`,
-  # then `a` to `b`, and `a`'s index wants a name `c`'s index is still sitting on.
-  # PostgreSQL answers that with PG::DuplicateTable, raised from inside
-  # `after_update :rename_table`, rolling back a rename that had already passed
-  # validation. So the canonical name is taken only when it is free; otherwise the
-  # index keeps whatever disambiguated name PostgreSQL gave it, which is untidy
-  # but correct, and the next rename of the table holding it frees the name again.
-  def rename_primary_key_index(previous_index_name)
-    return if previous_index_name.blank?
-    target = "#{identifier}_pkey"
-    return if previous_index_name == target
-    return if relation_name_taken_in_schema?(target)
-    connection = ActiveRecord::Base.connection
-    connection.execute(<<~SQL.squish)
-      ALTER INDEX #{connection.quote_table_name("#{schema_definition.schema_name}.#{previous_index_name}")}
-      RENAME TO #{connection.quote_column_name(target)}
-    SQL
-  end
-
-  # Of any kind, not just the kind about to be named: tables, indexes, sequences
-  # and views share one name space per schema, so an index cannot be renamed onto
-  # a table's name, nor a table created under an index's.
-  def relation_name_taken_in_schema?(name)
-    connection = ActiveRecord::Base.connection
-    connection.select_value(<<~SQL.squish).present?
-      SELECT 1
-      FROM pg_class
-      JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace
-      WHERE pg_namespace.nspname = #{connection.quote(schema_definition.schema_name)}
-        AND pg_class.relname = #{connection.quote(name)}
-    SQL
-  end
-
-  def rename_table
-    return unless identifier_previously_changed?
-    previous_table_name = table_name_for(nil, identifier_previously_was)
-    return if previous_table_name == table_name
-
-    connection = ActiveRecord::Base.connection
-    # Nothing to move when the table was never materialised, or has moved
-    # already. A relation already under the new name is not this table, and is
-    # left for PostgreSQL to refuse, as `rename_schema` does: skipping the rename
-    # would commit the definition pointing at it, with its own table stranded
-    # under the old name.
-    return unless connection.table_exists?(previous_table_name)
-
-    previous_index_name = primary_key_index_name(previous_table_name)
-
-    connection.execute(<<~SQL.squish)
-      ALTER TABLE #{connection.quote_table_name(previous_table_name)}
-      RENAME TO #{connection.quote_column_name(identifier)}
-    SQL
-    rename_primary_key_index previous_index_name
-    refresh_schema! previous_table_name
-  end
-
-  # Drop this table out of the pool-wide schema cache after a DDL statement, so
-  # the next `record_klass` builds its attributes from the shape the table has
-  # now. Called after every statement that changes the table.
-  #
-  # The adapter only does part of this by itself: `create_table`, `drop_table`
-  # and `rename_table` clear the data-source cache, but `add_column`,
-  # `rename_column`, `change_column` and `change_column_null` clear only the
-  # prepared-statement cache, and `remove_column` clears nothing at all.
-  #
-  # Unconditional on purpose. The obvious alternative — finding the model that
-  # owns the table and calling `reset_column_information` on it — cannot work
-  # here: `record_klass` returns an anonymous class, `Class#subclasses` holds
-  # only weak references, so once it has been collected the hunt matches nothing
-  # and the cache is quietly left stale. Iterating descendants is unsafe
-  # besides, since `table_name` raises on an anonymous subclass caught between
-  # `inherited` and its `self.table_name=`.
-  # `also` names further qualified table names to evict — the name the table is
-  # moving away from, for the two renames. `ALTER TABLE ... RENAME` and
-  # `ALTER SCHEMA ... RENAME` both go out through `execute`, so unlike
-  # `connection.rename_table` nothing drops the old name by itself.
-  def refresh_schema!(*also)
-    connection = ActiveRecord::Base.connection
-    pool = ActiveRecord::Base.connection_pool
-    names = ([ table_name ] + also).compact.map(&:to_s).uniq
-
-    # Straight away, because the rest of *this* transaction has to see the shape
-    # the DDL just gave the table — `alter_column` builds a `record_klass` two
-    # lines after calling here.
-    #
-    # `connection.clear_cache!` rather than `pool.active_connection&.clear_cache!`:
-    # `active_connection` is an alias of `active_connection?`, which is
-    # documented not to detect connections obtained through `checkout`, so the
-    # `&.` can silently skip the clear on the very connection that just ran the
-    # DDL. Every statement here goes through `ActiveRecord::Base.connection`, so
-    # clear that one.
-    connection.clear_cache!
-    names.each { |name| pool.schema_cache.clear_data_source_cache!(name) }
-
-    # And again if the transaction rolls back. Anything that repopulated the
-    # cache in between — the `record_klass` above, a query from another callback
-    # — describes a shape the database never kept, and `schema_cache` hangs off
-    # the pool_config for the life of the process, shared by every thread. A
-    # no-op outside a transaction: NullTransaction#after_rollback ignores the
-    # block.
-    transaction = connection.current_transaction
-    unless transaction.state&.finalized?
-      transaction.after_rollback do
-        connection.clear_cache!
-        names.each { |name| pool.schema_cache.clear_data_source_cache!(name) }
-      end
+    from_table, to_table = committing ? [ draft_table_identifier, identifier ] : [ identifier, draft_table_identifier ]
+    quoted_table_name = connection.quote_table_name("#{schema_name}.#{from_table}")
+    column_definitions.each do |column|
+      from_column, to_column = committing ? [ column.draft_column_name, column.identifier ] : [ column.identifier, column.draft_column_name ]
+      connection.execute(<<~SQL.squish)
+        ALTER TABLE #{quoted_table_name}
+        RENAME COLUMN #{connection.quote_column_name(from_column)} TO #{connection.quote_column_name(to_column)}
+      SQL
     end
-    nil
+    connection.execute("ALTER TABLE #{quoted_table_name} RENAME TO #{connection.quote_column_name(to_table)}")
   end
 
-  # Deliberately not memoised, however wasteful rebuilding the class per call
-  # looks. Three things would go stale behind a memo, and only the first has any
-  # DDL to hang an invalidation on:
+  # Committed schemas only. Rebuilt on every call (definitions change without
+  # DDL), after dropping the table from the schema cache so the class always
+  # sees the table as it is now.
   #
-  #   - `SchemaDefinition#rename_schema` iterates its own `table_definitions`, so
-  #     the `refresh_schema!` it calls lands on freshly loaded records, never on
-  #     the definition a caller is holding. `reload` does not clear ivars, so that
-  #     caller's memo would keep pointing at the schema the tables just left.
-  #   - `alter_column` refreshes and *then* builds a class that repopulates the
-  #     caches before it raises. The `after_rollback` hook in `refresh_schema!`
-  #     evicts the pool's schema cache, but an anonymous class keeps its own
-  #     `@columns_hash`, which nothing would evict.
-  #   - `@column_definitions` below is a Relation, unloaded on each call as this
-  #     stands. Held across calls it loads once, and a rename or a `sort` change on
-  #     a column — neither of which runs any DDL — would leave `entity_properties`
-  #     describing the definition as it was.
-  #
-  # The class has no method named after any column: columns are reached through
-  # `record[:name]`, `read_attribute` and `write_attribute` only. A column
-  # identifier is user input, and as a method it either collides with one Rails
-  # defines — `save`, or `valid` through the `valid?` Rails would generate,
-  # refused with DangerousAttributeError — or quietly replaces one it does not,
-  # such as Kernel's `format`. `id` keeps its methods; Rails defines those
-  # itself, whatever the columns.
-  #
-  # Four of the overrides below are Rails internals rather than public API.
-  # Each is pinned by a spec in column_definition_spec.rb or
-  # table_definition_spec.rb that fails if a Rails upgrade stops calling it.
+  # Columns are reached through `record[:name]`, `read_attribute` and
+  # `write_attribute`, never methods: identifiers are user input and could clash
+  # with `save`, `format` and the like. The Rails internals overridden below are
+  # pinned by specs.
   def record_klass
+    raise "#{identifier} is a draft: commit #{schema_definition&.committed_schema_name} before reading or writing its tables" unless committed?
     table_definition = self
-    column_definitions = self.ordered_column_definitions
+    # One string for both, since the cache is keyed by it.
+    physical_table_name = table_name
+    ActiveRecord::Base.connection_pool.schema_cache.clear_data_source_cache!(physical_table_name)
+    column_definitions = self.ordered_column_definitions.to_a
     klass = Class.new(ActiveRecord::Base) do
-      self.table_name = table_definition.table_name
+      self.table_name = physical_table_name
       self.inheritance_column = nil
       self.lock_optimistically = false
       @table_definition = table_definition
       @column_definitions = column_definitions
       before_save :set_updater
 
-      # Where Rails generates the reader, writer, dirty and query methods of
-      # every column, on first instantiation and again from `method_missing`.
+      # Would generate a method per column; see above.
       def self.define_attribute_methods
         false
       end
@@ -704,11 +441,8 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
         self["updated_by"] = current_user_login
       end
 
-      # Both default to `send(name)`, which with no attribute methods calls
-      # whatever method the column shares its name with: `as_json` on a row
-      # with a `destroy` column would destroy the row. `has_attribute?` asks the
-      # loaded attributes rather than the table's columns, so the
-      # `<name>__<display>` aliases `detailed` selects are read the same way.
+      # Both default to `send(name)`, which calls whatever method the column is
+      # named after (`destroy`!). Also reads `detailed`'s `<name>__<display>` aliases.
       def read_attribute_for_serialization(name)
         has_attribute?(name) ? read_attribute(name) : super
       end
@@ -717,18 +451,12 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
         has_attribute?(name) ? read_attribute(name) : super
       end
 
-      # What `method_missing` and `respond_to?` ask before resolving
-      # `record.name` to a column. Without this, `record.name` would still work
-      # whenever nothing else is called `name`, so whether it did would depend on
-      # which methods Ruby, Rails and grit happen to define.
+      # Stops `record.name` from resolving to a column.
       def attribute_method?(attr_name)
         attr_name == "id"
       end
 
-      # Every assignment — `new`, `create`, `update`, `assign_attributes`, and
-      # the scope attributes of `where(...).create` — ends here, and by default
-      # calls `public_send("#{name}=")`: for a column named `attributes`, that
-      # is `attributes=`.
+      # Avoids `public_send("#{name}=")`, which would hit methods like `attributes=`.
       def _assign_attribute(name, value)
         return super unless self.class.has_attribute?(name)
         write_attribute(name, value)
@@ -737,7 +465,6 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
       private :attribute_method?, :_assign_attribute
 
       def self.detailed(params = nil)
-        quoted_table_name = @table_definition.quoted_table_name
         query = self.unscoped
           .select("#{quoted_table_name}.id")
           .select("#{quoted_table_name}.created_by")
@@ -745,54 +472,28 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
           .select("#{quoted_table_name}.created_at")
           .select("#{quoted_table_name}.updated_at")
 
-        # Implementation columns are physically on the table but described
-        # nowhere in `column_definitions`, so they have to be selected here or
-        # they are invisible to the UI and `readable.rb` rejects any filter or
-        # sort that names one.
-        #
-        # Every one of them, `presented_when` or not. The gate belongs to
-        # `entity_properties` and the two methods built on it, which the
-        # entities controller feeds keywords from `entity_args`; a scope reaches
-        # here through `readable.rb`'s `klass.send(scope, params)`, one
-        # positional argument, so there are no keywords to gate on. Gating on
-        # what this can see would leave `entity_columns(with_x: true)`
-        # advertising a column the payload does not carry, and a sort on it
-        # resolves to `nil ASC NULLS LAST`. A payload wider than the columns
-        # advertised is harmless by comparison — the grid ignores keys it was
-        # not told about.
+        # Not described by `column_definitions`, so selected here. All of them:
+        # scopes get no `presented_when` keywords to gate on.
         @table_definition.implementation_column_definitions.each do |column|
           identifier = column[:identifier].to_s
-          query = query.select("#{@table_definition.quoted_table_name}.#{ActiveRecord::Base.connection.quote_column_name(identifier)}")
-          # An implementation column may be declared `type: "entity"`, in which
-          # case `entity_columns` expands it into one `<name>__<display>` grid
-          # column per display property — none of which exist unless the target
-          # is joined here too.
+          query = query.select("#{quoted_table_name}.#{ActiveRecord::Base.connection.quote_column_name(identifier)}")
+          # Entity columns need the target joined for their `<name>__<display>` columns.
           next unless column[:type].to_s == "entity" && column[:entity]
           entity_klass = column[:entity][:full_name].constantize
-          # Joined on whatever the column's foreign key points at, not on `id`:
-          # `implementation_column_target_column` supports `primary_key:`, and a
-          # constraint named after another column has to be joined on that column
-          # or the comparison is bigint against whatever the target actually is.
+          # Joined on the foreign key's target column, which may not be `id`.
           query = select_entity_display_columns(query, identifier, entity_klass.table_name, entity_klass, @table_definition.implementation_column_target_column(column))
         end
 
         @column_definitions.each do |column|
-          query = query.select("#{@table_definition.quoted_table_name}.#{column.quoted_identifier}")
+          query = query.select("#{quoted_table_name}.#{ActiveRecord::Base.connection.quote_column_name(column.identifier)}")
           next unless column.data_type.is_entity
           query = select_entity_display_columns(query, column.identifier, column.data_type.table_name, column.data_type.model)
         end
         query
       end
 
-      # Joins `target_table_name` on `<name>` and selects each of the target's
-      # display properties as `<name>__<display property>` — the grid columns
-      # `entity_columns_from_properties` expands an entity property into. Shared
-      # by both loops above so that an implementation column declared as an
-      # entity is selected exactly as a dynamic one is.
-      #
-      # `target_column` defaults to `id`, which is what every dynamic column's
-      # foreign key points at (`create_dynamic_column_foreign_keys`); only an
-      # implementation column can say otherwise.
+      # Joins the target table and selects its display properties as
+      # `<name>__<property>`, the grid columns `entity_columns` expands to.
       def self.select_entity_display_columns(query, name, target_table_name, entity_klass, target_column = DEFAULT_FOREIGN_KEY_TARGET_COLUMN)
         display_properties = entity_klass.display_properties
         connection = ActiveRecord::Base.connection
@@ -800,7 +501,7 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
         quoted_column = connection.quote_column_name(name)
         query = query.joins(<<~SQL.squish)
           LEFT OUTER JOIN #{connection.quote_table_name(target_table_name)} #{connection.quote_column_name(table_alias)}
-          ON #{connection.quote_column_name(table_alias)}.#{connection.quote_column_name(target_column)} = #{@table_definition.quoted_table_name}.#{quoted_column}
+          ON #{connection.quote_column_name(table_alias)}.#{connection.quote_column_name(target_column)} = #{quoted_table_name}.#{quoted_column}
         SQL
         display_properties.each do |display_property|
           query = query.select(
@@ -811,8 +512,7 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
         query
       end
 
-      # Both of these live on the definition, so that an includer can override
-      # them with `super`. See TableDefinition#implementation_column_properties.
+      # Delegated so includers can override them on the definition.
       def self.implementation_column_properties(**args)
         @table_definition.implementation_column_properties(**args)
       end
@@ -863,12 +563,8 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
         props.concat(self.column_definition_properties(**args))
       end
 
-      # `property[:entity]` is guarded rather than assumed, as it is in `detailed`:
-      # an implementation column may be declared `type: "entity"` with no `entity:`
-      # hash. `implementation_column_definitions_valid` refuses that shape, but an
-      # includer overriding `implementation_column_properties` reaches here
-      # without passing through it, and the failure — a NoMethodError on every
-      # index request, while `detailed` keeps working — is a poor way to find out.
+      # `property[:entity]` may be nil when an includer overrides
+      # `implementation_column_properties` past the validation.
       def self.entity_field_from_property(property)
         if property[:type] == "entity" && property[:entity]
           foreign_klass = property[:entity][:full_name].constantize
@@ -924,9 +620,7 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
                   display_column: foreign_klass_display_property[:name],
                   display_column_type: foreign_klass_display_property[:type]
                 },
-                # The property's own flag counts too, exactly as in the else
-                # branch below: a column declared `default_hidden: true` should
-                # not become visible just because it is an entity reference.
+                # A declared `default_hidden` applies to entity columns too.
                 default_hidden: property[:default_hidden] ||
                   default_hidden.include?("#{property[:name]}__#{foreign_klass_display_property[:name]}")
               })
@@ -964,6 +658,82 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
 
     def schema_definition_id
       "#{self.schema_definition_association}_id".to_sym
+    end
+
+    # Implementation columns are code: a change to them ships with a migration
+    # that applies it to every table, draft or committed, with these helpers.
+    # The migration drops and recreates dependent views itself.
+    #
+    # Yields each table definition (reloaded) and its current physical table
+    # name, in a savepoint under its schema's row lock so a commit or revert
+    # can't interleave. Tables whose schema definition is gone are skipped.
+    def each_physical_table
+      raise ArgumentError, "#{name} must declare belongs_to_schema_definition" if schema_definition_association.nil?
+      connection = ActiveRecord::Base.connection
+      base_class.unscoped.find_each do |table_definition|
+        transaction(requires_new: true) do
+          schema = table_definition.schema_definition&.locked_copy
+          next if schema.nil?
+          table_definition.reload
+          table_definition.association(schema_definition_association).target = schema
+          table_name = table_definition.table_name
+          raise "#{table_name}, the table of #{name} #{table_definition.identifier}, does not exist" unless connection.table_exists?(table_name)
+          yield table_definition, table_name
+          connection.clear_cache!
+          ActiveRecord::Base.connection_pool.schema_cache.clear_data_source_cache!(table_name)
+        end
+      end
+    end
+
+    # Adds `identifier` to every table that declares it: nullable, then the
+    # block fills it in (raw SQL on the given table name), then NOT NULL if
+    # `required:`, then the foreign key. Safe to re-run.
+    #
+    #   SDTMModelDomain.add_implementation_column(:site_id) do |_domain, table_name|
+    #     execute "UPDATE #{quote_table_name(table_name)} SET site_id = ..."
+    #   end
+    def add_implementation_column(identifier, &backfill)
+      identifier = identifier.to_s
+      connection = ActiveRecord::Base.connection
+      tables = 0
+      declared = 0
+      each_physical_table do |table_definition, table_name|
+        tables += 1
+        column = table_definition.implementation_column_definitions.find { |declaration| declaration[:identifier].to_s == identifier }
+        next if column.nil?
+        declared += 1
+        problem = table_definition.implementation_column_addition_problem(column)
+        raise ArgumentError, "Cannot add #{identifier} to #{table_name}: #{problem}" unless problem.nil?
+
+        connection.add_column table_name, identifier, column[:data_type_name], null: true unless connection.column_exists?(table_name, identifier)
+        backfill&.call(table_definition, table_name)
+        if column[:required]
+          quoted_table_name = connection.quote_table_name(table_name)
+          if connection.select_value("SELECT 1 FROM #{quoted_table_name} WHERE #{connection.quote_column_name(identifier)} IS NULL LIMIT 1")
+            raise "Cannot require #{identifier} on #{table_name}: some rows have no value; fill them in from the block"
+          end
+          connection.change_column_null table_name, identifier, false
+        end
+        table_definition.create_implementation_column_foreign_keys([ column ], table_name: table_name)
+      end
+      # An empty database has nothing to migrate.
+      raise ArgumentError, "No #{name} declares the implementation column #{identifier.inspect}" if tables.positive? && declared.zero?
+    end
+
+    # Drops `identifier` and its foreign key from every table. Remove the
+    # declaration first.
+    def remove_implementation_column(identifier)
+      identifier = identifier.to_s
+      connection = ActiveRecord::Base.connection
+      each_physical_table do |table_definition, table_name|
+        if table_definition.implementation_column_definitions.any? { |declaration| declaration[:identifier].to_s == identifier }
+          raise ArgumentError, "#{name} #{table_definition.identifier} still declares the implementation column #{identifier}; remove it from implementation_column_definitions first"
+        end
+        # On a committed table the name belongs to a column definition; the
+        # implementation column can't still be there.
+        next if table_definition.committed? && table_definition.column_definitions.exists?(identifier: identifier)
+        connection.remove_column table_name, identifier, if_exists: true
+      end
     end
   end
 end
