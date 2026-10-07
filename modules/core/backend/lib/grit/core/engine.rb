@@ -26,6 +26,10 @@ module Grit
       # declared by the engine or app defining them:
       #
       #   config.grit.dynamic_schema_prefixes << "ds"
+      #
+      # `dynamic_schema_prefix` refuses a prefix missing here. Listed in config
+      # rather than collected from the macro because rake tasks don't eager
+      # load: no model has run its macro when `db:migrate` dumps structure.sql.
       config.grit = ActiveSupport::OrderedOptions.new
       config.grit.dynamic_schema_prefixes = []
 

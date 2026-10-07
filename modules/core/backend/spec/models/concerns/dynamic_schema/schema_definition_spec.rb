@@ -798,32 +798,26 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
       }.to raise_error(ArgumentError, /at most 32/)
     end
 
-    # `class_attribute` defines a public writer whether or not the macro is used, so the
-    # checks live on the writer.
-    it "applies the same checks to a direct schema_prefix assignment" do
-      expect {
-        Class.new(ApplicationRecord) do
-          def self.name = "DirectPrefixSchemaDefinition"
-          self.table_name = "test_schema_definitions"
-          include Grit::Core::Model::DynamicSchema::SchemaDefinition
-          self.schema_prefix = "Bad-Prefix"
-        end
-      }.to raise_error(ArgumentError, /lowercase letters/)
-
-      expect {
-        Class.new(ApplicationRecord) do
-          def self.name = "DirectOverLongPrefixSchemaDefinition"
-          self.table_name = "test_schema_definitions"
-          include Grit::Core::Model::DynamicSchema::SchemaDefinition
-          self.schema_prefix = "a" * (Grit::Core::Model::DynamicSchema::SchemaDefinition::MAX_SCHEMA_PREFIX_LENGTH + 1)
-        end
-      }.to raise_error(ArgumentError, /at most 32/)
-    end
-
-    it "cannot be set on a single record" do
+    # Only the macro sets it, so its checks need no second home on a writer.
+    it "has no schema_prefix writer on the class or a record" do
+      expect(Grit::SchemaDefinition).not_to respond_to(:schema_prefix=)
       expect(Grit::SchemaDefinition.new).not_to respond_to(:schema_prefix=)
       expect { Grit::SchemaDefinition.new(identifier: "x", name: "X", schema_prefix: "foo") }
         .to raise_error(ActiveModel::UnknownAttributeError)
+    end
+
+    it "is inherited, and a subclass may redeclare it without changing its parent" do
+      declare_schema_prefix("othr")
+      inheriting = Class.new(Grit::SchemaDefinition) { def self.name = "InheritingSchemaDefinition" }
+      redeclaring = Class.new(Grit::SchemaDefinition) do
+        def self.name = "RedeclaringSchemaDefinition"
+        dynamic_schema_prefix "othr"
+      end
+
+      expect(inheriting.schema_prefix).to eq("test")
+      expect(redeclaring.schema_prefix).to eq("othr")
+      expect(redeclaring.new.schema_prefix).to eq("othr")
+      expect(Grit::SchemaDefinition.schema_prefix).to eq("test")
     end
 
     # Without the macro `schema_prefix` is nil and schemas would be `_<id>`, invisible to the

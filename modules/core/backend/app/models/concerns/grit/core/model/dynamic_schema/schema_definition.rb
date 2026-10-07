@@ -56,25 +56,10 @@ module Grit::Core::Model::DynamicSchema::SchemaDefinition
     raise ArgumentError, "Dynamic schema prefix #{prefix.inspect} is #{prefix.bytesize} bytes; at most #{MAX_SCHEMA_PREFIX_LENGTH}, so that a #{prefix}_<schema> schema name survives PostgreSQL's 63 byte limit" if prefix.bytesize > MAX_SCHEMA_PREFIX_LENGTH
   end
 
-  # Validates `self.schema_prefix =` like the macro, including that the prefix is
-  # declared in config. Prepended because `class_attribute` defines the writer
-  # on the singleton class.
-  module SchemaPrefixWriter
-    def schema_prefix=(prefix)
-      return super if prefix.nil?
-      prefix = prefix.to_s
-      Grit::Core::Model::DynamicSchema::SchemaDefinition.check_schema_prefix!(prefix)
-      unless Grit::Core::Model::DynamicSchema::SchemaDefinition.schema_prefixes.include?(prefix)
-        raise ArgumentError, "Dynamic schema prefix #{prefix.inspect} is not declared; add it to config.grit.dynamic_schema_prefixes in the engine or app that defines #{name}"
-      end
-      super(prefix)
-    end
-  end
-
   included do
     class_attribute :table_definitions_association, default: nil
-    class_attribute :schema_prefix, default: nil, instance_writer: false
-    singleton_class.prepend(SchemaPrefixWriter)
+    # Set only by `dynamic_schema_prefix`, which checks it; read `schema_prefix`.
+    class_attribute :_schema_prefix, default: nil, instance_accessor: false, instance_predicate: false
 
     # Run inside the transaction; for objects that depend on physical names,
     # such as views. Throwing :abort in a `before_` callback cancels the change.
@@ -96,6 +81,10 @@ module Grit::Core::Model::DynamicSchema::SchemaDefinition
 
   def committed?
     committed_at.present?
+  end
+
+  def schema_prefix
+    self.class.schema_prefix
   end
 
   def draft_schema_name
@@ -338,8 +327,17 @@ module Grit::Core::Model::DynamicSchema::SchemaDefinition
   end
 
   class_methods do
+    def schema_prefix
+      _schema_prefix
+    end
+
     def dynamic_schema_prefix(prefix)
-      self.schema_prefix = prefix
+      prefix = prefix.to_s
+      Grit::Core::Model::DynamicSchema::SchemaDefinition.check_schema_prefix!(prefix)
+      unless Grit::Core::Model::DynamicSchema::SchemaDefinition.schema_prefixes.include?(prefix)
+        raise ArgumentError, "Dynamic schema prefix #{prefix.inspect} is not declared; add it to config.grit.dynamic_schema_prefixes in the engine or app that defines #{name}"
+      end
+      self._schema_prefix = prefix
     end
 
     # `options` go to `has_many`, but not `dependent:`: the cascade is
