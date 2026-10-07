@@ -202,7 +202,6 @@ module Grit::Core::Model::DynamicSchema::SchemaDefinition
     locked = locked_copy
     return unless locked&.committed?
     errors.add(:identifier, "cannot be changed while #{locked.committed_schema_name} is committed; revert it to draft first")
-    throw :abort
   end
 
   # No `if_not_exists`: a schema already under this id-based name isn't ours.

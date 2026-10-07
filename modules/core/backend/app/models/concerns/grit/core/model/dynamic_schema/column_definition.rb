@@ -33,17 +33,13 @@ module Grit::Core::Model::DynamicSchema::ColumnDefinition
     validate :identifier_unique_in_table
     validate :table_definition_unchanged
     validate :columns_count_within_limit, on: :create
-    # Last: the row checks read the draft table, which `check_schema_draft`
-    # vouches for.
-    validate :check_schema_draft, if: :structural_change?
-    validate :check_column_fillable, on: :create, if: :required
-    validate :check_column_alterable, on: :update, if: -> { required_changed? || data_type_id_changed? }
+    validate :structural_change_allowed, if: :structural_change?
 
     after_create :create_column
     after_update :alter_column
     # On the table's cascade its drop takes the column; see `Refusal`.
     before_destroy :refuse_unless_can_modify, unless: :destroyed_by_parent_definition?
-    before_destroy :check_schema_draft, unless: :destroyed_by_parent_definition?
+    before_destroy :refuse_unless_schema_draft, unless: :destroyed_by_parent_definition?
     before_destroy :drop_column, unless: :destroyed_by_parent_definition?
   end
 
@@ -57,10 +53,9 @@ module Grit::Core::Model::DynamicSchema::ColumnDefinition
   # See `TableDefinition#schema_definition_in_database`.
   def table_definition_in_database
     return if self.class.table_definition_association.nil?
-    foreign_key = self.class.table_definition_foreign_key
-    return table_definition if new_record? || !attribute_changed?(foreign_key)
+    return table_definition unless moved_to_another_table?
     reflection = association(self.table_definition_association).reflection
-    reflection.klass.unscoped.find_by(reflection.association_primary_key => attribute_in_database(foreign_key))
+    reflection.klass.unscoped.find_by(reflection.association_primary_key => attribute_in_database(self.class.table_definition_foreign_key))
   end
 
   def committed?
@@ -85,7 +80,13 @@ module Grit::Core::Model::DynamicSchema::ColumnDefinition
   def structural_change?
     return true if new_record?
     return true if identifier_changed? || data_type_id_changed? || required_changed?
-    return false if self.class.table_definition_association.nil?
+    moved_to_another_table?
+  end
+
+  # A saved column pointed at another table, which `table_definition_unchanged`
+  # refuses.
+  def moved_to_another_table?
+    return false if new_record? || self.class.table_definition_association.nil?
     attribute_changed?(self.class.table_definition_foreign_key)
   end
 
@@ -97,11 +98,25 @@ module Grit::Core::Model::DynamicSchema::ColumnDefinition
   # See `TableDefinition#check_schema_draft`.
   def check_schema_draft
     schema = table_definition_in_database&.schema_definition_in_database
-    return if schema.nil? || schema.new_record?
+    return true if schema.nil? || schema.new_record?
     locked = schema.locked_copy
-    return unless locked&.committed?
+    return true unless locked&.committed?
     errors.add(:base, "#{locked.committed_schema_name} is committed: revert it to draft to change its structure")
-    throw :abort
+    false
+  end
+
+  def refuse_unless_schema_draft
+    throw :abort unless check_schema_draft
+  end
+
+  # The row checks read the draft table, so they run once `check_schema_draft`
+  # vouches for it and the column is staying in it with a type to check.
+  def structural_change_allowed
+    return unless check_schema_draft
+    return if moved_to_another_table? # `table_definition_unchanged` refuses it
+    return if data_type.nil? # `belongs_to` refuses it
+    check_column_fillable if new_record? && required
+    check_column_alterable if persisted? && (required_changed? || data_type_id_changed?)
   end
 
   def identifier_not_implementation_column
@@ -141,9 +156,7 @@ module Grit::Core::Model::DynamicSchema::ColumnDefinition
   end
 
   def table_definition_unchanged
-    return if self.class.table_definition_association.nil?
-    return if new_record?
-    return unless attribute_changed?(self.class.table_definition_foreign_key)
+    return unless moved_to_another_table?
     errors.add(:base, "A column definition cannot be moved to another table")
   end
 
@@ -157,7 +170,6 @@ module Grit::Core::Model::DynamicSchema::ColumnDefinition
 
   # A NOT NULL column can't be added to a table with rows.
   def check_column_fillable
-    return if errors.any?
     definition = table_definition
     return if definition.nil? || definition.new_record?
     connection = ActiveRecord::Base.connection
@@ -168,7 +180,6 @@ module Grit::Core::Model::DynamicSchema::ColumnDefinition
   # What `alter_column` would do to the rows, tried before it runs: the type
   # conversion is the same cast, dry-run in a savepoint.
   def check_column_alterable
-    return if errors.any?
     definition = table_definition
     return if definition.nil?
     connection = ActiveRecord::Base.connection

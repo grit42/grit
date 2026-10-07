@@ -212,6 +212,25 @@ RSpec.describe "DynamicSchema::ColumnDefinition concern", type: :model do
       expect(physical_column(definition).null).to be(false)
     end
 
+    # The row checks don't wait for the other validations to pass.
+    it "reports what the rows refuse alongside other errors" do
+      definition = Grit::ColumnDefinition.create!(identifier: "a_column", name: "A", data_type: string_type, table_definition: table)
+      insert_draft_row(table, a_column: nil)
+
+      expect(definition.update(identifier: "xmin", required: true)).to be(false)
+      expect(definition.errors[:identifier].join).to match(/system column/)
+      expect(definition.errors[:base]).to include("Cannot require column with empty values")
+    end
+
+    # The type conversion is checked against the rows, which needs a type.
+    it "does not read the rows when the data type is missing" do
+      definition = Grit::ColumnDefinition.create!(identifier: "a_column", name: "A", data_type: string_type, table_definition: table)
+      insert_draft_row(table, a_column: "1")
+
+      expect(definition.update(data_type: nil)).to be(false)
+      expect(definition.errors[:data_type]).to include("must exist")
+    end
+
     it "converts a string column to an integer, casting the values through text" do
       definition = Grit::ColumnDefinition.create!(identifier: "a_column", name: "A", data_type: string_type, table_definition: table)
       row_id = insert_draft_row(table, a_column: "42")
@@ -525,6 +544,20 @@ RSpec.describe "DynamicSchema::ColumnDefinition concern", type: :model do
       expect(definition.errors[:base].join).to match(/cannot be moved to another table/)
       expect(column(table.physical_table_name, "c#{definition.id}")).not_to be_nil
       expect(column(other.physical_table_name, "c#{definition.id}")).to be_nil
+    end
+
+    # The draft check reads the saved table; the row checks must not read the
+    # other one, whose draft is gone once its schema is committed.
+    it "does not read the rows of the table a refused move names" do
+      other_schema = Grit::SchemaDefinition.create!(identifier: "other", name: "Other")
+      other = Grit::TableDefinition.create!(identifier: "other", name: "Other", schema_definition: other_schema)
+      other_schema.commit!
+      definition = Grit::ColumnDefinition.create!(identifier: "a_column", name: "A", data_type: string_type, table_definition: table)
+      insert_draft_row(table, a_column: nil)
+
+      expect(definition.update(table_definition: other, required: true)).to be(false)
+      expect(definition.errors[:base].join).to match(/cannot be moved to another table/)
+      expect(definition.errors[:base]).not_to include("Cannot require column with empty values")
     end
   end
 

@@ -90,7 +90,7 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
 
     # On the schema's cascade its drop takes the table; see `Refusal`.
     before_destroy :refuse_unless_can_modify, unless: :destroyed_by_parent_definition?
-    before_destroy :check_schema_draft, unless: :destroyed_by_parent_definition?
+    before_destroy :refuse_unless_schema_draft, unless: :destroyed_by_parent_definition?
     after_destroy :drop_table, unless: :destroyed_by_parent_definition?
   end
 
@@ -145,10 +145,9 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
   # The schema the saved row belongs to: a refused move stays in memory, and
   # destroy doesn't validate.
   def schema_definition_in_database
-    foreign_key = self.class.schema_definition_foreign_key
-    return schema_definition if new_record? || !attribute_changed?(foreign_key)
+    return schema_definition unless moved_to_another_schema?
     reflection = association(self.schema_definition_association).reflection
-    reflection.klass.unscoped.find_by(reflection.association_primary_key => attribute_in_database(foreign_key))
+    reflection.klass.unscoped.find_by(reflection.association_primary_key => attribute_in_database(self.class.schema_definition_foreign_key))
   end
 
   def ordered_column_definitions
@@ -552,8 +551,14 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
 
   # Whether saving touches the physical table; `name` and `sort` can change any time.
   def structural_change?
-    return new_record? || identifier_changed? if self.class.schema_definition_association.nil?
-    new_record? || identifier_changed? || attribute_changed?(self.class.schema_definition_foreign_key)
+    new_record? || identifier_changed? || moved_to_another_schema?
+  end
+
+  # A saved table pointed at another schema, which `schema_definition_unchanged`
+  # refuses.
+  def moved_to_another_schema?
+    return false if new_record? || self.class.schema_definition_association.nil?
+    attribute_changed?(self.class.schema_definition_foreign_key)
   end
 
   # See `Refusal`.
@@ -561,15 +566,21 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
     destroyed_through?(self.class.schema_definition_association)
   end
 
-  # Refuses a structural change while the schema is committed
+  # Locks the schema row so a commit can't race the change. Adds the error and
+  # says whether the change may proceed; `refuse_unless_schema_draft` throws on
+  # false.
   def check_schema_draft
-    return if self.class.schema_definition_association.nil?
+    return true if self.class.schema_definition_association.nil?
     schema = schema_definition_in_database
-    return if schema.nil? || schema.new_record?
+    return true if schema.nil? || schema.new_record?
     locked = schema.locked_copy
-    return unless locked&.committed?
+    return true unless locked&.committed?
     errors.add(:base, "#{locked.committed_schema_name} is committed: revert it to draft to change its structure")
-    throw :abort
+    false
+  end
+
+  def refuse_unless_schema_draft
+    throw :abort unless check_schema_draft
   end
 
   # Among the schema's definitions only; the catalog is not consulted.
@@ -585,9 +596,7 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
   end
 
   def schema_definition_unchanged
-    return if self.class.schema_definition_association.nil?
-    return if new_record?
-    return unless attribute_changed?(self.class.schema_definition_foreign_key)
+    return unless moved_to_another_schema?
     errors.add(:base, "A table definition cannot be moved to another schema")
   end
 

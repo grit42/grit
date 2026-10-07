@@ -17,7 +17,7 @@
 #++
 
 # How schema, table and column definitions refuse a change: a guard adds to
-# `errors` and throws :abort.
+# `errors`; on destroy it also throws :abort.
 #
 #   - Save: guards are validations, so `valid?` agrees with `save`, and `save!`
 #     raises RecordInvalid.
