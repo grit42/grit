@@ -532,12 +532,13 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
         query
       end
 
-      # Joins the target table and selects its display properties as
+      # Joins the target table as `<name>__`, the alias `GritEntityRecord#detailed_scope`
+      # gives foreign key joins, and selects its display properties as
       # `<name>__<property>`, the grid columns `entity_columns` expands to.
       def self.select_entity_display_columns(query, name, target_table_name, entity_klass, target_column = DEFAULT_FOREIGN_KEY_TARGET_COLUMN)
         display_properties = entity_klass.display_properties
         connection = ActiveRecord::Base.connection
-        table_alias = "#{name}__entities"
+        table_alias = "#{name}__"
         quoted_column = connection.quote_column_name(name)
         query = query.joins(<<~SQL.squish)
           LEFT OUTER JOIN #{connection.quote_table_name(target_table_name)} #{connection.quote_column_name(table_alias)}

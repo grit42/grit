@@ -887,7 +887,7 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
       it "joins the target table in detailed" do
         sql = committed_klass(owned).detailed.to_sql
 
-        expect(sql).to include(%(LEFT OUTER JOIN "grit_core_users" "owner_id__entities" ON "owner_id__entities"."id" = #{owned.quoted_table_name}."owner_id"))
+        expect(sql).to include(%(LEFT OUTER JOIN "grit_core_users" "owner_id__" ON "owner_id__"."id" = #{owned.quoted_table_name}."owner_id"))
         expect(sql).to include(%(AS "owner_id__login"))
       end
 
@@ -898,6 +898,13 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
 
         expect(row["owner_id"]).to eq(admin.id)
         expect(row["owner_id__login"]).to eq(admin.login)
+      end
+
+      it "filters on the join alias GritEntityRecord#detailed_scope uses" do
+        committed_klass(owned).create!(owner_id: admin.id)
+
+        expect(committed_klass(owned).detailed.where("owner_id__.login = ?", admin.login).to_a.size).to eq(1)
+        expect(committed_klass(owned).detailed.where("owner_id__.login = ?", "nobody").to_a).to be_empty
       end
 
       it "selects every grid column it advertises" do
@@ -997,7 +1004,7 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
     it "joins on the column the foreign key actually points at" do
       sql = committed_klass(alt).detailed.to_sql
 
-      expect(sql).to include(%(LEFT OUTER JOIN "grit_core_users" "owner_login__entities" ON "owner_login__entities"."login" = #{alt.quoted_table_name}."owner_login"))
+      expect(sql).to include(%(LEFT OUTER JOIN "grit_core_users" "owner_login__" ON "owner_login__"."login" = #{alt.quoted_table_name}."owner_login"))
     end
 
     it "reads the joined values off a row" do
@@ -1100,7 +1107,7 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
     it "joins the target table and selects its display properties" do
       sql = committed_klass(table).detailed.to_sql
 
-      expect(sql).to include(%(LEFT OUTER JOIN "grit_core_users" "ref_col__entities" ON "ref_col__entities"."id" = #{table.quoted_table_name}."ref_col"))
+      expect(sql).to include(%(LEFT OUTER JOIN "grit_core_users" "ref_col__" ON "ref_col__"."id" = #{table.quoted_table_name}."ref_col"))
       expect(sql).to include(%(AS "ref_col__name"))
       expect(sql).to include(%(AS "ref_col__login"))
     end
