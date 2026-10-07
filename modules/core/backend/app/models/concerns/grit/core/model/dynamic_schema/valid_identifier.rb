@@ -17,7 +17,9 @@
 #++
 
 # Identifier rules shared by schema, table and column definitions: each
-# identifier becomes an unquoted PostgreSQL name.
+# identifier becomes a PostgreSQL name. SQL keywords are allowed on purpose
+# (`group` and `order` make natural column names), so any SQL naming them
+# must quote them.
 module Grit::Core::Model::DynamicSchema::ValidIdentifier
   extend ActiveSupport::Concern
 

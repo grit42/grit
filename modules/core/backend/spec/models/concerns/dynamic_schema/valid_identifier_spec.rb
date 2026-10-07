@@ -115,6 +115,16 @@ RSpec.describe "DynamicSchema::ValidIdentifier concern", type: :model do
       end
     end
 
+    # SQL keywords are allowed on purpose: `group` is a natural column name, and
+    # everything that emits SQL quotes identifiers.
+    %i[schema table column].each do |model|
+      it "lets a #{model} take SQL keywords" do
+        %w[group order user select table].each do |keyword|
+          expect(build_with_identifier(model, keyword)).to be_valid
+        end
+      end
+    end
+
     it "no longer reserves the assays-specific experiment_id" do
       expect(build_with_identifier(:column, "experiment_id")).to be_valid
     end

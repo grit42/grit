@@ -49,6 +49,19 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
     SQL
   end
 
+  # Mirrors readable.rb's `select_values_map`: filter/sort name => SQL expression.
+  def select_values_map(scope)
+    scope.select_values.each_with_object({}) do |select_value, memo|
+      sql = select_value.to_s
+      aliased = /\A(?<expression>.+)\s+AS\s+(?<alias>.+)\z/i.match(sql)
+      if aliased
+        memo[aliased[:alias].delete('"')] = aliased[:expression]
+      else
+        memo[sql.split(".").last.delete('"')] = sql
+      end
+    end
+  end
+
   # An includer can name its associations after the concern's own accessors
   # (`column_definitions`, `schema_definition`) without them recursing.
   describe "natural-name associations (T1)" do
@@ -1326,6 +1339,42 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
     end
   end
 
+  describe "record_klass naming" do
+    let(:table) { Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: schema) }
+
+    it "names the class after its table" do
+      klass = committed_klass(table)
+
+      expect(klass.name).to eq("DynamicRecord(test_grp.tbl)")
+      expect(klass.model_name.name).to eq("DynamicRecord(test_grp.tbl)")
+    end
+
+    it "builds the full message of an attribute error" do
+      Grit::ColumnDefinition.create!(identifier: "label", name: "Label", data_type: string_type, table_definition: table)
+      row = committed_klass(table).new
+
+      row.errors.add("label", :blank)
+
+      expect(row.errors.full_messages).to eq([ "Label can't be blank" ])
+    end
+
+    it "keys the cache by table" do
+      other = Grit::TableDefinition.create!(identifier: "other", name: "Other", schema_definition: schema)
+      row = committed_klass(table).create!(id: 1)
+      other_row = other.record_klass.create!(id: 1)
+
+      expect(row.cache_key).not_to eq(other_row.cache_key)
+    end
+
+    it "versions the cache by updated_at" do
+      row = committed_klass(table).create!
+
+      expect(row.cache_version).to eq(row["updated_at"].utc.to_fs(:usec))
+      expect(row.cache_key_with_version).to eq("#{row.cache_key}-#{row.cache_version}")
+      expect(committed_klass(table).find(row.id).cache_version).to eq(row.cache_version)
+    end
+  end
+
   # ==========================================================================
   # Columns are attributes, never methods
   # ==========================================================================
@@ -1378,19 +1427,6 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
     let(:table) { Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: schema) }
     let!(:label) { Grit::ColumnDefinition.create!(identifier: "label", name: "Label", data_type: string_type, table_definition: table) }
     let!(:reference) { Grit::ColumnDefinition.create!(identifier: "ref_col", name: "Ref", data_type: entity_type, table_definition: table) }
-
-    # Mirrors readable.rb's `select_values_map`: filter/sort name => SQL expression.
-    def select_values_map(scope)
-      scope.select_values.each_with_object({}) do |select_value, memo|
-        sql = select_value.to_s
-        aliased = /\A(?<expression>.+)\s+AS\s+(?<alias>.+)\z/i.match(sql)
-        if aliased
-          memo[aliased[:alias].delete('"')] = aliased[:expression]
-        else
-          memo[sql.split(".").last.delete('"')] = sql
-        end
-      end
-    end
 
     shared_examples "columns reached by identifier" do
       it "writes and reads them" do
@@ -1461,6 +1497,48 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
       end
 
       include_examples "columns reached by identifier"
+    end
+  end
+
+  # Allowed on purpose, so everything the concern emits has to quote them.
+  describe "identifiers that are SQL keywords" do
+    let(:table) { Grit::TableDefinition.create!(identifier: "select", name: "Select", schema_definition: schema) }
+    let!(:group_column) { Grit::ColumnDefinition.create!(identifier: "group", name: "Group", data_type: string_type, table_definition: table) }
+    let!(:order_column) { Grit::ColumnDefinition.create!(identifier: "order", name: "Order", data_type: entity_type, table_definition: table) }
+
+    it "writes, reads and queries them" do
+      klass = committed_klass(table)
+      klass.create!(group: "b", order: admin.id)
+      klass.create!(group: "a")
+
+      expect(klass.where(group: "a").count).to eq(1)
+      expect(klass.order(:group).pluck(:group)).to eq(%w[a b])
+      expect(klass.find_by(group: "b")["order"]).to eq(admin.id)
+    end
+
+    it "lets readable filter and sort detailed by them" do
+      klass = committed_klass(table)
+      klass.create!(group: "b", order: admin.id)
+      klass.create!(group: "a")
+      scope = klass.detailed
+      columns = select_values_map(scope)
+
+      expect(columns.keys).to include("group", "order", "order__login")
+      expect(scope.order(Arel.sql("#{columns['group']} DESC")).map { |row| row["group"] }).to eq(%w[b a])
+      expect(scope.where("#{columns['order__login']} = ?", admin.login).map { |row| row["group"] }).to eq(%w[b])
+    end
+
+    it "reverts, renames to another keyword and recommits" do
+      row = committed_klass(table).create!(group: "a", order: admin.id)
+
+      schema.revert_to_draft!
+      group_column.update!(identifier: "user")
+      schema.commit!
+
+      reloaded = table.reload.record_klass.find(row.id)
+      expect(reloaded["user"]).to eq("a")
+      expect(reloaded["order"]).to eq(admin.id)
+      expect(foreign_key_names(table.table_name)).to include(table.foreign_key_name("order", order_column.id))
     end
   end
 

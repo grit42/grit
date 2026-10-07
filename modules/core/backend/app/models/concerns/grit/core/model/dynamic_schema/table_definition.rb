@@ -430,12 +430,20 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
 
   # Committed schemas only. Rebuilt on every call (definitions change without
   # DDL), after dropping the table from the schema cache so the class always
-  # sees the table as it is now.
+  # sees the table as it is now. That costs catalog queries on every call:
+  # call it once per request or job and hold the class for that unit of work.
+  # Do not keep it across requests, as a revert and recommit leaves a held
+  # class with stale columns.
+  #
+  # Saving stamps `created_by` and `updated_by` from `Grit::Core::User.current`,
+  # which raises outside a request unless `RequestStore.store["current_user"]`
+  # is set first, as the load set jobs do.
   #
   # Columns are reached through `record[:name]`, `read_attribute` and
   # `write_attribute`, never methods: identifiers are user input and could clash
-  # with `save`, `format` and the like. The Rails internals overridden below are
-  # pinned by specs.
+  # with `save`, `format` and the like. They may also be SQL keywords (`group`,
+  # `order`), so quote them in any SQL written against the class. The Rails
+  # internals overridden below are pinned by specs.
   def record_klass
     raise "#{identifier} is a draft: commit #{schema_definition&.committed_schema_name} before reading or writing its tables" unless committed?
     table_definition = self
@@ -448,6 +456,8 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
     ActiveRecord::Base.connection_pool.schema_cache.clear_data_source_cache!(physical_table_name)
     column_definitions = self.ordered_column_definitions.to_a
     klass = Class.new(ActiveRecord::Base) do
+      # Anonymous classes have no `model_name`, which errors and cache keys need.
+      set_temporary_name "DynamicRecord(#{physical_table_name})"
       self.table_name = physical_table_name
       self.inheritance_column = nil
       self.lock_optimistically = false
@@ -504,6 +514,13 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
       end
 
       private :attribute_method?, :_assign_attribute
+
+      # Rails reads `updated_at` through attribute methods, which this class
+      # does not define. `cache_key` and `cache_key_with_version` call it.
+      def cache_version
+        return unless cache_versioning
+        self["updated_at"]&.utc&.to_fs(cache_timestamp_format)
+      end
 
       def self.detailed(params = nil)
         query = self.unscoped
