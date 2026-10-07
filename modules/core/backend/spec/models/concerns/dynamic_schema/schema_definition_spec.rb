@@ -185,18 +185,27 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
       expect(connection.table_exists?("test_grp.other")).to be(true)
     end
 
-    it "renames no constraint or index" do
-      foreign_keys = connection.foreign_keys(table.table_name).map(&:name).sort
-
+    it "renames the primary key and dynamic column foreign keys after their identifiers" do
       schema.commit!
 
-      expect(connection.foreign_keys("test_grp.measures").map(&:name).sort).to eq(foreign_keys)
-      expect(foreign_keys).to eq([ "c#{reference.id}_id", "owner_id_id" ])
-      expect(primary_key_index_name("test_grp.measures")).to eq("t#{table.id}_pkey")
+      expect(connection.foreign_keys("test_grp.measures").map(&:name).sort)
+        .to eq([ table.foreign_key_name("owner_id"), table.foreign_key_name("ref_col", reference.id) ])
+      expect(primary_key_index_name("test_grp.measures")).to eq(table.committed_primary_key_name)
+      expect(table.committed_primary_key_name).to start_with("measures_")
     end
 
-    # Tables and indexes share a namespace per schema, so a readable `<table>_pkey` index
-    # name would block a table of that name.
+    it "restores the draft constraint names on revert" do
+      foreign_keys = connection.foreign_keys(table.table_name).map(&:name).sort
+      schema.commit!
+
+      schema.revert_to_draft!
+
+      expect(connection.foreign_keys(table.table_name).map(&:name).sort).to eq(foreign_keys)
+      expect(primary_key_index_name(table.table_name)).to eq(table.draft_primary_key_name)
+    end
+
+    # Tables and indexes share a namespace per schema; primary key index names are padded past
+    # any identifier, so they block no table name.
     it "commits a table named like another table's primary key index" do
       create_table("measures_pkey")
 

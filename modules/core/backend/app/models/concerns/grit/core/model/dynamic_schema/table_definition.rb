@@ -62,6 +62,19 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
   # Far below PostgreSQL's 1600: the grid stops being usable long before.
   MAX_COLUMNS = 250
 
+  # `<name>_<id in hex>_<suffix>`, the id zero-padded so that the name takes all
+  # of PostgreSQL's 63 bytes. Longer than any identifier, so no table can take a
+  # primary key index's name; and as the hex has no underscore, two names only
+  # meet when both `name` and `id` do.
+  def self.constraint_name(name, id, suffix)
+    name = name.to_s
+    limit = ActiveRecord::Base.connection.max_identifier_length
+    width = limit - name.bytesize - suffix.bytesize - 2
+    hex = id.to_s(16)
+    raise ArgumentError, "Constraint name for #{name.inspect} and id #{id} would be over #{limit} bytes" if hex.bytesize > width
+    "#{name}_#{hex.rjust(width, "0")}_#{suffix}"
+  end
+
   included do
     class_attribute :column_definitions_association, default: nil
     class_attribute :schema_definition_association, default: nil
@@ -116,6 +129,15 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
 
   def committed_table_name
     "#{schema_definition.committed_schema_name}.#{identifier}"
+  end
+
+  # Named after the table like the table, so a commit renames it too.
+  def draft_primary_key_name
+    Grit::Core::Model::DynamicSchema::TableDefinition.constraint_name(draft_table_identifier, id, "pk")
+  end
+
+  def committed_primary_key_name
+    Grit::Core::Model::DynamicSchema::TableDefinition.constraint_name(identifier, id, "pk")
   end
 
   # The current physical name.
@@ -278,14 +300,7 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
 
     foreign_key = column[:foreign_key]
     return if foreign_key.nil?
-
     errors.add(:base, "Implementation column #{identifier.inspect} has a foreign key with no table_name") if foreign_key[:table_name].to_s.empty?
-
-    target_column = implementation_column_target_column(column)
-    name = "#{identifier}_#{target_column}"
-    limit = ActiveRecord::Base.connection.max_identifier_length
-    return unless name.bytesize > limit
-    errors.add(:base, "Implementation column #{identifier.inspect} would need the foreign key constraint #{name.inspect}, which is #{name.bytesize} bytes; PostgreSQL truncates at #{limit}")
   end
 
   # An unmapped `data_type_name` (`jsonb`, `inet`, ...) needs an explicit
@@ -311,16 +326,22 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
 
   # Table DDL only runs in a draft (`check_schema_draft`), so it uses draft names.
   def create_table
+    connection = ActiveRecord::Base.connection
     # Skips Rails' length check, which measures `<schema>.<table>` as a whole.
-    ActiveRecord::Base.connection.create_table draft_table_name, id: false, _uses_legacy_table_name: true do |t|
+    connection.create_table draft_table_name, id: false, _uses_legacy_table_name: true do |t|
       create_base_columns t
       create_implementation_columns t
     end
+    # Added here as `create_table` can't name it.
+    connection.execute(<<~SQL.squish)
+      ALTER TABLE #{connection.quote_table_name(draft_table_name)}
+      ADD CONSTRAINT #{connection.quote_column_name(draft_primary_key_name)} PRIMARY KEY (id)
+    SQL
     create_implementation_column_foreign_keys
   end
 
   def create_base_columns(t)
-    t.bigint :id, primary_key: true, default: -> { "nextval('grit_seq'::regclass)" }
+    t.bigint :id, null: false, default: -> { "nextval('grit_seq'::regclass)" }
     t.string :created_by, limit: 30, null: false, default: "SYSTEM"
     t.datetime :created_at, null: false, default: -> { "CURRENT_TIMESTAMP" }
     t.string :updated_by, limit: 30
@@ -353,21 +374,20 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
     "the table would have more than #{MAX_COLUMNS} columns"
   end
 
-  # Foreign keys are named after the column they are on (`c<id>` or the
-  # implementation identifier), so commits and reverts never rename them.
-  def add_column_foreign_key(column_name, target_table_name, target_column = DEFAULT_FOREIGN_KEY_TARGET_COLUMN, table_name: draft_table_name)
-    ActiveRecord::Base.connection.add_foreign_key table_name, target_table_name, column: column_name, primary_key: target_column, name: foreign_key_name(column_name, target_column), if_not_exists: true
+  # `owner_id` is the column definition's id, or this table's for an
+  # implementation column.
+  def add_column_foreign_key(column_name, target_table_name, target_column = DEFAULT_FOREIGN_KEY_TARGET_COLUMN, owner_id: id, table_name: draft_table_name)
+    ActiveRecord::Base.connection.add_foreign_key table_name, target_table_name, column: column_name, primary_key: target_column, name: foreign_key_name(column_name, owner_id), if_not_exists: true
   end
 
   def implementation_column_target_column(column)
     (column.dig(:foreign_key, :primary_key) || DEFAULT_FOREIGN_KEY_TARGET_COLUMN).to_s
   end
 
-  def foreign_key_name(column_name, target_column = DEFAULT_FOREIGN_KEY_TARGET_COLUMN)
-    name = "#{column_name}_#{target_column}"
-    limit = ActiveRecord::Base.connection.max_identifier_length
-    raise ArgumentError, "Foreign key name #{name.inspect} is #{name.bytesize} bytes; PostgreSQL truncates at #{limit}" if name.bytesize > limit
-    name
+  # Named after the column it is on (`c<id>` or the identifier), so a commit
+  # renames those of dynamic columns; implementation columns keep theirs.
+  def foreign_key_name(column_name, owner_id = id)
+    Grit::Core::Model::DynamicSchema::TableDefinition.constraint_name(column_name, owner_id, "fk")
   end
 
   # Destroy callbacks also run on unsaved records, which have no table.
@@ -378,9 +398,9 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
     ActiveRecord::Base.connection.drop_table "#{schema.draft_schema_name}.#{draft_table_identifier}", if_exists: true
   end
 
-  # Renames the table and its dynamic columns between draft and committed names,
-  # inside `schema_name` (the committed schema name either way). Raw SQL, as
-  # `rename_table` would also rename the id-named primary key index.
+  # Renames the table, its dynamic columns and their constraints between draft
+  # and committed names, inside `schema_name` (the committed schema name either
+  # way). Raw SQL, as `rename_table` expects a `<table>_pkey` primary key index.
   def rename_physical_objects!(schema_name, to:)
     raise ArgumentError, "to: should be :committed or :draft, not #{to.inspect}" unless %i[committed draft].include?(to)
     committing = to == :committed
@@ -393,8 +413,21 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
         ALTER TABLE #{quoted_table_name}
         RENAME COLUMN #{connection.quote_column_name(from_column)} TO #{connection.quote_column_name(to_column)}
       SQL
+      next unless column.data_type.is_entity
+      rename_constraint!(quoted_table_name, foreign_key_name(from_column, column.id), foreign_key_name(to_column, column.id))
     end
+    from_key, to_key = committing ? [ draft_primary_key_name, committed_primary_key_name ] : [ committed_primary_key_name, draft_primary_key_name ]
+    # Renames the primary key index along with the constraint.
+    rename_constraint!(quoted_table_name, from_key, to_key)
     connection.execute("ALTER TABLE #{quoted_table_name} RENAME TO #{connection.quote_column_name(to_table)}")
+  end
+
+  def rename_constraint!(quoted_table_name, from, to)
+    connection = ActiveRecord::Base.connection
+    connection.execute(<<~SQL.squish)
+      ALTER TABLE #{quoted_table_name}
+      RENAME CONSTRAINT #{connection.quote_column_name(from)} TO #{connection.quote_column_name(to)}
+    SQL
   end
 
   # Committed schemas only. Rebuilt on every call (definitions change without

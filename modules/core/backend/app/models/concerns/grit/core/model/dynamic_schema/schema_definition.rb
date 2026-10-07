@@ -223,7 +223,7 @@ module Grit::Core::Model::DynamicSchema::SchemaDefinition
       if ActiveRecord::Base.connection.schema_exists?(draft_schema_name)
         raise Grit::Core::Model::DynamicSchema::CommitError, "Could not revert #{committed_schema_name} to draft: the schema #{draft_schema_name} already exists"
       end
-      tables = table_definitions.to_a
+      tables = table_definitions.includes(table_definitions.klass.column_definitions_association => :data_type).to_a
 
       run_schema_callbacks(:schema_revert) do
         translating_statement_errors("revert #{committed_schema_name} to draft") do

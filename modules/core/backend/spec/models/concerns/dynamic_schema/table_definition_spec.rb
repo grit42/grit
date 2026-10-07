@@ -306,39 +306,74 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
     end
   end
 
-  describe "foreign key constraint naming (T8)" do
-    it "names constraints after the column they are on and the column they reference" do
+  describe "constraint naming (T8)" do
+    # `<name>_<id in hex, zero-padded to 63 bytes>_<suffix>`.
+    def padded(name, id, suffix)
+      hex = id.to_s(16)
+      "#{name}_#{hex.rjust(63 - name.length - suffix.length - 2, "0")}_#{suffix}"
+    end
+
+    it "pads names to PostgreSQL's 63 bytes" do
+      expect(Grit::Core::Model::DynamicSchema::TableDefinition.constraint_name("tbl", 26, "pk"))
+        .to eq("tbl_#{'0' * 54}1a_pk")
+    end
+
+    it "names foreign keys after the column they are on and its definition, or the table for implementation columns" do
       table = Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: schema)
       column = Grit::ColumnDefinition.create!(identifier: "ref_col", name: "Ref", data_type: entity_type, table_definition: table)
 
-      expect(foreign_key_names(table.table_name)).to eq([ "c#{column.id}_id", "owner_id_id" ])
+      expect(foreign_key_names(table.table_name))
+        .to eq([ padded("c#{column.id}", column.id, "fk"), padded("owner_id", table.id, "fk") ])
     end
 
-    it "keeps constraint names through renames, a commit and a revert" do
+    it "names the primary key after the table" do
+      table = Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: schema)
+
+      expect(primary_key_index_name(table.table_name)).to eq(padded("t#{table.id}", table.id, "pk"))
+      expect(table.draft_primary_key_name).to eq(padded("t#{table.id}", table.id, "pk"))
+    end
+
+    it "keeps draft names through identifier changes" do
       table = Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: schema)
       column = Grit::ColumnDefinition.create!(identifier: "ref_col", name: "Ref", data_type: entity_type, table_definition: table)
       names = foreign_key_names(table.table_name)
 
       column.update!(identifier: "new_col")
       table.update!(identifier: "new_tbl")
+
       expect(foreign_key_names(table.table_name)).to eq(names)
+      expect(primary_key_index_name(table.table_name)).to eq(table.draft_primary_key_name)
+    end
+
+    it "renames dynamic column foreign keys and the primary key at commit, and back at revert" do
+      table = Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: schema)
+      column = Grit::ColumnDefinition.create!(identifier: "ref_col", name: "Ref", data_type: entity_type, table_definition: table)
+      draft_names = foreign_key_names(table.table_name)
 
       schema.commit!
-      expect(foreign_key_names("test_grp.new_tbl")).to eq(names)
+
+      expect(foreign_key_names("test_grp.tbl"))
+        .to eq([ padded("owner_id", table.id, "fk"), padded("ref_col", column.id, "fk") ])
+      expect(primary_key_index_name("test_grp.tbl")).to eq(padded("tbl", table.id, "pk"))
+      expect(table.committed_primary_key_name).to eq(padded("tbl", table.id, "pk"))
+      expect(table.record_klass.primary_key).to eq("id")
 
       schema.revert_to_draft!
-      expect(foreign_key_names(table.table_name)).to eq(names)
+
+      expect(foreign_key_names(table.table_name)).to eq(draft_names)
+      expect(primary_key_index_name(table.table_name)).to eq(table.draft_primary_key_name)
     end
 
-    it "keeps the primary key index name through a commit" do
+    it "leaves a column that is no entity without foreign key through a commit" do
       table = Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: schema)
+      Grit::ColumnDefinition.create!(identifier: "label", name: "Label", data_type: string_type, table_definition: table)
 
       schema.commit!
 
-      expect(primary_key_index_name("test_grp.tbl")).to eq("t#{table.id}_pkey")
+      expect(foreign_key_names("test_grp.tbl")).to eq([ padded("owner_id", table.id, "fk") ])
     end
 
-    it "names a constraint after a non-default target column" do
+    it "names an implementation column's foreign key the same whatever its target column" do
       klass = Class.new(Grit::TableDefinition) do
         def self.name = "AlternateTargetTableDefinition"
 
@@ -350,7 +385,7 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
 
       table = klass.create!(identifier: "alt", name: "Alt", schema_definition: schema)
 
-      expect(foreign_key_names(table.table_name)).to eq([ "owner_login_login" ])
+      expect(foreign_key_names(table.table_name)).to eq([ padded("owner_login", table.id, "fk") ])
     end
   end
 
@@ -479,21 +514,19 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
       expect(table.errors[:base].count { |e| e.match?(/declared more than once/) }).to eq(1)
     end
 
-    it "refuses to write a foreign key name PostgreSQL would truncate" do
-      table = Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: schema)
-      expect { table.foreign_key_name("c" * 62) }.to raise_error(ArgumentError, /truncates at/)
+    # Any bigint id fits beside any identifier, and the padding puts every name past what an
+    # identifier can be.
+    it "makes every constraint name exactly 63 bytes" do
+      max = Grit::Core::Model::DynamicSchema::ValidIdentifier::MAX_IDENTIFIER_LENGTH
+      [ "ab", "c" * max ].product([ 1, 2**63 - 1 ], %w[pk fk]).each do |name, id, suffix|
+        constraint_name = Grit::Core::Model::DynamicSchema::TableDefinition.constraint_name(name, id, suffix)
+        expect(constraint_name.bytesize).to eq(connection.max_identifier_length)
+      end
     end
 
-    # A constraint name is where two identifiers meet: 30 + 1 + 30 must fit PostgreSQL's 63 bytes,
-    # or two columns could truncate onto one constraint name.
-    it "composes a worst-case constraint name inside the limit" do
-      max = Grit::Core::Model::DynamicSchema::ValidIdentifier::MAX_IDENTIFIER_LENGTH
-      table = Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: schema)
-
-      name = table.foreign_key_name("c" * max, "t" * max)
-
-      expect(name.bytesize).to eq(61)
-      expect(name.bytesize).to be <= connection.max_identifier_length
+    it "refuses a constraint name PostgreSQL would truncate" do
+      expect { Grit::Core::Model::DynamicSchema::TableDefinition.constraint_name("c" * 50, 2**63 - 1, "fk") }
+        .to raise_error(ArgumentError, /over 63 bytes/)
     end
 
     # The qualified table name is 66 chars: past the combined length Rails checks for, but within
@@ -510,26 +543,9 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
       expect(table.table_name.length).to be > connection.max_identifier_length
       expect(connection.table_exists?(table.table_name)).to be(true)
       expect(connection.columns(table.table_name).map(&:name)).to include("c" * max)
-      expect(foreign_key_names(table.table_name)).to eq([ "c#{column.id}_id", "owner_id_id" ])
-    end
-
-    # The target column is half the constraint name; unchecked, an over-long one would raise from
-    # `after_create :create_table` instead of failing validation.
-    it "invalidates a record whose foreign key target column blows the budget" do
-      klass = Class.new(Grit::TableDefinition) do
-        def self.name = "LongTargetColumnTableDefinition"
-
-        def implementation_column_definitions
-          [ { identifier: "ab_reference_column_identifier", data_type_name: "bigint",
-              foreign_key: { table_name: "grit_core_users", primary_key: "a_very_long_target_column_name_here" } } ]
-        end
-      end
-
-      table = klass.new(identifier: "tbl", name: "Table", schema_definition: schema)
-
-      expect(table).not_to be_valid
-      expect(table.errors[:base].join).to match(/PostgreSQL truncates at/)
-      expect(table.save).to be(false)
+      expect(foreign_key_names(table.table_name))
+        .to eq([ table.foreign_key_name("c" * max, column.id), table.foreign_key_name("owner_id") ])
+      expect(primary_key_index_name(table.table_name)).to eq(table.committed_primary_key_name)
     end
 
     # An unmapped SQL type would reach the UI as a property type nothing renders (blank cell, no
@@ -646,7 +662,7 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
 
     it "creates the column and its foreign key" do
       expect(committed_klass(table).column_names).to include("owner_id")
-      expect(foreign_key_names(table.table_name)).to include("owner_id_id")
+      expect(foreign_key_names(table.table_name)).to include(table.foreign_key_name("owner_id"))
     end
 
     it "selects the column in detailed" do
@@ -852,7 +868,7 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
       it "still builds the physical column and its foreign key" do
         expect(committed_klass(gated).column_names).to include("owner_id")
         expect(committed_klass(gated).detailed.to_sql).to include(%(#{gated.quoted_table_name}."owner_id"))
-        expect(foreign_key_names(gated.table_name)).to include("owner_id_id")
+        expect(foreign_key_names(gated.table_name)).to include(gated.foreign_key_name("owner_id"))
       end
     end
   end
@@ -1363,9 +1379,9 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
 
         Grit::TableDefinition.add_implementation_column(:batch_id)
 
-        table_names.each do |table_name|
+        [ draft, committed ].zip(table_names).each do |table, table_name|
           expect(column_named(table_name, "batch_id").null).to be(true)
-          expect(foreign_key_names(table_name)).to include("batch_id_id")
+          expect(foreign_key_names(table_name)).to include(table.foreign_key_name("batch_id"))
         end
       end
 
@@ -1375,7 +1391,7 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
 
         Grit::TableDefinition.add_implementation_column(:owner_login)
 
-        expect(foreign_key_names("test_other.cmt")).to include("owner_login_login")
+        expect(foreign_key_names("test_other.cmt")).to include(committed.foreign_key_name("owner_login"))
       end
 
       it "hands each table to the block to fill a required column in" do
@@ -1403,7 +1419,8 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
         Grit::TableDefinition.add_implementation_column(:batch_id)
 
         expect { Grit::TableDefinition.add_implementation_column(:batch_id) }.not_to raise_error
-        expect(foreign_key_names("test_other.cmt")).to eq([ "batch_id_id", "owner_id_id" ])
+        expect(foreign_key_names("test_other.cmt"))
+          .to eq([ committed.foreign_key_name("batch_id"), committed.foreign_key_name("owner_id") ])
       end
 
       it "refuses a column a column definition is already identified by" do

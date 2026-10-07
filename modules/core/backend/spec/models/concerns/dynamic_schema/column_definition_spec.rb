@@ -32,6 +32,10 @@ RSpec.describe "DynamicSchema::ColumnDefinition concern", type: :model do
     set_current_user(admin)
   end
 
+  def draft_foreign_key_name(definition)
+    table.foreign_key_name(definition.draft_column_name, definition.id)
+  end
+
   def connection
     ActiveRecord::Base.connection
   end
@@ -97,10 +101,11 @@ RSpec.describe "DynamicSchema::ColumnDefinition concern", type: :model do
       connection.foreign_keys(table.table_name).map(&:name)
     end
 
-    it "names the constraint after the column's id and the column it references" do
+    it "names the constraint after the column's draft name and id" do
       definition = Grit::ColumnDefinition.create!(identifier: "ref_col", name: "Ref", data_type: entity_type, table_definition: table)
 
-      expect(foreign_key_names).to include("c#{definition.id}_id")
+      expect(draft_foreign_key_name(definition)).to match(/\Ac#{definition.id}_0+#{definition.id.to_s(16)}_fk\z/)
+      expect(foreign_key_names).to include(draft_foreign_key_name(definition))
     end
 
     it "keeps the constraint name when the identifier changes" do
@@ -108,16 +113,16 @@ RSpec.describe "DynamicSchema::ColumnDefinition concern", type: :model do
 
       definition.update!(identifier: "new_col")
 
-      expect(foreign_key_names).to include("c#{definition.id}_id")
+      expect(foreign_key_names).to include(draft_foreign_key_name(definition))
     end
 
     it "names the constraint after the column when the data type becomes an entity" do
       definition = Grit::ColumnDefinition.create!(identifier: "a_column", name: "A", data_type: integer_type, table_definition: table)
-      expect(foreign_key_names).not_to include("c#{definition.id}_id")
+      expect(foreign_key_names).not_to include(draft_foreign_key_name(definition))
 
       definition.update!(data_type: entity_type)
 
-      expect(foreign_key_names).to include("c#{definition.id}_id")
+      expect(foreign_key_names).to include(draft_foreign_key_name(definition))
     end
   end
 
@@ -194,11 +199,11 @@ RSpec.describe "DynamicSchema::ColumnDefinition concern", type: :model do
 
     it "drops the foreign key when the type stops being an entity" do
       definition = Grit::ColumnDefinition.create!(identifier: "ref_col", name: "Ref", data_type: entity_type, table_definition: table)
-      expect(connection.foreign_keys(table.table_name).map(&:name)).to include("c#{definition.id}_id")
+      expect(connection.foreign_keys(table.table_name).map(&:name)).to include(draft_foreign_key_name(definition))
 
       definition.update!(data_type: integer_type)
 
-      expect(connection.foreign_keys(table.table_name).map(&:name)).not_to include("c#{definition.id}_id")
+      expect(connection.foreign_keys(table.table_name).map(&:name)).not_to include(draft_foreign_key_name(definition))
     end
 
     it "refuses to point a populated column at an entity" do
@@ -226,7 +231,7 @@ RSpec.describe "DynamicSchema::ColumnDefinition concern", type: :model do
 
       definition.update!(data_type: other_entity_type)
 
-      expect(connection.foreign_keys(table.table_name).map(&:name)).to include("c#{definition.id}_id")
+      expect(connection.foreign_keys(table.table_name).map(&:name)).to include(draft_foreign_key_name(definition))
     end
 
     # Only a bad cast becomes the "conflicts in existing rows" error; anything else keeps its

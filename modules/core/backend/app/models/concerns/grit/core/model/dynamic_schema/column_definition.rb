@@ -155,7 +155,7 @@ module Grit::Core::Model::DynamicSchema::ColumnDefinition
     raise "Cannot require column with empty values" if required && connection.select_value("SELECT 1 FROM #{connection.quote_table_name(table_name)} LIMIT 1")
 
     connection.add_column table_name, draft_column_name, data_type.sql_name, null: !required
-    definition.add_column_foreign_key draft_column_name, data_type.table_name, foreign_key_target_column if data_type.is_entity
+    definition.add_column_foreign_key draft_column_name, data_type.table_name, foreign_key_target_column, owner_id: id if data_type.is_entity
   end
 
   # Only `required` and the type reach the table: a draft column is named after
@@ -184,7 +184,7 @@ module Grit::Core::Model::DynamicSchema::ColumnDefinition
       begin
         connection.remove_foreign_key table_name, column: column_name, if_exists: true
         connection.change_column table_name, column_name, data_type.sql_name, using: "#{quoted_column_name}::text::#{data_type.sql_name}"
-        definition.add_column_foreign_key column_name, data_type.table_name, foreign_key_target_column if data_type.is_entity
+        definition.add_column_foreign_key column_name, data_type.table_name, foreign_key_target_column, owner_id: id if data_type.is_entity
       rescue ActiveRecord::InvalidForeignKey
         raise "Failed to convert #{previous_data_type.name} to #{data_type.name} because of conflicts in existing rows"
       rescue ActiveRecord::StatementInvalid => e
