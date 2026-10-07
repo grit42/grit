@@ -97,6 +97,89 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
     end
   end
 
+  # The guard also stands before commit, revert and drop.
+  describe "check_can_modify beyond save" do
+    let(:locked_klass) do
+      Class.new(Grit::SchemaDefinition) do
+        def self.name = "LockedSchemaDefinition"
+
+        def check_can_modify
+          super
+          return unless name == "Locked"
+          errors.add(:base, "is locked")
+          throw :abort
+        end
+      end
+    end
+    let(:own) { locked_klass.create!(identifier: "lck", name: "Open") }
+
+    def lock(definition)
+      locked_klass.find(definition.id).update_columns(name: "Locked")
+    end
+
+    # Locked through another instance: the commit reads the locked row, not memory.
+    it "refuses a commit and leaves the draft as it was" do
+      create_table(schema_definition: own)
+      lock(own)
+
+      expect { own.commit! }.to raise_error(Grit::Core::Model::DynamicSchema::CommitError, "Schema lck: is locked")
+      expect(own).not_to be_committed
+      expect(own.reload).not_to be_committed
+      expect(connection.schema_exists?("test_#{own.id}")).to be(true)
+      expect(connection.table_exists?("test_#{own.id}.t#{own.table_definitions.first.id}")).to be(true)
+    end
+
+    it "reports the refusal from the non-bang forms once" do
+      lock(own)
+
+      expect(own.commit).to be(false)
+      expect(own.errors[:base]).to eq([ "Schema lck: is locked" ])
+    end
+
+    it "refuses a revert and leaves the schema committed" do
+      own.commit!
+      lock(own)
+
+      expect { own.revert_to_draft! }.to raise_error(Grit::Core::Model::DynamicSchema::CommitError, "Schema lck: is locked")
+      expect(own.reload).to be_committed
+      expect(connection.schema_exists?("test_lck")).to be(true)
+    end
+
+    it "refuses a drop with the reason" do
+      own.update_columns(name: "Locked")
+
+      expect(own.destroy).to be(false)
+      expect { own.destroy! }.to raise_error(ActiveRecord::RecordNotDestroyed, "is locked")
+      expect(connection.schema_exists?("test_#{own.id}")).to be(true)
+    end
+
+    it "counts errors added without :abort as a refusal" do
+      klass = Class.new(Grit::SchemaDefinition) do
+        def self.name = "FrozenSchemaDefinition"
+
+        def check_can_modify
+          errors.add(:base, "is frozen once committed") if committed_at_in_database.present?
+        end
+      end
+      frozen = klass.create!(identifier: "frz", name: "Frozen")
+      frozen.commit!
+
+      expect(frozen.update(name: "Renamed")).to be(false)
+      expect { frozen.reload.revert_to_draft! }.to raise_error(Grit::Core::Model::DynamicSchema::CommitError, "Schema frz: is frozen once committed")
+    end
+
+    it "is the schema's alone at commit" do
+      table = create_table
+      create_column(table)
+      allow_any_instance_of(Grit::TableDefinition).to receive(:check_can_modify) { |definition| definition.errors.add(:base, "table locked") }
+      allow_any_instance_of(Grit::ColumnDefinition).to receive(:check_can_modify) { |definition| definition.errors.add(:base, "column locked") }
+      expect(table).not_to be_valid
+
+      expect { schema.commit! }.not_to raise_error
+      expect(schema).to be_committed
+    end
+  end
+
   describe "blank identifier (T11)" do
     it "reports an invalid record rather than raising" do
       expect { schema.update(identifier: nil) }.not_to raise_error
@@ -458,6 +541,13 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
       expect(connection.schema_exists?("test_grp")).to be(true)
     end
 
+    it "is refused by validation" do
+      schema.identifier = "other"
+
+      expect(schema).not_to be_valid
+      expect { schema.save! }.to raise_error(ActiveRecord::RecordInvalid, /cannot be changed while test_grp is committed/)
+    end
+
     # Simulates a request racing the commit, which loaded the definition while still a draft.
     it "is checked against the locked row rather than memory" do
       stale = Grit::SchemaDefinition.find(schema.id)
@@ -525,6 +615,8 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
       own = klass.create!(identifier: "kpt", name: "Kept")
 
       expect(own.destroy).to be(false)
+      expect(own.errors[:base]).to eq([ "A before_schema_drop callback aborted the drop" ])
+      expect { own.destroy! }.to raise_error(ActiveRecord::RecordNotDestroyed, "A before_schema_drop callback aborted the drop")
       expect(connection.schema_exists?("test_#{own.id}")).to be(true)
       expect(Grit::SchemaDefinition.where(id: own.id)).to exist
     end

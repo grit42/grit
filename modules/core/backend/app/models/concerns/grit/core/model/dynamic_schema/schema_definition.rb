@@ -29,6 +29,7 @@
 module Grit::Core::Model::DynamicSchema::SchemaDefinition
   extend ActiveSupport::Concern
   include Grit::Core::Model::DynamicSchema::ValidIdentifier
+  include Grit::Core::Model::DynamicSchema::Refusal
 
   MAX_IDENTIFIER_LENGTH = Grit::Core::Model::DynamicSchema::ValidIdentifier::MAX_IDENTIFIER_LENGTH
   IDENTIFIER_FORMAT = Grit::Core::Model::DynamicSchema::ValidIdentifier::IDENTIFIER_FORMAT
@@ -79,22 +80,18 @@ module Grit::Core::Model::DynamicSchema::SchemaDefinition
     # such as views. Throwing :abort in a `before_` callback cancels the change.
     define_model_callbacks :schema_commit, :schema_revert, :schema_drop
 
+    # Guards; see `Refusal`.
+    validate :refuse_unless_can_modify, except_on: :schema_commit, prepend: true
     validate :schema_prefix_declared
     validate :schema_name_available
+    validate :check_identifier_modifiable, if: -> { persisted? && identifier_changed? }
 
-    before_save :check_can_modify
-    before_save :check_identifier_modifiable, if: -> { persisted? && identifier_changed? }
     after_create :create_schema
 
     # Declared before `has_many_table_definitions`' `dependent: :destroy`, so
     # `before_schema_drop` still sees the table definitions.
-    before_destroy :check_can_modify
+    before_destroy :refuse_unless_can_modify
     before_destroy :drop_schema
-  end
-
-  # Runs before every save and destroy; a no-op for includers to override (call
-  # `super`). Structural changes to a committed schema are refused regardless.
-  def check_can_modify
   end
 
   def committed?
@@ -173,11 +170,14 @@ module Grit::Core::Model::DynamicSchema::SchemaDefinition
   def drop_schema
     locked = locked_copy
     return if locked.nil?
+    count = errors.count
     dropped = run_callbacks(:schema_drop) do
       ActiveRecord::Base.connection.drop_schema(locked.schema_name, if_exists: true)
       true
     end
-    throw :abort unless dropped
+    return if dropped
+    errors.add(:base, "A before_schema_drop callback aborted the drop") if errors.count == count
+    throw :abort
   end
 
   def commit
@@ -203,7 +203,6 @@ module Grit::Core::Model::DynamicSchema::SchemaDefinition
           tables.each { |table| table.rename_physical_objects!(committed_schema_name, to: :committed) }
         end
         update_columns(committed_at: Time.current)
-        clear_prepared_statements
       end
     end
   end
@@ -231,7 +230,6 @@ module Grit::Core::Model::DynamicSchema::SchemaDefinition
           ActiveRecord::Base.connection.rename_schema(committed_schema_name, draft_schema_name)
         end
         update_columns(committed_at: nil)
-        clear_prepared_statements
       end
     end
   end
@@ -240,7 +238,7 @@ module Grit::Core::Model::DynamicSchema::SchemaDefinition
 
   # A savepoint, so a failed non-bang call rolls back inside a caller's
   # transaction. Restores `committed_at` in memory on failure, since a rollback
-  # doesn't.
+  # doesn't. `check_can_modify` sees the locked row.
   def in_schema_transaction
     if new_record? || has_changes_to_save?
       raise Grit::Core::Model::DynamicSchema::CommitError, "Save #{self.class.model_name.human.downcase} #{identifier} before committing or reverting it"
@@ -249,6 +247,7 @@ module Grit::Core::Model::DynamicSchema::SchemaDefinition
     self.class.transaction(requires_new: true) do
       lock!
       committed_at_before = committed_at
+      check_can_modify!
       yield
     end
     self
@@ -258,10 +257,17 @@ module Grit::Core::Model::DynamicSchema::SchemaDefinition
     raise
   end
 
-  # This connection's prepared statements were planned against the old names.
-  # Other connections' are not reached; Rails retries those outside transactions.
-  def clear_prepared_statements
-    ActiveRecord::Base.connection.clear_cache!
+  # Cleared after, as the non-bang forms copy the messages back onto `errors`.
+  def check_can_modify!
+    errors.clear
+    refused = !catch(:abort) do
+      refuse_unless_can_modify
+      true
+    end
+    return unless refused
+    messages = errors.full_messages.map { |message| "Schema #{identifier}: #{message}" }
+    errors.clear
+    raise Grit::Core::Model::DynamicSchema::CommitError, messages
   end
 
   def run_schema_callbacks(kind, &block)
@@ -279,6 +285,7 @@ module Grit::Core::Model::DynamicSchema::SchemaDefinition
   end
 
   # Every definition's errors, plus whether the readable schema name is taken.
+  # `check_can_modify` is the schema's alone; see `check_can_modify!`.
   def commit_errors(tables)
     messages = definition_errors(self, "Schema #{identifier}")
     if ActiveRecord::Base.connection.schema_exists?(committed_schema_name)
@@ -294,7 +301,7 @@ module Grit::Core::Model::DynamicSchema::SchemaDefinition
   end
 
   def definition_errors(definition, label)
-    return [] if definition.valid?
+    return [] if definition.valid?(Grit::Core::Model::DynamicSchema::Refusal::COMMIT_VALIDATION_CONTEXT)
     definition.errors.full_messages.map { |message| "#{label}: #{message}" }
   end
 

@@ -19,6 +19,7 @@
 module Grit::Core::Model::DynamicSchema::TableDefinition
   extend ActiveSupport::Concern
   include Grit::Core::Model::DynamicSchema::ValidIdentifier
+  include Grit::Core::Model::DynamicSchema::Refusal
 
   MAX_IDENTIFIER_LENGTH = Grit::Core::Model::DynamicSchema::ValidIdentifier::MAX_IDENTIFIER_LENGTH
   IDENTIFIER_FORMAT = Grit::Core::Model::DynamicSchema::ValidIdentifier::IDENTIFIER_FORMAT
@@ -79,22 +80,18 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
     class_attribute :column_definitions_association, default: nil
     class_attribute :schema_definition_association, default: nil
 
-    before_save :check_can_modify
-    before_save :check_schema_draft, if: :structural_change?
-    after_create :create_table
-    before_destroy :check_can_modify
-
-    before_destroy :check_schema_draft, unless: :destroyed_by_association
-    after_destroy :drop_table, unless: :destroyed_by_association
-
+    # Guards; see `Refusal`.
+    validate :refuse_unless_can_modify, except_on: :schema_commit, prepend: true
     validate :implementation_column_definitions_valid
     validate :identifier_unique_in_schema
     validate :schema_definition_unchanged
-  end
+    validate :check_schema_draft, if: :structural_change?
 
-  # Runs before every save and destroy; a no-op for includers to override (call
-  # `super`). Structural changes to a committed schema are refused regardless.
-  def check_can_modify
+    after_create :create_table
+
+    before_destroy :refuse_unless_can_modify
+    before_destroy :check_schema_draft, unless: :destroyed_by_association
+    after_destroy :drop_table, unless: :destroyed_by_association
   end
 
   # Whether saving touches the physical table; `name` and `sort` can change any time.
@@ -443,6 +440,10 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
     table_definition = self
     # One string for both, since the cache is keyed by it.
     physical_table_name = table_name
+    # Prepared statements are keyed by their SQL, so tagging every query with
+    # the commit stops any connection reusing a plan from before a revert, when
+    # the columns may have changed ("cached plan must not change result type").
+    generation = "#{physical_table_name} #{schema_definition.committed_at.utc.iso8601(6)}"
     ActiveRecord::Base.connection_pool.schema_cache.clear_data_source_cache!(physical_table_name)
     column_definitions = self.ordered_column_definitions.to_a
     klass = Class.new(ActiveRecord::Base) do
@@ -451,7 +452,13 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
       self.lock_optimistically = false
       @table_definition = table_definition
       @column_definitions = column_definitions
+      @generation = generation
       before_save :set_updater
+
+      # Every query starts from it: `unscoped`, `all` and the `find` cache.
+      def self.relation
+        super.annotate(@generation)
+      end
 
       # Would generate a method per column; see above.
       def self.define_attribute_methods
@@ -466,7 +473,7 @@ module Grit::Core::Model::DynamicSchema::TableDefinition
         [ "updated_at" ]
       end
 
-      private_class_method :timestamp_attributes_for_create, :timestamp_attributes_for_update
+      private_class_method :relation, :timestamp_attributes_for_create, :timestamp_attributes_for_update
 
       def set_updater
         current_user_login = Grit::Core::User.current.login

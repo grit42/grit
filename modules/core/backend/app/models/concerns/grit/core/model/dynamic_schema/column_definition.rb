@@ -19,30 +19,31 @@
 module Grit::Core::Model::DynamicSchema::ColumnDefinition
   extend ActiveSupport::Concern
   include Grit::Core::Model::DynamicSchema::ValidIdentifier
+  include Grit::Core::Model::DynamicSchema::Refusal
 
   included do
     belongs_to :data_type, class_name: "Grit::Core::DataType"
     class_attribute :table_definition_association
 
+    # Guards; see `Refusal`.
+    validate :refuse_unless_can_modify, except_on: :schema_commit, prepend: true
     validate :identifier_not_implementation_column
     validate :identifier_not_system_column
     validate :identifier_not_display_column_alias
     validate :identifier_unique_in_table
     validate :table_definition_unchanged
     validate :columns_count_within_limit, on: :create
+    # Last: the row checks read the draft table, which `check_schema_draft`
+    # vouches for.
+    validate :check_schema_draft, if: :structural_change?
+    validate :check_column_fillable, on: :create, if: :required
+    validate :check_column_alterable, on: :update, if: -> { required_changed? || data_type_id_changed? }
 
-    before_save :check_can_modify
-    before_save :check_schema_draft, if: :structural_change?
     after_create :create_column
     after_update :alter_column
-    before_destroy :check_can_modify
+    before_destroy :refuse_unless_can_modify
     before_destroy :check_schema_draft
     before_destroy :drop_column
-  end
-
-  # Runs before every save and destroy; a no-op for includers to override (call
-  # `super`). Structural changes to a committed schema are refused regardless.
-  def check_can_modify
   end
 
   # Whether saving touches the physical column. `name`, `description` and
@@ -145,16 +146,62 @@ module Grit::Core::Model::DynamicSchema::ColumnDefinition
     Grit::Core::Model::DynamicSchema::TableDefinition::DEFAULT_FOREIGN_KEY_TARGET_COLUMN
   end
 
+  # A NOT NULL column can't be added to a table with rows.
+  def check_column_fillable
+    return if errors.any?
+    definition = table_definition
+    return if definition.nil? || definition.new_record?
+    connection = ActiveRecord::Base.connection
+    return unless connection.select_value("SELECT 1 FROM #{connection.quote_table_name(definition.draft_table_name)} LIMIT 1")
+    errors.add(:base, "Cannot require column with empty values")
+  end
+
+  # What `alter_column` would do to the rows, tried before it runs: the type
+  # conversion is the same cast, dry-run in a savepoint.
+  def check_column_alterable
+    return if errors.any?
+    definition = table_definition
+    return if definition.nil?
+    connection = ActiveRecord::Base.connection
+    quoted_table_name = connection.quote_table_name(definition.draft_table_name)
+    quoted_column_name = connection.quote_column_name(draft_column_name)
+
+    if required_changed? && required && connection.select_value("SELECT 1 FROM #{quoted_table_name} WHERE #{quoted_column_name} IS NULL LIMIT 1")
+      errors.add(:base, "Cannot require column with empty values")
+    end
+    return unless data_type_id_changed?
+    previous_data_type = Grit::Core::DataType.find(data_type_id_in_database)
+    conflict = "Failed to convert #{previous_data_type.name} to #{data_type.name} because of conflicts in existing rows"
+
+    # Entity ids mean nothing as another type, or as another entity type's ids
+    # (two vocabularies share one table).
+    if previous_data_type.is_entity || data_type.is_entity
+      errors.add(:base, conflict) if connection.select_value("SELECT 1 FROM #{quoted_table_name} WHERE #{quoted_column_name} IS NOT NULL LIMIT 1")
+      return
+    end
+
+    begin
+      ActiveRecord::Base.transaction(requires_new: true) do
+        connection.select_value("SELECT count(#{cast_expression(quoted_column_name)}) FROM #{quoted_table_name}")
+      end
+    rescue ActiveRecord::StatementInvalid => e
+      # Bad syntax, out of range and the like; anything else keeps its class
+      # (e.g. Deadlocked).
+      raise unless e.cause.is_a?(PG::DataException)
+      errors.add(:base, conflict)
+    end
+  end
+
+  # Through text, which every type reads.
+  def cast_expression(quoted_column_name)
+    "#{quoted_column_name}::text::#{data_type.sql_name}"
+  end
+
   # Column DDL only runs in a draft (`check_schema_draft`), so it uses draft
-  # names.
+  # names. What the rows allow is validated beforehand.
   def create_column
     definition = table_definition
-    connection = ActiveRecord::Base.connection
-    table_name = definition.draft_table_name
-    # Friendlier than the PG::NotNullViolation PostgreSQL would raise.
-    raise "Cannot require column with empty values" if required && connection.select_value("SELECT 1 FROM #{connection.quote_table_name(table_name)} LIMIT 1")
-
-    connection.add_column table_name, draft_column_name, data_type.sql_name, null: !required
+    ActiveRecord::Base.connection.add_column definition.draft_table_name, draft_column_name, data_type.sql_name, null: !required
     definition.add_column_foreign_key draft_column_name, data_type.table_name, foreign_key_target_column, owner_id: id if data_type.is_entity
   end
 
@@ -165,34 +212,13 @@ module Grit::Core::Model::DynamicSchema::ColumnDefinition
     definition = table_definition
     connection = ActiveRecord::Base.connection
     table_name = definition.draft_table_name
-    quoted_table_name = connection.quote_table_name(table_name)
     column_name = draft_column_name
-    quoted_column_name = connection.quote_column_name(column_name)
 
-    if required_previously_changed?
-      raise "Cannot require column with empty values" if required && connection.select_value("SELECT 1 FROM #{quoted_table_name} WHERE #{quoted_column_name} IS NULL LIMIT 1")
-      connection.change_column_null table_name, column_name, !required
-    end
-
-    if data_type_id_previously_changed?
-      previous_data_type = Grit::Core::DataType.find(data_type_id_previously_was)
-      # Entity ids mean nothing as another type, or as another entity type's ids
-      # (two vocabularies share one table).
-      if (previous_data_type.is_entity || data_type.is_entity) && connection.select_value("SELECT 1 FROM #{quoted_table_name} WHERE #{quoted_column_name} IS NOT NULL LIMIT 1")
-        raise "Failed to convert #{previous_data_type.name} to #{data_type.name} because of conflicts in existing rows"
-      end
-      begin
-        connection.remove_foreign_key table_name, column: column_name, if_exists: true
-        connection.change_column table_name, column_name, data_type.sql_name, using: "#{quoted_column_name}::text::#{data_type.sql_name}"
-        definition.add_column_foreign_key column_name, data_type.table_name, foreign_key_target_column, owner_id: id if data_type.is_entity
-      rescue ActiveRecord::InvalidForeignKey
-        raise "Failed to convert #{previous_data_type.name} to #{data_type.name} because of conflicts in existing rows"
-      rescue ActiveRecord::StatementInvalid => e
-        raise "Failed to convert #{previous_data_type.name} to #{data_type.name} because of conflicts in existing rows" if /invalid input syntax for type/.match?(e.to_s)
-        # Re-raise the original, keeping its class (e.g. Deadlocked) and backtrace.
-        raise
-      end
-    end
+    connection.change_column_null table_name, column_name, !required if required_previously_changed?
+    return unless data_type_id_previously_changed?
+    connection.remove_foreign_key table_name, column: column_name, if_exists: true
+    connection.change_column table_name, column_name, data_type.sql_name, using: cast_expression(connection.quote_column_name(column_name))
+    definition.add_column_foreign_key column_name, data_type.table_name, foreign_key_target_column, owner_id: id if data_type.is_entity
   end
 
   # Destroy callbacks also run on unsaved records, which have no column.

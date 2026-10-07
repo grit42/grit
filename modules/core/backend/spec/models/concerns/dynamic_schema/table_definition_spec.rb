@@ -88,6 +88,39 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
       expect { klass.create!(identifier: "tbl", name: "Table", schema_definition: schema) }
         .to raise_error("locked")
     end
+
+    it "refuses a save through errors and a destroy with the reason" do
+      table = Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: schema)
+      klass = Class.new(Grit::TableDefinition) do
+        def self.name = "LockedTableDefinition"
+
+        def check_can_modify
+          super
+          errors.add(:base, "is locked")
+        end
+      end
+      locked = klass.find(table.id)
+
+      expect(locked).not_to be_valid
+      expect { locked.update!(name: "Renamed") }.to raise_error(ActiveRecord::RecordInvalid, /is locked/)
+      expect(locked.destroy).to be(false)
+      expect { locked.destroy! }.to raise_error(ActiveRecord::RecordNotDestroyed, "is locked")
+      expect(connection.table_exists?(table.table_name)).to be(true)
+    end
+
+    it "gives a refusal without a message a generic one" do
+      klass = Class.new(Grit::TableDefinition) do
+        def self.name = "SilentTableDefinition"
+
+        def check_can_modify
+          throw :abort
+        end
+      end
+      table = klass.new(identifier: "tbl", name: "Table", schema_definition: schema)
+
+      expect(table.save).to be(false)
+      expect(table.errors[:base]).to eq([ "Silent table definition tbl cannot be modified" ])
+    end
   end
 
   # Lets a plain includer that declares no implementation columns still create its table.
@@ -253,6 +286,14 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
       expect(connection.table_exists?("test_grp.tbl")).to be(true)
     end
 
+    it "says why from the bang forms" do
+      table.identifier = "new_tbl"
+
+      expect(table).not_to be_valid
+      expect { table.save! }.to raise_error(ActiveRecord::RecordInvalid, /test_grp is committed/)
+      expect { table.reload.destroy! }.to raise_error(ActiveRecord::RecordNotDestroyed, /test_grp is committed/)
+    end
+
     it "lets the name and sort change" do
       expect(table.update(name: "Renamed", sort: 3)).to be(true)
     end
@@ -303,6 +344,67 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
 
       expect(table.record_klass.table_name).to eq("test_grp.t_moved")
       expect(table.record_klass.columns_hash["some_col"].type).to eq(:integer)
+    end
+  end
+
+  # Prepared statements are keyed by their SQL, on every connection. Untagged, a statement
+  # prepared before a revert is reused after a recommit that changed the columns, which
+  # PostgreSQL refuses ("cached plan must not change result type"), for good inside a
+  # transaction.
+  describe "record_klass query generations" do
+    let!(:table) { Grit::TableDefinition.create!(identifier: "t_gen", name: "Table", schema_definition: schema) }
+
+    def statements
+      captured = []
+      subscriber = ActiveSupport::Notifications.subscribe("sql.active_record") do |*, payload|
+        captured.push(payload[:sql]) unless payload[:name] == "SCHEMA"
+      end
+      yield
+      captured
+    ensure
+      ActiveSupport::Notifications.unsubscribe(subscriber)
+    end
+
+    it "tags every query with the commit" do
+      schema.commit!
+      tag = "/* test_grp.t_gen #{schema.reload.committed_at.utc.iso8601(6)} */"
+      klass = table.record_klass
+      row = klass.create!
+
+      sql = statements do
+        klass.find(row.id)
+        klass.find_by(owner_id: nil)
+        klass.where(owner_id: nil).to_a
+        klass.detailed.to_a
+        row.reload
+      end
+
+      expect(sql).not_to be_empty
+      expect(sql).to all(include(tag))
+    end
+
+    it "changes the tag with every commit" do
+      schema.commit!
+      before = table.record_klass.all.to_sql
+      schema.revert_to_draft!
+      schema.commit!
+
+      expect(table.reload.record_klass.all.to_sql).not_to eq(before)
+    end
+
+    it "plans afresh after a recommit changed a column's type" do
+      column = Grit::ColumnDefinition.create!(identifier: "some_col", name: "Some", data_type: string_type, table_definition: table)
+      schema.commit!
+      row = table.record_klass.create!("some_col" => "42")
+      expect(table.record_klass.find(row.id)["some_col"]).to eq("42")
+
+      # As another connection, which keeps its statements: Rails' DDL helpers clear this one's.
+      allow(connection).to receive(:clear_cache!)
+      schema.revert_to_draft!
+      column.update!(data_type: create(:grit_core_data_type, :integer))
+      schema.commit!
+
+      expect(table.reload.record_klass.find(row.id)["some_col"]).to eq(42)
     end
   end
 

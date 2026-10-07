@@ -74,6 +74,26 @@ RSpec.describe "DynamicSchema::ColumnDefinition concern", type: :model do
         klass.create!(identifier: "a_column", name: "A", data_type: string_type, table_definition: table)
       }.to raise_error("locked")
     end
+
+    it "refuses a save through errors and a destroy with the reason" do
+      definition = Grit::ColumnDefinition.create!(identifier: "a_column", name: "A", data_type: string_type, table_definition: table)
+      klass = Class.new(Grit::ColumnDefinition) do
+        def self.name = "Grit::LockedColumnDefinition"
+
+        def check_can_modify
+          super
+          errors.add(:base, "is locked")
+          throw :abort
+        end
+      end
+      locked = klass.find(definition.id)
+
+      expect(locked.update(name: "Renamed")).to be(false)
+      expect(locked.errors[:base]).to eq([ "is locked" ])
+      expect(locked.destroy).to be(false)
+      expect { locked.destroy! }.to raise_error(ActiveRecord::RecordNotDestroyed, "is locked")
+      expect(column(table.table_name, "c#{definition.id}")).not_to be_nil
+    end
   end
 
   describe "the physical column (T7)" do
@@ -160,15 +180,28 @@ RSpec.describe "DynamicSchema::ColumnDefinition concern", type: :model do
       definition = Grit::ColumnDefinition.create!(identifier: "a_column", name: "A", data_type: string_type, table_definition: table)
       insert_draft_row(table, a_column: nil)
 
-      expect { definition.update!(required: true) }.to raise_error("Cannot require column with empty values")
+      expect(definition.update(required: true)).to be(false)
+      expect(definition.errors[:base]).to include("Cannot require column with empty values")
+      expect(physical_column(definition).null).to be(true)
+    end
+
+    # A refusal is a validation, so `valid?` agrees with `save`.
+    it "reports empty values from valid? and raises RecordInvalid from update!" do
+      definition = Grit::ColumnDefinition.create!(identifier: "a_column", name: "A", data_type: string_type, table_definition: table)
+      insert_draft_row(table, a_column: nil)
+      definition.required = true
+
+      expect(definition).not_to be_valid
+      expect { definition.save! }.to raise_error(ActiveRecord::RecordInvalid, /Cannot require column with empty values/)
     end
 
     it "refuses to add a required column to a table that has rows" do
       insert_draft_row(table)
+      added = Grit::ColumnDefinition.new(identifier: "a_column", name: "A", data_type: string_type, table_definition: table, required: true)
 
-      expect {
-        Grit::ColumnDefinition.create!(identifier: "a_column", name: "A", data_type: string_type, table_definition: table, required: true)
-      }.to raise_error("Cannot require column with empty values")
+      expect(added).not_to be_valid
+      expect(added.save).to be(false)
+      expect(added.errors[:base]).to include("Cannot require column with empty values")
       expect(Grit::ColumnDefinition.where(identifier: "a_column")).not_to exist
       expect(connection.columns(table.table_name).map(&:name)).to eq(%w[id created_by created_at updated_by updated_at owner_id])
     end
@@ -194,7 +227,7 @@ RSpec.describe "DynamicSchema::ColumnDefinition concern", type: :model do
       insert_draft_row(table, a_column: "not a number")
 
       expect { definition.update!(data_type: integer_type) }
-        .to raise_error(/Failed to convert string to integer because of conflicts in existing rows/)
+        .to raise_error(ActiveRecord::RecordInvalid, /Failed to convert string to integer because of conflicts in existing rows/)
     end
 
     it "drops the foreign key when the type stops being an entity" do
@@ -211,7 +244,7 @@ RSpec.describe "DynamicSchema::ColumnDefinition concern", type: :model do
       insert_draft_row(table, a_column: 999_999)
 
       expect { definition.update!(data_type: entity_type) }
-        .to raise_error(/because of conflicts in existing rows/)
+        .to raise_error(ActiveRecord::RecordInvalid, /because of conflicts in existing rows/)
     end
 
     # Two entity types can share a table and SQL type (e.g. two vocabularies), so the ids
@@ -222,7 +255,7 @@ RSpec.describe "DynamicSchema::ColumnDefinition concern", type: :model do
       insert_draft_row(table, ref_col: admin.id)
 
       expect { definition.update!(data_type: other_entity_type) }
-        .to raise_error(/because of conflicts in existing rows/)
+        .to raise_error(ActiveRecord::RecordInvalid, /because of conflicts in existing rows/)
     end
 
     it "points an empty entity column at another entity type" do
@@ -244,13 +277,34 @@ RSpec.describe "DynamicSchema::ColumnDefinition concern", type: :model do
       expect { definition.update!(data_type: integer_type) }.to raise_error(ActiveRecord::Deadlocked)
     end
 
-    it "still translates a bad cast into the conflicts message" do
+    # The cast is dry-run in a savepoint before any DDL, so a refusal leaves the column,
+    # and the transaction the caller is in, as they were.
+    it "dry-runs the conversion and leaves the column as it was" do
       definition = Grit::ColumnDefinition.create!(identifier: "a_column", name: "A", data_type: string_type, table_definition: table)
-      allow(connection).to receive(:change_column)
-        .and_raise(ActiveRecord::StatementInvalid.new(%(PG::InvalidTextRepresentation: ERROR: invalid input syntax for type bigint: "x")))
+      insert_draft_row(table, a_column: "not a number")
+      definition.data_type = integer_type
 
-      expect { definition.update!(data_type: integer_type) }
-        .to raise_error(RuntimeError, /Failed to convert string to integer because of conflicts in existing rows/)
+      expect(definition).not_to be_valid
+      expect(definition.errors[:base]).to include("Failed to convert string to integer because of conflicts in existing rows")
+      expect(definition.save).to be(false)
+      expect(physical_column(definition).sql_type).to eq("character varying")
+    end
+
+    it "refuses a value out of the new type's range" do
+      definition = Grit::ColumnDefinition.create!(identifier: "a_column", name: "A", data_type: string_type, table_definition: table)
+      insert_draft_row(table, a_column: "99999999999999999999")
+
+      expect(definition.update(data_type: integer_type)).to be(false)
+      expect(definition.errors[:base]).to include("Failed to convert string to integer because of conflicts in existing rows")
+    end
+
+    it "re-raises a dry-run failure that is not about the values with its class intact" do
+      definition = Grit::ColumnDefinition.create!(identifier: "a_column", name: "A", data_type: string_type, table_definition: table)
+      allow(connection).to receive(:select_value).and_call_original
+      allow(connection).to receive(:select_value).with(/\ASELECT count\(/)
+        .and_raise(ActiveRecord::Deadlocked.new("PG::TRDeadlockDetected: ERROR: deadlock detected"))
+
+      expect { definition.update!(data_type: integer_type) }.to raise_error(ActiveRecord::Deadlocked)
     end
 
     it "runs no DDL for a change of identifier, name, description or sort" do
@@ -292,6 +346,14 @@ RSpec.describe "DynamicSchema::ColumnDefinition concern", type: :model do
     it "refuses to be destroyed" do
       expect(definition.destroy).to be(false)
       expect(column("test_grp.tbl", "a_column")).not_to be_nil
+    end
+
+    it "says why from the bang forms" do
+      definition.required = true
+
+      expect(definition).not_to be_valid
+      expect { definition.save! }.to raise_error(ActiveRecord::RecordInvalid, /test_grp is committed/)
+      expect { definition.reload.destroy! }.to raise_error(ActiveRecord::RecordNotDestroyed, /test_grp is committed/)
     end
 
     # Identifier rules run on every save, so an identifier that code has since made invalid
