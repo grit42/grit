@@ -77,6 +77,31 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
     end
   end
 
+  describe "association helpers" do
+    def renamed_schema_class(**options)
+      Class.new(ApplicationRecord) do
+        def self.name = "Grit::RenamedSchemaDefinition"
+        self.table_name = "test_schema_definitions"
+        include Grit::Core::Model::DynamicSchema::SchemaDefinition
+        dynamic_schema_prefix "test"
+        has_many_table_definitions :tables, class_name: "Grit::TableDefinition", foreign_key: :schema_definition_id, **options
+      end
+    end
+
+    it "takes has_many options" do
+      renamed = renamed_schema_class.create!(identifier: "grp", name: "Schema")
+      table = Grit::TableDefinition.create!(identifier: "measures", name: "Measures", schema_definition_id: renamed.id)
+
+      expect(renamed.table_definitions.to_a).to eq([ table ])
+      renamed.commit!
+      expect(connection.table_exists?("test_grp.measures")).to be(true)
+    end
+
+    it "keeps the cascade its own" do
+      expect { renamed_schema_class(dependent: :nullify) }.to raise_error(ArgumentError, /dependent/)
+    end
+  end
+
   describe "check_can_modify default guard (T2)" do
     it "allows create, update and destroy" do
       expect(schema.update(name: "Renamed")).to be(true)
@@ -190,10 +215,10 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
   describe "a draft" do
     it "lives in a schema named after its id" do
       expect(schema).not_to be_committed
-      expect(schema.schema_name).to eq("test_#{schema.id}")
+      expect(schema.physical_schema_name).to eq("test_#{schema.id}")
       expect(schema.draft_schema_name).to eq("test_#{schema.id}")
       expect(schema.committed_schema_name).to eq("test_grp")
-      expect(schema.schema_exists?).to be(true)
+      expect(schema.physical_schema_exists?).to be(true)
       expect(connection.schema_exists?("test_grp")).to be(false)
     end
 
@@ -202,14 +227,14 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
 
       schema.update!(identifier: "new_grp")
 
-      expect(schema.schema_name).to eq("test_#{schema.id}")
-      expect(connection.table_exists?(table.table_name)).to be(true)
+      expect(schema.physical_schema_name).to eq("test_#{schema.id}")
+      expect(connection.table_exists?(table.physical_table_name)).to be(true)
       expect(connection.schema_exists?("test_new_grp")).to be(false)
     end
 
     # The name derives from the id, so an existing schema under it belongs to something else.
     it "does not adopt a schema that is already there" do
-      expect { schema.create_schema }.to raise_error(ActiveRecord::StatementInvalid, /already exists/)
+      expect { schema.send(:create_schema) }.to raise_error(ActiveRecord::StatementInvalid, /already exists/)
     end
   end
 
@@ -219,13 +244,13 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
     let!(:reference) { create_column(table, "ref_col", data_type: entity_type) }
 
     it "moves the schema, its tables and their dynamic columns to their identifiers" do
-      draft_table_name = table.table_name
+      draft_table_name = table.physical_table_name
 
       schema.commit!
 
       expect(schema).to be_committed
-      expect(schema.schema_name).to eq("test_grp")
-      expect(table.table_name).to eq("test_grp.measures")
+      expect(schema.physical_schema_name).to eq("test_grp")
+      expect(table.physical_table_name).to eq("test_grp.measures")
       expect(connection.schema_exists?("test_#{schema.id}")).to be(false)
       expect(connection.table_exists?(draft_table_name)).to be(false)
       expect(column_names("test_grp.measures"))
@@ -278,13 +303,13 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
     end
 
     it "restores the draft constraint names on revert" do
-      foreign_keys = connection.foreign_keys(table.table_name).map(&:name).sort
+      foreign_keys = connection.foreign_keys(table.physical_table_name).map(&:name).sort
       schema.commit!
 
       schema.revert_to_draft!
 
-      expect(connection.foreign_keys(table.table_name).map(&:name).sort).to eq(foreign_keys)
-      expect(primary_key_index_name(table.table_name)).to eq(table.draft_primary_key_name)
+      expect(connection.foreign_keys(table.physical_table_name).map(&:name).sort).to eq(foreign_keys)
+      expect(primary_key_index_name(table.physical_table_name)).to eq(table.draft_primary_key_name)
     end
 
     # Tables and indexes share a namespace per schema; primary key index names are padded past
@@ -310,7 +335,7 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
       expect { schema.commit! }
         .to raise_error(Grit::Core::Model::DynamicSchema::CommitError, /the schema test_grp already exists/)
       expect(schema.reload).not_to be_committed
-      expect(connection.table_exists?(table.table_name)).to be(true)
+      expect(connection.table_exists?(table.physical_table_name)).to be(true)
     end
 
     # Per-record validations only check an identifier when it changes, but code
@@ -341,7 +366,7 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
 
     # Fails after the schema has moved, so that there is something to undo.
     def fail_table_renames
-      allow_any_instance_of(Grit::TableDefinition).to receive(:rename_physical_objects!)
+      allow_any_instance_of(Grit::SchemaDefinition).to receive(:rename_table_objects!)
         .and_raise(ActiveRecord::StatementInvalid, "PG::InternalError: ERROR:  boom")
     end
 
@@ -353,7 +378,7 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
       expect(schema.reload).not_to be_committed
       expect(connection.schema_exists?("test_#{schema.id}")).to be(true)
       expect(connection.schema_exists?("test_grp")).to be(false)
-      expect(connection.table_exists?(table.table_name)).to be(true)
+      expect(connection.table_exists?(table.physical_table_name)).to be(true)
     end
 
     # `committed_at` is set in memory before the after callbacks and a rollback doesn't reset
@@ -413,11 +438,11 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
           end
 
           def note_before
-            seen.push([ :before, schema_name ])
+            seen.push([ :before, physical_schema_name ])
           end
 
           def note_after
-            seen.push([ :after, schema_name ])
+            seen.push([ :after, physical_schema_name ])
           end
         end
       end
@@ -460,9 +485,9 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
       schema.revert_to_draft!
 
       expect(schema).not_to be_committed
-      expect(schema.schema_name).to eq("test_#{schema.id}")
-      expect(table.table_name).to eq("test_#{schema.id}.t#{table.id}")
-      expect(column_names(table.table_name)).to include("c#{label.id}")
+      expect(schema.physical_schema_name).to eq("test_#{schema.id}")
+      expect(table.physical_table_name).to eq("test_#{schema.id}.t#{table.id}")
+      expect(column_names(table.physical_table_name)).to include("c#{label.id}")
       expect(connection.schema_exists?("test_grp")).to be(false)
       expect(draft_value(table, row_id, :label)).to eq("first")
       expect { table.record_klass }.to raise_error(/is a draft/)
@@ -470,7 +495,7 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
 
     it "leaves the definition in memory committed when the revert fails" do
       schema.commit!
-      allow_any_instance_of(Grit::TableDefinition).to receive(:rename_physical_objects!)
+      allow_any_instance_of(Grit::SchemaDefinition).to receive(:rename_table_objects!)
         .and_raise(ActiveRecord::StatementInvalid, "PG::InternalError: ERROR:  boom")
 
       expect { schema.revert_to_draft! }.to raise_error(Grit::Core::Model::DynamicSchema::CommitError, /boom/)
@@ -510,8 +535,8 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
       klass = Class.new(Grit::SchemaDefinition) do
         def self.name = "RevertCallbackSchemaDefinition"
 
-        before_schema_revert { seen.push([ :before, schema_name ]) }
-        after_schema_revert { seen.push([ :after, schema_name ]) }
+        before_schema_revert { seen.push([ :before, physical_schema_name ]) }
+        after_schema_revert { seen.push([ :after, physical_schema_name ]) }
 
         def seen
           @seen ||= []
@@ -633,7 +658,7 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
       expect(Grit::SchemaDefinition.where(id: own.id)).to exist
       expect(Grit::TableDefinition.where(id: table.id)).to exist
       expect(connection.schema_exists?("test_#{own.id}")).to be(true)
-      expect(connection.table_exists?(table.table_name)).to be(true)
+      expect(connection.table_exists?(table.physical_table_name)).to be(true)
     end
 
     it "runs before_schema_drop with the tables intact" do
@@ -647,7 +672,7 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
         end
 
         def note_tables
-          seen.concat(table_definitions.map { |table| ActiveRecord::Base.connection.table_exists?(table.table_name) })
+          seen.concat(table_definitions.map { |table| ActiveRecord::Base.connection.table_exists?(table.physical_table_name) })
         end
       end
       own = klass.create!(identifier: "drp", name: "Drop")
@@ -850,7 +875,7 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
       end
 
       own = klass.create!(identifier: "grp", name: "Schema")
-      expect(own.schema_name).to eq("declared_#{own.id}")
+      expect(own.physical_schema_name).to eq("declared_#{own.id}")
       expect(own.committed_schema_name).to eq("declared_grp")
     end
 
@@ -868,9 +893,9 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
       widest = klass.create!(identifier: "g" * max_identifier, name: "Schema")
       widest.commit!
 
-      expect(widest.schema_name.bytesize).to eq(63)
-      expect(widest.schema_name).to eq("#{'p' * max_prefix}_#{'g' * max_identifier}")
-      expect(connection.schema_names).to include(widest.schema_name)
+      expect(widest.physical_schema_name.bytesize).to eq(63)
+      expect(widest.physical_schema_name).to eq("#{'p' * max_prefix}_#{'g' * max_identifier}")
+      expect(connection.schema_names).to include(widest.physical_schema_name)
     end
   end
 end

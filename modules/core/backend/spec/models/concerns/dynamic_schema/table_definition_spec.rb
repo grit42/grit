@@ -71,13 +71,13 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
       expect(table.column_definitions.to_a).to eq([])
     end
 
-    it "composes table_name from both associations" do
+    it "composes physical_table_name from both associations" do
       table = Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: schema)
-      expect(table.table_name).to eq("test_#{schema.id}.t#{table.id}")
+      expect(table.physical_table_name).to eq("test_#{schema.id}.t#{table.id}")
 
       schema.commit!
 
-      expect(table.table_name).to eq("test_grp.tbl")
+      expect(table.physical_table_name).to eq("test_grp.tbl")
     end
   end
 
@@ -118,7 +118,7 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
       expect { locked.update!(name: "Renamed") }.to raise_error(ActiveRecord::RecordInvalid, /is locked/)
       expect(locked.destroy).to be(false)
       expect { locked.destroy! }.to raise_error(ActiveRecord::RecordNotDestroyed, "is locked")
-      expect(connection.table_exists?(table.table_name)).to be(true)
+      expect(connection.table_exists?(table.physical_table_name)).to be(true)
     end
 
     it "gives a refusal without a message a generic one" do
@@ -143,16 +143,14 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
         def self.name = "Grit::PlainTableDefinition"
         self.table_name = "test_table_definitions"
         include Grit::Core::Model::DynamicSchema::TableDefinition
-        # Hand-rolled rather than `has_many_column_definitions`, only because
-        # the anonymous class's name gives Rails the wrong foreign key.
-        self.column_definitions_association = :column_definitions
-        has_many :column_definitions, class_name: "Grit::ColumnDefinition", foreign_key: :table_definition_id
+        # The class's name would give Rails the wrong foreign key.
+        has_many_column_definitions :column_definitions, class_name: "Grit::ColumnDefinition", foreign_key: :table_definition_id
         belongs_to_schema_definition :schema_definition
       end
 
       table = klass.create!(identifier: "pln", name: "Plain", schema_definition: schema)
       expect(table.implementation_column_definitions).to eq([])
-      expect(connection.table_exists?(table.table_name)).to be(true)
+      expect(connection.table_exists?(table.physical_table_name)).to be(true)
     end
   end
 
@@ -160,10 +158,10 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
     it "is built on create, under the definition's id" do
       table = Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: schema)
 
-      expect(table.table_name).to eq("test_#{schema.id}.t#{table.id}")
-      expect(table.draft_table_name).to eq(table.table_name)
+      expect(table.physical_table_name).to eq("test_#{schema.id}.t#{table.id}")
+      expect(table.draft_table_name).to eq(table.physical_table_name)
       expect(table.committed_table_name).to eq("test_grp.tbl")
-      expect(connection.columns(table.table_name).map(&:name))
+      expect(connection.columns(table.physical_table_name).map(&:name))
         .to eq(%w[id created_by created_at updated_by updated_at owner_id])
     end
 
@@ -172,15 +170,15 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
 
       table.update!(identifier: "new_tbl")
 
-      expect(table.table_name).to eq("test_#{schema.id}.t#{table.id}")
-      expect(connection.table_exists?(table.table_name)).to be(true)
+      expect(table.physical_table_name).to eq("test_#{schema.id}.t#{table.id}")
+      expect(connection.table_exists?(table.physical_table_name)).to be(true)
     end
 
     # The name derives from the id, so a table already under it belongs to something else.
     it "does not adopt a table that is already there" do
       table = Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: schema)
 
-      expect { table.create_table }.to raise_error(ActiveRecord::StatementInvalid, /already exists/)
+      expect { table.send(:create_table) }.to raise_error(ActiveRecord::StatementInvalid, /already exists/)
     end
   end
 
@@ -212,10 +210,10 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
       first_schema.commit!
       second_schema.commit!
 
-      expect(first.table_name).to eq("test_gr.p_tbl")
-      expect(second.table_name).to eq("test_gr_p.tbl")
-      expect(connection.table_exists?(first.table_name)).to be(true)
-      expect(connection.table_exists?(second.table_name)).to be(true)
+      expect(first.physical_table_name).to eq("test_gr.p_tbl")
+      expect(second.physical_table_name).to eq("test_gr_p.tbl")
+      expect(connection.table_exists?(first.physical_table_name)).to be(true)
+      expect(connection.table_exists?(second.physical_table_name)).to be(true)
     end
 
     it "lets a definition be updated without colliding with itself" do
@@ -228,7 +226,7 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
     # fails the commit rather than being adopted.
     it "leaves a table something else built under the name to the commit" do
       table = Grit::TableDefinition.create!(identifier: "orphan", name: "Orphan", schema_definition: schema)
-      connection.execute("CREATE TABLE #{schema.schema_name}.orphan (id bigint PRIMARY KEY)")
+      connection.execute("CREATE TABLE #{schema.physical_schema_name}.orphan (id bigint PRIMARY KEY)")
 
       expect(table).to be_valid
       expect { schema.commit! }
@@ -250,7 +248,7 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
       expect(table.update(schema_definition: other_schema)).to be(false)
       expect(table.errors[:base].join).to match(/cannot be moved to another schema/)
       expect(table.reload.schema_definition_id).to eq(schema.id)
-      expect(connection.table_exists?(table.table_name)).to be(true)
+      expect(connection.table_exists?(table.physical_table_name)).to be(true)
     end
 
     it "leaves an unrelated update alone" do
@@ -262,7 +260,7 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
 
   describe "validating without a schema" do
     # `identifier_unique_in_schema` runs before the `belongs_to` presence check and reaches
-    # `schema_definition.schema_name`, so it must cope with a missing schema.
+    # `schema_definition.physical_schema_name`, so it must cope with a missing schema.
     it "reports a missing schema rather than raising" do
       table = Grit::TableDefinition.new(identifier: "tbl", name: "Table", schema_definition_id: -1)
 
@@ -338,9 +336,9 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
     it "sees the table as it is now, whatever the cache held" do
       table = Grit::TableDefinition.create!(identifier: "t_stale", name: "Table", schema_definition: schema)
       schema.commit!
-      expect(warm_schema_cache(table.table_name)).not_to include("late_col")
+      expect(warm_schema_cache(table.physical_table_name)).not_to include("late_col")
 
-      connection.add_column table.table_name, "late_col", :string
+      connection.add_column table.physical_table_name, "late_col", :string
 
       expect(table.record_klass.column_names).to include("late_col")
     end
@@ -437,33 +435,33 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
       table = Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: schema)
       column = Grit::ColumnDefinition.create!(identifier: "ref_col", name: "Ref", data_type: entity_type, table_definition: table)
 
-      expect(foreign_key_names(table.table_name))
+      expect(foreign_key_names(table.physical_table_name))
         .to eq([ padded("c#{column.id}", column.id, "fk"), padded("owner_id", table.id, "fk") ])
     end
 
     it "names the primary key after the table" do
       table = Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: schema)
 
-      expect(primary_key_index_name(table.table_name)).to eq(padded("t#{table.id}", table.id, "pk"))
+      expect(primary_key_index_name(table.physical_table_name)).to eq(padded("t#{table.id}", table.id, "pk"))
       expect(table.draft_primary_key_name).to eq(padded("t#{table.id}", table.id, "pk"))
     end
 
     it "keeps draft names through identifier changes" do
       table = Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: schema)
       column = Grit::ColumnDefinition.create!(identifier: "ref_col", name: "Ref", data_type: entity_type, table_definition: table)
-      names = foreign_key_names(table.table_name)
+      names = foreign_key_names(table.physical_table_name)
 
       column.update!(identifier: "new_col")
       table.update!(identifier: "new_tbl")
 
-      expect(foreign_key_names(table.table_name)).to eq(names)
-      expect(primary_key_index_name(table.table_name)).to eq(table.draft_primary_key_name)
+      expect(foreign_key_names(table.physical_table_name)).to eq(names)
+      expect(primary_key_index_name(table.physical_table_name)).to eq(table.draft_primary_key_name)
     end
 
     it "renames dynamic column foreign keys and the primary key at commit, and back at revert" do
       table = Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: schema)
       column = Grit::ColumnDefinition.create!(identifier: "ref_col", name: "Ref", data_type: entity_type, table_definition: table)
-      draft_names = foreign_key_names(table.table_name)
+      draft_names = foreign_key_names(table.physical_table_name)
 
       schema.commit!
 
@@ -475,8 +473,8 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
 
       schema.revert_to_draft!
 
-      expect(foreign_key_names(table.table_name)).to eq(draft_names)
-      expect(primary_key_index_name(table.table_name)).to eq(table.draft_primary_key_name)
+      expect(foreign_key_names(table.physical_table_name)).to eq(draft_names)
+      expect(primary_key_index_name(table.physical_table_name)).to eq(table.draft_primary_key_name)
     end
 
     it "leaves a column that is no entity without foreign key through a commit" do
@@ -500,7 +498,7 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
 
       table = klass.create!(identifier: "alt", name: "Alt", schema_definition: schema)
 
-      expect(foreign_key_names(table.table_name)).to eq([ padded("owner_login", table.id, "fk") ])
+      expect(foreign_key_names(table.physical_table_name)).to eq([ padded("owner_login", table.id, "fk") ])
     end
   end
 
@@ -629,6 +627,41 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
       expect(table.errors[:base].count { |e| e.match?(/declared more than once/) }).to eq(1)
     end
 
+    # Coerced into `ImplementationColumn`s, so a typo cannot pass for an unset key.
+    it "raises on a misspelt key, naming the includer" do
+      klass = Class.new(Grit::TableDefinition) do
+        def self.name = "MisspeltImplementationColumnTableDefinition"
+
+        def implementation_column_definitions
+          [ { identifier: "owner_id", data_type_name: "bigint", requird: true } ]
+        end
+      end
+
+      table = klass.new(identifier: "tbl", name: "Table", schema_definition: schema)
+
+      expect { table.valid? }.to raise_error(
+        ArgumentError, /MisspeltImplementationColumnTableDefinition#implementation_column_definitions: unknown keyword: :requird/
+      )
+    end
+
+    it "takes ImplementationColumns as well as Hashes" do
+      klass = Class.new(Grit::TableDefinition) do
+        def self.name = "StructuredImplementationColumnTableDefinition"
+
+        def implementation_column_definitions
+          [ Grit::Core::Model::DynamicSchema::ImplementationColumn.new(
+              identifier: "owner_id", data_type_name: "bigint", required: true,
+              foreign_key: Grit::Core::Model::DynamicSchema::ImplementationColumn::ForeignKey.new(table_name: "grit_core_users")
+            ) ]
+        end
+      end
+
+      table = klass.create!(identifier: "tbl", name: "Table", schema_definition: schema)
+
+      expect(connection.columns(table.physical_table_name).find { |c| c.name == "owner_id" }.null).to be(false)
+      expect(foreign_key_names(table.physical_table_name)).to eq([ table.foreign_key_name("owner_id") ])
+    end
+
     # Any bigint id fits beside any identifier, and the padding puts every name past what an
     # identifier can be.
     it "makes every constraint name exactly 63 bytes" do
@@ -654,13 +687,13 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
 
       widest_schema.commit!
 
-      expect(table.table_name).to eq("test_#{'g' * max}.#{'t' * max}")
-      expect(table.table_name.length).to be > connection.max_identifier_length
-      expect(connection.table_exists?(table.table_name)).to be(true)
-      expect(connection.columns(table.table_name).map(&:name)).to include("c" * max)
-      expect(foreign_key_names(table.table_name))
+      expect(table.physical_table_name).to eq("test_#{'g' * max}.#{'t' * max}")
+      expect(table.physical_table_name.length).to be > connection.max_identifier_length
+      expect(connection.table_exists?(table.physical_table_name)).to be(true)
+      expect(connection.columns(table.physical_table_name).map(&:name)).to include("c" * max)
+      expect(foreign_key_names(table.physical_table_name))
         .to eq([ table.foreign_key_name("c" * max, column.id), table.foreign_key_name("owner_id") ])
-      expect(primary_key_index_name(table.table_name)).to eq(table.committed_primary_key_name)
+      expect(primary_key_index_name(table.physical_table_name)).to eq(table.committed_primary_key_name)
     end
 
     # An unmapped SQL type would reach the UI as a property type nothing renders (blank cell, no
@@ -777,11 +810,11 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
 
     it "creates the column and its foreign key" do
       expect(committed_klass(table).column_names).to include("owner_id")
-      expect(foreign_key_names(table.table_name)).to include(table.foreign_key_name("owner_id"))
+      expect(foreign_key_names(table.physical_table_name)).to include(table.foreign_key_name("owner_id"))
     end
 
     it "selects the column in detailed" do
-      expect(committed_klass(table).detailed.to_sql).to include(%(#{table.quoted_table_name}."owner_id"))
+      expect(committed_klass(table).detailed.to_sql).to include(%(#{table.quoted_physical_table_name}."owner_id"))
     end
 
     it "returns rows through detailed" do
@@ -900,7 +933,7 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
       it "joins the target table in detailed" do
         sql = committed_klass(owned).detailed.to_sql
 
-        expect(sql).to include(%(LEFT OUTER JOIN "grit_core_users" "owner_id__" ON "owner_id__"."id" = #{owned.quoted_table_name}."owner_id"))
+        expect(sql).to include(%(LEFT OUTER JOIN "grit_core_users" "owner_id__" ON "owner_id__"."id" = #{owned.quoted_physical_table_name}."owner_id"))
         expect(sql).to include(%(AS "owner_id__login"))
       end
 
@@ -989,8 +1022,8 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
       # would drop the physical column and its foreign key.
       it "still builds the physical column and its foreign key" do
         expect(committed_klass(gated).column_names).to include("owner_id")
-        expect(committed_klass(gated).detailed.to_sql).to include(%(#{gated.quoted_table_name}."owner_id"))
-        expect(foreign_key_names(gated.table_name)).to include(gated.foreign_key_name("owner_id"))
+        expect(committed_klass(gated).detailed.to_sql).to include(%(#{gated.quoted_physical_table_name}."owner_id"))
+        expect(foreign_key_names(gated.physical_table_name)).to include(gated.foreign_key_name("owner_id"))
       end
     end
   end
@@ -1017,7 +1050,7 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
     it "joins on the column the foreign key actually points at" do
       sql = committed_klass(alt).detailed.to_sql
 
-      expect(sql).to include(%(LEFT OUTER JOIN "grit_core_users" "owner_login__" ON "owner_login__"."login" = #{alt.quoted_table_name}."owner_login"))
+      expect(sql).to include(%(LEFT OUTER JOIN "grit_core_users" "owner_login__" ON "owner_login__"."login" = #{alt.quoted_physical_table_name}."owner_login"))
     end
 
     it "reads the joined values off a row" do
@@ -1120,7 +1153,7 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
     it "joins the target table and selects its display properties" do
       sql = committed_klass(table).detailed.to_sql
 
-      expect(sql).to include(%(LEFT OUTER JOIN "grit_core_users" "ref_col__" ON "ref_col__"."id" = #{table.quoted_table_name}."ref_col"))
+      expect(sql).to include(%(LEFT OUTER JOIN "grit_core_users" "ref_col__" ON "ref_col__"."id" = #{table.quoted_physical_table_name}."ref_col"))
       expect(sql).to include(%(AS "ref_col__name"))
       expect(sql).to include(%(AS "ref_col__login"))
     end
@@ -1159,7 +1192,7 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
   describe "drop_table" do
     it "drops the table when the definition is destroyed" do
       table = Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: schema)
-      table_name = table.table_name
+      table_name = table.physical_table_name
 
       table.destroy!
 
@@ -1169,7 +1202,7 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
     it "drops every table in the schema when the schema is destroyed" do
       one = Grit::TableDefinition.create!(identifier: "one", name: "One", schema_definition: schema)
       two = Grit::TableDefinition.create!(identifier: "two", name: "Two", schema_definition: schema)
-      table_names = [ one.table_name, two.table_name ]
+      table_names = [ one.physical_table_name, two.physical_table_name ]
 
       schema.destroy!
 
@@ -1180,19 +1213,19 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
     it "drops its own table, whatever a refused change left in memory" do
       table = Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: schema)
       other = Grit::TableDefinition.create!(identifier: "other", name: "Other", schema_definition: schema)
-      table_name = table.table_name
+      table_name = table.physical_table_name
 
       expect(table.update(identifier: "other")).to be(false)
       table.destroy!
 
       expect(connection.table_exists?(table_name)).to be(false)
-      expect(connection.table_exists?(other.table_name)).to be(true)
+      expect(connection.table_exists?(other.physical_table_name)).to be(true)
     end
 
     it "drops its own table after a refused move to another schema" do
       other_schema = Grit::SchemaDefinition.create!(identifier: "other", name: "Other")
       table = Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: schema)
-      table_name = table.table_name
+      table_name = table.physical_table_name
 
       expect(table.update(schema_definition: other_schema)).to be(false)
       table.destroy!
@@ -1218,7 +1251,7 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
 
       Grit::TableDefinition.new(identifier: "tbl", name: "Clash", schema_definition: schema).destroy
 
-      expect(connection.table_exists?(table.table_name)).to be(true)
+      expect(connection.table_exists?(table.physical_table_name)).to be(true)
     end
 
     # Columns cascade with `destroy` but skip `drop_column`: the DROP TABLE takes them.
@@ -1226,7 +1259,7 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
       table = Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: schema)
       Grit::ColumnDefinition.create!(identifier: "one_col", name: "One", data_type: string_type, table_definition: table)
       Grit::ColumnDefinition.create!(identifier: "two_col", name: "Two", data_type: string_type, table_definition: table)
-      table_name = table.table_name
+      table_name = table.physical_table_name
 
       statements = []
       subscriber = ActiveSupport::Notifications.subscribe("sql.active_record") do |*, payload|
@@ -1253,6 +1286,36 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
       expect(Grit::ColumnDefinition.where(id: column.id)).not_to exist
     end
 
+    # Only the schema's cascade skips the table's guard, draft check and drop;
+    # see `Refusal`. Here a stranger owns the schema's row.
+    context "on another parent's cascade" do
+      let(:stranger) do
+        Class.new(ApplicationRecord) do
+          def self.name = "Grit::TableHolder"
+          self.table_name = "test_schema_definitions"
+          has_many :tables, class_name: "Grit::TableDefinition", foreign_key: :schema_definition_id, dependent: :destroy
+        end
+      end
+
+      it "drops the table" do
+        table = Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: schema)
+        table_name = table.physical_table_name
+
+        stranger.find(schema.id).destroy!
+
+        expect(connection.table_exists?(table_name)).to be(false)
+      end
+
+      it "is refused while the schema is committed" do
+        table = Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: schema)
+        schema.commit!
+
+        expect(stranger.find(schema.id).destroy).to be(false)
+        expect(Grit::TableDefinition.where(id: table.id)).to exist
+        expect(connection.table_exists?("test_grp.tbl")).to be(true)
+      end
+    end
+
     # So that includers' column callbacks run.
     it "destroys its column definitions one by one" do
       table = Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: schema)
@@ -1276,8 +1339,8 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
 
       definition.destroy!
 
-      expect(connection.columns(table.table_name).map(&:name)).not_to include("c#{definition.id}")
-      expect(connection.table_exists?(table.table_name)).to be(true)
+      expect(connection.columns(table.physical_table_name).map(&:name)).not_to include("c#{definition.id}")
+      expect(connection.table_exists?(table.physical_table_name)).to be(true)
     end
   end
 
@@ -1538,7 +1601,7 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
       reloaded = table.reload.record_klass.find(row.id)
       expect(reloaded["user"]).to eq("a")
       expect(reloaded["order"]).to eq(admin.id)
-      expect(foreign_key_names(table.table_name)).to include(table.foreign_key_name("order", order_column.id))
+      expect(foreign_key_names(table.physical_table_name)).to include(table.foreign_key_name("order", order_column.id))
     end
   end
 
@@ -1574,7 +1637,7 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
 
       it "raises for a table that is not there" do
         table = Grit::TableDefinition.create!(identifier: "gone", name: "Gone", schema_definition: schema)
-        connection.drop_table table.table_name
+        connection.drop_table table.physical_table_name
 
         expect { Grit::TableDefinition.each_physical_table { } }.to raise_error(/does not exist/)
       end
@@ -1583,7 +1646,7 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
     describe "add_implementation_column" do
       let!(:draft) { Grit::TableDefinition.create!(identifier: "drf", name: "Draft", schema_definition: schema) }
       let!(:committed) { Grit::TableDefinition.create!(identifier: "cmt", name: "Committed", schema_definition: other_schema) }
-      let(:table_names) { [ draft.table_name, "test_other.cmt" ] }
+      let(:table_names) { [ draft.physical_table_name, "test_other.cmt" ] }
 
       before(:each) { other_schema.commit! }
 
@@ -1642,7 +1705,7 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
 
         expect { Grit::TableDefinition.add_implementation_column(:batch_id) }
           .to raise_error(ArgumentError, /a column definition is already identified batch_id/)
-        expect(column_named(draft.table_name, "batch_id")).to be_nil
+        expect(column_named(draft.physical_table_name, "batch_id")).to be_nil
       end
 
       it "refuses to take a table past MAX_COLUMNS" do
@@ -1672,7 +1735,7 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
 
         Grit::TableDefinition.remove_implementation_column(:owner_id)
 
-        [ draft.table_name, "test_other.cmt" ].each do |table_name|
+        [ draft.physical_table_name, "test_other.cmt" ].each do |table_name|
           expect(column_named(table_name, "owner_id")).to be_nil
           expect(foreign_key_names(table_name)).to be_empty
         end
@@ -1701,7 +1764,63 @@ RSpec.describe "DynamicSchema::TableDefinition concern", type: :model do
 
   describe "association helpers" do
     it "names the foreign key column after the association" do
-      expect(Grit::TableDefinition.schema_definition_id).to eq(:schema_definition_id)
+      expect(Grit::TableDefinition.schema_definition_foreign_key).to eq(:schema_definition_id)
+    end
+
+    # Options go to the Rails macros, and the concern reads the foreign key from
+    # the reflection rather than from the association's name.
+    context "with options" do
+      let(:klass) do
+        Class.new(ApplicationRecord) do
+          def self.name = "Grit::RenamedTableDefinition"
+          self.table_name = "test_table_definitions"
+          include Grit::Core::Model::DynamicSchema::TableDefinition
+          has_many_column_definitions :fields, class_name: "Grit::ColumnDefinition", foreign_key: :table_definition_id
+          belongs_to_schema_definition :owner, class_name: "Grit::SchemaDefinition", foreign_key: :schema_definition_id
+        end
+      end
+
+      it "reads the foreign key from the reflection" do
+        expect(klass.schema_definition_foreign_key).to eq(:schema_definition_id)
+      end
+
+      it "reaches the schema and columns through the renamed associations" do
+        table = klass.create!(identifier: "tbl", name: "Table", owner: schema)
+        column = Grit::ColumnDefinition.create!(identifier: "label", name: "Label", data_type: string_type, table_definition_id: table.id)
+
+        expect(table.schema_definition).to eq(schema)
+        expect(table.column_definitions.to_a).to eq([ column ])
+        expect(connection.table_exists?(table.physical_table_name)).to be(true)
+      end
+
+      it "checks the identifier among the schema's tables" do
+        Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: schema)
+        table = klass.new(identifier: "tbl", name: "Table", owner: schema)
+
+        expect(table).not_to be_valid
+        expect(table.errors[:identifier].join).to match(/already taken/)
+      end
+
+      it "refuses a move" do
+        other_schema = Grit::SchemaDefinition.create!(identifier: "other", name: "Other")
+        table = klass.create!(identifier: "tbl", name: "Table", owner: schema)
+
+        expect(table.update(owner: other_schema)).to be(false)
+        expect(table.errors[:base].join).to match(/cannot be moved to another schema/)
+        expect(table.reload.owner).to eq(schema)
+        expect(connection.table_exists?(table.physical_table_name)).to be(true)
+      end
+
+      it "keeps the cascade its own" do
+        expect {
+          Class.new(ApplicationRecord) do
+            def self.name = "Grit::NullifyingTableDefinition"
+            self.table_name = "test_table_definitions"
+            include Grit::Core::Model::DynamicSchema::TableDefinition
+            has_many_column_definitions :column_definitions, foreign_key: :table_definition_id, dependent: :nullify
+          end
+        }.to raise_error(ArgumentError, /dependent/)
+      end
     end
   end
 end

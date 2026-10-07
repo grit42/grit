@@ -45,6 +45,8 @@ module Grit::Core::Model::DynamicSchema::ValidIdentifier
     after_validation :explain_committed_identifier
   end
 
+  private
+
   # Runs on every save: code may reserve an identifier after it was saved.
   def identifier_not_conflict
     return if identifier.blank?

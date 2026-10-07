@@ -41,11 +41,44 @@ module Grit::Core::Model::DynamicSchema::ColumnDefinition
 
     after_create :create_column
     after_update :alter_column
-    # On a cascade the table's drop takes the column; see `Refusal`.
-    before_destroy :refuse_unless_can_modify, unless: :destroyed_by_association
-    before_destroy :check_schema_draft, unless: :destroyed_by_association
-    before_destroy :drop_column, unless: :destroyed_by_association
+    # On the table's cascade its drop takes the column; see `Refusal`.
+    before_destroy :refuse_unless_can_modify, unless: :destroyed_by_parent_definition?
+    before_destroy :check_schema_draft, unless: :destroyed_by_parent_definition?
+    before_destroy :drop_column, unless: :destroyed_by_parent_definition?
   end
+
+  # nil until the includer calls `belongs_to_table_definition`, so validations
+  # skip rather than raise.
+  def table_definition
+    return if self.class.table_definition_association.nil?
+    association(self.table_definition_association).reader
+  end
+
+  # See `TableDefinition#schema_definition_in_database`.
+  def table_definition_in_database
+    return if self.class.table_definition_association.nil?
+    foreign_key = self.class.table_definition_foreign_key
+    return table_definition if new_record? || !attribute_changed?(foreign_key)
+    reflection = association(self.table_definition_association).reflection
+    reflection.klass.unscoped.find_by(reflection.association_primary_key => attribute_in_database(foreign_key))
+  end
+
+  def committed?
+    !!table_definition&.committed?
+  end
+
+  # The column's name in a draft. Not a valid identifier, so nothing else can
+  # hold it; a commit renames it to the identifier.
+  def draft_column_name
+    "c#{id}"
+  end
+
+  # The column an entity foreign key references.
+  def foreign_key_target_column
+    Grit::Core::Model::DynamicSchema::TableDefinition::DEFAULT_FOREIGN_KEY_TARGET_COLUMN
+  end
+
+  private
 
   # Whether saving touches the physical column. `name`, `description` and
   # `sort` can change at any time.
@@ -53,7 +86,12 @@ module Grit::Core::Model::DynamicSchema::ColumnDefinition
     return true if new_record?
     return true if identifier_changed? || data_type_id_changed? || required_changed?
     return false if self.class.table_definition_association.nil?
-    attribute_changed?(self.class.table_definition_id)
+    attribute_changed?(self.class.table_definition_foreign_key)
+  end
+
+  # See `Refusal`.
+  def destroyed_by_parent_definition?
+    destroyed_through?(self.class.table_definition_association)
   end
 
   # See `TableDefinition#check_schema_draft`.
@@ -70,7 +108,7 @@ module Grit::Core::Model::DynamicSchema::ColumnDefinition
     return if identifier.blank?
     definition = table_definition
     return if definition.nil?
-    return unless definition.implementation_column_definitions.any? { |column| column[:identifier].to_s == identifier }
+    return unless definition.implementation_columns.any? { |column| column.identifier == identifier }
     errors.add(:identifier, "is reserved by this table and cannot be used as identifier")
   end
 
@@ -94,7 +132,7 @@ module Grit::Core::Model::DynamicSchema::ColumnDefinition
   def identifier_unique_in_table
     return if self.class.table_definition_association.nil?
     return if identifier.blank?
-    foreign_key = self.class.table_definition_id
+    foreign_key = self.class.table_definition_foreign_key
     return if self[foreign_key].blank?
     klass = self.class.base_class
     scope = klass.unscoped.where(foreign_key => self[foreign_key], identifier: identifier)
@@ -105,7 +143,7 @@ module Grit::Core::Model::DynamicSchema::ColumnDefinition
   def table_definition_unchanged
     return if self.class.table_definition_association.nil?
     return if new_record?
-    return unless attribute_changed?(self.class.table_definition_id)
+    return unless attribute_changed?(self.class.table_definition_foreign_key)
     errors.add(:base, "A column definition cannot be moved to another table")
   end
 
@@ -115,36 +153,6 @@ module Grit::Core::Model::DynamicSchema::ColumnDefinition
     limit = Grit::Core::Model::DynamicSchema::TableDefinition::MAX_COLUMNS
     return if definition.physical_column_count(excluding: self) < limit
     errors.add(:base, "A table cannot have more than #{limit} columns")
-  end
-
-  # nil until the includer calls `belongs_to_table_definition`, so validations
-  # skip rather than raise.
-  def table_definition
-    return if self.class.table_definition_association.nil?
-    association(self.table_definition_association).reader
-  end
-
-  # See `TableDefinition#schema_definition_in_database`.
-  def table_definition_in_database
-    return if self.class.table_definition_association.nil?
-    foreign_key = self.class.table_definition_id
-    return table_definition if new_record? || !attribute_changed?(foreign_key)
-    association(self.table_definition_association).klass.unscoped.find_by(id: attribute_in_database(foreign_key))
-  end
-
-  def committed?
-    !!table_definition&.committed?
-  end
-
-  # The column's name in a draft. Not a valid identifier, so nothing else can
-  # hold it; a commit renames it to the identifier.
-  def draft_column_name
-    "c#{id}"
-  end
-
-  # The column an entity foreign key references.
-  def foreign_key_target_column
-    Grit::Core::Model::DynamicSchema::TableDefinition::DEFAULT_FOREIGN_KEY_TARGET_COLUMN
   end
 
   # A NOT NULL column can't be added to a table with rows.
@@ -232,13 +240,15 @@ module Grit::Core::Model::DynamicSchema::ColumnDefinition
   end
 
   class_methods do
-    def belongs_to_table_definition(table_definition_association)
-      self.table_definition_association = table_definition_association
-      belongs_to self.table_definition_association
+    # `options` go to `belongs_to`; the concern reads the foreign key and its
+    # target from the reflection.
+    def belongs_to_table_definition(name, **options)
+      self.table_definition_association = name
+      belongs_to name, **options
     end
 
-    def table_definition_id
-      "#{self.table_definition_association}_id".to_sym
+    def table_definition_foreign_key
+      reflect_on_association(table_definition_association).foreign_key.to_sym
     end
   end
 end

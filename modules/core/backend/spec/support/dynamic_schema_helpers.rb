@@ -23,11 +23,11 @@ module DynamicSchemaHelpers
   def insert_draft_row(table, values = {})
     connection = ActiveRecord::Base.connection
     sql = if values.empty?
-      "INSERT INTO #{table.quoted_table_name} DEFAULT VALUES RETURNING id"
+      "INSERT INTO #{table.quoted_physical_table_name} DEFAULT VALUES RETURNING id"
     else
       columns = values.keys.map { |identifier| connection.quote_column_name(draft_column(table, identifier)) }
       quoted_values = values.values.map { |value| connection.quote(value) }
-      "INSERT INTO #{table.quoted_table_name} (#{columns.join(", ")}) VALUES (#{quoted_values.join(", ")}) RETURNING id"
+      "INSERT INTO #{table.quoted_physical_table_name} (#{columns.join(", ")}) VALUES (#{quoted_values.join(", ")}) RETURNING id"
     end
     connection.select_value(sql)
   end
@@ -36,7 +36,7 @@ module DynamicSchemaHelpers
     connection = ActiveRecord::Base.connection
     connection.select_value(<<~SQL.squish)
       SELECT #{connection.quote_column_name(draft_column(table, identifier))}
-      FROM #{table.quoted_table_name}
+      FROM #{table.quoted_physical_table_name}
       WHERE id = #{connection.quote(row_id)}
     SQL
   end

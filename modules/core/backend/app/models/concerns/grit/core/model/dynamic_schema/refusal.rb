@@ -28,11 +28,12 @@
 #
 # A cascade consults only the guard of the record `destroy` was called on: a
 # schema's tables and a table's columns skip their guards, draft checks and DDL
-# under `destroyed_by_association`, the parent's drop taking them with it, as
-# commit and revert consult the schema's guard alone. Includers' own callbacks
-# on them still run; when one aborts, the parent's `destroy` returns false with
-# the reason on the child's `errors`, and `destroy!` raises the child's
-# RecordNotDestroyed.
+# when their parent definition destroys them (`destroyed_by_parent_definition?`),
+# the parent's drop taking them with it, as commit and revert consult the
+# schema's guard alone. Includers' own callbacks on them still run; when one
+# aborts, the parent's `destroy` returns false with the reason on the child's
+# `errors`, and `destroy!` raises the child's RecordNotDestroyed. Any other
+# parent's cascade destroys them as if called directly: guarded, and dropped.
 module Grit::Core::Model::DynamicSchema::Refusal
   extend ActiveSupport::Concern
 
@@ -53,10 +54,10 @@ module Grit::Core::Model::DynamicSchema::Refusal
 
   # In a savepoint, so that a refusal after DDL has run (an includer's callback
   # declared after the macros, a child aborting the cascade) rolls it back:
-  # Rails' own rollback is a no-op inside a caller's transaction. A cascaded
-  # child is covered by its parent's.
+  # Rails' own rollback is a no-op inside a caller's transaction. A child its
+  # parent definition cascades to is covered by the parent's.
   def destroy
-    return super if destroyed_by_association
+    return super if destroyed_by_parent_definition?
     destroyed = false
     self.class.transaction(requires_new: true) do
       destroyed = super
@@ -85,5 +86,21 @@ module Grit::Core::Model::DynamicSchema::Refusal
     return if allowed && errors.count == count
     errors.add(:base, "#{self.class.model_name.human} #{identifier} cannot be modified") if errors.count == count
     throw :abort
+  end
+
+  # Whether the parent definition's cascade is destroying this record; see
+  # above. A schema has none.
+  def destroyed_by_parent_definition?
+    false
+  end
+
+  # Whether `destroyed_by_association` is the has_many on the other side of
+  # the `belongs_to` named `name`: same foreign key, declared on its class.
+  def destroyed_through?(name)
+    cascade = destroyed_by_association
+    return false if cascade.nil? || name.nil?
+    parent = self.class.reflect_on_association(name)
+    return false unless cascade.foreign_key.to_s == parent.foreign_key.to_s
+    !!(parent.klass <= cascade.active_record || cascade.active_record <= parent.klass)
   end
 end
