@@ -42,7 +42,8 @@ const DeleteRole = ({ role }: { role: Partial<Role> }) => {
         <div className={styles.actionContent}>
           <h3>Delete role</h3>
           <p>
-            Users with this role will loose associated permissions. <b>This action is irreversible.</b>
+            Users with this role will loose associated permissions.{" "}
+            <b>This action is irreversible.</b>
           </p>
         </div>
         <Button onClick={handleDelete} color="danger">

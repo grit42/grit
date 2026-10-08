@@ -105,7 +105,6 @@ const AssayMetadataDefinitionsTable = () => {
 
   const navigateToNew = useCallback(() => navigate("new"), [navigate]);
 
-
   const tableState = useSetupTableState<AssayMetadataDefinitionData>(
     "admin-assay_metadata_definitions-list",
     COLUMNS,

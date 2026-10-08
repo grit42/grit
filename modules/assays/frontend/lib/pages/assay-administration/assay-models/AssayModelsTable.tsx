@@ -134,11 +134,7 @@ const AssayModelsTable = () => {
     <Table
       header="Assay models"
       tableState={tableState}
-      headerActions={
-        <Button onClick={navigateToNew}>
-          New
-        </Button>
-      }
+      headerActions={<Button onClick={navigateToNew}>New</Button>}
       data={flatData}
       onRowClick={(row) => navigate(`${row.original.id}/details`)}
       loading={isFetching}

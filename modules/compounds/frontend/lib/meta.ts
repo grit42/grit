@@ -28,7 +28,7 @@ const Meta: ModuleMeta = {
       name: "Compounds",
       path: "/compounds",
       permissions: ["read:system"],
-      icon: CompoundIcon
+      icon: CompoundIcon,
     },
   ],
 };

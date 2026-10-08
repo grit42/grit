@@ -304,8 +304,6 @@ const CloneDataSheetColumnPage = () => {
       </FormPage.Body>
     </FormPage>
   );
-
-
 };
 
 export default CloneDataSheetColumnPage;
