@@ -62,7 +62,6 @@
     "eslint-plugin-react-refresh": "catalog:",
     "glob": "catalog:",
     "globals": "catalog:",
-    "path": "^0.12.7",
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-router-dom": "catalog:",

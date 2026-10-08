@@ -44,13 +44,15 @@ packages:
   - packages/frontend/*
   - tools/ruby
 
+strictDepBuilds: true
+
 allowBuilds:
-  '@parcel/watcher': true
-  '@swc/core': true
+  "@parcel/watcher": false
+  "@swc/core": true
   es5-ext: true
   esbuild: true
   lefthook: true
-  nx: true
+  nx: false
   unrs-resolver: true
 
 catalog:
@@ -88,9 +90,6 @@ catalog:
   vite-plugin-static-copy: ^3.2.0
   vitest: ^4.0.18
   zod: ^4.3.6
-
-onlyBuiltDependencies:
-  - lefthook
 
 # GHSA IDs to dismiss from `pnpm audit` (CI: security.yml). Only add an entry
 # once you've confirmed the vulnerable code path isn't reachable from our
