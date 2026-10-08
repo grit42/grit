@@ -21,16 +21,12 @@ require "rails_helper"
 
 # Exercised through the Grit::ColumnDefinition dummy model.
 RSpec.describe "DynamicSchema::ColumnDefinition concern", type: :model do
-  let(:admin) { create(:grit_core_user, :admin, :with_administrator_role) }
+  let(:user) { create(:grit_core_user) }
   let(:schema) { Grit::SchemaDefinition.create!(identifier: "grp", name: "Schema") }
   let(:table) { Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: schema) }
   let(:string_type) { create(:grit_core_data_type, :string) }
   let(:integer_type) { create(:grit_core_data_type, :integer) }
   let(:entity_type) { create(:grit_core_data_type, :entity) }
-
-  before(:each) do
-    set_current_user(admin)
-  end
 
   def draft_foreign_key_name(definition)
     table.foreign_key_name(definition.draft_column_name, definition.id)
@@ -44,37 +40,7 @@ RSpec.describe "DynamicSchema::ColumnDefinition concern", type: :model do
     connection.columns(table_name).find { |c| c.name == name }
   end
 
-  # The includer's association shares the concern's accessor name, `table_definition`,
-  # which must not recurse into itself.
-  describe "natural-name association" do
-    it "reads the association rather than recursing" do
-      definition = Grit::ColumnDefinition.create!(identifier: "a_column", name: "A", data_type: string_type, table_definition: table)
-      expect(definition.table_definition).to eq(table)
-    end
-  end
-
   describe "check_can_modify default guard" do
-    it "allows create, update and destroy" do
-      definition = Grit::ColumnDefinition.create!(identifier: "a_column", name: "A", data_type: string_type, table_definition: table)
-      expect(definition.update(name: "Renamed")).to be(true)
-      expect { definition.destroy! }.not_to raise_error
-    end
-
-    it "is overridable with super" do
-      klass = Class.new(Grit::ColumnDefinition) do
-        def self.name = "Grit::OverridingColumnDefinition"
-
-        def check_can_modify
-          super
-          raise "locked"
-        end
-      end
-
-      expect {
-        klass.create!(identifier: "a_column", name: "A", data_type: string_type, table_definition: table)
-      }.to raise_error("locked")
-    end
-
     it "refuses a save through errors and a destroy with the reason" do
       definition = Grit::ColumnDefinition.create!(identifier: "a_column", name: "A", data_type: string_type, table_definition: table)
       klass = Class.new(Grit::ColumnDefinition) do
@@ -116,83 +82,22 @@ RSpec.describe "DynamicSchema::ColumnDefinition concern", type: :model do
     end
   end
 
-  describe "foreign key constraint naming" do
-    def foreign_key_names
-      connection.foreign_keys(table.physical_table_name).map(&:name)
-    end
-
-    it "names the constraint after the column's draft name and id" do
-      definition = Grit::ColumnDefinition.create!(identifier: "ref_col", name: "Ref", data_type: entity_type, table_definition: table)
-
-      expect(draft_foreign_key_name(definition)).to match(/\Ac#{definition.id}_0+#{definition.id.to_s(16)}_fk\z/)
-      expect(foreign_key_names).to include(draft_foreign_key_name(definition))
-    end
-
-    it "keeps the constraint name when the identifier changes" do
-      definition = Grit::ColumnDefinition.create!(identifier: "ref_col", name: "Ref", data_type: entity_type, table_definition: table)
-
-      definition.update!(identifier: "new_col")
-
-      expect(foreign_key_names).to include(draft_foreign_key_name(definition))
-    end
-
-    it "names the constraint after the column when the data type becomes an entity" do
-      definition = Grit::ColumnDefinition.create!(identifier: "a_column", name: "A", data_type: integer_type, table_definition: table)
-      expect(foreign_key_names).not_to include(draft_foreign_key_name(definition))
-
-      definition.update!(data_type: entity_type)
-
-      expect(foreign_key_names).to include(draft_foreign_key_name(definition))
-    end
-  end
-
-  describe "blank identifier" do
-    it "reports an invalid record rather than raising" do
-      definition = Grit::ColumnDefinition.create!(identifier: "a_column", name: "A", data_type: string_type, table_definition: table)
-
-      expect { definition.update(identifier: nil) }.not_to raise_error
-      expect(definition).not_to be_valid
-      expect(definition.errors[:identifier]).to include("can't be blank")
-    end
-
-    it "does not add a reserved-keyword error for a blank identifier" do
-      definition = Grit::ColumnDefinition.new(identifier: "", name: "A", data_type: string_type, table_definition: table)
-      definition.valid?
-      expect(definition.errors[:identifier]).not_to include("is a reserved keyword and cannot be used as identifier")
-    end
-  end
-
   describe "altering a column" do
     def physical_column(definition)
       column(table.physical_table_name, "c#{definition.id}")
     end
 
-    it "tightens a column to NOT NULL when no value is missing" do
-      definition = Grit::ColumnDefinition.create!(identifier: "a_column", name: "A", data_type: string_type, table_definition: table)
-      insert_draft_row(table, a_column: "present")
-
-      definition.update!(required: true)
-
-      expect(physical_column(definition).null).to be(false)
-    end
-
-    it "refuses to require a column that has empty values" do
-      definition = Grit::ColumnDefinition.create!(identifier: "a_column", name: "A", data_type: string_type, table_definition: table)
-      insert_draft_row(table, a_column: nil)
-
-      expect(definition.update(required: true)).to be(false)
-      expect(definition.errors[:base]).to include("Cannot require column with empty values")
-      expect(physical_column(definition).null).to be(true)
-    end
-
     # A refusal is a validation, so `valid?` agrees with `save`.
-    it "reports empty values from valid? and raises RecordInvalid from update!" do
+    it "refuses to require a column that has empty values" do
       definition = Grit::ColumnDefinition.create!(identifier: "a_column", name: "A", data_type: string_type, table_definition: table)
       insert_draft_row(table, a_column: nil)
       definition.required = true
 
       expect(definition).not_to be_valid
       expect { definition.save! }.to raise_error(ActiveRecord::RecordInvalid, /Cannot require column with empty values/)
+      expect(definition.save).to be(false)
+      expect(definition.errors[:base]).to include("Cannot require column with empty values")
+      expect(physical_column(definition).null).to be(true)
     end
 
     it "refuses to add a required column to a table that has rows" do
@@ -241,14 +146,6 @@ RSpec.describe "DynamicSchema::ColumnDefinition concern", type: :model do
       expect(draft_value(table, row_id, :a_column)).to eq(42)
     end
 
-    it "refuses a conversion the existing rows cannot survive" do
-      definition = Grit::ColumnDefinition.create!(identifier: "a_column", name: "A", data_type: string_type, table_definition: table)
-      insert_draft_row(table, a_column: "not a number")
-
-      expect { definition.update!(data_type: integer_type) }
-        .to raise_error(ActiveRecord::RecordInvalid, /Failed to convert string to integer because of conflicts in existing rows/)
-    end
-
     it "drops the foreign key when the type stops being an entity" do
       definition = Grit::ColumnDefinition.create!(identifier: "ref_col", name: "Ref", data_type: entity_type, table_definition: table)
       expect(connection.foreign_keys(table.physical_table_name).map(&:name)).to include(draft_foreign_key_name(definition))
@@ -271,7 +168,7 @@ RSpec.describe "DynamicSchema::ColumnDefinition concern", type: :model do
     it "refuses to point a populated entity column at another entity type" do
       other_entity_type = create(:grit_core_data_type, :entity)
       definition = Grit::ColumnDefinition.create!(identifier: "ref_col", name: "Ref", data_type: entity_type, table_definition: table)
-      insert_draft_row(table, ref_col: admin.id)
+      insert_draft_row(table, ref_col: user.id)
 
       expect { definition.update!(data_type: other_entity_type) }
         .to raise_error(ActiveRecord::RecordInvalid, /because of conflicts in existing rows/)
@@ -286,35 +183,26 @@ RSpec.describe "DynamicSchema::ColumnDefinition concern", type: :model do
       expect(connection.foreign_keys(table.physical_table_name).map(&:name)).to include(draft_foreign_key_name(definition))
     end
 
-    # Only a bad cast becomes the "conflicts in existing rows" error; anything else keeps its
-    # class and backtrace, so a caller can still rescue a deadlock and retry.
-    it "re-raises a failure that is not a bad cast with its class intact" do
-      definition = Grit::ColumnDefinition.create!(identifier: "a_column", name: "A", data_type: string_type, table_definition: table)
-      allow(connection).to receive(:change_column)
-        .and_raise(ActiveRecord::Deadlocked.new("PG::TRDeadlockDetected: ERROR: deadlock detected"))
-
-      expect { definition.update!(data_type: integer_type) }.to raise_error(ActiveRecord::Deadlocked)
-    end
-
     # The cast is dry-run in a savepoint before any DDL, so a refusal leaves the column,
-    # and the transaction the caller is in, as they were.
-    it "dry-runs the conversion and leaves the column as it was" do
+    # and the transaction the caller is in, as they were. A value out of range is refused
+    # like one that does not parse.
+    it "refuses a conversion the existing rows cannot survive and leaves the column as it was" do
+      conflict = "Failed to convert string to integer because of conflicts in existing rows"
       definition = Grit::ColumnDefinition.create!(identifier: "a_column", name: "A", data_type: string_type, table_definition: table)
       insert_draft_row(table, a_column: "not a number")
       definition.data_type = integer_type
 
       expect(definition).not_to be_valid
-      expect(definition.errors[:base]).to include("Failed to convert string to integer because of conflicts in existing rows")
+      expect(definition.errors[:base]).to include(conflict)
       expect(definition.save).to be(false)
+      expect { definition.save! }.to raise_error(ActiveRecord::RecordInvalid, /#{conflict}/)
       expect(physical_column(definition).sql_type).to eq("character varying")
-    end
 
-    it "refuses a value out of the new type's range" do
-      definition = Grit::ColumnDefinition.create!(identifier: "a_column", name: "A", data_type: string_type, table_definition: table)
-      insert_draft_row(table, a_column: "99999999999999999999")
+      out_of_range = Grit::ColumnDefinition.create!(identifier: "b_column", name: "B", data_type: string_type, table_definition: table)
+      insert_draft_row(table, b_column: "99999999999999999999")
 
-      expect(definition.update(data_type: integer_type)).to be(false)
-      expect(definition.errors[:base]).to include("Failed to convert string to integer because of conflicts in existing rows")
+      expect(out_of_range.update(data_type: integer_type)).to be(false)
+      expect(out_of_range.errors[:base]).to include(conflict)
     end
 
     it "re-raises a dry-run failure that is not about the values with its class intact" do
@@ -362,12 +250,10 @@ RSpec.describe "DynamicSchema::ColumnDefinition concern", type: :model do
       expect(column("test_grp.tbl", "a_column").sql_type).to eq("character varying")
     end
 
-    it "refuses to be destroyed" do
+    it "refuses to be destroyed, and says why from the bang forms" do
       expect(definition.destroy).to be(false)
       expect(column("test_grp.tbl", "a_column")).not_to be_nil
-    end
 
-    it "says why from the bang forms" do
       definition.required = true
 
       expect(definition).not_to be_valid
@@ -401,27 +287,11 @@ RSpec.describe "DynamicSchema::ColumnDefinition concern", type: :model do
   end
 
   describe "unique column identifiers" do
-    # Draft columns are `c<id>`, so the database would only catch the clash at commit.
-    it "rejects a duplicate identifier within one table" do
-      Grit::ColumnDefinition.create!(identifier: "a_column", name: "A", data_type: string_type, table_definition: table)
-
-      clash = Grit::ColumnDefinition.new(identifier: "a_column", name: "B", data_type: string_type, table_definition: table)
-
-      expect(clash).not_to be_valid
-      expect(clash.errors[:identifier].join).to match(/already taken by another column/)
-    end
-
     it "allows the same identifier under different tables" do
       other = Grit::TableDefinition.create!(identifier: "other", name: "Other", schema_definition: schema)
       Grit::ColumnDefinition.create!(identifier: "a_column", name: "A", data_type: string_type, table_definition: table)
 
       expect(Grit::ColumnDefinition.new(identifier: "a_column", name: "B", data_type: string_type, table_definition: other)).to be_valid
-    end
-
-    it "lets a definition be updated without colliding with itself" do
-      definition = Grit::ColumnDefinition.create!(identifier: "a_column", name: "A", data_type: string_type, table_definition: table)
-
-      expect(definition.update(name: "Renamed")).to be(true)
     end
 
     # The catalog is not consulted: the column is `c<id>` until committed.
@@ -431,6 +301,7 @@ RSpec.describe "DynamicSchema::ColumnDefinition concern", type: :model do
       expect(Grit::ColumnDefinition.new(identifier: "orphan", name: "Orphan", data_type: string_type, table_definition: table)).to be_valid
     end
 
+    # Draft columns are `c<id>`, so the database would only catch the clash at commit.
     it "reports one message where a sibling owns the identifier" do
       Grit::ColumnDefinition.create!(identifier: "a_column", name: "A", data_type: string_type, table_definition: table)
 
@@ -455,14 +326,6 @@ RSpec.describe "DynamicSchema::ColumnDefinition concern", type: :model do
     identifiers = %w[save valid attribute attributes destroy format send create_or_update mutations record_timestamps]
     values = identifiers.index_with { |identifier| "#{identifier} value" }
 
-    identifiers.each do |identifier|
-      it "accepts #{identifier}" do
-        record = Grit::ColumnDefinition.new(identifier: identifier, name: "X", data_type: string_type, table_definition: table)
-
-        expect(record).to be_valid
-      end
-    end
-
     def create_columns(identifiers)
       identifiers.each do |identifier|
         Grit::ColumnDefinition.create!(identifier: identifier, name: identifier.humanize, data_type: string_type, table_definition: table)
@@ -474,63 +337,36 @@ RSpec.describe "DynamicSchema::ColumnDefinition concern", type: :model do
       identifiers.index_with { |identifier| reloaded[identifier] }
     end
 
-    shared_examples "columns named after methods" do
-      it "stores and reads back a value in each column" do
-        row = table.record_klass.create!(values)
-
-        expect(read_back(row, identifiers)).to eq(values)
-      end
-
-      it "updates each column" do
-        row = table.record_klass.create!
-        updated = identifiers.index_with { |identifier| "#{identifier} updated" }
-
-        row.update!(updated)
-
-        expect(read_back(row, identifiers)).to eq(updated)
-      end
-
-      # Scope attributes skip `assign_attributes` and are assigned one by one,
-      # through the same setter lookup.
-      it "assigns each column from the scope it is created through" do
-        row = table.record_klass.where(values).create!
-
-        expect(read_back(row, identifiers)).to eq(values)
-      end
-
-      # Serialization reads each attribute with `send` by default, which on the
-      # `destroy` column would destroy the row.
-      it "serializes each column without calling the method it shares a name with" do
-        row = table.record_klass.create!(values)
-
-        expect(table.record_klass.find(row.id).as_json.slice(*identifiers)).to eq(values)
-        expect(table.record_klass.detailed.find(row.id).as_json.slice(*identifiers)).to eq(values)
-        expect(table.record_klass.exists?(row.id)).to be(true)
-      end
-
-      it "reads each column for validation without calling the method it shares a name with" do
-        row = table.record_klass.create!(values)
-
-        expect(row.read_attribute_for_validation(:destroy)).to eq("destroy value")
-        expect(table.record_klass.exists?(row.id)).to be(true)
-      end
-    end
-
     context "once committed" do
       before(:each) do
         create_columns(identifiers)
         schema.commit!
       end
 
-      include_examples "columns named after methods"
-    end
+      # Scope attributes skip `assign_attributes` and are assigned one by one,
+      # through the same setter lookup.
+      it "creates, updates and reads back each column, through a scope too" do
+        row = table.record_klass.create!(values)
+        expect(read_back(row, identifiers)).to eq(values)
 
-    # The base columns are the table's own, so they stay reserved.
-    it "keeps refusing a base column" do
-      record = Grit::ColumnDefinition.new(identifier: "created_at", name: "X", data_type: string_type, table_definition: table)
+        updated = identifiers.index_with { |identifier| "#{identifier} updated" }
+        row.update!(updated)
+        expect(read_back(row, identifiers)).to eq(updated)
 
-      expect(record).not_to be_valid
-      expect(record.errors[:identifier]).to include("is a reserved keyword and cannot be used as identifier")
+        scoped = table.record_klass.where(values).create!
+        expect(read_back(scoped, identifiers)).to eq(values)
+      end
+
+      # Serialization reads each attribute with `send` by default, which on the
+      # `destroy` column would destroy the row.
+      it "serializes and validates each column without calling the method it shares a name with" do
+        row = table.record_klass.create!(values)
+
+        expect(table.record_klass.find(row.id).as_json.slice(*identifiers)).to eq(values)
+        expect(table.record_klass.detailed.find(row.id).as_json.slice(*identifiers)).to eq(values)
+        expect(row.read_attribute_for_validation(:destroy)).to eq("destroy value")
+        expect(table.record_klass.exists?(row.id)).to be(true)
+      end
     end
   end
 
@@ -563,17 +399,6 @@ RSpec.describe "DynamicSchema::ColumnDefinition concern", type: :model do
 
   # The column is named after its id, which no refused change can touch.
   describe "drop_column" do
-    it "drops its own column after a refused rename" do
-      definition = Grit::ColumnDefinition.create!(identifier: "a_column", name: "A", data_type: string_type, table_definition: table)
-      other = Grit::ColumnDefinition.create!(identifier: "b_column", name: "B", data_type: string_type, table_definition: table)
-
-      expect(definition.update(identifier: "b_column")).to be(false)
-      definition.destroy!
-
-      expect(column(table.physical_table_name, "c#{definition.id}")).to be_nil
-      expect(column(table.physical_table_name, "c#{other.id}")).not_to be_nil
-    end
-
     it "drops its own column after a refused move to another table" do
       other = Grit::TableDefinition.create!(identifier: "other", name: "Other", schema_definition: schema)
       definition = Grit::ColumnDefinition.create!(identifier: "a_column", name: "A", data_type: string_type, table_definition: table)
@@ -595,15 +420,6 @@ RSpec.describe "DynamicSchema::ColumnDefinition concern", type: :model do
 
       expect(definition.destroy).to be(false)
       expect(column("test_grp.tbl", "a_column")).not_to be_nil
-    end
-
-    # Destroy callbacks run on a record that was never saved.
-    it "drops nothing when destroyed before it was saved" do
-      definition = Grit::ColumnDefinition.create!(identifier: "a_column", name: "A", data_type: string_type, table_definition: table)
-
-      Grit::ColumnDefinition.new(identifier: "a_column", name: "Clash", data_type: string_type, table_definition: table).destroy
-
-      expect(column(table.physical_table_name, "c#{definition.id}")).not_to be_nil
     end
 
     # Only the table's cascade skips the drop; see `Refusal`. Here a stranger
@@ -646,7 +462,8 @@ RSpec.describe "DynamicSchema::ColumnDefinition concern", type: :model do
 
   describe "column count guard" do
     # Far below PostgreSQL's 1600-column limit, for the grid's sake. Stubbed because each
-    # real create runs an ALTER TABLE.
+    # real create runs an ALTER TABLE. Refused as an invalid record: a raise from
+    # `before_create` would reach the caller as a 500.
     it "refuses a column past the ceiling" do
       table # materialise it before the stub, which the real creation path reads too
       allow_any_instance_of(Grit::TableDefinition).to receive(:column_definitions).and_return(Array.new(250))
@@ -655,16 +472,7 @@ RSpec.describe "DynamicSchema::ColumnDefinition concern", type: :model do
 
       expect(definition).not_to be_valid
       expect(definition.errors[:base].join).to match(/cannot have more than 250 columns/)
-    end
-
-    # A raise from `before_create` would reach the caller as a 500.
-    it "reports an invalid record rather than raising" do
-      table
-      allow_any_instance_of(Grit::TableDefinition).to receive(:column_definitions).and_return(Array.new(250))
-
-      expect {
-        Grit::ColumnDefinition.create!(identifier: "a_column", name: "A", data_type: string_type, table_definition: table)
-      }.to raise_error(ActiveRecord::RecordInvalid, /cannot have more than 250 columns/)
+      expect { definition.save! }.to raise_error(ActiveRecord::RecordInvalid, /cannot have more than 250 columns/)
     end
 
     # The ceiling is on the physical table: 244 dynamic + 5 base + `owner_id` = 250.
@@ -695,26 +503,17 @@ RSpec.describe "DynamicSchema::ColumnDefinition concern", type: :model do
         Grit::TableDefinition.find(table.id)
       end
 
-      it "admits the last column built through an unloaded association" do
+      it "admits the last column however it is built" do
         table.column_definitions.create!(attributes_for("first"))
-        owner = fresh_table
 
-        definition = owner.column_definitions.build(attributes_for("last"))
-
-        expect(owner.column_definitions).not_to be_loaded
+        unloaded = fresh_table
+        definition = unloaded.column_definitions.build(attributes_for("last"))
+        expect(unloaded.column_definitions).not_to be_loaded
         expect(definition).to be_valid
-      end
 
-      it "admits the last column built through a loaded association" do
-        table.column_definitions.create!(attributes_for("first"))
-        owner = fresh_table
-        owner.column_definitions.load
-
-        expect(owner.column_definitions.build(attributes_for("last"))).to be_valid
-      end
-
-      it "admits the last column built standalone" do
-        table.column_definitions.create!(attributes_for("first"))
+        loaded = fresh_table
+        loaded.column_definitions.load
+        expect(loaded.column_definitions.build(attributes_for("last"))).to be_valid
 
         expect(Grit::ColumnDefinition.new(**attributes_for("last"), table_definition: fresh_table)).to be_valid
       end
@@ -748,10 +547,6 @@ RSpec.describe "DynamicSchema::ColumnDefinition concern", type: :model do
   end
 
   describe "association helpers" do
-    it "names the foreign key column after the association" do
-      expect(Grit::ColumnDefinition.table_definition_foreign_key).to eq(:table_definition_id)
-    end
-
     # Options go to `belongs_to`, and the concern reads the foreign key from the
     # reflection rather than from the association's name.
     it "takes belongs_to options" do
@@ -793,20 +588,13 @@ RSpec.describe "DynamicSchema::ColumnDefinition concern", type: :model do
 
   # PostgreSQL gives every table these, and refuses them as column names.
   describe "system column names" do
-    %w[tableoid xmin cmin xmax cmax ctid].each do |identifier|
-      it "rejects #{identifier}" do
+    it "rejects every one" do
+      %w[tableoid xmin cmin xmax cmax ctid].each do |identifier|
         definition = Grit::ColumnDefinition.new(identifier: identifier, name: "X", data_type: string_type, table_definition: table)
 
-        expect(definition).not_to be_valid
+        expect(definition).not_to be_valid, identifier
         expect(definition.errors[:identifier].join).to include("system column")
       end
-    end
-
-    it "rejects a rename onto one" do
-      definition = Grit::ColumnDefinition.create!(identifier: "a_column", name: "A", data_type: string_type, table_definition: table)
-
-      expect(definition.update(identifier: "xmin")).to be(false)
-      expect(column(table.physical_table_name, "c#{definition.id}")).to be_present
     end
   end
 

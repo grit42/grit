@@ -19,8 +19,8 @@
 
 require "rails_helper"
 
-# The shape of an implementation column declaration. Its `problems` are
-# exercised through a table's validation in table_definition_spec.rb.
+# The shape of an implementation column declaration and its `problems`. How a
+# table reports them is in table_definition_spec.rb.
 RSpec.describe Grit::Core::Model::DynamicSchema::ImplementationColumn do
   describe ".coerce" do
     it "fills in what a Hash leaves out" do
@@ -91,6 +91,52 @@ RSpec.describe Grit::Core::Model::DynamicSchema::ImplementationColumn do
       expect(described_class.new(identifier: "meta", data_type_name: "jsonb", type: "sting").problems)
         .to contain_exactly(/type "sting", which is not one of/)
       expect(described_class.new(identifier: "meta", data_type_name: "jsonb", type: "text").problems).to eq([])
+    end
+
+    # Anything else would reach the UI as a property type nothing renders.
+    it "reports an SQL type that names no grit type" do
+      expect(described_class.new(identifier: "meta", data_type_name: "jsonb").problems)
+        .to contain_exactly(/data_type_name "jsonb", which is not one of .*; declare the grit property type with type:/)
+    end
+
+    it "reports an identifier no dynamic table can take" do
+      max = Grit::Core::Model::DynamicSchema::ValidIdentifier::MAX_IDENTIFIER_LENGTH
+      {
+        "o" * (max + 1) => /is #{max + 1} bytes; at most #{max}/,
+        "created_at" => /is a base column of every dynamic table/,
+        "xmin" => /is a PostgreSQL system column name/,
+        "owner__name" => /should not contain a double underscore/
+      }.each do |identifier, problem|
+        expect(described_class.new(identifier: identifier, data_type_name: "bigint").problems).to contain_exactly(problem), identifier
+      end
+    end
+  end
+
+  # The inverse of `DataType#sql_name`, plus catalog spellings. Other types pass through:
+  # mapping "text" to "string" would lose multiline input.
+  describe "#property_type" do
+    it "reads an SQL type as the grit type it stands for" do
+      {
+        "varchar" => "string",
+        "timestamp without time zone" => "datetime",
+        "numeric" => "decimal",
+        "bool" => "boolean",
+        "decimal" => "decimal",
+        "text" => "text"
+      }.each do |data_type_name, property_type|
+        expect(described_class.new(identifier: "a_column", data_type_name: data_type_name).property_type).to eq(property_type), data_type_name
+      end
+    end
+
+    it "takes a declared type over the SQL type" do
+      expect(described_class.new(identifier: "a_column", data_type_name: "jsonb", type: "text").property_type).to eq("text")
+    end
+
+    # Any other type reaches the grid as a blank cell with no editor.
+    it "only ever produces a grit property type" do
+      produced = Grit::Core::Model::DynamicSchema::TableDefinition::IMPLEMENTATION_COLUMN_TYPES.values.uniq
+
+      expect(produced - Grit::Core::Model::DynamicSchema::TableDefinition::GRIT_PROPERTY_TYPES).to eq([])
     end
   end
 end

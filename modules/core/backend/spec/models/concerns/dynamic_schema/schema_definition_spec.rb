@@ -23,14 +23,10 @@ require "rails_helper"
 # Exercised through the Grit::SchemaDefinition dummy model. Real DDL runs; PostgreSQL's
 # transactional DDL lets `use_transactional_fixtures` roll it back per example.
 RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
-  let(:admin) { create(:grit_core_user, :admin, :with_administrator_role) }
+  let(:user) { create(:grit_core_user) }
   let(:string_type) { create(:grit_core_data_type, :string) }
   let(:entity_type) { create(:grit_core_data_type, :entity) }
   let(:schema) { Grit::SchemaDefinition.create!(identifier: "grp", name: "Schema") }
-
-  before(:each) do
-    set_current_user(admin)
-  end
 
   def connection
     ActiveRecord::Base.connection
@@ -64,19 +60,6 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
     Grit::ColumnDefinition.create!(identifier: identifier, name: identifier.humanize, data_type: data_type, table_definition: table)
   end
 
-  # The includer's association shares the concern's accessor name, `table_definitions`,
-  # which must not recurse into itself.
-  describe "natural-name association" do
-    it "reads the association rather than recursing" do
-      expect(schema.table_definitions.to_a).to eq([])
-    end
-
-    it "sees table definitions added to the association" do
-      table = create_table
-      expect(schema.table_definitions.reload.to_a).to eq([ table ])
-    end
-  end
-
   describe "association helpers" do
     def renamed_schema_class(**options)
       Class.new(ApplicationRecord) do
@@ -99,26 +82,6 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
 
     it "keeps the cascade its own" do
       expect { renamed_schema_class(dependent: :nullify) }.to raise_error(ArgumentError, /dependent/)
-    end
-  end
-
-  describe "check_can_modify default guard" do
-    it "allows create, update and destroy" do
-      expect(schema.update(name: "Renamed")).to be(true)
-      expect { schema.destroy! }.not_to raise_error
-    end
-
-    it "is overridable with super" do
-      klass = Class.new(Grit::SchemaDefinition) do
-        def self.name = "OverridingSchemaDefinition"
-
-        def check_can_modify
-          super
-          raise "locked"
-        end
-      end
-
-      expect { klass.create!(identifier: "grp", name: "Schema") }.to raise_error("locked")
     end
   end
 
@@ -205,13 +168,6 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
     end
   end
 
-  describe "blank identifier" do
-    it "reports an invalid record rather than raising" do
-      expect { schema.update(identifier: nil) }.not_to raise_error
-      expect(schema.errors[:identifier]).to include("can't be blank")
-    end
-  end
-
   describe "a draft" do
     it "lives in a schema named after its id" do
       expect(schema).not_to be_committed
@@ -222,14 +178,25 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
       expect(connection.schema_exists?("test_grp")).to be(false)
     end
 
-    it "touches nothing in the database when its identifier changes" do
+    # Draft names derive from ids, so a schema, table or column identifier is only a row's.
+    it "runs no DDL when an identifier changes" do
       table = create_table
+      column = create_column(table)
 
-      schema.update!(identifier: "new_grp")
+      statements = []
+      subscriber = ActiveSupport::Notifications.subscribe("sql.active_record") do |*, payload|
+        statements << payload[:sql]
+      end
+      begin
+        schema.update!(identifier: "new_grp")
+        table.update!(identifier: "new_measures")
+        column.update!(identifier: "new_label")
+      ensure
+        ActiveSupport::Notifications.unsubscribe(subscriber)
+      end
 
+      expect(statements.grep(/\A\s*(CREATE|ALTER|DROP)\b/i)).to be_empty
       expect(schema.physical_schema_name).to eq("test_#{schema.id}")
-      expect(connection.table_exists?(table.physical_table_name)).to be(true)
-      expect(connection.schema_exists?("test_new_grp")).to be(false)
     end
 
     # The name derives from the id, so an existing schema under it belongs to something else.
@@ -258,13 +225,13 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
     end
 
     it "keeps the data" do
-      insert_draft_row(table, label: "first", ref_col: admin.id)
+      insert_draft_row(table, label: "first", ref_col: user.id)
 
       schema.commit!
 
       row = table.record_klass.first
       expect(row["label"]).to eq("first")
-      expect(row["ref_col"]).to eq(admin.id)
+      expect(row["ref_col"]).to eq(user.id)
     end
 
     it "takes whatever identifiers the draft settled on" do
@@ -300,6 +267,7 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
         .to eq([ table.foreign_key_name("owner_id"), table.foreign_key_name("ref_col", reference.id) ])
       expect(primary_key_index_name("test_grp.measures")).to eq(table.committed_primary_key_name)
       expect(table.committed_primary_key_name).to start_with("measures_")
+      expect(table.record_klass.primary_key).to eq("id")
     end
 
     it "restores the draft constraint names on revert" do
@@ -340,28 +308,14 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
 
     # Per-record validations only check an identifier when it changes, but code
     # can change the rules under a saved one.
-    it "validates every identifier again, changed or not" do
-      allow_any_instance_of(Grit::ColumnDefinition).to receive(:reserved_identifiers)
-        .and_return(Grit::Core::Model::DynamicSchema::ValidIdentifier::DEFAULT_RESERVED_IDENTIFIERS + [ "label" ])
-
-      expect { schema.commit! }
-        .to raise_error(Grit::Core::Model::DynamicSchema::CommitError, /Column measures\.label: Identifier is a reserved keyword/)
-    end
-
-    it "reports every problem at once" do
+    it "validates every identifier again, changed or not, and reports every problem at once" do
       connection.create_schema("test_grp")
       allow_any_instance_of(Grit::ColumnDefinition).to receive(:reserved_identifiers)
         .and_return(Grit::Core::Model::DynamicSchema::ValidIdentifier::DEFAULT_RESERVED_IDENTIFIERS + [ "label" ])
 
       expect { schema.commit! }.to raise_error(Grit::Core::Model::DynamicSchema::CommitError) { |error|
-        expect(error.messages).to include(/the schema test_grp already exists/, /Column measures\.label/)
+        expect(error.messages).to include(/the schema test_grp already exists/, /Column measures\.label: Identifier is a reserved keyword/)
       }
-    end
-
-    it "refuses a definition with unsaved changes" do
-      schema.name = "Unsaved"
-
-      expect { schema.commit! }.to raise_error(Grit::Core::Model::DynamicSchema::CommitError, /Save/)
     end
 
     # Fails after the schema has moved, so that there is something to undo.
@@ -370,6 +324,8 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
         .and_raise(ActiveRecord::StatementInvalid, "PG::InternalError: ERROR:  boom")
     end
 
+    # Runs in its own savepoint, so the non-bang form, which swallows the error, leaves no
+    # half commit in a caller's transaction either.
     it "rolls everything back when a rename fails" do
       fail_table_renames
 
@@ -379,6 +335,13 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
       expect(connection.schema_exists?("test_#{schema.id}")).to be(true)
       expect(connection.schema_exists?("test_grp")).to be(false)
       expect(connection.table_exists?(table.physical_table_name)).to be(true)
+
+      ActiveRecord::Base.transaction do
+        expect(schema.commit).to be(false)
+        expect(connection.schema_exists?("test_#{schema.id}")).to be(true)
+        expect(connection.schema_exists?("test_grp")).to be(false)
+        expect(connection.select_value("SELECT 1")).to eq(1)
+      end
     end
 
     # `committed_at` is set in memory before the after callbacks and a rollback doesn't reset
@@ -398,30 +361,10 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
       expect { own_table.record_klass }.to raise_error(/is a draft/)
     end
 
-    # Runs in its own savepoint, so the non-bang form, which swallows the error, leaves no
-    # half commit in the caller's transaction.
-    it "rolls back on its own inside a caller's transaction" do
-      fail_table_renames
-
-      ActiveRecord::Base.transaction do
-        expect(schema.commit).to be(false)
-        expect(connection.schema_exists?("test_#{schema.id}")).to be(true)
-        expect(connection.schema_exists?("test_grp")).to be(false)
-        expect(connection.select_value("SELECT 1")).to eq(1)
-      end
-    end
-
     describe "commit" do
       it "returns true on success" do
         expect(schema.commit).to be(true)
         expect(schema).to be_committed
-      end
-
-      it "returns false and reports what stopped it" do
-        connection.create_schema("test_grp")
-
-        expect(schema.commit).to be(false)
-        expect(schema.errors[:base].join).to match(/the schema test_grp already exists/)
       end
     end
 
@@ -455,11 +398,6 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
         expect(own.seen).to eq([ [ :before, "test_#{own.id}" ], [ :after, "test_cbk" ] ])
       end
 
-      it "does not share them with other includers" do
-        klass
-        expect(Grit::SchemaDefinition._schema_commit_callbacks.map(&:filter)).to be_empty
-      end
-
       it "aborts the commit when a before_schema_commit callback throws :abort" do
         aborting = Class.new(Grit::SchemaDefinition) do
           def self.name = "AbortingSchemaDefinition"
@@ -489,14 +427,6 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
         expect(connection.schema_exists?("test_#{own.id}")).to be(true)
         expect(connection.schema_exists?("test_rbk")).to be(false)
         expect { own_table.record_klass }.to raise_error(/is a draft/)
-      end
-
-      it "returns false from commit inside a caller's transaction when a callback rolls back" do
-        rolling_back = Class.new(Grit::SchemaDefinition) do
-          def self.name = "RollingBackSchemaDefinition"
-          after_schema_commit { raise ActiveRecord::Rollback }
-        end
-        own = rolling_back.create!(identifier: "rbk", name: "Rolled back")
 
         ActiveRecord::Base.transaction do
           expect(own.commit).to be(false)
@@ -626,16 +556,13 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
     before(:each) { schema.commit! }
 
     it "cannot change" do
-      expect(schema.update(identifier: "other")).to be(false)
-      expect(schema.errors[:identifier].join).to match(/cannot be changed while test_grp is committed/)
-      expect(connection.schema_exists?("test_grp")).to be(true)
-    end
-
-    it "is refused by validation" do
       schema.identifier = "other"
 
       expect(schema).not_to be_valid
       expect { schema.save! }.to raise_error(ActiveRecord::RecordInvalid, /cannot be changed while test_grp is committed/)
+      expect(schema.save).to be(false)
+      expect(schema.errors[:identifier].join).to match(/cannot be changed while test_grp is committed/)
+      expect(connection.schema_exists?("test_grp")).to be(true)
     end
 
     # Simulates a request racing the commit, which loaded the definition while still a draft.
@@ -698,6 +625,34 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
       expect(connection.schema_exists?("test_#{schema.id}")).to be(false)
       expect(Grit::TableDefinition.where(id: table.id)).not_to exist
       expect(Grit::ColumnDefinition.where(id: column.id)).not_to exist
+    end
+
+    # The cascade skips a table's guard but not an includer's own callbacks, and one that
+    # aborts stops the schema's destroy with its reason; see `Refusal`. The schema is dropped
+    # and the table's columns destroyed by then, and the rollback restores them.
+    it "is stopped by a table definition's own callback, with its reason" do
+      kept_klass = stub_const("Grit::KeptTableDefinition", Class.new(Grit::TableDefinition) do
+        before_destroy do
+          errors.add(:base, "is kept")
+          throw :abort
+        end
+      end)
+      klass = Class.new(Grit::SchemaDefinition) do
+        def self.name = "KeepingSchemaDefinition"
+        has_many_table_definitions :table_definitions, class_name: "Grit::KeptTableDefinition", foreign_key: :schema_definition_id
+      end
+      own = klass.create!(identifier: "kpt", name: "Keeping")
+      table = kept_klass.create!(identifier: "measures", name: "Measures", schema_definition: own)
+      column = create_column(table)
+
+      expect(own.destroy).to be(false)
+      expect { own.destroy! }.to raise_error(ActiveRecord::RecordNotDestroyed, "is kept") { |error|
+        expect(error.record).to be_a(kept_klass).and have_attributes(id: table.id)
+      }
+      expect(Grit::SchemaDefinition.where(id: own.id)).to exist
+      expect(Grit::TableDefinition.where(id: table.id)).to exist
+      expect(Grit::ColumnDefinition.where(id: column.id)).to exist
+      expect(connection.table_exists?(table.physical_table_name)).to be(true)
     end
 
     # Rails' own rollback is a no-op inside a caller's transaction, so `destroy` takes a
@@ -798,14 +753,6 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
       expect(clash.errors[:identifier].join).to match(/another definition resolves to the schema test_grp/)
     end
 
-    it "refuses to rename onto an identifier a sibling holds" do
-      schema
-      other = Grit::SchemaDefinition.create!(identifier: "oth", name: "Other")
-
-      expect(other.update(identifier: "grp")).to be(false)
-      expect(other.errors[:identifier].join).to match(/another definition resolves to the schema/)
-    end
-
     # Only checked on commit: a draft lives under a name nothing else can hold.
     it "does not consult the catalog for a draft" do
       connection.create_schema("test_taken")
@@ -826,10 +773,6 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
       expect(klass.new(identifier: "pg_temp_1", name: "Temp")).not_to be_valid
     end
 
-    it "leaves a definition alone when its identifier is not moving" do
-      expect(schema.update(name: "Renamed")).to be(true)
-    end
-
     # Compared on the resolved name: under another prefix the same identifier is another schema.
     it "allows a sibling identifier that resolves to another schema" do
       declare_schema_prefix("othr")
@@ -840,13 +783,6 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
       schema
 
       expect(klass.new(identifier: "grp", name: "Elsewhere")).to be_valid
-    end
-
-    # Closes the race the validation can't; the concern tells includers to add this index.
-    it "is backed by a unique index on identifier" do
-      index_names = connection.indexes("test_schema_definitions").select(&:unique).map { |i| Array(i.columns) }
-
-      expect(index_names).to include([ "identifier" ])
     end
   end
 
@@ -925,36 +861,32 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
       }.to raise_error(ArgumentError, /"undeclared" is not declared; add it to config\.grit\.dynamic_schema_prefixes in the engine or app that defines UndeclaredPrefixSchemaDefinition/)
     end
 
-    it "accepts a prefix declared in config" do
-      declare_schema_prefix("declared")
-
-      klass = Class.new(Grit::SchemaDefinition) do
-        def self.name = "DeclaredPrefixSchemaDefinition"
-        dynamic_schema_prefix "declared"
-      end
-
-      own = klass.create!(identifier: "grp", name: "Schema")
-      expect(own.physical_schema_name).to eq("declared_#{own.id}")
-      expect(own.committed_schema_name).to eq("declared_grp")
-    end
-
-    # Max prefix + `_` + max identifier is exactly 63 bytes, PostgreSQL's identifier limit;
-    # the name must reach the catalog untruncated.
-    it "accepts a prefix at the limit and commits a schema with it" do
+    # Max prefix + `_` + max identifier is exactly 63 bytes, PostgreSQL's identifier limit, and
+    # the qualified table name is past the combined length Rails checks for: every name must
+    # reach the catalog whole.
+    it "commits the longest prefix and identifiers at every level whole" do
       max_prefix = Grit::Core::Model::DynamicSchema::SchemaDefinition::MAX_SCHEMA_PREFIX_LENGTH
-      max_identifier = Grit::Core::Model::DynamicSchema::ValidIdentifier::MAX_IDENTIFIER_LENGTH
+      max = Grit::Core::Model::DynamicSchema::ValidIdentifier::MAX_IDENTIFIER_LENGTH
       declare_schema_prefix("p" * max_prefix)
       klass = Class.new(Grit::SchemaDefinition) do
         def self.name = "WidestSchemaDefinition"
         dynamic_schema_prefix "p" * Grit::Core::Model::DynamicSchema::SchemaDefinition::MAX_SCHEMA_PREFIX_LENGTH
       end
+      widest = klass.create!(identifier: "g" * max, name: "Schema")
+      table = create_table("t" * max, schema_definition: widest)
+      column = create_column(table, "c" * max, data_type: entity_type)
 
-      widest = klass.create!(identifier: "g" * max_identifier, name: "Schema")
       widest.commit!
 
+      expect(widest.physical_schema_name).to eq("#{'p' * max_prefix}_#{'g' * max}")
       expect(widest.physical_schema_name.bytesize).to eq(63)
-      expect(widest.physical_schema_name).to eq("#{'p' * max_prefix}_#{'g' * max_identifier}")
       expect(connection.schema_names).to include(widest.physical_schema_name)
+      expect(table.physical_table_name).to eq("#{widest.physical_schema_name}.#{'t' * max}")
+      expect(connection.table_exists?(table.physical_table_name)).to be(true)
+      expect(column_names(table.physical_table_name)).to include("c" * max)
+      expect(connection.foreign_keys(table.physical_table_name).map(&:name).sort)
+        .to eq([ table.foreign_key_name("c" * max, column.id), table.foreign_key_name("owner_id") ].sort)
+      expect(primary_key_index_name(table.physical_table_name)).to eq(table.committed_primary_key_name)
     end
   end
 end

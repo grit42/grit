@@ -17,19 +17,16 @@
 # @grit42/core. If not, see <https://www.gnu.org/licenses/>.
 
 require "rails_helper"
+require "grit/core/entity_mapper"
 
 # The class `TableDefinition#record_klass` returns, exercised through the
 # Grit::TableDefinition dummy model against real DDL; PostgreSQL's transactional
 # DDL plus `use_transactional_fixtures` rolls it back per example. The
 # definition side is in table_definition_spec.
 RSpec.describe Grit::Core::Model::DynamicSchema::DynamicRecord, type: :model do
-  let(:admin) { create(:grit_core_user, :admin, :with_administrator_role) }
+  let(:user) { create(:grit_core_user) }
   let(:schema) { Grit::SchemaDefinition.create!(identifier: "grp", name: "Schema") }
   let(:string_type) { create(:grit_core_data_type, :string) }
-
-  before(:each) do
-    set_current_user(admin)
-  end
 
   def connection
     ActiveRecord::Base.connection
@@ -144,7 +141,7 @@ RSpec.describe Grit::Core::Model::DynamicSchema::DynamicRecord, type: :model do
 
       row = committed_klass(table).create!(lock_version: 5)
       stale = committed_klass(table).find(row.id)
-      row.update!(owner_id: admin.id)
+      row.update!(owner_id: user.id)
 
       expect(row.reload["lock_version"]).to eq(5)
       expect { stale.update!(owner_id: nil) }.not_to raise_error
@@ -155,7 +152,7 @@ RSpec.describe Grit::Core::Model::DynamicSchema::DynamicRecord, type: :model do
       Grit::ColumnDefinition.create!(identifier: "updated_on", name: "Updated on", data_type: string_type, table_definition: table)
 
       row = committed_klass(table).create!(updated_on: "x")
-      row.update!(owner_id: admin.id)
+      row.update!(owner_id: user.id)
 
       expect(row.reload["created_on"]).to be_nil
       expect(row["updated_on"]).to eq("x")
@@ -166,20 +163,22 @@ RSpec.describe Grit::Core::Model::DynamicSchema::DynamicRecord, type: :model do
     let(:table) { Grit::TableDefinition.create!(identifier: "tbl", name: "Table", schema_definition: schema) }
 
     it "stamps the current user on create" do
+      set_current_user(user)
       row = committed_klass(table).create!
 
-      expect(row["created_by"]).to eq(admin.login)
-      expect(row["updated_by"]).to eq(admin.login)
+      expect(row["created_by"]).to eq(user.login)
+      expect(row["updated_by"]).to eq(user.login)
     end
 
     it "leaves created_by alone on update" do
+      other = create(:grit_core_user)
+      set_current_user(user)
       row = committed_klass(table).create!
-      other = create(:grit_core_user, :with_administrator_role)
       set_current_user(other)
 
-      row.update!(owner_id: admin.id)
+      row.update!(owner_id: user.id)
 
-      expect(row["created_by"]).to eq(admin.login)
+      expect(row["created_by"]).to eq(user.login)
       expect(row["updated_by"]).to eq(other.login)
     end
   end
@@ -229,14 +228,14 @@ RSpec.describe Grit::Core::Model::DynamicSchema::DynamicRecord, type: :model do
 
     it "defines no method for a column" do
       klass = committed_klass(table)
-      row = klass.create!(owner_id: admin.id)
+      row = klass.create!(owner_id: user.id)
 
       expect(klass.method_defined?(:owner_id)).to be(false)
       expect(klass.method_defined?(:owner_id=)).to be(false)
       expect(klass.method_defined?(:owner_id_changed?)).to be(false)
       expect(row).not_to respond_to(:owner_id)
       expect { row.owner_id }.to raise_error(NoMethodError)
-      expect(row["owner_id"]).to eq(admin.id)
+      expect(row["owner_id"]).to eq(user.id)
     end
 
     it "keeps the methods Rails defines for id" do
@@ -246,17 +245,11 @@ RSpec.describe Grit::Core::Model::DynamicSchema::DynamicRecord, type: :model do
       expect(row.id_previously_changed?).to be(true)
     end
 
-    it "assigns a column from the scope it is created through" do
-      row = committed_klass(table).where(owner_id: admin.id).create!
-
-      expect(row.reload["owner_id"]).to eq(admin.id)
-    end
-
     it "still refuses unpermitted parameters" do
-      params = ActionController::Parameters.new(owner_id: admin.id)
+      params = ActionController::Parameters.new(owner_id: user.id)
 
       expect { committed_klass(table).new(params) }.to raise_error(ActiveModel::ForbiddenAttributesError)
-      expect(committed_klass(table).new(params.permit(:owner_id))["owner_id"]).to eq(admin.id)
+      expect(committed_klass(table).new(params.permit(:owner_id))["owner_id"]).to eq(user.id)
     end
 
     it "still refuses an attribute the table does not have" do
