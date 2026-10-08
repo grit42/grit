@@ -45,7 +45,9 @@ const FormPageForm = <T,>({
 }: FormPageFormProps<T>) => {
   const form = useForm({
     defaultValues: defaultValues,
-    onSubmit: genericErrorHandler(async ({ value, formApi }) => await onSubmit(value, formApi)),
+    onSubmit: genericErrorHandler(
+      async ({ value, formApi }) => await onSubmit(value, formApi),
+    ),
   });
 
   return (

@@ -29,14 +29,14 @@ const Meta: ModuleMeta = {
       name: "Vocabularies",
       path: "/core/vocabularies",
       permissions: ["read:system"],
-      icon: VocabularyIcon
+      icon: VocabularyIcon,
     },
     {
       identifier: "ADMINISTRATION",
       name: "Administration",
       path: "/core/administration",
-      permissions: ["admin:system","admin:users"],
-      icon: AdministrationIcon
+      permissions: ["admin:system", "admin:users"],
+      icon: AdministrationIcon,
     },
   ],
 };

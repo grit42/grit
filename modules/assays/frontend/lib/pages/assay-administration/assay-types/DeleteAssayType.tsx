@@ -6,7 +6,11 @@ import { Button } from "@grit42/client-library/components";
 import { useDestroyEntityMutation } from "@grit42/core";
 import { AssayTypeData } from "../../../queries/assay_types";
 
-const DeleteAssayType = ({ assayType }: { assayType: Partial<AssayTypeData> }) => {
+const DeleteAssayType = ({
+  assayType,
+}: {
+  assayType: Partial<AssayTypeData>;
+}) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const destroyEntityMutation = useDestroyEntityMutation(

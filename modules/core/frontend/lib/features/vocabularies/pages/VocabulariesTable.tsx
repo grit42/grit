@@ -79,32 +79,27 @@ const COLUMNS: GritColumnDef<VocabularyData>[] = [
   },
 ];
 
-
 const VocabulariesTable = () => {
   const navigate = useNavigate();
   const canEditVocabularies = useHasPermission("admin:vocabularies");
 
-  const tableState = useSetupTableState(
-    "vocabularies-tables",
-    COLUMNS,
-    {
-      settings: {
-        disableColumnReorder: true,
-      },
-      initial: {
-        sorting: [
-          {
-            id: "name",
-            desc: false,
-          },
-        ],
-        sizing: {
-          name: 500,
-          description: 750,
+  const tableState = useSetupTableState("vocabularies-tables", COLUMNS, {
+    settings: {
+      disableColumnReorder: true,
+    },
+    initial: {
+      sorting: [
+        {
+          id: "name",
+          desc: false,
         },
+      ],
+      sizing: {
+        name: 500,
+        description: 750,
       },
     },
-  );
+  });
 
   const { data, isLoading, isFetchingNextPage, isError, error, fetchNextPage } =
     useInfiniteVocabularies(tableState.sorting, tableState.filters);
