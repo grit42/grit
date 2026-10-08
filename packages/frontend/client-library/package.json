@@ -72,6 +72,7 @@
     "eslint-plugin-react-refresh": "catalog:",
     "glob": "catalog:",
     "globals": "catalog:",
+    "happy-dom": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-router-dom": "catalog:",
@@ -82,7 +83,6 @@
     "vite-plugin-externalize-deps": "catalog:",
     "vite-plugin-lib-inject-css": "catalog:",
     "vite-plugin-static-copy": "catalog:",
-    "jsdom": "^25.0.0",
     "vitest": "catalog:"
   },
   "dependencies": {
