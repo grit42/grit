@@ -22,9 +22,7 @@ import {
   ErrorPage,
 } from "@grit42/client-library/components";
 import { useQueryClient } from "@grit42/api";
-import {
-  useDetachFilesFromExperimentMutation,
-} from "../../../../mutations/experiments";
+import { useDetachFilesFromExperimentMutation } from "../../../../mutations/experiments";
 import {
   ExperimentAttachedFile,
   ExperimentData,
@@ -49,7 +47,11 @@ const COLUMNS: GritColumnDef<ExperimentAttachedFile>[] = [
 
 const getRowId = (row: ExperimentAttachedFile) => row.id.toString();
 
-const ExperimentAttachements = ({ experiment }: { experiment: ExperimentData }) => {
+const ExperimentAttachements = ({
+  experiment,
+}: {
+  experiment: ExperimentData;
+}) => {
   const canCrudExperiment =
     useHasPermission("write:assays") &&
     experiment.publication_status_id__name !== "Published";
@@ -102,42 +104,38 @@ const ExperimentAttachements = ({ experiment }: { experiment: ExperimentData }) 
   }
 
   if (!canCrudExperiment && data?.length === 0) {
-    return <ErrorPage error="This experiment has no attachments." />
+    return <ErrorPage error="This experiment has no attachments." />;
   }
 
   return (
-      <Table<ExperimentAttachedFile>
-        className={styles.attachmentsTable}
-        getRowId={getRowId}
-        tableState={tableState}
-        fitContent
-        data={data}
-        loading={isLoading}
-        header="Attachments"
-        noDataMessage={isError ? error : "No attachments"}
-        rowActions={canCrudExperiment ? ["delete"] : undefined}
-        onDelete={(rows) =>
-          handleDetach(rows.map(({ original }) => original.id))
-        }
-        onRowClick={({ id }) => handleDownload(id)}
-        headerActions={
-          <ButtonGroup>
-            {!hasSelected && (
-              <Button onClick={() => handleDownload()}>
-                Download all
-              </Button>
-            )}
-            {hasSelected && (
-              <Button onClick={() => handleDownload()} disabled={!hasSelected}>
-                Download selected
-              </Button>
-            )}
-            {canCrudExperiment && (
-              <Button onClick={() => setIsAdding(true)}>Attach files</Button>
-            )}
-          </ButtonGroup>
-        }
-      />
+    <Table<ExperimentAttachedFile>
+      className={styles.attachmentsTable}
+      getRowId={getRowId}
+      tableState={tableState}
+      fitContent
+      data={data}
+      loading={isLoading}
+      header="Attachments"
+      noDataMessage={isError ? error : "No attachments"}
+      rowActions={canCrudExperiment ? ["delete"] : undefined}
+      onDelete={(rows) => handleDetach(rows.map(({ original }) => original.id))}
+      onRowClick={({ id }) => handleDownload(id)}
+      headerActions={
+        <ButtonGroup>
+          {!hasSelected && (
+            <Button onClick={() => handleDownload()}>Download all</Button>
+          )}
+          {hasSelected && (
+            <Button onClick={() => handleDownload()} disabled={!hasSelected}>
+              Download selected
+            </Button>
+          )}
+          {canCrudExperiment && (
+            <Button onClick={() => setIsAdding(true)}>Attach files</Button>
+          )}
+        </ButtonGroup>
+      }
+    />
   );
 };
 

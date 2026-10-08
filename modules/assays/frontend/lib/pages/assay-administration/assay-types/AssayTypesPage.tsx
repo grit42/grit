@@ -22,9 +22,11 @@ import { useAssayTypesAdministrationBreadcrumbs } from "./breadcrumbs";
 
 const AssayTypesPage = () => {
   useAssayTypesAdministrationBreadcrumbs();
-  return <div className={styles.assayTypesPage}>
-    <AssayTypesTable />
-  </div>;
+  return (
+    <div className={styles.assayTypesPage}>
+      <AssayTypesTable />
+    </div>
+  );
 };
 
 export default AssayTypesPage;

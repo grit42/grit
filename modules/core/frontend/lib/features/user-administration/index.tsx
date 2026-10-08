@@ -33,7 +33,7 @@ const useRegisterAccessAdministrationRoutes = () => {
         url: "roles",
         permissions: ["admin:users"],
         routes: (
-          <Route  key="core-access-roles" path="roles" element={<AuthGuard />}>
+          <Route key="core-access-roles" path="roles" element={<AuthGuard />}>
             <Route index element={<RolesPage />} />
             <Route path="new" element={<NewRolePage />} />
             <Route path=":role_id" element={<RolePage />} />
@@ -44,4 +44,4 @@ const useRegisterAccessAdministrationRoutes = () => {
   }, [register]);
 };
 
-export default useRegisterAccessAdministrationRoutes
+export default useRegisterAccessAdministrationRoutes;
