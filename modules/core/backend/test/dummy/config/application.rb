@@ -54,5 +54,8 @@ module Dummy
     }
 
     config.active_storage.variant_processor = :disabled
+
+    # The prefix Grit::SchemaDefinition declares.
+    config.grit.dynamic_schema_prefixes << "test"
   end
 end

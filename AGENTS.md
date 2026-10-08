@@ -35,7 +35,7 @@ pnpm nx run-many -t build                       # build all frontend packages
 pnpm nx build @grit42/core                      # build a specific package (+ deps)
 
 # Backend
-pnpm nx test grit-core                          # run minitest for core engine
+pnpm nx test grit-core                          # run rspec for core engine
 pnpm nx run-many -t test --projects=grit-core,grit-compounds,grit-assays  # all backend tests
 
 # E2E (Playwright)

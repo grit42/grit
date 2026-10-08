@@ -1,0 +1,360 @@
+#--
+# Copyright 2025 grit42 A/S. <https://grit42.com/>
+#
+# This file is part of grit-core.
+#
+# grit-core is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 3 of the License, or  any later version.
+#
+# grit-core is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+# or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+# more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# grit-core. If not, see <https://www.gnu.org/licenses/>.
+#++
+
+# A schema definition owns one PostgreSQL schema holding its tables.
+#
+#   - Draft: objects are named after ids (`<prefix>_<id>`, `t<id>`, `c<id>`),
+#     which are never valid identifiers, so identifier changes run no DDL.
+#     Other structural changes apply immediately. `record_klass` is unavailable.
+#   - Committed: `commit!` renames everything to its identifier in one
+#     transaction and locks the structure; `revert_to_draft!` renames it back.
+#     Data is kept both ways.
+#
+# Includers need a `committed_at` datetime column (nil while a draft).
+module Grit::Core::Model::DynamicSchema::SchemaDefinition
+  extend ActiveSupport::Concern
+  include Grit::Core::Model::DynamicSchema::ValidIdentifier
+  include Grit::Core::Model::DynamicSchema::Refusal
+
+  # `<prefix>_<identifier>` must fit PostgreSQL's 63-byte identifier limit.
+  # `ValidIdentifier` is written in full: an included concern's constants are
+  # not reachable from a concern's body.
+  MAX_SCHEMA_PREFIX_LENGTH = 63 - (1 + Grit::Core::Model::DynamicSchema::ValidIdentifier::MAX_IDENTIFIER_LENGTH)
+
+  # Schemas PostgreSQL or grit's static tables own; `pg_*` is reserved wholesale.
+  RESERVED_SCHEMA_NAMES = %w[public information_schema].freeze
+  RESERVED_SCHEMA_NAME_PREFIX = "pg_"
+
+  # The prefixes in `config.grit.dynamic_schema_prefixes`, which the engine
+  # excludes from `structure.sql` (see `ExcludeDynamicSchemasFromStructureDump`).
+  def self.schema_prefixes
+    Grit::Core::Engine.config.grit.dynamic_schema_prefixes.map do |prefix|
+      prefix = prefix.to_s
+      check_schema_prefix!(prefix)
+      prefix
+    end
+  end
+
+  def self.check_schema_prefix!(prefix)
+    raise ArgumentError, "Dynamic schema prefix #{prefix.inspect} should start with two lowercase letters or underscores and contain only lowercase letters, numbers and underscores" unless Grit::Core::Model::DynamicSchema::ValidIdentifier::IDENTIFIER_FORMAT.match?(prefix)
+    raise ArgumentError, "Dynamic schema prefix #{prefix.inspect} is #{prefix.bytesize} bytes; at most #{MAX_SCHEMA_PREFIX_LENGTH}, so that a #{prefix}_<schema> schema name survives PostgreSQL's 63 byte limit" if prefix.bytesize > MAX_SCHEMA_PREFIX_LENGTH
+  end
+
+  included do
+    class_attribute :table_definitions_association, default: nil
+    # Set only by `dynamic_schema_prefix`, which checks it; read `schema_prefix`.
+    class_attribute :_schema_prefix, default: nil, instance_accessor: false, instance_predicate: false
+
+    # Run inside the transaction; for objects that depend on physical names,
+    # such as views. Throwing :abort in a `before_` callback cancels the change.
+    define_model_callbacks :schema_commit, :schema_revert, :schema_drop
+
+    # Guards; see `Refusal`.
+    validate :refuse_unless_can_modify, except_on: :schema_commit, prepend: true
+    validate :schema_prefix_declared
+    validate :schema_name_available
+    validate :check_identifier_modifiable, if: -> { persisted? && identifier_changed? }
+
+    after_create :create_schema
+
+    # Declared before `has_many_table_definitions`' `dependent: :destroy`, so
+    # `before_schema_drop` still sees the table definitions.
+    before_destroy :refuse_unless_can_modify
+    before_destroy :drop_schema
+  end
+
+  def committed?
+    committed_at.present?
+  end
+
+  def schema_prefix
+    self.class.schema_prefix
+  end
+
+  def draft_schema_name
+    "#{self.schema_prefix}_#{id}"
+  end
+
+  def committed_schema_name
+    "#{self.schema_prefix}_#{identifier}"
+  end
+
+  # The current physical name.
+  def physical_schema_name
+    committed? ? committed_schema_name : draft_schema_name
+  end
+
+  def physical_schema_exists?
+    ActiveRecord::Base.connection.schema_exists?(physical_schema_name)
+  end
+
+  def quoted_physical_schema_name
+    ActiveRecord::Base.connection.quote_schema_name(physical_schema_name)
+  end
+
+  def table_definitions
+    association(self.table_definitions_association).reader
+  end
+
+  # A fresh copy of this row, locked FOR UPDATE (nil if gone). Structural
+  # changes read the committed state from it, so they serialise with commits.
+  # A copy because `lock!` refuses records with unsaved changes.
+  def locked_copy
+    self.class.base_class.unscoped.lock.find_by(id: id)
+  end
+
+  def commit
+    commit!
+    true
+  rescue Grit::Core::Model::DynamicSchema::CommitError => e
+    e.messages.each { |message| errors.add(:base, message) }
+    false
+  end
+
+  # Renames the draft to readable names in one transaction, after validating
+  # every definition. Raises one CommitError listing every problem.
+  def commit!
+    in_schema_transaction("commit #{committed_schema_name}") do
+      raise Grit::Core::Model::DynamicSchema::CommitError, "#{committed_schema_name} is already committed" if committed?
+      tables = table_definitions.includes(table_definitions.klass.column_definitions_association => :data_type).to_a
+      messages = commit_errors(tables)
+      raise Grit::Core::Model::DynamicSchema::CommitError, messages if messages.any?
+
+      run_schema_callbacks(:schema_commit) do
+        translating_statement_errors("commit #{committed_schema_name}") do
+          ActiveRecord::Base.connection.rename_schema(draft_schema_name, committed_schema_name)
+          tables.each { |table| rename_table_objects!(table, to: :committed) }
+        end
+        update_columns(committed_at: Time.current)
+      end
+    end
+  end
+
+  def revert_to_draft
+    revert_to_draft!
+    true
+  rescue Grit::Core::Model::DynamicSchema::CommitError => e
+    e.messages.each { |message| errors.add(:base, message) }
+    false
+  end
+
+  # The inverse of `commit!`.
+  def revert_to_draft!
+    in_schema_transaction("revert #{committed_schema_name} to draft") do
+      raise Grit::Core::Model::DynamicSchema::CommitError, "#{draft_schema_name} is not committed" unless committed?
+      if ActiveRecord::Base.connection.schema_exists?(draft_schema_name)
+        raise Grit::Core::Model::DynamicSchema::CommitError, "Could not revert #{committed_schema_name} to draft: the schema #{draft_schema_name} already exists"
+      end
+      tables = table_definitions.includes(table_definitions.klass.column_definitions_association => :data_type).to_a
+
+      run_schema_callbacks(:schema_revert) do
+        translating_statement_errors("revert #{committed_schema_name} to draft") do
+          tables.each { |table| rename_table_objects!(table, to: :draft) }
+          ActiveRecord::Base.connection.rename_schema(committed_schema_name, draft_schema_name)
+        end
+        update_columns(committed_at: nil)
+      end
+    end
+  end
+
+  private
+
+  def schema_prefix_declared
+    return if self.schema_prefix.present?
+    errors.add(:base, "#{self.class.name} must declare a dynamic_schema_prefix")
+  end
+
+  # Against siblings only; `commit!` checks the catalog.
+  def schema_name_available
+    return if identifier.blank?
+    return if self.schema_prefix.blank?
+    name = committed_schema_name
+    if RESERVED_SCHEMA_NAMES.include?(name) || name.start_with?(RESERVED_SCHEMA_NAME_PREFIX)
+      errors.add(:identifier, "would resolve to #{name}, a schema name PostgreSQL reserves")
+    elsif sibling_resolves_to_schema?(name)
+      errors.add(:identifier, "is already taken: another definition resolves to the schema #{name}")
+    end
+  end
+
+  def sibling_resolves_to_schema?(name)
+    scope = self.class.base_class.unscoped.where(identifier: identifier)
+    scope = scope.where.not(id: id) if persisted?
+    scope.any? { |sibling| sibling.committed_schema_name == name }
+  end
+
+  def check_identifier_modifiable
+    locked = locked_copy
+    return unless locked&.committed?
+    errors.add(:identifier, "cannot be changed while #{locked.committed_schema_name} is committed; revert it to draft first")
+  end
+
+  # No `if_not_exists`: a schema already under this id-based name isn't ours.
+  def create_schema
+    ActiveRecord::Base.connection.create_schema(draft_schema_name)
+  end
+
+  # Named from the locked row: the identifier in memory may be a refused one,
+  # and the drop cascades.
+  def drop_schema
+    locked = locked_copy
+    return if locked.nil?
+    count = errors.count
+    dropped = run_callbacks(:schema_drop) do
+      ActiveRecord::Base.connection.drop_schema(locked.physical_schema_name, if_exists: true)
+      true
+    end
+    return if dropped
+    errors.add(:base, "A before_schema_drop callback aborted the drop") if errors.count == count
+    throw :abort
+  end
+
+  # A savepoint, so a failed non-bang call rolls back inside a caller's
+  # transaction. Restores `committed_at` in memory on failure, since a rollback
+  # doesn't; an `ActiveRecord::Rollback` raised in the block fails too, as the
+  # savepoint would otherwise swallow it (one raised inside a nested joinable
+  # `transaction` block in a callback never reaches here: that is Rails').
+  # `check_can_modify` sees the locked row.
+  def in_schema_transaction(action)
+    if new_record? || has_changes_to_save?
+      raise Grit::Core::Model::DynamicSchema::CommitError, "Save #{self.class.model_name.human.downcase} #{identifier} before committing or reverting it"
+    end
+    committed_at_before = committed_at
+    begin
+      self.class.transaction(requires_new: true) do
+        lock!
+        committed_at_before = committed_at
+        check_can_modify!
+        yield
+      rescue ActiveRecord::Rollback
+        raise Grit::Core::Model::DynamicSchema::CommitError, "Could not #{action}: a callback raised ActiveRecord::Rollback"
+      end
+    rescue StandardError
+      self.committed_at = committed_at_before
+      clear_attribute_changes([ :committed_at ])
+      raise
+    end
+    self
+  end
+
+  # Cleared after, as the non-bang forms copy the messages back onto `errors`.
+  def check_can_modify!
+    errors.clear
+    refused = !catch(:abort) do
+      refuse_unless_can_modify
+      true
+    end
+    return unless refused
+    messages = errors.full_messages.map { |message| "Schema #{identifier}: #{message}" }
+    errors.clear
+    raise Grit::Core::Model::DynamicSchema::CommitError, messages
+  end
+
+  def run_schema_callbacks(kind, &block)
+    completed = run_callbacks(kind) do
+      block.call
+      true
+    end
+    raise Grit::Core::Model::DynamicSchema::CommitError, "A before_#{kind} callback aborted the change" unless completed
+  end
+
+  def translating_statement_errors(action)
+    yield
+  rescue ActiveRecord::StatementInvalid => e
+    raise Grit::Core::Model::DynamicSchema::CommitError, "Could not #{action}: #{e.message.lines.first.to_s.strip}"
+  end
+
+  # Every definition's errors, plus whether the readable schema name is taken.
+  # `check_can_modify` is the schema's alone; see `check_can_modify!`.
+  def commit_errors(tables)
+    messages = definition_errors(self, "Schema #{identifier}")
+    if ActiveRecord::Base.connection.schema_exists?(committed_schema_name)
+      messages.push("Schema #{identifier}: the schema #{committed_schema_name} already exists")
+    end
+    tables.each do |table|
+      messages.concat(definition_errors(table, "Table #{table.identifier}"))
+      table.column_definitions.each do |column|
+        messages.concat(definition_errors(column, "Column #{table.identifier}.#{column.identifier}"))
+      end
+    end
+    messages
+  end
+
+  def definition_errors(definition, label)
+    return [] if definition.valid?(Grit::Core::Model::DynamicSchema::Refusal::COMMIT_VALIDATION_CONTEXT)
+    definition.errors.full_messages.map { |message| "#{label}: #{message}" }
+  end
+
+  # Renames a table, its dynamic columns and their constraints between draft
+  # and committed names, inside the committed schema name (the schema moves
+  # before a commit's renames and after a revert's). Raw SQL, as
+  # `rename_table` expects a `<table>_pkey` primary key index.
+  def rename_table_objects!(table, to:)
+    committing = to == :committed
+    connection = ActiveRecord::Base.connection
+    from_table, to_table = committing ? [ table.draft_table_identifier, table.identifier ] : [ table.identifier, table.draft_table_identifier ]
+    quoted_table_name = connection.quote_table_name("#{committed_schema_name}.#{from_table}")
+    table.column_definitions.each do |column|
+      from_column, to_column = committing ? [ column.draft_column_name, column.identifier ] : [ column.identifier, column.draft_column_name ]
+      connection.execute(<<~SQL.squish)
+        ALTER TABLE #{quoted_table_name}
+        RENAME COLUMN #{connection.quote_column_name(from_column)} TO #{connection.quote_column_name(to_column)}
+      SQL
+      next unless column.data_type.is_entity
+      rename_constraint!(quoted_table_name, table.foreign_key_name(from_column, column.id), table.foreign_key_name(to_column, column.id))
+    end
+    from_key, to_key = committing ? [ table.draft_primary_key_name, table.committed_primary_key_name ] : [ table.committed_primary_key_name, table.draft_primary_key_name ]
+    # Renames the primary key index along with the constraint.
+    rename_constraint!(quoted_table_name, from_key, to_key)
+    connection.execute("ALTER TABLE #{quoted_table_name} RENAME TO #{connection.quote_column_name(to_table)}")
+  end
+
+  def rename_constraint!(quoted_table_name, from, to)
+    connection = ActiveRecord::Base.connection
+    connection.execute(<<~SQL.squish)
+      ALTER TABLE #{quoted_table_name}
+      RENAME CONSTRAINT #{connection.quote_column_name(from)} TO #{connection.quote_column_name(to)}
+    SQL
+  end
+
+  class_methods do
+    def schema_prefix
+      _schema_prefix
+    end
+
+    def dynamic_schema_prefix(prefix)
+      prefix = prefix.to_s
+      Grit::Core::Model::DynamicSchema::SchemaDefinition.check_schema_prefix!(prefix)
+      unless Grit::Core::Model::DynamicSchema::SchemaDefinition.schema_prefixes.include?(prefix)
+        raise ArgumentError, "Dynamic schema prefix #{prefix.inspect} is not declared; add it to config.grit.dynamic_schema_prefixes in the engine or app that defines #{name}"
+      end
+      self._schema_prefix = prefix
+    end
+
+    # `options` go to `has_many`, but not `dependent:`: the cascade is
+    # `:destroy`, so includers' table callbacks run; the concern's own guard,
+    # draft check and DROP TABLE are skipped, as DROP SCHEMA ... CASCADE takes
+    # the tables. Reset first, as the cascade destroys the target as loaded,
+    # which may predate tables added since.
+    def has_many_table_definitions(name, **options)
+      raise ArgumentError, "has_many_table_definitions sets dependent: :destroy itself" if options.key?(:dependent)
+      before_destroy { association(name).reset }
+      has_many name, **options, dependent: :destroy
+      self.table_definitions_association = name
+    end
+  end
+end
