@@ -79,12 +79,6 @@
         "serveStaticTargetName": "serve-static",
         "typecheckTargetName": "typecheck"
       }
-    },
-    {
-      "plugin": "@nx/eslint/plugin",
-      "options": {
-        "targetName": "eslint"
-      }
     }
   ],
   "release": {
