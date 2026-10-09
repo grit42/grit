@@ -50,6 +50,7 @@
     "glob": "catalog:",
     "globals": "catalog:",
     "react": "catalog:",
+    "sass-embedded": "catalog:",
     "typescript": "catalog:",
     "typescript-eslint": "catalog:",
     "vite": "catalog:",

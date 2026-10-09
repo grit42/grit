@@ -58,6 +58,7 @@
     "globals": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
+    "sass-embedded": "catalog:",
     "typescript": "catalog:",
     "typescript-eslint": "catalog:",
     "vite": "catalog:",

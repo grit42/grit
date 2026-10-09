@@ -80,6 +80,7 @@
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-router-dom": "catalog:",
+    "sass-embedded": "catalog:",
     "typescript": "catalog:",
     "typescript-eslint": "catalog:",
     "vite": "catalog:",
