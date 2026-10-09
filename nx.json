@@ -103,5 +103,6 @@
       "@grit42/spreadsheet",
       "@grit42/plots"
     ]
-  }
+  },
+  "analytics": false
 }
