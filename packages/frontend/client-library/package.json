@@ -50,6 +50,7 @@
   },
   "scripts": {
     "tsc": "tsc -b",
+    "typecheck": "tsc --noEmit -p tsconfig.lib.json",
     "build": "tsc -b ./tsconfig.lib.json && vite build",
     "lint": "eslint . --fix",
     "lint:check": "eslint .",
@@ -72,9 +73,11 @@
     "eslint-plugin-react-refresh": "catalog:",
     "glob": "catalog:",
     "globals": "catalog:",
+    "happy-dom": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-router-dom": "catalog:",
+    "sass-embedded": "catalog:",
     "typescript": "catalog:",
     "typescript-eslint": "catalog:",
     "vite": "catalog:",
@@ -82,7 +85,6 @@
     "vite-plugin-externalize-deps": "catalog:",
     "vite-plugin-lib-inject-css": "catalog:",
     "vite-plugin-static-copy": "catalog:",
-    "jsdom": "^25.0.0",
     "vitest": "catalog:"
   },
   "dependencies": {

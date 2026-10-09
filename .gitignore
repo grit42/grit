@@ -50,6 +50,8 @@ apps/**/server/tmp/*
 # Nx
 .nx/cache
 .nx/workspace-data
+.nx/polygraph
+.nx/self-healing
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
 
