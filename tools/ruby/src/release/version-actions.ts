@@ -3,10 +3,7 @@ import { join } from "node:path";
 import { AfterAllProjectsVersioned, VersionActions } from "nx/release";
 import { readdirSync, statSync } from "node:fs";
 
-export const afterAllProjectsVersioned: AfterAllProjectsVersioned = async (
-  _cwd,
-  _opts,
-) => {
+export const afterAllProjectsVersioned: AfterAllProjectsVersioned = async () => {
   return {
     changedFiles: [],
     deletedFiles: [],

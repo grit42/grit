@@ -7,6 +7,8 @@
   "types": "./src/index.d.ts",
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.lib.json",
+    "lint": "eslint . --fix",
+    "lint:check": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest"
   },
@@ -16,8 +18,12 @@
     "tslib": "^2.3.0"
   },
   "devDependencies": {
+    "@eslint/js": "catalog:",
     "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "globals": "catalog:",
     "typescript": "catalog:",
+    "typescript-eslint": "catalog:",
     "vitest": "catalog:"
   }
 }
