@@ -69,16 +69,6 @@
       "options": {
         "lintTargetName": "rubocop"
       }
-    },
-    {
-      "plugin": "@nx/vite/plugin",
-      "options": {
-        "buildTargetName": "vite:build",
-        "devTargetName": "vite:dev",
-        "previewTargetName": "preview",
-        "serveStaticTargetName": "serve-static",
-        "typecheckTargetName": "typecheck"
-      }
     }
   ],
   "release": {

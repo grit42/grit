@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "vite --port 3002",
     "tsc": "tsc -b",
+    "typecheck": "tsc --noEmit -p tsconfig.lib.json",
     "build": "tsc -b ./tsconfig.lib.json && vite build",
     "test": "vitest run",
     "test:watch": "vitest",

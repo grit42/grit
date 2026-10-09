@@ -28,6 +28,7 @@
   "scripts": {
     "dev": "vite --port 3001",
     "tsc": "tsc -b",
+    "typecheck": "tsc --noEmit -p tsconfig.lib.json",
     "build": "tsc -b ./tsconfig.lib.json && vite build",
     "lint": "eslint . --fix",
     "lint:check": "eslint .",
