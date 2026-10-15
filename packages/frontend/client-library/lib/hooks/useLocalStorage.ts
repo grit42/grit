@@ -17,7 +17,7 @@
  */
 
 import superjson from "superjson";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import useEventCallback from "./useEventCallback";
 import useEventListener from "./useEventListener";
 
@@ -57,6 +57,10 @@ export function useLocalStorage<T>(
   // Pass initial state function to useState so logic is only executed once
   const [storedValue, setStoredValue] = useState<T>(readValue);
 
+  // The latest value, so two functional updates in one handler compose
+  // instead of the second discarding the first.
+  const latest = useRef<T>(storedValue);
+
   // Return a wrapped version of useState's setter function that ...
   // ... persists the new value to localStorage.
   const setValue: React.Dispatch<React.SetStateAction<T>> = useEventCallback(
@@ -71,9 +75,11 @@ export function useLocalStorage<T>(
 
       try {
         // Allow value to be a function so we have the same API as useState
-        const newValue = value instanceof Function ? value(storedValue) : value;
+        const newValue =
+          value instanceof Function ? value(latest.current) : value;
 
         // Save state
+        latest.current = newValue;
         setStoredValue(newValue);
 
         // Save to local storage
@@ -89,27 +95,21 @@ export function useLocalStorage<T>(
     },
   );
 
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setStoredValue(readValue());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   const handleStorageChange = useCallback(
     (event: StorageEvent | CustomEvent) => {
       if ((event as StorageEvent)?.key && (event as StorageEvent).key !== key) {
         return;
       }
-      setStoredValue(readValue());
+      const next = readValue();
+      latest.current = next;
+      setStoredValue(next);
     },
     [key, readValue],
   );
 
-  // this only works for other documents, not the current one
+  // The browser fires `storage` in other tabs only; `local-storage` is
+  // dispatched by `setValue` for this one.
   useEventListener("storage", handleStorageChange);
-
-  // this is a custom event, triggered in writeValueToLocalStorage
-  // See: useLocalStorage()
   useEventListener("local-storage", handleStorageChange);
 
   return [storedValue, setValue];
@@ -127,10 +127,7 @@ export function useLocalStorageChanges<T>(
     if (callback) callback(readLocalStorageValue<T | null>(id, null));
   };
 
-  // this only works for other documents, not the current one
+  // As in useLocalStorage: other tabs, then this one.
   useEventListener("storage", handleStorageChange);
-
-  // this is a custom event, triggered in writeValueToLocalStorage
-  // See: useLocalStorage()
   useEventListener("local-storage", handleStorageChange);
 }
