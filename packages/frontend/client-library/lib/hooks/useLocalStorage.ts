@@ -28,7 +28,7 @@ declare global {
 }
 
 export function readLocalStorageValue<T = null>(key: string, fallbackValue: T) {
-  // Prevent build error "window is undefined" but keeps working
+  // No window during a server-side build.
   if (typeof window === "undefined") {
     return fallbackValue;
   }
@@ -47,25 +47,17 @@ export function useLocalStorage<T>(
   fallbackValue: T,
   shareState?: boolean,
 ): [T, React.Dispatch<React.SetStateAction<T>>] {
-  // Get from local storage then
-  // parse stored json or return fallbackValue
   const readValue = useCallback((): T => {
     return readLocalStorageValue<T>(key, fallbackValue);
   }, [fallbackValue, key]);
 
-  // State to store our value
-  // Pass initial state function to useState so logic is only executed once
   const [storedValue, setStoredValue] = useState<T>(readValue);
 
-  // The latest value, so two functional updates in one handler compose
-  // instead of the second discarding the first.
+  // Read by the setter, so two functional updates in one handler compose.
   const latest = useRef<T>(storedValue);
 
-  // Return a wrapped version of useState's setter function that ...
-  // ... persists the new value to localStorage.
   const setValue: React.Dispatch<React.SetStateAction<T>> = useEventCallback(
     (value: React.SetStateAction<T>) => {
-      // Prevent build error "window is undefined" but keeps working
       if (typeof window == "undefined") {
         console.warn(
           `Tried setting localStorage key “${key}” even though environment is not a client`,
@@ -74,18 +66,15 @@ export function useLocalStorage<T>(
       }
 
       try {
-        // Allow value to be a function so we have the same API as useState
         const newValue =
           value instanceof Function ? value(latest.current) : value;
 
-        // Save state
         latest.current = newValue;
         setStoredValue(newValue);
 
-        // Save to local storage
         window.localStorage.setItem(key, superjson.stringify(newValue));
 
-        // We dispatch a custom event so every useLocalStorage hook are notified
+        // Notifies the other hooks in this tab.
         if (shareState !== false) {
           window.dispatchEvent(new Event("local-storage"));
         }
@@ -107,8 +96,7 @@ export function useLocalStorage<T>(
     [key, readValue],
   );
 
-  // The browser fires `storage` in other tabs only; `local-storage` is
-  // dispatched by `setValue` for this one.
+  // `storage` fires in other tabs only; `local-storage` covers this one.
   useEventListener("storage", handleStorageChange);
   useEventListener("local-storage", handleStorageChange);
 
