@@ -39,7 +39,7 @@ export * from "./Dialog";
 export { default as Dropdown } from "./Dropdown";
 export * from "./Dropdown";
 
-export { default as ErrorPage } from "./ErrorPage";
+export { default as ErrorPage, errorMessage } from "./ErrorPage";
 
 export { default as LoadingPage } from "./LoadingPage";
 
