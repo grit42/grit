@@ -118,7 +118,7 @@ const RoutedTabs = ({
     <div
       style={{
         display: "grid",
-        gridTemplateColumns: "1fr",
+        gridTemplateColumns: "minmax(0, 1fr)",
         gridTemplateRows: rows.join(" "),
         overflow: "auto",
       }}
