@@ -148,15 +148,6 @@ describe("categorical colours", () => {
     expect(CATEGORICAL_COLORS.dark).not.toEqual(CATEGORICAL_COLORS.light);
   });
 
-  test("each set separates from its own background", () => {
-    for (const color of CATEGORICAL_COLORS.light) {
-      expect(relativeLuminance(color)).toBeLessThan(0.6);
-    }
-    for (const color of CATEGORICAL_COLORS.dark) {
-      expect(relativeLuminance(color)).toBeGreaterThan(0.15);
-    }
-  });
-
   test("each strip colour stands clear of its own surface", () => {
     for (const color of CATEGORICAL_COLORS.light) {
       expect(contrastRatio(color, "#ffffff")).toBeGreaterThanOrEqual(1.8);

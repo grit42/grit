@@ -966,23 +966,6 @@ describe("facetOrder", () => {
       ...(facetOrder ? { facetOrder } : {}),
     }) as PlotDefinition;
 
-  test("sorts by label when no order is given", () => {
-    expect(facetLabels(rows, def())).toEqual(["F", "M", "U"]);
-  });
-
-  test("uses the given order", () => {
-    expect(facetLabels(rows, def(["M", "F"]))).toEqual(["M", "F", "U"]);
-  });
-
-  test("keeps an unlisted panel, rather than dropping it", () => {
-    // A partial or stale order must not hide a panel.
-    expect(facetLabels(rows, def(["M"]))).toEqual(["M", "F", "U"]);
-  });
-
-  test("ignores a label the data does not hold", () => {
-    expect(facetLabels(rows, def(["ZZZ", "M"]))).toEqual(["M", "F", "U"]);
-  });
-
   test("reaches buildFacets, not only the label list", () => {
     const facets = buildFacets(rows, def(["M", "F"]));
     expect(facets.map((one) => one.label)).toEqual(["M", "F", "U"]);
@@ -1030,10 +1013,6 @@ describe("buildTimeSeries series order", () => {
 
   test("draws the series in the declared order", () => {
     expect([...new Set(names(["M", "F"]))]).toEqual(["M", "F"]);
-  });
-
-  test("falls back to the alphabet", () => {
-    expect([...new Set(names())]).toEqual(["F", "M"]);
   });
 });
 

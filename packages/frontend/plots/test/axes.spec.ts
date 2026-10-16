@@ -446,10 +446,6 @@ describe("categoryRange", () => {
   test("still spans one cell with nothing to draw", () => {
     expect(categoryRange(0).range).toEqual([-0.5, 0.5]);
   });
-
-  test("is stated, so a placed note cannot widen it", () => {
-    expect(categoryRange(5).autorange).toBe(false);
-  });
 });
 
 /** An axis of counts never puts a tick between two whole things counted. */

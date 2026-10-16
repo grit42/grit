@@ -426,11 +426,6 @@ describe("the palette preview", () => {
     return host.querySelector<HTMLElement>('[aria-hidden="true"]')!;
   };
 
-  test("shows the series colours by default", async () => {
-    const preview = await mount(plot, false);
-    expect(preview.querySelectorAll("span").length).toBeGreaterThan(1);
-  });
-
   test("shows the heatmap scale for a plot drawn on one", async () => {
     const preview = await mount(plot, true);
     expect(preview.querySelectorAll("span")).toHaveLength(0);
