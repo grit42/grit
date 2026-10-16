@@ -192,12 +192,10 @@ const buildTraces = (
 
       for (const xValue of xValues) {
         const vals = group.data[xValue.toString()];
-        means.push(Number(mean(vals)));
-        medians.push(Number(median(vals)));
-        sds.push(vals.length > 1 ? Number(std(vals)) : 0);
-        sems.push(
-          vals.length > 1 ? Number(std(vals)) / Math.sqrt(vals.length) : 0,
-        );
+        means.push(mean(vals));
+        medians.push(median(vals));
+        sds.push(std(vals));
+        sems.push(vals.length > 1 ? std(vals) / Math.sqrt(vals.length) : 0);
         counts.push(vals.length);
       }
 
