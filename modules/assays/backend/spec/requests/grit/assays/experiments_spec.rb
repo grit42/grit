@@ -312,6 +312,24 @@ module Grit::Assays
       end
     end
 
+    # --- Data sheet definitions authorization ---
+
+    describe "assay_data_sheet_definitions authorization" do
+      let(:experiment) { create(:grit_assays_experiment, :draft, assay_model: draft_model) }
+
+      it "allows listing with 'read:system'" do
+        login_as(create(:grit_core_user, :with_read_role))
+        get "/api/grit/assays/experiments/#{experiment.id}/assay_data_sheet_definitions", as: :json
+        expect(response).to have_http_status(:success)
+      end
+
+      it "forbids listing without 'read:system'" do
+        login_as(create(:grit_core_user))
+        get "/api/grit/assays/experiments/#{experiment.id}/assay_data_sheet_definitions", as: :json
+        expect(response).to have_http_status(:forbidden)
+      end
+    end
+
     # --- Export ZIP ---
 
     describe "export" do

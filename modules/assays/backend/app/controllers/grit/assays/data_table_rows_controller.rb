@@ -20,6 +20,9 @@ module Grit::Assays
   class DataTableRowsController < ApplicationController
     include Grit::Core::GritEntityController
 
+    # Replaces the check_read callback registered by Readable, so the default actions must be listed too.
+    before_action :check_read, only: %i[ index show export full_perspective ]
+
     def full_perspective
       limit = params[:limit] ||= 50
       offset = params[:offset] ||= 0

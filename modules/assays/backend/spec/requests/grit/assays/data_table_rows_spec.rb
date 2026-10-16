@@ -139,6 +139,21 @@ module Grit::Assays
       end
     end
 
+    # --- Full perspective authorization ---
+
+    describe "full_perspective authorization" do
+      # Loading this class queries a table that does not exist; outside the example transaction that is harmless.
+      before(:all) { ExperimentDataSheetRecord }
+
+      it "forbids full_perspective without 'read:system'" do
+        data_table
+        login_as(create(:grit_core_user))
+        get "/api/grit/assays/data_table_rows/#{item1.id}/full_perspective",
+          params: { data_table_id: data_table.id, column_safe_name: "entity_name" }
+        expect(response).to have_http_status(:forbidden)
+      end
+    end
+
     # --- Metadata filters ---
 
     describe "metadata filters" do
