@@ -353,5 +353,29 @@ module Grit::Assays
         expect(response).to have_http_status(:unauthorized)
       end
     end
+
+    # --- Scope dispatch ---
+
+    describe "scope dispatch security" do
+      let(:reader) { create(:grit_core_user, :with_read_role) }
+
+      it "does not run Experiment.create through the index scope parameter" do
+        model_id = draft_model.id
+        login_as(reader)
+        expect {
+          get "/api/grit/assays/experiments", params: { scope: "create", name: "created-via-scope", assay_model_id: model_id }
+        }.not_to change(Grit::Assays::Experiment, :count)
+        expect(response).to have_http_status(:bad_request)
+      end
+
+      it "only accepts declared scopes" do
+        expect(Grit::Assays::Experiment.entity_scope?("published")).to be true
+        expect(Grit::Assays::Experiment.entity_scope?("detailed")).to be true
+        expect(Grit::Assays::Experiment.entity_scope?("create")).to be false
+        expect(Grit::Assays::ExperimentDataSheetRecord.entity_scope?("update")).to be false
+        expect(Grit::Assays::ExperimentDataSheetRecord.entity_scope?("by_experiment")).to be true
+        expect(Grit::Core::LoadSet.entity_scope?("by_experiment")).to be true
+      end
+    end
   end
 end

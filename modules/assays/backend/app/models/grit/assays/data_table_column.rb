@@ -24,6 +24,8 @@ module Grit::Assays
 
     entity_crud_with read: [ "read:system" ], write: [ "write:analysis" ]
 
+    entity_scopes :selected, :available, :available_entity_attributes
+
     validates :name, uniqueness: { scope: :data_table_id, message: "has already been taken in this data table" }, length: { minimum: 1 }
     validates :safe_name, uniqueness: { scope: :data_table_id, message: "has already been taken in this data table" }, length: { minimum: 3, maximum: 30 }
     validates :safe_name, format: { with: /\A[a-z_]{2}/, message: "should start with two lowercase letters or underscores" }
