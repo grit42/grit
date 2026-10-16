@@ -21,19 +21,49 @@ import MarvinIcon from "../../icons/Marvin03Meh";
 import styles from "./errorPage.module.scss";
 
 interface ErrorPageProps {
-  error?: string | null;
+  error?: unknown;
 }
+
+const errorMessage = (error: unknown): string => {
+  if (error === null || error === undefined) return "An error occured";
+  if (typeof error === "string") return error;
+  if (typeof error === "number" || typeof error === "boolean") {
+    return String(error);
+  }
+  if (error instanceof Error) return error.message;
+
+  if (typeof error === "object") {
+    const record = error as Record<string, unknown>;
+    for (const key of ["msg", "message", "error", "detail"]) {
+      const value = record[key];
+      if (typeof value === "string" && value !== "") return value;
+    }
+    if (Array.isArray(record.errors)) {
+      const joined = record.errors.filter((one) => typeof one === "string");
+      if (joined.length > 0) return joined.join(", ");
+    }
+    try {
+      return JSON.stringify(error);
+    } catch {
+      return "An error occured";
+    }
+  }
+
+  return String(error);
+};
 
 const ErrorPage = ({ error, children }: PropsWithChildren<ErrorPageProps>) => {
   return (
     <div className={styles.container}>
       <MarvinIcon className={styles.icon} height={150} />
       <div className={styles.content}>
-        <h3>{error ?? "An error occured"}</h3>
+        <h3>{errorMessage(error)}</h3>
         {children}
       </div>
     </div>
   );
 };
+
+export { errorMessage };
 
 export default ErrorPage;
