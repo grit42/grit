@@ -347,5 +347,52 @@ module Grit::Assays
         expect(response).to have_http_status(:unauthorized)
       end
     end
+
+    # --- Authorization ---
+
+    describe "authorization" do
+      let(:writer) { create(:grit_core_user, :with_write_role) }
+      let(:draft_model) { create(:grit_assays_assay_model, :draft, assay_type: biochemical) }
+      let(:published_model) { create(:grit_assays_assay_model, :published, assay_type: biochemical) }
+
+      before { login_as(writer) }
+
+      it "forbids create without 'admin:assays'" do
+        expect {
+          post "/api/grit/assays/assay_models", params: { name: "Forbidden", assay_type_id: biochemical.id }, as: :json
+        }.not_to change(AssayModel, :count)
+        expect(response).to have_http_status(:forbidden)
+      end
+
+      it "forbids clone without 'admin:assays'" do
+        draft_model
+        expect {
+          post "/api/grit/assays/assay_models/#{draft_model.id}/clone", params: { name: "Forbidden clone", assay_type_id: biochemical.id }, as: :json
+        }.not_to change(AssayModel, :count)
+        expect(response).to have_http_status(:forbidden)
+      end
+
+      it "forbids update_metadata without 'admin:assays'" do
+        species_def = create(:grit_assays_assay_metadata_definition, :species, vocabulary: create(:grit_core_vocabulary))
+        expect {
+          post "/api/grit/assays/assay_models/#{draft_model.id}/update_metadata", params: { removed: [], added: [ species_def.id ] }, as: :json
+        }.not_to change(AssayModelMetadatum, :count)
+        expect(response).to have_http_status(:forbidden)
+      end
+
+      it "forbids publish without 'admin:assays'" do
+        post "/api/grit/assays/assay_models/#{draft_model.id}/publish", as: :json
+        expect(response).to have_http_status(:forbidden)
+        expect(draft_model.reload.publication_status.name).to eq("Draft")
+      end
+
+      it "forbids draft without 'admin:assays'" do
+        experiment = create(:grit_assays_experiment, :draft, assay_model: published_model)
+        post "/api/grit/assays/assay_models/#{published_model.id}/draft", as: :json
+        expect(response).to have_http_status(:forbidden)
+        expect(published_model.reload.publication_status.name).to eq("Published")
+        expect(Experiment.exists?(experiment.id)).to be true
+      end
+    end
   end
 end

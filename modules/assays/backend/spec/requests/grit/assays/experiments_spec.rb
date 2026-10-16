@@ -280,6 +280,38 @@ module Grit::Assays
       end
     end
 
+    # --- Publish and draft authorization ---
+
+    describe "publish and draft authorization" do
+      let(:analyst) { create(:grit_core_user, :with_analyse_role) }
+      let(:writer) { create(:grit_core_user, :with_write_role) }
+      let(:draft_experiment) { create(:grit_assays_experiment, :draft, assay_model: draft_model) }
+      let(:published_experiment) { create(:grit_assays_experiment, :published, assay_model: draft_model) }
+
+      it "forbids publish without 'write:assays'" do
+        login_as(analyst)
+        post "/api/grit/assays/experiments/#{draft_experiment.id}/publish", as: :json
+        expect(response).to have_http_status(:forbidden)
+        expect(draft_experiment.reload.publication_status.name).to eq("Draft")
+      end
+
+      it "forbids draft without 'write:assays'" do
+        login_as(analyst)
+        post "/api/grit/assays/experiments/#{published_experiment.id}/draft", as: :json
+        expect(response).to have_http_status(:forbidden)
+        expect(published_experiment.reload.publication_status.name).to eq("Published")
+      end
+
+      it "allows publish and draft with 'write:assays'" do
+        login_as(writer)
+        post "/api/grit/assays/experiments/#{draft_experiment.id}/publish", as: :json
+        expect(response).to have_http_status(:success)
+        post "/api/grit/assays/experiments/#{draft_experiment.id}/draft", as: :json
+        expect(response).to have_http_status(:success)
+        expect(draft_experiment.reload.publication_status.name).to eq("Draft")
+      end
+    end
+
     # --- Export ZIP ---
 
     describe "export" do

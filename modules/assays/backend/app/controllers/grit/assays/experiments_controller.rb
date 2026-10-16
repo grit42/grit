@@ -23,6 +23,9 @@ module Grit::Assays
   class ExperimentsController < ApplicationController
     include Grit::Core::GritEntityController
 
+    # Replaces the check_write callback registered by Writable, so the default actions must be listed too.
+    before_action :check_write, only: %i[ create update destroy publish draft ]
+
     def create
       ActiveRecord::Base.transaction do
         record = Grit::Assays::Experiment.new(params.permit(self.permitted_params))
