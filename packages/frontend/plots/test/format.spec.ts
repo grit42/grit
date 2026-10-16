@@ -23,8 +23,8 @@ describe("automatic precision", () => {
   });
 
   test("survives a value that is not a number", () => {
-    expect(fmt.text(Number.NaN)).toBe("—");
-    expect(fmt.text(Number.POSITIVE_INFINITY)).toBe("—");
+    expect(fmt.text(Number.NaN)).toBe("-");
+    expect(fmt.text(Number.POSITIVE_INFINITY)).toBe("-");
   });
 });
 
