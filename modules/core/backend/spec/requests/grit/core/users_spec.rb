@@ -433,4 +433,32 @@ RSpec.describe "Users API", type: :request do
       expect(response).to have_http_status(:unauthorized)
     end
   end
+
+  describe "activation and password reset without a token" do
+    [ nil, "" ].each do |token|
+      it "does not change any password when the activation token is #{token.inspect}" do
+        target = admin
+        old_password = target.crypted_password
+        params = { password: "Pwned123!", password_confirmation: "Pwned123!" }
+        params[:activation_token] = token unless token.nil?
+
+        post "/api/grit/core/user/activate", params: params
+
+        expect(response).not_to have_http_status(:success)
+        expect(target.reload.crypted_password).to eq(old_password)
+      end
+
+      it "does not change any password when the password recovery token is #{token.inspect}" do
+        target = admin
+        old_password = target.crypted_password
+        params = { password: "Pwned123!", password_confirmation: "Pwned123!" }
+        params[:forgot_token] = token unless token.nil?
+
+        post "/api/grit/core/user/password_reset", params: params
+
+        expect(response).not_to have_http_status(:success)
+        expect(target.reload.crypted_password).to eq(old_password)
+      end
+    end
+  end
 end
