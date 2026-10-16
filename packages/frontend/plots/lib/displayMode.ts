@@ -4,7 +4,6 @@ import type {
   PlotDisplayOptions,
   StatMarker,
 } from "./types";
-import type { BoxStats } from "./math";
 
 export interface ResolvedDisplay {
   showIndividual: boolean;
@@ -23,17 +22,3 @@ export const resolveDisplay = (
   errorBars: display?.errorBars ?? "sd",
   errorStyle: display?.errorStyle ?? "bars",
 });
-
-export const errorValue = (
-  mode: ErrorBarMode,
-  stats: Pick<BoxStats, "std" | "sem">,
-): number | undefined => {
-  switch (mode) {
-    case "sd":
-      return stats.std;
-    case "sem":
-      return stats.sem;
-    case "none":
-      return undefined;
-  }
-};

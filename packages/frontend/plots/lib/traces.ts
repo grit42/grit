@@ -149,47 +149,6 @@ export const errorBand = ({
   };
 };
 
-export const errorBar = ({
-  days,
-  means,
-  errors,
-  color,
-  groupLabel,
-  errorLabel,
-  customData,
-  hoverRows,
-  xaxis,
-  yaxis,
-}: {
-  days: number[];
-  means: number[];
-  errors: number[];
-  color: string | undefined;
-  groupLabel: string;
-  errorLabel: string;
-  customData: number[][];
-  hoverRows: HoverRow[];
-  xaxis?: string;
-  yaxis?: string;
-}): Partial<Data> => {
-  if (!days.length) return {};
-  return {
-    x: days,
-    y: means,
-    type: "scatter",
-    mode: "markers",
-    name: `${groupLabel} ±${errorLabel}`,
-    legendgroup: groupLabel,
-    showlegend: false,
-    marker: { color, size: 1, opacity: 0, line: { color: "#fff", width: 1 } },
-    error_y: { type: "data", array: errors, visible: true, color, width: 10 },
-    customdata: customData,
-    hovertemplate: buildHoverTemplate(hoverRows),
-    ...(xaxis ? { xaxis } : {}),
-    ...(yaxis ? { yaxis } : {}),
-  };
-};
-
 /** Precomputed box stats (plotly.js 1.52+); `@types/plotly.js` lacks them. */
 interface PrecomputedBox {
   q1: number[];

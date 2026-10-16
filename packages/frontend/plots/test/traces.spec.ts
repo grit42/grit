@@ -1,11 +1,9 @@
 import { describe, expect, test } from "vitest";
 import { composite, readableOn, rgba, type ColorMap } from "../lib/colors";
 import { SYMBOLS } from "../lib/constants";
-import { errorValue } from "../lib/displayMode";
 import {
   boxStatsHoverTrace,
   errorBand,
-  errorBar,
   outlierTrace,
   scatterTrace,
 } from "../lib/traces";
@@ -112,40 +110,6 @@ describe("errorBand", () => {
     expect(band.fill).toBe("toself");
     expect(band.showlegend).toBe(false);
     expect(band.hoverinfo).toBe("skip");
-  });
-});
-
-describe("errorBar", () => {
-  const bar = asTrace(
-    errorBar({
-      days: [0, 7],
-      means: [10, 12],
-      errors: [1, 2],
-      color: "#4e79a7",
-      groupLabel: "Dose 1",
-      errorLabel: "SEM",
-      customData: [[1], [2]],
-      hoverRows: [{ key: "Mean", value: "%{y}" }],
-    }),
-  );
-
-  test("plots the means with symmetric error bars", () => {
-    expect(bar.y).toEqual([10, 12]);
-    expect(bar.error_y?.array).toEqual([1, 2]);
-  });
-
-  test("renders the supplied hover rows", () => {
-    expect(bar.hovertemplate).toBe("Mean: %{y}<extra></extra>");
-  });
-});
-
-describe("displayMode", () => {
-  test("errorValue selects the requested dispersion measure", () => {
-    const stats = { std: 4, sem: 2 };
-    expect(errorValue("sd", stats)).toBe(4);
-    expect(errorValue("sem", stats)).toBe(2);
-    // undefined, not 0, so callers can omit the error bar.
-    expect(errorValue("none", stats)).toBeUndefined();
   });
 });
 
