@@ -1,13 +1,5 @@
 /**
  * Title and axis-label defaulting.
- *
- * `title`, `x.label` and `y.label` are all derived values that the settings UI
- * now also lets a user type into. The rule these helpers encode is: keep
- * re-deriving while the stored value still matches what the generator would
- * produce, and stop the moment it doesn't. That is what makes an axis or type
- * change update the defaults without discarding a deliberate choice — the
- * behaviour these tests pin, since nothing else records that a value was
- * hand-written.
  */
 import { describe, expect, test } from "vitest";
 import type {
@@ -128,7 +120,11 @@ describe("withDerivedLabels", () => {
 
   test("re-derives a customised title on a plot-type change", () => {
     const next = { ...custom, type: "box" } as BoxPlotDefinition;
-    expect(withDerivedLabels(next, PROPERTIES).title).toBe("Body weight");
+    // A box reads "{y} by {x}", as bar, violin and comparison do.
+    expect(withDerivedLabels(next, PROPERTIES).title).toBe(
+      "Body weight by Study day",
+    );
+    expect(withDerivedLabels(next, PROPERTIES).title).not.toBe(custom.title);
   });
 
   /**
@@ -179,12 +175,7 @@ describe("withDerivedLabels", () => {
   });
 });
 
-/**
- * Drives whether "Reset to defaults" is offered as available. Every definition
- * saved before the label became editable stored one explicitly, so an
- * `undefined`-only test would mark all of them customised and leave the button
- * permanently enabled.
- */
+/** Drives whether "Reset to defaults" is offered as available. */
 describe("isDerivedAxisLabel", () => {
   test("an absent label is derived", () => {
     expect(isDerivedAxisLabel({ key: "BWDY" }, PROPERTIES)).toBe(true);
@@ -297,11 +288,6 @@ describe("nextAxisLabel", () => {
     );
   });
 
-  /**
-   * Definitions persisted before the axis-key change had `label` set to the raw
-   * key rather than the display name, which is still the auto value for a
-   * property that carries no display name.
-   */
   test("treats a label equal to the raw key as still derived", () => {
     expect(
       nextAxisLabel({ key: "UNKNOWN", label: "UNKNOWN" }, "BWDY", PROPERTIES),
@@ -313,15 +299,6 @@ describe("nextAxisLabel", () => {
   });
 });
 
-/**
- * Axis labels moved from paper-referenced annotations to Plotly axis titles.
- *
- * The annotation sat at `x: -0.05` — an offset proportional to plot width,
- * against a fixed left margin — so beyond a certain width it fell outside the
- * paper area and was clipped, reappearing only when the window was made
- * narrower. Plotly has no `automargin` for annotations, so only an axis title
- * can reserve its own space.
- */
 describe("withAxisTitles", () => {
   const axesFor = (facets: number) =>
     Object.fromEntries(
@@ -347,11 +324,6 @@ describe("withAxisTitles", () => {
     });
   });
 
-  /**
-   * Plotly derives the axis title from `layout.font.size` at about 1.2×.
-   * Setting a size here — even the 14 it resolves to by default — pins it, and
-   * the titles stop following the font-size setting.
-   */
   test("leaves the title size to Plotly so it tracks the font setting", () => {
     const titled = withAxisTitles(axesFor(1), { facets: 1, yTitle: "Weight" });
     expect(titled.yaxis1!.title).not.toHaveProperty("font.size");
