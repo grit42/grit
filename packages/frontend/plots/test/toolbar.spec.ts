@@ -1,4 +1,3 @@
-/** *Add note* and *Download* as buttons in Plotly's toolbar. */
 import { describe, expect, test } from "vitest";
 import {
   DOWNLOAD_ICON,

@@ -1,6 +1,3 @@
-/**
- * The settings panel's structure and its warnings.
- */
 // @vitest-environment happy-dom
 import { describe, expect, test } from "vitest";
 import { createRoot } from "react-dom/client";
@@ -73,7 +70,6 @@ describe("the settings sections", () => {
   test("survives a definition whose type is implemented elsewhere", async () => {
     const host = await render({ ...plot, type: "violin" } as PlotDefinition);
     expect(host.textContent).toContain("Labels");
-    // No per-type settings and no capability-gated sections to show.
     expect(sections(host).map((s) => s.title)).not.toContain("Ticks");
   });
 
@@ -115,7 +111,6 @@ describe("the settings sections", () => {
     expect(on.textContent).toContain("One line per");
   });
 
-  /** Choosing the data is the first thing anyone does; the rest is refinement. */
   test("opens Data and leaves the rest collapsed", async () => {
     const host = await render();
     expect(sections(host)).toEqual([
@@ -138,10 +133,6 @@ describe("the settings sections", () => {
     expect(style.textContent).toContain("Gridlines");
   });
 
-  /**
-   * Reset spans every section, so it sits outside them — inside one it would
-   * read as resetting only that section.
-   */
   test("keeps the reset button outside the sections", async () => {
     const host = await render();
     const reset = Array.from(host.querySelectorAll("button")).find((b) =>
@@ -193,7 +184,7 @@ describe("the settings sections", () => {
     expect(warning(host)).toBe("");
   });
 
-  /** Scatter tolerates the same categorical x that time series rejects. */
+  // Scatter tolerates the categorical x that time series rejects.
   test("asks the chosen type, not a shared rule", async () => {
     const categorical = {
       ...plot,
@@ -231,7 +222,6 @@ describe("the settings sections", () => {
     expect(bright).not.toEqual(defaultPalette);
   });
 
-  /** Box plots group along x, so an x tick control would configure nothing. */
   test("offers x ticks only where x is a measurement axis", async () => {
     const scatter = await render();
     const box = await render({ ...plot, type: "box" });
@@ -298,7 +288,6 @@ describe("resetting a type's own settings", () => {
     expect(resetButton(host).disabled).toBe(false);
   });
 
-  /** Otherwise it offers to reset something it has no way of resetting. */
   test("and dead when nothing else is, whatever the type carries", async () => {
     const host = await render(withBins, undefined, {
       implementations: implementations(undefined),
@@ -307,10 +296,6 @@ describe("resetting a type's own settings", () => {
   });
 });
 
-/**
- * A note is easy to place and, without a list, impossible to find again to
- * remove
- */
 describe("the notes section", () => {
   const withNotes = {
     ...plot,
@@ -365,7 +350,6 @@ describe("the notes section", () => {
   });
 });
 
-/** One switch for one scale across facet panels, where a plot opts in. */
 describe("the panel scales switch", () => {
   const faceted = { ...plot, facetBy: ["compound"] };
   const rows = [

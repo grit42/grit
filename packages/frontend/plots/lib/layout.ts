@@ -41,10 +41,7 @@ export const composeAxes = ({
   axes: Record<string, Partial<LayoutAxis>>;
   facets: number;
   colorMap: ColorMap;
-  /**
-   * Which axes carry a scale. A categorical axis takes neither a type nor
-   * ticks from the definition, because the plot places its categories itself.
-   */
+  /** Axes that take type and ticks from the definition; not categorical. */
   scaleAxes?: ScaleAxis[];
   /** Axis titles, or `false` where the plot labels its axes itself. */
   titles?: boolean | { x?: string; y?: string };
@@ -73,7 +70,6 @@ export const composeAxes = ({
             }
           : {}),
         ...buildAppearanceAxis(def.appearance, colorMap.textColor),
-        // The builder's own settings win
         ...axis,
       },
     };
@@ -90,7 +86,6 @@ export const composeAxes = ({
     }
   }
 
-  // One scale for every panel via `matches`.
   if (def.sharedScales && facets > 1) {
     for (let panel = 2; panel <= facets; panel += 1) {
       for (const orientation of ["x", "y"] as const) {

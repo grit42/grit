@@ -1,6 +1,3 @@
-/**
- * Datasets the playground can plot.
- */
 import type {
   PlotDefinition,
   SourceData,

@@ -23,9 +23,7 @@ import styles from "./plotNotices.module.scss";
 /** How long a notice keeps saying what it changed from. */
 const RECENT_MS = 8000;
 
-/**
- * Remembers the previous total so a change can state what it changed from.
- */
+/** The previous total, held for RECENT_MS after a change. */
 const useRecentChange = (total: number) => {
   const [previous, setPrevious] = useState<number | null>(null);
   const last = useRef(total);

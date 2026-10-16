@@ -16,13 +16,7 @@
  * @grit42/plots. If not, see <https://www.gnu.org/licenses/>.
  */
 
-/**
- * Domain-neutral Plotly trace factories.
- *
- * Deliberately limited to building blocks with no product identity of their
- * own. Traces that constitute a licensed plot type — control lines, violation
- * markers — live with that plot type in its module instead.
- */
+// Generic traces only; licensed plot-type traces live in their own module.
 import type { Data, Datum, ScatterData } from "plotly.js";
 import { type ColorMap, composite, readableOn, rgba } from "./colors";
 import { countText, numberFormat, type NumberFormat } from "./format";
@@ -196,13 +190,7 @@ export const errorBar = ({
   };
 };
 
-/**
- * Box statistics Plotly draws directly, instead of computing them from the
- * sample.
- *
- * plotly.js has accepted precomputed quartiles since 1.52, but
- * `@types/plotly.js` still describes only the sample form.
- */
+/** Precomputed box stats (plotly.js 1.52+); `@types/plotly.js` lacks them. */
 interface PrecomputedBox {
   q1: number[];
   median: number[];
@@ -214,17 +202,8 @@ interface PrecomputedBox {
 }
 
 /**
- * A box drawn from statistics we compute
- *
- * Plotly walks each whisker out to the most extreme *data point* inside the
- * 1.5-IQR fence (`box/calc.js` `computeUpperFence`), while `boxStats` reports
- * the fence itself clamped to the data. Meaning a box drawn from the sample never
- * quite agreed with the statistics reported beside it, and because Plotly only
- * does that walk when it is also drawing points, toggling the points moved the
- * whiskers. Handing the numbers over makes the two agree.
- *
- * Plotly accepts them as given provided they bracket the quartiles, which
- * clamped fences always do.
+ * Plotly's own whiskers stop at the last point inside the fence, and only when
+ * points are drawn; precomputed, they match `boxStats`.
  */
 export const statsBoxTrace = ({
   stats,
@@ -243,7 +222,7 @@ export const statsBoxTrace = ({
   fillColor?: string;
   width?: number;
   showlegend?: boolean;
-  /** The dashed mean line. Off where something else already draws it. */
+  /** The dashed mean line; off where something else draws it. */
   boxmean?: boolean;
 }): Partial<Data> => {
   const precomputed: PrecomputedBox = {
@@ -281,7 +260,6 @@ export const boxStatsHoverTrace = ({
   values: number[];
   label: string;
   xIndex: number;
-  /** Precision for the numbers written into the template. */
   format?: NumberFormat;
 }): Partial<ScatterData> | null => {
   const s = boxStats(values);

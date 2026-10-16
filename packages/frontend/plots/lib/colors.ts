@@ -22,7 +22,7 @@ import type { Theme } from "@grit42/client-library/theme";
 
 export const hexToRgb = ({ color }: { color: string }) => {
   const raw = color.trim().replace(/^#/, "");
-  // Expand shorthand (#eee -> #eeeeee). The app theme uses 3-digit hex some places
+  // The app theme uses some 3-digit hex (#eee).
   const h =
     raw.length === 3 || raw.length === 4
       ? raw
@@ -37,10 +37,7 @@ export const hexToRgb = ({ color }: { color: string }) => {
   };
 };
 
-/**
- * Return `color` with the given alpha, accepting hex (`#rrggbb`) or
- * `rgb()`/`rgba()` input. Anything else is passed through untouched.
- */
+/** Hex or `rgb()`/`rgba()`; anything else passes through unchanged. */
 export const rgba = ({
   color,
   alpha,
@@ -66,7 +63,6 @@ const toRgb = (color: string): { r: number; g: number; b: number } => {
   return { r, g, b };
 };
 
-/** As {@link toRgb}, keeping the alpha. Opaque unless the input says otherwise. */
 const toRgba = (
   color: string,
 ): { r: number; g: number; b: number; a: number } => {
@@ -91,14 +87,7 @@ const toRgba = (
   return { r, g, b, a: alpha };
 };
 
-/**
- * `color` painted over `background`, honouring its alpha.
- *
- * The surface a marker actually sits on is rarely either one: a bar or a
- * violin is filled translucently, so what a point is drawn against is the fill
- * *composited over* the page. Measuring contrast against the fill alone
- * overstates it, and against the page alone ignores the trace entirely.
- */
+/** `color` over `background`, as a point on a translucent fill sees it. */
 export const composite = (color: string, background: string): string => {
   const { r, g, b, a } = toRgba(color);
   if (a >= 1) return `rgb(${r}, ${g}, ${b})`;
@@ -108,9 +97,7 @@ export const composite = (color: string, background: string): string => {
   return `rgb(${mix(r, behind.r)}, ${mix(g, behind.g)}, ${mix(b, behind.b)})`;
 };
 
-/** WCAG relative luminance, 0 (black) to 1 (white).
- * https://www.w3.org/WAI/GL/wiki/Relative_luminance
- */
+/** WCAG relative luminance, 0 (black) to 1 (white). */
 export const relativeLuminance = (color: string): number => {
   const { r, g, b } = toRgb(color);
   const channel = (value: number) => {
@@ -120,9 +107,7 @@ export const relativeLuminance = (color: string): number => {
   return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
 };
 
-/**
- * Black or white, whichever reads better on `color`.
- */
+/** Black or white, whichever reads better on `color`. */
 export const contrastingText = (color: string): string =>
   relativeLuminance(color) > 0.4 ? "#000000" : "#ffffff";
 
@@ -148,7 +133,7 @@ export const interpolateScale = (
   return `rgb(${mix(from.r, to.r)}, ${mix(from.g, to.g)}, ${mix(from.b, to.b)})`;
 };
 
-/** Lighten `hex` toward white by `amount` (0-1). */
+/** Lighten `color` toward white by `amount` (0-1). */
 export const tint = (color: string, amount: number): string => {
   const { r, g, b } = toRgb(color);
   const mix = (c: number) => Math.round(c + (255 - c) * amount);
@@ -169,7 +154,7 @@ export const contrastRatio = (a: string, b: string): number => {
   return (light + 0.05) / (dark + 0.05);
 };
 
-/**` color`, moved away from `background` until it can be seen against it. */
+/** `color`, moved away from `surfaces` until it can be seen on them. */
 export const readableOn = (
   color: string,
   surfaces: string | string[],
@@ -189,7 +174,6 @@ export const readableOn = (
 
   if (clears(color)) return color;
 
-  // Both directions are tried at every step rather than one chosen up front
   let best = color;
   let bestRatio = contrastRatio(color, primary);
 
@@ -210,9 +194,8 @@ export const readableOn = (
 export type ColorPreset = "default" | "muted" | "bright";
 
 /**
- * Sequential schemes for heatmaps, after Paul Tol
- * (https://sronpersonalpages.nl/~pault/#sec:sequential), light to dark as given.
- * Default is Iridescent, Muted YlOrBr, Bright Smooth rainbow.
+ * Paul Tol's sequential schemes, light to dark: Iridescent, YlOrBr, Smooth
+ * rainbow. https://sronpersonalpages.nl/~pault/#sec:sequential
  */
 export const SEQUENTIAL_SCHEMES: Record<ColorPreset, readonly string[]> = {
   default: [
@@ -289,13 +272,12 @@ export const SEQUENTIAL_SCHEMES: Record<ColorPreset, readonly string[]> = {
   ],
 };
 
-/** The lowest contrast a scale's low end may have with the surface it is on. */
+/** Minimum contrast of a scale's low end against its surface. */
 export const MIN_SCALE_CONTRAST = 1.2;
 
 /**
- * A scheme for one theme: low values run from the surface outwards - light to
- * dark on a light surface, reversed on a dark one - so a higher value always
- * stands out more. Low stops too close to the surface are dropped.
+ * Runs out from the surface, so higher values stand out in either theme; low
+ * stops too close to the surface are dropped.
  */
 export const sequentialScale = (
   colors: readonly string[],
@@ -422,10 +404,7 @@ const defaultPalette = (dark: boolean) => ({
 
 type PaletteColors = ReturnType<typeof defaultPalette>;
 
-/**
- * Qualitative series (Paul Tol "muted").
- * https://sronpersonalpages.nl/~pault/
- */
+/** Paul Tol "muted": https://sronpersonalpages.nl/~pault/ */
 const mutedPalette = (dark: boolean): PaletteColors => ({
   maleFill: rgba({ color: "#CC8B3C", alpha: 0.4 }),
   maleLine: rgba({ color: "#9C6A2E", alpha: 1.0 }),
@@ -464,10 +443,7 @@ const mutedPalette = (dark: boolean): PaletteColors => ({
   ],
 });
 
-/**
- * High-saturation palette for on-screen emphasis (Paul Tol "bright").
- * https://sronpersonalpages.nl/~pault/
- */
+/** Paul Tol "bright": https://sronpersonalpages.nl/~pault/ */
 const brightPalette = (dark: boolean): PaletteColors => ({
   maleFill: rgba({ color: "#FF9500", alpha: 0.45 }),
   maleLine: rgba({ color: "#CC7700", alpha: 1.0 }),

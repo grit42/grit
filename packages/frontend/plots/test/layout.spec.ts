@@ -1,6 +1,3 @@
-/**
- * One scale across facet panels (`sharedScales`), through Plotly's `matches`.
- */
 import { describe, expect, test } from "vitest";
 import { composeAxes } from "../lib/layout";
 import type { ColorMap } from "../lib/colors";

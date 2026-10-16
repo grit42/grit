@@ -37,7 +37,6 @@ const AnnotationLayer = ({
 }: {
   annotating: boolean;
   onAnnotatingChange: (annotating: boolean) => void;
-  /** The point that was clicked, once there is one. */
   pending: AnnotationPoint | null;
   onCancel: () => void;
   onCommit: (text: string) => void;

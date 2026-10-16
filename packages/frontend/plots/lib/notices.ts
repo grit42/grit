@@ -26,15 +26,8 @@ import {
   hiddenFacetLabels,
 } from "./utils";
 
-/** Something the figure did not draw */
 export interface PlotNotice {
-  /**
-   * `omitted` — data exists but is not drawn.
-   * `empty` — nothing is drawn at all, and why.
-   * `warning` — drawn, but something about it should be read with care.
-   * `info` — the figure did something worth stating, and nothing is wrong.
-   *   Not counted in the omitted total.
-   */
+  /** `info` says what the figure did; it is not counted as omitted. */
   kind: "omitted" | "empty" | "warning" | "info";
   reason: string;
   count?: number;

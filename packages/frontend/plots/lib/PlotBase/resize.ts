@@ -16,20 +16,11 @@
  * @grit42/plots. If not, see <https://www.gnu.org/licenses/>.
  */
 
-/**
- * Keeps a drawn figure the size of its box. Plotly's `responsive` only listens
- * to the window, so a sidebar collapsing or a table folding away would leave
- * the canvas at its old size. The box is observed without re-rendering, so a
- * refit cannot feed back into the box it measured.
- */
-
-/** A Plotly graph div, which carries its own refit function. */
 type GraphDiv = HTMLElement & { _responsiveChartHandler?: () => void };
 
 /**
- * Redraw a plot at its container's size: through the graph div's own
- * `_responsiveChartHandler`, which skips a hidden plot, else a lazily imported
- * `Plots.resize` (kept dynamic so Plotly stays out of the initial bundle).
+ * Plotly's internal `_responsiveChartHandler` skips hidden plots; else
+ * `Plots.resize`, imported lazily to keep Plotly out of the initial bundle.
  */
 export const refitPlot = (graphDiv: HTMLElement): void => {
   const own = (graphDiv as GraphDiv)._responsiveChartHandler;
@@ -47,10 +38,7 @@ export const refitPlot = (graphDiv: HTMLElement): void => {
     .catch(() => {});
 };
 
-/**
- * Call `onResize` when a box changes size: at most once a frame, and not for a
- * sub-pixel change. Returns the teardown.
- */
+/** At most once a frame, ignoring sub-pixel changes. Returns the teardown. */
 export const observeBoxSize = (
   box: Element,
   onResize: () => void,

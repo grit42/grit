@@ -1,6 +1,3 @@
-/**
- * Title and axis-label defaulting.
- */
 import { describe, expect, test } from "vitest";
 import type {
   BoxPlotDefinition,
@@ -44,7 +41,6 @@ describe("propertyLabel", () => {
     expect(propertyLabel("MISSING", PROPERTIES)).toBe("MISSING");
   });
 
-  /** Reached through `plot.x?.key` on externally-authored config. */
   test("is empty for an absent key rather than printing 'undefined'", () => {
     expect(propertyLabel(undefined, PROPERTIES)).toBe("");
   });
@@ -91,10 +87,6 @@ describe("nextPlotTitle", () => {
     );
   });
 
-  /**
-   * The generator is a total function today, but the `?? next.title` fallback
-   * is what keeps an unrecognised type from blanking the title outright.
-   */
   test("falls back to the incoming title for an unknown type", () => {
     const next = { ...scatter, type: "sunburst" } as unknown as PlotDefinition;
     expect(nextPlotTitle(scatter, next, PROPERTIES)).toBe(
@@ -103,13 +95,6 @@ describe("nextPlotTitle", () => {
   });
 });
 
-/**
- * What a plot-type change and the "Reset to defaults" button both apply.
- *
- * Deliberately *not* `nextPlotTitle`'s preserve-if-customised rule: the
- * previous type's wording describes a different plot, so re-deriving is more
- * often right than the edit it discards.
- */
 describe("withDerivedLabels", () => {
   const custom: ScatterPlotDefinition = {
     ...scatter,
@@ -120,17 +105,13 @@ describe("withDerivedLabels", () => {
 
   test("re-derives a customised title on a plot-type change", () => {
     const next = { ...custom, type: "box" } as BoxPlotDefinition;
-    // A box reads "{y} by {x}", as bar, violin and comparison do.
+    // A box reads "{y} by {x}".
     expect(withDerivedLabels(next, PROPERTIES).title).toBe(
       "Body weight by Study day",
     );
     expect(withDerivedLabels(next, PROPERTIES).title).not.toBe(custom.title);
   });
 
-  /**
-   * Cleared, not overwritten with today's display name — so the labels go back
-   * to following the axes rather than being pinned to their current reading.
-   */
   test("clears customised axis labels rather than freezing them", () => {
     const reset = withDerivedLabels(custom, PROPERTIES);
     expect(reset.x.label).toBeUndefined();
@@ -160,7 +141,6 @@ describe("withDerivedLabels", () => {
     expect(reset.export).toEqual({ format: "png" });
   });
 
-  /** The palette survives here; only the reset button clears it. */
   test("keeps the palette, which is not derived from the axes", () => {
     const reset = withDerivedLabels(
       { ...custom, palette: "muted" },
@@ -175,7 +155,6 @@ describe("withDerivedLabels", () => {
   });
 });
 
-/** Drives whether "Reset to defaults" is offered as available. */
 describe("isDerivedAxisLabel", () => {
   test("an absent label is derived", () => {
     expect(isDerivedAxisLabel({ key: "BWDY" }, PROPERTIES)).toBe(true);
@@ -200,9 +179,6 @@ describe("isDerivedAxisLabel", () => {
   });
 });
 
-/**
- * "Reset to defaults" clears every presentation choice.
- */
 describe("withDefaultAppearance", () => {
   const decorated: ScatterPlotDefinition = {
     ...scatter,
@@ -329,7 +305,7 @@ describe("withAxisTitles", () => {
     expect(titled.yaxis1!.title).not.toHaveProperty("font.size");
   });
 
-  /** Without this the title can be pushed out of the reserved margin. */
+  // Without it the title can be pushed out of the reserved margin.
   test("always sets automargin, titled or not", () => {
     const titled = withAxisTitles(axesFor(3), { facets: 3, yTitle: "Weight" });
     expect(Object.values(titled).every((a) => a.automargin)).toBe(true);
@@ -340,10 +316,7 @@ describe("withAxisTitles", () => {
     expect(titled.xaxis1).not.toHaveProperty("title");
   });
 
-  /**
-   * Three facets lay out as a 2-column grid, so the y title belongs to the
-   * leftmost column and the x title to whichever facet has nothing below it.
-   */
+  // Three facets form a 2-column grid.
   test("labels only the outer axes of a facet grid", () => {
     const titled = withAxisTitles(axesFor(3), {
       facets: 3,

@@ -42,20 +42,9 @@ const AXIS_KEY_RE = /^[xy]axis\d*$/;
 export const figureClick = <T,>(annotating: boolean, onClick: T | undefined) =>
   annotating ? undefined : onClick;
 
-/**
- * Plotly's container for the first cartesian axis is `xaxis`; the numbered
- * spelling only begins at `xaxis2`. `cartesian/layout_defaults` resolves every
- * axis id back to that canonical name and reads `layoutIn[name]`, so a
- * `xaxis1` key is never read at all.
- *
- * Builders number facets from 1, which puts the first facet's settings — axis
- * type included — on exactly that dead key, while the canonical `xaxis` below
- * gets seeded with colours alone. The symptom is a first facet that ignores its
- * axis type, and an unfaceted plot that ignores it outright.
- */
+/** Plotly never reads `xaxis1`, only `xaxis`; builders number facets from 1. */
 const canonicalAxisKey = (key: string) => key.replace(/^([xy]axis)1$/, "$1");
 
-/** Axis entries from one source, merged onto their canonical keys. */
 const canonicalAxes = (
   source: Record<string, Partial<LayoutAxis>> | undefined,
 ): Record<string, Partial<LayoutAxis>> => {
@@ -193,15 +182,11 @@ const ThemedPlot = ({
     ...restLayout
   } = layout ?? {};
 
-  // `buildThemedAxes` has already absorbed every axis key onto its canonical
-  // name, so spreading the originals back in would restore the dead `xaxis1`
-  // spelling alongside the real `xaxis`.
+  // Axes come from `themedAxes`; the originals may hold a dead `xaxis1`.
   const layoutWithoutAxes = Object.fromEntries(
     Object.entries(restLayout).filter(([key]) => !AXIS_KEY_RE.test(key)),
   );
 
-  // Resolved before the layout, because the annotations need to know which
-  // scale they are being placed on.
   const themedAxes = buildThemedAxes(colorMap, { xaxis, yaxis, axes, layout });
   const scales = {
     x: (themedAxes.xaxis as Partial<LayoutAxis> | undefined)?.type,
@@ -214,7 +199,7 @@ const ThemedPlot = ({
     showlegend: true,
     dragmode: annotating ? false : "pan",
     autosize: true,
-    // Plotly's own camera gives way to the Download button below.
+    // Our Download button replaces Plotly's camera.
     modebar: { remove: ["lasso2d", "select2d", "toImage"] },
 
     ...layoutWithoutAxes,

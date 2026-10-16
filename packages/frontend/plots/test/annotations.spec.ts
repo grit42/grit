@@ -1,6 +1,3 @@
-/**
- * A reader's notes on a figure.
- */
 import { describe, expect, test } from "vitest";
 import {
   annotationsIn,
@@ -74,19 +71,14 @@ describe("rendering", () => {
     expect(shape.xref).toBe("x");
   });
 
-  /**
-   * Plotly is inconsistent about log axes, and this is the sharp edge:
-   * `tickvals` are data values and the axis takes their logarithm itself, but
-   * an annotation goes through `r2p`, which reads its input as an already
-   * logarithmic range value. A note stored at 1.2596 was drawn at 10^1.2596.
-   */
+  // Plotly quirk: a log axis reads an annotation's x as log10 but `tickvals`
+  // as data values.
   test("converts the position for a logarithmic axis", () => {
     const [shape] = annotationShapes([note({ x: 1.2596, y: 50 })], colorMap, {
       x: "log",
       y: "linear",
     });
     expect(shape.x).toBeCloseTo(Math.log10(1.2596), 10);
-    // The linear axis is untouched.
     expect(shape.y).toBe(50);
   });
 
@@ -97,7 +89,6 @@ describe("rendering", () => {
     expect(shape.x).toBe(1.2596);
   });
 
-  /** There is no position on a log axis to convert it to. */
   test("leaves a non-positive value alone on a logarithmic axis", () => {
     const [shape] = annotationShapes([note({ x: 0 })], colorMap, { x: "log" });
     expect(shape.x).toBe(0);
@@ -134,13 +125,7 @@ describe("identity", () => {
   });
 });
 
-/**
- * Where the reader clicked, in data coordinates.
- *
- * Plotly's own click event fires only over a data point, so a note could only
- * ever be attached to an existing observation — clicking the empty space
- * beside a run, which is where a note about that space belongs, did nothing.
- */
+// Plotly's click event fires only over a data point; a note can go anywhere.
 describe("placing a note from a click", () => {
   const axis = (id: string, offset: number, length: number) => ({
     _id: id,
@@ -150,12 +135,7 @@ describe("placing a note from a click", () => {
     p2d: (pixel: number) => (pixel / length) * 100,
   });
 
-  /**
-   * Plotly draws a `.nsewdrag` rectangle over each subplot's plot area, so its
-   * client rect is the plot area as laid out. Reading the origin from there
-   * rather than from the graph div is what stopped every note landing to the
-   * right of the click.
-   */
+  // Plotly's `.nsewdrag` rect over each subplot is its plot area as laid out.
   const withDragLayer = (
     panels: { subplot: string; left: number; top: number }[],
     axes: Record<string, unknown>,
@@ -181,12 +161,11 @@ describe("placing a note from a click", () => {
     }) as unknown as HTMLElement;
 
   test("measures from the plot area, not from the graph div", () => {
-    const div = withDragLayer(
-      // A plot area whose left edge is nowhere near the div's.
-      [{ subplot: "xy", left: 340, top: 120 }],
-      { xaxis: axis("x", 20, 200), yaxis: axis("y", 10, 100) },
-    );
-    // Halfway across the plot area, whatever the div's own origin is.
+    const div = withDragLayer([{ subplot: "xy", left: 340, top: 120 }], {
+      xaxis: axis("x", 20, 200),
+      yaxis: axis("y", 10, 100),
+    });
+    // Halfway across the plot area.
     expect(pointFromClick(div, 440, 170)).toEqual({
       x: 50,
       y: 50,
@@ -196,8 +175,7 @@ describe("placing a note from a click", () => {
   });
 
   test("records both axes of a subplot whose axes do not pair", () => {
-    // A row strip is (x3, y1) and an UpSet's bars (x, y2): an x derived from
-    // the y would land the note on another subplot.
+    // e.g. a row strip (x3, y): an x derived from y lands on another subplot.
     const div = withDragLayer(
       [
         { subplot: "xy", left: 0, top: 0 },
@@ -239,10 +217,6 @@ describe("placing a note from a click", () => {
     expect(pointFromClick(div, 50, 150)).toBeNull();
   });
 
-  /**
-   * Where nothing has been laid out — a figure that has not drawn, or a test
-   * environment with no layout — the axis offsets are all there is to go on.
-   */
   describe("without a laid-out drag layer", () => {
     const noLayer = (axes: Record<string, unknown>, subplots: string[]) =>
       ({
@@ -278,7 +252,6 @@ describe("placing a note from a click", () => {
     });
 
     test("records both axes on this path too", () => {
-      // A strip's subplot: its own x, the matrix's y.
       const div = noLayer(
         {
           xaxis: axis("x", 20, 100),
@@ -306,7 +279,6 @@ describe("placing a note from a click", () => {
   });
 });
 
-/** A composite view, several figures from one definition, keeps each figure's notes its own. */
 describe("notes in a composite view", () => {
   const onM = note({ id: "m", scope: "M:chart" });
   const onF = note({ id: "f", scope: "F:chart" });
@@ -336,7 +308,6 @@ describe("notes in a composite view", () => {
   });
 
   test("lets the first figure delete a note saved before scopes", () => {
-    // The first chart draws it, so removing it there has to remove it.
     const next = withAnnotationsIn(all, "M:chart", [onM], { first: true });
     expect(next.map((a) => a.id)).not.toContain("o");
   });

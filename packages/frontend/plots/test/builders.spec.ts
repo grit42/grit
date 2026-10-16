@@ -1,6 +1,3 @@
-/**
- * The package's plot builders, against SEND data.
- */
 import { describe, expect, test } from "vitest";
 import { buildTimeSeries } from "../lib/TimeSeriesPlot/utils";
 import { buildScatter } from "../lib/ScatterPlot/utils";
@@ -125,11 +122,6 @@ describe("buildTimeSeries", () => {
     expect(() => buildTimeSeries([], timeSeries, colorMap)).not.toThrow();
   });
 
-  /**
-   * The defaults reproduce what this builder drew before any of it was
-   * configurable, which is what lets configuration land without changing a
-   * single existing plot.
-   */
   test("an absent display block draws exactly the default mean and SD", () => {
     expect(JSON.stringify(build({ display: undefined }))).toBe(
       JSON.stringify(
@@ -202,7 +194,6 @@ describe("buildTimeSeries display options", () => {
     const lines = traces.filter((t) => t.opacity !== undefined);
     expect(lines.length).toBe(30);
     expect(lines.every((t) => (t.x ?? []).length === 6)).toBe(true);
-    // Named for the subject, so hovering identifies the animal.
     expect(String(lines[0].name)).toContain("NCSTUDY01-ANIMAL");
   });
 
@@ -315,12 +306,7 @@ describe("buildBox", () => {
   const buildBoxWith = (def: Partial<BoxPlotDefinition> = {}) =>
     buildBox(sendBodyWeights, { ...box, ...def }, colorMap);
 
-  /**
-   * Plotly walks the whisker out to the most extreme point inside the 1.5-IQR
-   * fence, and only when it is drawing points — so with `boxpoints` the box
-   * changed shape as the toggle moved, and never matched the hover. The stats
-   * are handed over precomputed instead.
-   */
+  // Plotly's own whiskers move with `boxpoints`, so stats are precomputed.
   test("the box is drawn from the reported statistics", () => {
     const drawn = buildBoxWith()
       .traces.map(asTrace)
@@ -339,7 +325,6 @@ describe("buildBox", () => {
     expect(box.lowerfence).toEqual([stats.lowerWhisker]);
     expect(box.upperfence).toEqual([stats.upperWhisker]);
     expect(box.mean).toEqual([stats.mean]);
-    // No sample handed over, so nothing is left for Plotly to recompute.
     expect(drawn[0].y).toBeUndefined();
   });
 
@@ -353,7 +338,6 @@ describe("buildBox", () => {
     expect(boxesOf(true)).toBe(boxesOf(false));
   });
 
-  /** The dashed mean line the violin draws. */
   test("marks the mean on every box", () => {
     const drawn = buildBoxWith()
       .traces.map(asTrace)
@@ -368,7 +352,6 @@ describe("buildBox", () => {
         .filter((t) => String(t.name).endsWith("observations"));
 
     expect(points(false)).toHaveLength(0);
-    // The shared default, rather than the box's own former always-on.
     expect(
       buildBoxWith()
         .traces.map(asTrace)
@@ -383,7 +366,7 @@ describe("buildBox", () => {
   });
 
   test("shows the outliers when the raw values are hidden", () => {
-    // One value far outside the whiskers, so there is something to find.
+    // One value far outside the whiskers.
     const withOutlier = [
       ...Array.from({ length: 12 }, (_, i) => ({
         ARM: "A",
@@ -407,7 +390,7 @@ describe("buildBox", () => {
       expect(drawn[0].marker).toMatchObject({ symbol: "circle-open" });
     }
 
-    // And never twice: the ordinary points exclude what the outliers carry.
+    // Never twice: the observations exclude the outliers.
     const observations = buildBox(
       withOutlier,
       { ...box, groupBy: ["ARM"], display: { showIndividual: true } },
@@ -419,7 +402,7 @@ describe("buildBox", () => {
     expect(observations[0].y).not.toContain(900);
   });
 
-  /** Plotly's own box hover carries no mean, variance, IQR or count. */
+  // Plotly's own box hover lacks mean, variance, IQR and count.
   test("carries the full box statistics on hover", () => {
     const stats = buildBoxWith()
       .traces.map(asTrace)
@@ -475,17 +458,13 @@ describe("buildBar", () => {
   const buildBarWith = (def: Partial<BarPlotDefinition> = {}) =>
     buildBar(sendBodyWeights, { ...bar, ...def }, colorMap);
 
-  /**
-   * One trace per *series*, carrying all of its categories. Plotly reserves a
-   * grouping slot per trace at every category, so a trace per bar gives each
-   * series a different position from one category to the next.
-   */
+  // One trace per series: Plotly gives each trace a slot at every category.
   test("draws one bar per category, in one trace", () => {
     const built = buildBarWith();
     const bars = built.traces.map(asTrace).filter((t) => t.type === "bar");
     expect(bars).toHaveLength(1);
     expect(bars[0].y).toHaveLength(3);
-    // The categories are ticks on a numeric axis, not the x values themselves.
+    // The categories are ticks on a numeric axis.
     expect(bars[0].x).toEqual([0, 1, 2]);
     expect(built.axes.xaxis1.ticktext).toEqual([
       "Treatment 1",
@@ -495,7 +474,6 @@ describe("buildBar", () => {
     expect(built.axes.xaxis1.tickvals).toEqual([0, 1, 2]);
   });
 
-  /** Side by side within the category, not stacked on its centre. */
   test("gives each series its own slot inside the category", () => {
     const bars = buildBarWith({ groupBy: ["SEX"] })
       .traces.map(asTrace)
@@ -505,15 +483,12 @@ describe("buildBar", () => {
     const [first, second] = bars;
     const offsets = bars.map((b) => (b.x as number[])[0]);
     expect(new Set(offsets).size).toBe(bars.length);
-    // Each sits within half a unit of the category it belongs to...
     for (const offset of offsets) expect(Math.abs(offset)).toBeLessThan(0.5);
-    // ...and the slots do not overlap. Widths are one per bar now, since a
-    // category holding fewer series gives each of them a wider slot.
+    // Widths are per bar: a category with fewer series has wider slots.
     const gap = Math.abs((second.x as number[])[0] - (first.x as number[])[0]);
     expect(gap).toBeGreaterThanOrEqual((first.width as number[])[0]);
   });
 
-  /** A series keeps its identity across facets rather than being renumbered. */
   test("a series keeps one colour and one legend entry across facets", () => {
     const bars = buildBarWith({ groupBy: ["SEX"], facetBy: ["ARMCD"] })
       .traces.map(asTrace)
@@ -544,7 +519,6 @@ describe("buildBar", () => {
     expect((first.y as number[])[0]).toBeCloseTo(mean, 6);
   });
 
-  /** One legend entry per series, not one per bar. */
   test("names each series once", () => {
     const bars = buildBarWith({ groupBy: ["SEX"] })
       .traces.map(asTrace)
@@ -574,14 +548,9 @@ describe("buildBar", () => {
     expect(withPoints.length).toBeGreaterThan(plain);
     const points = withPoints.filter((t) => t.mode === "markers");
     expect(points).toHaveLength(1);
-    // Every observation, not one point per bar.
     expect((points[0].y as number[]).length).toBeGreaterThan(3);
   });
 
-  /**
-   * Without jitter every observation lands on its bar's centre line and the
-   * overlay reads as a single stripe, which is the whole point of drawing it.
-   */
   test("the observations are jittered across the bar they belong to", () => {
     const points = buildBarWith({ display: { showIndividual: true } })
       .traces.map(asTrace)
@@ -593,7 +562,6 @@ describe("buildBar", () => {
     const xs = points.x as number[];
     const first = xs.filter((x) => Math.abs(x) < 0.5);
     expect(new Set(first).size).toBeGreaterThan(1);
-    // Spread within the bar, not beyond it.
     const halfWidth = (bar.width as number[])[0] / 2;
     for (const x of first) expect(Math.abs(x)).toBeLessThanOrEqual(halfWidth);
   });
@@ -656,7 +624,7 @@ describe("buildBar slot allocation", () => {
   const sparse = [
     { ARM: "Treatment 1", SEX: "M", BWSTRESN: 300 },
     { ARM: "Treatment 1", SEX: "F", BWSTRESN: 280 },
-    // Treatment 2 was males only.
+    // Treatment 2 has males only.
     { ARM: "Treatment 2", SEX: "M", BWSTRESN: 310 },
   ];
 
@@ -679,7 +647,7 @@ describe("buildBar slot allocation", () => {
     const bars = barsOf(sparse, ["SEX"]);
     const males = bars.find((b) => b.name === "M")!;
     expect((males.x as number[])[0]).toBeCloseTo(0.2);
-    // ...while Treatment 2 is the male bar's alone, so it sits on the tick.
+    // Treatment 2 has only the male bar, so it sits on the tick.
     expect((males.x as number[])[1]).toBe(1);
     expect((males.width as number[])[1]).toBeGreaterThan(
       (males.width as number[])[0],
@@ -693,7 +661,6 @@ describe("buildBar slot allocation", () => {
     }
   });
 
-  /** Row order is not an order a reader can use. */
   test("orders the categories by name, numerically aware", () => {
     const rows = [
       { ARM: "Day 10", SEX: "M", BWSTRESN: 1 },
@@ -745,13 +712,6 @@ describe("the ungrouped series name", () => {
   });
 });
 
-/**
- * Ordering a category axis that is not nominal.
- *
- * Names are the right order for a nominal axis and the wrong one for an
- * ordinal scale — dose groups sort Control, High, Low, Mid — and the order
- * lives in a column the plot does not draw.
- */
 describe("getCategorySortKey", () => {
   const doses = [
     { ARM: "Mid", RANK: 2, BWSTRESN: 300 },
@@ -787,7 +747,6 @@ describe("getCategorySortKey", () => {
     ]);
   });
 
-  /** The bars follow the ticks, or the labels name the wrong bars. */
   test("the bars move with the ticks", () => {
     const built = buildBar(
       doses as never,
@@ -802,7 +761,6 @@ describe("getCategorySortKey", () => {
       { getCategorySortKey: (row) => Number(row.RANK) },
     );
     const bar = built.traces.map(asTrace).find((t) => t.type === "bar")!;
-    // Control is the shortest and now sits first.
     expect((bar.y as number[])[0]).toBe(280);
     expect((bar.y as number[])[3]).toBe(320);
   });
@@ -949,7 +907,6 @@ describe("facet ordering", () => {
   });
 });
 
-/** A declared panel order, for conventions the alphabet does not know (M before F). */
 describe("facetOrder", () => {
   const rows: SourceData = [
     { sex: "F", value: 1 },
@@ -972,7 +929,6 @@ describe("facetOrder", () => {
   });
 });
 
-/** The one ordering rule behind `facetOrder` and `seriesOrder`. */
 describe("inDeclaredOrder", () => {
   test("puts the listed labels first, in the caller's order", () => {
     expect(inDeclaredOrder(["F", "M", "U"], ["M", "F"])).toEqual([

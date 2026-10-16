@@ -26,9 +26,7 @@ describe("hexToRgb", () => {
     });
   });
 
-  /**
-   * Regression guard. The app theme expresses colours as three-digit hex (`#eee`, `#111`);
-   */
+  // The app theme uses three-digit hex (`#eee`, `#111`).
   test("expands three-digit shorthand", () => {
     expect(hexToRgb({ color: "#eee" })).toEqual({ r: 238, g: 238, b: 238 });
     expect(hexToRgb({ color: "#111" })).toEqual({ r: 17, g: 17, b: 17 });
@@ -79,14 +77,13 @@ describe("contrast", () => {
   test("relativeLuminance brackets black and white", () => {
     expect(relativeLuminance("#000000")).toBeCloseTo(0, 6);
     expect(relativeLuminance("#ffffff")).toBeCloseTo(1, 6);
-    // Accepts the rgb() form the palettes are built from.
     expect(relativeLuminance("rgba(255, 255, 255, 1)")).toBeCloseTo(1, 6);
   });
 
   test("contrastingText picks the readable one", () => {
     expect(contrastingText("#ffffff")).toBe("#000000");
     expect(contrastingText("#000000")).toBe("#ffffff");
-    // The bright yellow at the top of the dark scale needs black on it.
+    // The bright yellow at the top of the dark scale.
     expect(contrastingText("#FDE725")).toBe("#000000");
     expect(contrastingText("#2B2D6E")).toBe("#ffffff");
   });
@@ -99,7 +96,7 @@ describe("contrast", () => {
     expect(interpolateScale(scale, 0)).toBe("rgb(0, 0, 0)");
     expect(interpolateScale(scale, 1)).toBe("rgb(255, 255, 255)");
     expect(interpolateScale(scale, 0.5)).toBe("rgb(128, 128, 128)");
-    // Out of range clamps rather than extrapolating past the ends.
+    // Out of range clamps.
     expect(interpolateScale(scale, 2)).toBe("rgb(255, 255, 255)");
     expect(interpolateScale(scale, -1)).toBe("rgb(0, 0, 0)");
   });
@@ -158,11 +155,6 @@ describe("categorical colours", () => {
   });
 });
 
-/**
- * A series colour chosen to look right as a large fill is often too close to
- * the background to read as a small marker on top of it — which is what the
- * individual observations drawn over a box, a bar or a violin are.
- */
 describe("composite", () => {
   test("an opaque colour covers whatever is behind it", () => {
     expect(composite("#4e79a7", "#ffffff")).toBe("rgb(78, 121, 167)");
@@ -174,7 +166,7 @@ describe("composite", () => {
     );
   });
 
-  /** How a fill built by concatenation — `${color}55` — arrives. */
+  // How a fill built as `${color}55` arrives.
   test("reads the alpha off an 8-digit hex", () => {
     const over = composite("#00000080", "#ffffff");
     const [r] = over
@@ -232,7 +224,6 @@ describe("readableOn", () => {
     }
   });
 
-  /** The series palette, on its own fill, in both themes. */
   test("clears the ratio for every palette colour, either scheme", () => {
     const palette = ["#4e79a7", "#f28e2b", "#e15759", "#76b7b2", "#59a14f"];
     for (const background of ["#1d2532", "#ffffff"]) {
@@ -245,7 +236,6 @@ describe("readableOn", () => {
     }
   });
 
-  /** `shade` always accepted rgba; `tint` parsed it as hex and returned NaN. */
   test("accepts an rgba colour, not only hex", () => {
     const out = readableOn("rgba(78, 121, 167, 1)", "rgb(54, 79, 109)");
     expect(out).not.toContain("NaN");
@@ -253,12 +243,10 @@ describe("readableOn", () => {
   });
 
   test("weighs the first surface over the rest", () => {
-    // Dark trace on a light page: the marker has to move away from the trace,
-    // which is the surface it mostly sits on.
+    // Dark trace on a light page: the marker must clear the trace.
     const onTrace = readableOn("#1a1a1a", ["#000000", "#ffffff"]);
     expect(contrastRatio(onTrace, "#000000")).toBeGreaterThanOrEqual(3);
 
-    // Reversing the order reverses which one is guaranteed.
     const onPage = readableOn("#fdfdfd", ["#ffffff", "#000000"]);
     expect(contrastRatio(onPage, "#ffffff")).toBeGreaterThanOrEqual(3);
   });
@@ -269,7 +257,6 @@ describe("readableOn", () => {
     expect(contrastRatio(both, "#858585")).toBeGreaterThanOrEqual(3);
   });
 
-  /** These run inside builders; one missing entry must not take a plot down. */
   test("passes through anything it cannot measure", () => {
     expect(readableOn("#4e79a7", undefined as unknown as string)).toBe(
       "#4e79a7",

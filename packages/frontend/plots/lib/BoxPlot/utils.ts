@@ -70,9 +70,7 @@ const buildBoxTraces = (
     const facet = facets[i];
     const axis = i + 1;
 
-    // Boxes sit at explicit numeric positions, so the hover and outlier
-    // overlays below can be placed on top of the box they describe rather
-    // than relying on trace order to line them up.
+    // Numeric positions, so hover and outlier overlays land on their box.
     axes[`xaxis${axis}`] = {
       type: "linear",
       tickmode: "array",
@@ -178,7 +176,6 @@ const buildBoxTraces = (
             showlegend: false,
             legendgroup: group.label,
           }),
-          // Hollow: the shape says outlier, the colour says which box.
           marker: {
             color: readableOn(color, colorMap.bgColor),
             symbol: "circle-open",

@@ -95,7 +95,6 @@ const XY_CAPABILITIES = [
   ...STYLE_CAPABILITIES,
 ] as const;
 
-/** The full display surface: a summary, its dispersion, and the raw values. */
 const SUMMARY_CAPABILITIES = [
   "summary",
   "multipleSummaries",
@@ -110,8 +109,6 @@ export const PLOT_IMPLEMENTATIONS: PlotImplementations = {
     PlotSettings: ScatterPlotSettings as ComponentType<PlotSettingsProps>,
     label: "Scatter",
     value: "scatter",
-    // A scatter draws one point per row; there is no summary to configure,
-    // which is why the display capabilities are a separate list.
     capabilities: XY_CAPABILITIES,
     supports: axisSupport(["y"]),
   },
@@ -131,9 +128,7 @@ export const PLOT_IMPLEMENTATIONS: PlotImplementations = {
     PlotSettings: BarPlotSettings as ComponentType<PlotSettingsProps>,
     label: "Bar",
     value: "bar",
-    // x names the categories, so only y has a scale to tick.
-    // No "errorBand" or "individualBy": both need a continuous x, and x here
-    // names discrete categories.
+    // x is categorical: no xTicks, and no errorBand or individualBy.
     capabilities: [
       "yTicks",
       "axisLabels",
@@ -155,9 +150,6 @@ export const PLOT_IMPLEMENTATIONS: PlotImplementations = {
   },
 };
 
-/**
- * Settings for one plot, whoever implements it.
- */
 const PlotSettings = ({
   plot,
   implementations = PLOT_IMPLEMENTATIONS,
@@ -179,10 +171,8 @@ const PlotSettings = ({
   const can = (capability: PlotCapability) =>
     plotImplementation?.capabilities.includes(capability) ?? false;
 
-  // Evaluated for the *current* definition rather than only on a type change:
-  // the data behind a saved plot can change after it was configured, so a
-  // warning that only fired at the moment of switching would never be seen
-  // again. Deliberately non-blocking for the same reason.
+  // Checked on every render, not only on a type change: a saved plot's data
+  // can change after it was configured. Non-blocking for the same reason.
   const support = plotImplementation?.supports(plot, {
     properties: props.properties,
     data: props.data,

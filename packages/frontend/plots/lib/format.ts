@@ -21,13 +21,11 @@ import type { PlotAppearanceOptions } from "./types";
 /** Significant figures shown when no decimal count was chosen. */
 export const AUTOMATIC_SIGNIFICANT_FIGURES = 4;
 
-/**
- * One rule for every number a figure writes.
- */
+/** One rule for every number a figure writes. */
 export interface NumberFormat {
   /** d3 spec for a Plotly template placeholder, without the leading colon. */
   spec: string;
-  /** The same rule applied here, for a value written into a template. */
+  /** The same rule in JS, for values baked into a template. */
   text: (value: number) => string;
 }
 
@@ -40,8 +38,7 @@ export const numberFormat = (
 
   if (decimals === undefined || !Number.isFinite(decimals)) {
     return {
-      // `~` trims the trailing zeros `g` would otherwise leave, so 4200 reads
-      // as 4200 rather than 4200.0.
+      // `~` drops trailing zeros: 4200, not 4200.0.
       spec: `.${AUTOMATIC_SIGNIFICANT_FIGURES}~g`,
       text: (value) =>
         Number.isFinite(value)

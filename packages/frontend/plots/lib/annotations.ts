@@ -20,14 +20,10 @@ import type { Annotations, AxisType } from "plotly.js";
 import type { ColorMap } from "./colors";
 import type { PlotAnnotation } from "./types";
 
-/**
- * A reader's notes, as Plotly annotations.
- */
 const forAxis = (value: number | string, axisType: AxisType | undefined) => {
   if (axisType !== "log") return value;
   const numeric = typeof value === "number" ? value : Number(value);
-  // A non-positive value has no position on a log axis, so there is nothing
-  // sensible to convert it to; leave it and let Plotly drop it.
+  // Non-positive has no log position; leave it for Plotly to drop.
   return Number.isFinite(numeric) && numeric > 0 ? Math.log10(numeric) : value;
 };
 
@@ -87,12 +83,7 @@ interface ResolvedLayout {
   [key: string]: unknown;
 }
 
-/**
- * The data coordinates under a click, from the pixel position.
- *
- * Plotly's own `plotly_click` fires only when the pointer is over a *data
- * point*
- */
+/** Data coordinates under a click; `plotly_click` fires only on a point. */
 export const pointFromClick = (
   graphDiv: HTMLElement,
   clientX: number,
@@ -165,7 +156,7 @@ export const pointFromClick = (
   return null;
 };
 
-/** One figure's notes in a composite view; unscoped notes go to the first figure. */
+/** A figure's notes in a composite view; unscoped ones go to the first. */
 export const annotationsIn = (
   annotations: readonly PlotAnnotation[] | undefined,
   scope: string,

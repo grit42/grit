@@ -177,8 +177,7 @@ const buildTraces = (
     );
     for (let j = 0; j < groups.length; j++) {
       const group = groups[j]!;
-      // Figure-wide, so a series keeps its colour, its dash and its marker in
-      // every panel.
+      // Figure-wide, so a series looks the same in every panel.
       const seriesIndex = Math.max(seriesNames.indexOf(group.label), 0);
       const color =
         colorMap.universalColors[seriesIndex % colorMap.universalColors.length];

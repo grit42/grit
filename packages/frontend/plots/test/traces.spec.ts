@@ -51,7 +51,6 @@ describe("scatterTrace", () => {
     expect(t.hovertemplate).toBe("Value: %{y}<extra></extra>");
   });
 
-  /** An explicit template must not be overwritten by the row shorthand. */
   test("an explicit hovertemplate takes precedence over hoverRows", () => {
     const t = scatterTrace({
       x: [1],
@@ -145,7 +144,7 @@ describe("displayMode", () => {
     const stats = { std: 4, sem: 2 };
     expect(errorValue("sd", stats)).toBe(4);
     expect(errorValue("sem", stats)).toBe(2);
-    // undefined rather than 0, so callers can omit the error bar entirely.
+    // undefined, not 0, so callers can omit the error bar.
     expect(errorValue("none", stats)).toBeUndefined();
   });
 });
@@ -153,15 +152,10 @@ describe("displayMode", () => {
 describe("boxStatsHoverTrace", () => {
   const values = [1, 2, 3, 4, 5, 6, 7, 8, 9, 100];
 
-  /**
-   * Not a box plot — an invisible marker at the median that gives a plot a hover
-   * target carrying the summary statistics. Named for what it does, since
-   * `boxTrace` next to the real `BoxPlot` was actively misleading.
-   */
   test("is invisible, unlabelled and sits at the median", () => {
     const t = boxStatsHoverTrace({ values, label: "Group", xIndex: 2 })!;
     expect(t.x).toEqual([2]);
-    // Ten values, so the median is the mean of the 5th and 6th: (5 + 6) / 2.
+    // Ten values, so the median is (5 + 6) / 2.
     expect(t.y).toEqual([5.5]);
     expect((t.marker as { opacity?: number }).opacity).toBe(0);
     expect(t.showlegend).toBe(false);
@@ -192,13 +186,12 @@ describe("boxStatsHoverTrace", () => {
 });
 
 describe("outlierTrace", () => {
-  /** 100 sits far beyond 1.5*IQR of 1..9, so it is the sole outlier. */
+  // 100 is far past 1.5×IQR of 1..9, so it is the sole outlier.
   const values = [1, 2, 3, 4, 5, 6, 7, 8, 9, 100];
 
-  // An outlier's colour is checked against the violin's fill as well as the page.
   test("chooses a colour that reads on its group's fill as well as the page", () => {
     const withPage = { ...colorMap, bgColor: "#ffffff" } as unknown as ColorMap;
-    // A light yellow reads poorly on white, and worse on its own tinted fill.
+    // A light yellow reads poorly on white and worse on its own fill.
     const colour = (
       outlierTrace({
         values,
@@ -228,7 +221,7 @@ describe("outlierTrace", () => {
     const a = outlierTrace({ values, label: "G", xIndex: 1, colorMap })!;
     const b = outlierTrace({ values, label: "G", xIndex: 1, colorMap })!;
     expect(a.x).toEqual(b.x);
-    // Offset from the index, but within the default +/-0.2 jitter.
+    // Within the default ±0.2 jitter.
     expect(Math.abs((a.x as number[])[0]! - 1)).toBeLessThanOrEqual(0.2);
   });
 

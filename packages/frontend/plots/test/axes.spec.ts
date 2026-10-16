@@ -1,11 +1,3 @@
-/**
- * Tick ranges and plot chrome.
- *
- * `niceRange` is the only real algorithm in the appearance block, and the only
- * part that can be subtly wrong rather than visibly wrong: a range that crops
- * data hides points without any error, and one that lands on 3.7/7.4/11.1 is
- * "even" only in the arithmetic sense.
- */
 import { describe, expect, test } from "vitest";
 import {
   buildAppearanceAxis,
@@ -21,7 +13,6 @@ import {
 } from "../lib/axes";
 
 describe("niceRange", () => {
-  /** The worked example this was specified against. */
   test("-2…103 becomes -10…110", () => {
     expect(niceRange(-2, 103).range).toEqual([-10, 110]);
   });
@@ -32,7 +23,6 @@ describe("niceRange", () => {
     expect((range[1] - range[0]) % step).toBe(0);
   });
 
-  /** The invariant that matters: widening is fine, cropping loses data. */
   test("always contains the input", () => {
     const inputs: [number, number][] = [
       [-2, 103],
@@ -69,7 +59,7 @@ describe("niceRange", () => {
     }
   });
 
-  /** Floating point would otherwise surface as 0.30000000000000004 ticks. */
+  // Float noise would otherwise show as 0.30000000000000004 ticks.
   test("small magnitudes stay clean", () => {
     expect(niceRange(0.0001, 0.0009).range).toEqual([0.0001, 0.0009]);
     expect(niceRange(0.1, 0.7).range).toEqual([0.1, 0.7]);
@@ -79,7 +69,6 @@ describe("niceRange", () => {
     expect(niceRange(103, -2).range).toEqual(niceRange(-2, 103).range);
   });
 
-  /** A single-valued series has no span to divide; it must still be drawable. */
   test("widens a zero-width span", () => {
     const { range } = niceRange(5, 5);
     expect(range[0]).toBeLessThan(5);
@@ -116,7 +105,7 @@ describe("supportsTickRange", () => {
     expect(supportsTickRange(undefined)).toBe(true);
   });
 
-  /** Plotly reads a log axis range as exponents, so -10…110 would be 10⁻¹⁰…10¹¹⁰. */
+  // Plotly reads a log range as exponents: -10…110 is 10⁻¹⁰…10¹¹⁰.
   test("log, category, date and multicategory do not", () => {
     for (const type of ["log", "category", "date", "multicategory"] as const) {
       expect(supportsTickRange(type)).toBe(false);
@@ -194,28 +183,20 @@ describe("buildAxisTicks", () => {
     expect(buildAxisTicks({ mode: "range" }, "linear")).toEqual({});
   });
 
-  /** Minor ticks mark positions; labelling them is what makes an axis unreadable. */
   test("minor ticks are drawn without labels or gridlines", () => {
     const built = buildAxisTicks({ minor: true }, "linear");
     expect(built.minor?.ticks).toBe("outside");
     expect(built.minor?.showgrid).toBe(false);
   });
 
-  /**
-   * Plotly draws no tick marks at all by default, so minor ticks alone would
-   * be subdivisions of nothing.
-   */
+  // Plotly draws no major tick marks by default.
   test("enabling minor ticks also draws the major marks, and longer", () => {
     const built = buildAxisTicks({ minor: true }, "linear");
     expect(built.ticks).toBe("outside");
     expect(built.ticklen).toBeGreaterThan(built.minor!.ticklen as number);
   });
 
-  /**
-   * Plotly's axis `color` covers the line, font and grid but not
-   * `minor.tickcolor`, which falls back to a hard-coded `#444` — invisible on
-   * a dark theme.
-   */
+  // Plotly's axis `color` skips `minor.tickcolor`, whose #444 vanishes on dark.
   test("both tick colours are set explicitly from the theme", () => {
     const built = buildAxisTicks({ minor: true }, "linear", "#eeeeee");
     expect(built.tickcolor).toBe("#eeeeee");
@@ -260,7 +241,6 @@ describe("buildAppearanceAxis", () => {
     expect(built.linecolor).toBe("#111");
   });
 
-  /** A frame plus zero lines reads as a double border when data spans zero. */
   test("a frame turns zero lines off by default", () => {
     expect(buildAppearanceAxis({ frame: true }, "#111").zeroline).toBe(false);
   });
@@ -291,21 +271,10 @@ describe("buildAppearanceLayout", () => {
   });
 });
 
-/**
- * Log tick labels.
- *
- * Labels go on the decades — 10⁻², 10⁻¹, 10⁰ — and the positions between them
- * carry ticks without labels, which is what `LogLocator` draws in matplotlib
- * and what a reader expects. Left to Plotly, a wide range repeats 1, 2 and 5
- * in every decade in smaller type, and a narrow one falls back to the plain
- * values a *linear* axis would show.
- */
+// Modelled on matplotlib's `LogLocator`.
 describe("logTicks", () => {
-  /**
-   * What a reader sees: Plotly clips an explicit tick array to the axis range,
-   * and the locator deliberately generates past the data so panning has
-   * somewhere to go.
-   */
+  // Labels in view: Plotly clips tick arrays to the range, and the locator
+  // overshoots the data so panning has ticks.
   const labels = (values: number[], maxTicks?: number) => {
     const { axis } = logTicks(values, maxTicks ? { maxTicks } : undefined);
     const positions = (axis.tickvals ?? []) as number[];
@@ -315,7 +284,6 @@ describe("logTicks", () => {
     return text.filter((_, i) => positions[i] >= min && positions[i] <= max);
   };
 
-  /** Over more than a decade the decades carry it on their own. */
   test("labels only the decades over a wide span", () => {
     expect(labels([0.01, 0.1, 1, 5, 10])).toEqual([
       "10⁻²",
@@ -329,14 +297,9 @@ describe("logTicks", () => {
   test("carries unlabelled ticks between them", () => {
     const { minorTickvals } = logTicks([1, 100]);
     expect(minorTickvals).toEqual(expect.arrayContaining([2, 20, 200]));
-    // 2 through 9 of each decade, and nothing on a decade itself.
     expect(minorTickvals).not.toContain(10);
   });
 
-  /**
-   * Under a decade in view the decades alone leave the axis nearly bare, so
-   * the subdivisions are labelled: first 2 and 5, then every one of 1…9.
-   */
   test("labels 2 and 5 within the decade when the decades are too sparse", () => {
     expect(labels([1000, 4000, 9000])).toEqual(["10³", "2×10³", "5×10³"]);
     expect(logTicks([1000, 9000]).minorTickvals).toEqual(
@@ -363,13 +326,7 @@ describe("logTicks", () => {
     ]);
   });
 
-  /**
-   * The SEND body weights, which are 0.429 decades — just past the point where
-   * matplotlib's own threshold stops labelling the subdivisions, leaving 5000
-   * as the only label inside the data. Escalating on the visible count instead
-   * is what keeps this axis from falling back to the evenly spaced round
-   * numbers a *linear* axis would show, which is what it did before.
-   */
+  // SEND body weights: 0.429 decades, just past matplotlib's threshold.
   test("does not read as linear just past a threshold", () => {
     const drawn = labels([2090.1, 3400, 4800, 5609.1]);
     expect(drawn).toEqual(["3×10³", "4×10³", "5×10³"]);
@@ -380,8 +337,7 @@ describe("logTicks", () => {
     const wide = labels([1e-6, 1e9]);
     expect(wide.length).toBeLessThanOrEqual(10);
     expect(wide).toContain("10⁰");
-    // Past ten decades the subdivisions are dropped: 2…9 of each would be a
-    // hundred ticks, which is matplotlib's own rule.
+    // Past ten decades subdivisions are dropped, as in matplotlib.
     expect(logTicks([1e-6, 1e9]).minorTickvals).toEqual([]);
   });
 
@@ -417,9 +373,6 @@ describe("logTicks", () => {
   });
 });
 
-/**
- * Minor ticks on a log axis whose majors are an explicit array.
- */
 describe("minor ticks on a log axis", () => {
   const minorsOf = (values: number[]) =>
     (
@@ -448,7 +401,6 @@ describe("categoryRange", () => {
   });
 });
 
-/** An axis of counts never puts a tick between two whole things counted. */
 describe("countStep", () => {
   test("steps by one on a short axis", () => {
     expect(countStep(2.4)).toBe(1);
@@ -467,7 +419,6 @@ describe("countStep", () => {
   });
 });
 
-/** Study days and years are whole, so their ticks are too. */
 describe("wholeNumberTicks", () => {
   test("ticks whole numbers over an axis of them", () => {
     expect(wholeNumberTicks([2016, 2019, 2023])).toEqual({

@@ -32,16 +32,8 @@ export interface PlotExportOptions {
   scale?: number;
 }
 /**
- * How tick positions are chosen.
- *
- * `auto` leaves it to Plotly, which is almost always right; the rest exist for
- * when a plot has to line up with something outside it.
- *
- * `count` is a *ceiling*, not a target — Plotly picks the densest 1/2/5×10ⁿ
- * step that stays under it, so over a 0–100 range only 1, 2, 3, 6 and 11 ticks
- * are reachable and the values in between are indistinguishable. `spacing` is
- * the exact control: it names the step directly, so every value changes the
- * plot.
+ * `count` is a ceiling: Plotly picks the densest 1/2/5×10ⁿ step under it.
+ * `spacing` sets the step exactly.
  */
 export type TickMode = "auto" | "count" | "spacing" | "range";
 
@@ -49,24 +41,23 @@ export interface AxisTickOptions {
   mode?: TickMode;
   count?: number;
   spacing?: number;
-  /**
-   * Bounds for `range`. */
+  /** Bounds for `range`. */
   min?: number;
   max?: number;
   minor?: boolean;
 }
 
 export interface PlotAnnotation {
-  /** Stable across edits, so the settings list can address one of them. */
+  /** Stable across edits, for the settings list. */
   id: string;
   text: string;
   x: number | string;
   y: number | string;
-  /** Which panel it belongs to, for a faceted figure. Absent means the first. */
+  /** The panel's y axis; absent means the first. */
   axis?: string;
-  /** The x axis it was placed on, where subplots do not pair xN with yN. */
+  /** For subplots that do not pair xN with yN. */
   xaxis?: string;
-  /** The figure of a composite view the note belongs to; absent in a single figure. */
+  /** The figure within a composite view; absent in a single figure. */
   scope?: string;
   author?: string;
   created?: string;
@@ -139,7 +130,7 @@ export interface TimeSeriesPlotDefinition extends PlotDefinitionBase {
   type: "timeseries";
 }
 
-/** Implemented in `modules/sdtm`; see `PlotDefinitionType`. */
+/** Implemented in `modules/sdtm`. */
 export interface ViolinPlotDefinition extends PlotDefinitionBase {
   type: "violin";
 }
@@ -148,10 +139,10 @@ export type ControlLimit = "mean" | "median" | "sd1" | "sd2" | "sd3";
 
 export type ControlOutlierRule = "none" | "sd1" | "sd2" | "sd3";
 
-/** Implemented in `modules/sdtm`; see `PlotDefinitionType`. */
+/** Implemented in `modules/sdtm`. */
 export interface ControlChartPlotDefinition extends PlotDefinitionBase {
   type: "controlChart";
-  /** The limits drawn; empty draws none. */
+  /** Empty draws none. */
   limits?: ControlLimit[];
   outliers?: ControlOutlierRule;
 }
@@ -163,7 +154,7 @@ export interface PlotBracket {
   series?: string;
 }
 
-/** Implemented in `modules/sdtm`; see `PlotDefinitionType`. */
+/** Implemented in `modules/sdtm`. */
 export interface ComparisonPlotDefinition extends PlotDefinitionBase {
   type: "comparison";
   brackets?: PlotBracket[];
@@ -179,7 +170,7 @@ export interface HeatmapBand {
   size?: number;
 }
 
-/** Implemented in `modules/sdtm`; see `PlotDefinitionType`. */
+/** Implemented in `modules/sdtm`. */
 export interface HeatmapPlotDefinition extends PlotDefinitionBase {
   type: "heatmap";
   z?: {
@@ -201,17 +192,15 @@ export interface HeatmapPlotDefinition extends PlotDefinitionBase {
   cluster?: {
     x?: boolean;
     y?: boolean;
-    /** How clusters are merged. */
     linkage?: "ward" | "average" | "complete";
     dendrogram?: boolean;
   };
 }
 
-/** Implemented in `modules/sdtm`; see `PlotDefinitionType`. */
+/** Implemented in `modules/sdtm`. */
 export interface HistogramPlotDefinition extends PlotDefinitionBase {
   type: "histogram";
   bins?: number;
-  /** As on the control chart: the limits drawn. */
   limits?: ControlLimit[];
   orientation?: "h" | "v";
   density?: boolean;
@@ -219,7 +208,7 @@ export interface HistogramPlotDefinition extends PlotDefinitionBase {
 
 export type UpsetTier = "complete" | "extended" | "incomplete";
 
-/** Implemented in `modules/sdtm`; see `PlotDefinitionType`. */
+/** Implemented in `modules/sdtm`. */
 export interface UpsetPlotDefinition extends PlotDefinitionBase {
   type: "upset";
   /** What is counted (studies, subjects), for the size axis and the notices. */
