@@ -13,6 +13,7 @@ overrides:
   browserslist: ">=4.28.8"
   postcss: ">=8.5.26"
   axios: ">=1.18.0"
+  smol-toml: ">=1.9.0"
 
 # Supply-chain hardening: reject exotic (non-registry) sub-dependency
 # sources, wait 7 days before resolving newly-published versions, and never
@@ -44,13 +45,15 @@ packages:
   - packages/frontend/*
   - tools/ruby
 
+strictDepBuilds: true
+
 allowBuilds:
-  '@parcel/watcher': true
-  '@swc/core': true
+  "@parcel/watcher": false
+  "@swc/core": true
   es5-ext: true
   esbuild: true
   lefthook: true
-  nx: true
+  nx: false
   unrs-resolver: true
 
 catalog:
@@ -74,6 +77,7 @@ catalog:
   eslint-plugin-react-refresh: ~0.5.2
   glob: ^13.0.6
   globals: ^17.4.0
+  happy-dom: ^20.8.3
   prettier: ^3.8.1
   react: ^19.2.4
   react-dom: ^19.2.4
@@ -88,19 +92,3 @@ catalog:
   vite-plugin-static-copy: ^3.2.0
   vitest: ^4.0.18
   zod: ^4.3.6
-
-onlyBuiltDependencies:
-  - lefthook
-
-# GHSA IDs to dismiss from `pnpm audit` (CI: security.yml). Only add an entry
-# once you've confirmed the vulnerable code path isn't reachable from our
-# usage (e.g. a build-time-only tool, a feature we don't invoke) — and note
-# why below. Prefer bumping the package via `overrides` above when a patched
-# release exists; reserve this list for cases with no non-breaking fix.
-auditConfig:
-  ignoreGhsas:
-    # Zip-Slip in nx's self-hosted remote cache — we don't use that feature.
-    - GHSA-vp3h-ghgh-jr7g
-    # Permissive CORS on the `nx graph` dev server — never run in CI or
-    # anywhere network-reachable.
-    - GHSA-g2r8-wvmj-jf5w
