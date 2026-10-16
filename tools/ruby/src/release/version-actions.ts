@@ -1,14 +1,9 @@
-import { ProjectGraphProjectNode, Tree } from "@nx/devkit";
+import { Tree } from "@nx/devkit";
 import { join } from "node:path";
 import { AfterAllProjectsVersioned, VersionActions } from "nx/release";
-import { ReleaseGroupWithName } from "nx/src/command-line/release/config/filter-release-groups";
 import { readdirSync, statSync } from "node:fs";
-import { FinalConfigForProject } from "nx/src/command-line/release/utils/release-graph";
 
-export const afterAllProjectsVersioned: AfterAllProjectsVersioned = async (
-  _cwd,
-  _opts,
-) => {
+export const afterAllProjectsVersioned: AfterAllProjectsVersioned = async () => {
   return {
     changedFiles: [],
     deletedFiles: [],
@@ -18,12 +13,8 @@ export const afterAllProjectsVersioned: AfterAllProjectsVersioned = async (
 export default class RubyVersionActions extends VersionActions {
   validManifestFilenames: string[] = [];
 
-  constructor(
-    releaseGroup: ReleaseGroupWithName,
-    projectGraphNode: ProjectGraphProjectNode,
-    finalConfigForProject: FinalConfigForProject,
-  ) {
-    super(releaseGroup, projectGraphNode, finalConfigForProject);
+  constructor(...args: ConstructorParameters<typeof VersionActions>) {
+    super(...args);
     const files: string[] = [];
     function through_directory(path: string) {
       readdirSync(path).forEach((file) => {

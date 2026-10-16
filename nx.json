@@ -9,9 +9,16 @@
       "{projectRoot}/lib/**/*",
       "{projectRoot}/app/**/*",
       "{projectRoot}/config/**/*",
-      "{projectRoot}/db/**/*"
+      "{projectRoot}/db/**/*",
+      "{projectRoot}/tsconfig*.json",
+      "{projectRoot}/vite.config.*",
+      "{projectRoot}/vitest.config.*",
+      "{projectRoot}/vite-env.d.ts",
+      "{projectRoot}/Gemfile",
+      "{projectRoot}/Gemfile.lock",
+      "{projectRoot}/*.gemspec"
     ],
-    "testSource": ["{projectRoot}/test/**/*"],
+    "testSource": ["{projectRoot}/test/**/*", "{projectRoot}/spec/**/*"],
     "lintable": [
       "{projectRoot}/**/*.{ts,tsx,js,jsx,rb}",
       "{projectRoot}/eslint.config.*",
@@ -36,7 +43,7 @@
     },
     "build": {
       "dependsOn": ["^build"],
-      "inputs": ["source"],
+      "inputs": ["source", "^source"],
       "outputs": ["{projectRoot}/dist"],
       "cache": true
     },
@@ -48,7 +55,8 @@
       "inputs": ["formattable"]
     },
     "typecheck": {
-      "inputs": ["source"],
+      "dependsOn": ["^build"],
+      "inputs": ["source", "^source"],
       "cache": true
     },
     "lint:check": {
@@ -59,7 +67,8 @@
       "inputs": ["lintable"]
     },
     "test": {
-      "inputs": ["source", "testSource"],
+      "dependsOn": ["^build"],
+      "inputs": ["source", "testSource", "^source"],
       "cache": true
     }
   },
@@ -68,22 +77,6 @@
       "plugin": "./tools/ruby/src/index.ts",
       "options": {
         "lintTargetName": "rubocop"
-      }
-    },
-    {
-      "plugin": "@nx/vite/plugin",
-      "options": {
-        "buildTargetName": "vite:build",
-        "devTargetName": "vite:dev",
-        "previewTargetName": "preview",
-        "serveStaticTargetName": "serve-static",
-        "typecheckTargetName": "typecheck"
-      }
-    },
-    {
-      "plugin": "@nx/eslint/plugin",
-      "options": {
-        "targetName": "eslint"
       }
     }
   ],
@@ -119,5 +112,6 @@
       "@grit42/spreadsheet",
       "@grit42/plots"
     ]
-  }
+  },
+  "analytics": false
 }
