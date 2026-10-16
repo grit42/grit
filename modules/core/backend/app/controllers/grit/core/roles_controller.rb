@@ -20,6 +20,8 @@ module Grit::Core
   class RolesController < ApplicationController
     include Grit::Core::GritEntityController
 
+    # Replaces the check_write callback registered by Writable, so the default actions must be listed too.
+    before_action :check_write, only: %i[ create update destroy set_permissions ]
     before_action :check_system_role, only: [ :update, :destroy ]
 
     def set_permissions
