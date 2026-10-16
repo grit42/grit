@@ -391,6 +391,61 @@ module Grit::Assays
         # Clean up dynamic tables and experiments
         post "/api/grit/assays/assay_models/#{model_id}/draft", as: :json
       end
+
+      context "with a column name containing SQL" do
+        before(:all) { ExperimentDataSheetRecord }
+
+        it "uses the column name as a quoted CSV header and does not run it" do
+          column_name = %q{x", (SELECT max(login) FROM grit_core_users) AS "y}
+          post "/api/grit/assays/assay_models", params: {
+            name: "Export Injection Model",
+            assay_type_id: biochemical.id,
+            sheets: [
+              {
+                name: "Results",
+                result: true,
+                sort: 1,
+                columns: [
+                  { name: "IC50", safe_name: "ic50", sort: 1, required: false, data_type_id: integer_type.id },
+                  { name: column_name, safe_name: "injected", sort: 2, required: false, data_type_id: integer_type.id }
+                ]
+              }
+            ]
+          }, as: :json
+          expect(response).to have_http_status(:created)
+          model_id = JSON.parse(response.body)["data"]["id"]
+
+          post "/api/grit/assays/assay_models/#{model_id}/publish", as: :json
+          expect(response).to have_http_status(:success)
+
+          post "/api/grit/assays/experiments", params: {
+            name: "Export Injection Experiment",
+            assay_model_id: model_id
+          }, as: :json
+          experiment_id = JSON.parse(response.body)["data"]["id"]
+          sheet_id = AssayModel.find(model_id).assay_data_sheet_definitions.first.id
+          RequestStore.store["current_user"] = admin
+          ExperimentDataSheetRecord.sheet_record_klass(sheet_id).create!(experiment_id: experiment_id, ic50: 1)
+
+          get "/api/grit/assays/experiments/#{experiment_id}/export"
+          expect(response).to have_http_status(:success)
+
+          csv = nil
+          Tempfile.create([ "test_export", ".zip" ], binmode: true) do |f|
+            f.write(response.body)
+            f.rewind
+            Zip::InputStream.open(f.path) do |zip|
+              while (entry = zip.get_next_entry)
+                csv = CSV.parse(zip.read) if entry.name.end_with?("/data/Results.csv")
+              end
+            end
+          end
+
+          expect(csv).to eq([ [ "IC50", column_name ], [ "1", nil ] ])
+
+          post "/api/grit/assays/assay_models/#{model_id}/draft", as: :json
+        end
+      end
     end
 
     # --- Authentication ---

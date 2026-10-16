@@ -191,8 +191,9 @@ module Grit::Assays
                   .entity_columns(assay_data_sheet_definition_id: data_sheet[:id])
                   .reject { |c| c[:default_hidden] }
 
+      connection = ActiveRecord::Base.connection
       record_columns = columns.map do |column|
-        "\"sub\".\"#{column[:name]}\" as \"#{column[:display_name]}\""
+        "\"sub\".#{connection.quote_column_name(column[:name])} as #{connection.quote_column_name(column[:display_name])}"
       end
 
       data_sheet_sql =
