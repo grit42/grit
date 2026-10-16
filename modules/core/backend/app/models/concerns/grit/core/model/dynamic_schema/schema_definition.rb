@@ -43,16 +43,28 @@ module Grit::Core::Model::DynamicSchema::SchemaDefinition
   # The prefixes in `config.grit.dynamic_schema_prefixes`, which the engine
   # excludes from `structure.sql` (see `ExcludeDynamicSchemasFromStructureDump`).
   def self.schema_prefixes
-    Grit::Core::Engine.config.grit.dynamic_schema_prefixes.map do |prefix|
-      prefix = prefix.to_s
-      check_schema_prefix!(prefix)
-      prefix
-    end
+    prefixes = Grit::Core::Engine.config.grit.dynamic_schema_prefixes.map(&:to_s)
+    prefixes.each { |prefix| check_schema_prefix!(prefix) }
+    check_schema_prefixes_disjoint!(prefixes)
+    prefixes
   end
 
   def self.check_schema_prefix!(prefix)
     raise ArgumentError, "Dynamic schema prefix #{prefix.inspect} should start with two lowercase letters or underscores and contain only lowercase letters, numbers and underscores" unless Grit::Core::Model::DynamicSchema::ValidIdentifier::IDENTIFIER_FORMAT.match?(prefix)
     raise ArgumentError, "Dynamic schema prefix #{prefix.inspect} is #{prefix.bytesize} bytes; at most #{MAX_SCHEMA_PREFIX_LENGTH}, so that a #{prefix}_<schema> schema name survives PostgreSQL's 63 byte limit" if prefix.bytesize > MAX_SCHEMA_PREFIX_LENGTH
+    raise ArgumentError, "Dynamic schema prefix #{prefix.inspect} would name schemas #{prefix}_*, which PostgreSQL reserves" if "#{prefix}_".start_with?(RESERVED_SCHEMA_NAME_PREFIX)
+  end
+
+  # Each prefix owns its `<prefix>_` namespace alone. Under `ds` and `ds_x`,
+  # `ds_x_123` is both a `ds` identifier and a `ds_x` draft, and neither the
+  # sibling check nor `create_schema` would see it coming.
+  def self.check_schema_prefixes_disjoint!(prefixes)
+    prefixes.combination(2) do |a, b|
+      raise ArgumentError, "Dynamic schema prefix #{a.inspect} is declared twice in config.grit.dynamic_schema_prefixes" if a == b
+      shorter, longer = [ a, b ].sort_by(&:length)
+      next unless longer.start_with?("#{shorter}_")
+      raise ArgumentError, "Dynamic schema prefixes #{shorter.inspect} and #{longer.inspect} overlap: every #{longer}_* schema name is also a #{shorter}_* one"
+    end
   end
 
   included do

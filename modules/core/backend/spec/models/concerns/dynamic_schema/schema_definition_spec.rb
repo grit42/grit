@@ -786,6 +786,44 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
     end
   end
 
+  describe "schema_prefixes" do
+    def schema_prefixes(*declared)
+      allow(Grit::Core::Engine.config.grit).to receive(:dynamic_schema_prefixes).and_return(declared)
+      Grit::Core::Model::DynamicSchema::SchemaDefinition.schema_prefixes
+    end
+
+    it "returns the declared prefixes as strings" do
+      expect(schema_prefixes(:ds, "dsx")).to eq(%w[ds dsx])
+    end
+
+    # Two engines would share one namespace without knowing it.
+    it "rejects a prefix declared twice" do
+      expect { schema_prefixes("ds", :ds) }.to raise_error(ArgumentError, /"ds" is declared twice/)
+    end
+
+    # `ds` + `x_123` is `ds_x`'s draft for id 123; `ds` + `x_grp` is `ds_x` + `grp`.
+    it "rejects a prefix that extends another with an underscore, in either order" do
+      expect { schema_prefixes("ds", "ds_x") }.to raise_error(ArgumentError, /"ds" and "ds_x" overlap/)
+      expect { schema_prefixes("ds_x", "ds") }.to raise_error(ArgumentError, /"ds" and "ds_x" overlap/)
+    end
+
+    # `ds_` + `grp` is `ds` + `_grp`.
+    it "rejects a prefix that is another plus a trailing underscore" do
+      expect { schema_prefixes("ds", "ds_") }.to raise_error(ArgumentError, /"ds" and "ds_" overlap/)
+    end
+
+    # The separator keeps them apart: `ds_` and `dsx_` share no name.
+    it "allows prefixes sharing leading characters without the separator" do
+      expect(schema_prefixes("ds", "dsx", "ds1")).to eq(%w[ds dsx ds1])
+    end
+
+    it "rejects a prefix whose schemas PostgreSQL reserves" do
+      expect { schema_prefixes("pg") }.to raise_error(ArgumentError, /PostgreSQL reserves/)
+      expect { schema_prefixes("pg_x") }.to raise_error(ArgumentError, /PostgreSQL reserves/)
+      expect(schema_prefixes("pgx")).to eq(%w[pgx])
+    end
+  end
+
   describe "dynamic_schema_prefix" do
     # Otherwise it would only show up on commit, as a truncated schema name.
     it "rejects an over-long prefix at class definition time" do
@@ -847,6 +885,29 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
           dynamic_schema_prefix "Test-Prefix"
         end
       }.to raise_error(ArgumentError, /lowercase letters/)
+    end
+
+    # Every draft would be `pg_<id>`, which PostgreSQL refuses to create.
+    it "rejects a prefix whose schemas PostgreSQL reserves at class definition time" do
+      expect {
+        Class.new(ApplicationRecord) do
+          def self.name = "ReservedPrefixSchemaDefinition"
+          self.table_name = "test_schema_definitions"
+          include Grit::Core::Model::DynamicSchema::SchemaDefinition
+          dynamic_schema_prefix "pg"
+        end
+      }.to raise_error(ArgumentError, /"pg" would name schemas pg_\*, which PostgreSQL reserves/)
+    end
+
+    it "rejects a declared prefix overlapping another at class definition time" do
+      declare_schema_prefix("test_x")
+
+      expect {
+        Class.new(Grit::SchemaDefinition) do
+          def self.name = "OverlappingPrefixSchemaDefinition"
+          dynamic_schema_prefix "test_x"
+        end
+      }.to raise_error(ArgumentError, /"test" and "test_x" overlap/)
     end
 
     # structure.sql only excludes the prefixes in config, so its schemas would be dumped.

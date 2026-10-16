@@ -27,6 +27,11 @@ module Grit
       #
       #   config.grit.dynamic_schema_prefixes << "ds"
       #
+      # Each prefix owns its `<prefix>_` namespace alone: no duplicates, and
+      # none may extend another with an underscore (`ds` and `ds_x`). Each also
+      # belongs to one class and its STI subclasses; that is not checked, and
+      # two classes sharing a prefix would collide on schema names.
+      #
       # `dynamic_schema_prefix` refuses a prefix missing here. Listed in config
       # rather than collected from the macro because rake tasks don't eager
       # load: no model has run its macro when `db:migrate` dumps structure.sql.
