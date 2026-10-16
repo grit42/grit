@@ -66,6 +66,7 @@ export const DATASETS: Dataset[] = [
       y: { key: "BWSTRESN", axisType: "linear" },
       groupBy: ["ARM"],
       facetBy: ["SEX"],
+      facetOrder: ["M", "F"],
     },
   },
   {
