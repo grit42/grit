@@ -33,9 +33,9 @@
   "description": "",
   "dependencies": {
     "@grit42/client-library": "workspace:*",
+    "@types/plotly.js": "^3.0.15",
     "mathjs": "15.2.0",
-    "plotly.js": "^3.4.0",
-    "react-plotly.js": "^2.6.0"
+    "plotly.js-cartesian-dist-min": "4.1.2"
   },
   "peerDependencies": {
     "react": "catalog:"
@@ -43,10 +43,8 @@
   "devDependencies": {
     "@eslint/js": "catalog:",
     "@types/node": "catalog:",
-    "@types/plotly.js": "^2.35.14",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "@types/react-plotly.js": "^2.6.4",
     "@vitejs/plugin-react": "catalog:",
     "autoprefixer": "catalog:",
     "eslint": "catalog:",

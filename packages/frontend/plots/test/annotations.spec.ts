@@ -4,7 +4,7 @@ import {
   withAnnotationsIn,
   annotationShapes,
   nextAnnotationId,
-  pointFromClick,
+  pointFromEvent,
 } from "../lib/annotations";
 import type { ColorMap } from "../lib/colors";
 import type { PlotAnnotation } from "../lib/types";
@@ -125,157 +125,44 @@ describe("identity", () => {
   });
 });
 
-// Plotly's click event fires only over a data point; a note can go anywhere.
 describe("placing a note from a click", () => {
-  const axis = (id: string, offset: number, length: number) => ({
-    _id: id,
-    _offset: offset,
-    _length: length,
-    // A linear 0…100 scale over the axis length.
-    p2d: (pixel: number) => (pixel / length) * 100,
+  const click = (fields: Record<string, unknown>) =>
+    ({ points: [], event: {}, ...fields }) as never;
+
+  test("takes the data coordinates and both axes", () => {
+    expect(
+      pointFromEvent(
+        click({
+          xvals: [50],
+          yvals: [12.5],
+          xaxes: [{ _id: "x" }],
+          yaxes: [{ _id: "y" }],
+        }),
+      ),
+    ).toEqual({ x: 50, y: 12.5, axis: "y", xaxis: "x" });
   });
 
-  // Plotly's `.nsewdrag` rect over each subplot is its plot area as laid out.
-  const withDragLayer = (
-    panels: { subplot: string; left: number; top: number }[],
-    axes: Record<string, unknown>,
-  ) =>
-    ({
-      getBoundingClientRect: () => ({ left: 0, top: 0 }),
-      querySelectorAll: () =>
-        panels.map((panel) => ({
-          parentElement: { getAttribute: () => panel.subplot },
-          getBoundingClientRect: () => ({
-            left: panel.left,
-            top: panel.top,
-            right: panel.left + 200,
-            bottom: panel.top + 100,
-            width: 200,
-            height: 100,
-          }),
-        })),
-      _fullLayout: {
-        _subplots: { cartesian: panels.map((p) => p.subplot) },
-        ...axes,
-      },
-    }) as unknown as HTMLElement;
-
-  test("measures from the plot area, not from the graph div", () => {
-    const div = withDragLayer([{ subplot: "xy", left: 340, top: 120 }], {
-      xaxis: axis("x", 20, 200),
-      yaxis: axis("y", 10, 100),
-    });
-    // Halfway across the plot area.
-    expect(pointFromClick(div, 440, 170)).toEqual({
-      x: 50,
-      y: 50,
-      axis: "y",
-      xaxis: "x",
-    });
+  test("keeps a category as its name", () => {
+    expect(pointFromEvent(click({ xvals: ["Dose 1"], yvals: [3] }))?.x).toBe(
+      "Dose 1",
+    );
   });
 
   test("records both axes of a subplot whose axes do not pair", () => {
-    // e.g. a row strip (x3, y): an x derived from y lands on another subplot.
-    const div = withDragLayer(
-      [
-        { subplot: "xy", left: 0, top: 0 },
-        { subplot: "x3y", left: 300, top: 0 },
-      ],
-      {
-        xaxis: axis("x", 0, 200),
-        yaxis: axis("y", 0, 100),
-        xaxis3: axis("x3", 0, 200),
-      },
-    );
-    const point = pointFromClick(div, 400, 50)!;
-    expect(point.axis).toBe("y");
-    expect(point.xaxis).toBe("x3");
+    const point = pointFromEvent(
+      click({
+        xvals: [2],
+        yvals: ["LB"],
+        xaxes: [{ _id: "x3" }],
+        yaxes: [{ _id: "y" }],
+      }),
+    )!;
+    expect([point.xaxis, point.axis]).toEqual(["x3", "y"]);
   });
 
-  test("picks the panel the click landed in", () => {
-    const div = withDragLayer(
-      [
-        { subplot: "xy", left: 0, top: 0 },
-        { subplot: "x2y2", left: 300, top: 0 },
-      ],
-      {
-        xaxis: axis("x", 0, 200),
-        yaxis: axis("y", 0, 100),
-        xaxis2: axis("x2", 0, 200),
-        yaxis2: axis("y2", 0, 100),
-      },
-    );
-    expect(pointFromClick(div, 400, 50)?.axis).toBe("y2");
-    expect(pointFromClick(div, 100, 50)?.axis).toBe("y");
-  });
-
-  test("declines a click outside every panel", () => {
-    const div = withDragLayer([{ subplot: "xy", left: 100, top: 100 }], {
-      xaxis: axis("x", 0, 200),
-      yaxis: axis("y", 0, 100),
-    });
-    expect(pointFromClick(div, 50, 150)).toBeNull();
-  });
-
-  describe("without a laid-out drag layer", () => {
-    const noLayer = (axes: Record<string, unknown>, subplots: string[]) =>
-      ({
-        getBoundingClientRect: () => ({ left: 100, top: 50 }),
-        querySelectorAll: () => [],
-        _fullLayout: { _subplots: { cartesian: subplots }, ...axes },
-      }) as unknown as HTMLElement;
-
-    test("falls back to the axis offsets", () => {
-      const div = noLayer(
-        { xaxis: axis("x", 20, 200), yaxis: axis("y", 10, 100) },
-        ["xy"],
-      );
-      expect(pointFromClick(div, 220, 110)).toEqual({
-        x: 50,
-        y: 50,
-        axis: "y",
-        xaxis: "x",
-      });
-    });
-
-    test("still picks the right panel", () => {
-      const div = noLayer(
-        {
-          xaxis: axis("x", 20, 100),
-          yaxis: axis("y", 10, 100),
-          xaxis2: axis("x2", 200, 100),
-          yaxis2: axis("y2", 10, 100),
-        },
-        ["xy", "x2y2"],
-      );
-      expect(pointFromClick(div, 100 + 250, 50 + 60)?.axis).toBe("y2");
-    });
-
-    test("records both axes on this path too", () => {
-      const div = noLayer(
-        {
-          xaxis: axis("x", 20, 100),
-          yaxis: axis("y", 10, 100),
-          xaxis3: axis("x3", 200, 100),
-        },
-        ["xy", "x3y"],
-      );
-      const point = pointFromClick(div, 100 + 250, 50 + 60)!;
-      expect(point.xaxis).toBe("x3");
-      expect(point.axis).toBe("y");
-    });
-  });
-
-  test("declines before the figure has been laid out", () => {
-    expect(
-      pointFromClick(
-        {
-          getBoundingClientRect: () => ({ left: 0, top: 0 }),
-        } as unknown as HTMLElement,
-        10,
-        10,
-      ),
-    ).toBeNull();
+  test("declines a click that carries no position", () => {
+    expect(pointFromEvent(click({}))).toBeNull();
+    expect(pointFromEvent(click({ xvals: [1], yvals: [null] }))).toBeNull();
   });
 });
 
