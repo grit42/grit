@@ -21,9 +21,15 @@ import { ColorMap } from "../colors";
 import { numberFormat, type NumberFormat } from "../format";
 import { mean, median, std } from "../math";
 import { SourceData, StatMarker, TimeSeriesPlotDefinition } from "../types";
-import { buildFacets, nullish, ungroupedLabel } from "../utils";
+import {
+  buildFacets,
+  inDeclaredOrder,
+  nullish,
+  ungroupedLabel,
+} from "../utils";
 import { resolveDisplay } from "../displayMode";
 import { errorBand } from "../traces";
+import { wholeNumberTicks } from "../axes";
 import { seriesDash, seriesSymbol } from "../constants";
 
 const SUMMARY_MARKERS: readonly StatMarker[] = ["mean", "median"];
@@ -116,7 +122,7 @@ const buildErrorBar = ({
     error_y: { type: "data", array: errors, visible: true, color, width: 10 },
     customdata: customData,
     hovertemplate:
-      `<b>${groupLabel} — mean</b><br>${xLabel}: %{x}<br>${yLabel}: %{y:${fmt.spec}}` +
+      `<b>${groupLabel}: mean</b><br>${xLabel}: %{x}<br>${yLabel}: %{y:${fmt.spec}}` +
       hoverSuffix,
   };
 };
@@ -133,16 +139,23 @@ const buildTraces = (
   const yLabel = def.y.label ?? def.y.key;
   const display = resolveDisplay(def.display);
   const fmt = numberFormat(def.appearance);
-  const seriesNames = [
-    ...new Set(facets.flatMap((facet) => facet.data.map((g) => g.label))),
-  ];
+  const seriesNames = inDeclaredOrder(
+    facets.flatMap((facet) => facet.data.map((g) => g.label)),
+    def.seriesOrder,
+  );
 
   const multiFacet = facets.length > 1;
 
   for (let i = 0; i < facets.length; i++) {
     const facet = facets[i];
     const axis = i + 1;
-    axes[`xaxis${axis}`] = {};
+    axes[`xaxis${axis}`] =
+      wholeNumberTicks(
+        (def.sharedScales ? facets : [facet]).flatMap((one) =>
+          one.data.flatMap((group) => Object.keys(group.data).map(Number)),
+        ),
+        def.x.ticks,
+      ) ?? {};
     axes[`yaxis${axis}`] = {};
 
     if (multiFacet) {
@@ -159,8 +172,11 @@ const buildTraces = (
       });
     }
 
-    for (let j = 0; j < facet.data.length; j++) {
-      const group = facet.data[j];
+    const groups = [...facet.data].sort(
+      (a, b) => seriesNames.indexOf(a.label) - seriesNames.indexOf(b.label),
+    );
+    for (let j = 0; j < groups.length; j++) {
+      const group = groups[j]!;
       // Figure-wide, so a series keeps its colour, its dash and its marker in
       // every panel.
       const seriesIndex = Math.max(seriesNames.indexOf(group.label), 0);
@@ -318,7 +334,7 @@ const buildTraces = (
           },
           customdata: statCustomdata,
           hovertemplate:
-            `<b>${group.label} — ${marker}</b><br>${xLabel}: %{x}<br>${yLabel}: %{y:${fmt.spec}}` +
+            `<b>${group.label}: ${marker}</b><br>${xLabel}: %{x}<br>${yLabel}: %{y:${fmt.spec}}` +
             statHoverSuffix,
         });
       }

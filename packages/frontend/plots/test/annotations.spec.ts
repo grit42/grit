@@ -3,6 +3,8 @@
  */
 import { describe, expect, test } from "vitest";
 import {
+  annotationsIn,
+  withAnnotationsIn,
   annotationShapes,
   nextAnnotationId,
   pointFromClick,
@@ -24,6 +26,20 @@ const note = (extra: Partial<PlotAnnotation> = {}): PlotAnnotation => ({
 });
 
 describe("rendering", () => {
+  test("draws a note on the x axis it was placed on", () => {
+    const [shape] = annotationShapes(
+      [note({ axis: "y", xaxis: "x3" })],
+      colorMap,
+    );
+    expect(shape.xref).toBe("x3");
+    expect(shape.yref).toBe("y");
+  });
+
+  test("derives the x axis only for a note saved before it was recorded", () => {
+    const [shape] = annotationShapes([note({ axis: "y2" })], colorMap);
+    expect(shape.xref).toBe("x2");
+  });
+
   test("places a note at data coordinates with an arrow to the point", () => {
     const [shape] = annotationShapes([note()], colorMap);
     expect(shape.x).toBe(5);
@@ -171,7 +187,31 @@ describe("placing a note from a click", () => {
       { xaxis: axis("x", 20, 200), yaxis: axis("y", 10, 100) },
     );
     // Halfway across the plot area, whatever the div's own origin is.
-    expect(pointFromClick(div, 440, 170)).toEqual({ x: 50, y: 50, axis: "y" });
+    expect(pointFromClick(div, 440, 170)).toEqual({
+      x: 50,
+      y: 50,
+      axis: "y",
+      xaxis: "x",
+    });
+  });
+
+  test("records both axes of a subplot whose axes do not pair", () => {
+    // A row strip is (x3, y1) and an UpSet's bars (x, y2): an x derived from
+    // the y would land the note on another subplot.
+    const div = withDragLayer(
+      [
+        { subplot: "xy", left: 0, top: 0 },
+        { subplot: "x3y", left: 300, top: 0 },
+      ],
+      {
+        xaxis: axis("x", 0, 200),
+        yaxis: axis("y", 0, 100),
+        xaxis3: axis("x3", 0, 200),
+      },
+    );
+    const point = pointFromClick(div, 400, 50)!;
+    expect(point.axis).toBe("y");
+    expect(point.xaxis).toBe("x3");
   });
 
   test("picks the panel the click landed in", () => {
@@ -220,6 +260,7 @@ describe("placing a note from a click", () => {
         x: 50,
         y: 50,
         axis: "y",
+        xaxis: "x",
       });
     });
 
@@ -235,6 +276,21 @@ describe("placing a note from a click", () => {
       );
       expect(pointFromClick(div, 100 + 250, 50 + 60)?.axis).toBe("y2");
     });
+
+    test("records both axes on this path too", () => {
+      // A strip's subplot: its own x, the matrix's y.
+      const div = noLayer(
+        {
+          xaxis: axis("x", 20, 100),
+          yaxis: axis("y", 10, 100),
+          xaxis3: axis("x3", 200, 100),
+        },
+        ["xy", "x3y"],
+      );
+      const point = pointFromClick(div, 100 + 250, 50 + 60)!;
+      expect(point.xaxis).toBe("x3");
+      expect(point.axis).toBe("y");
+    });
   });
 
   test("declines before the figure has been laid out", () => {
@@ -247,5 +303,41 @@ describe("placing a note from a click", () => {
         10,
       ),
     ).toBeNull();
+  });
+});
+
+/** A composite view, several figures from one definition, keeps each figure's notes its own. */
+describe("notes in a composite view", () => {
+  const onM = note({ id: "m", scope: "M:chart" });
+  const onF = note({ id: "f", scope: "F:chart" });
+  const onDist = note({ id: "d", scope: "M:distribution" });
+  const older = note({ id: "o" });
+  const all = [onM, onF, onDist, older];
+
+  test("draws only the notes scoped to the figure", () => {
+    expect(annotationsIn(all, "F:chart").map((a) => a.id)).toEqual(["f"]);
+    expect(annotationsIn(all, "M:distribution").map((a) => a.id)).toEqual([
+      "d",
+    ]);
+  });
+
+  test("gives notes saved before scopes to the first figure only", () => {
+    expect(
+      annotationsIn(all, "M:chart", { first: true }).map((a) => a.id),
+    ).toEqual(["m", "o"]);
+    expect(annotationsIn(all, "F:chart").map((a) => a.id)).not.toContain("o");
+  });
+
+  test("writes a figure's notes back without touching the others'", () => {
+    const added = note({ id: "new" });
+    const next = withAnnotationsIn(all, "F:chart", [onF, added]);
+    expect(next.map((a) => a.id).sort()).toEqual(["d", "f", "m", "new", "o"]);
+    expect(next.find((a) => a.id === "new")?.scope).toBe("F:chart");
+  });
+
+  test("lets the first figure delete a note saved before scopes", () => {
+    // The first chart draws it, so removing it there has to remove it.
+    const next = withAnnotationsIn(all, "M:chart", [onM], { first: true });
+    expect(next.map((a) => a.id)).not.toContain("o");
   });
 });
