@@ -73,6 +73,41 @@ module Grit::Assays
       end
     end
 
+    # --- Metadata filters ---
+
+    describe "metadata_filters validation" do
+      # Loading this class queries a table that does not exist; outside the example transaction that is harmless.
+      before(:all) { ExperimentDataSheetRecord }
+      before do
+        login_as(admin)
+        data_table
+      end
+
+      let(:column_params) do
+        {
+          data_table_id: data_table.id,
+          name: "Filtered Column",
+          safe_name: "filtered_column",
+          source_type: "entity_attribute",
+          entity_attribute_name: "name"
+        }
+      end
+
+      it "rejects filter values that are not vocabulary item ids" do
+        expect {
+          post "/api/grit/assays/data_table_columns", params: { **column_params, metadata_filters: { "1" => [ "0) OR (1=1" ] } }, as: :json
+        }.not_to change(DataTableColumn, :count)
+        expect(response).to have_http_status(:unprocessable_entity)
+      end
+
+      it "accepts lists of vocabulary item ids" do
+        expect {
+          post "/api/grit/assays/data_table_columns", params: { **column_params, metadata_filters: { "1" => [ 1, "2" ] } }, as: :json
+        }.to change(DataTableColumn, :count).by(1)
+        expect(response).to have_http_status(:created)
+      end
+    end
+
     # --- Authentication ---
 
     describe "authentication" do

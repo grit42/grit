@@ -31,12 +31,21 @@ module Grit::Assays
     validates :safe_name, format: { with: /\A[a-z_]{2}/, message: "should start with two lowercase letters or underscores" }
     validates :safe_name, format: { with: /\A[a-z0-9_]*\z/, message: "should contain only lowercase letters, numbers and underscores" }
     validate :safe_name_not_conflict
+    validate :metadata_filters_are_id_lists
 
     def safe_name_not_conflict
       return unless self.safe_name_changed?
       if Grit::Assays::DataTableRow.new.respond_to?(self.safe_name)
         errors.add("safe_name", "cannot be used as a safe name")
       end
+    end
+
+    def metadata_filters_are_id_lists
+      return if metadata_filters.blank?
+      valid = metadata_filters.is_a?(Hash) && metadata_filters.values.all? do |ids|
+        ids.nil? || (ids.is_a?(Array) && ids.all? { |id| id.to_s.match?(/\A\d+\z/) })
+      end
+      errors.add("metadata_filters", "should only contain lists of vocabulary item ids") unless valid
     end
 
     def self.detailed(params = {})
@@ -186,7 +195,8 @@ LEFT OUTER JOIN (
       self.metadata_filters.each do |key, value|
         metadata_definition = metadata_definitions.find { |d| d.id.to_s == key.to_s }
         unless metadata_definition.nil? || value.nil? || value.blank?
-          join.push "EXPERIMENTS_WITH_METADATA.#{metadata_definition.safe_name} IN (#{value.join(",")})"
+          vocabulary_item_ids = Array(value).filter_map { |id| Integer(id.to_s, 10, exception: false) }
+          join.push self.class.sanitize_sql_array([ "EXPERIMENTS_WITH_METADATA.#{metadata_definition.safe_name} IN (?)", vocabulary_item_ids ])
         end
       end
       join.join(" AND ")
