@@ -20,14 +20,10 @@ import type { Annotations, AxisType } from "plotly.js";
 import type { ColorMap } from "./colors";
 import type { PlotAnnotation } from "./types";
 
-/**
- * A reader's notes, as Plotly annotations.
- */
 const forAxis = (value: number | string, axisType: AxisType | undefined) => {
   if (axisType !== "log") return value;
   const numeric = typeof value === "number" ? value : Number(value);
-  // A non-positive value has no position on a log axis, so there is nothing
-  // sensible to convert it to; leave it and let Plotly drop it.
+  // Non-positive has no log position; leave it for Plotly to drop.
   return Number.isFinite(numeric) && numeric > 0 ? Math.log10(numeric) : value;
 };
 
@@ -40,9 +36,10 @@ export const annotationShapes = (
     text: annotation.text,
     x: forAxis(annotation.x, scales?.x),
     y: forAxis(annotation.y, scales?.y),
-    xref: (annotation.axis
-      ? `${annotation.axis.replace("y", "x")}`
-      : "x") as Partial<Annotations>["xref"],
+    xref: (annotation.xaxis ??
+      (annotation.axis
+        ? annotation.axis.replace("y", "x")
+        : "x")) as Partial<Annotations>["xref"],
     yref: (annotation.axis ?? "y") as Partial<Annotations>["yref"],
     showarrow: true,
     arrowhead: 6,
@@ -86,17 +83,17 @@ interface ResolvedLayout {
   [key: string]: unknown;
 }
 
-/**
- * The data coordinates under a click, from the pixel position.
- *
- * Plotly's own `plotly_click` fires only when the pointer is over a *data
- * point*
- */
+/** Data coordinates under a click; `plotly_click` fires only on a point. */
 export const pointFromClick = (
   graphDiv: HTMLElement,
   clientX: number,
   clientY: number,
-): { x: number | string; y: number | string; axis?: string } | null => {
+): {
+  x: number | string;
+  y: number | string;
+  axis?: string;
+  xaxis?: string;
+} | null => {
   const layout = (graphDiv as unknown as { _fullLayout?: ResolvedLayout })
     ._fullLayout;
   if (!layout) return null;
@@ -133,6 +130,7 @@ export const pointFromClick = (
       x: axes.xa.p2d(clientX - rect.left),
       y: axes.ya.p2d(clientY - rect.top),
       axis: axes.ya._id,
+      xaxis: axes.xa._id,
     };
   }
 
@@ -151,8 +149,33 @@ export const pointFromClick = (
       x: xa.p2d(px - xa._offset),
       y: ya.p2d(py - ya._offset),
       axis: ya._id,
+      xaxis: xa._id,
     };
   }
 
   return null;
 };
+
+/** A figure's notes in a composite view; unscoped ones go to the first. */
+export const annotationsIn = (
+  annotations: readonly PlotAnnotation[] | undefined,
+  scope: string,
+  { first = false }: { first?: boolean } = {},
+): PlotAnnotation[] =>
+  (annotations ?? []).filter(
+    (annotation) =>
+      annotation.scope === scope || (first && annotation.scope === undefined),
+  );
+
+export const withAnnotationsIn = (
+  annotations: readonly PlotAnnotation[] | undefined,
+  scope: string,
+  next: readonly PlotAnnotation[],
+  { first = false }: { first?: boolean } = {},
+): PlotAnnotation[] => [
+  ...(annotations ?? []).filter(
+    (annotation) =>
+      annotation.scope !== scope && !(first && annotation.scope === undefined),
+  ),
+  ...next.map((annotation) => ({ ...annotation, scope })),
+];

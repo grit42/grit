@@ -1,6 +1,3 @@
-/**
- * Datasets the playground can plot.
- */
 import type {
   PlotDefinition,
   SourceData,
@@ -40,15 +37,9 @@ export const DATASETS: Dataset[] = [
       x: { key: "concentration", axisType: "log" },
       y: { key: "response", axisType: "linear" },
       groupBy: ["compound"],
-      export: { control: "button" },
     },
   },
   {
-    /**
-     * The closest generic equivalent of SDTM's TimePlot: a measurement over
-     * study day, grouped by dose and split by sex. Worth comparing side by side
-     * with `TestTimePlot` when deciding what the two should share.
-     */
     id: "send-bw",
     label: "SEND: body weight over time",
     description: "Body weight by study day, per dose group. 600 rows.",
@@ -60,7 +51,6 @@ export const DATASETS: Dataset[] = [
       x: { key: "BWDY", axisType: "linear" },
       y: { key: "BWSTRESN", axisType: "linear" },
       groupBy: ["ARM"],
-      export: { control: "button" },
     },
   },
   {
@@ -76,7 +66,7 @@ export const DATASETS: Dataset[] = [
       y: { key: "BWSTRESN", axisType: "linear" },
       groupBy: ["ARM"],
       facetBy: ["SEX"],
-      export: { control: "button" },
+      facetOrder: ["M", "F"],
     },
   },
   {
@@ -91,7 +81,6 @@ export const DATASETS: Dataset[] = [
       title: "Body weight by dose group",
       x: { key: "ARM", axisType: "category" },
       y: { key: "BWSTRESN", axisType: "linear" },
-      export: { control: "button" },
     },
   },
   {
@@ -106,7 +95,6 @@ export const DATASETS: Dataset[] = [
       x: { key: "LBTEST", axisType: "category" },
       y: { key: "LBSTRESN", axisType: "linear" },
       groupBy: ["LBTEST"],
-      export: { control: "button" },
     },
   },
   {
@@ -121,7 +109,6 @@ export const DATASETS: Dataset[] = [
       x: { key: "CLSEV", axisType: "category" },
       y: { key: "CLDY", axisType: "linear" },
       groupBy: ["CLSEV"],
-      export: { control: "button" },
     },
   },
   {
@@ -136,7 +123,6 @@ export const DATASETS: Dataset[] = [
       x: { key: "ARM", axisType: "category" },
       y: { key: "AGE", axisType: "linear" },
       groupBy: ["ARM"],
-      export: { control: "button" },
     },
   },
 ];

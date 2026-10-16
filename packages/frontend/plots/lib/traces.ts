@@ -16,15 +16,9 @@
  * @grit42/plots. If not, see <https://www.gnu.org/licenses/>.
  */
 
-/**
- * Domain-neutral Plotly trace factories.
- *
- * Deliberately limited to building blocks with no product identity of their
- * own. Traces that constitute a licensed plot type — control lines, violation
- * markers — live with that plot type in its module instead.
- */
+// Generic traces only; licensed plot-type traces live in their own module.
 import type { Data, Datum, ScatterData } from "plotly.js";
-import { type ColorMap, readableOn, rgba } from "./colors";
+import { type ColorMap, composite, readableOn, rgba } from "./colors";
 import { countText, numberFormat, type NumberFormat } from "./format";
 import { buildHoverTemplate, type HoverRow } from "./hover";
 import { type BoxStats, boxStats, randomJitter, toFiniteNumbers } from "./math";
@@ -155,54 +149,7 @@ export const errorBand = ({
   };
 };
 
-export const errorBar = ({
-  days,
-  means,
-  errors,
-  color,
-  groupLabel,
-  errorLabel,
-  customData,
-  hoverRows,
-  xaxis,
-  yaxis,
-}: {
-  days: number[];
-  means: number[];
-  errors: number[];
-  color: string | undefined;
-  groupLabel: string;
-  errorLabel: string;
-  customData: number[][];
-  hoverRows: HoverRow[];
-  xaxis?: string;
-  yaxis?: string;
-}): Partial<Data> => {
-  if (!days.length) return {};
-  return {
-    x: days,
-    y: means,
-    type: "scatter",
-    mode: "markers",
-    name: `${groupLabel} ±${errorLabel}`,
-    legendgroup: groupLabel,
-    showlegend: false,
-    marker: { color, size: 1, opacity: 0, line: { color: "#fff", width: 1 } },
-    error_y: { type: "data", array: errors, visible: true, color, width: 10 },
-    customdata: customData,
-    hovertemplate: buildHoverTemplate(hoverRows),
-    ...(xaxis ? { xaxis } : {}),
-    ...(yaxis ? { yaxis } : {}),
-  };
-};
-
-/**
- * Box statistics Plotly draws directly, instead of computing them from the
- * sample.
- *
- * plotly.js has accepted precomputed quartiles since 1.52, but
- * `@types/plotly.js` still describes only the sample form.
- */
+/** Precomputed box stats (plotly.js 1.52+); `@types/plotly.js` lacks them. */
 interface PrecomputedBox {
   q1: number[];
   median: number[];
@@ -214,17 +161,8 @@ interface PrecomputedBox {
 }
 
 /**
- * A box drawn from statistics we compute
- *
- * Plotly walks each whisker out to the most extreme *data point* inside the
- * 1.5-IQR fence (`box/calc.js` `computeUpperFence`), while `boxStats` reports
- * the fence itself clamped to the data. Meaning a box drawn from the sample never
- * quite agreed with the statistics reported beside it, and because Plotly only
- * does that walk when it is also drawing points, toggling the points moved the
- * whiskers. Handing the numbers over makes the two agree.
- *
- * Plotly accepts them as given provided they bracket the quartiles, which
- * clamped fences always do.
+ * Plotly's own whiskers stop at the last point inside the fence, and only when
+ * points are drawn; precomputed, they match `boxStats`.
  */
 export const statsBoxTrace = ({
   stats,
@@ -243,7 +181,7 @@ export const statsBoxTrace = ({
   fillColor?: string;
   width?: number;
   showlegend?: boolean;
-  /** The dashed mean line. Off where something else already draws it. */
+  /** The dashed mean line; off where something else draws it. */
   boxmean?: boolean;
 }): Partial<Data> => {
   const precomputed: PrecomputedBox = {
@@ -281,7 +219,6 @@ export const boxStatsHoverTrace = ({
   values: number[];
   label: string;
   xIndex: number;
-  /** Precision for the numbers written into the template. */
   format?: NumberFormat;
 }): Partial<ScatterData> | null => {
   const s = boxStats(values);
@@ -312,6 +249,8 @@ export const boxStatsHoverTrace = ({
     ],
   });
 };
+
+const OUTLIER_FILL_ALPHA = 1;
 
 export const outlierTrace = ({
   format,
@@ -354,7 +293,16 @@ export const outlierTrace = ({
     x: outliers.map(() => xIndex + jitterValue()),
     y: outliers,
     mode: "markers",
-    color: readableOn(color ?? colorMap.markerFill, colorMap.bgColor),
+    color: readableOn(color ?? colorMap.markerFill, [
+      composite(
+        rgba({
+          color: color ?? colorMap.markerFill,
+          alpha: OUTLIER_FILL_ALPHA,
+        }),
+        colorMap.bgColor,
+      ),
+      colorMap.bgColor,
+    ]),
     colorMap,
     marker: { symbol: "circle-open", size: 7, line: { width: 2 } },
     legendgroup: label,

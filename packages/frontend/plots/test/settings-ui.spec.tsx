@@ -1,11 +1,10 @@
-/**
- * The settings panel's structure and its warnings.
- */
 // @vitest-environment happy-dom
 import { describe, expect, test } from "vitest";
 import { createRoot } from "react-dom/client";
 import { act, createElement } from "react";
 import PlotSettings, { PLOT_IMPLEMENTATIONS } from "../lib/PlotSettings";
+import BaseSettings from "../lib/PlotBase/BaseSettings";
+import StyleSettings, { scaleGradient } from "../lib/PlotBase/StyleSettings";
 import type {
   PlotDefinition,
   SourceData,
@@ -71,7 +70,6 @@ describe("the settings sections", () => {
   test("survives a definition whose type is implemented elsewhere", async () => {
     const host = await render({ ...plot, type: "violin" } as PlotDefinition);
     expect(host.textContent).toContain("Labels");
-    // No per-type settings and no capability-gated sections to show.
     expect(sections(host).map((s) => s.title)).not.toContain("Ticks");
   });
 
@@ -113,7 +111,6 @@ describe("the settings sections", () => {
     expect(on.textContent).toContain("One line per");
   });
 
-  /** Choosing the data is the first thing anyone does; the rest is refinement. */
   test("opens Data and leaves the rest collapsed", async () => {
     const host = await render();
     expect(sections(host)).toEqual([
@@ -136,10 +133,6 @@ describe("the settings sections", () => {
     expect(style.textContent).toContain("Gridlines");
   });
 
-  /**
-   * Reset spans every section, so it sits outside them — inside one it would
-   * read as resetting only that section.
-   */
   test("keeps the reset button outside the sections", async () => {
     const host = await render();
     const reset = Array.from(host.querySelectorAll("button")).find((b) =>
@@ -160,11 +153,6 @@ describe("the settings sections", () => {
     expect(resetIn(styled).disabled).toBe(false);
   });
 
-  /**
-   * A warning, never a block. The configuration stays selectable because the
-   * data behind a saved plot can change after the fact, and because the user
-   * may be mid-way through a series of edits that ends up valid.
-   */
   test("warns about a column the plot type cannot use", async () => {
     const host = await render({
       ...plot,
@@ -196,7 +184,7 @@ describe("the settings sections", () => {
     expect(warning(host)).toBe("");
   });
 
-  /** Scatter tolerates the same categorical x that time series rejects. */
+  // Scatter tolerates the categorical x that time series rejects.
   test("asks the chosen type, not a shared rule", async () => {
     const categorical = {
       ...plot,
@@ -234,7 +222,6 @@ describe("the settings sections", () => {
     expect(bright).not.toEqual(defaultPalette);
   });
 
-  /** Box plots group along x, so an x tick control would configure nothing. */
   test("offers x ticks only where x is a measurement axis", async () => {
     const scatter = await render();
     const box = await render({ ...plot, type: "box" });
@@ -301,7 +288,6 @@ describe("resetting a type's own settings", () => {
     expect(resetButton(host).disabled).toBe(false);
   });
 
-  /** Otherwise it offers to reset something it has no way of resetting. */
   test("and dead when nothing else is, whatever the type carries", async () => {
     const host = await render(withBins, undefined, {
       implementations: implementations(undefined),
@@ -310,10 +296,6 @@ describe("resetting a type's own settings", () => {
   });
 });
 
-/**
- * A note is easy to place and, without a list, impossible to find again to
- * remove
- */
 describe("the notes section", () => {
   const withNotes = {
     ...plot,
@@ -365,5 +347,90 @@ describe("the notes section", () => {
     expect(
       (received as { annotations?: { id: string }[] }).annotations,
     ).toEqual([{ id: "note-2", text: "Balance recalibrated", x: 9, y: 12 }]);
+  });
+});
+
+describe("the panel scales switch", () => {
+  const faceted = { ...plot, facetBy: ["compound"] };
+  const rows = [
+    { concentration: 1, response: 2, compound: "A" },
+    { concentration: 3, response: 4, compound: "B" },
+  ];
+  const mount = async (
+    def: PlotDefinition,
+    show: Record<string, boolean>,
+    data: SourceData = rows,
+  ) => {
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+    await act(async () => {
+      createRoot(host).render(
+        createElement(BaseSettings, {
+          plot: def,
+          properties,
+          data,
+          onChange: () => {},
+          show,
+        }),
+      );
+    });
+    return host.textContent ?? "";
+  };
+
+  test("is offered where the plot opts in and there are panels", async () => {
+    expect(await mount(faceted, { sharedScales: true })).toContain(
+      "Panel scales",
+    );
+  });
+
+  test("is not offered to a plot that does not opt in", async () => {
+    expect(await mount(faceted, {})).not.toContain("Panel scales");
+  });
+
+  test("is not offered with a single panel", async () => {
+    expect(await mount(plot, { sharedScales: true })).not.toContain(
+      "Panel scales",
+    );
+  });
+});
+
+describe("the palette preview", () => {
+  const mount = async (def: PlotDefinition, sequentialPalette: boolean) => {
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+    await act(async () => {
+      createRoot(host).render(
+        createElement(StyleSettings, {
+          plot: def,
+          onChange: () => {},
+          show: { sequentialPalette },
+        }),
+      );
+    });
+    return host.querySelector<HTMLElement>('[aria-hidden="true"]')!;
+  };
+
+  test("shows the heatmap scale for a plot drawn on one", async () => {
+    const preview = await mount(plot, true);
+    expect(preview.querySelectorAll("span")).toHaveLength(0);
+    expect(preview.style.background).toContain("linear-gradient");
+  });
+
+  test("follows the chosen palette", async () => {
+    const standard = (await mount(plot, true)).style.background;
+    const bright = (
+      await mount({ ...plot, palette: "bright" } as PlotDefinition, true)
+    ).style.background;
+    expect(bright).not.toBe(standard);
+  });
+
+  test("places each stop at its position on the scale", () => {
+    expect(
+      scaleGradient([
+        [0, "#ffffff"],
+        [0.5, "#888888"],
+        [1, "#000000"],
+      ]),
+    ).toBe("linear-gradient(to right, #ffffff 0%, #888888 50%, #000000 100%)");
   });
 });
