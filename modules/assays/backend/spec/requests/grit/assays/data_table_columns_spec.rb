@@ -108,6 +108,29 @@ module Grit::Assays
       end
     end
 
+    # --- Available entity attributes ---
+
+    describe "available_entity_attributes" do
+      # Loading this class queries a table that does not exist; outside the example transaction that is harmless.
+      before(:all) { ExperimentDataSheetRecord }
+      before do
+        login_as(admin)
+        data_table
+      end
+
+      it "quotes property display names" do
+        allow(Grit::Core::VocabularyItem).to receive(:entity_properties).and_wrap_original do |original, **args|
+          [ *original.call(**args), { name: "researcher_note", display_name: "Researcher's note" } ]
+        end
+
+        get "/api/grit/assays/data_table_columns", params: { scope: "available_entity_attributes", data_table_id: data_table.id }
+
+        expect(response).to have_http_status(:success)
+        names = JSON.parse(response.body)["data"].map { |row| row["name"] }
+        expect(names).to include("Researcher's note")
+      end
+    end
+
     # --- Authentication ---
 
     describe "authentication" do

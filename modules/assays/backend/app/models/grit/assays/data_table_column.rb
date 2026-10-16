@@ -83,7 +83,7 @@ module Grit::Assays
       raise "'data_table_id' is required" if params["data_table_id"].nil?
       data_table = DataTable.find(params["data_table_id"])
 
-      "SELECT name,safe_name FROM (VALUES #{data_table.entity_data_type.model.entity_properties.reject { |e| e[:name] == "id" }.map { |e| "('#{e[:display_name]}', '#{e[:name]}')" }.join(",") }) values(name,safe_name)"
+      "SELECT name,safe_name FROM (VALUES #{data_table.entity_data_type.model.entity_properties.reject { |e| e[:name] == "id" }.map { |e| "(#{connection.quote(e[:display_name])}, #{connection.quote(e[:name])})" }.join(",") }) values(name,safe_name)"
     end
 
     def self.available(params = nil)
