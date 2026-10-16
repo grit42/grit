@@ -154,7 +154,11 @@ export const buildHoverMatrix = ({
     byRow.set(y, row);
   }
 
+  // An empty cell still gets one entry per key: a bare null makes Plotly warn
+  // for every key in the template on hover.
+  const blank = keys.map(() => null);
+
   return yCategories.map((y) =>
-    xCategories.map((x) => byRow.get(y)?.get(x) ?? null),
+    xCategories.map((x) => byRow.get(y)?.get(x) ?? blank),
   );
 };
