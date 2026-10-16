@@ -4,6 +4,7 @@ import { resolveDisplay } from "../displayMode";
 import { numberFormat, type NumberFormat } from "../format";
 import { boxStats, randomJitter, toFiniteNumbers } from "../math";
 import { boxStatsHoverTrace, scatterTrace, statsBoxTrace } from "../traces";
+import { categoryRange } from "../axes";
 import { BoxPlotDefinition, SourceData } from "../types";
 import { buildFacets, nullish, ungroupedLabel } from "../utils";
 
@@ -77,7 +78,7 @@ const buildBoxTraces = (
       tickmode: "array",
       tickvals: labels.map((_, index) => index),
       ticktext: labels,
-      range: [-0.5, Math.max(labels.length - 0.5, 0.5)],
+      ...categoryRange(labels.length),
       zeroline: false,
     };
     axes[`yaxis${axis}`] = {};

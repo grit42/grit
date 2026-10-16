@@ -93,6 +93,45 @@ const NON_LINEAR_AXES: AxisType[] = [
 export const supportsTickRange = (axisType: AxisType | undefined): boolean =>
   axisType === undefined || !NON_LINEAR_AXES.includes(axisType);
 
+export const categoryRange = (
+  count: number,
+): { range: [number, number]; autorange: false } => ({
+  range: [-0.5, Math.max(count, 1) - 0.5],
+  autorange: false,
+});
+
+export const countStep = (top: number, ticks = 5): number => {
+  const raw = top / ticks;
+  if (!(raw > 1)) return 1;
+  const magnitude = 10 ** Math.floor(Math.log10(raw));
+  return [1, 2, 5, 10]
+    .map((multiple) => multiple * magnitude)
+    .find((step) => step >= raw)!;
+};
+
+export const wholeNumberTicks = (
+  values: readonly number[],
+  userTicks?: AxisTickOptions,
+): { tickmode: "linear"; tick0: 0; dtick: number } | undefined => {
+  if (userTicks?.mode && userTicks.mode !== "auto") return undefined;
+  const finite = values.filter(Number.isFinite);
+  if (finite.length === 0 || !finite.every(Number.isInteger)) return undefined;
+  return {
+    tickmode: "linear",
+    tick0: 0,
+    dtick: countStep(Math.max(...finite) - Math.min(...finite), 8),
+  };
+};
+
+/** The tick settings for an axis of counts reaching `top`. Counts only. */
+export const countTicks = (
+  top: number,
+): { tickmode: "linear"; tick0: 0; dtick: number } => ({
+  tickmode: "linear",
+  tick0: 0,
+  dtick: countStep(top),
+});
+
 const MAJOR_TICK_LENGTH = 6;
 const MINOR_TICK_LENGTH = 3;
 
