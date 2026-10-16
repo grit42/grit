@@ -232,6 +232,15 @@ RSpec.describe "Load Sets API", type: :request do
       }.not_to change(Grit::Core::LoadSet, :count)
       expect(response).to have_http_status(:forbidden)
     end
+
+    it "does not change the entity of an existing load set" do
+      login_as(admin)
+      patch "/api/grit/core/load_sets/#{load_set.id}", params: { name: "renamed", entity: "Grit::Core::VocabularyItem" }, as: :json
+      expect(response).to have_http_status(:ok)
+      load_set.reload
+      expect(load_set.name).to eq("renamed")
+      expect(load_set.entity).to eq("Grit::TestEntity")
+    end
   end
 
   describe "succeeded load set" do

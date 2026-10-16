@@ -114,7 +114,7 @@ module Grit::Core
 
     private
       def permitted_params
-        [ :name, :entity, :origin_id, load_set_blocks: [ :name, :separator, mappings: {} ] ]
+        [ :name, :origin_id, load_set_blocks: [ :name, :separator, mappings: {} ] ]
       end
 
       def check_read

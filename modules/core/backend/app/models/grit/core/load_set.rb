@@ -24,6 +24,9 @@ module Grit::Core
 
     entity_scopes :by_entity, :by_vocabulary
 
+    # Load set and load set block permissions are checked against this entity.
+    attr_readonly :entity
+
     has_many :load_set_blocks, dependent: :destroy
 
     before_destroy :check_status
