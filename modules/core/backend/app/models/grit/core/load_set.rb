@@ -22,6 +22,8 @@ module Grit::Core
 
     entity_crud_with read: [ "read:system" ]
 
+    entity_scopes :by_entity, :by_vocabulary
+
     has_many :load_set_blocks, dependent: :destroy
 
     before_destroy :check_status

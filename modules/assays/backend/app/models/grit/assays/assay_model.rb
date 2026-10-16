@@ -34,6 +34,8 @@ module Grit::Assays
 
     entity_crud_with read: [ "read:system" ], write: [ "admin:assays" ]
 
+    entity_scopes :published
+
     def self.published(params)
       self.detailed(params).where("grit_core_publication_statuses__.name = 'Published'")
     end

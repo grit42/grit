@@ -50,6 +50,8 @@ module Grit::Assays
 
     entity_crud_with read: [ "read:system" ], write: [ "write:assays" ]
 
+    entity_scopes :published
+
     def set_metadata_values(params)
       success = true
       experiment_metadata = self.experiment_metadata
