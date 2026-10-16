@@ -34,4 +34,36 @@ RSpec.describe "User Sessions API", type: :request do
       expect(credentials_cookie).to match(/;\s*samesite=lax/i)
     end
   end
+
+  describe "rate limiting" do
+    # The test environment uses a null cache store, which never counts.
+    let(:counter_store) { ActiveSupport::Cache::MemoryStore.new }
+
+    before do
+      allow(Grit::Core::UserSessionsController.cache_store).to receive(:increment) do |*args, **options|
+        counter_store.increment(*args, **options)
+      end
+    end
+
+    it "refuses logins from an address after 10 attempts, including for admin" do
+      10.times do
+        post "/api/grit/core/user_session", params: { user_session: { login: admin.login, password: "wrong" } }
+        expect(response).to have_http_status(:unauthorized)
+      end
+
+      post "/api/grit/core/user_session", params: { user_session: { login: admin.login, password: "password" } }
+      expect(response).to have_http_status(:too_many_requests)
+      expect(JSON.parse(response.body)["success"]).to be(false)
+    end
+
+    it "refuses two factor attempts from an address after 10 attempts" do
+      10.times do
+        post "/api/grit/core/user_session/two_factor", params: { user: admin.login, token: "WRONG" }
+        expect(response).not_to have_http_status(:too_many_requests)
+      end
+
+      post "/api/grit/core/user_session/two_factor", params: { user: admin.login, token: "WRONG" }
+      expect(response).to have_http_status(:too_many_requests)
+    end
+  end
 end
