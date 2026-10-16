@@ -26,6 +26,9 @@ import type { PlotAnnotation, PlotExportOptions } from "../types";
 import type { PlotNotice } from "../notices";
 import {
   annotationShapes,
+  axisLayout,
+  drawnCategories,
+  notesFor,
   nextAnnotationId,
   pointFromEvent,
 } from "../annotations";
@@ -168,6 +171,35 @@ const ThemedPlot = ({
   );
 
   const themedAxes = buildThemedAxes(colorMap, { xaxis, yaxis, axes, layout });
+  const placedIn = axisLayout(themedAxes);
+  const notes = notesFor(
+    annotations,
+    placedIn,
+    drawnCategories(data, themedAxes),
+  );
+  const shownNotices: PlotNotice[] = [
+    ...(notices ?? []),
+    ...(notes.elsewhere
+      ? [
+          {
+            kind: "info" as const,
+            count: notes.elsewhere,
+            reason:
+              "notes hidden: placed with another panel layout, such as a different Facet by. Return to it to see them, or remove them under Notes.",
+          },
+        ]
+      : []),
+    ...(notes.missing
+      ? [
+          {
+            kind: "info" as const,
+            count: notes.missing,
+            reason:
+              "notes hidden: what they point at is not in the figure, such as a removed study. Restore it to see them, or remove them under Notes.",
+          },
+        ]
+      : []),
+  ];
   const scales = {
     x: (themedAxes.xaxis as Partial<LayoutAxis> | undefined)?.type,
     y: (themedAxes.yaxis as Partial<LayoutAxis> | undefined)?.type,
@@ -214,7 +246,7 @@ const ThemedPlot = ({
 
     annotations: [
       ...((restLayout.annotations ?? []) as Partial<Annotations>[]),
-      ...annotationShapes(annotations, colorMap, scales),
+      ...annotationShapes(notes.shown, colorMap, scales),
     ],
 
     uirevision: layout?.uirevision ?? "true",
@@ -267,7 +299,7 @@ const ThemedPlot = ({
   const withNotices = (figure: ReactNode) => (
     <div className={styles.stack}>
       <div className={styles.figure}>{figure}</div>
-      {notices?.length ? <PlotNotices notices={notices} /> : null}
+      {shownNotices.length ? <PlotNotices notices={shownNotices} /> : null}
     </div>
   );
 
@@ -292,6 +324,7 @@ const ThemedPlot = ({
                   y: pending.y,
                   axis: pending.axis,
                   xaxis: pending.xaxis,
+                  layout: placedIn,
                   author: annotationAuthor,
                 },
               ]);
