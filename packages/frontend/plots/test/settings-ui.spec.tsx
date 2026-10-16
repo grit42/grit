@@ -7,6 +7,7 @@ import { createRoot } from "react-dom/client";
 import { act, createElement } from "react";
 import PlotSettings, { PLOT_IMPLEMENTATIONS } from "../lib/PlotSettings";
 import BaseSettings from "../lib/PlotBase/BaseSettings";
+import StyleSettings, { scaleGradient } from "../lib/PlotBase/StyleSettings";
 import type {
   PlotDefinition,
   SourceData,
@@ -406,5 +407,51 @@ describe("the panel scales switch", () => {
     expect(await mount(plot, { sharedScales: true })).not.toContain(
       "Panel scales",
     );
+  });
+});
+
+describe("the palette preview", () => {
+  const mount = async (def: PlotDefinition, sequentialPalette: boolean) => {
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+    await act(async () => {
+      createRoot(host).render(
+        createElement(StyleSettings, {
+          plot: def,
+          onChange: () => {},
+          show: { sequentialPalette },
+        }),
+      );
+    });
+    return host.querySelector<HTMLElement>('[aria-hidden="true"]')!;
+  };
+
+  test("shows the series colours by default", async () => {
+    const preview = await mount(plot, false);
+    expect(preview.querySelectorAll("span").length).toBeGreaterThan(1);
+  });
+
+  test("shows the heatmap scale for a plot drawn on one", async () => {
+    const preview = await mount(plot, true);
+    expect(preview.querySelectorAll("span")).toHaveLength(0);
+    expect(preview.style.background).toContain("linear-gradient");
+  });
+
+  test("follows the chosen palette", async () => {
+    const standard = (await mount(plot, true)).style.background;
+    const bright = (
+      await mount({ ...plot, palette: "bright" } as PlotDefinition, true)
+    ).style.background;
+    expect(bright).not.toBe(standard);
+  });
+
+  test("places each stop at its position on the scale", () => {
+    expect(
+      scaleGradient([
+        [0, "#ffffff"],
+        [0.5, "#888888"],
+        [1, "#000000"],
+      ]),
+    ).toBe("linear-gradient(to right, #ffffff 0%, #888888 50%, #000000 100%)");
   });
 });

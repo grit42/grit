@@ -40,6 +40,7 @@ export const PLOT_CAPABILITIES = [
   "individual",
   "individualBy",
   "palette",
+  "sequentialPalette",
   "fontSize",
   "gridlines",
   "frame",
@@ -316,6 +317,7 @@ const PlotSettings = ({
             onChange={props.onChange}
             show={{
               palette: can("palette"),
+              sequentialPalette: can("sequentialPalette"),
               fontSize: can("fontSize"),
               gridlines: can("gridlines"),
               frame: can("frame"),

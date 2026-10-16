@@ -48,6 +48,11 @@ const TICK_ANGLE_OPTIONS: {
   { label: "Upright", value: -90 },
 ];
 
+export const scaleGradient = (scale: readonly [number, string][]) =>
+  `linear-gradient(to right, ${scale
+    .map(([at, color]) => `${color} ${Math.round(at * 1000) / 10}%`)
+    .join(", ")})`;
+
 const StyleSettings = <TPlot extends PlotDefinition>({
   plot,
   onChange,
@@ -57,6 +62,8 @@ const StyleSettings = <TPlot extends PlotDefinition>({
   onChange: (plot: TPlot) => void;
   show?: {
     palette?: boolean;
+    /** Preview the heatmap scale rather than the series colours. */
+    sequentialPalette?: boolean;
     fontSize?: boolean;
     gridlines?: boolean;
     frame?: boolean;
@@ -67,6 +74,7 @@ const StyleSettings = <TPlot extends PlotDefinition>({
 }) => {
   const {
     palette: showPalette = true,
+    sequentialPalette = false,
     fontSize: showFontSize = true,
     gridlines: showGridlines = true,
     frame: showFrame = true,
@@ -90,15 +98,23 @@ const StyleSettings = <TPlot extends PlotDefinition>({
             isClearable={false}
             onChange={(palette: ColorPreset) => onChange({ ...plot, palette })}
           />
-          <div className={styles.swatches} aria-hidden="true">
-            {colorMap.universalColors.map((color) => (
-              <span
-                key={color}
-                className={styles.swatch}
-                style={{ background: color }}
-              />
-            ))}
-          </div>
+          {sequentialPalette ? (
+            <div
+              className={styles.scale}
+              aria-hidden="true"
+              style={{ background: scaleGradient(colorMap.heatmapScale) }}
+            />
+          ) : (
+            <div className={styles.swatches} aria-hidden="true">
+              {colorMap.universalColors.map((color) => (
+                <span
+                  key={color}
+                  className={styles.swatch}
+                  style={{ background: color }}
+                />
+              ))}
+            </div>
+          )}
         </>
       )}
       {showFontSize && (
