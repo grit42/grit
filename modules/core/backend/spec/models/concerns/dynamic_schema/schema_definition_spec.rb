@@ -580,6 +580,30 @@ RSpec.describe "DynamicSchema::SchemaDefinition concern", type: :model do
     end
   end
 
+  # It says which physical names are live, so only the renames may move it.
+  describe "committed_at" do
+    it "cannot be cleared by a save, which would orphan the committed schema" do
+      schema.commit!
+
+      expect(schema.update(committed_at: nil)).to be(false)
+      expect(schema.errors[:committed_at].join).to match(/commit! or revert_to_draft!/)
+      expect(schema.reload).to be_committed
+      expect { schema.revert_to_draft! }.not_to raise_error
+      expect(connection.schema_exists?("test_#{schema.id}")).to be(true)
+    end
+
+    it "cannot be set by a save on a draft" do
+      expect(schema.update(committed_at: Time.current)).to be(false)
+      expect(schema.reload).not_to be_committed
+    end
+
+    it "cannot be set on create" do
+      expect {
+        Grit::SchemaDefinition.create!(identifier: "grp", name: "Schema", committed_at: Time.current)
+      }.to raise_error(ActiveRecord::RecordInvalid, /commit! or revert_to_draft!/)
+    end
+  end
+
   # Destroying a definition drops its schema with CASCADE, draft or committed.
   describe "destroy" do
     it "drops a draft schema with its tables" do

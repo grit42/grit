@@ -25,7 +25,8 @@
 #     transaction and locks the structure; `revert_to_draft!` renames it back.
 #     Data is kept both ways.
 #
-# Includers need a `committed_at` datetime column (nil while a draft).
+# Includers need a `committed_at` datetime column (nil while a draft), which
+# only `commit!` and `revert_to_draft!` change.
 module Grit::Core::Model::DynamicSchema::SchemaDefinition
   extend ActiveSupport::Concern
   include Grit::Core::Model::DynamicSchema::ValidIdentifier
@@ -81,6 +82,7 @@ module Grit::Core::Model::DynamicSchema::SchemaDefinition
     validate :schema_prefix_declared
     validate :schema_name_available
     validate :check_identifier_modifiable, if: -> { persisted? && identifier_changed? }
+    validate :committed_at_unchanged, if: :committed_at_changed?
 
     after_create :create_schema
 
@@ -213,6 +215,12 @@ module Grit::Core::Model::DynamicSchema::SchemaDefinition
     locked = locked_copy
     return unless locked&.committed?
     errors.add(:identifier, "cannot be changed while #{locked.committed_schema_name} is committed; revert it to draft first")
+  end
+
+  # It says which physical names are live, so only the renames may move it;
+  # they write it with `update_columns`, which skips this.
+  def committed_at_unchanged
+    errors.add(:committed_at, "can only be changed by commit! or revert_to_draft!")
   end
 
   # No `if_not_exists`: a schema already under this id-based name isn't ours.
