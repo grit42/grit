@@ -64,6 +64,4 @@ const ErrorPage = ({ error, children }: PropsWithChildren<ErrorPageProps>) => {
   );
 };
 
-export { errorMessage };
-
 export default ErrorPage;
