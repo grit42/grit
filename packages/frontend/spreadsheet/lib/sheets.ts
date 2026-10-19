@@ -74,7 +74,12 @@ export const mergeRanges = (sheet: WorkSheet) => {
       const value = ((sheet["!data"] || [])[merge.s.r] || [])[merge.s.c];
       for (let col = merge.s.c; col <= merge.e.c; col++) {
         for (let row = merge.s.r; row <= merge.e.r; row++) {
-          ((sheet["!data"] || [])[row] || [])[col] = value;
+          const rowData = Number.isInteger(row)
+            ? (sheet["!data"] || [])[row]
+            : undefined;
+          if (Array.isArray(rowData) && Number.isInteger(col)) {
+            rowData[col] = value;
+          }
         }
       }
     });

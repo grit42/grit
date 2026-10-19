@@ -27,7 +27,7 @@ declare global {
   }
 }
 
-function readLocalStorageValue<T = null>(key: string, fallbackValue: T) {
+export function readLocalStorageValue<T = null>(key: string, fallbackValue: T) {
   // Prevent build error "window is undefined" but keeps working
   if (typeof window === "undefined") {
     return fallbackValue;
@@ -37,7 +37,7 @@ function readLocalStorageValue<T = null>(key: string, fallbackValue: T) {
     const item = window.localStorage.getItem(key);
     return item ? (superjson.parse(item) as T) : fallbackValue;
   } catch (error) {
-    console.warn(`Error reading localStorage key “${key}”:`, error);
+    console.warn("Error reading localStorage key:", key, error);
     return fallbackValue;
   }
 }
@@ -84,7 +84,7 @@ export function useLocalStorage<T>(
           window.dispatchEvent(new Event("local-storage"));
         }
       } catch (error) {
-        console.warn(`Error setting localStorage key “${key}”:`, error);
+        console.warn("Error setting localStorage key:", key, error);
       }
     },
   );

@@ -564,6 +564,40 @@ RSpec.describe "Load Set Blocks API", type: :request do
     end
   end
 
+  describe "permission checks on an existing load set block" do
+    let(:manager) { create(:grit_core_user, :with_manage_role) }
+
+    it "uses the block's own entity, not the entity parameter" do
+      block = create(:grit_core_load_set_block, load_set: load_set, status: Grit::Core::LoadSetStatus.find_by!(name: "Succeeded"))
+      allow(Grit::Core::EntityLoader).to receive(:rollback_load_set_block)
+      allow_any_instance_of(Grit::Core::LoadSetBlock).to receive(:initialize_data)
+      login_as(manager)
+      post "/api/grit/core/load_set_blocks/#{block.id}/rollback", params: { entity: "Grit::Core::VocabularyItem" }, as: :json
+      expect(response).to have_http_status(:forbidden)
+      expect(block.reload.status.name).to eq("Succeeded")
+      expect(Grit::Core::EntityLoader).not_to have_received(:rollback_load_set_block)
+    end
+
+    it "uses the entity of the load set given by load_set_id, not the entity parameter" do
+      login_as(manager)
+      post "/api/grit/core/load_set_blocks", params: { load_set_id: load_set.id, entity: "Grit::Core::VocabularyItem", name: "forbidden" }, as: :json
+      expect(response).to have_http_status(:forbidden)
+    end
+  end
+
+  describe "entity allow-list" do
+    it "returns 400 on fields when entity is not a GritEntityRecord class" do
+      get "/api/grit/core/load_set_blocks/fields", params: { entity: "Kernel" }
+      expect(response).to have_http_status(:bad_request)
+      expect(JSON.parse(response.body)["errors"]).to eq("Unknown entity")
+    end
+
+    it "returns 400 on fields for a made-up class name" do
+      get "/api/grit/core/load_set_blocks/fields", params: { entity: "Totally::Fake" }
+      expect(response).to have_http_status(:bad_request)
+    end
+  end
+
   describe "SQL injection prevention" do
     before { login_as(admin) }
 

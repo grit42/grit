@@ -1185,6 +1185,13 @@ CREATE UNIQUE INDEX uniq_permission_per_role ON public.grit_core_role_permission
 
 
 --
+-- Name: uniq_role_per_user; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX uniq_role_per_user ON public.grit_core_user_roles USING btree (user_id, role_id);
+
+
+--
 -- Name: uniq_vocabulary_item_name_per_vocabulary; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1468,6 +1475,7 @@ ALTER TABLE ONLY public.test_entities
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20260918110216'),
 ('20260510051017'),
 ('20260510051016'),
 ('20260502000001'),

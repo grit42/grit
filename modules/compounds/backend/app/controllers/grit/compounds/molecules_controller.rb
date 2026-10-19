@@ -20,11 +20,19 @@ module Grit::Compounds
   class MoleculesController < ApplicationController
     include Grit::Core::GritEntityController
 
+    # Replaces the check_read callback registered by Readable, so the default actions must be listed too.
+    before_action :check_read, only: %i[ index show export molecule_exists ]
+
+    # Molecule is not an entity; molecule_exists returns compounds, so their read permission applies.
+    def model_override(params)
+      Grit::Compounds::Compound
+    end
+
     def molecule_exists
       ActiveRecord::Base.transaction do
         ActiveRecord::Base.connection.execute("SET LOCAL rdkit.do_chiral_sss=true;")
         existing_molecule = Molecule.by_molfile(params[:molfile])
-        existing_molecule_compounds = existing_molecule.nil? ? [] : Compound.detailed().where("grit_compounds_molecules__.id = #{existing_molecule.id}").all
+        existing_molecule_compounds = existing_molecule.nil? ? [] : Compound.detailed().where("grit_compounds_molecules__.id = ?", existing_molecule.id).all
 
         render json: { success: true, data: { molfile: params[:molfile], existing_molecule_id: existing_molecule&.id, existing_molecule_compounds: existing_molecule_compounds } }
       end

@@ -17,6 +17,8 @@
 #++
 
 Grit::Core::LoadSet.class_eval do
+  entity_scopes :by_experiment
+
   def self.by_experiment(params = nil)
     self.detailed
       .distinct("grit_core_load_sets.id")

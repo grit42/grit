@@ -201,6 +201,48 @@ RSpec.describe "Load Sets API", type: :request do
     end
   end
 
+  describe "entity allow-list" do
+    it "returns 400 on index when entity is not a GritEntityRecord class" do
+      get "/api/grit/core/load_sets", params: { entity: "Kernel" }
+      expect(response).to have_http_status(:bad_request)
+      expect(JSON.parse(response.body)["errors"]).to eq("Unknown entity")
+    end
+
+    it "returns 400 on create when entity is not a GritEntityRecord class" do
+      post "/api/grit/core/load_sets", params: {
+        name: "evil",
+        entity: "Kernel",
+        origin_id: origin.id,
+        load_set_blocks: { "0" => { name: "b", separator: ",",
+          data: Rack::Test::UploadedFile.new(
+            File.join(FILE_FIXTURE_PATH, "test_entity.csv"), "text/csv") } }
+      }
+      expect(response).to have_http_status(:bad_request)
+    end
+  end
+
+  describe "permission checks on an existing load set" do
+    let(:manager) { create(:grit_core_user, :with_manage_role) }
+
+    it "uses the load set's own entity, not the entity parameter" do
+      test_entity_load_set = create(:grit_core_load_set, :with_succeeded_block, origin_id: origin.id)
+      login_as(manager)
+      expect {
+        post "/api/grit/core/load_sets/#{test_entity_load_set.id}/cancel", params: { entity: "Grit::Core::VocabularyItem" }, as: :json
+      }.not_to change(Grit::Core::LoadSet, :count)
+      expect(response).to have_http_status(:forbidden)
+    end
+
+    it "does not change the entity of an existing load set" do
+      login_as(admin)
+      patch "/api/grit/core/load_sets/#{load_set.id}", params: { name: "renamed", entity: "Grit::Core::VocabularyItem" }, as: :json
+      expect(response).to have_http_status(:ok)
+      load_set.reload
+      expect(load_set.name).to eq("renamed")
+      expect(load_set.entity).to eq("Grit::TestEntity")
+    end
+  end
+
   describe "succeeded load set" do
     let!(:succeeded_load_set) { create(:grit_core_load_set, :with_succeeded_block, origin_id: origin.id) }
 

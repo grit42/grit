@@ -22,6 +22,10 @@ module Grit
       isolate_namespace Grit::Core
       config.generators.api_only = true
 
+      # ActiveStorage's own controllers (direct uploads, disk service, blob redirects) have no
+      # grit authentication. Files are uploaded and served through grit controllers instead.
+      config.active_storage.draw_routes = false if config.respond_to?(:active_storage)
+
       def self.openapi_root
         root.join("openapi").to_s
       end

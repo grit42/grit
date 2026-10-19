@@ -158,6 +158,41 @@ RSpec.describe Grit::Compounds::CompoundsController, type: :request do
     end
   end
 
+  describe "LIKE filter — literal % character (Fix #2)" do
+    let!(:compound_without_percent) do
+      create(:grit_compounds_compound, name: "discount50",
+             origin: origin, compound_type: compound_type)
+    end
+    let!(:compound_with_percent) do
+      create(:grit_compounds_compound, name: "discount50%",
+             origin: origin, compound_type: compound_type)
+    end
+
+    it "contains: returns only the record whose name literally contains '50%'" do
+      filter = ActiveSupport::JSON.encode([
+        { type: "string", operator: "contains", property: "name", value: "50%" }
+      ])
+      get "/api/grit/compounds/compounds", params: "filter=#{URI.encode_uri_component(filter)}"
+
+      expect(response).to have_http_status(:success)
+      names = JSON.parse(response.body)["data"].map { |r| r["name"] }
+      expect(names).to include("discount50%")
+      expect(names).not_to include("discount50")
+    end
+
+    it "like: treats % in the value as a literal character, not a wildcard" do
+      filter = ActiveSupport::JSON.encode([
+        { type: "string", operator: "like", property: "name", value: "discount50%" }
+      ])
+      get "/api/grit/compounds/compounds", params: "filter=#{URI.encode_uri_component(filter)}"
+
+      expect(response).to have_http_status(:success)
+      names = JSON.parse(response.body)["data"].map { |r| r["name"] }
+      expect(names).to include("discount50%")
+      expect(names).not_to include("discount50")
+    end
+  end
+
   describe "SQL injection prevention in export columns (PR #97)" do
     before { login_as(admin) }
 
@@ -171,6 +206,14 @@ RSpec.describe Grit::Compounds::CompoundsController, type: :request do
     it "exports normally with legitimate columns" do
       get "/api/grit/compounds/compounds/export", params: { columns: [ "name" ] }
       expect(response).to have_http_status(:ok)
+    end
+  end
+
+  describe "scope dispatch security" do
+    it "does not accept write class methods as scopes" do
+      expect(Grit::Compounds::Compound.entity_scope?("create")).to be false
+      expect(Grit::Compounds::Batch.entity_scope?("create")).to be false
+      expect(Grit::Compounds::Compound.entity_scope?("detailed")).to be true
     end
   end
 end

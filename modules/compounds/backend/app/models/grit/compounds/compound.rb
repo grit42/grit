@@ -258,7 +258,7 @@ module Grit::Compounds
             filter_value
           ]))
       elsif [ "like", "contains", "regexp" ].include?(name_filter["operator"]) then
-          filter_value.gsub!("_", '\\_') # Take _ literal
+          filter_value = ActiveRecord::Base.sanitize_sql_like(filter_value)
           filter_value.gsub!("*", "%") # Use * as wildcard
           filter_value.gsub!(".", "_") # Use . as wildcard
           wildcards = %w[% _]

@@ -10,7 +10,7 @@ import {
   joinPathFragments,
   CreateNodesResult,
 } from "@nx/devkit";
-import { execSync } from "child_process";
+import { execFileSync } from "child_process";
 import { existsSync, readdirSync } from "fs";
 import { dirname, join } from "path";
 
@@ -265,9 +265,10 @@ export const createDependencies: CreateDependencies = (_opts, ctx) => {
   for (const project of nxProjects) {
     const maybeGemspecPath = join(project.root, `${project.name}.gemspec`);
     if (existsSync(maybeGemspecPath)) {
-      const gem_name = execSync(
-        `ruby ${ctx.workspaceRoot}/tools/ruby/scripts/gem_name.rb ${ctx.workspaceRoot}/${maybeGemspecPath}`,
-      )
+      const gem_name = execFileSync("ruby", [
+        `${ctx.workspaceRoot}/tools/ruby/scripts/gem_name.rb`,
+        `${ctx.workspaceRoot}/${maybeGemspecPath}`,
+      ])
         .toString()
         .trim();
       gemspecProjectMap.set(gem_name, project.name!);
@@ -279,9 +280,10 @@ export const createDependencies: CreateDependencies = (_opts, ctx) => {
     const maybeGemfilePath = join(project.root, "Gemfile");
 
     if (existsSync(maybeGemspecPath)) {
-      const gem_deps = execSync(
-        `ruby ${ctx.workspaceRoot}/tools/ruby/scripts/gemspec_deps.rb ${ctx.workspaceRoot}/${maybeGemspecPath}`,
-      );
+      const gem_deps = execFileSync("ruby", [
+        `${ctx.workspaceRoot}/tools/ruby/scripts/gemspec_deps.rb`,
+        `${ctx.workspaceRoot}/${maybeGemspecPath}`,
+      ]);
       const deps = gem_deps.toString().trim().split(",");
       for (const dep of deps) {
         if (gemspecProjectMap.has(dep)) {
@@ -297,9 +299,10 @@ export const createDependencies: CreateDependencies = (_opts, ctx) => {
         }
       }
     } else if (existsSync(maybeGemfilePath)) {
-      const gem_deps = execSync(
-        `ruby ${ctx.workspaceRoot}/tools/ruby/scripts/gemfile_deps.rb ${ctx.workspaceRoot}/${maybeGemfilePath}`,
-      );
+      const gem_deps = execFileSync("ruby", [
+        `${ctx.workspaceRoot}/tools/ruby/scripts/gemfile_deps.rb`,
+        `${ctx.workspaceRoot}/${maybeGemfilePath}`,
+      ]);
       const deps = gem_deps.toString().trim().split(",");
       for (const dep of deps) {
         if (gemspecProjectMap.has(dep)) {

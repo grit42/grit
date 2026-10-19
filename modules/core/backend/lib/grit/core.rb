@@ -33,11 +33,11 @@ module Grit
     lt = lambda { |property, value| ActiveRecord::Base.send(:sanitize_sql_array, [ "#{property} < ?", value ]) }
     lte = lambda { |property, value| ActiveRecord::Base.send(:sanitize_sql_array, [ "#{property} <= ?", value ]) }
     empty = lambda { |property, value| ActiveRecord::Base.send(:sanitize_sql_array, [ "#{property} IS NULL" ]) }
-    empty_text = lambda { |property, value| ActiveRecord::Base.send(:sanitize_sql_array, [ "#{property} = '' OR #{property} IS NULL" ]) }
+    empty_text = lambda { |property, value| ActiveRecord::Base.send(:sanitize_sql_array, [ "(#{property} = '' OR #{property} IS NULL)" ]) }
     not_empty = lambda { |property, value| ActiveRecord::Base.send(:sanitize_sql_array, [ "#{property} IS NOT NULL" ]) }
-    not_empty_text = lambda { |property, value| ActiveRecord::Base.send(:sanitize_sql_array, [ "#{property} <> '' OR #{property} IS NOT NULL" ]) }
+    not_empty_text = lambda { |property, value| ActiveRecord::Base.send(:sanitize_sql_array, [ "(#{property} <> '' OR #{property} IS NOT NULL)" ]) }
     contains = lambda do |property, value|
-      value.gsub!("_", '\\_')
+      value = ActiveRecord::Base.sanitize_sql_like(value)
       value.gsub!("*", "%")
       value.gsub!(".", "_")
       wildcards = %w[% _]
@@ -46,7 +46,7 @@ module Grit
       ActiveRecord::Base.send(:sanitize_sql_array, [ "#{property} ILIKE ?", value ])
     end
     not_contains = lambda do |property, value|
-      value.gsub!("_", '\\_')
+      value = ActiveRecord::Base.sanitize_sql_like(value)
       value.gsub!("*", "%")
       value.gsub!(".", "_")
       wildcards = %w[% _]
@@ -55,7 +55,7 @@ module Grit
       ActiveRecord::Base.send(:sanitize_sql_array, [ "#{property} NOT ILIKE ?", value ])
     end
     like = lambda do |property, value|
-      value.gsub!("_", '\\_')
+      value = ActiveRecord::Base.sanitize_sql_like(value)
       value.gsub!("*", "%")
       value.gsub!(".", "_")
       ActiveRecord::Base.send(:sanitize_sql_array, [ "#{property} ILIKE ?", value ])
