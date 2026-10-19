@@ -206,6 +206,16 @@ describe("a note's panel layout", () => {
       shown: [here],
       elsewhere: 1,
       missing: 0,
+      unplaced: 0,
+    });
+  });
+
+  test("counts a note saved before layouts were recorded apart", () => {
+    const old = { ...note({ id: "old" }), layout: undefined } as never;
+    expect(notesFor([old], axisLayout(single))).toMatchObject({
+      shown: [],
+      elsewhere: 0,
+      unplaced: 1,
     });
   });
 });

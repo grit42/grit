@@ -154,8 +154,16 @@ export const notesFor = (
   annotations: readonly PlotAnnotation[] | undefined,
   layout: string,
   categories: Map<string, Set<string>> = new Map(),
-): { shown: PlotAnnotation[]; elsewhere: number; missing: number } => {
-  const here = (annotations ?? []).filter((note) => note.layout === layout);
+): {
+  shown: PlotAnnotation[];
+  elsewhere: number;
+  missing: number;
+  unplaced: number;
+} => {
+  const all = annotations ?? [];
+  // Saved before notes recorded their layout; there is nowhere to put them.
+  const unplaced = all.filter((note) => !note.layout).length;
+  const here = all.filter((note) => note.layout === layout);
   const onDrawn = (axis: string, value: number | string) =>
     categories.get(axis)?.has(String(value)) ?? true;
   const shown = here.filter(
@@ -163,8 +171,9 @@ export const notesFor = (
   );
   return {
     shown,
-    elsewhere: (annotations?.length ?? 0) - here.length,
+    elsewhere: all.length - here.length - unplaced,
     missing: here.length - shown.length,
+    unplaced,
   };
 };
 
