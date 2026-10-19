@@ -33,7 +33,6 @@
   "description": "",
   "dependencies": {
     "@grit42/client-library": "workspace:*",
-    "mathjs": "15.2.0",
     "plotly.js": "^3.4.0",
     "react-plotly.js": "^2.6.0"
   },
