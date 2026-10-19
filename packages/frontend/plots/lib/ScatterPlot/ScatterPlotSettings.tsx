@@ -1,94 +1,49 @@
-import { CheckboxGroup, Select } from "@grit42/client-library/components";
+import { Select } from "@grit42/client-library/components";
 import { ScatterPlotDefinition, SourceDataProperties } from "../types";
-import { useMemo } from "react";
 import { getScatterPlotTitle } from "./utils";
-import { AxisType } from "plotly.js";
+import {
+  PropertyOption,
+  useNumericPropertiesOptions,
+  usePropertiesOptions,
+} from "../utils";
+import BaseSettings from "../PlotBase/BaseSettings";
+import AxesTypeSettings from "../PlotBase/AxisTypeSettings";
 
 const ScatterPlotSettings = ({
   plot,
-  xAxisProperties,
-  yAxisProperties,
-  groupByProperties,
   onChange,
+  properties,
 }: {
   plot: ScatterPlotDefinition;
-  xAxisProperties: SourceDataProperties;
-  yAxisProperties: SourceDataProperties;
-  groupByProperties: SourceDataProperties;
+  properties: SourceDataProperties;
   onChange: (plot: ScatterPlotDefinition) => void;
 }) => {
-  const xAxisOptions = useMemo(
-    () =>
-      xAxisProperties.map(({ name, display_name }) => ({
-        label: display_name,
-        value: name,
-        id: name,
-      })),
-    [xAxisProperties],
-  );
+  const xAxisOptions = usePropertiesOptions(properties);
 
-  const yAxisOptions = useMemo(
-    () =>
-      yAxisProperties.map(({ name, display_name }) => ({
-        label: display_name,
-        value: name,
-        id: name,
-      })),
-    [yAxisProperties],
-  );
+  const yAxisOptions = useNumericPropertiesOptions(properties);
 
-  const groupByOptions = useMemo(
-    () =>
-      groupByProperties.map(({ name, display_name }) => ({
-        label: display_name,
-        value: name,
-        id: name,
-      })),
-    [groupByProperties],
-  );
-
-  const onXAxisKeyChange = (key: string) => {
-    const axisProperty = xAxisProperties.find(({ name }) => name === key);
+  const onXAxisKeyChange = (key: string, option: PropertyOption) => {
     onChange({
       ...plot,
       x: {
         ...plot.x,
         key,
-        label: axisProperty?.display_name ?? axisProperty?.name ?? key,
+        label: option.label ?? key,
       },
-      title: getScatterPlotTitle(
-        key,
-        plot.y.key,
-        xAxisProperties,
-        yAxisProperties,
-      ),
+      title: getScatterPlotTitle(key, plot.y.key, properties),
     });
   };
 
-  const onYAxisKeyChange = (key: string) => {
-    const axisProperty = yAxisProperties.find(({ name }) => name === key);
+  const onYAxisKeyChange = (key: string, option: PropertyOption) => {
     onChange({
       ...plot,
       y: {
         ...plot.y,
         key,
-        label: axisProperty?.display_name ?? axisProperty?.name ?? key,
+        label: option.label ?? key,
       },
-      title: getScatterPlotTitle(
-        plot.x.key,
-        key,
-        xAxisProperties,
-        yAxisProperties,
-      ),
+      title: getScatterPlotTitle(plot.x.key, key, properties),
     });
-  };
-
-  const onAxisTypeChange = (axis: "x" | "y") => (axisType: AxisType) => {
-    onChange({ ...plot, [axis]: { ...plot[axis], axisType } });
-  };
-
-  const onGroupByChange = (groupBy: string[]) => {
-    onChange({ ...plot, groupBy });
   };
 
   return (
@@ -100,51 +55,13 @@ const ScatterPlotSettings = ({
         onChange={onXAxisKeyChange}
       />
       <Select
-        label="X axis type"
-        options={[
-          {
-            value: "linear",
-            label: "Linear",
-          },
-          {
-            value: "log",
-            label: "Log",
-          },
-          {
-            value: "category",
-            label: "Category",
-          },
-        ]}
-        value={plot.x.axisType}
-        onChange={onAxisTypeChange("x")}
-      />
-      <Select
         label="Y axis"
         options={yAxisOptions}
         value={plot.y.key}
         onChange={onYAxisKeyChange}
       />
-      <Select
-        label="Y axis type"
-        options={[
-          {
-            value: "linear",
-            label: "Linear",
-          },
-          {
-            value: "log",
-            label: "Log",
-          },
-        ]}
-        value={plot.y.axisType}
-        onChange={onAxisTypeChange("y")}
-      />
-      <CheckboxGroup
-        label="Group by"
-        options={groupByOptions}
-        value={plot.groupBy}
-        onChange={onGroupByChange}
-      ></CheckboxGroup>
+      <AxesTypeSettings plot={plot} onChange={onChange} />
+      <BaseSettings plot={plot} properties={properties} onChange={onChange} />
     </>
   );
 };

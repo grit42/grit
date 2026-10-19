@@ -1,2 +1,2 @@
-import { read, utils } from "xlsx";
-export { read, utils };
+import { read, writeFile, utils } from "xlsx";
+export { read, writeFile, utils };

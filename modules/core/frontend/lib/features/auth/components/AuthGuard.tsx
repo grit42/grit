@@ -16,24 +16,19 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Navigate } from "react-router-dom";
-import { hasOneOfPermissions, hasPermission, hasRoles } from "../utils";
+import { Navigate, Outlet } from "react-router-dom";
+import { hasOneOfPermissions, hasPermission } from "../utils";
 import { useSession } from "../api/queries";
 import { Spinner } from "@grit42/client-library/components";
 
 interface Props {
-  /**
-   * @deprecated
-   */
-  roles?: string[];
   permission?: string;
   permissions?: string[];
-  children: React.ReactNode;
+  children?: React.ReactNode;
 }
 
 export default function AuthGuard({
-  children,
-  roles,
+  children = <Outlet />,
   permission,
   permissions,
 }: Props) {
@@ -53,9 +48,7 @@ export default function AuthGuard({
     return <Navigate to="/" />;
   } else if (permissions && !hasOneOfPermissions(data, permissions)) {
     return <Navigate to="/" />;
-  } else if (roles && !hasRoles(data, roles)) {
-    return <Navigate to="/" />;
   }
 
-  return <>{children}</>;
+  return children;
 }

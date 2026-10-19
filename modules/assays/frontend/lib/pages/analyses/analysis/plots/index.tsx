@@ -16,20 +16,22 @@
  * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
  */
 
-@use "@grit42/client-library/theme.scss";
+import { useAnalysisContext } from "../../../../features/analyses";
+import { useHasPermission } from "@grit42/core";
+import PlotTabs from "../../../../features/plots/PlotTabs";
 
-.plotContainer {
-  display: grid;
-  grid-template-columns: 8fr min-content;
-  gap: theme.$spacing-md;
-  height: 100%;
-  overflow: auto;
-}
+const PlotsPage = () => {
+  const { analysis } = useAnalysisContext();
+  const canCrudPlots = useHasPermission("write:analysis");
 
-.plotSidebar {
-  width: auto;
-  display: grid;
-  gap: theme.$spacing-lg;
-  grid-auto-rows: min-content;
-  overflow-y: auto;
-}
+  return (
+    <PlotTabs
+      plots={analysis.plots}
+      canCrudPlots={canCrudPlots}
+      matchPattern="/assays/analyses/:analysis_id/plots/:plot_id"
+      navigationPattern="relative-sibling"
+    />
+  );
+};
+
+export default PlotsPage;

@@ -28,8 +28,14 @@ export { default as BoxPlot } from "./BoxPlot";
 export { default as BoxPlotSettings } from "./BoxPlot/BoxPlotSettings";
 export * from "./BoxPlot";
 
+export { default as TimeSeriesPlot } from "./TimeSeriesPlot";
+export { default as TimeSeriesPlotSettings } from "./TimeSeriesPlot/TimeSeriesPlotSettings";
+export * from "./TimeSeriesPlot";
+
 export { default as Plot } from "./Plot";
 export { default as PlotSettings } from "./PlotSettings";
 
 export type * from "./types";
 export * from "./utils";
+export * from "./math";
+export * from "./colors";

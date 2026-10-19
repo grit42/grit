@@ -68,9 +68,5 @@ module Grit::Assays
       end
       query
     end
-
-    def self.published(params = nil)
-      self.detailed.where("grit_core_publication_statuses__.name = ?", "Published")
-    end
   end
 end

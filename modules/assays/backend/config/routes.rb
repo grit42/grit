@@ -1,4 +1,8 @@
 Grit::Assays::Engine.routes.draw do
+  resources :analyses do
+    resources :analysis_records, only: :index
+    resources :analysis_experiments, only: [ :index, :create, :destroy ]
+  end
   resources :experiment_metadata_templates
   resources :experiment_metadata
   resources :data_table_columns

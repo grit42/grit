@@ -16,15 +16,15 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Navigate } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 import { useSession } from "../api/queries";
 import { Spinner } from "@grit42/client-library/components";
 
 interface Props {
-  children: React.ReactNode;
+  children?: React.ReactNode;
 }
 
-export default function NoAuthGuard({ children }: Props) {
+export default function NoAuthGuard({ children = <Outlet /> }: Props) {
   const { isLoading, data } = useSession();
 
   if (isLoading) return <Spinner />;
@@ -33,5 +33,5 @@ export default function NoAuthGuard({ children }: Props) {
     return <Navigate to="/" />;
   }
 
-  return <>{children}</>;
+  return children;
 }

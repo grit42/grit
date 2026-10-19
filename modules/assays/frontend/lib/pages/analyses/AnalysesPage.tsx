@@ -16,20 +16,25 @@
  * @grit42/assays. If not, see <https://www.gnu.org/licenses/>.
  */
 
-@use "@grit42/client-library/theme.scss";
+import { ErrorPage, Spinner } from "@grit42/client-library/components";
+import AnalysesTable from "./AnalysesTable";
+import { useAnalysisColumns } from "../../features/analyses/queries";
 
-.plotContainer {
-  display: grid;
-  grid-template-columns: 8fr min-content;
-  gap: theme.$spacing-md;
-  height: 100%;
-  overflow: auto;
-}
+const AnalysesPage = () => {
+  const {
+    data: dataTableColumns,
+    isLoading: isDataTableColumnsLoading,
+    isError: isDataTableColumnsError,
+    error: dataTableColumnsError,
+  } = useAnalysisColumns();
 
-.plotSidebar {
-  width: auto;
-  display: grid;
-  gap: theme.$spacing-lg;
-  grid-auto-rows: min-content;
-  overflow-y: auto;
-}
+  if (isDataTableColumnsLoading) return <Spinner />;
+
+  if (!dataTableColumns || isDataTableColumnsError) {
+    return <ErrorPage error={dataTableColumnsError} />;
+  }
+
+  return <AnalysesTable />;
+};
+
+export default AnalysesPage;

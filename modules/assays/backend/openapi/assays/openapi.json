@@ -26,6 +26,244 @@
     }
   ],
   "paths": {
+    "/api/grit/assays/analyses": {
+      "get": {
+        "summary": "Lists all analyses",
+        "tags": [
+          "Assays - Analyses"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "analyses listed"
+          }
+        }
+      },
+      "post": {
+        "summary": "Creates an analysis",
+        "tags": [
+          "Assays - Analyses"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "analysis created"
+          },
+          "422": {
+            "description": "analysis not created without name"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/grit/assays/analyses/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Shows an analysis",
+        "tags": [
+          "Assays - Analyses"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "analysis shown"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Updates an analysis",
+        "tags": [
+          "Assays - Analyses"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "analysis updated"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Destroys an analysis",
+        "tags": [
+          "Assays - Analyses"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "analysis destroyed"
+          }
+        }
+      }
+    },
+    "/api/grit/assays/analyses/{analysis_id}/analysis_experiments": {
+      "parameters": [
+        {
+          "name": "analysis_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Lists analysis experiments for an analysis",
+        "tags": [
+          "Assays - Analysis Experiments"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "analysis experiments listed"
+          }
+        }
+      },
+      "post": {
+        "summary": "Adds an experiment to an analysis",
+        "tags": [
+          "Assays - Analysis Experiments"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "experiment added to analysis"
+          },
+          "422": {
+            "description": "duplicate experiment not added"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/grit/assays/analyses/{analysis_id}/analysis_experiments/{id}": {
+      "parameters": [
+        {
+          "name": "analysis_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "delete": {
+        "summary": "Removes an experiment from an analysis",
+        "tags": [
+          "Assays - Analysis Experiments"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "experiment removed from analysis"
+          }
+        }
+      }
+    },
+    "/api/grit/assays/analyses/{analysis_id}/analysis_records": {
+      "parameters": [
+        {
+          "name": "analysis_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Lists analysis records",
+        "tags": [
+          "Assays - Analysis Records"
+        ],
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "analysis records listed"
+          }
+        }
+      }
+    },
     "/api/grit/assays/assay_data_sheet_columns": {
       "get": {
         "summary": "Lists all assay data sheet columns",
@@ -58,11 +296,11 @@
           "201": {
             "description": "column created on draft model"
           },
-          "422": {
-            "description": "cannot create column with invalid safe_name"
-          },
           "500": {
             "description": "cannot create column on published model"
+          },
+          "422": {
+            "description": "cannot create column with invalid safe_name"
           }
         },
         "requestBody": {

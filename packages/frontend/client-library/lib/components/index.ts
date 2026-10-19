@@ -70,6 +70,9 @@ export * from "./RoutedTabs";
 export { default as Select } from "./Select";
 export * from "./Select";
 
+export { default as SortableMultiselect } from "./SortableMultiselect";
+export * from "./SortableMultiselect";
+
 export { default as Spinner } from "./Spinner";
 export * from "./Spinner";
 

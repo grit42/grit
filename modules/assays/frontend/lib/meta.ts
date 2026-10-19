@@ -33,6 +33,11 @@ const Meta: ModuleMeta = {
       path: "/assays/data_tables",
     },
     {
+      identifier: "ANALYSES",
+      name: "Analyses",
+      path: "/assays/analyses",
+    },
+    {
       identifier: "ASSAY_MODELS",
       name: "Assay Models",
       path: "/assays/assay-models",

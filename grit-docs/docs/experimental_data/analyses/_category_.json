@@ -1,0 +1,9 @@
+{
+  "label": "Analyses",
+  "description": "Visualise data across Experiments",
+  "position": 50,
+  "link": {
+    "type": "doc",
+    "id": "index"
+  }
+}

@@ -54,6 +54,18 @@ module Grit
       value = "#{value}%" unless value.end_with?(*wildcards)
       ActiveRecord::Base.send(:sanitize_sql_array, [ "#{property} NOT ILIKE ?", value ])
     end
+    starts_with = lambda do |property, value|
+      value = ActiveRecord::Base.sanitize_sql_like(value).gsub("*", "%").gsub(".", "_")
+      wildcards = %w[% _]
+      value = "#{value}%" unless value.end_with?(*wildcards)
+      ActiveRecord::Base.send(:sanitize_sql_array, [ "#{property} ILIKE ?", value ])
+    end
+    ends_with = lambda do |property, value|
+      value = ActiveRecord::Base.sanitize_sql_like(value).gsub("*", "%").gsub(".", "_")
+      wildcards = %w[% _]
+      value = "%#{value}" unless value.start_with?(*wildcards)
+      ActiveRecord::Base.send(:sanitize_sql_array, [ "#{property} ILIKE ?", value ])
+    end
     like = lambda do |property, value|
       value = ActiveRecord::Base.sanitize_sql_like(value)
       value.gsub!("*", "%")
@@ -77,6 +89,8 @@ module Grit
       "not_empty"=> not_empty_text,
       "contains"=> contains,
       "not_contains"=> not_contains,
+      "starts_with"=> starts_with,
+      "ends_with"=> ends_with,
       "like"=> like,
       "in_list"=> in_list,
       "not_in_list"=> not_in_list,
@@ -89,6 +103,8 @@ module Grit
       "not_empty"=> not_empty_text,
       "contains"=> contains,
       "not_contains"=> not_contains,
+      "starts_with"=> starts_with,
+      "ends_with"=> ends_with,
       "like"=> like,
       "in_list"=> in_list,
       "not_in_list"=> not_in_list,

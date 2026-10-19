@@ -153,6 +153,20 @@ RSpec.describe Grit::Compounds::Compound, type: :model do
 
       expect(result[:molecule_id]).to eq(existing_molecule.id)
     end
+
+    it "does not persist a blank property value" do
+      string_property = create(:grit_compounds_compound_property, :string_type, compound_type: compound_type)
+
+      result = described_class.create({
+        "name" => "compound_blank_prop",
+        "origin_id" => origin.id,
+        "compound_type_id" => compound_type.id,
+        string_property.safe_name => ""
+      })
+
+      expect(result[:compound_property_value_ids]).to be_empty
+      expect(Grit::Compounds::CompoundPropertyValue.where(compound_id: result[:compound_id])).to be_empty
+    end
   end
 
   describe ".find_by_name_or_synonyms" do

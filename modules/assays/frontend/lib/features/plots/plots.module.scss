@@ -1,0 +1,15 @@
+@use "@grit42/client-library/theme.scss";
+
+.plotContainer {
+  &.withSidebar {
+    grid-template-columns: minmax(40ch, 2fr) 8fr !important;
+  }
+}
+
+.plotSidebar {
+  width: auto;
+  display: grid;
+  gap: theme.$spacing-lg;
+  grid-auto-rows: min-content;
+  overflow-y: auto;
+}

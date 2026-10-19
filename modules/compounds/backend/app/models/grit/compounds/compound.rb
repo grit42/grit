@@ -85,7 +85,7 @@ module Grit::Compounds
         end
 
         Grit::Compounds::CompoundProperty.where(compound_type_id: [ compound.compound_type_id, nil ]).each do |prop|
-          if !params[prop.safe_name].nil?
+          if !params[prop.safe_name].nil? && !params[prop.safe_name].blank?
             prop_value = Grit::Compounds::CompoundPropertyValue.new(
               compound_id: compound.id,
               compound_property_id: prop.id,

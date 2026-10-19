@@ -88,10 +88,6 @@ module Grit::Core
       loader(load_set_block.load_set.entity).block_entity_info(load_set_block)
     end
 
-    def self.load_set_loaded_data_columns(load_set)
-      loader(load_set.entity).loaded_data_columns(load_set)
-    end
-
     def self.load_set_block_loaded_data_columns(load_set_block)
       loader(load_set_block.load_set.entity).block_loaded_data_columns(load_set_block)
     end
@@ -188,10 +184,6 @@ module Grit::Core
 
     def self.destroy(load_set)
       load_set.destroy!
-    end
-
-    def self.loaded_data_columns(load_set)
-      load_set.entity.constantize.entity_columns(**self.show(load_set).symbolize_keys!)
     end
 
     def self.block_loaded_data_columns(load_set_block)

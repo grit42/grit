@@ -66,7 +66,7 @@ module Grit::Core
                   )
                 }
               },
-              length: { within: 3..100 },
+              length: { within: 3..30 },
               uniqueness: {
                 case_sensitive: false,
                 if: :will_save_change_to_login?

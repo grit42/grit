@@ -1,5 +1,8 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "cli": {
+    "packageManager": "pnpm"
+  },
   "namedInputs": {
     "source": [
       "{projectRoot}/src/**/*",
@@ -95,7 +98,7 @@
     "git": {
       "tag": true
     },
-    "projectsRelationship": "fixed",
+    "projectsRelationship": "independent",
     "projects": [
       "grit-core",
       "@grit42/core",

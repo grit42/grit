@@ -45,6 +45,18 @@ RSpec.describe Grit::Core do
       expect(results).not_to include(record_with_percent)
     end
 
+    it "starts_with: treats % as a literal character" do
+      results = filter_results("starts_with", "50%")
+      expect(results).to include(record_with_percent)
+      expect(results).not_to include(record_without_percent)
+    end
+
+    it "ends_with: treats % as a literal character" do
+      results = filter_results("ends_with", "50%")
+      expect(results).to include(record_with_percent)
+      expect(results).not_to include(record_without_percent)
+    end
+
     it "like: treats % as a literal character" do
       results = filter_results("like", "50%")
       expect(results).to include(record_with_percent)

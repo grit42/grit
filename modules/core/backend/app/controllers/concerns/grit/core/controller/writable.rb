@@ -31,7 +31,7 @@ module Grit::Core::Controller::Writable
       @record = klass.new(permitted_params)
 
       if @record.save
-        render json: { success: true, data: @record }, status: :created, location: @record
+        render json: { success: true, data: @record }, status: :created
       else
         render json: { success: false, errors: @record.errors }, status: :unprocessable_entity
       end

@@ -1,46 +1,63 @@
+import { ComponentType } from "react";
 import { Select } from "@grit42/client-library/components";
-import { PlotDefinition, SourceDataProperties } from "./types";
+import { PlotDefinition, PlotSettingsProps } from "./types";
 import ScatterPlotSettings from "./ScatterPlot/ScatterPlotSettings";
 import BoxPlotSettings from "./BoxPlot/BoxPlotSettings";
+import TimeSeriesPlotSettings from "./TimeSeriesPlot/TimeSeriesPlotSettings";
 import { getPlotTitle } from "./utils";
 
-const PlotSettings = ({
-  plot,
-  ...props
-}: {
-  plot: PlotDefinition;
-  xAxisProperties: SourceDataProperties;
-  yAxisProperties: SourceDataProperties;
-  groupByProperties: SourceDataProperties;
-  onChange: (plot: PlotDefinition) => void;
-}) => {
+interface PlotImplementation {
+  PlotSettings: ComponentType<PlotSettingsProps>;
+  label: string;
+  value: PlotDefinition["type"];
+}
+
+const PLOT_IMPLEMENTATIONS: Record<PlotDefinition["type"], PlotImplementation> =
+  {
+    scatter: {
+      PlotSettings: ScatterPlotSettings as ComponentType<PlotSettingsProps>,
+      label: "Scatter",
+      value: "scatter",
+    },
+    box: {
+      PlotSettings: BoxPlotSettings as ComponentType<PlotSettingsProps>,
+      label: "Box",
+      value: "box",
+    },
+    timeseries: {
+      PlotSettings: TimeSeriesPlotSettings as ComponentType<PlotSettingsProps>,
+      label: "Time series",
+      value: "timeseries",
+    },
+  };
+
+const PLOT_OPTIONS = Object.values(PLOT_IMPLEMENTATIONS).map(
+  ({ label, value }) => ({
+    label,
+    value,
+  }),
+);
+
+const PlotSettings = ({ plot, ...props }: PlotSettingsProps) => {
+  const plotImplementation = PLOT_IMPLEMENTATIONS[plot.type];
+
   return (
     <>
       <Select
         label="Plot type"
-        options={[
-          { label: "Scatter", value: "scatter" },
-          { label: "Box", value: "box" },
-        ]}
+        options={PLOT_OPTIONS}
         value={plot.type}
         onChange={(type: any) =>
           props.onChange({
             ...plot,
             type,
-            title: getPlotTitle(
-              type,
-              plot,
-              props.xAxisProperties,
-              props.yAxisProperties,
-              props.groupByProperties,
-            ),
+            title: getPlotTitle(type, plot, props.properties),
           })
         }
       />
-      {plot.type === "scatter" && (
-        <ScatterPlotSettings plot={plot} {...props} />
+      {plotImplementation && (
+        <plotImplementation.PlotSettings plot={plot} {...props} />
       )}
-      {plot.type === "box" && <BoxPlotSettings plot={plot} {...props} />}
     </>
   );
 };

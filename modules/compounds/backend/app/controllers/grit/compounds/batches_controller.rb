@@ -21,32 +21,13 @@ module Grit::Compounds
     include Grit::Core::GritEntityController
 
     def create
-      permitted_params = params.permit(self.permitted_params)
-      @record = Grit::Compounds::Batch.new(permitted_params)
-
-      if !@record.save
-        render json: { success: false, errors: @record.errors }, status: :unprocessable_entity
-        return
-      end
-
-      Grit::Compounds::BatchProperty.where(compound_type_id: [ @record.compound_type_id, nil ]).each do |prop|
-        if !params[prop.safe_name].nil? && !params[prop.safe_name].blank?
-          prop_value = Grit::Compounds::BatchPropertyValue.new(
-            batch_id: @record.id,
-            batch_property_id: prop.id,
-          )
-          if prop.data_type.is_entity
-            prop_value.entity_id_value = params[prop.safe_name]
-          else
-            prop_value["#{prop.data_type.name}_value"] = params[prop.safe_name]
-          end
-          prop_value.save!
-        end
-      end
+      result = Grit::Compounds::Batch.create(params)
 
       scope = get_scope(params[:scope] || "detailed", params)
-      @record = scope.find(@record.id)
+      @record = scope.find(result[:batch_id])
       render json: { success: true, data: @record }, status: :created, location: @record
+    rescue ActiveRecord::RecordInvalid => e
+      render json: { success: false, errors: e.record.errors }, status: :unprocessable_entity
     rescue StandardError => e
       render json: { success: false, errors: e.to_s }, status: :internal_server_error
     end

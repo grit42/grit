@@ -1,38 +1,13 @@
 import { Route, Routes } from "react-router-dom";
 import { ExperimentData } from "../../../../queries/experiments";
-import { useMemo } from "react";
-import { ErrorPage, RoutedTabs } from "@grit42/client-library/components";
+import { ErrorPage } from "@grit42/client-library/components";
 import ExperimentPlot from "./ExperimentPlot";
 import { useHasPermission } from "@grit42/core";
+import PlotTabs from "../../../../features/plots/PlotTabs";
 
 interface Props {
   experiment: ExperimentData;
 }
-
-const ExperimentPlotTabs = ({ experiment }: Props) => {
-  const canCrudPlots =
-    useHasPermission("write:assays") &&
-    experiment.publication_status_id__name !== "Published";
-
-  const tabs = useMemo(
-    () => [
-      ...Object.values(experiment.plots).map(({ id, def }) => ({
-        url: id,
-        label: `${def.title} (${def.type})`,
-      })),
-      ...(canCrudPlots ? [{ url: "new", label: "New plot" }] : []),
-    ],
-    [canCrudPlots, experiment.plots],
-  );
-
-  return (
-    <RoutedTabs
-      matchPattern="/assays/experiments/:experiment_id/plots/:tab/*"
-      tabs={tabs}
-      defaultTab={Object.keys(experiment.plots)[0] ?? "new"}
-    />
-  );
-};
 
 const ExperimentPlots = ({ experiment }: Props) => {
   const canCrudPlots =
@@ -51,7 +26,15 @@ const ExperimentPlots = ({ experiment }: Props) => {
 
   return (
     <Routes>
-      <Route element={<ExperimentPlotTabs experiment={experiment} />}>
+      <Route
+        element={
+          <PlotTabs
+            plots={experiment.plots}
+            canCrudPlots={canCrudPlots}
+            matchPattern="/assays/experiments/:experiment_id/plots/:plot_id/*"
+          />
+        }
+      >
         <Route
           path=":plot_id?"
           element={<ExperimentPlot experiment={experiment} />}
