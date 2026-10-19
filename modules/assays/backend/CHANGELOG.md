@@ -1,3 +1,9 @@
+## 0.12.1
+
+### 🩹 Fixes
+
+- security updates
+
 ## 0.12.0
 
 ### 🚀 Features
