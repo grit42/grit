@@ -161,7 +161,7 @@ GEM
     diff-lcs (1.6.2)
     drb (2.2.3)
     erb (6.0.4)
-    error_highlight (0.7.1)
+    error_highlight (0.7.2)
     erubi (1.13.1)
     factory_bot (6.6.0)
       activesupport (>= 6.1.0)
