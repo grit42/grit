@@ -23,9 +23,7 @@ import styles from "./plotNotices.module.scss";
 /** How long a notice keeps saying what it changed from. */
 const RECENT_MS = 8000;
 
-/**
- * Remembers the previous total so a change can state what it changed from.
- */
+/** The previous total, held for RECENT_MS after a change. */
 const useRecentChange = (total: number) => {
   const [previous, setPrevious] = useState<number | null>(null);
   const last = useRef(total);
@@ -54,7 +52,13 @@ const PlotNotices = ({ notices }: { notices: PlotNotice[] }) => {
       {notices.map((notice, index) => (
         <p
           key={`${notice.kind}-${index}`}
-          className={notice.kind === "empty" ? styles.empty : styles.omitted}
+          className={
+            notice.kind === "empty"
+              ? styles.empty
+              : notice.kind === "info"
+                ? styles.info
+                : styles.omitted
+          }
         >
           {notice.count !== undefined && (
             <b className={styles.count}>{notice.count}</b>
@@ -67,7 +71,7 @@ const PlotNotices = ({ notices }: { notices: PlotNotice[] }) => {
           {omitted > previous
             ? `${omitted - previous} more left out than a moment ago`
             : `${previous - omitted} fewer left out than a moment ago`}
-          {previous === 0 && " — nothing was left out before this change"}
+          {previous === 0 && " - nothing was left out before this change"}
         </p>
       )}
     </div>

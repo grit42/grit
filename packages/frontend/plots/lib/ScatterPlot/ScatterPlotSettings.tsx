@@ -1,5 +1,9 @@
 import { Select } from "@grit42/client-library/components";
-import { ScatterPlotDefinition, SourceDataProperties } from "../types";
+import {
+  ScatterPlotDefinition,
+  SourceData,
+  SourceDataProperties,
+} from "../types";
 import {
   nextAxisLabel,
   nextPlotTitle,
@@ -13,9 +17,11 @@ const ScatterPlotSettings = ({
   plot,
   onChange,
   properties,
+  data,
 }: {
   plot: ScatterPlotDefinition;
   properties: SourceDataProperties;
+  data?: SourceData;
   onChange: (plot: ScatterPlotDefinition) => void;
 }) => {
   const xAxisOptions = usePropertiesOptions(properties);
@@ -49,7 +55,12 @@ const ScatterPlotSettings = ({
         onChange={onAxisKeyChange("y")}
       />
       <AxesTypeSettings plot={plot} onChange={onChange} />
-      <BaseSettings plot={plot} properties={properties} onChange={onChange} />
+      <BaseSettings
+        plot={plot}
+        properties={properties}
+        onChange={onChange}
+        data={data}
+      />
     </>
   );
 };

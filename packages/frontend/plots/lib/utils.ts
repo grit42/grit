@@ -60,10 +60,7 @@ export const getPlotTitle = (
   }
 };
 
-/**
- * Lay `facets` sub-plots out in a roughly square grid, capped at four columns
- * so individual facets stay legible.
- */
+/** Roughly square, capped at four columns so facets stay legible. */
 export const buildFacetGrid = (facets: number) => {
   const columns = Math.min(Math.ceil(Math.sqrt(facets)), 4);
   return {
@@ -87,18 +84,11 @@ export const nextPlotTitle = (
     ? (getPlotTitle(next, properties) ?? next.title)
     : previous.title;
 
-/**
- * The display name of a data key, which is what an axis label defaults to.
- * Falls back to the key when the property is unknown.
- */
 export const propertyLabel = (
   key: string | undefined,
   properties: SourceDataProperties,
 ): string => properties.find((p) => p.name === key)?.display_name ?? key ?? "";
 
-/**
- * Whether an axis label is still the default rather than one the user typed.
- */
 export const isDerivedAxisLabel = (
   axis: { key?: string; label?: string } | undefined,
   properties: SourceDataProperties,
@@ -106,9 +96,6 @@ export const isDerivedAxisLabel = (
   axis?.label === undefined ||
   axis.label === propertyLabel(axis.key, properties);
 
-/**
- * Axis label to use after changing that axis' key.
- */
 export const nextAxisLabel = (
   axis: { key?: string; label?: string } | undefined,
   nextKey: string,
@@ -128,18 +115,10 @@ export const withDerivedLabels = <T extends PlotDefinition>(
   y: { ...plot.y, label: undefined },
 });
 
-/** Whether either axis carries tick configuration. */
 export const hasTickOptions = (plot: PlotDefinition): boolean =>
   plot.x?.ticks !== undefined || plot.y?.ticks !== undefined;
 
-/**
- * Everything "Reset to defaults" clears: the derived labels plus every
- * presentation choice, on both axes.
- *
- * Ticks live on the axis objects rather than in a block of their own, which is
- * exactly why they were missed — clearing `appearance` and `palette` left them
- * untouched.
- */
+/** Ticks live on the axes, not in `appearance`; clear them too. */
 export const withDefaultAppearance = <T extends PlotDefinition>(
   plot: T,
   properties: SourceDataProperties,
@@ -155,11 +134,6 @@ export const withDefaultAppearance = <T extends PlotDefinition>(
   };
 };
 
-/**
- * A definition with both axis labels filled in from their columns.
- *
- * An absent `label` means "use the default", which is the column's display name
- */
 export const useResolvedAxisLabels = <T extends PlotDefinition>(
   def: T,
   properties: SourceDataProperties,
@@ -179,24 +153,14 @@ export const useResolvedAxisLabels = <T extends PlotDefinition>(
     [def, properties],
   );
 
-/**
- * Axis labels as Plotly's own axis titles rather than paper-referenced
- * annotations.
- *
- * An annotation placed at a fractional offset (`x: -0.05`) moves further from
- * the plot the wider the plot gets, while the left margin stays put — so past a
- * certain width the label falls outside the paper area and is clipped, which is
- * why it would reappear on resizing the window narrower.
- */
-/**
- * An axis title that names its scale.
- */
+/** An axis title that names its scale. */
 export const axisTitleFor = (
   title: string | undefined,
   axisType: string | undefined,
 ): string | undefined =>
   title && axisType === "log" ? `${title} (log\u2081\u2080)` : title;
 
+/** Axis titles, not paper annotations, which get clipped on wide plots. */
 export const withAxisTitles = (
   axes: Record<string, Partial<LayoutAxis>>,
   {
@@ -248,6 +212,16 @@ export const MAX_FACETS = 12;
 
 export const ungroupedLabel = (def: PlotDefinition) => def.seriesLabel ?? "All";
 
+const chosenFacets = (
+  labels: readonly string[],
+  def: PlotDefinition,
+): Set<string> | null => {
+  const chosen = new Set(
+    (def.facetOnly ?? []).filter((label) => labels.includes(label)),
+  );
+  return chosen.size ? chosen : null;
+};
+
 export const buildFacets = (
   data: SourceData,
   def: PlotDefinition,
@@ -256,13 +230,9 @@ export const buildFacets = (
     return [{ label: "root", key: "root", data }];
   }
 
-  // A Map, ordered by `facetLabels`, rather than an object: JavaScript orders
-  // integer-like object keys numerically and everything else by insertion, so
-  // `Object.values` and `facetLabels` disagreed whenever the facet values were
-  // integer-like — a study year or day — and the "panels not drawn" notice
-  // then named panels that had in fact been drawn.
+  // A Map: an object would sort integer-like keys (years, days) first.
   const facets = new Map<string, RawPlotFacet>();
-  for (const label of facetLabels(data, def)) {
+  for (const label of shownFacetLabels(data, def)) {
     facets.set(label, { key: label, label, data: [] });
   }
   for (const datum of data) {
@@ -282,13 +252,46 @@ export const facetLabels = (
   for (const datum of data) {
     keys.add(def.facetBy.map((column) => datum[column]).join(" "));
   }
-  return [...keys].sort((a, b) =>
+
+  return inDeclaredOrder([...keys], def.facetOrder);
+};
+
+export const inDeclaredOrder = (
+  labels: readonly string[],
+  order?: readonly string[],
+): string[] => {
+  const sorted = [...new Set(labels)].sort((a, b) =>
     a.localeCompare(b, undefined, { numeric: true }),
   );
+  if (!order?.length) return sorted;
+
+  const present = new Set(sorted);
+  const listed = order.filter((label) => present.has(label));
+  const seen = new Set(listed);
+  return [...listed, ...sorted.filter((label) => !seen.has(label))];
+};
+
+/** The panels left after "Facets shown", before the {@link MAX_FACETS} cap. */
+export const shownFacetLabels = (
+  data: SourceData,
+  def: PlotDefinition,
+): string[] => {
+  const labels = facetLabels(data, def);
+  const chosen = chosenFacets(labels, def);
+  return chosen ? labels.filter((label) => chosen.has(label)) : labels;
 };
 
 export const countFacets = (data: SourceData, def: PlotDefinition): number =>
-  facetLabels(data, def).length;
+  shownFacetLabels(data, def).length;
+
+export const hiddenFacetLabels = (
+  data: SourceData,
+  def: PlotDefinition,
+): string[] => {
+  const labels = facetLabels(data, def);
+  const chosen = chosenFacets(labels, def);
+  return chosen ? labels.filter((label) => !chosen.has(label)) : [];
+};
 
 export interface PropertyOption {
   label: string;

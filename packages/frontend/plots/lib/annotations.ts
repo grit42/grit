@@ -16,18 +16,14 @@
  * @grit42/plots. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import type { Annotations, AxisType } from "plotly.js";
+import type { Annotations, AxisType, Data, LayoutAxis } from "plotly.js";
 import type { ColorMap } from "./colors";
 import type { PlotAnnotation } from "./types";
 
-/**
- * A reader's notes, as Plotly annotations.
- */
 const forAxis = (value: number | string, axisType: AxisType | undefined) => {
   if (axisType !== "log") return value;
   const numeric = typeof value === "number" ? value : Number(value);
-  // A non-positive value has no position on a log axis, so there is nothing
-  // sensible to convert it to; leave it and let Plotly drop it.
+  // Non-positive has no log position; leave it for Plotly to drop.
   return Number.isFinite(numeric) && numeric > 0 ? Math.log10(numeric) : value;
 };
 
@@ -40,10 +36,8 @@ export const annotationShapes = (
     text: annotation.text,
     x: forAxis(annotation.x, scales?.x),
     y: forAxis(annotation.y, scales?.y),
-    xref: (annotation.axis
-      ? `${annotation.axis.replace("y", "x")}`
-      : "x") as Partial<Annotations>["xref"],
-    yref: (annotation.axis ?? "y") as Partial<Annotations>["yref"],
+    xref: annotation.xaxis as Partial<Annotations>["xref"],
+    yref: annotation.axis as Partial<Annotations>["yref"],
     showarrow: true,
     arrowhead: 6,
     arrowsize: 1,
@@ -86,17 +80,17 @@ interface ResolvedLayout {
   [key: string]: unknown;
 }
 
-/**
- * The data coordinates under a click, from the pixel position.
- *
- * Plotly's own `plotly_click` fires only when the pointer is over a *data
- * point*
- */
+/** Data coordinates under a click; `plotly_click` fires only on a point. */
 export const pointFromClick = (
   graphDiv: HTMLElement,
   clientX: number,
   clientY: number,
-): { x: number | string; y: number | string; axis?: string } | null => {
+): {
+  x: number | string;
+  y: number | string;
+  axis: string;
+  xaxis: string;
+} | null => {
   const layout = (graphDiv as unknown as { _fullLayout?: ResolvedLayout })
     ._fullLayout;
   if (!layout) return null;
@@ -133,6 +127,7 @@ export const pointFromClick = (
       x: axes.xa.p2d(clientX - rect.left),
       y: axes.ya.p2d(clientY - rect.top),
       axis: axes.ya._id,
+      xaxis: axes.xa._id,
     };
   }
 
@@ -151,8 +146,109 @@ export const pointFromClick = (
       x: xa.p2d(px - xa._offset),
       y: ya.p2d(py - ya._offset),
       axis: ya._id,
+      xaxis: xa._id,
     };
   }
 
   return null;
 };
+
+/**
+ * The figure's axis structure: each axis and what it is anchored to, not its
+ * size. Facets, strips and trees change it; removing a row does not.
+ */
+export const axisLayout = (
+  axes: Record<string, Partial<LayoutAxis> | undefined>,
+): string =>
+  Object.entries(axes)
+    .map(([key, axis]) => `${key}>${axis?.anchor ?? ""}`)
+    .sort()
+    .join("|");
+
+// Plotly reads "x1" as "x"; a click reports the latter.
+const axisId = (id: unknown) => String(id).replace(/^([xy])1$/, "$1");
+
+/** The values drawn on each category axis, keyed by axis id ("x2"). */
+export const drawnCategories = (
+  data: readonly Data[],
+  axes: Record<string, Partial<LayoutAxis> | undefined>,
+): Map<string, Set<string>> => {
+  const drawn = new Map<string, unknown[]>();
+  for (const trace of data as Partial<Record<string, unknown>>[]) {
+    for (const [side, id] of [
+      ["x", trace.xaxis ?? "x"],
+      ["y", trace.yaxis ?? "y"],
+    ] as const) {
+      const values = trace[side];
+      if (!Array.isArray(values)) continue;
+      const key = axisId(id);
+      drawn.set(key, [...(drawn.get(key) ?? []), ...values]);
+    }
+  }
+
+  const categories = new Map<string, Set<string>>();
+  for (const [id, values] of drawn) {
+    const type = axes[`${id[0]}axis${id.slice(1)}`]?.type;
+    const named =
+      values.length > 0 && values.every((v) => typeof v === "string");
+    if (type === "category" || (type === undefined && named)) {
+      categories.set(id, new Set(values.map(String)));
+    }
+  }
+  return categories;
+};
+
+/**
+ * The notes to draw: placed in this axis layout, and on a category the figure
+ * still draws. A removed study hides its notes until it is restored.
+ */
+export const notesFor = (
+  annotations: readonly PlotAnnotation[] | undefined,
+  layout: string,
+  categories: Map<string, Set<string>> = new Map(),
+): {
+  shown: PlotAnnotation[];
+  elsewhere: number;
+  missing: number;
+  unplaced: number;
+} => {
+  const all = annotations ?? [];
+  // Saved before notes recorded their layout; there is nowhere to put them.
+  const unplaced = all.filter((note) => !note.layout).length;
+  const here = all.filter((note) => note.layout === layout);
+  const onDrawn = (axis: string, value: number | string) =>
+    categories.get(axis)?.has(String(value)) ?? true;
+  const shown = here.filter(
+    (note) => onDrawn(note.xaxis, note.x) && onDrawn(note.axis, note.y),
+  );
+  return {
+    shown,
+    elsewhere: all.length - here.length - unplaced,
+    missing: here.length - shown.length,
+    unplaced,
+  };
+};
+
+/** A figure's notes in a composite view; unscoped ones go to the first. */
+export const annotationsIn = (
+  annotations: readonly PlotAnnotation[] | undefined,
+  scope: string,
+  { first = false }: { first?: boolean } = {},
+): PlotAnnotation[] =>
+  (annotations ?? []).filter(
+    (annotation) =>
+      annotation.scope === scope || (first && annotation.scope === undefined),
+  );
+
+export const withAnnotationsIn = (
+  annotations: readonly PlotAnnotation[] | undefined,
+  scope: string,
+  next: readonly PlotAnnotation[],
+  { first = false }: { first?: boolean } = {},
+): PlotAnnotation[] => [
+  ...(annotations ?? []).filter(
+    (annotation) =>
+      annotation.scope !== scope && !(first && annotation.scope === undefined),
+  ),
+  ...next.map((annotation) => ({ ...annotation, scope })),
+];

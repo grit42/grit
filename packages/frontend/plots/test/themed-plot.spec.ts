@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import {
+  figureClick,
   buildExportOptions,
   buildThemedAxes,
 } from "../lib/PlotBase/ThemedPlot";
@@ -29,21 +30,11 @@ describe("buildThemedAxes", () => {
       "yaxis",
       "yaxis3",
     ]);
-    // Discovered axes are themed too, not just passed through.
     expect(themed.xaxis2!.color).toBe("#111");
     expect(themed.yaxis3!.gridcolor).toBe("rgba(17, 17, 17, 0.2)");
   });
 
-  /**
-   * Plotly reads the first cartesian axis from `layout.xaxis`; `xaxis1` is a
-   * key it never looks at (`cartesian/layout_defaults` resolves ids through
-   * `id2name`, and `id2name("x")` is `"xaxis"`).
-   *
-   * Every builder numbers facets from 1, so before this was canonicalised the
-   * first facet's axis type landed on the dead key while the canonical entry
-   * carried colours alone — an unfaceted plot ignored its axis type outright,
-   * and a faceted one got it right on every facet except the first.
-   */
+  // Plotly reads the first axis from `layout.xaxis` and ignores `xaxis1`.
   describe("the first facet's axis (regression)", () => {
     test("`xaxis1` is folded onto `xaxis`, which Plotly actually reads", () => {
       const themed = buildThemedAxes(colorMap, {
@@ -90,7 +81,7 @@ describe("buildThemedAxes", () => {
         layout: { xaxis: { type: "linear" } } as never,
       });
       expect(themed.xaxis!.type).toBe("linear");
-      // Merged, not replaced: the `xaxis1` entry's other settings survive.
+      // Merged, not replaced.
       expect(themed.xaxis!.nticks).toBe(5);
     });
   });
@@ -141,7 +132,6 @@ describe("buildExportOptions", () => {
     ).toEqual({ format: "png", filename: "bw" });
   });
 
-  /** scale only affects raster output, so it stays absent unless asked for. */
   test("omits scale unless set", () => {
     expect(buildExportOptions({ format: "png" }, "t")).not.toHaveProperty(
       "scale",
@@ -156,5 +146,16 @@ describe("buildExportOptions", () => {
       format: "webp",
       filename: undefined,
     });
+  });
+});
+
+describe("figureClick", () => {
+  test("passes the figure's click action through ordinarily", () => {
+    const onClick = () => {};
+    expect(figureClick(false, onClick)).toBe(onClick);
+  });
+
+  test("withdraws it while a note is being placed", () => {
+    expect(figureClick(true, () => {})).toBeUndefined();
   });
 });
