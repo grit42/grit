@@ -1025,3 +1025,40 @@ describe("facets shown", () => {
     expect(hiddenFacetLabels(rows, def(["Envigo"]))).toEqual([]);
   });
 });
+
+describe("the summary hover", () => {
+  const SUMMARY = [
+    "n",
+    "Mean",
+    "Median",
+    "SD",
+    "SEM",
+    "Variance",
+    "Min",
+    "Max",
+  ];
+  const lines = (template: unknown) =>
+    SUMMARY.filter((key) => String(template).includes(`<br>${key}: `));
+
+  test("lists the same statistics on a time series and a bar plot", () => {
+    const series = build().traces.find((trace) =>
+      String((trace as { hovertemplate?: string }).hovertemplate).includes(
+        ": mean",
+      ),
+    ) as { hovertemplate?: string };
+    const bars = buildBar(
+      sendBodyWeights,
+      {
+        type: "bar",
+        title: "Body weight by arm",
+        x: { key: "ARM", axisType: "category" },
+        y: { key: "BWSTRESN", axisType: "linear" },
+      },
+      colorMap,
+    ).traces.find((trace) => (trace as { type?: string }).type === "bar") as {
+      hovertemplate?: string;
+    };
+    expect(lines(series.hovertemplate)).toEqual(SUMMARY);
+    expect(lines(bars.hovertemplate)).toEqual(SUMMARY);
+  });
+});

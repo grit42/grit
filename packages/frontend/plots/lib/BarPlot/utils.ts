@@ -23,6 +23,8 @@ import {
   buildHoverCustomData,
   buildHoverTemplate,
   resolveHoverSpec,
+  summaryHoverRows,
+  summaryHoverValues,
 } from "../hover";
 import { boxStats, randomJitter } from "../math";
 import { barTrace, scatterTrace } from "../traces";
@@ -38,11 +40,6 @@ import { seriesPattern } from "../constants";
 import { categoryRange } from "../axes";
 import { numberFormat } from "../format";
 import { buildFacets, nullish, ungroupedLabel } from "../utils";
-
-const STAT_HOVER_SUFFIX =
-  `<br>n: %{customdata[1]}<br>Mean: %{customdata[2]}` +
-  `<br>Median: %{customdata[3]}<br>SD: %{customdata[4]}` +
-  `<br>SEM: %{customdata[5]}<extra></extra>`;
 
 const CATEGORY_FILL = 0.8;
 const JITTER_SEED = 42;
@@ -256,14 +253,7 @@ export const buildBar = (
           y.push(height);
           widths.push(slots.width * 0.9);
           errors.push(display.errorBars === "sem" ? stats.sem : stats.std);
-          hovered.push([
-            category,
-            stats.count,
-            fmt.text(stats.mean),
-            fmt.text(stats.median),
-            fmt.text(stats.std),
-            fmt.text(stats.sem),
-          ]);
+          hovered.push([category, ...summaryHoverValues(stats, fmt)]);
         }
 
         group.values.forEach((value, i) => {
@@ -287,10 +277,12 @@ export const buildBar = (
             showlegend: !named.has(series),
             customData: hovered,
             // Same shape as the time-series hover.
-            hoverTemplate:
-              `<b>${series} - ${summaryLabel}</b>` +
-              `<br>${xLabel}: %{customdata[0]}<br>${yLabel}: %{y:${fmt.spec}}` +
-              STAT_HOVER_SUFFIX,
+            hoverTemplate: buildHoverTemplate([
+              { value: `${series} - ${summaryLabel}` },
+              { key: xLabel, value: "%{customdata[0]}" },
+              { key: yLabel, value: "%{y}", format: fmt.spec },
+              ...summaryHoverRows(1),
+            ]),
           }),
           xaxis: `x${axis}`,
           yaxis: `y${axis}`,

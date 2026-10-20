@@ -8,10 +8,12 @@ import {
   maxBinCount,
   mean,
   median,
+  sem,
   numberToLetters,
   randomJitter,
   statistics,
   std,
+  summarise,
   toFiniteNumbers,
   zipFinite,
 } from "../lib/math";
@@ -289,6 +291,11 @@ describe("summary statistics", () => {
 
   test("give a single value no spread", () => {
     expect(std([5])).toBe(0);
+    expect(sem([5])).toBe(0);
+  });
+
+  test("give the standard error as the spread over the square root of n", () => {
+    expect(sem([1, 2, 3, 4])).toBeCloseTo(std([1, 2, 3, 4]) / 2, 12);
   });
 
   test("interpolate quantiles between order statistics", () => {
@@ -298,5 +305,22 @@ describe("summary statistics", () => {
     ]);
     expect(stats.p97_5).toBeCloseTo(90.4, 10);
     expect(stats.variance).toBeCloseTo(1902.5, 10);
+  });
+});
+
+describe("summarise", () => {
+  test("agrees with the separate statistics", () => {
+    const values = [0.1, 0.2, 0.3, 10.5, -4];
+    const summary = summarise(values);
+    expect(summary).toMatchObject({
+      count: 5,
+      min: -4,
+      max: 10.5,
+      mean: mean(values),
+      median: median(values),
+      std: std(values),
+      sem: sem(values),
+    });
+    expect(summary.variance).toBeCloseTo(std(values) ** 2, 12);
   });
 });
