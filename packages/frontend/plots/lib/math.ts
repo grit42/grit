@@ -33,6 +33,10 @@ const variance = (values: readonly number[]): number => {
 
 const std = (values: readonly number[]): number => Math.sqrt(variance(values));
 
+/** Standard error of the mean; 0 for a single value. */
+const sem = (values: readonly number[]): number =>
+  values.length > 1 ? std(values) / Math.sqrt(values.length) : 0;
+
 /** Linear between order statistics, as R's default and numpy's. */
 const quantile = (sorted: readonly number[], p: number): number => {
   const at = p * (sorted.length - 1);
@@ -238,7 +242,7 @@ const boxStats = (arr: number[]): BoxStats | null => {
   const meanValue = mean(values);
   const stdValue = std(values);
   const varianceValue = variance(values);
-  const sem = stdValue / Math.sqrt(values.length);
+  const semValue = sem(values);
 
   // whiskers are arbitrarily defined in plotly
   // see https://github.com/plotly/plotly.js/issues/277
@@ -259,7 +263,7 @@ const boxStats = (arr: number[]): BoxStats | null => {
     mean: meanValue,
     std: stdValue,
     variance: varianceValue,
-    sem,
+    sem: semValue,
     iqr,
     lowerWhisker,
     upperWhisker,
@@ -307,6 +311,7 @@ export {
   mean,
   median,
   std,
+  sem,
   toFiniteNumber,
   toFiniteNumbers,
   zipFinite,

@@ -8,6 +8,7 @@ import {
   maxBinCount,
   mean,
   median,
+  sem,
   numberToLetters,
   randomJitter,
   statistics,
@@ -289,6 +290,11 @@ describe("summary statistics", () => {
 
   test("give a single value no spread", () => {
     expect(std([5])).toBe(0);
+    expect(sem([5])).toBe(0);
+  });
+
+  test("give the standard error as the spread over the square root of n", () => {
+    expect(sem([1, 2, 3, 4])).toBeCloseTo(std([1, 2, 3, 4]) / 2, 12);
   });
 
   test("interpolate quantiles between order statistics", () => {

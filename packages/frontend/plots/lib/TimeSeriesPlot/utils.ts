@@ -19,7 +19,7 @@
 import { Annotations, Data, LayoutAxis } from "plotly.js";
 import { ColorMap } from "../colors";
 import { numberFormat, type NumberFormat } from "../format";
-import { mean, median, std } from "../math";
+import { mean, median, sem, std } from "../math";
 import { SourceData, StatMarker, TimeSeriesPlotDefinition } from "../types";
 import {
   buildFacets,
@@ -195,7 +195,7 @@ const buildTraces = (
         means.push(mean(vals));
         medians.push(median(vals));
         sds.push(std(vals));
-        sems.push(vals.length > 1 ? std(vals) / Math.sqrt(vals.length) : 0);
+        sems.push(sem(vals));
         counts.push(vals.length);
       }
 
