@@ -3,7 +3,12 @@ import { buildTimeSeries } from "../lib/TimeSeriesPlot/utils";
 import { buildScatter } from "../lib/ScatterPlot/utils";
 import { buildBox } from "../lib/BoxPlot/utils";
 import { buildBar } from "../lib/BarPlot/utils";
-import { buildFacets, facetLabels, inDeclaredOrder } from "../lib/utils";
+import {
+  buildFacets,
+  facetLabels,
+  hiddenFacetLabels,
+  inDeclaredOrder,
+} from "../lib/utils";
 import { boxStats } from "../lib/math";
 import type { ColorMap } from "../lib/colors";
 import type {
@@ -989,5 +994,34 @@ describe("buildTimeSeries study-day axis", () => {
       colorMap,
     );
     expect(axes.xaxis1).toMatchObject({ tickmode: "linear", dtick: 1 });
+  });
+});
+
+describe("panels shown", () => {
+  const rows: SourceData = [
+    { sex: "F", value: 1 },
+    { sex: "M", value: 2 },
+  ];
+  const def = (facetOnly: string[]) =>
+    ({
+      type: "scatter",
+      title: "t",
+      x: { key: "value", axisType: "linear" },
+      y: { key: "value", axisType: "linear" },
+      facetBy: ["sex"],
+      facetOnly,
+    }) as PlotDefinition;
+
+  test("draws only the panels picked", () => {
+    expect(buildFacets(rows, def(["M"])).map((f) => f.label)).toEqual(["M"]);
+    expect(hiddenFacetLabels(rows, def(["M"]))).toEqual(["F"]);
+  });
+
+  test("draws every panel when the pick names none of them", () => {
+    expect(buildFacets(rows, def(["Envigo"])).map((f) => f.label)).toEqual([
+      "F",
+      "M",
+    ]);
+    expect(hiddenFacetLabels(rows, def(["Envigo"]))).toEqual([]);
   });
 });

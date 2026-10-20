@@ -212,6 +212,16 @@ export const MAX_FACETS = 12;
 
 export const ungroupedLabel = (def: PlotDefinition) => def.seriesLabel ?? "All";
 
+const chosenFacets = (
+  labels: readonly string[],
+  def: PlotDefinition,
+): Set<string> | null => {
+  const chosen = new Set(
+    (def.facetOnly ?? []).filter((label) => labels.includes(label)),
+  );
+  return chosen.size ? chosen : null;
+};
+
 export const buildFacets = (
   data: SourceData,
   def: PlotDefinition,
@@ -220,11 +230,12 @@ export const buildFacets = (
     return [{ label: "root", key: "root", data }];
   }
 
-  const chosen = def.facetOnly?.length ? new Set(def.facetOnly) : null;
+  const labels = facetLabels(data, def);
+  const chosen = chosenFacets(labels, def);
 
   // A Map: an object would sort integer-like keys (years, days) first.
   const facets = new Map<string, RawPlotFacet>();
-  for (const label of facetLabels(data, def)) {
+  for (const label of labels) {
     if (chosen && !chosen.has(label)) continue;
     facets.set(label, { key: label, label, data: [] });
   }
@@ -271,9 +282,9 @@ export const hiddenFacetLabels = (
   data: SourceData,
   def: PlotDefinition,
 ): string[] => {
-  if (!def.facetOnly?.length) return [];
-  const chosen = new Set(def.facetOnly);
-  return facetLabels(data, def).filter((label) => !chosen.has(label));
+  const labels = facetLabels(data, def);
+  const chosen = chosenFacets(labels, def);
+  return chosen ? labels.filter((label) => !chosen.has(label)) : [];
 };
 
 export interface PropertyOption {
