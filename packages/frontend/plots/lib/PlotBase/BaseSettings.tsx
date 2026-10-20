@@ -68,7 +68,9 @@ const BaseSettings = <TPlot extends PlotDefinition>({
           label="Facet by"
           options={options}
           value={plot.facetBy ?? []}
-          onChange={onPropChange("facetBy")}
+          onChange={(facetBy: string[]) =>
+            onChange({ ...plot, facetBy, facetOnly: undefined })
+          }
         />
       )}
       {facetBy && panelOptions.length > 1 && (

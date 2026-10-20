@@ -350,6 +350,24 @@ describe("the notes section", () => {
   });
 });
 
+describe("the panels shown control", () => {
+  const rows = [
+    { concentration: 1, response: 2, compound: "A" },
+    { concentration: 3, response: 4, compound: "B" },
+  ];
+
+  test.each(["scatter", "box", "bar", "timeseries"] as const)(
+    "is offered on a faceted %s plot",
+    async (type) => {
+      const host = await render(
+        { ...plot, type, facetBy: ["compound"] } as PlotDefinition,
+        rows,
+      );
+      expect(host.textContent).toContain("Panels shown");
+    },
+  );
+});
+
 describe("the panel scales switch", () => {
   const faceted = { ...plot, facetBy: ["compound"] };
   const rows = [

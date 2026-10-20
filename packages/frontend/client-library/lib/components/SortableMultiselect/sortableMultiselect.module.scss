@@ -33,6 +33,14 @@
   display: flex;
   flex-direction: column;
   gap: theme.$spacing-sm;
+  max-height: 18em;
+  overflow-y: auto;
+}
+
+.actions {
+  display: flex;
+  gap: theme.$spacing-sm;
+  align-items: center;
 }
 
 .item {

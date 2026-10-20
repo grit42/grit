@@ -7,7 +7,6 @@ import {
 
 const options = (overrides = {}) => ({
   canAnnotate: true,
-  annotating: false,
   onToggleNote: () => {},
   canDownload: true,
   onDownload: () => {},
@@ -23,11 +22,6 @@ describe("figureToolbarButtons", () => {
     ]);
     expect(buttons[0]!.icon).toBe(NOTE_ICON);
     expect(buttons[1]!.icon).toBe(DOWNLOAD_ICON);
-  });
-
-  test("names the note button for what a click will do", () => {
-    const [note] = figureToolbarButtons(options({ annotating: true }));
-    expect(note!.title).toBe("Cancel the note");
   });
 
   test("leaves out what the host cannot do", () => {

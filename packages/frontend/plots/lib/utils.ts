@@ -212,6 +212,16 @@ export const MAX_FACETS = 12;
 
 export const ungroupedLabel = (def: PlotDefinition) => def.seriesLabel ?? "All";
 
+const chosenFacets = (
+  labels: readonly string[],
+  def: PlotDefinition,
+): Set<string> | null => {
+  const chosen = new Set(
+    (def.facetOnly ?? []).filter((label) => labels.includes(label)),
+  );
+  return chosen.size ? chosen : null;
+};
+
 export const buildFacets = (
   data: SourceData,
   def: PlotDefinition,
@@ -220,12 +230,9 @@ export const buildFacets = (
     return [{ label: "root", key: "root", data }];
   }
 
-  const chosen = def.facetOnly?.length ? new Set(def.facetOnly) : null;
-
   // A Map: an object would sort integer-like keys (years, days) first.
   const facets = new Map<string, RawPlotFacet>();
-  for (const label of facetLabels(data, def)) {
-    if (chosen && !chosen.has(label)) continue;
+  for (const label of shownFacetLabels(data, def)) {
     facets.set(label, { key: label, label, data: [] });
   }
   for (const datum of data) {
@@ -264,16 +271,26 @@ export const inDeclaredOrder = (
   return [...listed, ...sorted.filter((label) => !seen.has(label))];
 };
 
+/** The panels left after "Panels shown", before the {@link MAX_FACETS} cap. */
+export const shownFacetLabels = (
+  data: SourceData,
+  def: PlotDefinition,
+): string[] => {
+  const labels = facetLabels(data, def);
+  const chosen = chosenFacets(labels, def);
+  return chosen ? labels.filter((label) => chosen.has(label)) : labels;
+};
+
 export const countFacets = (data: SourceData, def: PlotDefinition): number =>
-  facetLabels(data, def).length;
+  shownFacetLabels(data, def).length;
 
 export const hiddenFacetLabels = (
   data: SourceData,
   def: PlotDefinition,
 ): string[] => {
-  if (!def.facetOnly?.length) return [];
-  const chosen = new Set(def.facetOnly);
-  return facetLabels(data, def).filter((label) => !chosen.has(label));
+  const labels = facetLabels(data, def);
+  const chosen = chosenFacets(labels, def);
+  return chosen ? labels.filter((label) => !chosen.has(label)) : [];
 };
 
 export interface PropertyOption {

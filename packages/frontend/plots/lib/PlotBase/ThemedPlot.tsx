@@ -16,7 +16,7 @@
  * @grit42/plots. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { useState, type ReactNode } from "react";
+import { useCallback, useMemo, useState, type ReactNode } from "react";
 import { Config, Layout, LayoutAxis, PlotMouseEvent } from "plotly.js";
 import type { PlotParams } from "./types";
 import PlotBase from ".";
@@ -26,6 +26,9 @@ import type { PlotAnnotation, PlotExportOptions } from "../types";
 import type { PlotNotice } from "../notices";
 import {
   annotationShapes,
+  axisLayout,
+  drawnCategories,
+  notesFor,
   nextAnnotationId,
   pointFromEvent,
 } from "../annotations";
@@ -147,6 +150,20 @@ const ThemedPlot = ({
   const [annotating, setAnnotating] = useState(false);
   const [pending, setPending] = useState<AnnotationPoint | null>(null);
   const canAnnotate = typeof onAnnotationsChange === "function";
+  const canDownload = graphDiv !== null;
+  const toggleNote = useCallback(() => setAnnotating((was) => !was), []);
+  const openDownload = useCallback(() => setDownloadOpen(true), []);
+  // Stable, so Plotly updates in place instead of redrawing and losing the zoom.
+  const toolbarButtons = useMemo(
+    () =>
+      figureToolbarButtons({
+        canAnnotate,
+        onToggleNote: toggleNote,
+        canDownload,
+        onDownload: openDownload,
+      }),
+    [canAnnotate, canDownload, toggleNote, openDownload],
+  );
 
   const placeNote = (event: Readonly<PlotMouseEvent>) => {
     const point = pointFromEvent(event);
@@ -168,6 +185,45 @@ const ThemedPlot = ({
   );
 
   const themedAxes = buildThemedAxes(colorMap, { xaxis, yaxis, axes, layout });
+  const placedIn = axisLayout(themedAxes);
+  const notes = notesFor(
+    annotations,
+    placedIn,
+    drawnCategories(data, themedAxes),
+  );
+  const shownNotices: PlotNotice[] = [
+    ...(notices ?? []),
+    ...(notes.elsewhere
+      ? [
+          {
+            kind: "info" as const,
+            count: notes.elsewhere,
+            reason:
+              "notes hidden: placed with another panel layout, such as a different Facet by. Return to it to see them, or remove them under Notes.",
+          },
+        ]
+      : []),
+    ...(notes.missing
+      ? [
+          {
+            kind: "info" as const,
+            count: notes.missing,
+            reason:
+              "notes hidden: what they point at is not in the figure, such as a removed study. Restore it to see them, or remove them under Notes.",
+          },
+        ]
+      : []),
+    ...(notes.unplaced
+      ? [
+          {
+            kind: "info" as const,
+            count: notes.unplaced,
+            reason:
+              "notes hidden: saved by an earlier version, they cannot be placed. Remove them under Notes.",
+          },
+        ]
+      : []),
+  ];
   const scales = {
     x: (themedAxes.xaxis as Partial<LayoutAxis> | undefined)?.type,
     y: (themedAxes.yaxis as Partial<LayoutAxis> | undefined)?.type,
@@ -214,7 +270,7 @@ const ThemedPlot = ({
 
     annotations: [
       ...((restLayout.annotations ?? []) as Partial<Annotations>[]),
-      ...annotationShapes(annotations, colorMap, scales),
+      ...annotationShapes(notes.shown, colorMap, scales),
     ],
 
     uirevision: layout?.uirevision ?? "true",
@@ -224,18 +280,12 @@ const ThemedPlot = ({
     responsive: true,
     scrollZoom: true,
     displaylogo: false,
-    displayModeBar: annotating ? true : "hover",
+    displayModeBar: "hover",
     // On by default in Plotly 4: a button posting the data to cloud.plotly.com.
     showSendToCloud: false,
     ...config,
     modeBarButtonsToAdd: [
-      ...figureToolbarButtons({
-        canAnnotate,
-        annotating,
-        onToggleNote: () => setAnnotating((was) => !was),
-        canDownload: graphDiv !== null,
-        onDownload: () => setDownloadOpen(true),
-      }),
+      ...toolbarButtons,
       ...(config?.modeBarButtonsToAdd ?? []),
     ],
   };
@@ -267,7 +317,7 @@ const ThemedPlot = ({
   const withNotices = (figure: ReactNode) => (
     <div className={styles.stack}>
       <div className={styles.figure}>{figure}</div>
-      {notices?.length ? <PlotNotices notices={notices} /> : null}
+      {shownNotices.length ? <PlotNotices notices={shownNotices} /> : null}
     </div>
   );
 
@@ -292,6 +342,7 @@ const ThemedPlot = ({
                   y: pending.y,
                   axis: pending.axis,
                   xaxis: pending.xaxis,
+                  layout: placedIn,
                   author: annotationAuthor,
                 },
               ]);

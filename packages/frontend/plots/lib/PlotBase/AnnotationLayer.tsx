@@ -24,8 +24,8 @@ import styles from "./annotationLayer.module.scss";
 export interface AnnotationPoint {
   x: number | string;
   y: number | string;
-  axis?: string;
-  xaxis?: string;
+  axis: string;
+  xaxis: string;
 }
 
 const AnnotationLayer = ({

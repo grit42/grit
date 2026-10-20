@@ -22,8 +22,8 @@ import type { PlotDefinition, SourceData } from "./types";
 import {
   MAX_FACETS,
   countFacets,
-  facetLabels,
   hiddenFacetLabels,
+  shownFacetLabels,
 } from "./utils";
 
 export interface PlotNotice {
@@ -131,7 +131,7 @@ export const plotNotices = ({
 
   const wanted = countFacets(data, def);
   if (wanted > MAX_FACETS) {
-    const omitted = facetLabels(data, def).slice(MAX_FACETS);
+    const omitted = shownFacetLabels(data, def).slice(MAX_FACETS);
     const named = omitted.slice(0, NAMED_OMISSIONS).join(", ");
     const rest =
       omitted.length > NAMED_OMISSIONS

@@ -53,10 +53,11 @@ export interface PlotAnnotation {
   text: string;
   x: number | string;
   y: number | string;
-  /** The panel's y axis; absent means the first. */
-  axis?: string;
-  /** For subplots that do not pair xN with yN. */
-  xaxis?: string;
+  /** The y and x axis it was placed on; subplots need not pair xN with yN. */
+  axis: string;
+  xaxis: string;
+  /** The figure's axis layout when placed; drawn only in that layout. */
+  layout: string;
   /** The figure within a composite view; absent in a single figure. */
   scope?: string;
   author?: string;
