@@ -17,54 +17,35 @@
  */
 
 import type { ColorMap } from "./colors";
-import {
-  create,
-  evaluateDependencies,
-  minDependencies,
-  maxDependencies,
-  largerEqDependencies,
-  addDependencies,
-  divideDependencies,
-  sqrtDependencies,
-  cosDependencies,
-  meanDependencies,
-  medianDependencies,
-  stdDependencies,
-  quantileSeqDependencies,
-  varianceDependencies,
-  roundDependencies,
-} from "mathjs";
+const sum = (values: readonly number[]) =>
+  values.reduce((total, value) => total + value, 0);
 
-const {
-  min,
-  max,
-  evaluate,
-  add,
-  divide,
-  sqrt,
-  cos,
-  mean,
-  median,
-  std,
-  quantileSeq,
-  variance,
-  round,
-} = create({
-  evaluateDependencies,
-  minDependencies,
-  maxDependencies,
-  largerEqDependencies,
-  addDependencies,
-  divideDependencies,
-  sqrtDependencies,
-  cosDependencies,
-  meanDependencies,
-  medianDependencies,
-  stdDependencies,
-  quantileSeqDependencies,
-  varianceDependencies,
-  roundDependencies,
-});
+const mean = (values: readonly number[]): number => sum(values) / values.length;
+
+/** Sample variance (n - 1); 0 for a single value. */
+const variance = (values: readonly number[]): number => {
+  if (values.length < 2) return 0;
+  const centre = mean(values);
+  return (
+    sum(values.map((value) => (value - centre) ** 2)) / (values.length - 1)
+  );
+};
+
+const std = (values: readonly number[]): number => Math.sqrt(variance(values));
+
+/** Linear between order statistics, as R's default and numpy's. */
+const quantile = (sorted: readonly number[], p: number): number => {
+  const at = p * (sorted.length - 1);
+  const below = Math.floor(at);
+  const above = Math.min(below + 1, sorted.length - 1);
+  return sorted[below]! + (at - below) * (sorted[above]! - sorted[below]!);
+};
+
+const ascending = (values: readonly number[]) =>
+  [...values].sort((a, b) => a - b);
+
+const median = (values: readonly number[]): number =>
+  quantile(ascending(values), 0.5);
 
 const randomSeed = (seed: number): (() => number) => {
   let state = seed;
@@ -248,17 +229,15 @@ const boxStats = (arr: number[]): BoxStats | null => {
   }
   if (!values.length) return null;
 
-  const sorted = [...values].sort((a, b) => a - b);
+  const sorted = ascending(values);
   const minValue = sorted[0]!;
   const maxValue = sorted[sorted.length - 1]!;
-  const [p2_5, q1, medianValue, q3, p97_5] = quantileSeq(
-    sorted,
-    [0.025, 0.25, 0.5, 0.75, 0.975],
-    true,
-  ) as [number, number, number, number, number];
-  const meanValue = mean(values) as unknown as number;
-  const stdValue = std(values) as unknown as number;
-  const varianceValue = variance(values) as unknown as number;
+  const [p2_5, q1, medianValue, q3, p97_5] = [
+    0.025, 0.25, 0.5, 0.75, 0.975,
+  ].map((p) => quantile(sorted, p)) as [number, number, number, number, number];
+  const meanValue = mean(values);
+  const stdValue = std(values);
+  const varianceValue = variance(values);
   const sem = stdValue / Math.sqrt(values.length);
 
   // whiskers are arbitrarily defined in plotly
@@ -293,12 +272,13 @@ const statistics = ({ arr }: { arr: number[] }): Stats | null => {
 
   const nSamples = array.length;
 
-  const minValue = Number(min(array));
-  const maxValue = Number(max(array));
-  const meanValue = Number(mean(array));
-  const medianValue = Number(median(array));
-  const stdValue = Number(std(array));
-  const varianceValue = Number(variance(array));
+  const sorted = ascending(array);
+  const minValue = sorted[0]!;
+  const maxValue = sorted[sorted.length - 1]!;
+  const meanValue = mean(array);
+  const medianValue = quantile(sorted, 0.5);
+  const stdValue = std(array);
+  const varianceValue = variance(array);
   const lolValue = meanValue - 1 * stdValue;
   const uolValue = meanValue + 1 * stdValue;
   const lwlValue = meanValue - 2 * stdValue;
@@ -324,19 +304,9 @@ const statistics = ({ arr }: { arr: number[] }): Stats | null => {
 };
 
 export {
-  min,
-  max,
-  evaluate,
-  add,
-  divide,
-  sqrt,
-  cos,
   mean,
   median,
   std,
-  quantileSeq,
-  variance,
-  round,
   toFiniteNumber,
   toFiniteNumbers,
   zipFinite,

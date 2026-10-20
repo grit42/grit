@@ -6,9 +6,12 @@ import {
   arange,
   boxStats,
   maxBinCount,
+  mean,
+  median,
   numberToLetters,
   randomJitter,
   statistics,
+  std,
   toFiniteNumbers,
   zipFinite,
 } from "../lib/math";
@@ -271,5 +274,29 @@ describe("maxBinCount", () => {
 
   test("ignores values outside the range", () => {
     expect(maxBinCount([1, 100], 0, 10, 5)).toBe(1);
+  });
+});
+
+// Reference values from mathjs 15.2, which these replace.
+describe("summary statistics", () => {
+  test("match the previous implementation", () => {
+    const values = [0.1, 0.2, 0.3, 10.5, -4];
+    expect(mean(values)).toBeCloseTo(1.42, 12);
+    expect(median(values)).toBe(0.2);
+    expect(std(values)).toBeCloseTo(5.392309338307661, 12);
+    expect(median([1, 2])).toBe(1.5);
+  });
+
+  test("give a single value no spread", () => {
+    expect(std([5])).toBe(0);
+  });
+
+  test("interpolate quantiles between order statistics", () => {
+    const stats = boxStats([1, 2, 3, 4, 100])!;
+    expect([stats.p2_5, stats.q1, stats.median, stats.q3]).toEqual([
+      1.1, 2, 3, 4,
+    ]);
+    expect(stats.p97_5).toBeCloseTo(90.4, 10);
+    expect(stats.variance).toBeCloseTo(1902.5, 10);
   });
 });

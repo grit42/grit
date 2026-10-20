@@ -33,7 +33,6 @@
   "description": "",
   "dependencies": {
     "@grit42/client-library": "workspace:*",
-    "mathjs": "15.2.0",
     "plotly.js-cartesian-dist-min": "4.1.2"
   },
   "peerDependencies": {
