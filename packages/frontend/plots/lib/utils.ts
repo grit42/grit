@@ -230,13 +230,9 @@ export const buildFacets = (
     return [{ label: "root", key: "root", data }];
   }
 
-  const labels = facetLabels(data, def);
-  const chosen = chosenFacets(labels, def);
-
   // A Map: an object would sort integer-like keys (years, days) first.
   const facets = new Map<string, RawPlotFacet>();
-  for (const label of labels) {
-    if (chosen && !chosen.has(label)) continue;
+  for (const label of shownFacetLabels(data, def)) {
     facets.set(label, { key: label, label, data: [] });
   }
   for (const datum of data) {
@@ -275,8 +271,18 @@ export const inDeclaredOrder = (
   return [...listed, ...sorted.filter((label) => !seen.has(label))];
 };
 
+/** The panels left after "Panels shown", before the {@link MAX_FACETS} cap. */
+export const shownFacetLabels = (
+  data: SourceData,
+  def: PlotDefinition,
+): string[] => {
+  const labels = facetLabels(data, def);
+  const chosen = chosenFacets(labels, def);
+  return chosen ? labels.filter((label) => chosen.has(label)) : labels;
+};
+
 export const countFacets = (data: SourceData, def: PlotDefinition): number =>
-  facetLabels(data, def).length;
+  shownFacetLabels(data, def).length;
 
 export const hiddenFacetLabels = (
   data: SourceData,
