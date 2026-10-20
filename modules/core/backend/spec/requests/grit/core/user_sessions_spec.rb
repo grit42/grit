@@ -65,5 +65,16 @@ RSpec.describe "User Sessions API", type: :request do
       post "/api/grit/core/user_session/two_factor", params: { user: admin.login, token: "WRONG" }
       expect(response).to have_http_status(:too_many_requests)
     end
+
+    it "counts login and two factor attempts separately" do
+      10.times do
+        post "/api/grit/core/user_session", params: { user_session: { login: admin.login, password: "wrong" } }
+      end
+      post "/api/grit/core/user_session", params: { user_session: { login: admin.login, password: "wrong" } }
+      expect(response).to have_http_status(:too_many_requests)
+
+      post "/api/grit/core/user_session/two_factor", params: { user: admin.login, token: "WRONG" }
+      expect(response).not_to have_http_status(:too_many_requests)
+    end
   end
 end
