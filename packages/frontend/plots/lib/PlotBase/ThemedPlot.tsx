@@ -16,7 +16,14 @@
  * @grit42/plots. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { Config, Layout, LayoutAxis } from "plotly.js";
 import { PlotParams } from "react-plotly.js";
 import PlotBase from ".";
@@ -155,6 +162,20 @@ const ThemedPlot = ({
   const [annotating, setAnnotating] = useState(false);
   const [pending, setPending] = useState<AnnotationPoint | null>(null);
   const canAnnotate = typeof onAnnotationsChange === "function";
+  const canDownload = graphDiv !== null;
+  const toggleNote = useCallback(() => setAnnotating((was) => !was), []);
+  const openDownload = useCallback(() => setDownloadOpen(true), []);
+  // Stable, so Plotly updates in place instead of redrawing and losing the zoom.
+  const toolbarButtons = useMemo(
+    () =>
+      figureToolbarButtons({
+        canAnnotate,
+        onToggleNote: toggleNote,
+        canDownload,
+        onDownload: openDownload,
+      }),
+    [canAnnotate, canDownload, toggleNote, openDownload],
+  );
 
   // Plotly only follows the window; follow the figure's own box too.
   useEffect(() => {
@@ -242,17 +263,11 @@ const ThemedPlot = ({
     responsive: true,
     scrollZoom: true,
     displaylogo: false,
-    displayModeBar: annotating ? true : "hover",
+    displayModeBar: "hover",
     toImageButtonOptions: buildExportOptions(exportOptions, title),
     ...config,
     modeBarButtonsToAdd: [
-      ...figureToolbarButtons({
-        canAnnotate,
-        annotating,
-        onToggleNote: () => setAnnotating((was) => !was),
-        canDownload: graphDiv !== null,
-        onDownload: () => setDownloadOpen(true),
-      }),
+      ...toolbarButtons,
       ...(config?.modeBarButtonsToAdd ?? []),
     ],
   };

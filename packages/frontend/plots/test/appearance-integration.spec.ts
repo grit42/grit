@@ -406,3 +406,37 @@ describe("export fidelity", () => {
     expect(svg).toContain("Excursion expected");
   });
 });
+
+describe("re-rendering", () => {
+  type GraphDiv = HTMLElement & {
+    _context: { modeBarButtonsToAdd: { name: string; click: () => void }[] };
+  };
+
+  // A full redraw (newPlot) rebuilds the svg and loses the reader's zoom.
+  test("updates the figure in place, e.g. when Download opens", async () => {
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+    await act(async () => {
+      createRoot(host).render(
+        createElement(Plot, {
+          def: withDef({}),
+          data,
+          dataProperties: properties,
+        } as never),
+      );
+    });
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+    });
+    const graphDiv = host.querySelector(".js-plotly-plot") as GraphDiv;
+    const before = graphDiv.querySelector(".main-svg");
+    await act(async () => {
+      graphDiv._context.modeBarButtonsToAdd
+        .find((button) => button.name === "grit-download")!
+        .click();
+      await new Promise((resolve) => setTimeout(resolve, 300));
+    });
+    expect(before).not.toBeNull();
+    expect(graphDiv.querySelector(".main-svg")).toBe(before);
+  });
+});

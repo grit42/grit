@@ -36,9 +36,12 @@ export const DOWNLOAD_ICON = {
     "M5 18H19V20H5Z",
 };
 
+/**
+ * Keep these stable across renders: Plotly compares the config, and any change,
+ * a new click function included, makes it redraw from scratch and lose the zoom.
+ */
 export interface FigureToolbarOptions {
   canAnnotate: boolean;
-  annotating: boolean;
   onToggleNote: () => void;
   canDownload: boolean;
   onDownload: () => void;
@@ -46,7 +49,6 @@ export interface FigureToolbarOptions {
 
 export const figureToolbarButtons = ({
   canAnnotate,
-  annotating,
   onToggleNote,
   canDownload,
   onDownload,
@@ -55,7 +57,7 @@ export const figureToolbarButtons = ({
     ? [
         {
           name: "grit-add-note",
-          title: annotating ? "Cancel the note" : "Add note",
+          title: "Add note",
           icon: NOTE_ICON,
           click: () => onToggleNote(),
         },
