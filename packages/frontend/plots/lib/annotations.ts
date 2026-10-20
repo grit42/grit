@@ -16,7 +16,7 @@
  * @grit42/plots. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import type { Annotations, AxisType } from "plotly.js";
+import type { Annotations, AxisType, Data, LayoutAxis } from "plotly.js";
 import type { ColorMap } from "./colors";
 import type { PlotAnnotation } from "./types";
 
@@ -36,11 +36,8 @@ export const annotationShapes = (
     text: annotation.text,
     x: forAxis(annotation.x, scales?.x),
     y: forAxis(annotation.y, scales?.y),
-    xref: (annotation.xaxis ??
-      (annotation.axis
-        ? annotation.axis.replace("y", "x")
-        : "x")) as Partial<Annotations>["xref"],
-    yref: (annotation.axis ?? "y") as Partial<Annotations>["yref"],
+    xref: annotation.xaxis as Partial<Annotations>["xref"],
+    yref: annotation.axis as Partial<Annotations>["yref"],
     showarrow: true,
     arrowhead: 6,
     arrowsize: 1,
@@ -91,8 +88,8 @@ export const pointFromClick = (
 ): {
   x: number | string;
   y: number | string;
-  axis?: string;
-  xaxis?: string;
+  axis: string;
+  xaxis: string;
 } | null => {
   const layout = (graphDiv as unknown as { _fullLayout?: ResolvedLayout })
     ._fullLayout;
@@ -154,6 +151,73 @@ export const pointFromClick = (
   }
 
   return null;
+};
+
+/**
+ * The figure's axis structure: each axis and what it is anchored to, not its
+ * size. Facets, strips and trees change it; removing a row does not.
+ */
+export const axisLayout = (
+  axes: Record<string, Partial<LayoutAxis> | undefined>,
+): string =>
+  Object.entries(axes)
+    .map(([key, axis]) => `${key}>${axis?.anchor ?? ""}`)
+    .sort()
+    .join("|");
+
+// Plotly reads "x1" as "x"; a click reports the latter.
+const axisId = (id: unknown) => String(id).replace(/^([xy])1$/, "$1");
+
+/** The values drawn on each category axis, keyed by axis id ("x2"). */
+export const drawnCategories = (
+  data: readonly Data[],
+  axes: Record<string, Partial<LayoutAxis> | undefined>,
+): Map<string, Set<string>> => {
+  const drawn = new Map<string, unknown[]>();
+  for (const trace of data as Partial<Record<string, unknown>>[]) {
+    for (const [side, id] of [
+      ["x", trace.xaxis ?? "x"],
+      ["y", trace.yaxis ?? "y"],
+    ] as const) {
+      const values = trace[side];
+      if (!Array.isArray(values)) continue;
+      const key = axisId(id);
+      drawn.set(key, [...(drawn.get(key) ?? []), ...values]);
+    }
+  }
+
+  const categories = new Map<string, Set<string>>();
+  for (const [id, values] of drawn) {
+    const type = axes[`${id[0]}axis${id.slice(1)}`]?.type;
+    const named =
+      values.length > 0 && values.every((v) => typeof v === "string");
+    if (type === "category" || (type === undefined && named)) {
+      categories.set(id, new Set(values.map(String)));
+    }
+  }
+  return categories;
+};
+
+/**
+ * The notes to draw: placed in this axis layout, and on a category the figure
+ * still draws. A removed study hides its notes until it is restored.
+ */
+export const notesFor = (
+  annotations: readonly PlotAnnotation[] | undefined,
+  layout: string,
+  categories: Map<string, Set<string>> = new Map(),
+): { shown: PlotAnnotation[]; elsewhere: number; missing: number } => {
+  const here = (annotations ?? []).filter((note) => note.layout === layout);
+  const onDrawn = (axis: string, value: number | string) =>
+    categories.get(axis)?.has(String(value)) ?? true;
+  const shown = here.filter(
+    (note) => onDrawn(note.xaxis, note.x) && onDrawn(note.axis, note.y),
+  );
+  return {
+    shown,
+    elsewhere: (annotations?.length ?? 0) - here.length,
+    missing: here.length - shown.length,
+  };
 };
 
 /** A figure's notes in a composite view; unscoped ones go to the first. */

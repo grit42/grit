@@ -3,7 +3,10 @@ import {
   annotationsIn,
   withAnnotationsIn,
   annotationShapes,
+  axisLayout,
+  drawnCategories,
   nextAnnotationId,
+  notesFor,
   pointFromClick,
 } from "../lib/annotations";
 import type { ColorMap } from "../lib/colors";
@@ -19,6 +22,9 @@ const note = (extra: Partial<PlotAnnotation> = {}): PlotAnnotation => ({
   text: "Excursion expected",
   x: 5,
   y: 50,
+  axis: "y",
+  xaxis: "x",
+  layout: "xaxis>y|yaxis>x",
   ...extra,
 });
 
@@ -30,11 +36,6 @@ describe("rendering", () => {
     );
     expect(shape.xref).toBe("x3");
     expect(shape.yref).toBe("y");
-  });
-
-  test("derives the x axis only for a note saved before it was recorded", () => {
-    const [shape] = annotationShapes([note({ axis: "y2" })], colorMap);
-    expect(shape.xref).toBe("x2");
   });
 
   test("places a note at data coordinates with an arrow to the point", () => {
@@ -60,15 +61,11 @@ describe("rendering", () => {
   });
 
   test("lands in the panel it was placed in", () => {
-    const [shape] = annotationShapes([note({ axis: "y2" })], colorMap);
-    expect(shape.yref).toBe("y2");
-    expect(shape.xref).toBe("x2");
-  });
-
-  test("defaults to the first panel where none was recorded", () => {
-    const [shape] = annotationShapes([note()], colorMap);
-    expect(shape.yref).toBe("y");
-    expect(shape.xref).toBe("x");
+    const [shape] = annotationShapes(
+      [note({ axis: "y2", xaxis: "x2" })],
+      colorMap,
+    );
+    expect([shape.xref, shape.yref]).toEqual(["x2", "y2"]);
   });
 
   // Plotly quirk: a log axis reads an annotation's x as log10 but `tickvals`
@@ -276,6 +273,81 @@ describe("placing a note from a click", () => {
         10,
       ),
     ).toBeNull();
+  });
+});
+
+describe("a note's panel layout", () => {
+  const single = {
+    xaxis: { anchor: "y" as const },
+    yaxis: { anchor: "x" as const },
+  };
+  const faceted = {
+    ...single,
+    xaxis2: { anchor: "y2" as const },
+    yaxis2: { anchor: "x2" as const },
+  };
+
+  test("is the axes and their anchors, in any order", () => {
+    expect(axisLayout(single)).toBe("xaxis>y|yaxis>x");
+    expect(axisLayout({ yaxis: single.yaxis, xaxis: single.xaxis })).toBe(
+      axisLayout(single),
+    );
+  });
+
+  test("ignores sizes, so removing a row keeps the notes", () => {
+    expect(
+      axisLayout({ ...single, xaxis: { anchor: "y", domain: [0, 0.5] } }),
+    ).toBe(axisLayout(single));
+  });
+
+  test("changes with the panels", () => {
+    expect(axisLayout(faceted)).not.toBe(axisLayout(single));
+  });
+
+  test("shows only the notes placed in the current layout", () => {
+    const here = note({ id: "a", layout: axisLayout(single) });
+    const elsewhere = note({ id: "b", layout: axisLayout(faceted) });
+    expect(notesFor([here, elsewhere], axisLayout(single))).toEqual({
+      shown: [here],
+      elsewhere: 1,
+      missing: 0,
+    });
+  });
+});
+
+describe("a note on a category the figure no longer draws", () => {
+  const layout = "xaxis>y|yaxis>x";
+  const cells = [
+    { type: "heatmap", x: ["S1", "S2"], y: ["LB", "BW"] },
+  ] as never[];
+
+  test("reads the categories drawn on each axis", () => {
+    const drawn = drawnCategories(cells, {});
+    expect([...drawn.get("x")!]).toEqual(["S1", "S2"]);
+    expect([...drawn.get("y")!]).toEqual(["LB", "BW"]);
+  });
+
+  test("reads a trace on x1 as the first axis, as Plotly does", () => {
+    const drawn = drawnCategories(
+      [
+        { type: "heatmap", x: ["S1"], y: ["LB"], xaxis: "x1", yaxis: "y1" },
+      ] as never[],
+      {},
+    );
+    expect([...drawn.keys()]).toEqual(["x", "y"]);
+  });
+
+  test("leaves a numeric axis out, where every value has a position", () => {
+    const drawn = drawnCategories([{ x: [1, 2], y: [3, 4] }] as never[], {});
+    expect(drawn.size).toBe(0);
+  });
+
+  test("hides a note on a removed study until it is back", () => {
+    const onS3 = note({ x: "S3", y: "LB", layout });
+    const onS1 = note({ id: "b", x: "S1", y: "LB", layout });
+    const result = notesFor([onS3, onS1], layout, drawnCategories(cells, {}));
+    expect(result.shown).toEqual([onS1]);
+    expect(result.missing).toBe(1);
   });
 });
 
