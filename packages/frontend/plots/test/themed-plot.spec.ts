@@ -1,9 +1,5 @@
 import { describe, expect, test } from "vitest";
-import {
-  figureClick,
-  buildExportOptions,
-  buildThemedAxes,
-} from "../lib/PlotBase/ThemedPlot";
+import { figureClick, buildThemedAxes } from "../lib/PlotBase/ThemedPlot";
 import type { ColorMap } from "../lib/colors";
 
 const colorMap = {
@@ -118,44 +114,15 @@ describe("buildThemedAxes", () => {
   });
 });
 
-describe("buildExportOptions", () => {
-  test("defaults to svg named after the plot title", () => {
-    expect(buildExportOptions(undefined, "Body weight")).toEqual({
-      format: "svg",
-      filename: "Body weight",
-    });
-  });
-
-  test("honours an explicit format and filename", () => {
-    expect(
-      buildExportOptions({ format: "png", filename: "bw" }, "Body weight"),
-    ).toEqual({ format: "png", filename: "bw" });
-  });
-
-  test("omits scale unless set", () => {
-    expect(buildExportOptions({ format: "png" }, "t")).not.toHaveProperty(
-      "scale",
-    );
-    expect(buildExportOptions({ format: "png", scale: 3 }, "t")).toMatchObject({
-      scale: 3,
-    });
-  });
-
-  test("tolerates a missing title", () => {
-    expect(buildExportOptions({ format: "webp" }, undefined)).toEqual({
-      format: "webp",
-      filename: undefined,
-    });
-  });
-});
-
 describe("figureClick", () => {
+  const onClick = () => {};
+  const placeNote = () => {};
+
   test("passes the figure's click action through ordinarily", () => {
-    const onClick = () => {};
-    expect(figureClick(false, onClick)).toBe(onClick);
+    expect(figureClick(false, onClick, placeNote)).toBe(onClick);
   });
 
-  test("withdraws it while a note is being placed", () => {
-    expect(figureClick(true, () => {})).toBeUndefined();
+  test("places the note instead while one is being placed", () => {
+    expect(figureClick(true, onClick, placeNote)).toBe(placeNote);
   });
 });

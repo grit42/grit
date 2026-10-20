@@ -225,4 +225,12 @@ RSpec.describe Grit::Compounds::CompoundsController, type: :request do
       expect(response).to have_http_status(:ok)
     end
   end
+
+  describe "scope dispatch security" do
+    it "does not accept write class methods as scopes" do
+      expect(Grit::Compounds::Compound.entity_scope?("create")).to be false
+      expect(Grit::Compounds::Batch.entity_scope?("create")).to be false
+      expect(Grit::Compounds::Compound.entity_scope?("detailed")).to be true
+    end
+  end
 end

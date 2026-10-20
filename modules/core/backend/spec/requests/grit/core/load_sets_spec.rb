@@ -221,6 +221,28 @@ RSpec.describe "Load Sets API", type: :request do
     end
   end
 
+  describe "permission checks on an existing load set" do
+    let(:manager) { create(:grit_core_user, :with_manage_role) }
+
+    it "uses the load set's own entity, not the entity parameter" do
+      test_entity_load_set = create(:grit_core_load_set, :with_succeeded_block, origin_id: origin.id)
+      login_as(manager)
+      expect {
+        post "/api/grit/core/load_sets/#{test_entity_load_set.id}/cancel", params: { entity: "Grit::Core::VocabularyItem" }, as: :json
+      }.not_to change(Grit::Core::LoadSet, :count)
+      expect(response).to have_http_status(:forbidden)
+    end
+
+    it "does not change the entity of an existing load set" do
+      login_as(admin)
+      patch "/api/grit/core/load_sets/#{load_set.id}", params: { name: "renamed", entity: "Grit::Core::VocabularyItem" }, as: :json
+      expect(response).to have_http_status(:ok)
+      load_set.reload
+      expect(load_set.name).to eq("renamed")
+      expect(load_set.entity).to eq("Grit::TestEntity")
+    end
+  end
+
   describe "succeeded load set" do
     let!(:succeeded_load_set) { create(:grit_core_load_set, :with_succeeded_block, origin_id: origin.id) }
 

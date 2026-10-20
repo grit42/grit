@@ -177,6 +177,30 @@ module Grit::Assays
         expect(json["success"]).to be false
         expect(json["errors"]).to match(/published/i)
       end
+
+      context "when experiment_id names another experiment" do
+        # Loading this class queries a table that does not exist; outside the example transaction that is harmless.
+        before(:all) { ExperimentDataSheetRecord }
+
+        it "does not update record in a published experiment" do
+          other_draft = Experiment.create!(name: "Other Draft Experiment", assay_model: model, publication_status: draft_status)
+          record_id = http_create_record(value: 1)
+          experiment.update_column(:publication_status_id, published_status.id)
+
+          patch "/api/grit/assays/assay_data_sheet_definitions/#{sheet.id}/experiment_data_sheet_records/#{record_id}",
+            params: {
+              id: record_id,
+              experiment_id: other_draft.id,
+              assay_data_sheet_definition_id: sheet.id,
+              value: 99
+            },
+            as: :json
+
+          expect(response).to have_http_status(:internal_server_error)
+          expect(JSON.parse(response.body)["errors"]).to match(/published/i)
+          expect(klass.find(record_id).value).to eq(1)
+        end
+      end
     end
 
     # --- Destroy ---

@@ -85,6 +85,22 @@ module Grit::Assays
       end
     end
 
+    # --- Authorization ---
+
+    describe "authorization" do
+      it "forbids create_bulk without 'admin:assays'" do
+        draft_model
+        writer = create(:grit_core_user, :with_write_role)
+        login_as(writer)
+        expect {
+          post "/api/grit/assays/assay_data_sheet_definitions/create_bulk", params: {
+            sheets: [ { name: "Forbidden sheet", assay_model_id: draft_model.id, result: true, sort: 1, columns: [] } ]
+          }, as: :json
+        }.not_to change(AssayDataSheetDefinition, :count)
+        expect(response).to have_http_status(:forbidden)
+      end
+    end
+
     # Note: Full CRUD testing for AssayDataSheetDefinitions is complex due to
     # publication status constraints. Sheet definitions are typically created
     # as part of assay model creation via the assay_models_controller.

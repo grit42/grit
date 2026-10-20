@@ -336,7 +336,7 @@ describe("export fidelity", () => {
       await new Promise((resolve) => setTimeout(resolve, 300));
     });
     const graphDiv = host.querySelector(".js-plotly-plot") as HTMLElement;
-    const { default: Plotly } = await import("plotly.js/dist/plotly");
+    const { default: Plotly } = await import("plotly.js-cartesian-dist-min");
     return (await Plotly.toImage(graphDiv, {
       format: "svg",
       width: 700,

@@ -1,13 +1,14 @@
 import { Spinner } from "@grit42/client-library/components";
 import { lazy, Suspense } from "react";
-import { PlotParams } from "react-plotly.js";
+import type { PlotParams } from "./types";
 
-const LazyPlotlyPlot = lazy(() => import("react-plotly.js"));
+// Lazy, to keep Plotly out of the initial bundle.
+const LazyPlotlyChart = lazy(() => import("./PlotlyChart"));
 
 const PlotBase = (props: PlotParams) => {
   return (
     <Suspense fallback={<Spinner />}>
-      <LazyPlotlyPlot {...props} />
+      <LazyPlotlyChart {...props} />
     </Suspense>
   );
 };

@@ -21,6 +21,9 @@ module Grit::Assays
     include Grit::Core::GritEntityController
     include Grit::Core::Controller::DangerousEdit
 
+    # Replaces the check_write callback registered by Writable, so the default actions must be listed too.
+    before_action :check_write, only: %i[ create update destroy clone update_metadata publish draft ]
+
     def create
       AssayModel.transaction do
         permitted_params = params.permit(self.permitted_params)

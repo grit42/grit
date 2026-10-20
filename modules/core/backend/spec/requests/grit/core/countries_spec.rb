@@ -194,6 +194,11 @@ RSpec.describe "Countries API", type: :request do
       get "/api/grit/core/countries", params: { scope: "nonexistent_scope" }
       expect(response).to have_http_status(:bad_request)
     end
+
+    it "rejects the inherited 'query_constraints' scope" do
+      get "/api/grit/core/countries", params: { scope: "query_constraints" }
+      expect(response).to have_http_status(:bad_request)
+    end
   end
 
   describe "sort direction SQL injection prevention" do

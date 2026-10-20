@@ -16,16 +16,9 @@
  * @grit42/plots. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
-import { Config, Layout, LayoutAxis } from "plotly.js";
-import { PlotParams } from "react-plotly.js";
+import { useCallback, useMemo, useState, type ReactNode } from "react";
+import { Config, Layout, LayoutAxis, PlotMouseEvent } from "plotly.js";
+import type { PlotParams } from "./types";
 import PlotBase from ".";
 import { ColorMap, ColorPreset, useColorMap } from "../colors";
 import type { Annotations } from "plotly.js";
@@ -37,20 +30,22 @@ import {
   drawnCategories,
   notesFor,
   nextAnnotationId,
-  pointFromClick,
+  pointFromEvent,
 } from "../annotations";
 import AnnotationLayer, { type AnnotationPoint } from "./AnnotationLayer";
 import DownloadDialog from "./DownloadDialog";
 import PlotNotices from "./PlotNotices";
-import { observeBoxSize, refitPlot } from "./resize";
 import { figureToolbarButtons } from "./toolbar";
 import styles from "./downloadButton.module.scss";
 
 const AXIS_KEY_RE = /^[xy]axis\d*$/;
 
-/** The figure's own click action, withdrawn while a note is being placed. */
-export const figureClick = <T,>(annotating: boolean, onClick: T | undefined) =>
-  annotating ? undefined : onClick;
+/** While a note is being placed, a click places it and nothing else. */
+export const figureClick = <T,>(
+  annotating: boolean,
+  onClick: T | undefined,
+  placeNote: T,
+) => (annotating ? placeNote : onClick);
 
 /** Plotly never reads `xaxis1`, only `xaxis`; builders number facets from 1. */
 const canonicalAxisKey = (key: string) => key.replace(/^([xy]axis)1$/, "$1");
@@ -128,15 +123,6 @@ export const buildThemedAxes = (
   return themed;
 };
 
-export const buildExportOptions = (
-  options: PlotExportOptions | undefined,
-  title: string | undefined,
-) => ({
-  format: options?.format ?? "svg",
-  filename: options?.filename ?? title,
-  ...(options?.scale !== undefined ? { scale: options.scale } : {}),
-});
-
 const ThemedPlot = ({
   data,
   title,
@@ -160,7 +146,6 @@ const ThemedPlot = ({
   const derived = useColorMap(palette);
   const colorMap = colorMapProp ?? derived;
   const [graphDiv, setGraphDiv] = useState<HTMLElement | null>(null);
-  const figureRef = useRef<HTMLDivElement | null>(null);
   const [downloadOpen, setDownloadOpen] = useState(false);
   const [annotating, setAnnotating] = useState(false);
   const [pending, setPending] = useState<AnnotationPoint | null>(null);
@@ -180,24 +165,12 @@ const ThemedPlot = ({
     [canAnnotate, canDownload, toggleNote, openDownload],
   );
 
-  // Plotly only follows the window; follow the figure's own box too.
-  useEffect(() => {
-    const box = figureRef.current;
-    if (!box || !graphDiv) return;
-    return observeBoxSize(box, () => refitPlot(graphDiv));
-  }, [graphDiv]);
-
-  useEffect(() => {
-    if (!annotating || !graphDiv) return;
-    const onClick = (event: MouseEvent) => {
-      const point = pointFromClick(graphDiv, event.clientX, event.clientY);
-      if (!point) return;
-      setPending(point);
-      setAnnotating(false);
-    };
-    graphDiv.addEventListener("click", onClick);
-    return () => graphDiv.removeEventListener("click", onClick);
-  }, [annotating, graphDiv]);
+  const placeNote = (event: Readonly<PlotMouseEvent>) => {
+    const point = pointFromEvent(event);
+    if (!point) return;
+    setPending(point);
+    setAnnotating(false);
+  };
 
   const {
     title: layoutTitle,
@@ -261,6 +234,8 @@ const ThemedPlot = ({
     plot_bgcolor: colorMap.bgColor,
     showlegend: true,
     dragmode: annotating ? false : "pan",
+    // Clicks off a point carry data coordinates, so a note can go anywhere.
+    ...(annotating ? { clickanywhere: true } : {}),
     autosize: true,
     // Our Download button replaces Plotly's camera.
     modebar: { remove: ["lasso2d", "select2d", "toImage"] },
@@ -306,7 +281,8 @@ const ThemedPlot = ({
     scrollZoom: true,
     displaylogo: false,
     displayModeBar: "hover",
-    toImageButtonOptions: buildExportOptions(exportOptions, title),
+    // On by default in Plotly 4: a button posting the data to cloud.plotly.com.
+    showSendToCloud: false,
     ...config,
     modeBarButtonsToAdd: [
       ...toolbarButtons,
@@ -317,7 +293,7 @@ const ThemedPlot = ({
   const plot = (
     <PlotBase
       {...props}
-      onClick={figureClick(annotating, props.onClick)}
+      onClick={figureClick(annotating, props.onClick, placeNote)}
       data={data}
       layout={themedLayout}
       config={themedConfig}
@@ -340,9 +316,7 @@ const ThemedPlot = ({
 
   const withNotices = (figure: ReactNode) => (
     <div className={styles.stack}>
-      <div className={styles.figure} ref={figureRef}>
-        {figure}
-      </div>
+      <div className={styles.figure}>{figure}</div>
       {shownNotices.length ? <PlotNotices notices={shownNotices} /> : null}
     </div>
   );

@@ -25,6 +25,8 @@ module Grit::Assays
 
     entity_crud_with read: [ "read:system" ], write: [ "write:analysis" ]
 
+    entity_scopes :available
+
     def self.entity_properties(**args)
       DataTable.find(args[:data_table_id]).entity_data_type.model.entity_properties(**args)
     end
