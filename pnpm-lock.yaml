@@ -855,9 +855,6 @@ importers:
       '@grit42/client-library':
         specifier: workspace:*
         version: link:../client-library
-      '@types/plotly.js':
-        specifier: ^3.0.15
-        version: 3.0.15
       mathjs:
         specifier: 15.2.0
         version: 15.2.0
@@ -871,6 +868,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 22.19.19
+      '@types/plotly.js':
+        specifier: ^3.0.15
+        version: 3.0.15
       '@types/react':
         specifier: 'catalog:'
         version: 19.2.16
