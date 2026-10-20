@@ -350,7 +350,7 @@ describe("the notes section", () => {
   });
 });
 
-describe("the panels shown control", () => {
+describe("the facets shown control", () => {
   const rows = [
     { concentration: 1, response: 2, compound: "A" },
     { concentration: 3, response: 4, compound: "B" },
@@ -363,7 +363,7 @@ describe("the panels shown control", () => {
         { ...plot, type, facetBy: ["compound"] } as PlotDefinition,
         rows,
       );
-      expect(host.textContent).toContain("Panels shown");
+      expect(host.textContent).toContain("Facets shown");
     },
   );
 });
