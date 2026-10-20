@@ -4,6 +4,7 @@ import { resolveDisplay } from "../displayMode";
 import { numberFormat, type NumberFormat } from "../format";
 import { boxStats, randomJitter, toFiniteNumbers } from "../math";
 import { boxStatsHoverTrace, scatterTrace, statsBoxTrace } from "../traces";
+import { categoryRange } from "../axes";
 import { BoxPlotDefinition, SourceData } from "../types";
 import { buildFacets, nullish, ungroupedLabel } from "../utils";
 
@@ -69,15 +70,13 @@ const buildBoxTraces = (
     const facet = facets[i];
     const axis = i + 1;
 
-    // Boxes sit at explicit numeric positions, so the hover and outlier
-    // overlays below can be placed on top of the box they describe rather
-    // than relying on trace order to line them up.
+    // Numeric positions, so hover and outlier overlays land on their box.
     axes[`xaxis${axis}`] = {
       type: "linear",
       tickmode: "array",
       tickvals: labels.map((_, index) => index),
       ticktext: labels,
-      range: [-0.5, Math.max(labels.length - 0.5, 0.5)],
+      ...categoryRange(labels.length),
       zeroline: false,
     };
     axes[`yaxis${axis}`] = {};
@@ -177,7 +176,6 @@ const buildBoxTraces = (
             showlegend: false,
             legendgroup: group.label,
           }),
-          // Hollow: the shape says outlier, the colour says which box.
           marker: {
             color: readableOn(color, colorMap.bgColor),
             symbol: "circle-open",

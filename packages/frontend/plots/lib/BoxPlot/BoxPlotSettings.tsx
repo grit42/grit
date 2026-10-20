@@ -1,5 +1,5 @@
 import { Select } from "@grit42/client-library/components";
-import { BoxPlotDefinition, SourceDataProperties } from "../types";
+import { BoxPlotDefinition, SourceData, SourceDataProperties } from "../types";
 import { nextAxisLabel, nextPlotTitle, usePropertiesOptions } from "../utils";
 import AxesTypeSettings from "../PlotBase/AxisTypeSettings";
 import BaseSettings from "../PlotBase/BaseSettings";
@@ -8,9 +8,11 @@ const BoxPlotSettings = ({
   plot,
   properties,
   onChange,
+  data,
 }: {
   plot: BoxPlotDefinition;
   properties: SourceDataProperties;
+  data?: SourceData;
   onChange: (plot: BoxPlotDefinition) => void;
 }) => {
   const axisOptions = usePropertiesOptions(properties);
@@ -32,7 +34,12 @@ const BoxPlotSettings = ({
         onChange={onYAxisKeyChange}
       />
       <AxesTypeSettings axes="y" plot={plot} onChange={onChange} />
-      <BaseSettings plot={plot} properties={properties} onChange={onChange} />
+      <BaseSettings
+        plot={plot}
+        properties={properties}
+        onChange={onChange}
+        data={data}
+      />
     </>
   );
 };

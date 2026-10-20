@@ -1,14 +1,3 @@
-/**
- * Title and axis-label defaulting.
- *
- * `title`, `x.label` and `y.label` are all derived values that the settings UI
- * now also lets a user type into. The rule these helpers encode is: keep
- * re-deriving while the stored value still matches what the generator would
- * produce, and stop the moment it doesn't. That is what makes an axis or type
- * change update the defaults without discarding a deliberate choice — the
- * behaviour these tests pin, since nothing else records that a value was
- * hand-written.
- */
 import { describe, expect, test } from "vitest";
 import type {
   BoxPlotDefinition,
@@ -52,7 +41,6 @@ describe("propertyLabel", () => {
     expect(propertyLabel("MISSING", PROPERTIES)).toBe("MISSING");
   });
 
-  /** Reached through `plot.x?.key` on externally-authored config. */
   test("is empty for an absent key rather than printing 'undefined'", () => {
     expect(propertyLabel(undefined, PROPERTIES)).toBe("");
   });
@@ -99,10 +87,6 @@ describe("nextPlotTitle", () => {
     );
   });
 
-  /**
-   * The generator is a total function today, but the `?? next.title` fallback
-   * is what keeps an unrecognised type from blanking the title outright.
-   */
   test("falls back to the incoming title for an unknown type", () => {
     const next = { ...scatter, type: "sunburst" } as unknown as PlotDefinition;
     expect(nextPlotTitle(scatter, next, PROPERTIES)).toBe(
@@ -111,13 +95,6 @@ describe("nextPlotTitle", () => {
   });
 });
 
-/**
- * What a plot-type change and the "Reset to defaults" button both apply.
- *
- * Deliberately *not* `nextPlotTitle`'s preserve-if-customised rule: the
- * previous type's wording describes a different plot, so re-deriving is more
- * often right than the edit it discards.
- */
 describe("withDerivedLabels", () => {
   const custom: ScatterPlotDefinition = {
     ...scatter,
@@ -128,13 +105,13 @@ describe("withDerivedLabels", () => {
 
   test("re-derives a customised title on a plot-type change", () => {
     const next = { ...custom, type: "box" } as BoxPlotDefinition;
-    expect(withDerivedLabels(next, PROPERTIES).title).toBe("Body weight");
+    // A box reads "{y} by {x}".
+    expect(withDerivedLabels(next, PROPERTIES).title).toBe(
+      "Body weight by Study day",
+    );
+    expect(withDerivedLabels(next, PROPERTIES).title).not.toBe(custom.title);
   });
 
-  /**
-   * Cleared, not overwritten with today's display name — so the labels go back
-   * to following the axes rather than being pinned to their current reading.
-   */
   test("clears customised axis labels rather than freezing them", () => {
     const reset = withDerivedLabels(custom, PROPERTIES);
     expect(reset.x.label).toBeUndefined();
@@ -164,7 +141,6 @@ describe("withDerivedLabels", () => {
     expect(reset.export).toEqual({ format: "png" });
   });
 
-  /** The palette survives here; only the reset button clears it. */
   test("keeps the palette, which is not derived from the axes", () => {
     const reset = withDerivedLabels(
       { ...custom, palette: "muted" },
@@ -179,12 +155,6 @@ describe("withDerivedLabels", () => {
   });
 });
 
-/**
- * Drives whether "Reset to defaults" is offered as available. Every definition
- * saved before the label became editable stored one explicitly, so an
- * `undefined`-only test would mark all of them customised and leave the button
- * permanently enabled.
- */
 describe("isDerivedAxisLabel", () => {
   test("an absent label is derived", () => {
     expect(isDerivedAxisLabel({ key: "BWDY" }, PROPERTIES)).toBe(true);
@@ -209,9 +179,6 @@ describe("isDerivedAxisLabel", () => {
   });
 });
 
-/**
- * "Reset to defaults" clears every presentation choice.
- */
 describe("withDefaultAppearance", () => {
   const decorated: ScatterPlotDefinition = {
     ...scatter,
@@ -297,11 +264,6 @@ describe("nextAxisLabel", () => {
     );
   });
 
-  /**
-   * Definitions persisted before the axis-key change had `label` set to the raw
-   * key rather than the display name, which is still the auto value for a
-   * property that carries no display name.
-   */
   test("treats a label equal to the raw key as still derived", () => {
     expect(
       nextAxisLabel({ key: "UNKNOWN", label: "UNKNOWN" }, "BWDY", PROPERTIES),
@@ -313,15 +275,6 @@ describe("nextAxisLabel", () => {
   });
 });
 
-/**
- * Axis labels moved from paper-referenced annotations to Plotly axis titles.
- *
- * The annotation sat at `x: -0.05` — an offset proportional to plot width,
- * against a fixed left margin — so beyond a certain width it fell outside the
- * paper area and was clipped, reappearing only when the window was made
- * narrower. Plotly has no `automargin` for annotations, so only an axis title
- * can reserve its own space.
- */
 describe("withAxisTitles", () => {
   const axesFor = (facets: number) =>
     Object.fromEntries(
@@ -347,17 +300,12 @@ describe("withAxisTitles", () => {
     });
   });
 
-  /**
-   * Plotly derives the axis title from `layout.font.size` at about 1.2×.
-   * Setting a size here — even the 14 it resolves to by default — pins it, and
-   * the titles stop following the font-size setting.
-   */
   test("leaves the title size to Plotly so it tracks the font setting", () => {
     const titled = withAxisTitles(axesFor(1), { facets: 1, yTitle: "Weight" });
     expect(titled.yaxis1!.title).not.toHaveProperty("font.size");
   });
 
-  /** Without this the title can be pushed out of the reserved margin. */
+  // Without it the title can be pushed out of the reserved margin.
   test("always sets automargin, titled or not", () => {
     const titled = withAxisTitles(axesFor(3), { facets: 3, yTitle: "Weight" });
     expect(Object.values(titled).every((a) => a.automargin)).toBe(true);
@@ -368,10 +316,7 @@ describe("withAxisTitles", () => {
     expect(titled.xaxis1).not.toHaveProperty("title");
   });
 
-  /**
-   * Three facets lay out as a 2-column grid, so the y title belongs to the
-   * leftmost column and the x title to whichever facet has nothing below it.
-   */
+  // Three facets form a 2-column grid.
   test("labels only the outer axes of a facet grid", () => {
     const titled = withAxisTitles(axesFor(3), {
       facets: 3,

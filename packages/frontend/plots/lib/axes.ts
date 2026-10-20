@@ -23,12 +23,10 @@ export interface NiceRange {
   range: [number, number];
   step: number;
 }
-/**
- * Step sizes that read as round numbers.
- */
+
 const NICE_STEPS = [1, 2, 5, 10];
 
-/** Round to the precision the step implies, so 0.1 + 0.2 artefacts don't show. */
+/** Round to the step's precision, hiding float noise like 0.1 + 0.2. */
 const atStepPrecision = (value: number, step: number): number => {
   const decimals = Math.max(0, -Math.floor(Math.log10(step)));
   return Number(value.toFixed(Math.min(decimals + 1, 15)));
@@ -45,12 +43,7 @@ const niceStep = (rough: number): number => {
   return step * magnitude;
 };
 
-/**
- * A range that contains `[min, max]` and starts and ends on a round tick.
- *
- * Rounding outward is the point: given -2…103 it yields -10…110, so every tick
- * is an even value and no data point sits on the very edge of the plot.
- */
+/** Rounds outward to round ticks: -2…103 gives -10…110. */
 export const niceRange = (
   min: number,
   max: number,
@@ -93,12 +86,47 @@ const NON_LINEAR_AXES: AxisType[] = [
 export const supportsTickRange = (axisType: AxisType | undefined): boolean =>
   axisType === undefined || !NON_LINEAR_AXES.includes(axisType);
 
+export const categoryRange = (
+  count: number,
+): { range: [number, number]; autorange: false } => ({
+  range: [-0.5, Math.max(count, 1) - 0.5],
+  autorange: false,
+});
+
+export const countStep = (top: number, ticks = 5): number => {
+  const raw = top / ticks;
+  if (!(raw > 1)) return 1;
+  const magnitude = 10 ** Math.floor(Math.log10(raw));
+  return [1, 2, 5, 10]
+    .map((multiple) => multiple * magnitude)
+    .find((step) => step >= raw)!;
+};
+
+export const wholeNumberTicks = (
+  values: readonly number[],
+  userTicks?: AxisTickOptions,
+): { tickmode: "linear"; tick0: 0; dtick: number } | undefined => {
+  if (userTicks?.mode && userTicks.mode !== "auto") return undefined;
+  const finite = values.filter(Number.isFinite);
+  if (finite.length === 0 || !finite.every(Number.isInteger)) return undefined;
+  return {
+    tickmode: "linear",
+    tick0: 0,
+    dtick: countStep(Math.max(...finite) - Math.min(...finite), 8),
+  };
+};
+
+export const countTicks = (
+  top: number,
+): { tickmode: "linear"; tick0: 0; dtick: number } => ({
+  tickmode: "linear",
+  tick0: 0,
+  dtick: countStep(top),
+});
+
 const MAJOR_TICK_LENGTH = 6;
 const MINOR_TICK_LENGTH = 3;
 
-/**
- * Plotly layout for one axis' tick configuration.
- */
 const SUPERSCRIPT: Record<string, string> = {
   "0": "\u2070",
   "1": "\u00b9",
@@ -119,28 +147,19 @@ const powerOfTen = (decade: number) =>
     .map((c) => SUPERSCRIPT[c] ?? c)
     .join("")}`;
 
-/**
- * Which mantissas carry labels, in escalating order.
- * Implementation based on matplotlib because Plotly was a PIA
- */
+/** Labelled mantissas, tried in order, after matplotlib. */
 const MANTISSA_SETS = [[1], [1, 2, 5], [1, 2, 3, 4, 5, 6, 7, 8, 9]];
 
 /** Below this a set is too sparse to read, and the next one is tried. */
 const MIN_LABELS_IN_VIEW = 3;
 
-/**
- * Past this many decades the subdivisions are dropped entirely: 2…9 of eleven
- * decades is a hundred ticks nobody can read.
- */
+/** Beyond this, the 2…9 minor ticks are too many to read. */
 const MAX_DECADES_WITH_MINORS = 10;
 const TARGET_DECADE_LABELS = 9;
 
 /**
- * Round values across the span, for a log axis too narrow to hold two of the
- * 1…9 positions — 1.2…1.9 contains none of them, and an axis with no labels at
- * all is worse than one whose labels are plain numbers. Under a fraction of a
- * decade log and linear are near-indistinguishable anyway, so nothing is
- * misrepresented by placing them evenly.
+ * For a log axis too narrow to hold two of 1…9 (e.g. 1.2…1.9); under a decade,
+ * log and linear look the same.
  */
 const roundValueTicks = (min: number, max: number, targetTicks: number) => {
   const step = niceStep((max - min) / Math.max(targetTicks, 2));
@@ -162,22 +181,12 @@ const roundValueTicks = (min: number, max: number, targetTicks: number) => {
 
 export interface LogTicks {
   axis: Partial<LayoutAxis>;
-  /** Positions for unlabelled ticks between the labelled ones. */
   minorTickvals: number[];
 }
 
 /**
- * Ticks for a log axis, following matplotlib's `LogLocator`.
- *
- * Labels go on the decades: 10⁻², 10⁻¹, 10⁰ and 2…9 of each decade carry
- * ticks without them. Where the decades alone would be too sparse to read the
- * subdivisions are labelled too, first 2 and 5 and then all of 1…9, so a
- * narrow axis is not left nearly bare.
- *
- * Over more than ten decades the decades themselves are strided and the minor
- * ticks dropped entirely.
- *
- * `tickvals` are the underlying values; Plotly takes the logarithm itself.
+ * After matplotlib's `LogLocator`: decades labelled, then 2 and 5, then 1…9
+ * while too sparse. `tickvals` are raw values; Plotly takes the log itself.
  */
 export const logTicks = (
   values: number[],
@@ -195,8 +204,7 @@ export const logTicks = (
   const logMax = Math.log10(max);
   if (!Number.isFinite(logMin) || !Number.isFinite(logMax)) return none;
 
-  // The span in view, which decides how much gets labelled, and the whole
-  // decades inside it, which decide the stride. matplotlib keeps them apart.
+  // Span in view decides labelling; whole decades decide the stride.
   const inView = logMax - logMin;
   const wholeDecades = Math.floor(logMax) - Math.ceil(logMin);
 
@@ -214,7 +222,6 @@ export const logTicks = (
       decade += stride
     ) {
       for (let mantissa = 1; mantissa <= 9; mantissa++) {
-        // Only the decade itself exists once the decades are strided.
         if (stride > 1 && mantissa > 1) break;
         const value = mantissa * 10 ** decade;
         if (mantissas.includes(mantissa)) {
@@ -236,8 +243,7 @@ export const logTicks = (
   const countInView = (labelled: { value: number }[]) =>
     labelled.filter((t) => t.value >= min && t.value <= max).length;
 
-  // The smallest set that fills the axis: escalating stops as soon as there is
-  // enough to read, so a wide range never gets subdivisions it has no room for.
+  // Smallest set that fills the axis, so wide ranges get no subdivisions.
   let placed = place(MANTISSA_SETS[0]);
   if (stride === 1) {
     for (const mantissas of MANTISSA_SETS) {
@@ -270,10 +276,8 @@ export const buildAxisTicks = (
 ): Partial<LayoutAxis> => {
   const layout: Partial<LayoutAxis> = {};
 
-  // A log axis is laid out before the tick guard below: where its labels go
-  // follows from the axis *type*, so an axis nobody has configured still gets
-  // them. `count` is used as the number of decade labels to aim for;
-  // `spacing` is left to Plotly, where it already means decades per tick.
+  // By axis type, so an unconfigured log axis gets ticks too. `count` aims for
+  // decade labels; Plotly already reads `spacing` as decades per tick.
   const mode = ticks?.mode ?? "auto";
   let logMinorTickvals: number[] = [];
   if (axisType === "log" && values && (mode === "auto" || mode === "count")) {
@@ -284,7 +288,7 @@ export const buildAxisTicks = (
     logMinorTickvals = minorTickvals;
   }
 
-  // A log axis has already placed its own from the same count.
+  // A log axis already placed its ticks from this count.
   if (
     ticks?.mode === "count" &&
     ticks.count !== undefined &&
@@ -299,7 +303,6 @@ export const buildAxisTicks = (
     ticks.spacing !== undefined &&
     ticks.spacing > 0
   ) {
-    // Plotly places a tick every `dtick`
     layout.dtick = ticks.spacing;
   }
 

@@ -12,6 +12,7 @@ import { describe, expect, test } from "vitest";
 import { createRoot } from "react-dom/client";
 import { act, createElement } from "react";
 import Plot from "../lib/Plot";
+import { axisLayout } from "../lib/annotations";
 import type { PlotDefinition, SourceDataProperties } from "../lib/types";
 
 const properties: SourceDataProperties = [
@@ -33,7 +34,7 @@ const BASE = {
 } as const;
 
 /** Renders a definition and returns Plotly's resolved layout. */
-const fullLayout = async (def: PlotDefinition, rows: unknown[] = data) => {
+const renderedPlot = async (def: PlotDefinition, rows: unknown[] = data) => {
   const host = document.createElement("div");
   document.body.appendChild(host);
   const root = createRoot(host);
@@ -50,10 +51,26 @@ const fullLayout = async (def: PlotDefinition, rows: unknown[] = data) => {
     await new Promise((resolve) => setTimeout(resolve, 300));
   });
   const graphDiv = host.querySelector(".js-plotly-plot") as
-    | (HTMLElement & { _fullLayout: Record<string, any> })
+    | (HTMLElement & {
+        layout: Record<string, any>;
+        _fullLayout: Record<string, any>;
+      })
     | null;
   if (!graphDiv) throw new Error("plot did not render");
-  return graphDiv._fullLayout;
+  return graphDiv;
+};
+
+const fullLayout = async (def: PlotDefinition, rows: unknown[] = data) =>
+  (await renderedPlot(def, rows))._fullLayout;
+
+/** The axis layout a note placed on this figure records. */
+const noteLayout = async (def: PlotDefinition, rows: unknown[] = data) => {
+  const { layout } = await renderedPlot(def, rows);
+  return axisLayout(
+    Object.fromEntries(
+      Object.entries(layout).filter(([key]) => /^[xy]axis\d*$/.test(key)),
+    ),
+  );
 };
 
 const withDef = (extra: Record<string, unknown>) =>
@@ -360,6 +377,12 @@ describe("export fidelity", () => {
    * ten to the power of itself, and only Plotly can say so.
    */
   test("a note lands on the point it names, on a log axis", async () => {
+    const logX = { x: { key: "concentration", axisType: "log" } };
+    const rows = [
+      { concentration: 0.01, response: 10 },
+      { concentration: 10, response: 100 },
+    ];
+    const layout = await noteLayout(withDef(logX), rows);
     const host = document.createElement("div");
     document.body.appendChild(host);
     const root = createRoot(host);
@@ -367,15 +390,20 @@ describe("export fidelity", () => {
       root.render(
         createElement(Plot, {
           def: withDef({
-            x: { key: "concentration", axisType: "log" },
+            ...logX,
             annotations: [
-              { id: "note-1", text: "Excursion", x: 1.2596, y: 50 },
+              {
+                id: "note-1",
+                text: "Excursion",
+                x: 1.2596,
+                y: 50,
+                axis: "y",
+                xaxis: "x",
+                layout,
+              },
             ],
           }),
-          data: [
-            { concentration: 0.01, response: 10 },
-            { concentration: 10, response: 100 },
-          ],
+          data: rows,
           dataProperties: properties,
         } as never),
       );
@@ -394,15 +422,58 @@ describe("export fidelity", () => {
   });
 
   test("carries a reader's note", async () => {
+    const layout = await noteLayout(withDef({}));
     const svg = decodeURIComponent(
       await exported(
         withDef({
           annotations: [
-            { id: "note-1", text: "Excursion expected", x: 5, y: 50 },
+            {
+              id: "note-1",
+              text: "Excursion expected",
+              x: 5,
+              y: 50,
+              axis: "y",
+              xaxis: "x",
+              layout,
+            },
           ],
         }),
       ),
     );
     expect(svg).toContain("Excursion expected");
+  });
+});
+
+describe("re-rendering", () => {
+  type GraphDiv = HTMLElement & {
+    _context: { modeBarButtonsToAdd: { name: string; click: () => void }[] };
+  };
+
+  // A full redraw (newPlot) rebuilds the svg and loses the reader's zoom.
+  test("updates the figure in place, e.g. when Download opens", async () => {
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+    await act(async () => {
+      createRoot(host).render(
+        createElement(Plot, {
+          def: withDef({}),
+          data,
+          dataProperties: properties,
+        } as never),
+      );
+    });
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+    });
+    const graphDiv = host.querySelector(".js-plotly-plot") as GraphDiv;
+    const before = graphDiv.querySelector(".main-svg");
+    await act(async () => {
+      graphDiv._context.modeBarButtonsToAdd
+        .find((button) => button.name === "grit-download")!
+        .click();
+      await new Promise((resolve) => setTimeout(resolve, 300));
+    });
+    expect(before).not.toBeNull();
+    expect(graphDiv.querySelector(".main-svg")).toBe(before);
   });
 });

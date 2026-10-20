@@ -193,3 +193,23 @@ test("several omissions are reported together", () => {
   // are under the cap.
   expect(reasons(notices).some((r) => r.includes("logarithmic"))).toBe(true);
 });
+
+describe("panels over the maximum", () => {
+  const many = Array.from({ length: MAX_FACETS + 3 }, (_, i) => ({
+    dose: i,
+    response: i,
+    study: `S${String(i).padStart(2, "0")}`,
+  }));
+  const notDrawn = (extra: Record<string, unknown>) =>
+    reasons(
+      plotNotices({ def: def({ facetBy: ["study"], ...extra }), data: many }),
+    ).filter((reason) => reason.startsWith("panels not drawn"));
+
+  test("are reported when every panel is wanted", () => {
+    expect(notDrawn({})).toHaveLength(1);
+  });
+
+  test("are not reported once Facets shown picks fewer", () => {
+    expect(notDrawn({ facetOnly: ["S00", "S01"] })).toEqual([]);
+  });
+});
