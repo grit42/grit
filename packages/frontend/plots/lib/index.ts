@@ -16,7 +16,7 @@
  * @grit42/plots. If not, see <https://www.gnu.org/licenses/>.
  */
 
-export type { PlotParams, Figure } from "react-plotly.js";
+export type { PlotParams, Figure } from "./PlotBase/types";
 export type * from "plotly.js";
 export { default as PlotBase } from "./PlotBase";
 export { default as ThemedPlot } from "./PlotBase/ThemedPlot";
