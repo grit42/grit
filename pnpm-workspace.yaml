@@ -50,7 +50,6 @@ strictDepBuilds: true
 allowBuilds:
   "@parcel/watcher": false
   "@swc/core": true
-  es5-ext: true
   esbuild: true
   lefthook: true
   nx: false
