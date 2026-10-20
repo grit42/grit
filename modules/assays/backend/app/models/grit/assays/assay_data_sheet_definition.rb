@@ -29,6 +29,8 @@ module Grit::Assays
 
     entity_crud_with read: [ "read:system" ], write: [ "admin:assays" ]
 
+    entity_scopes :published, :by_experiment
+
     before_save :check_model_publication_status
     after_create :create_table_if_model_is_published
     before_destroy :check_model_publication_status

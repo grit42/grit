@@ -92,6 +92,13 @@ RSpec.describe Grit::Compounds::MoleculesController, type: :request do
 
       expect(response).to have_http_status(:unauthorized)
     end
+
+    it "requires the permission to read compounds" do
+      login_as(create(:grit_core_user))
+      post url, params: { molfile: valid_molfile }, as: :json
+
+      expect(response).to have_http_status(:forbidden)
+    end
   end
 
   path "/api/grit/compounds/molecules/molecule_exists" do

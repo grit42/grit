@@ -248,9 +248,9 @@ module Grit::Core
           return
         end
         entity = params[:entity]
-        if entity.blank? && params[:id].present?
+        if params[:id].present?
           entity = Grit::Core::LoadSetBlock.find(params[:id]).load_set.entity
-        elsif entity.blank? && params[:load_set_id].present?
+        elsif params[:load_set_id].present?
           entity = Grit::Core::LoadSet.find(params[:load_set_id]).entity
         end
         klass = Grit::Core::EntityMapper.find_entity_class(entity)
@@ -266,10 +266,10 @@ module Grit::Core
       def check_write
         render json: { success: false }, status: :bad_request if params[:id].blank? && params[:load_set_id].blank? && params[:entity].blank?
         entity = params[:entity]
-        if entity.blank? && params[:id].present?
+        if params[:id].present?
           entity = Grit::Core::LoadSetBlock.find(params[:id]).load_set.entity
-        elsif entity.blank? && params[:load_set_id].present?
-          Grit::Core::LoadSet.find(params[:load_set_id]).entity
+        elsif params[:load_set_id].present?
+          entity = Grit::Core::LoadSet.find(params[:load_set_id]).entity
         end
         klass = Grit::Core::EntityMapper.find_entity_class(entity)
         if klass.nil?
