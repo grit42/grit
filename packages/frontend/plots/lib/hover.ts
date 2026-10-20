@@ -17,6 +17,8 @@
  */
 
 import { Datum } from "plotly.js";
+import type { NumberFormat } from "./format";
+import type { Summary } from "./math";
 import type { SourceData, SourceDataProperties } from "./types";
 
 /** `value` is verbatim: a literal or a Plotly token like `%{customdata[2]}`. */
@@ -130,3 +132,32 @@ export const buildHoverMatrix = ({
     xCategories.map((x) => byRow.get(y)?.get(x) ?? blank),
   );
 };
+
+const SUMMARY_KEYS = [
+  "n",
+  "Mean",
+  "Median",
+  "SD",
+  "SEM",
+  "Variance",
+  "Min",
+  "Max",
+];
+
+/** The summary rows bar and time-series hovers share, from `customdata[first]` on. */
+export const summaryHoverRows = (first: number): HoverRow[] =>
+  SUMMARY_KEYS.map((key, i) => ({ key, value: `%{customdata[${first + i}]}` }));
+
+/** The values for {@link summaryHover}, in its order. */
+export const summaryHoverValues = (summary: Summary, fmt: NumberFormat) => [
+  summary.count,
+  ...[
+    summary.mean,
+    summary.median,
+    summary.std,
+    summary.sem,
+    summary.variance,
+    summary.min,
+    summary.max,
+  ].map((value) => fmt.text(value)),
+];
