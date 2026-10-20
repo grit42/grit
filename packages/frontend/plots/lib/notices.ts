@@ -111,7 +111,7 @@ export const plotNotices = ({
       kind: "info",
       reason:
         "The dendrogram is drawn for a single panel only. " +
-        'Narrow "Panels shown" to one, or stop faceting, to see it.',
+        'Narrow "Facets shown" to one, or stop faceting, to see it.',
     });
   }
 
@@ -125,7 +125,7 @@ export const plotNotices = ({
     notices.push({
       kind: "omitted",
       count: hidden.length,
-      reason: `panels hidden by the panel selection: ${named}${rest}.`,
+      reason: `facets hidden by "Facets shown": ${named}${rest}.`,
     });
   }
 

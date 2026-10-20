@@ -271,7 +271,7 @@ export const inDeclaredOrder = (
   return [...listed, ...sorted.filter((label) => !seen.has(label))];
 };
 
-/** The panels left after "Panels shown", before the {@link MAX_FACETS} cap. */
+/** The panels left after "Facets shown", before the {@link MAX_FACETS} cap. */
 export const shownFacetLabels = (
   data: SourceData,
   def: PlotDefinition,

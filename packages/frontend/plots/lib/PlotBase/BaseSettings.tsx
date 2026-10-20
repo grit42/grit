@@ -75,7 +75,7 @@ const BaseSettings = <TPlot extends PlotDefinition>({
       )}
       {facetBy && panelOptions.length > 1 && (
         <SortableMultiselect
-          label="Panels shown"
+          label="Facets shown"
           options={panelOptions}
           value={plot.facetOnly ?? []}
           onChange={onPropChange("facetOnly")}

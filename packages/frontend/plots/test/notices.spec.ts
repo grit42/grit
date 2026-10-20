@@ -209,7 +209,7 @@ describe("panels over the maximum", () => {
     expect(notDrawn({})).toHaveLength(1);
   });
 
-  test("are not reported once Panels shown picks fewer", () => {
+  test("are not reported once Facets shown picks fewer", () => {
     expect(notDrawn({ facetOnly: ["S00", "S01"] })).toEqual([]);
   });
 });

@@ -997,7 +997,7 @@ describe("buildTimeSeries study-day axis", () => {
   });
 });
 
-describe("panels shown", () => {
+describe("facets shown", () => {
   const rows: SourceData = [
     { sex: "F", value: 1 },
     { sex: "M", value: 2 },
