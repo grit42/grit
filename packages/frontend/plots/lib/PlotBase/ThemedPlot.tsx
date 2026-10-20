@@ -240,6 +240,16 @@ const ThemedPlot = ({
           },
         ]
       : []),
+    ...(notes.unplaced
+      ? [
+          {
+            kind: "info" as const,
+            count: notes.unplaced,
+            reason:
+              "notes hidden: saved by an earlier version, they cannot be placed. Remove them under Notes.",
+          },
+        ]
+      : []),
   ];
   const scales = {
     x: (themedAxes.xaxis as Partial<LayoutAxis> | undefined)?.type,
