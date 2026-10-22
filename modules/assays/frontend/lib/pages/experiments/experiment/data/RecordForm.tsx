@@ -156,22 +156,21 @@ const ExperimentDataSheetRecordFormWrapper = () => {
     );
   return (
     <div className={styles.recordFormContainer}>
-    <FormPage
-      header={
-        <FormPage.Header backLink={record_id !== "new"}>
-          {`${record_id !== "new" ? "Edit" : "New"} record`}
-        </FormPage.Header>
-      }
-
-    >
-      <FormPage.Body>
-        <ExperimentDataSheetRecordForm
-          fields={fields}
-          experimentDataSheetRecord={data}
-          experimentDataSheetId={sheet_id}
-        />
-      </FormPage.Body>
-    </FormPage>
+      <FormPage
+        header={
+          <FormPage.Header backLink={record_id !== "new"}>
+            {`${record_id !== "new" ? "Edit" : "New"} record`}
+          </FormPage.Header>
+        }
+      >
+        <FormPage.Body>
+          <ExperimentDataSheetRecordForm
+            fields={fields}
+            experimentDataSheetRecord={data}
+            experimentDataSheetId={sheet_id}
+          />
+        </FormPage.Body>
+      </FormPage>
     </div>
   );
 };

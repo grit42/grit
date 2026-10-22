@@ -17,7 +17,7 @@
  */
 
 import superjson from "superjson";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import useEventCallback from "./useEventCallback";
 import useEventListener from "./useEventListener";
 
@@ -28,7 +28,7 @@ declare global {
 }
 
 export function readLocalStorageValue<T = null>(key: string, fallbackValue: T) {
-  // Prevent build error "window is undefined" but keeps working
+  // No window during a server-side build.
   if (typeof window === "undefined") {
     return fallbackValue;
   }
@@ -47,21 +47,17 @@ export function useLocalStorage<T>(
   fallbackValue: T,
   shareState?: boolean,
 ): [T, React.Dispatch<React.SetStateAction<T>>] {
-  // Get from local storage then
-  // parse stored json or return fallbackValue
   const readValue = useCallback((): T => {
     return readLocalStorageValue<T>(key, fallbackValue);
   }, [fallbackValue, key]);
 
-  // State to store our value
-  // Pass initial state function to useState so logic is only executed once
   const [storedValue, setStoredValue] = useState<T>(readValue);
 
-  // Return a wrapped version of useState's setter function that ...
-  // ... persists the new value to localStorage.
+  // Read by the setter, so two functional updates in one handler compose.
+  const latest = useRef<T>(storedValue);
+
   const setValue: React.Dispatch<React.SetStateAction<T>> = useEventCallback(
     (value: React.SetStateAction<T>) => {
-      // Prevent build error "window is undefined" but keeps working
       if (typeof window == "undefined") {
         console.warn(
           `Tried setting localStorage key “${key}” even though environment is not a client`,
@@ -70,16 +66,15 @@ export function useLocalStorage<T>(
       }
 
       try {
-        // Allow value to be a function so we have the same API as useState
-        const newValue = value instanceof Function ? value(storedValue) : value;
+        const newValue =
+          value instanceof Function ? value(latest.current) : value;
 
-        // Save state
+        latest.current = newValue;
         setStoredValue(newValue);
 
-        // Save to local storage
         window.localStorage.setItem(key, superjson.stringify(newValue));
 
-        // We dispatch a custom event so every useLocalStorage hook are notified
+        // Notifies the other hooks in this tab.
         if (shareState !== false) {
           window.dispatchEvent(new Event("local-storage"));
         }
@@ -89,26 +84,20 @@ export function useLocalStorage<T>(
     },
   );
 
-  useEffect(() => {
-    setStoredValue(readValue());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   const handleStorageChange = useCallback(
     (event: StorageEvent | CustomEvent) => {
       if ((event as StorageEvent)?.key && (event as StorageEvent).key !== key) {
         return;
       }
-      setStoredValue(readValue());
+      const next = readValue();
+      latest.current = next;
+      setStoredValue(next);
     },
     [key, readValue],
   );
 
-  // this only works for other documents, not the current one
+  // `storage` fires in other tabs only; `local-storage` covers this one.
   useEventListener("storage", handleStorageChange);
-
-  // this is a custom event, triggered in writeValueToLocalStorage
-  // See: useLocalStorage()
   useEventListener("local-storage", handleStorageChange);
 
   return [storedValue, setValue];
@@ -126,10 +115,7 @@ export function useLocalStorageChanges<T>(
     if (callback) callback(readLocalStorageValue<T | null>(id, null));
   };
 
-  // this only works for other documents, not the current one
+  // As in useLocalStorage: other tabs, then this one.
   useEventListener("storage", handleStorageChange);
-
-  // this is a custom event, triggered in writeValueToLocalStorage
-  // See: useLocalStorage()
   useEventListener("local-storage", handleStorageChange);
 }

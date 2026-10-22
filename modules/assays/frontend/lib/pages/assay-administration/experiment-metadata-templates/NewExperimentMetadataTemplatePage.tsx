@@ -53,7 +53,12 @@ const NewExperimentMetadataTemplatePage = () => {
           <Button
             variant="transparent"
             size="tiny"
-            icon={<BackIcon height={24} fill="var(--palette-background-contrast-text)" />}
+            icon={
+              <BackIcon
+                height={24}
+                fill="var(--palette-background-contrast-text)"
+              />
+            }
           ></Button>
         </Link>
         <h1>New metadata template</h1>

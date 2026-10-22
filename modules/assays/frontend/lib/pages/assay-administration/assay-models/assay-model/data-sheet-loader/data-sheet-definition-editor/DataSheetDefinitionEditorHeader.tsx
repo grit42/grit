@@ -19,9 +19,7 @@ const DataSheetDefinitionEditorHeader = ({
   const navigate = useNavigate();
   return (
     <div className={styles.dataSheetsFormHeader}>
-      <h3 className={styles.header}>
-        Verify column definitions
-      </h3>
+      <h3 className={styles.header}>Verify column definitions</h3>
       <ButtonGroup>
         <Button
           onClick={async () => {

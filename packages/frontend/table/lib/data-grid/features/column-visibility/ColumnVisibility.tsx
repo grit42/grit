@@ -22,11 +22,7 @@ import { useCallback, useMemo, useState } from "react";
 import { classnames } from "@grit42/client-library/utils";
 import PreviewIcon from "@grit42/client-library/icons/Preview";
 import NoPreviewIcon from "@grit42/client-library/icons/NoPreview";
-import {
-  Button,
-  Input,
-  Surface,
-} from "@grit42/client-library/components";
+import { Button, Input, Surface } from "@grit42/client-library/components";
 import { GritColumnDef, GritGroupColumnDef } from "../../../types";
 import { getLeafColumnsWithGroupLabels } from "../../../utils";
 import CloseIcon from "@grit42/client-library/icons/Circle1Close";
@@ -165,13 +161,12 @@ const ColumnVisibility = ({
         </Button>
       </div>
       <div className={styles.columnSearchInput}>
-      <Input
-
-        value={columnSearchValue}
-        onChange={(e) => setColumnSearchValue(e.target.value)}
-        type="text"
-        placeholder="Search for a column..."
-      />
+        <Input
+          value={columnSearchValue}
+          onChange={(e) => setColumnSearchValue(e.target.value)}
+          type="text"
+          placeholder="Search for a column..."
+        />
       </div>
       <div className={styles.toggleAll}>
         <Button

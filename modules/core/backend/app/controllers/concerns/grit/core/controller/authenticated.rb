@@ -27,6 +27,8 @@ module Grit::Core::Controller::Authenticated
 
     private
     def authenticate_via_strategies
+      # Every request resolves its own user; never act on one left over from elsewhere.
+      RequestStore.store.delete("current_user")
       Grit::Core::AuthenticationStrategies.each do |strategy|
         user = strategy.authenticate(request)
         next unless user

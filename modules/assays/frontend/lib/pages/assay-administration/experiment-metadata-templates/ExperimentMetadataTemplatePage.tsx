@@ -32,14 +32,14 @@ import ExperimentMetadataTemplateForm from "./ExperimentMetadataTemplateForm";
 import { useMetadataTemplateAdministrationBreadcrumbs } from "./breadcrumbs";
 
 const ExperimentMetadataTemplatePage = () => {
-  const { metadata_template_id } = useParams() as { metadata_template_id: string };
+  const { metadata_template_id } = useParams() as {
+    metadata_template_id: string;
+  };
   useMetadataTemplateAdministrationBreadcrumbs();
 
   const metadataDefinitions = useAssayMetadataDefinitionsWithFields();
 
-  const metadataTemplate = useExperimentMetadataTemplate(
-    metadata_template_id,
-  );
+  const metadataTemplate = useExperimentMetadataTemplate(metadata_template_id);
 
   if (metadataTemplate.isLoading || metadataDefinitions.isLoading) {
     return <Spinner />;
@@ -67,13 +67,21 @@ const ExperimentMetadataTemplatePage = () => {
           <Button
             variant="transparent"
             size="tiny"
-            icon={<BackIcon height={24} fill="var(--palette-background-contrast-text)" />}
+            icon={
+              <BackIcon
+                height={24}
+                fill="var(--palette-background-contrast-text)"
+              />
+            }
           ></Button>
         </Link>
         <h1>Edit metadata template</h1>
       </div>
       <Surface>
-        <ExperimentMetadataTemplateForm metadataTemplate={metadataTemplate.data} metadataFields={metadataDefinitions.fields} />
+        <ExperimentMetadataTemplateForm
+          metadataTemplate={metadataTemplate.data}
+          metadataFields={metadataDefinitions.fields}
+        />
         <DeleteMetadataTemplate metadataTemplate={metadataTemplate.data} />
       </Surface>
     </div>

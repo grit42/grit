@@ -46,7 +46,6 @@ const AssayModelHeader = () => {
   );
 };
 
-
 const AssayModelExperiments = () => {
   const {
     isLoading: isExperimentColumnLoading,
@@ -58,9 +57,7 @@ const AssayModelExperiments = () => {
   if (isExperimentColumnError)
     return <ErrorPage error={assayTypeColumnError} />;
   return (
-    <div
-      className={styles.container}
-    >
+    <div className={styles.container}>
       <AssayModelHeader />
       <ExperimentsTable />
     </div>

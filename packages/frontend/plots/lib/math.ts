@@ -17,54 +17,77 @@
  */
 
 import type { ColorMap } from "./colors";
-import {
-  create,
-  evaluateDependencies,
-  minDependencies,
-  maxDependencies,
-  largerEqDependencies,
-  addDependencies,
-  divideDependencies,
-  sqrtDependencies,
-  cosDependencies,
-  meanDependencies,
-  medianDependencies,
-  stdDependencies,
-  quantileSeqDependencies,
-  varianceDependencies,
-  roundDependencies,
-} from "mathjs";
+const sum = (values: readonly number[]) =>
+  values.reduce((total, value) => total + value, 0);
 
-const {
-  min,
-  max,
-  evaluate,
-  add,
-  divide,
-  sqrt,
-  cos,
-  mean,
-  median,
-  std,
-  quantileSeq,
-  variance,
-  round,
-} = create({
-  evaluateDependencies,
-  minDependencies,
-  maxDependencies,
-  largerEqDependencies,
-  addDependencies,
-  divideDependencies,
-  sqrtDependencies,
-  cosDependencies,
-  meanDependencies,
-  medianDependencies,
-  stdDependencies,
-  quantileSeqDependencies,
-  varianceDependencies,
-  roundDependencies,
-});
+const mean = (values: readonly number[]): number => sum(values) / values.length;
+
+/** Sample variance (n - 1); 0 for a single value. */
+const variance = (
+  values: readonly number[],
+  centre: number = mean(values),
+): number => {
+  if (values.length < 2) return 0;
+  return (
+    sum(values.map((value) => (value - centre) ** 2)) / (values.length - 1)
+  );
+};
+
+const std = (
+  values: readonly number[],
+  varianceValue: number = variance(values),
+): number => Math.sqrt(varianceValue);
+
+/** Standard error of the mean; 0 for a single value. */
+const sem = (
+  values: readonly number[],
+  stdValue: number = std(values),
+): number => (values.length > 1 ? stdValue / Math.sqrt(values.length) : 0);
+
+/** Linear between order statistics, as R's default and numpy's. */
+const quantile = (sorted: readonly number[], p: number): number => {
+  const at = p * (sorted.length - 1);
+  const below = Math.floor(at);
+  const above = Math.min(below + 1, sorted.length - 1);
+  return sorted[below]! + (at - below) * (sorted[above]! - sorted[below]!);
+};
+
+const ascending = (values: readonly number[]) =>
+  [...values].sort((a, b) => a - b);
+
+const median = (values: readonly number[]): number =>
+  quantile(ascending(values), 0.5);
+
+export interface Summary {
+  count: number;
+  min: number;
+  max: number;
+  mean: number;
+  median: number;
+  variance: number;
+  std: number;
+  sem: number;
+}
+
+/** The usual statistics with one mean and one sort; pass `sorted` if you have it. */
+const summarise = (
+  values: readonly number[],
+  sorted: readonly number[] = ascending(values),
+): Summary => {
+  const centre = mean(values);
+  const varianceValue = variance(values, centre);
+  const stdValue = std(values, varianceValue);
+  return {
+    count: values.length,
+    min: sorted[0]!,
+    max: sorted.at(-1)!,
+    mean: centre,
+    median: quantile(sorted, 0.5),
+    variance: varianceValue,
+    std: stdValue,
+    sem: sem(values, stdValue),
+  };
+};
 
 const randomSeed = (seed: number): (() => number) => {
   let state = seed;
@@ -221,19 +244,11 @@ export interface Stats {
   uclValue: number;
 }
 
-export interface BoxStats {
-  count: number;
-  min: number;
-  max: number;
+export interface BoxStats extends Summary {
   p2_5: number;
   q1: number;
-  median: number;
   q3: number;
   p97_5: number;
-  mean: number;
-  std: number;
-  variance: number;
-  sem: number;
   iqr: number;
   lowerWhisker: number;
   upperWhisker: number;
@@ -248,39 +263,25 @@ const boxStats = (arr: number[]): BoxStats | null => {
   }
   if (!values.length) return null;
 
-  const sorted = [...values].sort((a, b) => a - b);
-  const minValue = sorted[0]!;
-  const maxValue = sorted[sorted.length - 1]!;
-  const [p2_5, q1, medianValue, q3, p97_5] = quantileSeq(
-    sorted,
-    [0.025, 0.25, 0.5, 0.75, 0.975],
-    true,
-  ) as [number, number, number, number, number];
-  const meanValue = mean(values) as unknown as number;
-  const stdValue = std(values) as unknown as number;
-  const varianceValue = variance(values) as unknown as number;
-  const sem = stdValue / Math.sqrt(values.length);
+  const sorted = ascending(values);
+  const summary = summarise(values, sorted);
+  const [p2_5, q1, q3, p97_5] = [0.025, 0.25, 0.75, 0.975].map((p) =>
+    quantile(sorted, p),
+  ) as [number, number, number, number];
 
   // whiskers are arbitrarily defined in plotly
   // see https://github.com/plotly/plotly.js/issues/277
   // to provide a consistent definition I use the 1.5*IQR rule
   const iqr = q3 - q1;
-  const lowerWhisker = Math.max(minValue, q1 - 1.5 * iqr);
-  const upperWhisker = Math.min(maxValue, q3 + 1.5 * iqr);
+  const lowerWhisker = Math.max(summary.min, q1 - 1.5 * iqr);
+  const upperWhisker = Math.min(summary.max, q3 + 1.5 * iqr);
 
   return {
-    count: values.length,
-    min: minValue,
-    max: maxValue,
+    ...summary,
     p2_5,
     q1,
-    median: medianValue,
     q3,
     p97_5,
-    mean: meanValue,
-    std: stdValue,
-    variance: varianceValue,
-    sem,
     iqr,
     lowerWhisker,
     upperWhisker,
@@ -291,14 +292,15 @@ const statistics = ({ arr }: { arr: number[] }): Stats | null => {
   const array = toFiniteNumbers(arr);
   if (array.length === 0) return null;
 
-  const nSamples = array.length;
-
-  const minValue = Number(min(array));
-  const maxValue = Number(max(array));
-  const meanValue = Number(mean(array));
-  const medianValue = Number(median(array));
-  const stdValue = Number(std(array));
-  const varianceValue = Number(variance(array));
+  const {
+    count: nSamples,
+    min: minValue,
+    max: maxValue,
+    mean: meanValue,
+    median: medianValue,
+    std: stdValue,
+    variance: varianceValue,
+  } = summarise(array);
   const lolValue = meanValue - 1 * stdValue;
   const uolValue = meanValue + 1 * stdValue;
   const lwlValue = meanValue - 2 * stdValue;
@@ -324,19 +326,11 @@ const statistics = ({ arr }: { arr: number[] }): Stats | null => {
 };
 
 export {
-  min,
-  max,
-  evaluate,
-  add,
-  divide,
-  sqrt,
-  cos,
   mean,
   median,
   std,
-  quantileSeq,
-  variance,
-  round,
+  sem,
+  summarise,
   toFiniteNumber,
   toFiniteNumbers,
   zipFinite,

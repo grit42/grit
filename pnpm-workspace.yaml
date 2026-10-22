@@ -1,16 +1,58 @@
+overrides:
+  minimatch: ">=10.2.1"
+  picomatch: ">=4.0.4"
+  esbuild: ">=0.28.1"
+  form-data: ">=4.0.6"
+  file-type: ">=21.3.1"
+  js-yaml: ">=4.3.2"
+  piscina: ">=4.9.3"
+  brace-expansion: ">=5.0.9"
+  nanoid: ">=3.3.18"
+  fast-uri: ">=3.1.7"
+  immutable: ">=5.1.9"
+  browserslist: ">=4.28.8"
+  postcss: ">=8.5.26"
+  axios: ">=1.18.0"
+  smol-toml: ">=1.9.0"
+
+# Supply-chain hardening: reject exotic (non-registry) sub-dependency
+# sources, wait 7 days before resolving newly-published versions, and never
+# let a lockfile update silently downgrade these settings.
+blockExoticSubdeps: true
+minimumReleaseAge: 10080
+minimumReleaseAgeExclude:
+  # Bundled by browserslist; ships near-daily data updates, so a 7-day
+  # cutoff would perpetually flag whatever version browserslist currently
+  # resolves to. Excluded by name (not pinned) so this doesn't recur.
+  - electron-to-chromium
+trustPolicy: no-downgrade
+trustPolicyExclude:
+  # Long-established, extremely widely-used transitive deps (semver is THE
+  # canonical semver library; detect-port/undici-types are small common
+  # utilities pulled in via nx/@types/node). The flagged "downgrade" is
+  # because the version pinned in our lockfile predates npm provenance/
+  # trusted-publisher adoption, not evidence of an actual takeover — the
+  # same false-positive is publicly reported against other unquestionably
+  # legitimate packages (e.g. tailwindcss) on this same new pnpm feature.
+  # Re-check this list whenever `pnpm update` touches any of these.
+  - "semver@6.3.1"
+  - "detect-port@1.6.1"
+  - "undici-types@6.21.0"
+
 packages:
   - apps/grit/client
   - modules/**/frontend
   - packages/frontend/*
   - tools/ruby
 
+strictDepBuilds: true
+
 allowBuilds:
-  '@parcel/watcher': true
-  '@swc/core': true
-  es5-ext: true
+  "@parcel/watcher": false
+  "@swc/core": true
   esbuild: true
   lefthook: true
-  nx: true
+  nx: false
   unrs-resolver: true
 
 catalog:
@@ -26,7 +68,7 @@ catalog:
   "@types/react-dom": ^19.2.3
   "@vitejs/plugin-react": ^5.1.4
   autoprefixer: ^10.4.24
-  axios: ^1.13.5
+  axios: ^1.20.0
   eslint: ^9.39.3
   eslint-import-resolver-typescript: ^4.4.4
   eslint-plugin-import-x: ^4.16.1
@@ -34,10 +76,11 @@ catalog:
   eslint-plugin-react-refresh: ~0.5.2
   glob: ^13.0.6
   globals: ^17.4.0
+  happy-dom: ^20.8.3
   prettier: ^3.8.1
   react: ^19.2.4
   react-dom: ^19.2.4
-  react-router-dom: ^7.13.1
+  react-router-dom: ^7.18.3
   sass-embedded: "^1.100.0"
   typescript: ~5.9.3
   typescript-eslint: ^8.56.1
@@ -48,6 +91,3 @@ catalog:
   vite-plugin-static-copy: ^3.2.0
   vitest: ^4.0.18
   zod: ^4.3.6
-
-onlyBuiltDependencies:
-  - lefthook

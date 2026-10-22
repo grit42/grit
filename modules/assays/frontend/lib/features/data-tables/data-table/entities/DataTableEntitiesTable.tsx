@@ -72,54 +72,54 @@ const DataTableEntitiesTable = ({ dataTableId }: Props) => {
   const navigateToEdit = useCallback(() => navigate("edit"), [navigate]);
 
   return (
-      <Table
-        header="Entities"
-        tableState={tableState}
-        rowActions={canEditDataTable ? ["delete"] : []}
-        onDelete={async (rows) => {
-          if (
-            !window.confirm(
-              `Are you sure you want to remove ${
-                rows.length > 1 ? `${rows.length} entities` : "this entity"
-              }? This action is irreversible`,
-            )
+    <Table
+      header="Entities"
+      tableState={tableState}
+      rowActions={canEditDataTable ? ["delete"] : []}
+      onDelete={async (rows) => {
+        if (
+          !window.confirm(
+            `Are you sure you want to remove ${
+              rows.length > 1 ? `${rows.length} entities` : "this entity"
+            }? This action is irreversible`,
           )
-            return;
-          await destroyEntitiesMutation.mutateAsync(
-            rows.map(({ original }) => original.data_table_entity_id),
-          );
-          await Promise.all([
-            queryClient.invalidateQueries({
-              queryKey: [
-                "entities",
-                "infiniteData",
-                `grit/assays/data_tables/${dataTableId}/data_table_entities`,
-              ],
-            }),
-            queryClient.invalidateQueries({
-              queryKey: [
-                "entities",
-                "infiniteData",
-                `grit/assays/data_tables/${dataTableId}/data_table_rows`,
-              ],
-            }),
-          ]);
-        }}
-        loading={isLoading}
-        headerActions={
-          canEditDataTable ? (
-            <Button disabled={dataTableId === "new"} onClick={navigateToEdit}>
-              Add
-            </Button>
-          ) : undefined
-        }
-        data={flatData ?? []}
-        pagination={{
-          fetchNextPage,
-          isFetchingNextPage,
-          totalRows: data?.pages[0]?.total,
-        }}
-      />
+        )
+          return;
+        await destroyEntitiesMutation.mutateAsync(
+          rows.map(({ original }) => original.data_table_entity_id),
+        );
+        await Promise.all([
+          queryClient.invalidateQueries({
+            queryKey: [
+              "entities",
+              "infiniteData",
+              `grit/assays/data_tables/${dataTableId}/data_table_entities`,
+            ],
+          }),
+          queryClient.invalidateQueries({
+            queryKey: [
+              "entities",
+              "infiniteData",
+              `grit/assays/data_tables/${dataTableId}/data_table_rows`,
+            ],
+          }),
+        ]);
+      }}
+      loading={isLoading}
+      headerActions={
+        canEditDataTable ? (
+          <Button disabled={dataTableId === "new"} onClick={navigateToEdit}>
+            Add
+          </Button>
+        ) : undefined
+      }
+      data={flatData ?? []}
+      pagination={{
+        fetchNextPage,
+        isFetchingNextPage,
+        totalRows: data?.pages[0]?.total,
+      }}
+    />
   );
 };
 

@@ -10,7 +10,10 @@ export const useCompoundBreadcrumbs = (compound?: CompoundData | null) =>
         compound
           ? [
               ...COMPOUNDS_BREADCRUMBS,
-              { label: compound.number, url: `/compounds/${compound.id}/details` },
+              {
+                label: compound.number,
+                url: `/compounds/${compound.id}/details`,
+              },
             ]
           : COMPOUNDS_BREADCRUMBS,
       [compound],

@@ -57,6 +57,20 @@ RSpec.describe "Data Types API", type: :request do
     end
   end
 
+  describe "guess_data_type_for_columns permissions" do
+    it "allows guessing with 'read:system'" do
+      login_as(notadmin)
+      post "/api/grit/core/data_types/guess_data_type_for_columns", params: { columns: { col1: [ "test_value" ] } }, as: :json
+      expect(response).to have_http_status(:success)
+    end
+
+    it "forbids guessing without 'read:system'" do
+      login_as(create(:grit_core_user))
+      post "/api/grit/core/data_types/guess_data_type_for_columns", params: { columns: { col1: [ "test_value" ] } }, as: :json
+      expect(response).to have_http_status(:forbidden)
+    end
+  end
+
   describe "SQL injection prevention in guess_data_type_for_columns" do
     context "when an entity data type name contains SQL injection characters" do
       let!(:malicious_data_type) do

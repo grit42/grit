@@ -181,13 +181,13 @@ const pad = (n: number) => String(n).padStart(2, "0");
 export const generateSampleData = (count = 50): SampleRow[] => {
   const rng = createRng(0x9e3779b9);
 
-  const pick = <T,>(arr: T[]): T => arr[Math.floor(rng() * arr.length)]!;
+  const pick = <T>(arr: T[]): T => arr[Math.floor(rng() * arr.length)]!;
   const randInt = (min: number, max: number) =>
     Math.floor(rng() * (max - min + 1)) + min;
   const randFloat = (min: number, max: number, decimals = 2) =>
     Number((rng() * (max - min) + min).toFixed(decimals));
   /** Returns the value, or null with the given probability. */
-  const maybeNull = <T,>(value: T, nullChance = 0.15): T | null =>
+  const maybeNull = <T>(value: T, nullChance = 0.15): T | null =>
     rng() < nullChance ? null : value;
 
   return Array.from({ length: count }, (_, index): SampleRow => {
@@ -195,7 +195,9 @@ export const generateSampleData = (count = 50): SampleRow[] => {
     const registeredOffset = randInt(0, 540);
     const registered = new Date(BASE_DATE + registeredOffset * DAY_MS);
     const updated = new Date(
-      registered.getTime() + randInt(0, 120) * DAY_MS + randInt(0, 86400) * 1000,
+      registered.getTime() +
+        randInt(0, 120) * DAY_MS +
+        randInt(0, 86400) * 1000,
     );
 
     const code = `${pick(PREFIXES)}-${String(randInt(1000, 9999))}`;

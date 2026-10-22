@@ -24,7 +24,11 @@ import { useMemo, useRef } from "react";
 import { classnames } from "@grit42/client-library/utils";
 import { Spinner } from "@grit42/client-library/components";
 import { useDisplayDensity } from "@grit42/client-library/hooks";
-import { GritTypedColumnDef, TableProps, TableStateSettings } from "../../types";
+import {
+  GritTypedColumnDef,
+  TableProps,
+  TableStateSettings,
+} from "../../types";
 import { getIsFiltersActive } from "../features/filters";
 import Marvin03Meh from "@grit42/client-library/icons/Marvin03Meh";
 import useInternalTableState from "../../features/table-state/useInternalTableState";

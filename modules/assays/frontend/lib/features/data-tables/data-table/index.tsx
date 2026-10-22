@@ -129,10 +129,7 @@ const DataTablePage = () => {
             element={<DataTablePlots dataTableId={data_table_id} />}
           />
         </Route>
-        <Route
-          path="settings"
-          element={<DataTableSettingsPage />}
-        >
+        <Route path="settings" element={<DataTableSettingsPage />}>
           <Route
             path="general"
             element={<DataTableDetails dataTableId={data_table_id} />}

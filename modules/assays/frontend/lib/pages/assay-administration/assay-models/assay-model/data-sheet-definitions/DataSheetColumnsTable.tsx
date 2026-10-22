@@ -48,7 +48,7 @@ const DataSheetDefinitionColumnsTable = ({
     },
     settings: {
       disableVisibilitySettings: true,
-    }
+    },
   });
 
   const { data, isLoading } = useAssayDataSheetColumns(

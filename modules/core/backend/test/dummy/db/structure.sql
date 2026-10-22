@@ -662,6 +662,26 @@ CREATE TABLE public.schema_migrations (
 
 
 --
+-- Name: test_column_definitions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.test_column_definitions (
+    id bigint DEFAULT nextval('public.grit_seq'::regclass) NOT NULL,
+    created_by character varying(30) DEFAULT 'SYSTEM'::character varying NOT NULL,
+    created_at timestamp(6) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_by character varying(30),
+    updated_at timestamp(6) without time zone,
+    identifier character varying NOT NULL,
+    name character varying,
+    description character varying,
+    sort integer,
+    required boolean DEFAULT false NOT NULL,
+    table_definition_id bigint NOT NULL,
+    data_type_id bigint NOT NULL
+);
+
+
+--
 -- Name: test_entities; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -679,7 +699,42 @@ CREATE TABLE public.test_entities (
     datetime timestamp(6) without time zone,
     date date,
     "boolean" boolean,
-    user_id bigint
+    user_id bigint,
+    second_user_id bigint
+);
+
+
+--
+-- Name: test_schema_definitions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.test_schema_definitions (
+    id bigint DEFAULT nextval('public.grit_seq'::regclass) NOT NULL,
+    created_by character varying(30) DEFAULT 'SYSTEM'::character varying NOT NULL,
+    created_at timestamp(6) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_by character varying(30),
+    updated_at timestamp(6) without time zone,
+    identifier character varying NOT NULL,
+    name character varying,
+    sort integer,
+    committed_at timestamp(6) without time zone
+);
+
+
+--
+-- Name: test_table_definitions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.test_table_definitions (
+    id bigint DEFAULT nextval('public.grit_seq'::regclass) NOT NULL,
+    created_by character varying(30) DEFAULT 'SYSTEM'::character varying NOT NULL,
+    created_at timestamp(6) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_by character varying(30),
+    updated_at timestamp(6) without time zone,
+    identifier character varying NOT NULL,
+    name character varying,
+    sort integer,
+    schema_definition_id bigint NOT NULL
 );
 
 
@@ -897,11 +952,35 @@ ALTER TABLE ONLY public.schema_migrations
 
 
 --
+-- Name: test_column_definitions test_column_definitions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.test_column_definitions
+    ADD CONSTRAINT test_column_definitions_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: test_entities test_entities_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.test_entities
     ADD CONSTRAINT test_entities_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: test_schema_definitions test_schema_definitions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.test_schema_definitions
+    ADD CONSTRAINT test_schema_definitions_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: test_table_definitions test_table_definitions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.test_table_definitions
+    ADD CONSTRAINT test_table_definitions_pkey PRIMARY KEY (id);
 
 
 --
@@ -1164,10 +1243,31 @@ CREATE INDEX index_grit_core_vocabulary_items_on_vocabulary_id ON public.grit_co
 
 
 --
+-- Name: index_test_column_definitions_on_data_type_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_test_column_definitions_on_data_type_id ON public.test_column_definitions USING btree (data_type_id);
+
+
+--
+-- Name: index_test_column_definitions_on_table_definition_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_test_column_definitions_on_table_definition_id ON public.test_column_definitions USING btree (table_definition_id);
+
+
+--
 -- Name: index_test_entities_on_name; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE UNIQUE INDEX index_test_entities_on_name ON public.test_entities USING btree (name);
+
+
+--
+-- Name: index_test_entities_on_second_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_test_entities_on_second_user_id ON public.test_entities USING btree (second_user_id);
 
 
 --
@@ -1178,10 +1278,45 @@ CREATE INDEX index_test_entities_on_user_id ON public.test_entities USING btree 
 
 
 --
+-- Name: index_test_table_definitions_on_schema_definition_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_test_table_definitions_on_schema_definition_id ON public.test_table_definitions USING btree (schema_definition_id);
+
+
+--
+-- Name: test_column_definitions_table_definition_id_identifier; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX test_column_definitions_table_definition_id_identifier ON public.test_column_definitions USING btree (table_definition_id, identifier);
+
+
+--
+-- Name: test_schema_definitions_identifier; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX test_schema_definitions_identifier ON public.test_schema_definitions USING btree (identifier);
+
+
+--
+-- Name: test_table_definitions_schema_definition_id_identifier; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX test_table_definitions_schema_definition_id_identifier ON public.test_table_definitions USING btree (schema_definition_id, identifier);
+
+
+--
 -- Name: uniq_permission_per_role; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE UNIQUE INDEX uniq_permission_per_role ON public.grit_core_role_permissions USING btree (role_id, permission_id);
+
+
+--
+-- Name: uniq_role_per_user; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX uniq_role_per_user ON public.grit_core_user_roles USING btree (user_id, role_id);
 
 
 --
@@ -1462,12 +1597,48 @@ ALTER TABLE ONLY public.test_entities
 
 
 --
+-- Name: test_column_definitions test_column_definitions_data_type_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.test_column_definitions
+    ADD CONSTRAINT test_column_definitions_data_type_id FOREIGN KEY (data_type_id) REFERENCES public.grit_core_data_types(id);
+
+
+--
+-- Name: test_column_definitions test_column_definitions_table_definition_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.test_column_definitions
+    ADD CONSTRAINT test_column_definitions_table_definition_id FOREIGN KEY (table_definition_id) REFERENCES public.test_table_definitions(id);
+
+
+--
+-- Name: test_entities test_second; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.test_entities
+    ADD CONSTRAINT test_second FOREIGN KEY (second_user_id) REFERENCES public.grit_core_users(id);
+
+
+--
+-- Name: test_table_definitions test_table_definitions_schema_definition_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.test_table_definitions
+    ADD CONSTRAINT test_table_definitions_schema_definition_id FOREIGN KEY (schema_definition_id) REFERENCES public.test_schema_definitions(id);
+
+
+--
 -- PostgreSQL database dump complete
 --
 
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261007090000'),
+('20260925120000'),
+('20260918110216'),
+('20260917101500'),
 ('20260510051017'),
 ('20260510051016'),
 ('20260502000001'),

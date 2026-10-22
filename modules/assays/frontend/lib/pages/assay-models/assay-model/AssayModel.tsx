@@ -23,27 +23,29 @@ import { useTabs } from "@grit42/core";
 import { useAssayModelBreadcrumbs } from "./breadcrumbs";
 
 const useAssayModelTabs = (id: string | number) =>
-  useTabs(useMemo(
-    () => [
-      {
-        url: `/assays/assay-models/${id}/experiments`,
-        label: "Experiments",
-      },
-      {
-        url: `/assays/assay-models/${id}/data`,
-        label: "Data",
-      },
-      {
-        url: `/assays/assay-models/${id}/data-sheets`,
-        label: "Data sheets",
-      },
-      {
-        url: `/assays/assay-models/${id}/metadata`,
-        label: "Metadata",
-      },
-    ],
-    [id],
-  ));
+  useTabs(
+    useMemo(
+      () => [
+        {
+          url: `/assays/assay-models/${id}/experiments`,
+          label: "Experiments",
+        },
+        {
+          url: `/assays/assay-models/${id}/data`,
+          label: "Data",
+        },
+        {
+          url: `/assays/assay-models/${id}/data-sheets`,
+          label: "Data sheets",
+        },
+        {
+          url: `/assays/assay-models/${id}/metadata`,
+          label: "Metadata",
+        },
+      ],
+      [id],
+    ),
+  );
 
 const AssayModel = () => {
   const { assay_model_id } = useParams() as { assay_model_id: string };

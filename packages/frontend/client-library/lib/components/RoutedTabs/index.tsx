@@ -61,26 +61,21 @@ const RoutedTabs = ({
   const navigate = useNavigate();
   const match = useMatch(matchPattern);
 
-  // Validate tabs
   if (!tabs || tabs.length === 0) {
     return <ErrorPage error="No tabs configured" />;
   }
 
-  // Extract param name from pattern if not provided
   let extractedParamName = paramName;
   if (!extractedParamName) {
     const paramMatches = matchPattern.match(/:([^/]+)/g);
     if (!paramMatches || paramMatches.length === 0) {
       return <ErrorPage error="Invalid route pattern: no parameters found" />;
     }
-    // Get last param and remove the colon
     extractedParamName = paramMatches[paramMatches.length - 1].substring(1);
   }
 
-  // Extract current param value from match
   const currentParam = match?.params[extractedParamName] ?? "";
 
-  // Find selected tab index
   const selectedTab = findSelectedTab(tabs, currentParam);
 
   if (selectedTab === -1) {
@@ -89,7 +84,6 @@ const RoutedTabs = ({
     return <Navigate to={path} replace />;
   }
 
-  // Handle tab change
   const handleTabChange = (index: number) => {
     if (tabs[index]) {
       const path =
@@ -100,25 +94,24 @@ const RoutedTabs = ({
     }
   };
 
-  // Prepare outlet
   const outlet = <Outlet />;
   const wrappedOutlet = outletWrapper ? outletWrapper(outlet) : outlet;
 
   const rows = ["1fr"];
   if (tabsAtBottom) {
-    rows.push("min-content")
+    rows.push("min-content");
   } else {
-    rows.splice(0, 0, "min-content")
+    rows.splice(0, 0, "min-content");
   }
   if (heading) {
-    rows.splice(0, 0, "min-content")
+    rows.splice(0, 0, "min-content");
   }
 
   return (
     <div
       style={{
         display: "grid",
-        gridTemplateColumns: "1fr",
+        gridTemplateColumns: "minmax(0, 1fr)",
         gridTemplateRows: rows.join(" "),
         overflow: "auto",
       }}

@@ -1,0 +1,90 @@
+name: Security Audit
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  brakeman:
+    name: Brakeman (Ruby SAST)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/grit/server
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1
+        with:
+          ruby-version: 3.4.9
+          bundler-cache: true
+          working-directory: apps/grit/server
+          bundler-opts: --with local
+
+      - name: Run Brakeman (server)
+        # --no-exit-on-warn: exit 0 on warnings, non-zero only on errors.
+        # Switch to --exit-on-warn once the initial warning baseline is resolved.
+        # --force: server has no app/ dir (code lives in modules), scan routes/config anyway.
+        run: bundle exec brakeman -q --no-exit-on-warn --force
+
+      - name: Run Brakeman (core)
+        run: bundle exec brakeman -q --no-exit-on-warn -p ../../../modules/core/backend
+
+      - name: Run Brakeman (assays)
+        run: bundle exec brakeman -q --no-exit-on-warn -p ../../../modules/assays/backend
+
+      - name: Run Brakeman (compounds)
+        run: bundle exec brakeman -q --no-exit-on-warn -p ../../../modules/compounds/backend
+
+  bundler-audit:
+    name: Bundler Audit (Gem CVEs)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1
+        with:
+          ruby-version: 3.4.9
+
+      - name: Install bundler-audit
+        run: gem install bundler-audit
+
+      - name: Audit main app
+        working-directory: apps/grit/server
+        run: bundle-audit check --update
+
+      - name: Audit core module
+        working-directory: modules/core/backend
+        run: bundle-audit check --update
+
+      - name: Audit compounds module
+        working-directory: modules/compounds/backend
+        run: bundle-audit check --update
+
+      - name: Audit assays module
+        working-directory: modules/assays/backend
+        run: bundle-audit check --update
+
+  pnpm-audit:
+    name: pnpm Audit (npm CVEs)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run audit
+        # moderate: flags medium+ severity. Raise to --audit-level high to reduce noise if needed.
+        run: pnpm audit --audit-level moderate

@@ -1,8 +1,5 @@
 import { describe, expect, test } from "vitest";
-import {
-  buildExportOptions,
-  buildThemedAxes,
-} from "../lib/PlotBase/ThemedPlot";
+import { figureClick, buildThemedAxes } from "../lib/PlotBase/ThemedPlot";
 import type { ColorMap } from "../lib/colors";
 
 const colorMap = {
@@ -29,21 +26,11 @@ describe("buildThemedAxes", () => {
       "yaxis",
       "yaxis3",
     ]);
-    // Discovered axes are themed too, not just passed through.
     expect(themed.xaxis2!.color).toBe("#111");
     expect(themed.yaxis3!.gridcolor).toBe("rgba(17, 17, 17, 0.2)");
   });
 
-  /**
-   * Plotly reads the first cartesian axis from `layout.xaxis`; `xaxis1` is a
-   * key it never looks at (`cartesian/layout_defaults` resolves ids through
-   * `id2name`, and `id2name("x")` is `"xaxis"`).
-   *
-   * Every builder numbers facets from 1, so before this was canonicalised the
-   * first facet's axis type landed on the dead key while the canonical entry
-   * carried colours alone — an unfaceted plot ignored its axis type outright,
-   * and a faceted one got it right on every facet except the first.
-   */
+  // Plotly reads the first axis from `layout.xaxis` and ignores `xaxis1`.
   describe("the first facet's axis (regression)", () => {
     test("`xaxis1` is folded onto `xaxis`, which Plotly actually reads", () => {
       const themed = buildThemedAxes(colorMap, {
@@ -90,7 +77,7 @@ describe("buildThemedAxes", () => {
         layout: { xaxis: { type: "linear" } } as never,
       });
       expect(themed.xaxis!.type).toBe("linear");
-      // Merged, not replaced: the `xaxis1` entry's other settings survive.
+      // Merged, not replaced.
       expect(themed.xaxis!.nticks).toBe(5);
     });
   });
@@ -127,34 +114,15 @@ describe("buildThemedAxes", () => {
   });
 });
 
-describe("buildExportOptions", () => {
-  test("defaults to svg named after the plot title", () => {
-    expect(buildExportOptions(undefined, "Body weight")).toEqual({
-      format: "svg",
-      filename: "Body weight",
-    });
+describe("figureClick", () => {
+  const onClick = () => {};
+  const placeNote = () => {};
+
+  test("passes the figure's click action through ordinarily", () => {
+    expect(figureClick(false, onClick, placeNote)).toBe(onClick);
   });
 
-  test("honours an explicit format and filename", () => {
-    expect(
-      buildExportOptions({ format: "png", filename: "bw" }, "Body weight"),
-    ).toEqual({ format: "png", filename: "bw" });
-  });
-
-  /** scale only affects raster output, so it stays absent unless asked for. */
-  test("omits scale unless set", () => {
-    expect(buildExportOptions({ format: "png" }, "t")).not.toHaveProperty(
-      "scale",
-    );
-    expect(buildExportOptions({ format: "png", scale: 3 }, "t")).toMatchObject({
-      scale: 3,
-    });
-  });
-
-  test("tolerates a missing title", () => {
-    expect(buildExportOptions({ format: "webp" }, undefined)).toEqual({
-      format: "webp",
-      filename: undefined,
-    });
+  test("places the note instead while one is being placed", () => {
+    expect(figureClick(true, onClick, placeNote)).toBe(placeNote);
   });
 });

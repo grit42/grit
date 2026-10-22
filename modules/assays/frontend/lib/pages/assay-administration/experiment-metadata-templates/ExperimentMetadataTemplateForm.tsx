@@ -86,7 +86,7 @@ const ExperimentMetadataTemplateForm = ({
           [
             "entities",
             "datum",
-          "grit/assays/experiment_metadata_templates",
+            "grit/assays/experiment_metadata_templates",
             newEntity.id.toString(),
           ],
           newEntity,

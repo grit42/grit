@@ -27,6 +27,7 @@ RSpec.describe "User Roles API", type: :request do
   let(:admin_user_role) { Grit::Core::UserRole.find_by!(user: admin, role: admin_role) }
   let(:target_user) { create(:grit_core_user) }
   let(:target_user_role) { create(:grit_core_user_role, user: target_user, role: read_role) }
+  let(:roleless_user) { create(:grit_core_user) }
 
   before(:each) do
     login_as(admin)
@@ -91,7 +92,7 @@ RSpec.describe "User Roles API", type: :request do
 
       response "200", "update is allowed with 'admin:users'" do
         let(:id) { target_user_role.id }
-        let(:user_role_params) { { user_id: notadmin.id } }
+        let(:user_role_params) { { user_id: roleless_user.id } }
         run_test!
       end
     end
@@ -106,6 +107,14 @@ RSpec.describe "User Roles API", type: :request do
         run_test!
       end
     end
+  end
+
+  it "forbids assigning the same role to a user twice" do
+    post "/api/grit/core/user_roles",
+         params: { user_id: notadmin.id, role_id: read_role.id }, as: :json
+
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(Grit::Core::UserRole.where(user_id: notadmin.id, role_id: read_role.id).count).to eq(1)
   end
 
   it "destruction changes the count" do

@@ -17,7 +17,7 @@
  */
 
 import { Link, useNavigate } from "react-router-dom";
-import {  useMemo } from "react";
+import { useMemo } from "react";
 import {
   useForm,
   FormField,
@@ -88,7 +88,7 @@ function RoleForm({ role }: { role: Partial<Role> }) {
     <Form form={form}>
       {role.system && (
         <div className={styles.systemRoleBanner}>
-          <InfoIcon height={16}/>
+          <InfoIcon height={16} />
           <span>This role is a system role and cannot be modified</span>
         </div>
       )}
@@ -99,7 +99,11 @@ function RoleForm({ role }: { role: Partial<Role> }) {
         ))}
       </FormFields>
       <FormControls>
-        {!role.id && <Link to=".."><Button color="primary">Cancel</Button></Link>}
+        {!role.id && (
+          <Link to="..">
+            <Button color="primary">Cancel</Button>
+          </Link>
+        )}
       </FormControls>
     </Form>
   );

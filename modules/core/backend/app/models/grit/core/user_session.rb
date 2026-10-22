@@ -22,6 +22,9 @@ module Grit::Core
   class UserSession < Authlogic::Session::Base
     consecutive_failed_logins_limit ENV.fetch("MAX_FAILED_LOGINS", 50).to_i
     logout_on_timeout ENV.fetch("SESSION_EXPIRY_ENABLED", "false") == "true"
+    # Authlogic sets its cookie with an explicit nil SameSite, which bypasses the Rails
+    # default. The cookie authenticates on its own, so it must not ride cross-site requests.
+    same_site "Lax"
 
     def cookie_key
       "grit_core_user_credentials"

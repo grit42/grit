@@ -1,4 +1,6 @@
-export const ASSAY_MODELS_BREADCRUMBS = [{
+export const ASSAY_MODELS_BREADCRUMBS = [
+  {
     url: "/assays/assay-models",
     label: "Assay Models",
-}]
+  },
+];

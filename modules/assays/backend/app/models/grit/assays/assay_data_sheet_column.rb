@@ -54,7 +54,7 @@ module Grit::Assays
 
     def self.detailed(params = {})
       self.detailed_scope(params)
-        .joins("LEFT OUTER JOIN grit_assays_assay_models ON grit_assays_assay_models.id = grit_assays_assay_data_sheet_definitions__.assay_model_id")
+        .joins("LEFT OUTER JOIN grit_assays_assay_models ON grit_assays_assay_models.id = assay_data_sheet_definition_id__.assay_model_id")
         .select("grit_assays_assay_models.id as assay_model_id")
         .select("grit_assays_assay_models.name as assay_model_id__name")
     end

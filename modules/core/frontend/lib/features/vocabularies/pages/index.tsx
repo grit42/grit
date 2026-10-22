@@ -34,10 +34,7 @@ const VocabulariesRoutes = () => {
       <Route path="new" element={<NewVocabularyPage />} />
       <Route path=":vocabulary_id" element={<VocabularyPage />}>
         <Route path="items">
-          <Route
-            index
-            element={<VocabularyItemsPage />}
-          />
+          <Route index element={<VocabularyItemsPage />} />
           <Route path="new" element={<NewVocabularyItemPage />} />
           <Route path=":vocabulary_item_id" element={<VocabularyItemPage />} />
         </Route>

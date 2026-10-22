@@ -24,11 +24,14 @@ module Grit::Assays
 
     entity_crud_with read: [ "read:system" ], write: [ "write:analysis" ]
 
+    entity_scopes :selected, :available, :available_entity_attributes
+
     validates :name, uniqueness: { scope: :data_table_id, message: "has already been taken in this data table" }, length: { minimum: 1 }
     validates :safe_name, uniqueness: { scope: :data_table_id, message: "has already been taken in this data table" }, length: { minimum: 3, maximum: 30 }
     validates :safe_name, format: { with: /\A[a-z_]{2}/, message: "should start with two lowercase letters or underscores" }
     validates :safe_name, format: { with: /\A[a-z0-9_]*\z/, message: "should contain only lowercase letters, numbers and underscores" }
     validate :safe_name_not_conflict
+    validate :metadata_filters_are_id_lists
 
     def safe_name_not_conflict
       return unless self.safe_name_changed?
@@ -37,11 +40,19 @@ module Grit::Assays
       end
     end
 
+    def metadata_filters_are_id_lists
+      return if metadata_filters.blank?
+      valid = metadata_filters.is_a?(Hash) && metadata_filters.values.all? do |ids|
+        ids.nil? || (ids.is_a?(Array) && ids.all? { |id| id.to_s.match?(/\A\d+\z/) })
+      end
+      errors.add("metadata_filters", "should only contain lists of vocabulary item ids") unless valid
+    end
+
     def self.detailed(params = {})
       self.detailed_scope(params)
-        .joins("LEFT OUTER JOIN grit_assays_assay_data_sheet_definitions ON grit_assays_assay_data_sheet_definitions.id = grit_assays_assay_data_sheet_columns__.assay_data_sheet_definition_id")
+        .joins("LEFT OUTER JOIN grit_assays_assay_data_sheet_definitions ON grit_assays_assay_data_sheet_definitions.id = assay_data_sheet_column_id__.assay_data_sheet_definition_id")
         .joins("LEFT OUTER JOIN grit_assays_assay_models ON grit_assays_assay_models.id = grit_assays_assay_data_sheet_definitions.assay_model_id")
-        .joins("LEFT OUTER JOIN grit_core_data_types ON grit_core_data_types.id = grit_assays_assay_data_sheet_columns__.data_type_id")
+        .joins("LEFT OUTER JOIN grit_core_data_types ON grit_core_data_types.id = assay_data_sheet_column_id__.data_type_id")
         .select("grit_assays_assay_data_sheet_definitions.id as assay_data_sheet_definition_id")
         .select("grit_assays_assay_data_sheet_definitions.name as assay_data_sheet_definition_id__name")
         .select("grit_assays_assay_models.id as assay_model_id")
@@ -55,7 +66,7 @@ module Grit::Assays
       params = params.as_json
       raise "'data_table_id' is required" if params["data_table_id"].nil?
       query = self.detailed(params)
-        .joins("LEFT OUTER JOIN grit_assays_assay_data_sheet_definitions ON grit_assays_assay_data_sheet_definitions.id = grit_assays_assay_data_sheet_columns__.assay_data_sheet_definition_id")
+        .joins("LEFT OUTER JOIN grit_assays_assay_data_sheet_definitions ON grit_assays_assay_data_sheet_definitions.id = assay_data_sheet_column_id__.assay_data_sheet_definition_id")
         .joins("LEFT OUTER JOIN grit_assays_assay_models ON grit_assays_assay_models.id = grit_assays_assay_data_sheet_definitions.assay_model_id")
         .select("grit_assays_assay_data_sheet_definitions.id as assay_data_sheet_definition_id")
         .select("grit_assays_assay_data_sheet_definitions.name as assay_data_sheet_definition_id__name")
@@ -72,7 +83,7 @@ module Grit::Assays
       raise "'data_table_id' is required" if params["data_table_id"].nil?
       data_table = DataTable.find(params["data_table_id"])
 
-      "SELECT name,safe_name FROM (VALUES #{data_table.entity_data_type.model.entity_properties.reject { |e| e[:name] == "id" }.map { |e| "('#{e[:display_name]}', '#{e[:name]}')" }.join(",") }) values(name,safe_name)"
+      "SELECT name,safe_name FROM (VALUES #{data_table.entity_data_type.model.entity_properties.reject { |e| e[:name] == "id" }.map { |e| "(#{connection.quote(e[:display_name])}, #{connection.quote(e[:name])})" }.join(",") }) values(name,safe_name)"
     end
 
     def self.available(params = nil)
@@ -80,12 +91,12 @@ module Grit::Assays
       raise "'data_table_id' is required" if params["data_table_id"].nil?
       data_table = DataTable.find(params["data_table_id"])
 
-      AssayDataSheetColumn.detailed.where("grit_assays_assay_data_sheet_definitions__.result IS TRUE")
-        .joins("JOIN grit_assays_assay_models grit_assays_assay_models__ ON grit_assays_assay_models__.id = grit_assays_assay_data_sheet_definitions__.assay_model_id")
+      AssayDataSheetColumn.detailed.where("assay_data_sheet_definition_id__.result IS TRUE")
+        .joins("JOIN grit_assays_assay_models grit_assays_assay_models__ ON grit_assays_assay_models__.id = assay_data_sheet_definition_id__.assay_model_id")
         .joins("JOIN grit_core_publication_statuses gaamps on gaamps.id = grit_assays_assay_models__.publication_status_id and gaamps.name = 'Published'")
         .select("grit_assays_assay_models__.id as assay_model_id")
         .select("grit_assays_assay_models__.name as assay_model_id__name")
-        .reorder("grit_assays_assay_data_sheet_definitions__.assay_model_id ASC", "grit_assays_assay_data_sheet_definitions__.sort ASC NULLS LAST", "grit_assays_assay_data_sheet_definitions__.id ASC", "grit_assays_assay_data_sheet_columns.sort ASC NULLS LAST")
+        .reorder("assay_data_sheet_definition_id__.assay_model_id ASC", "assay_data_sheet_definition_id__.sort ASC NULLS LAST", "assay_data_sheet_definition_id__.id ASC", "grit_assays_assay_data_sheet_columns.sort ASC NULLS LAST")
         .joins <<-SQL
 JOIN GRIT_ASSAYS_ASSAY_DATA_SHEET_COLUMNS GRIT_ASSAYS_ASSAY_DATA_SHEET_COLUMNS__SOURCE_DATA_TYPE ON GRIT_ASSAYS_ASSAY_DATA_SHEET_COLUMNS__SOURCE_DATA_TYPE.ASSAY_DATA_SHEET_DEFINITION_ID = GRIT_ASSAYS_ASSAY_DATA_SHEET_COLUMNS.ASSAY_DATA_SHEET_DEFINITION_ID
 AND GRIT_ASSAYS_ASSAY_DATA_SHEET_COLUMNS__SOURCE_DATA_TYPE.DATA_TYPE_ID = #{data_table.entity_data_type_id}
@@ -191,7 +202,8 @@ LEFT OUTER JOIN (
       self.metadata_filters.each do |key, value|
         metadata_definition = metadata_definitions.find { |d| d.id.to_s == key.to_s }
         unless metadata_definition.nil? || value.nil? || value.blank?
-          join.push "EXPERIMENTS_WITH_METADATA.#{metadata_definition.safe_name} IN (#{value.join(",")})"
+          vocabulary_item_ids = Array(value).filter_map { |id| Integer(id.to_s, 10, exception: false) }
+          join.push self.class.sanitize_sql_array([ "EXPERIMENTS_WITH_METADATA.#{metadata_definition.safe_name} IN (?)", vocabulary_item_ids ])
         end
       end
       join.join(" AND ")

@@ -28,6 +28,7 @@ module Grit::Core
 
     display_columns [ "name", "login" ]
     entity_crud_with read: [ "read:system" ], write: [ "admin:users" ]
+    entity_scopes :user_administration
 
     EMAIL = /
     \A
@@ -147,10 +148,11 @@ module Grit::Core
 
       self.foreign_keys.each do |foreign_key, memo|
         foreign_key_model = Grit::Core::EntityMapper.table_to_model_name(foreign_key.to_table).constantize
-        query = query.joins("LEFT OUTER JOIN #{foreign_key.to_table} #{foreign_key.to_table}__ ON #{foreign_key.to_table}__.#{foreign_key.options[:primary_key]} = #{self.table_name}.#{foreign_key.options[:column]}")
+        join_alias = "#{foreign_key.options[:column]}__"
+        query = query.joins("LEFT OUTER JOIN #{foreign_key.to_table} #{join_alias} ON #{join_alias}.#{foreign_key.options[:primary_key]} = #{self.table_name}.#{foreign_key.options[:column]}")
         foreign_key_model.display_properties.each do |property|
           next if @no_show.include?(foreign_key.options[:column])
-          query = query.select("#{foreign_key.to_table}__.#{property[:name]} as #{foreign_key.options[:column]}__#{property[:name]}")
+          query = query.select("#{join_alias}.#{property[:name]} as #{foreign_key.options[:column]}__#{property[:name]}")
         end
       end
       query
@@ -292,11 +294,35 @@ module Grit::Core
       end
 
       def check_who
-        # It is only admin and the user self that can edit user accounts
-        # Exception when activating process is in progress
-        raise "Not allowed" unless forgot_token_was.blank? || (forgot_token.blank? && !forgot_token_was.nil?) || activation_token_was.blank? || (activation_token.blank? && !activation_token_was.nil?) || Grit::Core::User.current.permission?("admin:users") || (login == Grit::Core::User.current.login)
+        # It is only admin and the user self that can edit user accounts.
+        # Completing an activation or a password reset is allowed: both need a secret token.
+        return true if activation_token_was.present? && activation_token.blank?
+        return true if forgot_token_was.present? && forgot_token.blank?
 
-        true
+        # Without a logged-in user (anonymous token flows, login bookkeeping, console) there is
+        # nobody to check against. User.current also resolves session and bearer-token logins,
+        # which don't populate RequestStore on their own.
+        current = RequestStore.store["current_user"] || lookup_current_user_for_check
+        return true if current.nil?
+        return true if current.permission?("admin:users") || login_was == current.login
+
+        raise "Not allowed"
+      end
+
+      # User.current resolves the session through Authlogic, which updates the user record
+      # (login bookkeeping) and so re-enters check_who. The nested call gets nil, which is
+      # correct: it is Authlogic's own update of that user, with no one else involved.
+      def lookup_current_user_for_check
+        return nil if RequestStore.store[:grit_check_who_lookup]
+
+        RequestStore.store[:grit_check_who_lookup] = true
+        begin
+          Grit::Core::User.current
+        rescue StandardError
+          nil
+        ensure
+          RequestStore.store.delete(:grit_check_who_lookup)
+        end
       end
 
       def check_admin_active

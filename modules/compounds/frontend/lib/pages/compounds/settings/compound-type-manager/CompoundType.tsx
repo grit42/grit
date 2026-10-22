@@ -18,7 +18,12 @@
 
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { Button, ErrorPage, Spinner, Surface } from "@grit42/client-library/components";
+import {
+  Button,
+  ErrorPage,
+  Spinner,
+  Surface,
+} from "@grit42/client-library/components";
 import { useQueryClient } from "@grit42/api";
 import {
   useCreateEntityMutation,

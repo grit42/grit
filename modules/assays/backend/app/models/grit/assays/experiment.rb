@@ -50,6 +50,8 @@ module Grit::Assays
 
     entity_crud_with read: [ "read:system" ], write: [ "write:assays" ]
 
+    entity_scopes :published
+
     def set_metadata_values(params)
       success = true
       experiment_metadata = self.experiment_metadata
@@ -94,7 +96,7 @@ module Grit::Assays
 
     def self.detailed(params = nil)
       query = detailed_scope(params)
-        .joins("JOIN grit_assays_assay_types grit_assays_assay_types__ on grit_assays_assay_types__.id = grit_assays_assay_models__.assay_type_id")
+        .joins("JOIN grit_assays_assay_types grit_assays_assay_types__ on grit_assays_assay_types__.id = assay_model_id__.assay_type_id")
         .select("grit_assays_assay_types__.id as assay_type_id")
         .select("grit_assays_assay_types__.name as assay_type_id__name")
       AssayMetadataDefinition.all.each do |md|
@@ -108,7 +110,7 @@ module Grit::Assays
     end
 
     def self.published(params = nil)
-      self.detailed.where("grit_core_publication_statuses__.name = ?", "Published")
+      self.detailed.where("publication_status_id__.name = ?", "Published")
     end
 
     def self.entity_properties(**args)
