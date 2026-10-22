@@ -14,11 +14,11 @@
     {
       "warning_type": "SQL Injection",
       "warning_code": 0,
-      "fingerprint": "4712588a0d2353689f5e1bf24298c02b7c96e49e8d82f8e3d1f2a2ffc521e28b",
+      "fingerprint": "447184a9bca3aaec0ffada1a37ba642bdc647e59b522d9ad86207ac9d00771b6",
       "check_name": "SQL",
       "message": "Possible SQL injection",
       "file": "app/models/grit/assays/experiment.rb",
-      "line": 102,
+      "line": 104,
       "confidence": "Weak",
       "note": "Same pattern as experiment_metadata_template.rb:64 - self.table_name (schema reflection) and md.safe_name (format-validated identifier). Reviewed 2026-09-10."
     },
