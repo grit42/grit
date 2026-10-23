@@ -109,5 +109,32 @@ module Grit::Assays
         expect(column).to respond_to(:sql_aggregate_method)
       end
     end
+
+    # --- entity_attribute_query (entity_attribute_name is a plain string
+    # column with no format validation, unlike safe_name; it must be checked
+    # against the known entity properties before being used in raw SQL) ---
+
+    describe "entity_attribute_query" do
+      let(:users_entity_type) { create(:grit_core_data_type, :entity) }
+      let(:data_table) { create(:grit_assays_data_table, entity_data_type: users_entity_type) }
+
+      it "builds the query when entity_attribute_name matches a real entity property" do
+        column = create(:grit_assays_data_table_column, :from_entity_attribute,
+                         data_table: data_table, entity_attribute_name: "login")
+
+        query = column.entity_attribute_query(Grit::Core::User.unscoped.select("targets.id"))
+
+        expect(query.to_sql).to include("login")
+      end
+
+      it "raises instead of building SQL when entity_attribute_name does not match a known property" do
+        column = create(:grit_assays_data_table_column, :from_entity_attribute,
+                         data_table: data_table, entity_attribute_name: "login\"; DROP TABLE grit_core_users; --")
+
+        expect {
+          column.entity_attribute_query(Grit::Core::User.unscoped.select("targets.id"))
+        }.to raise_error(/does not exist/)
+      end
+    end
   end
 end

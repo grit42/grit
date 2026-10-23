@@ -64,6 +64,11 @@ module Grit::Core
     def failure
       message = params[:message] || "Unknown SSO error"
       Rails.logger.warn "[SSO] Authentication failure: #{message}"
+      # Path is a hardcoded literal ("/app/core/authenticate"); message only
+      # reaches the URL-encoded query string, never the host, and
+      # allow_other_host: false blocks external redirects regardless.
+      # Reviewed 2026-09-10.
+      # nosemgrep: ruby.rails.security.audit.xss.avoid-redirect.avoid-redirect
       redirect_to "/app/core/authenticate?sso_error=#{ERB::Util.url_encode(message)}", allow_other_host: false
     end
 
