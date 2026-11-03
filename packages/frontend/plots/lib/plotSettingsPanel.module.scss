@@ -3,7 +3,7 @@
 .layout {
   overflow: hidden;
   &.expanded {
-    grid-template-columns: 1fr 5fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 5fr);
   }
 }
 
@@ -11,10 +11,13 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  scrollbar-gutter: stable;
   display: flex;
   flex-direction: column;
   gap: 4px;
   padding: 4px;
+  max-width: 100%;
+  overflow-wrap: break-word;
 }
 
 .header {
@@ -33,4 +36,8 @@
 .plot {
   height: 100%;
   min-height: 0;
+  min-width: 0;
+  max-width: 100%;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
 }

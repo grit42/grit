@@ -71,6 +71,9 @@ module AuthHelpers
 
   # Model spec login: uses Authlogic test mode
   def set_current_user(user)
+    # Logging in saves the user (login bookkeeping), which User#check_who guards. Act as that
+    # user meanwhile, so a different user resolved earlier in the example doesn't get the blame.
+    RequestStore.store["current_user"] = user
     Grit::Core::UserSession.create(user)
     # Clear bootstrap stub so User.current re-fetches from real session
     RequestStore.store.delete("current_user")

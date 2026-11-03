@@ -20,6 +20,9 @@ module Grit::Assays
   class DataTableEntitiesController < ApplicationController
     include Grit::Core::GritEntityController
 
+    # Replaces the check_write callback registered by Writable, so the default actions must be listed too.
+    before_action :check_write, only: %i[ create update destroy create_bulk ]
+
     def create_bulk
       permitted = params.require(:_json).map { |params| params.permit(self.permitted_params) }
 

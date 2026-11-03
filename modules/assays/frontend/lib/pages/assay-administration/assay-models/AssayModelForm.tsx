@@ -70,21 +70,18 @@ const FIELDS: FormFieldDef[] = [
 
 const AssayModelForm = ({
   assayModel,
-  cancelPath = ".."
+  cancelPath = "..",
 }: {
   assayModel: Partial<AssayModelData>;
   cancelPath?: string;
 }) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [formData, setFormData] = useState<
-    Partial<AssayModelData>
-  >(assayModel);
+  const [formData, setFormData] = useState<Partial<AssayModelData>>(assayModel);
 
-  const createEntityMutation =
-    useCreateEntityMutation<AssayModelData>(
-      "grit/assays/assay_models",
-    );
+  const createEntityMutation = useCreateEntityMutation<AssayModelData>(
+    "grit/assays/assay_models",
+  );
 
   const editEntityMutation = useEditEntityMutation<AssayModelData>(
     "grit/assays/assay_models",
@@ -116,9 +113,7 @@ const AssayModelForm = ({
         navigate(`../${newEntity.id}/details`);
       } else {
         setFormData(
-          await editEntityMutation.mutateAsync(
-            value as AssayModelData,
-          ),
+          await editEntityMutation.mutateAsync(value as AssayModelData),
         );
         formApi.reset();
       }

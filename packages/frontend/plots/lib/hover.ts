@@ -17,22 +17,18 @@
  */
 
 import { Datum } from "plotly.js";
+import type { NumberFormat } from "./format";
+import type { Summary } from "./math";
 import type { SourceData, SourceDataProperties } from "./types";
 
-/**
- * One line of a hover label.
- *
- * `value` is emitted verbatim, so it may be a literal (`"12.4"`) or a Plotly
- * token (`"%{y}"`, `"%{customdata[2]}"`). Tokens are what make a row reflect the
- * hovered point rather than a fixed value.
- */
+/** `value` is verbatim: a literal or a Plotly token like `%{customdata[2]}`. */
 export interface HoverRow {
-  /** Prefix, rendered as `key: value`. Omit for an unlabelled line. */
+  /** Rendered as `key: value`; omit for an unlabelled line. */
   key?: string;
   value: string | number;
   /** d3-format suffix applied inside a Plotly token, e.g. `".3f"`. */
   format?: string;
-  /** Insert a blank line before this row, grouping rows into blocks. */
+  /** A blank line before this row. */
   section?: boolean;
   /** Defaults to true for unlabelled rows, which act as headings. */
   bold?: boolean;
@@ -47,12 +43,7 @@ const applyFormat = (value: string | number, format?: string): string => {
   return str;
 };
 
-/**
- * Render rows into a Plotly `hovertemplate`.
- *
- * The trailing `<extra></extra>` suppresses Plotly's default trace-name box, so
- * the label shows only what the rows specify.
- */
+/** `<extra></extra>` hides Plotly's trace-name box. */
 export const buildHoverTemplate = (rows: HoverRow[]): string => {
   const lines = rows.map((row) => {
     const value = applyFormat(row.value, row.format);
@@ -64,13 +55,9 @@ export const buildHoverTemplate = (rows: HoverRow[]): string => {
   return lines.join("<br>") + "<extra></extra>";
 };
 
-/**
- * A hover line described by the data key it reads
- */
 export interface HoverField {
-  /** Key into the source data. Its display name supplies the default label. */
+  /** Its display name is the default label. */
   key: string;
-  /** Overrides the property's display name. */
   label?: string;
   format?: string;
   section?: boolean;
@@ -80,13 +67,8 @@ export interface HoverField {
 export type HoverSpec = HoverField[];
 
 /**
- * Turn a serializable {@link HoverSpec} into hover rows plus the ordered list of
- * data keys to attach as each point's `customdata`.
- *
- * Plotly can only reference values present on the trace, so a spec naming
- * arbitrary columns requires those columns to be carried in `customdata`; the
- * rows then address them positionally. Pair with {@link buildHoverCustomData},
- * which must be given the same `keys` array.
+ * Plotly only reads values on the trace, so columns ride in `customdata`. Pass
+ * the same `keys` to {@link buildHoverCustomData}.
  */
 export const resolveHoverSpec = (
   spec: HoverSpec,
@@ -108,24 +90,13 @@ export const resolveHoverSpec = (
   return { rows, keys };
 };
 
-/**
- * Extract `keys` from each datum, in order, for a trace's `customdata`.
- *
- * Must be called with the `keys` returned by {@link resolveHoverSpec} for the
- * positional references in the template to line up.
- */
+/** Pass the `keys` from {@link resolveHoverSpec}, or the rows misalign. */
 export const buildHoverCustomData = (
   data: SourceData,
   keys: string[],
 ): Datum[][] => data.map((datum) => keys.map((key) => datum[key] ?? null));
 
-/**
- * `customdata` for a heatmap, shaped like its `z`.
- *
- * Plotly indexes a heatmap's `customdata` by `[row][column]`, so a spec naming
- * arbitrary columns needs the values laid out as the matrix rather than as a
- * list. Cells with no row keep `null`, which renders as blank.
- */
+/** Heatmap `customdata`, shaped like `z`: Plotly indexes it `[row][column]`. */
 export const buildHoverMatrix = ({
   data,
   keys,
@@ -154,7 +125,39 @@ export const buildHoverMatrix = ({
     byRow.set(y, row);
   }
 
+  // Not a bare null: Plotly would warn for every template key on hover.
+  const blank = keys.map(() => null);
+
   return yCategories.map((y) =>
-    xCategories.map((x) => byRow.get(y)?.get(x) ?? null),
+    xCategories.map((x) => byRow.get(y)?.get(x) ?? blank),
   );
 };
+
+const SUMMARY_KEYS = [
+  "n",
+  "Mean",
+  "Median",
+  "SD",
+  "SEM",
+  "Variance",
+  "Min",
+  "Max",
+];
+
+/** The summary rows bar and time-series hovers share, from `customdata[first]` on. */
+export const summaryHoverRows = (first: number): HoverRow[] =>
+  SUMMARY_KEYS.map((key, i) => ({ key, value: `%{customdata[${first + i}]}` }));
+
+/** The values for {@link summaryHover}, in its order. */
+export const summaryHoverValues = (summary: Summary, fmt: NumberFormat) => [
+  summary.count,
+  ...[
+    summary.mean,
+    summary.median,
+    summary.std,
+    summary.sem,
+    summary.variance,
+    summary.min,
+    summary.max,
+  ].map((value) => fmt.text(value)),
+];

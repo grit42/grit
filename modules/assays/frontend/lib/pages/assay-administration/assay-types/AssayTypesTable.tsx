@@ -45,7 +45,10 @@ const ASSAY_TYPE_TABLE_COLUMNS: GritColumnDef<AssayTypeData>[] = [
 const AssayTypesTable = () => {
   const navigate = useNavigate();
 
-  const tableState = useSetupTableState("admin-assay_types-list", ASSAY_TYPE_TABLE_COLUMNS);
+  const tableState = useSetupTableState(
+    "admin-assay_types-list",
+    ASSAY_TYPE_TABLE_COLUMNS,
+  );
 
   const {
     data,
@@ -65,7 +68,11 @@ const AssayTypesTable = () => {
     <Table
       header="Assay types"
       tableState={tableState}
-      headerActions={<Link to="new"><Button>New</Button></Link>}
+      headerActions={
+        <Link to="new">
+          <Button>New</Button>
+        </Link>
+      }
       data={flatData}
       onRowClick={(row) => navigate(`${row.original.id}`)}
       loading={isFetching}

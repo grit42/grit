@@ -22,7 +22,7 @@ import type { Theme } from "@grit42/client-library/theme";
 
 export const hexToRgb = ({ color }: { color: string }) => {
   const raw = color.trim().replace(/^#/, "");
-  // Expand shorthand (#eee -> #eeeeee). The app theme uses 3-digit hex some places
+  // The app theme uses some 3-digit hex (#eee).
   const h =
     raw.length === 3 || raw.length === 4
       ? raw
@@ -37,10 +37,7 @@ export const hexToRgb = ({ color }: { color: string }) => {
   };
 };
 
-/**
- * Return `color` with the given alpha, accepting hex (`#rrggbb`) or
- * `rgb()`/`rgba()` input. Anything else is passed through untouched.
- */
+/** Hex or `rgb()`/`rgba()`; anything else passes through unchanged. */
 export const rgba = ({
   color,
   alpha,
@@ -66,7 +63,6 @@ const toRgb = (color: string): { r: number; g: number; b: number } => {
   return { r, g, b };
 };
 
-/** As {@link toRgb}, keeping the alpha. Opaque unless the input says otherwise. */
 const toRgba = (
   color: string,
 ): { r: number; g: number; b: number; a: number } => {
@@ -91,14 +87,7 @@ const toRgba = (
   return { r, g, b, a: alpha };
 };
 
-/**
- * `color` painted over `background`, honouring its alpha.
- *
- * The surface a marker actually sits on is rarely either one: a bar or a
- * violin is filled translucently, so what a point is drawn against is the fill
- * *composited over* the page. Measuring contrast against the fill alone
- * overstates it, and against the page alone ignores the trace entirely.
- */
+/** `color` over `background`, as a point on a translucent fill sees it. */
 export const composite = (color: string, background: string): string => {
   const { r, g, b, a } = toRgba(color);
   if (a >= 1) return `rgb(${r}, ${g}, ${b})`;
@@ -108,9 +97,7 @@ export const composite = (color: string, background: string): string => {
   return `rgb(${mix(r, behind.r)}, ${mix(g, behind.g)}, ${mix(b, behind.b)})`;
 };
 
-/** WCAG relative luminance, 0 (black) to 1 (white).
- * https://www.w3.org/WAI/GL/wiki/Relative_luminance
- */
+/** WCAG relative luminance, 0 (black) to 1 (white). */
 export const relativeLuminance = (color: string): number => {
   const { r, g, b } = toRgb(color);
   const channel = (value: number) => {
@@ -120,9 +107,7 @@ export const relativeLuminance = (color: string): number => {
   return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
 };
 
-/**
- * Black or white, whichever reads better on `color`.
- */
+/** Black or white, whichever reads better on `color`. */
 export const contrastingText = (color: string): string =>
   relativeLuminance(color) > 0.4 ? "#000000" : "#ffffff";
 
@@ -148,7 +133,7 @@ export const interpolateScale = (
   return `rgb(${mix(from.r, to.r)}, ${mix(from.g, to.g)}, ${mix(from.b, to.b)})`;
 };
 
-/** Lighten `hex` toward white by `amount` (0-1). */
+/** Lighten `color` toward white by `amount` (0-1). */
 export const tint = (color: string, amount: number): string => {
   const { r, g, b } = toRgb(color);
   const mix = (c: number) => Math.round(c + (255 - c) * amount);
@@ -169,7 +154,7 @@ export const contrastRatio = (a: string, b: string): number => {
   return (light + 0.05) / (dark + 0.05);
 };
 
-/**` color`, moved away from `background` until it can be seen against it. */
+/** `color`, moved away from `surfaces` until it can be seen on them. */
 export const readableOn = (
   color: string,
   surfaces: string | string[],
@@ -189,7 +174,6 @@ export const readableOn = (
 
   if (clears(color)) return color;
 
-  // Both directions are tried at every step rather than one chosen up front
   let best = color;
   let bestRatio = contrastRatio(color, primary);
 
@@ -210,52 +194,139 @@ export const readableOn = (
 export type ColorPreset = "default" | "muted" | "bright";
 
 /**
- * Categorical Okabe-Ito colours for annotation strips, one set per scheme.
+ * Paul Tol's sequential schemes, light to dark: Iridescent, YlOrBr, Smooth
+ * rainbow. https://sronpersonalpages.nl/~pault/#sec:sequential
  */
-export const HEATMAP_SCALES = {
-  default: {
-    dark: { low: "#2B2D6E", high: "#FDE725" },
-    light: { low: "#F0F4FB", high: "#1B3B6F" },
-  },
-  muted: {
-    dark: { low: "#262A4D", high: "#DDCC77" },
-    light: { low: "#EEF1F7", high: "#2E3A66" },
-  },
-  bright: {
-    dark: { low: "#14306B", high: "#FFD000" },
-    light: { low: "#E8F0FF", high: "#0B2A6B" },
-  },
-} as const;
+export const SEQUENTIAL_SCHEMES: Record<ColorPreset, readonly string[]> = {
+  default: [
+    "#FEFBE9",
+    "#FCF7D5",
+    "#F5F3C1",
+    "#EAF0B5",
+    "#DDECBF",
+    "#D0E7CA",
+    "#C2E3D2",
+    "#B5DDD8",
+    "#A8D8DC",
+    "#9BD2E1",
+    "#8DCBE4",
+    "#81C4E7",
+    "#7BBCE7",
+    "#7EB2E4",
+    "#88A5DD",
+    "#9398D2",
+    "#9B8AC4",
+    "#9D7DB2",
+    "#9A709E",
+    "#906388",
+    "#805770",
+    "#684957",
+    "#46353A",
+  ],
+  muted: [
+    "#FFFFE5",
+    "#FFF7BC",
+    "#FEE391",
+    "#FEC44F",
+    "#FB9A29",
+    "#EC7014",
+    "#CC4C02",
+    "#993404",
+    "#662506",
+  ],
+  bright: [
+    "#E8ECFB",
+    "#DDD8EF",
+    "#D1C1E1",
+    "#C3A8D1",
+    "#B58FC2",
+    "#A778B4",
+    "#9B62A7",
+    "#8C4E99",
+    "#6F4C9B",
+    "#6059A9",
+    "#5568B8",
+    "#4E79C5",
+    "#4D8AC6",
+    "#4E96BC",
+    "#549EB3",
+    "#59A5A9",
+    "#60AB9E",
+    "#69B190",
+    "#77B77D",
+    "#8CBC68",
+    "#A6BE54",
+    "#BEBC48",
+    "#D1B541",
+    "#DDAA3C",
+    "#E49C39",
+    "#E78C35",
+    "#E67932",
+    "#E4632D",
+    "#DF4828",
+    "#DA2222",
+    "#B8221E",
+    "#95211B",
+    "#721E17",
+    "#521A13",
+  ],
+};
 
-const heatmapScale = (preset: ColorPreset, dark: boolean) => {
-  const scale = HEATMAP_SCALES[preset] ?? HEATMAP_SCALES.default;
-  const { low, high } = scale[dark ? "dark" : "light"];
+/** Minimum contrast of a scale's low end against its surface. */
+export const MIN_SCALE_CONTRAST = 1.2;
+
+/**
+ * Runs out from the surface, so higher values stand out in either theme; low
+ * stops too close to the surface are dropped.
+ */
+export const sequentialScale = (
+  colors: readonly string[],
+  surface: string,
+  dark: boolean,
+): [number, string][] => {
+  const ordered = dark ? [...colors].reverse() : [...colors];
+  const first = ordered.findIndex(
+    (color) => contrastRatio(color, surface) >= MIN_SCALE_CONTRAST,
+  );
+  const kept = ordered.slice(Math.max(first, 0));
+  return kept.map((color, i) => [
+    kept.length === 1 ? 0 : i / (kept.length - 1),
+    color,
+  ]);
+};
+
+const heatmapColors = (preset: ColorPreset, surface: string, dark: boolean) => {
+  const scale = sequentialScale(
+    SEQUENTIAL_SCHEMES[preset] ?? SEQUENTIAL_SCHEMES.default,
+    surface,
+    dark,
+  );
   return {
-    heatmaplow: rgba({ color: low, alpha: 1.0 }),
-    heatmaphigh: rgba({ color: high, alpha: 1.0 }),
+    heatmapScale: scale,
+    heatmaplow: rgba({ color: scale[0]![1], alpha: 1.0 }),
+    heatmaphigh: rgba({ color: scale[scale.length - 1]![1], alpha: 1.0 }),
   };
 };
 
+/** Annotation-strip colours, after Paul Tol's qualitative schemes */
 export const CATEGORICAL_COLORS = {
   dark: [
-    "#56B4E9",
-    "#E69F00",
-    "#009E73",
-    "#F0E442",
-    "#CC79A7",
-    "#0072B2",
-    "#D55E00",
-    "#BBBBBB",
+    "#77AADD",
+    "#FFAABB",
+    "#44BB99",
+    "#EEDD88",
+    "#99DDFF",
+    "#EE8866",
+    "#DDDDDD",
   ],
   light: [
-    "#2E7BA6",
-    "#B87F00",
-    "#00785A",
-    "#9A8F00",
-    "#A65783",
-    "#00568A",
-    "#A64A00",
-    "#6E6E6E",
+    "#4477AA",
+    "#EE6677",
+    "#228833",
+    "#CCBB44",
+    "#66CCEE",
+    "#AA3377",
+    "#BBBBBB",
   ],
 } as const;
 
@@ -309,7 +380,6 @@ const defaultPalette = (dark: boolean) => ({
   oLine: dark
     ? rgba({ color: "#F8EB5F", alpha: 0.8 })
     : rgba({ color: "#9f9743", alpha: 0.8 }),
-  ...heatmapScale("default", dark),
   universalColors: [
     "#4e79a7",
     "#f28e2b",
@@ -334,10 +404,7 @@ const defaultPalette = (dark: boolean) => ({
 
 type PaletteColors = ReturnType<typeof defaultPalette>;
 
-/**
- * Qualitative series (Paul Tol "muted").
- * https://sronpersonalpages.nl/~pault/
- */
+/** Paul Tol "muted": https://sronpersonalpages.nl/~pault/ */
 const mutedPalette = (dark: boolean): PaletteColors => ({
   maleFill: rgba({ color: "#CC8B3C", alpha: 0.4 }),
   maleLine: rgba({ color: "#9C6A2E", alpha: 1.0 }),
@@ -363,7 +430,6 @@ const mutedPalette = (dark: boolean): PaletteColors => ({
   oLine: dark
     ? rgba({ color: "#999933", alpha: 0.8 })
     : rgba({ color: "#6E6E26", alpha: 0.8 }),
-  ...heatmapScale("muted", dark),
   universalColors: [
     "#332288",
     "#88CCEE",
@@ -377,10 +443,7 @@ const mutedPalette = (dark: boolean): PaletteColors => ({
   ],
 });
 
-/**
- * High-saturation palette for on-screen emphasis (Paul Tol "bright").
- * https://sronpersonalpages.nl/~pault/
- */
+/** Paul Tol "bright": https://sronpersonalpages.nl/~pault/ */
 const brightPalette = (dark: boolean): PaletteColors => ({
   maleFill: rgba({ color: "#FF9500", alpha: 0.45 }),
   maleLine: rgba({ color: "#CC7700", alpha: 1.0 }),
@@ -406,7 +469,6 @@ const brightPalette = (dark: boolean): PaletteColors => ({
   oLine: dark
     ? rgba({ color: "#66CCEE", alpha: 0.85 })
     : rgba({ color: "#3388AA", alpha: 0.85 }),
-  ...heatmapScale("bright", dark),
   universalColors: [
     "#4477AA",
     "#EE6677",
@@ -440,6 +502,7 @@ export const useColorMap = (preset: ColorPreset = "default") => {
     () => ({
       ...structuralColors(theme),
       ...PRESETS[resolved](darkTheme),
+      ...heatmapColors(resolved, theme.palette.background.surface, darkTheme),
     }),
     [theme, darkTheme, resolved],
   );

@@ -56,22 +56,22 @@ const AssayModelsTable = () => {
   );
 
   return (
-      <Table
-        disableFooter
-        fitContent
-        className={styles.assayModelsTable}
-        onRowClick={(row) => navigate(row.original.id.toString())}
-        tableState={tableState}
-        header="Assay models"
-        data={flatData}
-        loading={isLoading}
-        pagination={{
-          fetchNextPage,
-          isFetchingNextPage,
-          totalRows: data?.pages[0].total,
-        }}
-        noDataMessage={isError ? error : "No published assay models"}
-      />
+    <Table
+      disableFooter
+      fitContent
+      className={styles.assayModelsTable}
+      onRowClick={(row) => navigate(row.original.id.toString())}
+      tableState={tableState}
+      header="Assay models"
+      data={flatData}
+      loading={isLoading}
+      pagination={{
+        fetchNextPage,
+        isFetchingNextPage,
+        totalRows: data?.pages[0].total,
+      }}
+      noDataMessage={isError ? error : "No published assay models"}
+    />
   );
 };
 

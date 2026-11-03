@@ -263,4 +263,39 @@ RSpec.describe Grit::Core::User, type: :model do
       }.to raise_error(RuntimeError, "Not allowed")
     end
   end
+
+  describe "editing another user (check_who)" do
+    let(:other) { create(:grit_core_user, :with_read_role) }
+
+    it "refuses an update by a user without admin:users" do
+      target = other
+      set_current_user(notadmin)
+      expect {
+        target.update!(name: "Changed by someone else")
+      }.to raise_error(RuntimeError, "Not allowed")
+      expect(target.reload.name).not_to eq("Changed by someone else")
+    end
+
+    it "lets a user update their own record" do
+      set_current_user(notadmin)
+      notadmin.update!(name: "My new name")
+      expect(notadmin.reload.name).to eq("My new name")
+    end
+
+    it "lets an administrator update another user" do
+      target = other
+      set_current_user(admin)
+      target.update!(name: "Changed by admin")
+      expect(target.reload.name).to eq("Changed by admin")
+    end
+
+    it "refuses changing another user's email" do
+      target = other
+      set_current_user(notadmin)
+      expect {
+        target.update!(email: "taken-over@example.com")
+      }.to raise_error(RuntimeError, "Not allowed")
+      expect(target.reload.email).not_to eq("taken-over@example.com")
+    end
+  end
 end

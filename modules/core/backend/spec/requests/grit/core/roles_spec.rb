@@ -176,4 +176,22 @@ RSpec.describe "Roles API", type: :request do
     }.not_to change(Grit::Core::Role, :count)
     expect(response).to have_http_status(:forbidden)
   end
+
+  it "allows set_permissions with 'admin:users'" do
+    read_system = Grit::Core::Permission.find_by!(name: "read:system")
+    post "/api/grit/core/roles/#{custom_role.id}/set_permissions", params: { permissions: [ read_system.id ] }, as: :json
+    expect(response).to have_http_status(:success)
+    expect(custom_role.role_permissions.reload.map(&:permission_id)).to eq([ read_system.id ])
+  end
+
+  it "forbids set_permissions without 'admin:users'" do
+    read_role = Grit::Core::Role.find_by!(name: "Read")
+    admin_users = Grit::Core::Permission.find_by!(name: "admin:users")
+    login_as(notadmin)
+    expect {
+      post "/api/grit/core/roles/#{read_role.id}/set_permissions", params: { permissions: [ admin_users.id ] }, as: :json
+    }.not_to change { read_role.role_permissions.reload.map(&:permission_id).sort }
+    expect(response).to have_http_status(:forbidden)
+    expect(notadmin.reload.permission?("admin:users")).to be false
+  end
 end

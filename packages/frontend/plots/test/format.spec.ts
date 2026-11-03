@@ -1,6 +1,3 @@
-/**
- * One precision rule for every number a figure writes.
- */
 import { describe, expect, test } from "vitest";
 import { countText, numberFormat } from "../lib/format";
 
@@ -12,7 +9,6 @@ describe("automatic precision", () => {
     expect(fmt.text(0.001234567)).toBe("0.001235");
   });
 
-  /** 4200.0 claims a precision the trailing zero does not carry. */
   test("does not add trailing zeros", () => {
     expect(fmt.text(4200)).toBe("4200");
     expect(fmt.text(1)).toBe("1");
@@ -23,8 +19,8 @@ describe("automatic precision", () => {
   });
 
   test("survives a value that is not a number", () => {
-    expect(fmt.text(Number.NaN)).toBe("—");
-    expect(fmt.text(Number.POSITIVE_INFINITY)).toBe("—");
+    expect(fmt.text(Number.NaN)).toBe("-");
+    expect(fmt.text(Number.POSITIVE_INFINITY)).toBe("-");
   });
 });
 
@@ -45,7 +41,6 @@ describe("a chosen number of decimals", () => {
   });
 });
 
-/** A sample size of 30.00 is not a precision claim. */
 test("a count is written as a count", () => {
   expect(countText(30)).toBe("30");
   expect(countText(30.4)).toBe("30");

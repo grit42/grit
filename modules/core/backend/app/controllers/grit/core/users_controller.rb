@@ -72,7 +72,7 @@ module Grit::Core
     end
 
     def activate
-      @user = Grit::Core::User.find_by(activation_token: params[:activation_token])
+      @user = find_by_token!(:activation_token, params[:activation_token])
 
       raise "Invalid or expired activation link" unless @user
       raise "Password and password confirmation do not match" if params[:password] != params[:password_confirmation]
@@ -127,9 +127,7 @@ module Grit::Core
     end
 
     def password_reset
-      raise "No token specified" if params[:forgot_token].nil?
-
-      @user = Grit::Core::User.find_by(forgot_token: params[:forgot_token])
+      @user = find_by_token!(:forgot_token, params[:forgot_token])
 
       raise "This password recovery token does not exist" unless @user
       raise "This password recovery token has expired" if @user.forgot_token_expired?
@@ -320,6 +318,14 @@ module Grit::Core
     end
 
     private
+
+      # A missing or empty token would match every user whose token column is NULL, i.e.
+      # every activated user, so only a real, non-empty string token is looked up.
+      def find_by_token!(column, token)
+        raise "Invalid or expired link" unless token.is_a?(String) && token.present?
+
+        Grit::Core::User.find_by(column => token)
+      end
 
       def sync_user_roles(record, role_ids)
         requested_role_ids = Array(role_ids).map(&:to_i).uniq

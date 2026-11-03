@@ -22,9 +22,11 @@ import styles from "./experimentMetadataTemplates.module.scss";
 
 const ExperimentMetadataTemplatesPage = () => {
   useMetadataTemplateAdministrationBreadcrumbs();
-  return <div className={styles.metadataTemplatesPage}>
-    <ExperimentMetadataTemplatesTable />
-  </div>;
+  return (
+    <div className={styles.metadataTemplatesPage}>
+      <ExperimentMetadataTemplatesTable />
+    </div>
+  );
 };
 
 export default ExperimentMetadataTemplatesPage;

@@ -8,7 +8,7 @@ import {
 } from "../../queries/experiments";
 import { Link, useNavigate } from "react-router-dom";
 import { useMemo } from "react";
-import styles from "./experiments.module.scss"
+import styles from "./experiments.module.scss";
 
 const ExperimentsTable = () => {
   const canCreateExperiment = useHasPermission("write:assays");

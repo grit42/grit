@@ -44,7 +44,7 @@ module Grit::Core
         Rails.logger.warn "[SSO] IdP did not return an email for uid=#{uid}, using placeholder: #{email}"
       end
 
-      user = find_or_create_sso_user!(provider: provider, uid: uid, email: email, name: name, login: login)
+      user = find_or_create_sso_user!(provider: provider, uid: uid, email: email, email_verified: info["email_verified"], name: name, login: login)
 
       raise "User #{user.login} is inactive" unless user.active?
 
@@ -69,14 +69,18 @@ module Grit::Core
 
     private
 
-      def find_or_create_sso_user!(provider:, uid:, email:, name:, login:)
+      def find_or_create_sso_user!(provider:, uid:, email:, email_verified:, name:, login:)
         # First, try to find by SSO UID (returning user)
         user = Grit::Core::User.find_by(auth_method: provider, sso_uid: uid)
         return user if user
 
-        # Second, try to find by email and SSO providers.
-        user = Grit::Core::User.find_by(email: email, auth_method: provider)
+        # Second, link a pre-provisioned account with the same email. Only an account not
+        # yet linked to an IdP identity, so one identity cannot take over another's account,
+        # and not when the IdP marks the email unverified.
+        user = Grit::Core::User.find_by(email: email, auth_method: provider, sso_uid: nil)
         if user
+          raise "SSO email address is not verified" if email_verified.to_s == "false"
+
           user.update!(sso_uid: uid)
           return user
         end

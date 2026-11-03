@@ -23,6 +23,9 @@ module Grit::Core
     include Grit::Core::Controller::Authorized
     include Grit::Core::Controller::Readable
 
+    # Replaces the check_read callback registered by Readable, so the default actions must be listed too.
+    before_action :check_read, only: %i[ index show export guess_data_type_for_columns ]
+
     def guess_data_type_for_columns
       columns = params[:columns]
 

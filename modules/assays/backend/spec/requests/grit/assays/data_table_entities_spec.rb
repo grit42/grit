@@ -21,7 +21,7 @@ require "swagger_helper"
 
 module Grit::Assays
   RSpec.describe "Data Table Entities API", type: :request do
-    let(:admin) { create(:grit_core_user, :admin, :with_administrator_role) }
+    let(:admin) { create(:grit_core_user, :admin, :with_administrator_role, :with_write_role) }
 
     before do
       set_current_user(admin)
@@ -69,6 +69,24 @@ module Grit::Assays
         expect(response).to have_http_status(:success)
         json = JSON.parse(response.body)
         expect(json["success"]).to be true
+      end
+
+      context "without 'write:analysis'" do
+        # Loading this class queries a table that does not exist; outside the example transaction that is harmless.
+        before(:all) { ExperimentDataSheetRecord }
+
+        it "forbids create_bulk" do
+          data_table
+          item1
+          reader = create(:grit_core_user, :with_read_role)
+          login_as(reader)
+          expect {
+            post "/api/grit/assays/data_table_entities/create_bulk",
+              params: [ { data_table_id: data_table.id, entity_id: item1.id } ],
+              as: :json
+          }.not_to change(DataTableEntity, :count)
+          expect(response).to have_http_status(:forbidden)
+        end
       end
     end
 

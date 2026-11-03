@@ -1,5 +1,5 @@
 import { Select } from "@grit42/client-library/components";
-import { BarPlotDefinition, SourceDataProperties } from "../types";
+import { BarPlotDefinition, SourceData, SourceDataProperties } from "../types";
 import { nextAxisLabel, nextPlotTitle, usePropertiesOptions } from "../utils";
 import AxesTypeSettings from "../PlotBase/AxisTypeSettings";
 import BaseSettings from "../PlotBase/BaseSettings";
@@ -8,9 +8,11 @@ const BarPlotSettings = ({
   plot,
   properties,
   onChange,
+  data,
 }: {
   plot: BarPlotDefinition;
   properties: SourceDataProperties;
+  data?: SourceData;
   onChange: (plot: BarPlotDefinition) => void;
 }) => {
   const axisOptions = usePropertiesOptions(properties);
@@ -46,7 +48,12 @@ const BarPlotSettings = ({
         onChange={onYAxisKeyChange}
       />
       <AxesTypeSettings axes="y" plot={plot} onChange={onChange} />
-      <BaseSettings plot={plot} properties={properties} onChange={onChange} />
+      <BaseSettings
+        plot={plot}
+        properties={properties}
+        onChange={onChange}
+        data={data}
+      />
     </>
   );
 };

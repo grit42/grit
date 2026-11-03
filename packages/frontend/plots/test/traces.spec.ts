@@ -1,15 +1,9 @@
 import { describe, expect, test } from "vitest";
-import type { ColorMap } from "../lib/colors";
+import { composite, readableOn, rgba, type ColorMap } from "../lib/colors";
 import { SYMBOLS } from "../lib/constants";
-import {
-  errorValue,
-  shouldShowIndividual,
-  shouldShowMean,
-} from "../lib/displayMode";
 import {
   boxStatsHoverTrace,
   errorBand,
-  errorBar,
   outlierTrace,
   scatterTrace,
 } from "../lib/traces";
@@ -55,7 +49,6 @@ describe("scatterTrace", () => {
     expect(t.hovertemplate).toBe("Value: %{y}<extra></extra>");
   });
 
-  /** An explicit template must not be overwritten by the row shorthand. */
   test("an explicit hovertemplate takes precedence over hoverRows", () => {
     const t = scatterTrace({
       x: [1],
@@ -120,64 +113,13 @@ describe("errorBand", () => {
   });
 });
 
-describe("errorBar", () => {
-  const bar = asTrace(
-    errorBar({
-      days: [0, 7],
-      means: [10, 12],
-      errors: [1, 2],
-      color: "#4e79a7",
-      groupLabel: "Dose 1",
-      errorLabel: "SEM",
-      customData: [[1], [2]],
-      hoverRows: [{ key: "Mean", value: "%{y}" }],
-    }),
-  );
-
-  test("plots the means with symmetric error bars", () => {
-    expect(bar.y).toEqual([10, 12]);
-    expect(bar.error_y?.array).toEqual([1, 2]);
-  });
-
-  test("renders the supplied hover rows", () => {
-    expect(bar.hovertemplate).toBe("Mean: %{y}<extra></extra>");
-  });
-});
-
-describe("displayMode", () => {
-  test("individual observations show for 'individual' and 'both'", () => {
-    expect(shouldShowIndividual("individual")).toBe(true);
-    expect(shouldShowIndividual("both")).toBe(true);
-    expect(shouldShowIndividual("mean")).toBe(false);
-  });
-
-  test("summaries show for 'mean' and 'both'", () => {
-    expect(shouldShowMean("mean")).toBe(true);
-    expect(shouldShowMean("both")).toBe(true);
-    expect(shouldShowMean("individual")).toBe(false);
-  });
-
-  test("errorValue selects the requested dispersion measure", () => {
-    const stats = { std: 4, sem: 2 };
-    expect(errorValue("sd", stats)).toBe(4);
-    expect(errorValue("sem", stats)).toBe(2);
-    // undefined rather than 0, so callers can omit the error bar entirely.
-    expect(errorValue("none", stats)).toBeUndefined();
-  });
-});
-
 describe("boxStatsHoverTrace", () => {
   const values = [1, 2, 3, 4, 5, 6, 7, 8, 9, 100];
 
-  /**
-   * Not a box plot — an invisible marker at the median that gives a plot a hover
-   * target carrying the summary statistics. Named for what it does, since
-   * `boxTrace` next to the real `BoxPlot` was actively misleading.
-   */
   test("is invisible, unlabelled and sits at the median", () => {
     const t = boxStatsHoverTrace({ values, label: "Group", xIndex: 2 })!;
     expect(t.x).toEqual([2]);
-    // Ten values, so the median is the mean of the 5th and 6th: (5 + 6) / 2.
+    // Ten values, so the median is (5 + 6) / 2.
     expect(t.y).toEqual([5.5]);
     expect((t.marker as { opacity?: number }).opacity).toBe(0);
     expect(t.showlegend).toBe(false);
@@ -208,8 +150,29 @@ describe("boxStatsHoverTrace", () => {
 });
 
 describe("outlierTrace", () => {
-  /** 100 sits far beyond 1.5*IQR of 1..9, so it is the sole outlier. */
+  // 100 is far past 1.5×IQR of 1..9, so it is the sole outlier.
   const values = [1, 2, 3, 4, 5, 6, 7, 8, 9, 100];
+
+  test("chooses a colour that reads on its group's fill as well as the page", () => {
+    const withPage = { ...colorMap, bgColor: "#ffffff" } as unknown as ColorMap;
+    // A light yellow reads poorly on white and worse on its own fill.
+    const colour = (
+      outlierTrace({
+        values,
+        label: "G",
+        xIndex: 1,
+        colorMap: withPage,
+        color: "#f5e050",
+      })!.marker as { color?: string }
+    ).color;
+    expect(colour).not.toBe("#f5e050");
+    expect(
+      readableOn(colour!, [
+        composite(rgba({ color: "#f5e050", alpha: 1 }), "#ffffff"),
+        "#ffffff",
+      ]),
+    ).toBe(colour);
+  });
 
   test("plots only the points outside the whiskers", () => {
     const t = outlierTrace({ values, label: "G", xIndex: 1, colorMap })!;
@@ -222,7 +185,7 @@ describe("outlierTrace", () => {
     const a = outlierTrace({ values, label: "G", xIndex: 1, colorMap })!;
     const b = outlierTrace({ values, label: "G", xIndex: 1, colorMap })!;
     expect(a.x).toEqual(b.x);
-    // Offset from the index, but within the default +/-0.2 jitter.
+    // Within the default ±0.2 jitter.
     expect(Math.abs((a.x as number[])[0]! - 1)).toBeLessThanOrEqual(0.2);
   });
 

@@ -24,6 +24,7 @@
   "scripts": {
     "dev": "vite --port 3001",
     "tsc": "tsc -b",
+    "typecheck": "tsc --noEmit -p tsconfig.lib.json",
     "build": "tsc -b ./tsconfig.lib.json && vite build",
     "lint": "eslint . --fix",
     "lint:check": "eslint .",
@@ -39,8 +40,6 @@
     "@grit42/plots": "workspace:*",
     "@grit42/spreadsheet": "workspace:*",
     "@grit42/table": "workspace:*",
-    "lodash": "^4.17.21",
-    "mathjs": "15.2.0",
     "zod": "catalog:"
   },
   "peerDependencies": {
@@ -51,7 +50,6 @@
   "devDependencies": {
     "@eslint/js": "catalog:",
     "@playwright/test": "catalog:",
-    "@types/lodash": "^4.17.0",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
@@ -64,10 +62,10 @@
     "eslint-plugin-react-refresh": "catalog:",
     "glob": "catalog:",
     "globals": "catalog:",
-    "path": "^0.12.7",
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-router-dom": "catalog:",
+    "sass-embedded": "catalog:",
     "typescript": "catalog:",
     "typescript-eslint": "catalog:",
     "vite": "catalog:",

@@ -53,3 +53,19 @@
   color: var(--color-text-secondary, #767d8b);
   font-variant-numeric: tabular-nums;
 }
+
+.hint {
+  position: absolute;
+  top: 0.4rem;
+  left: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  background: var(--palette-background-surface, rgba(255, 255, 255, 0.9));
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  pointer-events: auto;
+  z-index: 1;
+}

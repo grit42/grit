@@ -91,59 +91,59 @@ const EntityAttributeDataTableColumnsTable = ({ dataTableId }: Props) => {
   );
 
   return (
-      <Table
-        header="Entity attribute columns"
-        tableState={tableState}
-        onRowClick={navigateToEdit}
-        rowActions={canEditDataTable ? ["delete"] : []}
-        onDelete={async (rows) => {
-          if (
-            !window.confirm(
-              `Are you sure you want to remove ${
-                rows.length > 1 ? `${rows.length} columns` : "this column"
-              }? This action is irreversible`,
-            )
+    <Table
+      header="Entity attribute columns"
+      tableState={tableState}
+      onRowClick={navigateToEdit}
+      rowActions={canEditDataTable ? ["delete"] : []}
+      onDelete={async (rows) => {
+        if (
+          !window.confirm(
+            `Are you sure you want to remove ${
+              rows.length > 1 ? `${rows.length} columns` : "this column"
+            }? This action is irreversible`,
           )
-            return;
-          await destroyColumnsMutation.mutateAsync(
-            rows.map(({ original }) => original.id),
-          );
-          await Promise.all([
-            queryClient.invalidateQueries({
-              queryKey: ["entities", "columns", "Grit::Assays::DataTableRow"],
-            }),
-            queryClient.invalidateQueries({
-              queryKey: [
-                "entities",
-                "infiniteData",
-                `grit/assays/data_tables/${dataTableId}/data_table_columns`,
-              ],
-            }),
-            queryClient.invalidateQueries({
-              queryKey: [
-                "entities",
-                "infiniteData",
-                `grit/assays/data_tables/${dataTableId}/data_table_rows`,
-              ],
-            }),
-          ]);
-        }}
-        loading={isLoading}
-        headerActions={
-          canEditDataTable ? (
-            <Button disabled={dataTableId === "new"} onClick={navigateToSelect}>
-              Add entity attribute
-            </Button>
-          ) : undefined
-        }
-        data={flatData ?? []}
-        noDataMessage={isError ? error : undefined}
-        pagination={{
-          fetchNextPage,
-          isFetchingNextPage,
-          totalRows: data?.pages[0]?.total,
-        }}
-      />
+        )
+          return;
+        await destroyColumnsMutation.mutateAsync(
+          rows.map(({ original }) => original.id),
+        );
+        await Promise.all([
+          queryClient.invalidateQueries({
+            queryKey: ["entities", "columns", "Grit::Assays::DataTableRow"],
+          }),
+          queryClient.invalidateQueries({
+            queryKey: [
+              "entities",
+              "infiniteData",
+              `grit/assays/data_tables/${dataTableId}/data_table_columns`,
+            ],
+          }),
+          queryClient.invalidateQueries({
+            queryKey: [
+              "entities",
+              "infiniteData",
+              `grit/assays/data_tables/${dataTableId}/data_table_rows`,
+            ],
+          }),
+        ]);
+      }}
+      loading={isLoading}
+      headerActions={
+        canEditDataTable ? (
+          <Button disabled={dataTableId === "new"} onClick={navigateToSelect}>
+            Add entity attribute
+          </Button>
+        ) : undefined
+      }
+      data={flatData ?? []}
+      noDataMessage={isError ? error : undefined}
+      pagination={{
+        fetchNextPage,
+        isFetchingNextPage,
+        totalRows: data?.pages[0]?.total,
+      }}
+    />
   );
 };
 

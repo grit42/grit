@@ -52,6 +52,8 @@ module Grit::Assays
 
     entity_crud_with read: [ "read:system" ], write: [ "admin:assays" ]
 
+    entity_scopes :by_assay_model
+
     private
 
       def check_in_use

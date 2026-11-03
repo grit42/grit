@@ -23,6 +23,8 @@ import {
   buildHoverCustomData,
   buildHoverTemplate,
   resolveHoverSpec,
+  summaryHoverRows,
+  summaryHoverValues,
 } from "../hover";
 import { boxStats, randomJitter } from "../math";
 import { barTrace, scatterTrace } from "../traces";
@@ -35,24 +37,17 @@ import {
   StatMarker,
 } from "../types";
 import { seriesPattern } from "../constants";
+import { categoryRange } from "../axes";
 import { numberFormat } from "../format";
 import { buildFacets, nullish, ungroupedLabel } from "../utils";
-
-const STAT_HOVER_SUFFIX =
-  `<br>n: %{customdata[1]}<br>Mean: %{customdata[2]}` +
-  `<br>Median: %{customdata[3]}<br>SD: %{customdata[4]}` +
-  `<br>SEM: %{customdata[5]}<extra></extra>`;
 
 const CATEGORY_FILL = 0.8;
 const JITTER_SEED = 42;
 
-/**
- * Where each bar sits when several series share a category.
- */
+/** Where each bar sits when several series share a category. */
 export interface CategorySlots {
-  /** Width of one bar, in axis units. */
+  /** In axis units. */
   width: number;
-  /** The centre of the bar for one series within one category. */
   position: (categoryIndex: number, seriesIndex: number) => number;
 }
 
@@ -70,7 +65,7 @@ interface BarGroup {
   category: string;
   series: string;
   values: number[];
-  /** The rows behind `values`, in the same order, for per-point hover. */
+  /** Parallel to `values`, for per-point hover. */
   rows: SourceDatum[];
 }
 
@@ -110,19 +105,8 @@ const barHeight = (values: number[], statMarkers: StatMarker[]) => {
 };
 
 /**
- * Bars of a summary per category.
- *
- * Reads the same `display` block as the other summarising plots, so a bar
- * chart with error bars and the observations drawn over it is configuration
- * rather than a separate plot type.
- *
- * Bars sit at **numeric** x positions rather than at the category name, and
- * the axis puts the names back as ticks. Plotly's own `barmode: "group"`
- * reserves one slot per *trace* at every category, so a figure that draws one
- * trace per bar gets as many slots as it has bars and each series lands in a
- * different place per category. Placing them here also gives the individual
- * observations a position to scatter around — drawn against the category name
- * they all collapse onto its centre line, whichever bar they belong to.
+ * Bars sit at numeric x with category names as ticks: Plotly's `barmode:
+ * "group"` reserves a slot per trace, and observations need a bar to jitter on.
  */
 export const buildBar = (
   data: SourceData,
@@ -217,7 +201,7 @@ export const buildBar = (
       tickmode: "array",
       tickvals: categories.map((_, i) => i),
       ticktext: categories,
-      range: [-0.5, Math.max(categories.length - 0.5, 0.5)],
+      ...categoryRange(categories.length),
       zeroline: false,
     };
     axes[`yaxis${axis}`] = {};
@@ -269,14 +253,7 @@ export const buildBar = (
           y.push(height);
           widths.push(slots.width * 0.9);
           errors.push(display.errorBars === "sem" ? stats.sem : stats.std);
-          hovered.push([
-            category,
-            stats.count,
-            fmt.text(stats.mean),
-            fmt.text(stats.median),
-            fmt.text(stats.std),
-            fmt.text(stats.sem),
-          ]);
+          hovered.push([category, ...summaryHoverValues(stats, fmt)]);
         }
 
         group.values.forEach((value, i) => {
@@ -294,18 +271,18 @@ export const buildBar = (
             label: series,
             color,
             width: widths,
-            // Only once there is more than one series to tell apart.
             pattern:
               seriesNames.length > 1 ? seriesPattern(seriesIndex) : undefined,
             error: display.errorBars === "none" ? undefined : errors,
             showlegend: !named.has(series),
             customData: hovered,
-            // The same shape the time series uses, so a group reads the same
-            // whichever plot type it is being looked at in.
-            hoverTemplate:
-              `<b>${series} — ${summaryLabel}</b>` +
-              `<br>${xLabel}: %{customdata[0]}<br>${yLabel}: %{y:${fmt.spec}}` +
-              STAT_HOVER_SUFFIX,
+            // Same shape as the time-series hover.
+            hoverTemplate: buildHoverTemplate([
+              { value: `${series} - ${summaryLabel}` },
+              { key: xLabel, value: "%{customdata[0]}" },
+              { key: yLabel, value: "%{y}", format: fmt.spec },
+              ...summaryHoverRows(1),
+            ]),
           }),
           xaxis: `x${axis}`,
           yaxis: `y${axis}`,
@@ -351,7 +328,7 @@ export const buildBar = (
     traces,
     axes,
     annotations,
-    // The geometry, so anything drawn over the bars can be placed on them.
+    // Bar geometry, for overlays.
     series: seriesNames,
     categories: facetCategories,
     facetSeries,

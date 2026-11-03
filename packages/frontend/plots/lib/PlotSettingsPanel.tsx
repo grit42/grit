@@ -95,7 +95,10 @@ const PlotSettingsPanel = <T extends PlotDefinition>({
     );
 
   return (
-    <SidebarLayout sidebar={sidebar} className={classnames(styles.layout, {[styles.expanded]: !collapsed})}>
+    <SidebarLayout
+      sidebar={sidebar}
+      className={classnames(styles.layout, { [styles.expanded]: !collapsed })}
+    >
       <div className={styles.plot}>{children}</div>
     </SidebarLayout>
   );

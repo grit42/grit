@@ -19,11 +19,23 @@
 import { Annotations, Data, LayoutAxis } from "plotly.js";
 import { ColorMap } from "../colors";
 import { numberFormat, type NumberFormat } from "../format";
-import { mean, median, std } from "../math";
+import { summarise } from "../math";
+import {
+  buildHoverTemplate,
+  summaryHoverRows,
+  summaryHoverValues,
+  type HoverRow,
+} from "../hover";
 import { SourceData, StatMarker, TimeSeriesPlotDefinition } from "../types";
-import { buildFacets, nullish, ungroupedLabel } from "../utils";
+import {
+  buildFacets,
+  inDeclaredOrder,
+  nullish,
+  ungroupedLabel,
+} from "../utils";
 import { resolveDisplay } from "../displayMode";
 import { errorBand } from "../traces";
+import { wholeNumberTicks } from "../axes";
 import { seriesDash, seriesSymbol } from "../constants";
 
 const SUMMARY_MARKERS: readonly StatMarker[] = ["mean", "median"];
@@ -87,7 +99,7 @@ const buildErrorBar = ({
   groupLabel,
   errorLabel,
   customData,
-  hoverSuffix,
+  statRows,
   legendgroup,
 }: {
   fmt: NumberFormat;
@@ -100,7 +112,7 @@ const buildErrorBar = ({
   groupLabel: string;
   errorLabel: string;
   customData: number[][];
-  hoverSuffix: string;
+  statRows: HoverRow[];
   legendgroup: string;
 }): Partial<Data> => {
   if (!x.length) return {};
@@ -115,9 +127,12 @@ const buildErrorBar = ({
     marker: { color, size: 1, opacity: 0, line: { color: "#fff", width: 1 } },
     error_y: { type: "data", array: errors, visible: true, color, width: 10 },
     customdata: customData,
-    hovertemplate:
-      `<b>${groupLabel} — mean</b><br>${xLabel}: %{x}<br>${yLabel}: %{y:${fmt.spec}}` +
-      hoverSuffix,
+    hovertemplate: buildHoverTemplate([
+      { value: `${groupLabel}: mean` },
+      { key: xLabel, value: "%{x}" },
+      { key: yLabel, value: "%{y}", format: fmt.spec },
+      ...statRows,
+    ]),
   };
 };
 
@@ -133,16 +148,23 @@ const buildTraces = (
   const yLabel = def.y.label ?? def.y.key;
   const display = resolveDisplay(def.display);
   const fmt = numberFormat(def.appearance);
-  const seriesNames = [
-    ...new Set(facets.flatMap((facet) => facet.data.map((g) => g.label))),
-  ];
+  const seriesNames = inDeclaredOrder(
+    facets.flatMap((facet) => facet.data.map((g) => g.label)),
+    def.seriesOrder,
+  );
 
   const multiFacet = facets.length > 1;
 
   for (let i = 0; i < facets.length; i++) {
     const facet = facets[i];
     const axis = i + 1;
-    axes[`xaxis${axis}`] = {};
+    axes[`xaxis${axis}`] =
+      wholeNumberTicks(
+        (def.sharedScales ? facets : [facet]).flatMap((one) =>
+          one.data.flatMap((group) => Object.keys(group.data).map(Number)),
+        ),
+        def.x.ticks,
+      ) ?? {};
     axes[`yaxis${axis}`] = {};
 
     if (multiFacet) {
@@ -159,41 +181,30 @@ const buildTraces = (
       });
     }
 
-    for (let j = 0; j < facet.data.length; j++) {
-      const group = facet.data[j];
-      // Figure-wide, so a series keeps its colour, its dash and its marker in
-      // every panel.
+    const groups = [...facet.data].sort(
+      (a, b) => seriesNames.indexOf(a.label) - seriesNames.indexOf(b.label),
+    );
+    for (let j = 0; j < groups.length; j++) {
+      const group = groups[j]!;
+      // Figure-wide, so a series looks the same in every panel.
       const seriesIndex = Math.max(seriesNames.indexOf(group.label), 0);
       const color =
         colorMap.universalColors[seriesIndex % colorMap.universalColors.length];
       const xValues = Object.keys(group.data)
         .map(Number)
         .toSorted((a, b) => a - b);
-      const means: number[] = [];
-      const medians: number[] = [];
-      const sds: number[] = [];
-      const sems: number[] = [];
-      const counts: number[] = [];
+      const summaries = xValues.map((xValue) =>
+        summarise(group.data[xValue.toString()]),
+      );
+      const means = summaries.map((s) => s.mean);
+      const medians = summaries.map((s) => s.median);
+      const sds = summaries.map((s) => s.std);
+      const sems = summaries.map((s) => s.sem);
 
-      for (const xValue of xValues) {
-        const vals = group.data[xValue.toString()];
-        means.push(Number(mean(vals)));
-        medians.push(Number(median(vals)));
-        sds.push(vals.length > 1 ? Number(std(vals)) : 0);
-        sems.push(
-          vals.length > 1 ? Number(std(vals)) / Math.sqrt(vals.length) : 0,
-        );
-        counts.push(vals.length);
-      }
-
-      const statCustomdata = xValues.map((_, i) => [
-        counts[i] ?? 0,
-        fmt.text(means[i] ?? 0),
-        fmt.text(medians[i] ?? 0),
-        fmt.text(sds[i] ?? 0),
-        fmt.text(sems[i] ?? 0),
-      ]) as unknown as number[][];
-      const statHoverSuffix = `<br>n: %{customdata[0]}<br>Mean: %{customdata[1]}<br>Median: %{customdata[2]}<br>SD: %{customdata[3]}<br>SEM: %{customdata[4]}<extra></extra>`;
+      const statCustomdata = summaries.map((s) =>
+        summaryHoverValues(s, fmt),
+      ) as unknown as number[][];
+      const statRows = summaryHoverRows(0);
 
       const seriesLabel = multiFacet
         ? `${facet.label} ${group.label}`
@@ -282,7 +293,7 @@ const buildTraces = (
               legendgroup: seriesLabel,
               errorLabel,
               customData: statCustomdata,
-              hoverSuffix: statHoverSuffix,
+              statRows,
             }),
             xaxis: `x${axis}`,
             yaxis: `y${axis}`,
@@ -317,9 +328,12 @@ const buildTraces = (
             line: { color: "#fff", width: 1 },
           },
           customdata: statCustomdata,
-          hovertemplate:
-            `<b>${group.label} — ${marker}</b><br>${xLabel}: %{x}<br>${yLabel}: %{y:${fmt.spec}}` +
-            statHoverSuffix,
+          hovertemplate: buildHoverTemplate([
+            { value: `${group.label}: ${marker}` },
+            { key: xLabel, value: "%{x}" },
+            { key: yLabel, value: "%{y}", format: fmt.spec },
+            ...statRows,
+          ]),
         });
       }
     }

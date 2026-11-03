@@ -23,11 +23,6 @@ module Grit
     # Initialize configuration defaults for originally generated Rails version.
     config.load_defaults 8.1
 
-    # Rate limiting (enable via RATE_LIMITING_ENABLED=true)
-    if ENV["RATE_LIMITING_ENABLED"] == "true"
-      config.middleware.use Rack::Attack
-    end
-
     config.autoload_lib(ignore: %w[tasks])
 
     config.api_only = true

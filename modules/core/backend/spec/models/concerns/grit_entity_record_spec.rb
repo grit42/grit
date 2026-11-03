@@ -264,6 +264,20 @@ RSpec.describe "GritEntityRecord concern", type: :model do
     ensure
       entity&.destroy
     end
+
+    it "does not raise PG::DuplicateAlias when a model has two foreign keys to the same table" do
+      second_user = create(:grit_core_user, :with_administrator_role)
+      entity = Grit::TestEntity.create!(name: "With Two Users", user_id: admin.id, second_user_id: second_user.id)
+
+      expect { Grit::TestEntity.detailed.find(entity.id) }.not_to raise_error
+
+      result = Grit::TestEntity.detailed.find(entity.id)
+      expect(result.user_id__name).to eq("Administrator")
+      expect(result.second_user_id__name).to eq(second_user.name)
+    ensure
+      entity&.destroy
+      second_user&.destroy
+    end
   end
 
   # ==========================================================================

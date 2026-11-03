@@ -26,36 +26,29 @@ import {
   withDerivedLabels,
 } from "./utils";
 
-export type PlotCapability =
-  | "annotations"
-  | "xTicks"
-  | "yTicks"
-  /** The axes carry titles the definition can set. */
-  | "axisLabels"
-  /** Mean or median as the summary the plot draws. */
-  | "summary"
-  /** Whether more than one summary can be drawn at once. */
-  | "multipleSummaries"
-  /** Which dispersion the error bars measure. */
-  | "errorBars"
-  /** Dispersion as a shaded band instead of bars; needs a continuous x. */
-  | "errorBand"
-  /** Whether the raw observations are drawn. */
-  | "individual"
-  /** A column to join each subject's observations into a line. */
-  | "individualBy"
-  | "palette"
-  /** Font size, gridlines, a frame, zero lines: each drawn only if declared. */
-  | "fontSize"
-  | "gridlines"
-  | "frame"
-  | "zeroLines";
+export const PLOT_CAPABILITIES = [
+  "annotations",
+  "tickAngle",
+  "xLabels",
+  "xTicks",
+  "yTicks",
+  "axisLabels",
+  "summary",
+  "multipleSummaries",
+  "errorBars",
+  "errorBand",
+  "individual",
+  "individualBy",
+  "palette",
+  "sequentialPalette",
+  "fontSize",
+  "gridlines",
+  "frame",
+  "zeroLines",
+] as const;
 
-/**
- * Every type that draws at data coordinates can carry a note at one. A heatmap
- * is the exception: its axes are category names, so a note has no position on
- * it that survives a re-order.
- */
+export type PlotCapability = (typeof PLOT_CAPABILITIES)[number];
+
 const STYLE_CAPABILITIES = [
   "palette",
   "fontSize",
@@ -102,7 +95,6 @@ const XY_CAPABILITIES = [
   ...STYLE_CAPABILITIES,
 ] as const;
 
-/** The full display surface: a summary, its dispersion, and the raw values. */
 const SUMMARY_CAPABILITIES = [
   "summary",
   "multipleSummaries",
@@ -117,8 +109,6 @@ export const PLOT_IMPLEMENTATIONS: PlotImplementations = {
     PlotSettings: ScatterPlotSettings as ComponentType<PlotSettingsProps>,
     label: "Scatter",
     value: "scatter",
-    // A scatter draws one point per row; there is no summary to configure,
-    // which is why the display capabilities are a separate list.
     capabilities: XY_CAPABILITIES,
     supports: axisSupport(["y"]),
   },
@@ -138,9 +128,7 @@ export const PLOT_IMPLEMENTATIONS: PlotImplementations = {
     PlotSettings: BarPlotSettings as ComponentType<PlotSettingsProps>,
     label: "Bar",
     value: "bar",
-    // x names the categories, so only y has a scale to tick.
-    // No "errorBand" or "individualBy": both need a continuous x, and x here
-    // names discrete categories.
+    // x is categorical: no xTicks, and no errorBand or individualBy.
     capabilities: [
       "yTicks",
       "axisLabels",
@@ -162,9 +150,6 @@ export const PLOT_IMPLEMENTATIONS: PlotImplementations = {
   },
 };
 
-/**
- * Settings for one plot, whoever implements it.
- */
 const PlotSettings = ({
   plot,
   implementations = PLOT_IMPLEMENTATIONS,
@@ -186,10 +171,8 @@ const PlotSettings = ({
   const can = (capability: PlotCapability) =>
     plotImplementation?.capabilities.includes(capability) ?? false;
 
-  // Evaluated for the *current* definition rather than only on a type change:
-  // the data behind a saved plot can change after it was configured, so a
-  // warning that only fired at the moment of switching would never be seen
-  // again. Deliberately non-blocking for the same reason.
+  // Checked on every render, not only on a type change: a saved plot's data
+  // can change after it was configured. Non-blocking for the same reason.
   const support = plotImplementation?.supports(plot, {
     properties: props.properties,
     data: props.data,
@@ -324,10 +307,13 @@ const PlotSettings = ({
             onChange={props.onChange}
             show={{
               palette: can("palette"),
+              sequentialPalette: can("sequentialPalette"),
               fontSize: can("fontSize"),
               gridlines: can("gridlines"),
               frame: can("frame"),
               zeroLines: can("zeroLines"),
+              tickAngle: can("tickAngle"),
+              xLabels: can("xLabels"),
             }}
           />
         </Section>

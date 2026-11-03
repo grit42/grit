@@ -100,7 +100,11 @@ const useRegisterAssaysAdministrationRoutes = () => {
                   element={<AssayMetadataDefinitionSelectorPage />}
                 />
               </Route>
-              <Route index path="data-sheets/import/*" element={<DataSheetLoader />} />
+              <Route
+                index
+                path="data-sheets/import/*"
+                element={<DataSheetLoader />}
+              />
               <Route path="data-sheets">
                 <Route index element={<DataSheetDefinitionsPage />} />
                 <Route path="new" element={<NewDataSheetDefinitionPage />} />
@@ -114,10 +118,7 @@ const useRegisterAssaysAdministrationRoutes = () => {
                 >
                   <Route path="columns">
                     <Route index element={<DataSheetDefinitionColumnsPage />} />
-                    <Route
-                      path="new"
-                      element={<NewDataSheetColumnPage />}
-                    />
+                    <Route path="new" element={<NewDataSheetColumnPage />} />
                     <Route
                       path=":data_sheet_column_id/clone"
                       element={<CloneDataSheetColumnPage />}

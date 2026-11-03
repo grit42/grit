@@ -23,7 +23,7 @@ const useRegisterSystemAdministrationRoutes = () => {
         url: "units",
         permissions: ["admin:system"],
         routes: (
-          <Route path="units" element={<AuthGuard permission="admin:system"/>}>
+          <Route path="units" element={<AuthGuard permission="admin:system" />}>
             <Route index element={<UnitsPage />} />
             <Route path="new" element={<NewUnitPage />} />
             <Route path=":unit_id" element={<UnitPage />} />
@@ -36,7 +36,10 @@ const useRegisterSystemAdministrationRoutes = () => {
         url: "origins",
         permissions: ["admin:system"],
         routes: (
-          <Route path="origins" element={<AuthGuard permission="admin:system" />}>
+          <Route
+            path="origins"
+            element={<AuthGuard permission="admin:system" />}
+          >
             <Route index element={<OriginsPage />} />
             <Route path="new" element={<NewOriginPage />} />
             <Route path=":origin_id" element={<OriginPage />} />
@@ -49,7 +52,10 @@ const useRegisterSystemAdministrationRoutes = () => {
         url: "locations",
         permissions: ["admin:system"],
         routes: (
-          <Route path="locations" element={<AuthGuard permission="admin:system" />}>
+          <Route
+            path="locations"
+            element={<AuthGuard permission="admin:system" />}
+          >
             <Route index element={<LocationsPage />} />
             <Route path="new" element={<NewLocationPage />} />
             <Route path=":location_id" element={<LocationPage />} />

@@ -25,6 +25,8 @@ module Grit::Assays
 
     entity_crud_with read: [ "read:system" ], write: [ "write:assays" ]
 
+    entity_scopes :by_experiment, :by_assay_data_sheet_definition
+
     def self.sheet_record_klass(assay_data_sheet_definition_id)
       Grit::Assays::AssayDataSheetDefinition
         .includes(assay_data_sheet_columns: [ :data_type ])

@@ -23,6 +23,23 @@ import {
   useLocalStorage,
 } from "../lib/hooks/useLocalStorage";
 
+// happy-dom binds Storage methods onto the instance on first access, so a spy
+// on Storage.prototype outlives vi.restoreAllMocks(). Swap the whole storage
+// object through the window getter instead.
+function storageThrowingOn(method: "getItem" | "setItem"): Storage {
+  return {
+    length: 0,
+    clear: () => {},
+    key: () => null,
+    getItem: () => null,
+    removeItem: () => {},
+    setItem: () => {},
+    [method]: () => {
+      throw new Error("storage unavailable");
+    },
+  };
+}
+
 describe("useLocalStorage — console.warn format string safety (Fix #4)", () => {
   let warnSpy: ReturnType<typeof vi.spyOn>;
 
@@ -37,9 +54,9 @@ describe("useLocalStorage — console.warn format string safety (Fix #4)", () =>
 
   describe("readLocalStorageValue (alert #1, line 40)", () => {
     it("passes key as a separate argument, not interpolated into the format string", () => {
-      vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
-        throw new Error("storage unavailable");
-      });
+      vi.spyOn(window, "localStorage", "get").mockReturnValue(
+        storageThrowingOn("getItem"),
+      );
 
       const key = "%s";
       readLocalStorageValue(key, null);
@@ -53,9 +70,9 @@ describe("useLocalStorage — console.warn format string safety (Fix #4)", () =>
 
   describe("useLocalStorage setValue (alert #2, line 87)", () => {
     it("passes key as a separate argument, not interpolated into the format string", async () => {
-      vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
-        throw new Error("storage unavailable");
-      });
+      vi.spyOn(window, "localStorage", "get").mockReturnValue(
+        storageThrowingOn("setItem"),
+      );
 
       const key = "%s";
       const { result } = renderHook(() => useLocalStorage(key, "default"));

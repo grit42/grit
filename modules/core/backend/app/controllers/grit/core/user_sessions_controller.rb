@@ -25,6 +25,13 @@ module Grit::Core
     before_action :require_no_user, only: %i[create two_factor]
     before_action :require_user, only: %i[show destroy]
 
+    # Per client address, one counter per action: without a name both actions would share
+    # a bucket, and a two factor login would cost two attempts. The admin account is
+    # exempt from lockout, so this is its only brute-force protection. Counts are kept in
+    # the Rails cache store.
+    rate_limit to: 10, within: 3.minutes, only: :create, name: "login", with: :too_many_attempts
+    rate_limit to: 10, within: 3.minutes, only: :two_factor, name: "two_factor", with: :too_many_attempts
+
     def platform_information
       modules = Rails::Engine.descendants.each_with_object({}) do |engine, memo|
         if engine.module_parents.include?(Grit)
@@ -179,6 +186,10 @@ module Grit::Core
         return unless current_user
 
         false
+      end
+
+      def too_many_attempts
+        render json: { success: false, errors: "Too many attempts. Try again later." }, status: :too_many_requests
       end
   end
 end

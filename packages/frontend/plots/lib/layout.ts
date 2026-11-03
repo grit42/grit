@@ -26,7 +26,6 @@ import type { ColorMap } from "./colors";
 import type { PlotDefinition, SourceData } from "./types";
 import { axisTitleFor, buildFacetGrid, withAxisTitles } from "./utils";
 
-/** Axes whose type and ticks come from the definition. */
 export type ScaleAxis = "x" | "y";
 
 export const composeAxes = ({
@@ -42,17 +41,10 @@ export const composeAxes = ({
   axes: Record<string, Partial<LayoutAxis>>;
   facets: number;
   colorMap: ColorMap;
-  /**
-   * Which axes carry a scale. A categorical axis takes neither a type nor
-   * ticks from the definition, because the plot places its categories itself.
-   */
+  /** Axes that take type and ticks from the definition; not categorical. */
   scaleAxes?: ScaleAxis[];
   /** Axis titles, or `false` where the plot labels its axes itself. */
   titles?: boolean | { x?: string; y?: string };
-  /**
-   * The rows being drawn. Only a log axis uses them, to decide whether it
-   * spans enough decades to label one per decade.
-   */
   data?: SourceData;
 }): Record<string, Partial<LayoutAxis>> => {
   const scaled = (axis: ScaleAxis) => scaleAxes.includes(axis);
@@ -78,11 +70,32 @@ export const composeAxes = ({
             }
           : {}),
         ...buildAppearanceAxis(def.appearance, colorMap.textColor),
-        // The builder's own settings win
         ...axis,
       },
     };
   }, {});
+
+  // The facet grid's own x axes only, so strips keep their labels.
+  if (def.appearance?.xTickLabels === false) {
+    for (let panel = 1; panel <= Math.max(facets, 1); panel += 1) {
+      for (const key of panel === 1 ? ["xaxis", "xaxis1"] : [`xaxis${panel}`]) {
+        if (composed[key]) {
+          composed[key] = { ...composed[key], showticklabels: false };
+        }
+      }
+    }
+  }
+
+  if (def.sharedScales && facets > 1) {
+    for (let panel = 2; panel <= facets; panel += 1) {
+      for (const orientation of ["x", "y"] as const) {
+        const key = `${orientation}axis${panel}`;
+        if (composed[key]) {
+          composed[key] = { ...composed[key], matches: orientation };
+        }
+      }
+    }
+  }
 
   if (titles === false) return composed;
 

@@ -114,7 +114,7 @@ module Grit::Core
 
     private
       def permitted_params
-        [ :name, :entity, :origin_id, load_set_blocks: [ :name, :separator, mappings: {} ] ]
+        [ :name, :origin_id, load_set_blocks: [ :name, :separator, mappings: {} ] ]
       end
 
       def check_read
@@ -123,7 +123,7 @@ module Grit::Core
           return
         end
         entity = params[:entity]
-        if entity.blank?
+        if params[:id].present?
           begin
             entity = Grit::Core::LoadSet.find(params[:id]).entity
           rescue ActiveRecord::RecordNotFound
@@ -144,7 +144,7 @@ module Grit::Core
       def check_write
         render json: { success: false }, status: :bad_request if params[:id].blank? && params[:entity].blank?
         entity = params[:entity]
-        if entity.blank?
+        if params[:id].present?
           entity = Grit::Core::LoadSet.find(params[:id]).entity
         end
 

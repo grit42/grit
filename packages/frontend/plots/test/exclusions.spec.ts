@@ -3,7 +3,6 @@ import {
   buildExclusionSummary,
   collectValid,
   countByCategory,
-  mergeSummaries,
   type ExcludedRecord,
   type Validator,
 } from "../lib/exclusions";
@@ -157,37 +156,5 @@ describe("countByCategory", () => {
     expect(
       countByCategory([{ k: "a" }, { k: null }, { k: "a" }], (r) => r.k),
     ).toEqual({ a: 2 });
-  });
-});
-
-describe("mergeSummaries", () => {
-  /** A faceted plot validates per facet but reports once. */
-  test("adds counts and unions the category breakdown", () => {
-    const a = collectValid(rows.slice(0, 2), [hasValue], options).summary;
-    const b = collectValid(rows.slice(2), [hasValue], options).summary;
-    const merged = mergeSummaries([a, b]);
-
-    expect(merged.total).toBe(5);
-    expect(merged.included).toBe(3);
-    expect(merged.includedByCategory).toEqual({ x: 3 });
-  });
-
-  /** Re-collapsing keeps one row per reason with the union of its groups. */
-  test("re-collapses reasons seen in more than one facet", () => {
-    const a = collectValid(rows.slice(0, 2), [hasValue], options).summary;
-    const b = collectValid(rows.slice(2), [hasValue], options).summary;
-    expect(mergeSummaries([a, b]).exclusionSummary).toEqual([
-      { reason: "Missing value", count: 2, groups: ["B1", "B2"] },
-    ]);
-  });
-
-  test("merging nothing yields an empty summary", () => {
-    expect(mergeSummaries([])).toEqual({
-      total: 0,
-      included: 0,
-      includedByCategory: {},
-      excluded: [],
-      exclusionSummary: [],
-    });
   });
 });

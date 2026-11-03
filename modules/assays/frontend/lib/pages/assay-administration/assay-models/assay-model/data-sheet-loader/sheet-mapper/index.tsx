@@ -198,8 +198,8 @@ const SheetMapper = ({
       <Form form={form} className={styles.sheetMapperContainer}>
         <div className={styles.headerRow}>
           <h3 className={styles.header}>
-            Choose sheets to import and provide
-            information about their structure
+            Choose sheets to import and provide information about their
+            structure
           </h3>
 
           <ButtonGroup>

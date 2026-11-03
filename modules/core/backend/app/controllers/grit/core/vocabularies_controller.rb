@@ -20,6 +20,9 @@ module Grit::Core
   class VocabulariesController < ApplicationController
     include Grit::Core::GritEntityController
 
+    # Replaces the check_read callback registered by Readable, so the default actions must be listed too.
+    before_action :check_read, only: %i[ index show export vocabulary_ids_from_names ]
+
     def vocabulary_ids_from_names
       names = params[:names]
       names ||= []

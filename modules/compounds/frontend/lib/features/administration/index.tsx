@@ -19,7 +19,10 @@ const useRegisterCompoundsAdministrationRoutes = () => {
         url: "compound-types-properties",
         permissions: ["admin:compounds"],
         routes: (
-          <Route path="compound-types-properties" element={<CompoundsTypePropertiesPage />}>
+          <Route
+            path="compound-types-properties"
+            element={<CompoundsTypePropertiesPage />}
+          >
             <Route index element={<CompoundTypeManagerPage />} />
             <Route
               path="compound_types/:compound_type_id"

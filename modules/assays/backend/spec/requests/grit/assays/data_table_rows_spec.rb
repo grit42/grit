@@ -139,6 +139,83 @@ module Grit::Assays
       end
     end
 
+    # --- Full perspective authorization ---
+
+    describe "full_perspective authorization" do
+      # Loading this class queries a table that does not exist; outside the example transaction that is harmless.
+      before(:all) { ExperimentDataSheetRecord }
+
+      it "forbids full_perspective without 'read:system'" do
+        data_table
+        login_as(create(:grit_core_user))
+        get "/api/grit/assays/data_table_rows/#{item1.id}/full_perspective",
+          params: { data_table_id: data_table.id, column_safe_name: "entity_name" }
+        expect(response).to have_http_status(:forbidden)
+      end
+    end
+
+    # --- Metadata filters ---
+
+    describe "metadata filters" do
+      # Loading this class queries a table that does not exist; outside the example transaction that is harmless.
+      before(:all) { ExperimentDataSheetRecord }
+      before { login_as(admin) }
+
+      it "binds stored filter values instead of interpolating them as SQL" do
+        draft_status = Grit::Core::PublicationStatus.find_or_create_by!(name: "Draft")
+        published_status = Grit::Core::PublicationStatus.find_or_create_by!(name: "Published")
+        integer_type = Grit::Core::DataType.find_or_create_by!(name: "integer") { |dt| dt.is_entity = false }
+        strain_vocab = Grit::Core::Vocabulary.create!(name: "Test Strains")
+        strain_a = Grit::Core::VocabularyItem.create!(name: "Strain A", vocabulary: strain_vocab)
+        strain_b = Grit::Core::VocabularyItem.create!(name: "Strain B", vocabulary: strain_vocab)
+        strain_def = AssayMetadataDefinition.create!(name: "Test Strain", safe_name: "test_strain", vocabulary: strain_vocab)
+
+        assay_model = AssayModel.new(name: "Filtered Assay", assay_type: create(:grit_assays_assay_type, :biochemical))
+        assay_model.publication_status = draft_status
+        assay_model.save!
+        assay_def = AssayDataSheetDefinition.create!(name: "Results", result: true, sort: 1, assay_model: assay_model)
+        AssayDataSheetColumn.create!(name: "Species", safe_name: "sp_id", sort: 1, required: true, assay_data_sheet_definition: assay_def, data_type: data_type)
+        measurement_col = AssayDataSheetColumn.create!(name: "IC50", safe_name: "ic_50_nm", sort: 2, required: false, assay_data_sheet_definition: assay_def, data_type: integer_type)
+        assay_model.publication_status = published_status
+        assay_model.save!
+        assay_model.create_tables
+
+        experiment = Experiment.new(name: "Strain A Experiment", assay_model: assay_model)
+        experiment.publication_status = draft_status
+        experiment.save!
+        ExperimentMetadatum.create!(experiment: experiment, assay_metadata_definition: strain_def, vocabulary: strain_vocab, vocabulary_item: strain_a)
+        ExperimentDataSheetRecord.sheet_record_klass(assay_def.id).create!(experiment_id: experiment.id, sp_id: item1.id, ic_50_nm: 42)
+        experiment.publication_status = published_status
+        experiment.save!
+
+        column = DataTableColumn.create!(
+          name: "IC50 (nM)",
+          safe_name: "ic_50_nm",
+          source_type: "assay_data_sheet_column",
+          aggregation_method: "latest",
+          experiment_ids: [],
+          metadata_filters: { strain_def.id.to_s => [ strain_b.id ] },
+          data_table: data_table,
+          assay_data_sheet_column: measurement_col
+        )
+
+        ic50_for_item1 = lambda do
+          get "/api/grit/assays/data_tables/#{data_table.id}/data_table_rows"
+          expect(response).to have_http_status(:success)
+          JSON.parse(response.body)["data"].find { |row| row["id"] == item1.id }["ic_50_nm"]
+        end
+
+        expect(ic50_for_item1.call).to be_nil
+
+        column.update_column(:metadata_filters, { strain_def.id.to_s => [ strain_a.id ] })
+        expect(ic50_for_item1.call).to eq(42)
+
+        # A value stored before validation existed must not widen the filter.
+        column.update_column(:metadata_filters, { strain_def.id.to_s => [ "0) OR (1=1" ] })
+        expect(ic50_for_item1.call).to be_nil
+      end
+    end
+
     # --- Authentication ---
 
     describe "authentication" do

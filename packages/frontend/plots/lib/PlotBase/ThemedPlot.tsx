@@ -16,10 +16,9 @@
  * @grit42/plots. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { useEffect, useState, type ReactNode } from "react";
-import { Config, Layout, LayoutAxis } from "plotly.js";
-import { PlotParams } from "react-plotly.js";
-import { Button } from "@grit42/client-library/components";
+import { useCallback, useMemo, useState, type ReactNode } from "react";
+import { Config, Layout, LayoutAxis, PlotMouseEvent } from "plotly.js";
+import type { PlotParams } from "./types";
 import PlotBase from ".";
 import { ColorMap, ColorPreset, useColorMap } from "../colors";
 import type { Annotations } from "plotly.js";
@@ -27,63 +26,30 @@ import type { PlotAnnotation, PlotExportOptions } from "../types";
 import type { PlotNotice } from "../notices";
 import {
   annotationShapes,
+  axisLayout,
+  drawnCategories,
+  notesFor,
   nextAnnotationId,
-  pointFromClick,
+  pointFromEvent,
 } from "../annotations";
 import AnnotationLayer, { type AnnotationPoint } from "./AnnotationLayer";
 import DownloadDialog from "./DownloadDialog";
 import PlotNotices from "./PlotNotices";
+import { figureToolbarButtons } from "./toolbar";
 import styles from "./downloadButton.module.scss";
 
 const AXIS_KEY_RE = /^[xy]axis\d*$/;
 
-/**
- * The size of the canvas Plotly actually drew.
- *
- * Plotly sizes `.svg-container` to its own computed width and height,
- */
-const usePlotCanvasSize = (graphDiv: HTMLElement | null) => {
-  const [size, setSize] = useState<{ width: number; height: number } | null>(
-    null,
-  );
+/** While a note is being placed, a click places it and nothing else. */
+export const figureClick = <T,>(
+  annotating: boolean,
+  onClick: T | undefined,
+  placeNote: T,
+) => (annotating ? placeNote : onClick);
 
-  useEffect(() => {
-    if (!graphDiv || typeof ResizeObserver === "undefined") return;
-
-    const measure = () => {
-      const canvas =
-        graphDiv.querySelector<HTMLElement>(".svg-container") ?? graphDiv;
-      const { clientWidth: width, clientHeight: height } = canvas;
-      setSize((previous) =>
-        previous?.width === width && previous?.height === height
-          ? previous
-          : { width, height },
-      );
-    };
-
-    measure();
-    const observer = new ResizeObserver(measure);
-    observer.observe(graphDiv);
-    return () => observer.disconnect();
-  }, [graphDiv]);
-
-  return size;
-};
-
-/**
- * Plotly's container for the first cartesian axis is `xaxis`; the numbered
- * spelling only begins at `xaxis2`. `cartesian/layout_defaults` resolves every
- * axis id back to that canonical name and reads `layoutIn[name]`, so a
- * `xaxis1` key is never read at all.
- *
- * Builders number facets from 1, which puts the first facet's settings — axis
- * type included — on exactly that dead key, while the canonical `xaxis` below
- * gets seeded with colours alone. The symptom is a first facet that ignores its
- * axis type, and an unfaceted plot that ignores it outright.
- */
+/** Plotly never reads `xaxis1`, only `xaxis`; builders number facets from 1. */
 const canonicalAxisKey = (key: string) => key.replace(/^([xy]axis)1$/, "$1");
 
-/** Axis entries from one source, merged onto their canonical keys. */
 const canonicalAxes = (
   source: Record<string, Partial<LayoutAxis>> | undefined,
 ): Record<string, Partial<LayoutAxis>> => {
@@ -157,15 +123,6 @@ export const buildThemedAxes = (
   return themed;
 };
 
-export const buildExportOptions = (
-  options: PlotExportOptions | undefined,
-  title: string | undefined,
-) => ({
-  format: options?.format ?? "svg",
-  filename: options?.filename ?? title,
-  ...(options?.scale !== undefined ? { scale: options.scale } : {}),
-});
-
 const ThemedPlot = ({
   data,
   title,
@@ -188,25 +145,32 @@ const ThemedPlot = ({
 }: ThemedPlotProps) => {
   const derived = useColorMap(palette);
   const colorMap = colorMapProp ?? derived;
-  const dedicatedButton = (exportOptions?.control ?? "button") === "button";
   const [graphDiv, setGraphDiv] = useState<HTMLElement | null>(null);
   const [downloadOpen, setDownloadOpen] = useState(false);
-  const canvas = usePlotCanvasSize(graphDiv);
   const [annotating, setAnnotating] = useState(false);
   const [pending, setPending] = useState<AnnotationPoint | null>(null);
   const canAnnotate = typeof onAnnotationsChange === "function";
+  const canDownload = graphDiv !== null;
+  const toggleNote = useCallback(() => setAnnotating((was) => !was), []);
+  const openDownload = useCallback(() => setDownloadOpen(true), []);
+  // Stable, so Plotly updates in place instead of redrawing and losing the zoom.
+  const toolbarButtons = useMemo(
+    () =>
+      figureToolbarButtons({
+        canAnnotate,
+        onToggleNote: toggleNote,
+        canDownload,
+        onDownload: openDownload,
+      }),
+    [canAnnotate, canDownload, toggleNote, openDownload],
+  );
 
-  useEffect(() => {
-    if (!annotating || !graphDiv) return;
-    const onClick = (event: MouseEvent) => {
-      const point = pointFromClick(graphDiv, event.clientX, event.clientY);
-      if (!point) return;
-      setPending(point);
-      setAnnotating(false);
-    };
-    graphDiv.addEventListener("click", onClick);
-    return () => graphDiv.removeEventListener("click", onClick);
-  }, [annotating, graphDiv]);
+  const placeNote = (event: Readonly<PlotMouseEvent>) => {
+    const point = pointFromEvent(event);
+    if (!point) return;
+    setPending(point);
+    setAnnotating(false);
+  };
 
   const {
     title: layoutTitle,
@@ -215,16 +179,51 @@ const ThemedPlot = ({
     ...restLayout
   } = layout ?? {};
 
-  // `buildThemedAxes` has already absorbed every axis key onto its canonical
-  // name, so spreading the originals back in would restore the dead `xaxis1`
-  // spelling alongside the real `xaxis`.
+  // Axes come from `themedAxes`; the originals may hold a dead `xaxis1`.
   const layoutWithoutAxes = Object.fromEntries(
     Object.entries(restLayout).filter(([key]) => !AXIS_KEY_RE.test(key)),
   );
 
-  // Resolved before the layout, because the annotations need to know which
-  // scale they are being placed on.
   const themedAxes = buildThemedAxes(colorMap, { xaxis, yaxis, axes, layout });
+  const placedIn = axisLayout(themedAxes);
+  const notes = notesFor(
+    annotations,
+    placedIn,
+    drawnCategories(data, themedAxes),
+  );
+  const shownNotices: PlotNotice[] = [
+    ...(notices ?? []),
+    ...(notes.elsewhere
+      ? [
+          {
+            kind: "info" as const,
+            count: notes.elsewhere,
+            reason:
+              "notes hidden: placed with another panel layout, such as a different Facet by. Return to it to see them, or remove them under Notes.",
+          },
+        ]
+      : []),
+    ...(notes.missing
+      ? [
+          {
+            kind: "info" as const,
+            count: notes.missing,
+            reason:
+              "notes hidden: what they point at is not in the figure, such as a removed study. Restore it to see them, or remove them under Notes.",
+          },
+        ]
+      : []),
+    ...(notes.unplaced
+      ? [
+          {
+            kind: "info" as const,
+            count: notes.unplaced,
+            reason:
+              "notes hidden: saved by an earlier version, they cannot be placed. Remove them under Notes.",
+          },
+        ]
+      : []),
+  ];
   const scales = {
     x: (themedAxes.xaxis as Partial<LayoutAxis> | undefined)?.type,
     y: (themedAxes.yaxis as Partial<LayoutAxis> | undefined)?.type,
@@ -234,19 +233,21 @@ const ThemedPlot = ({
     paper_bgcolor: colorMap.bgColor,
     plot_bgcolor: colorMap.bgColor,
     showlegend: true,
-    // Drag is off while a note is being placed: with pan on, the click that
-    // places the note is indistinguishable from the start of a drag.
     dragmode: annotating ? false : "pan",
+    // Clicks off a point carry data coordinates, so a note can go anywhere.
+    ...(annotating ? { clickanywhere: true } : {}),
     autosize: true,
-    modebar: {
-      remove: dedicatedButton
-        ? ["lasso2d", "select2d", "toImage"]
-        : ["lasso2d", "select2d"],
-    },
+    // Our Download button replaces Plotly's camera.
+    modebar: { remove: ["lasso2d", "select2d", "toImage"] },
 
     ...layoutWithoutAxes,
 
     ...themedAxes,
+
+    font: {
+      color: colorMap.textColor,
+      ...(layoutWithoutAxes as { font?: object }).font,
+    },
 
     legend: {
       font: { color: colorMap.textColor },
@@ -269,7 +270,7 @@ const ThemedPlot = ({
 
     annotations: [
       ...((restLayout.annotations ?? []) as Partial<Annotations>[]),
-      ...annotationShapes(annotations, colorMap, scales),
+      ...annotationShapes(notes.shown, colorMap, scales),
     ],
 
     uirevision: layout?.uirevision ?? "true",
@@ -279,17 +280,23 @@ const ThemedPlot = ({
     responsive: true,
     scrollZoom: true,
     displaylogo: false,
-    toImageButtonOptions: buildExportOptions(exportOptions, title),
+    displayModeBar: "hover",
+    // On by default in Plotly 4: a button posting the data to cloud.plotly.com.
+    showSendToCloud: false,
     ...config,
+    modeBarButtonsToAdd: [
+      ...toolbarButtons,
+      ...(config?.modeBarButtonsToAdd ?? []),
+    ],
   };
 
   const plot = (
     <PlotBase
       {...props}
+      onClick={figureClick(annotating, props.onClick, placeNote)}
       data={data}
       layout={themedLayout}
       config={themedConfig}
-      useResizeHandler
       onInitialized={(figure, div) => {
         setGraphDiv(div);
         onInitialized?.(figure, div);
@@ -307,55 +314,42 @@ const ThemedPlot = ({
     />
   );
 
-  const withNotices = (figure: ReactNode) =>
-    notices?.length ? (
-      <div className={styles.stack}>
-        <div className={styles.figure}>{figure}</div>
-        <PlotNotices notices={notices} />
-      </div>
-    ) : (
-      figure
-    );
-
-  if (!dedicatedButton) return withNotices(plot);
+  const withNotices = (figure: ReactNode) => (
+    <div className={styles.stack}>
+      <div className={styles.figure}>{figure}</div>
+      {shownNotices.length ? <PlotNotices notices={shownNotices} /> : null}
+    </div>
+  );
 
   return withNotices(
     <div className={styles.container}>
       {plot}
-      <div className={styles.overlay} style={canvas ?? undefined}>
-        <div className={styles.controls}>
-          {canAnnotate && (
-            <AnnotationLayer
-              annotating={annotating}
-              onAnnotatingChange={setAnnotating}
-              pending={pending}
-              onCancel={() => setPending(null)}
-              onCommit={(text) => {
-                if (!pending) return;
-                onAnnotationsChange?.([
-                  ...(annotations ?? []),
-                  {
-                    id: nextAnnotationId(annotations, text),
-                    text,
-                    x: pending.x,
-                    y: pending.y,
-                    axis: pending.axis,
-                    author: annotationAuthor,
-                  },
-                ]);
-                setPending(null);
-              }}
-            />
-          )}
-          <Button
-            size="tiny"
-            variant="filled"
-            onClick={() => setDownloadOpen(true)}
-            disabled={!graphDiv}
-          >
-            Download
-          </Button>
-        </div>
+      <div className={styles.overlay}>
+        {canAnnotate && (
+          <AnnotationLayer
+            annotating={annotating}
+            onAnnotatingChange={setAnnotating}
+            pending={pending}
+            onCancel={() => setPending(null)}
+            onCommit={(text) => {
+              if (!pending) return;
+              onAnnotationsChange?.([
+                ...(annotations ?? []),
+                {
+                  id: nextAnnotationId(annotations, text),
+                  text,
+                  x: pending.x,
+                  y: pending.y,
+                  axis: pending.axis,
+                  xaxis: pending.xaxis,
+                  layout: placedIn,
+                  author: annotationAuthor,
+                },
+              ]);
+              setPending(null);
+            }}
+          />
+        )}
       </div>
       <DownloadDialog
         isOpen={downloadOpen}

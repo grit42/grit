@@ -81,6 +81,6 @@ export const downloadPlot = async (
   graphDiv: HTMLElement,
   request: ReturnType<typeof buildDownloadRequest>,
 ): Promise<void> => {
-  const Plotly = await import("plotly.js/dist/plotly");
+  const { default: Plotly } = await import("plotly.js-cartesian-dist-min");
   await Plotly.downloadImage(graphDiv, request);
 };

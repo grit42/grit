@@ -111,4 +111,19 @@ RSpec.describe "Vocabularies API", type: :request do
       end
     end
   end
+
+  describe "vocabulary_ids_from_names permissions" do
+    it "returns ids with 'read:system'" do
+      login_as(create(:grit_core_user, :with_read_role))
+      post "/api/grit/core/vocabularies/vocabulary_ids_from_names", params: { names: [ "test_vocab" ] }, as: :json
+      expect(response).to have_http_status(:success)
+      expect(response.parsed_body["data"]).to eq({ "test_vocab" => vocabulary.id })
+    end
+
+    it "forbids lookup without 'read:system'" do
+      login_as(create(:grit_core_user))
+      post "/api/grit/core/vocabularies/vocabulary_ids_from_names", params: { names: [ "test_vocab" ] }, as: :json
+      expect(response).to have_http_status(:forbidden)
+    end
+  end
 end

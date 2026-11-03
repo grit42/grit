@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "vite --port 3002",
     "tsc": "tsc -b",
+    "typecheck": "tsc --noEmit -p tsconfig.lib.json",
     "build": "tsc -b ./tsconfig.lib.json && vite build",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -32,9 +33,7 @@
   "description": "",
   "dependencies": {
     "@grit42/client-library": "workspace:*",
-    "mathjs": "15.2.0",
-    "plotly.js": "^3.4.0",
-    "react-plotly.js": "^2.6.0"
+    "plotly.js-cartesian-dist-min": "4.1.2"
   },
   "peerDependencies": {
     "react": "catalog:"
@@ -42,10 +41,9 @@
   "devDependencies": {
     "@eslint/js": "catalog:",
     "@types/node": "catalog:",
-    "@types/plotly.js": "^2.35.14",
+    "@types/plotly.js": "^3.0.15",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "@types/react-plotly.js": "^2.6.4",
     "@vitejs/plugin-react": "catalog:",
     "autoprefixer": "catalog:",
     "eslint": "catalog:",
@@ -53,8 +51,10 @@
     "eslint-plugin-react-refresh": "catalog:",
     "glob": "catalog:",
     "globals": "catalog:",
+    "happy-dom": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
+    "sass-embedded": "catalog:",
     "typescript": "catalog:",
     "typescript-eslint": "catalog:",
     "vite": "catalog:",

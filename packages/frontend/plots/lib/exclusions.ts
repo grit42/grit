@@ -150,29 +150,3 @@ export const countByCategory = <T>(
   }
   return counts;
 };
-
-/**
- * Combine per-facet or per-panel summaries into one.
- */
-export const mergeSummaries = (
-  summaries: PlotDataSummary[],
-): PlotDataSummary => {
-  const excluded = summaries.flatMap((s) => s.excluded);
-  const includedByCategory: Record<string, number> = {};
-  for (const summary of summaries) {
-    for (const [category, count] of Object.entries(
-      summary.includedByCategory,
-    )) {
-      includedByCategory[category] =
-        (includedByCategory[category] ?? 0) + count;
-    }
-  }
-
-  return {
-    total: summaries.reduce((n, s) => n + s.total, 0),
-    included: summaries.reduce((n, s) => n + s.included, 0),
-    includedByCategory,
-    excluded,
-    exclusionSummary: buildExclusionSummary(excluded),
-  };
-};

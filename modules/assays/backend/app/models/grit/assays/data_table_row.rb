@@ -23,6 +23,8 @@ module Grit::Assays
 
     entity_crud_with read: [ "read:system" ]
 
+    entity_scopes :full_perspective
+
     def self.entity_properties(**args)
       data_table_id = args[:data_table_id]
       data_table = DataTable.find(data_table_id)

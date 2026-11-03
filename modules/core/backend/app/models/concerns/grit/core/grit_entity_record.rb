@@ -89,34 +89,21 @@ module Grit::Core::GritEntityRecord
   # Class Methods
   # ==========================================================================
 
-  # Lazily-computed set of methods inherited from ActiveRecord::Base / Ruby core.
-  # Not computed at module load time to avoid triggering DB connections or class
-  # loading in environments with partial schemas (e.g. per-module test databases).
-  def self.inherited_scope_blocklist
-    @inherited_scope_blocklist ||= (
-      ActiveRecord::Base.public_methods(true) + Object.public_methods(true)
-    ).map(&:to_s).to_set
-  end
+  # Scopes every entity may be read through: defined by this concern and read-only.
+  DEFAULT_ENTITY_SCOPES = %w[detailed by_load_set_block].freeze
 
   class_methods do
-    # True only for scope methods defined by application code (under /modules/),
-    # never for inherited ActiveRecord methods (update_all, delete_by, ...). Used
-    # to gate request-supplied `params[:scope]` dispatch.
+    # Names that may be passed as the request's `scope` parameter: the defaults, plus
+    # those declared with `entity_scopes` on this class or its ancestors. Any other public
+    # class method, including application methods that write (create, update, ...), is refused.
+    def entity_scope_names
+      inherited = superclass.respond_to?(:entity_scope_names) ? superclass.entity_scope_names : DEFAULT_ENTITY_SCOPES
+      (inherited + (@entity_scopes || [])).uniq
+    end
+
+    # Used to gate request-supplied `params[:scope]` dispatch.
     def entity_scope?(scope)
-      return false unless respond_to?(scope)
-      location = method(scope).source_location
-      if location&.first&.include?("/modules/")
-        # Method is defined in application code — always allow.
-        true
-      else
-        # source_location is nil (C extension) or points outside /modules/
-        # (inherited AR method or a test stub whose source is in a gem path).
-        # Fall back to blocklist: block known AR/Ruby inherited methods,
-        # allow everything else (including stubbed application scopes).
-        !Grit::Core::GritEntityRecord.inherited_scope_blocklist.include?(scope.to_s)
-      end
-    rescue NameError
-      false
+      entity_scope_names.include?(scope.to_s) && respond_to?(scope)
     end
 
     # ------------------------------------------------------------------------
@@ -130,6 +117,12 @@ module Grit::Core::GritEntityRecord
     end
 
     alias_method :display_column, :display_columns
+
+    # Declares the read-only class methods that may be selected with the request's
+    # `scope` parameter, in addition to DEFAULT_ENTITY_SCOPES.
+    def entity_scopes(*names)
+      @entity_scopes = ((@entity_scopes || []) + names.map(&:to_s)).uniq
+    end
 
     def entity_crud_with(read: nil, write: nil)
       @entity_crud = {
@@ -292,9 +285,10 @@ module Grit::Core::GritEntityRecord
 
       self.foreign_keys.each do |foreign_key, memo|
         foreign_key_model = Grit::Core::EntityMapper.table_to_model_name(foreign_key.to_table).constantize
-        query = query.joins("LEFT OUTER JOIN #{foreign_key.to_table} #{foreign_key.to_table}__ ON #{foreign_key.to_table}__.#{foreign_key.options[:primary_key]} = #{self.table_name}.#{foreign_key.options[:column]}")
+        join_alias = "#{foreign_key.options[:column]}__"
+        query = query.joins("LEFT OUTER JOIN #{foreign_key.to_table} #{join_alias} ON #{join_alias}.#{foreign_key.options[:primary_key]} = #{self.table_name}.#{foreign_key.options[:column]}")
         foreign_key_model.display_properties.each do |property|
-          query = query.select("#{foreign_key.to_table}__.#{property[:name]} as #{foreign_key.options[:column]}__#{property[:name]}")
+          query = query.select("#{join_alias}.#{property[:name]} as #{foreign_key.options[:column]}__#{property[:name]}")
         end
       end
       query

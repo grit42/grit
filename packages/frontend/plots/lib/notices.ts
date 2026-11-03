@@ -19,25 +19,16 @@
 import { resolveDisplay } from "./displayMode";
 import { supportsTickRange } from "./axes";
 import type { PlotDefinition, SourceData } from "./types";
-import { MAX_FACETS, countFacets, facetLabels } from "./utils";
+import {
+  MAX_FACETS,
+  countFacets,
+  hiddenFacetLabels,
+  shownFacetLabels,
+} from "./utils";
 
-/**
- * Something the figure did not draw, said in the figure's own words.
- *
- * Exclusions recorded by a domain validator answer "which records failed a
- * rule". These answer a different question the figure was silent about:
- * what the *plotting* layer dropped because a scale could not hold it, a
- * range did not reach it, or there was no room for its panel. A figure that
- * shows less than the data and does not admit it is the failure mode these
- * exist to close.
- */
 export interface PlotNotice {
-  /**
-   * `omitted` — data exists but is not drawn.
-   * `empty` — nothing is drawn at all, and why.
-   * `warning` — drawn, but something about it should be read with care.
-   */
-  kind: "omitted" | "empty" | "warning";
+  /** `info` says what the figure did; it is not counted as omitted. */
+  kind: "omitted" | "empty" | "warning" | "info";
   reason: string;
   count?: number;
 }
@@ -107,9 +98,40 @@ export const plotNotices = ({
     }
   }
 
+  const cluster = (
+    def as { cluster?: { x?: boolean; y?: boolean; dendrogram?: boolean } }
+  ).cluster;
+  if (
+    cluster &&
+    cluster.dendrogram !== false &&
+    (cluster.x || cluster.y) &&
+    countFacets(data, def) > 1
+  ) {
+    notices.push({
+      kind: "info",
+      reason:
+        "The dendrogram is drawn for a single panel only. " +
+        'Narrow "Facets shown" to one, or stop faceting, to see it.',
+    });
+  }
+
+  const hidden = hiddenFacetLabels(data, def);
+  if (hidden.length > 0) {
+    const named = hidden.slice(0, NAMED_OMISSIONS).join(", ");
+    const rest =
+      hidden.length > NAMED_OMISSIONS
+        ? ` and ${hidden.length - NAMED_OMISSIONS} more`
+        : "";
+    notices.push({
+      kind: "omitted",
+      count: hidden.length,
+      reason: `facets hidden by "Facets shown": ${named}${rest}.`,
+    });
+  }
+
   const wanted = countFacets(data, def);
   if (wanted > MAX_FACETS) {
-    const omitted = facetLabels(data, def).slice(MAX_FACETS);
+    const omitted = shownFacetLabels(data, def).slice(MAX_FACETS);
     const named = omitted.slice(0, NAMED_OMISSIONS).join(", ");
     const rest =
       omitted.length > NAMED_OMISSIONS

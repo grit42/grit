@@ -23,6 +23,10 @@ module Grit::Assays
   class ExperimentsController < ApplicationController
     include Grit::Core::GritEntityController
 
+    # Replace the callbacks registered by Readable and Writable, so the default actions must be listed too.
+    before_action :check_read, only: %i[ index show export assay_data_sheet_definitions ]
+    before_action :check_write, only: %i[ create update destroy publish draft ]
+
     def create
       ActiveRecord::Base.transaction do
         record = Grit::Assays::Experiment.new(params.permit(self.permitted_params))
@@ -187,8 +191,9 @@ module Grit::Assays
                   .entity_columns(assay_data_sheet_definition_id: data_sheet[:id])
                   .reject { |c| c[:default_hidden] }
 
+      connection = ActiveRecord::Base.connection
       record_columns = columns.map do |column|
-        "\"sub\".\"#{column[:name]}\" as \"#{column[:display_name]}\""
+        "\"sub\".#{connection.quote_column_name(column[:name])} as #{connection.quote_column_name(column[:display_name])}"
       end
 
       data_sheet_sql =

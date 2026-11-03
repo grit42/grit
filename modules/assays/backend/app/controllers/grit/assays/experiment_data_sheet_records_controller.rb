@@ -34,7 +34,8 @@ module Grit::Assays
     end
 
     def update
-      experiment = Grit::Assays::Experiment.find(params[:experiment_id])
+      record = ExperimentDataSheetRecord.sheet_record_klass(params[:assay_data_sheet_definition_id]).find(params[:id])
+      experiment = Grit::Assays::Experiment.find(record.experiment_id)
       raise "Cannot modify records in a published Experiment" if experiment.publication_status.name === "Published"
       @record = Grit::Assays::ExperimentDataSheetRecord.update(params)
       scope = get_scope(params[:scope] || "detailed", params)

@@ -85,7 +85,7 @@ const Router = () => {
             <Route path=":batch_id" element={<BatchPage />} />
           </Route>
           <Route path="synonyms">
-            <Route index  element={<LazyCompoundSynonymsPage />} />
+            <Route index element={<LazyCompoundSynonymsPage />} />
             <Route path="new" element={<NewSynonymPage />} />
             <Route path=":synonym_id" element={<SynonymPage />} />
           </Route>

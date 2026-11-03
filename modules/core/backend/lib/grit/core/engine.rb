@@ -22,6 +22,26 @@ module Grit
       isolate_namespace Grit::Core
       config.generators.api_only = true
 
+      # Schema prefixes used by `DynamicSchema::SchemaDefinition` includers,
+      # declared by the engine or app defining them:
+      #
+      #   config.grit.dynamic_schema_prefixes << "ds"
+      #
+      # Each prefix owns its `<prefix>_` namespace alone: no duplicates, and
+      # none may extend another with an underscore (`ds` and `ds_x`). Each also
+      # belongs to one class and its STI subclasses; that is not checked, and
+      # two classes sharing a prefix would collide on schema names.
+      #
+      # `dynamic_schema_prefix` refuses a prefix missing here. Listed in config
+      # rather than collected from the macro because rake tasks don't eager
+      # load: no model has run its macro when `db:migrate` dumps structure.sql.
+      config.grit = ActiveSupport::OrderedOptions.new
+      config.grit.dynamic_schema_prefixes = []
+
+      # ActiveStorage's own controllers (direct uploads, disk service, blob redirects) have no
+      # grit authentication. Files are uploaded and served through grit controllers instead.
+      config.active_storage.draw_routes = false if config.respond_to?(:active_storage)
+
       def self.openapi_root
         root.join("openapi").to_s
       end
@@ -90,6 +110,24 @@ module Grit
       initializer :ignore_tables do |app|
         ActiveRecord::SchemaDumper.ignore_tables << /^lsb_.*$/
         ActiveRecord::SchemaDumper.ignore_tables << /^raw_lsb_.*$/
+      end
+
+      # Keeps DynamicSchema schemas out of structure.sql by excluding each
+      # `<prefix>_*` namespace (so migrations must not create schemas there).
+      # Dumping only `public` instead would emit an unloadable `CREATE SCHEMA
+      # public`. Hooked on `structure_dump`, which every dump task reaches.
+      module ExcludeDynamicSchemasFromStructureDump
+        def structure_dump(filename, extra_flags)
+          prefixes = Grit::Core::Model::DynamicSchema::SchemaDefinition.schema_prefixes
+          return super if prefixes.empty?
+          # Not `|`, which would also collapse the caller's repeated flags.
+          flags = Array(extra_flags)
+          super(filename, flags + (prefixes.map { |prefix| "--exclude-schema=#{prefix}_*" } - flags))
+        end
+      end
+
+      initializer :exclude_dynamic_schemas_from_structure_dump do
+        ActiveRecord::Tasks::PostgreSQLDatabaseTasks.prepend(ExcludeDynamicSchemasFromStructureDump)
       end
     end
   end

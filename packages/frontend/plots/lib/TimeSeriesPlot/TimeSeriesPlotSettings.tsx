@@ -17,7 +17,11 @@
  */
 
 import { Select } from "@grit42/client-library/components";
-import { SourceDataProperties, TimeSeriesPlotDefinition } from "../types";
+import {
+  SourceData,
+  SourceDataProperties,
+  TimeSeriesPlotDefinition,
+} from "../types";
 import BaseSettings from "../PlotBase/BaseSettings";
 import {
   nextAxisLabel,
@@ -30,9 +34,11 @@ const TimeSeriesPlotSettings = ({
   plot,
   onChange,
   properties,
+  data,
 }: {
   plot: TimeSeriesPlotDefinition;
   properties: SourceDataProperties;
+  data?: SourceData;
   onChange: (plot: TimeSeriesPlotDefinition) => void;
 }) => {
   const axisOptions = useNumericPropertiesOptions(properties);
@@ -64,7 +70,12 @@ const TimeSeriesPlotSettings = ({
         onChange={onAxisKeyChange("y")}
       />
       <AxesTypeSettings plot={plot} onChange={onChange} />
-      <BaseSettings onChange={onChange} plot={plot} properties={properties} />
+      <BaseSettings
+        onChange={onChange}
+        plot={plot}
+        properties={properties}
+        data={data}
+      />
     </>
   );
 };

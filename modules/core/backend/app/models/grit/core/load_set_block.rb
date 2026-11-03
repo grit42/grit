@@ -22,6 +22,8 @@ module Grit::Core
 
     entity_crud_with read: [ "read:system" ]
 
+    entity_scopes :by_entity, :by_vocabulary, :preview_data, :errored_data, :warning_data
+
     belongs_to :status, class_name: "Grit::Core::LoadSetStatus"
     belongs_to :load_set
     has_one_attached :data
