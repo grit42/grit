@@ -27,6 +27,7 @@ import TableDndProvider from "../../components/TableDndProvider";
 import { classnames } from "@grit42/client-library/utils";
 import { GritColumnDef, TableProps } from "../../types";
 import InternalTableStateContext from "../../features/table-state/InternalTableStateContext";
+import TableStylesContext from "../../components/TableStylesContext";
 import PermanentFilters from "../features/filters/PermanentFilters";
 import { ColumnVisibility } from "../features/column-visibility";
 import TableHeader from "./TableHeader";
@@ -59,96 +60,99 @@ const Table = <T,>({
 
   return (
     <InternalTableStateContext.Provider value={tableState}>
-      <TableDndProvider table={table}>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateRows: "1fr",
-            gridTemplateColumns: showFilters ? "max-content 1fr" : "1fr",
-            gridAutoFlow: "column",
-            gridAutoColumns: "max-content",
-            overflow: "auto",
-          }}
-        >
-          {showFilters && (
-            <PermanentFilters
-              columns={
-                columns
-                  .filter(({ id }) => columnVisibility[id] ?? true)
-                  .sort((a, b) => {
-                    const indexA = columnOrder.indexOf(a.id as string);
-                    const indexB = columnOrder.indexOf(b.id as string);
-
-                    if (indexA < indexB) return -1;
-                    if (indexA > indexB) return 1;
-
-                    return 0;
-                  }) as GritColumnDef[]
-              }
-              filters={tableState.filters}
-              setFilters={tableState.setFilters}
-              setShowFilters={setShowFilters}
-            />
-          )}
+      {/* The shared header, body and cells take their classes from here. */}
+      <TableStylesContext.Provider value={styles}>
+        <TableDndProvider table={table}>
           <div
-            className={classnames(styles.container, className, {
-              [styles.fitContent]: !!props.fitContent,
-            })}
+            style={{
+              display: "grid",
+              gridTemplateRows: "1fr",
+              gridTemplateColumns: showFilters ? "max-content 1fr" : "1fr",
+              gridAutoFlow: "column",
+              gridAutoColumns: "max-content",
+              overflow: "auto",
+            }}
           >
-            <TableHeader
-              table={table}
-              showFilters={showFilters}
-              setShowFilters={setShowFilters}
-              showSettings={showSettings}
-              setShowSettings={setShowSettings}
-              actions={headerActions}
-            />
+            {showFilters && (
+              <PermanentFilters
+                columns={
+                  columns
+                    .filter(({ id }) => columnVisibility[id] ?? true)
+                    .sort((a, b) => {
+                      const indexA = columnOrder.indexOf(a.id as string);
+                      const indexB = columnOrder.indexOf(b.id as string);
+
+                      if (indexA < indexB) return -1;
+                      if (indexA > indexB) return 1;
+
+                      return 0;
+                    }) as GritColumnDef[]
+                }
+                filters={tableState.filters}
+                setFilters={tableState.setFilters}
+                setShowFilters={setShowFilters}
+              />
+            )}
             <div
-              className={classnames(styles.tableContainer)}
-              ref={setTableContainer}
-              onScroll={(e) =>
-                fetchMoreOnBottomReached(e.target as HTMLDivElement)
-              }
+              className={classnames(styles.container, className, {
+                [styles.fitContent]: !!props.fitContent,
+              })}
             >
-              <table
-                className={classnames({
-                  [styles.compact]: displayDensity === "compact",
-                })}
-                style={{
-                  ...columnSizeVars,
-                }}
+              <TableHeader
+                table={table}
+                showFilters={showFilters}
+                setShowFilters={setShowFilters}
+                showSettings={showSettings}
+                setShowSettings={setShowSettings}
+                actions={headerActions}
+              />
+              <div
+                className={classnames(styles.tableContainer)}
+                ref={setTableContainer}
+                onScroll={(e) =>
+                  fetchMoreOnBottomReached(e.target as HTMLDivElement)
+                }
               >
-                <TableHead
-                  table={table}
-                  columnOrder={columnOrder}
-                  settings={settings}
-                />
-                <TableBody
-                  table={table}
-                  tableContainer={tableContainer}
-                  onCellClick={props.onCellClick}
-                  onRowClick={props.onRowClick}
-                  data={displayData}
-                  loading={props.loading}
-                  settings={settings}
-                  noDataMessage={noDataMessage}
-                  disableNoDataMessage={disableNoDataMessage}
-                  emphasizedRows={props.emphasizedRows}
-                  editable={props.editable}
-                />
-              </table>
+                <table
+                  className={classnames({
+                    [styles.compact]: displayDensity === "compact",
+                  })}
+                  style={{
+                    ...columnSizeVars,
+                  }}
+                >
+                  <TableHead
+                    table={table}
+                    columnOrder={columnOrder}
+                    settings={settings}
+                  />
+                  <TableBody
+                    table={table}
+                    tableContainer={tableContainer}
+                    onCellClick={props.onCellClick}
+                    onRowClick={props.onRowClick}
+                    data={displayData}
+                    loading={props.loading}
+                    settings={settings}
+                    noDataMessage={noDataMessage}
+                    disableNoDataMessage={disableNoDataMessage}
+                    emphasizedRows={props.emphasizedRows}
+                    editable={props.editable}
+                  />
+                </table>
+              </div>
+              <TableFooter
+                loadedRecords={props.data?.length}
+                totalRecords={props.pagination?.totalRows}
+                status={props.footerStatus}
+              />
             </div>
-            <TableFooter
-              loadedRecords={props.data?.length}
-              totalRecords={props.pagination?.totalRows}
-              status={props.footerStatus}
-            />
+            {showSettings && (
+              <ColumnVisibility setShowSettings={setShowSettings} />
+            )}
           </div>
-          {showSettings && (
-            <ColumnVisibility setShowSettings={setShowSettings} />
-          )}
-        </div>
-      </TableDndProvider>
+        </TableDndProvider>
+      </TableStylesContext.Provider>
     </InternalTableStateContext.Provider>
   );
 };

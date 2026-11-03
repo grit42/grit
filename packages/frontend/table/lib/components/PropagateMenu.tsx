@@ -20,7 +20,7 @@ import { useCallback } from "react";
 import { Row, Table } from "@tanstack/react-table";
 import { Dropdown, MenuItems } from "@grit42/client-library/components";
 import MenuIcon from "@grit42/client-library/icons/Menu";
-import styles from "./table.module.scss";
+import { useTableStyles } from "./TableStylesContext";
 import { CellValuePropagationDirection, GritTypedColumnDef } from "../types";
 import { useColumnTypeDef } from "../features/column-types";
 import getPropagationTargetRows from "./getPropagationTargetRows";
@@ -43,6 +43,7 @@ interface Props<T> {
  * look anything up itself.
  */
 const PropagateMenu = <T,>({ table, row, column, getValue }: Props<T>) => {
+  const styles = useTableStyles();
   const typeDef = useColumnTypeDef(column.type);
   const selectedRows = table.getSelectedRowModel().flatRows;
 

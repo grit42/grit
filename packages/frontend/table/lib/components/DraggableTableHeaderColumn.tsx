@@ -20,7 +20,7 @@ import { flexRender, Header } from "@tanstack/react-table";
 
 import { CSSProperties, useMemo } from "react";
 
-import styles from "./table.module.scss";
+import { useTableStyles } from "./TableStylesContext";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { classnames } from "@grit42/client-library/utils";
@@ -39,6 +39,7 @@ const DraggableTableHeaderColumn = <T,>({
   headers?: Header<T, unknown>[];
   settings?: TableStateSettings<T>;
 }) => {
+  const styles = useTableStyles();
   const tableState = useInternalTableState();
   const isLeafHeader = useMemo(() => header.subHeaders.length === 0, [header]);
   const canDrag = useMemo(

@@ -19,7 +19,7 @@
 import { Cell, flexRender, Row, Table } from "@tanstack/react-table";
 import { useVirtualizer } from "@tanstack/react-virtual";
 
-import styles from "./table.module.scss";
+import { useTableStyles } from "./TableStylesContext";
 import { useMemo, useRef } from "react";
 import { classnames } from "@grit42/client-library/utils";
 import { Spinner } from "@grit42/client-library/components";
@@ -66,6 +66,7 @@ const TableCell = <T,>({
   row: Row<T>;
   table: Table<T>;
 }) => {
+  const styles = useTableStyles();
   const isNumericType = useMemo(
     () =>
       ["integer", "decimal", "float"].includes(
@@ -135,6 +136,7 @@ const TableBody = <T,>({
   emphasizedRows,
   editable,
 }: Props<T>) => {
+  const styles = useTableStyles();
   const displayDensity = useDisplayDensity();
 
   const { rows } = table.getRowModel();

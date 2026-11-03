@@ -18,7 +18,7 @@
 
 import { useCallback } from "react";
 import { Cell, flexRender, Table } from "@tanstack/react-table";
-import styles from "./table.module.scss";
+import { useTableStyles } from "./TableStylesContext";
 import { GritTypedColumnDef } from "../types";
 import { useColumnTypeDef } from "../features/column-types";
 import PropagateMenu from "./PropagateMenu";
@@ -37,6 +37,7 @@ interface Props<T> {
  * rather than erroring.
  */
 const EditableCell = <T,>({ cell, table }: Props<T>) => {
+  const styles = useTableStyles();
   const columnDef = cell.column.columnDef as GritTypedColumnDef;
   const typeDef = useColumnTypeDef(columnDef.type);
   const Input = typeDef.edit?.input;

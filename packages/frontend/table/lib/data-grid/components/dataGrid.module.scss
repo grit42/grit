@@ -181,6 +181,27 @@
   flex: 1;
 }
 
+// Same as the Table's editable cells (components/table.module.scss).
+.editableCell {
+  display: grid;
+  grid-template-columns: 1fr min-content;
+  align-items: center;
+  width: 100%;
+
+  > input[type="checkbox"] {
+    justify-self: center;
+  }
+
+  .menuIcon {
+    fill: rgb(from theme.$palette-primary-contrast-text r g b / 50%);
+    cursor: pointer;
+
+    &:hover {
+      fill: theme.$palette-primary-contrast-text;
+    }
+  }
+}
+
 .header {
   padding: theme.$spacing;
   gap: theme.$spacing;
