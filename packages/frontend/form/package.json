@@ -33,6 +33,7 @@
   "description": "",
   "dependencies": {
     "@grit42/client-library": "workspace:*",
+    "@grit42/notifications": "workspace:*",
     "@tanstack/react-form": "catalog:"
   },
   "peerDependencies": {
