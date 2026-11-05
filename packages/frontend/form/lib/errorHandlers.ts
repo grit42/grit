@@ -18,6 +18,7 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { AnyFormApi, DeepKeys } from "@tanstack/react-form";
+import { toast } from "@grit42/notifications";
 
 export type FormData = Record<string, any>;
 
@@ -38,18 +39,38 @@ export function genericErrorHandler<TFormData extends FormData>(
       await submitFn(props);
     } catch (e) {
       if (typeof e === "string") {
+        // (The API's notifyOnError already shows such errors as a toast.)
         props.formApi.setErrorMap({ onSubmit: e });
       } else if (typeof e === "object") {
+        // Errors on a field go to that field. The rest (e.g. Rails' `base`,
+        // errors about the record as a whole) are shown above the form,
+        // instead of being dropped.
+        const formErrors: string[] = [];
         for (const key in e) {
+          const messages = [(e as Record<string, string[] | string>)[key]].flat();
           if (props.formApi.getFieldMeta(key as DeepKeys<TFormData>)) {
             props.formApi.setFieldMeta(key as DeepKeys<TFormData>, (m) => ({
               ...m,
-              errors: (e as Record<string, string[]>)[key],
+              errors: messages,
               errorMap: {
-                onSubmit: (e as Record<string, string[]>)[key].join("\n"),
+                onSubmit: messages.join("\n"),
               },
             }));
+          } else {
+            formErrors.push(
+              ...messages.map((message) =>
+                key === "base" ? message : `${key}: ${message}`,
+              ),
+            );
           }
+        }
+        // A toast as well, as the banner and the fields may be out of view
+        // (notifyOnError only toasts plain string errors).
+        if (formErrors.length) {
+          props.formApi.setErrorMap({ onSubmit: formErrors.join("\n") });
+          toast.error(formErrors.join("\n"));
+        } else {
+          toast.error("Please check the highlighted fields");
         }
       } else {
         throw e;
