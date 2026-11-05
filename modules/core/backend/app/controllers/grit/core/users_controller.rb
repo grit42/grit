@@ -25,13 +25,22 @@ module Grit::Core
     before_action :require_user, only: %i[index show update_password generate_api_token]
 
     def create
-      user = params.require(:user).permit(:origin_id, :location_id, :login, :name, :active, :email, :two_factor, role_ids: [])
+      user = params.require(:user).permit(:origin_id, :location_id, :login, :name, :active, :email, :two_factor)
+      # Not in params[:user]: parameter wrapping only wraps the model's own
+      # attributes, so role_ids arrives at the top level (as for update).
+      role_ids = params.permit(role_ids: [])[:role_ids]
       record = Grit::Core::User.new(user)
       record.activation_token = SecureRandom.urlsafe_base64(20)
 
       Grit::Core::Mailer.deliver_activation_instructions(record).deliver_now
 
-      if record.save
+      saved = false
+      Grit::Core::User.transaction do
+        saved = record.save
+        sync_user_roles(record, role_ids) if saved && !role_ids.nil?
+      end
+
+      if saved
         scope = get_scope(params[:scope] || "detailed", params)
         record = scope.find(record.id)
         render json: { success: true, data: record }, status: :created, location: record
