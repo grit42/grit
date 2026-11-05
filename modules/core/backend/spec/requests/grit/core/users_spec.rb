@@ -243,6 +243,19 @@ RSpec.describe "Users API", type: :request do
       expect(role_ids_of(notadmin)).to eq([ extra_role.id ])
     end
 
+    it "admin should assign roles when creating a user" do
+      post "/api/grit/core/users", params: {
+        login: "with_role",
+        name: "With role",
+        email: "with_role@example.com",
+        origin_id: origin.id,
+        role_ids: [ extra_role.id ]
+      }, as: :json
+
+      expect(response).to have_http_status(:created)
+      expect(role_ids_of(Grit::Core::User.find_by!(login: "with_role"))).to eq([ extra_role.id ])
+    end
+
     it "should not duplicate roles when the same roles are assigned repeatedly" do
       role_ids = admin.role_ids + [ extra_role.id ]
       2.times do
