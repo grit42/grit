@@ -4,9 +4,11 @@
   appearance: none;
   border: 0;
   outline: none;
-  padding: 0.5em 1em;
+  // Overridable from a container, e.g. editable table cells use a compact
+  // field so their rows are as tall as read-only ones.
+  padding: var(--input-field-padding, 0.5em 1em);
   border-radius: theme.$border-radius;
-  height: 38px;
+  height: var(--input-field-height, 38px);
   width: 100%;
   color: theme.$palette-primary-contrast-text;
   background: theme.$palette-background-default;

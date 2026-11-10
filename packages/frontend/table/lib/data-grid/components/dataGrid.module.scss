@@ -37,6 +37,15 @@
       tr {
         min-height: 2em;
       }
+
+    // Editable cells: compact fields (see .editableCell).
+    td:has(.editableCell) {
+      padding-block: 1px;
+    }
+
+    .editableCell {
+      --input-field-height: 21px;
+    }
     }
   }
 
@@ -168,6 +177,12 @@
         text-overflow: ellipsis;
         border-block-end: 1px solid theme.$palette-primary-dark;
         border-inline-end: 1px solid theme.$palette-primary-dark;
+
+        // Editable cells keep the row height of read-only ones: the field
+        // fills the cell instead of sitting inside its padding.
+        &:has(.editableCell) {
+          padding-block: 2px;
+        }
       }
     }
   }
@@ -187,6 +202,11 @@
   grid-template-columns: 1fr min-content;
   align-items: center;
   width: 100%;
+
+  // Rows are 3em (36px) tall: the field takes all of it but the cell's 2px
+  // padding and border, so editable rows are no taller than read-only ones.
+  --input-field-height: 31px;
+  --input-field-padding: 0 0.5em;
 
   > input[type="checkbox"] {
     justify-self: center;
