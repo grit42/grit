@@ -88,7 +88,17 @@ const EntityTable = ({
     event: React.MouseEvent<HTMLTableRowElement, MouseEvent>,
   ) => void;
 }) => {
-  const tableColumns = useTableColumns(columns);
+  const entityColumns = useTableColumns(columns);
+  // The spare width of the dialog goes to the long-text columns (e.g. a
+  // description), or else to the display column (usually the name).
+  const tableColumns = useMemo(() => {
+    const hasText = entityColumns.some((column) => column.type === "text");
+    return entityColumns.map((column) =>
+      (hasText ? column.type === "text" : column.id === entity.display_column)
+        ? { ...column, flex: 1 }
+        : column,
+    );
+  }, [entityColumns, entity.display_column]);
 
   const tableState = useSetupTableState<EntityData>(
     `${entity.name}-selector`,

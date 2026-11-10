@@ -1,0 +1,5 @@
+{
+  "files": [],
+  "extends": "./tsconfig.lib.json",
+  "include": ["lib", "test"]
+}

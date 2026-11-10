@@ -24,9 +24,18 @@ import {
   useRegisterColumnTypeDef,
   GritTypedColumnDef,
 } from "@grit42/table";
+import {
+  EndpointError,
+  EndpointSuccess,
+  getFilterParams,
+  getURLParams,
+  request,
+} from "@grit42/api";
 import { generateUniqueID } from "@grit42/client-library/utils";
 import { getColumnEntityDef } from "../../../../utils";
+import { EntityData } from "../../types";
 import EntityFilterInput from "./EntityFilterInput";
+import EntityEditInput from "./EntityEditInput";
 
 export const isDirectLookup = (operator: string) =>
   operator === "eq" || operator === "ne";
@@ -129,6 +138,48 @@ export const operators = (
   ];
 };
 
+/**
+ * Resolves an entity column's current *display* value (e.g. "Escherichia
+ * coli") back to the entity record — mirroring how `EntityEditInput`
+ * resolves a selection — so the "Propagate..." menu can write the right id
+ * (as `value`) and record (as `entityData`) to other rows, not the display
+ * string itself.
+ */
+export const resolvePropagatedValue = async (
+  value: unknown,
+  column: GritTypedColumnDef,
+) => {
+  const entity = getColumnEntityDef(column);
+
+  const response = await request<EndpointSuccess<EntityData[]>, EndpointError>(
+    `/${entity.path}?${getURLParams({
+      ...getFilterParams([
+        {
+          id: generateUniqueID(),
+          active: true,
+          column: entity.display_column,
+          property: entity.display_column,
+          property_type: entity.display_column_type,
+          operator: "eq",
+          type: entity.display_column_type,
+          value,
+        },
+      ]),
+      limit: 1,
+    })}`,
+  );
+
+  if (!response.success) {
+    throw new Error("Could not resolve entity value for propagation");
+  }
+
+  const entityData = response.data[0];
+  return {
+    value: entityData ? entityData[entity.primary_key] : null,
+    entityData,
+  };
+};
+
 const useRegisterEntityColumnTypeDef = () => {
   const registerColumnTypeDef = useRegisterColumnTypeDef();
 
@@ -140,6 +191,10 @@ const useRegisterEntityColumnTypeDef = () => {
         updateFilterForOperator,
         operators,
         input: EntityFilterInput,
+      },
+      edit: {
+        input: EntityEditInput,
+        resolvePropagatedValue,
       },
     });
     return unregister;

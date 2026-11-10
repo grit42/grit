@@ -16,9 +16,9 @@
  * @grit42/table. If not, see <https://www.gnu.org/licenses/>.
  */
 
-export * from "./types";
-export * from "./utils";
+export * from "../../../features/filters/types";
+export * from "../../../features/filters/utils";
 export { default as Filters } from "./Filters";
-export { default as GenericFilterInput } from "./GenericFilterInput";
-export { default as useClientSideFilters } from "./useClientSideFilters";
-export { default as useFilters } from "./useFilters";
+export { default as GenericFilterInput } from "../../../features/filters/GenericFilterInput";
+export { default as useClientSideFilters } from "../../../features/filters/useClientSideFilters";
+export { default as useFilters } from "../../../features/filters/useFilters";

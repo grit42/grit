@@ -20,8 +20,8 @@ import { useCallback, useMemo } from "react";
 import { GritColumnDef } from "../../../types";
 import { Button } from "@grit42/client-library/components";
 import FilterIcon from "@grit42/client-library/icons/Filter";
-import { getIsFilterActive, getIsFiltersActive } from "./utils";
-import { Filter } from "./types";
+import { getIsFilterActive, getIsFiltersActive } from "../../../features/filters/utils";
+import { Filter } from "../../../features/filters/types";
 import { getLeafColumnsWithGroupLabels } from "../../../utils";
 
 interface Props {

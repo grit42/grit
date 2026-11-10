@@ -31,6 +31,51 @@ import {
 } from "@tanstack/react-table";
 import { Filter } from "./features/filters";
 
+/**
+ * One cell changed by a single edit or a "Propagate..." action, passed to
+ * `onCellsEdit` — always as an array, even for a single-cell edit, so
+ * propagation to many rows fires one call with every affected cell.
+ */
+export interface EditedCell<T> {
+  row: T;
+  column: keyof T;
+  value: unknown;
+  entityData?: unknown;
+  type?: string;
+  entityType?: string;
+}
+
+/**
+ * Which rows a "Propagate..." action copies an edited cell's value to.
+ * "up"/"down" follow the table's current sort order, not row-array order.
+ */
+export type CellValuePropagationDirection =
+  | "up"
+  | "down"
+  | "column"
+  | "selected";
+
+declare module "@tanstack/react-table" {
+  interface TableMeta<TData extends RowData> {
+    updateData: (
+      rowIndex: number,
+      columnId: keyof TData,
+      value: unknown,
+      entityData?: unknown,
+      type?: string,
+      entityType?: string,
+    ) => void;
+    updateRows: (
+      rows: Row<TData>[],
+      columnId: keyof TData,
+      value: unknown,
+      entityData?: unknown,
+      type?: string,
+      entityType?: string,
+    ) => void;
+  }
+}
+
 // @ts-expect-error types parameter are needed for compatibility with @tanstack/react-table
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type, @typescript-eslint/no-unused-vars
 export interface GritColumnMeta<TData extends RowData, TValue> {}
@@ -45,6 +90,22 @@ export type GritColumnDefBase<
   defaultVisibility?: "visible" | "hidden";
   header?: StringOrTemplateHeader<TData, TValue>;
   meta?: GritColumnMeta<TData, TValue>;
+  /**
+   * Make this column share the table's remaining horizontal space instead of
+   * using a fixed pixel `size`, similar to CSS `flex-grow` (e.g. `flex: 1`).
+   * Takes precedence over `size` when both are set, and disables drag-resize
+   * for this column. `minSize`/`size` still bound the column's minimum width.
+   */
+  flex?: number;
+
+  /**
+   * Render this column's cells as editable, using the input registered for
+   * its `type` via `ColumnTypeDefProvider`'s `edit` definition (falls back
+   * to the built-in text/number/date/checkbox inputs). Also requires the
+   * table-level `editable` prop to be set — a column can't opt itself into
+   * editing a table that hasn't opted in.
+   */
+  editable?: boolean;
 };
 
 export type GritDisplayColumnDef<
@@ -376,6 +437,13 @@ interface DefaultTableProps<T> {
   disableFooter?: boolean;
 
   /**
+   * Shown at the left of the footer, e.g. the save state of an editable
+   * table ("Saving...", "Saved 14:32") - `onCellsEdit` doesn't persist
+   * anything itself, so only the caller knows when a change is saved.
+   */
+  footerStatus?: React.ReactNode;
+
+  /**
    * Rows to emphasize in the manner of columns matching filters
    */
   emphasizedRows?: Record<string, boolean>;
@@ -394,6 +462,22 @@ interface DefaultTableProps<T> {
    * Should the table shrink to fit its content
    */
   fitContent?: boolean;
+
+  /**
+   * Allow columns with `editable: true` to render as editable cells. A
+   * column still needs its own `editable: true` to actually become
+   * editable — this is the table-level opt-in.
+   */
+  editable?: boolean;
+
+  /**
+   * Called with every cell changed by a single edit, or all at once by a
+   * "Propagate..." action. `@grit42/table` never persists this itself —
+   * it's purely a notification. Save the change through the edited
+   * entity's own update endpoint, or a narrow bulk action on that
+   * resource — not a generic cross-entity batch endpoint.
+   */
+  onCellsEdit?: (cells: EditedCell<T>[]) => void;
 }
 
 export interface StatelessTableProps<T> extends DefaultTableProps<T> {

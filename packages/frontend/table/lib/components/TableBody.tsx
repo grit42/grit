@@ -19,15 +19,22 @@
 import { Cell, flexRender, Row, Table } from "@tanstack/react-table";
 import { useVirtualizer } from "@tanstack/react-virtual";
 
-import styles from "./table.module.scss";
+import { useTableStyles } from "./TableStylesContext";
 import { useMemo, useRef } from "react";
 import { classnames } from "@grit42/client-library/utils";
 import { Spinner } from "@grit42/client-library/components";
 import { useDisplayDensity } from "@grit42/client-library/hooks";
-import { GritTypedColumnDef, TableProps, TableStateSettings } from "../types";
+import {
+  GritColumnDef,
+  GritTypedColumnDef,
+  TableProps,
+  TableStateSettings,
+} from "../types";
 import { getIsFiltersActive } from "../features/filters";
 import useInternalTableState from "../features/table-state/useInternalTableState";
 import Marvin03Meh from "@grit42/client-library/icons/Marvin03Meh";
+import getCellSizeStyle from "./getCellSizeStyle";
+import EditableCell from "./EditableCell";
 
 type Props<T> = Pick<
   TableProps<T>,
@@ -38,6 +45,7 @@ type Props<T> = Pick<
   | "noDataMessage"
   | "disableNoDataMessage"
   | "emphasizedRows"
+  | "editable"
 > & {
   data: T[];
   table: Table<T>;
@@ -50,11 +58,15 @@ const TableCell = <T,>({
   data,
   cell,
   row,
-}: Pick<Props<T>, "onCellClick" | "data"> & {
+  table,
+  editable,
+}: Pick<Props<T>, "onCellClick" | "data" | "editable"> & {
   data: T[];
   cell: Cell<T, unknown>;
   row: Row<T>;
+  table: Table<T>;
 }) => {
+  const styles = useTableStyles();
   const isNumericType = useMemo(
     () =>
       ["integer", "decimal", "float"].includes(
@@ -66,6 +78,7 @@ const TableCell = <T,>({
   const isColumnClickable =
     onCellClick !== undefined &&
     onCellClick[0].includes(cell.column.id as keyof T);
+  const flex = (cell.column.columnDef as GritColumnDef).flex;
   return (
     <td
       ref={cellRef}
@@ -89,18 +102,22 @@ const TableCell = <T,>({
       className={classnames({
         [styles.clickable]: isColumnClickable,
       })}
-      style={{
-        width: `calc(var(--col-${cell.column.id}-size) * 1px)`,
-      }}
+      style={getCellSizeStyle(`--col-${cell.column.id}-size`, flex)}
     >
       <div
         className={styles.cellContentContainer}
         style={{
           textAlign: isNumericType ? "end" : undefined,
-          width: `calc(var(--col-${cell.column.id}-size) * 1px - var(--spacing) / 2)`,
+          width: flex
+            ? "calc(100% - var(--spacing) / 2)"
+            : `calc(var(--col-${cell.column.id}-size) * 1px - var(--spacing) / 2)`,
         }}
       >
-        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+        {editable && (cell.column.columnDef as GritColumnDef).editable ? (
+          <EditableCell cell={cell} table={table} />
+        ) : (
+          flexRender(cell.column.columnDef.cell, cell.getContext())
+        )}
       </div>
     </td>
   );
@@ -117,7 +134,9 @@ const TableBody = <T,>({
   noDataMessage,
   settings,
   emphasizedRows,
+  editable,
 }: Props<T>) => {
+  const styles = useTableStyles();
   const displayDensity = useDisplayDensity();
 
   const { rows } = table.getRowModel();
@@ -188,6 +207,8 @@ const TableBody = <T,>({
                   key={cell.id}
                   cell={cell}
                   row={row}
+                  table={table}
+                  editable={editable}
                   onCellClick={onCellClick}
                   data={data}
                 />

@@ -28,7 +28,7 @@ import styles from "./permanentFilters.module.scss";
 import DeleteIcon from "@grit42/client-library/icons/Delete";
 import PreviewIcon from "@grit42/client-library/icons/Preview";
 import NoPreviewIcon from "@grit42/client-library/icons/NoPreview";
-import { Filter, FilterOperator } from "./types";
+import { Filter, FilterOperator } from "../../../features/filters/types";
 import { getLeafColumnsWithGroupLabels } from "../../../utils";
 import CloseIcon from "@grit42/client-library/icons/Circle1Close";
 import { useColumnTypeDefs } from "../../../features/column-types";

@@ -16,4 +16,17 @@
  * @grit42/table. If not, see <https://www.gnu.org/licenses/>.
  */
 
-export { default as useColumnSizing } from "./useColumnSizing";
+import { createContext, useContext } from "react";
+import tableStyles from "./table.module.scss";
+
+/**
+ * The CSS module of the table shell being rendered (`Table` or `DataGrid`).
+ * The parts both shells share (header columns, body, editable cells) read
+ * their class names from here: each stylesheet nests its rules under its own
+ * container, so a class from the other shell's stylesheet matches nothing.
+ */
+const TableStylesContext = createContext<Record<string, string>>(tableStyles);
+
+export const useTableStyles = () => useContext(TableStylesContext);
+
+export default TableStylesContext;
