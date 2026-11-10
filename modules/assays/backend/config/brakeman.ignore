@@ -3,6 +3,17 @@
     {
       "warning_type": "SQL Injection",
       "warning_code": 0,
+      "fingerprint": "0ee7a3cb9a140dc4726f101d16ec46dc25512871d4ca12d3360a016ddbe9daee",
+      "check_name": "SQL",
+      "message": "Possible SQL injection",
+      "file": "app/models/grit/assays/experiment_data_sheet_record.rb",
+      "line": 60,
+      "confidence": "Weak",
+      "note": "v0 only (main has refactored this class). The interpolated values are sheet.table_name (\"ds_#{id}\", integer id), column.safe_name (format-validated on AssayDataSheetColumn), column.data_type.table_name (not user-editable, DataTypes routes are index/show only) and entity display property names (schema-derived). Reviewed 2026-11-10."
+    },
+    {
+      "warning_type": "SQL Injection",
+      "warning_code": 0,
       "fingerprint": "1e67d773246b5f4aeb77c185ed51ed6db042696a463978d6c47b49e25043b30d",
       "check_name": "SQL",
       "message": "Possible SQL injection",
@@ -14,7 +25,7 @@
     {
       "warning_type": "SQL Injection",
       "warning_code": 0,
-      "fingerprint": "447184a9bca3aaec0ffada1a37ba642bdc647e59b522d9ad86207ac9d00771b6",
+      "fingerprint": "4712588a0d2353689f5e1bf24298c02b7c96e49e8d82f8e3d1f2a2ffc521e28b",
       "check_name": "SQL",
       "message": "Possible SQL injection",
       "file": "app/models/grit/assays/experiment.rb",
