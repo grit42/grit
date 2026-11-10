@@ -52,14 +52,14 @@ catalogs:
       specifier: ~0.5.2
       version: 0.5.2
     glob:
-      specifier: ^13.0.6
-      version: 13.0.6
+      specifier: ^14.0.3
+      version: 14.0.3
     globals:
       specifier: ^17.4.0
       version: 17.6.0
     happy-dom:
-      specifier: ^20.8.3
-      version: 20.10.1
+      specifier: ^21.0.4
+      version: 21.0.4
     prettier:
       specifier: ^3.8.1
       version: 3.8.3
@@ -101,7 +101,7 @@ catalogs:
       version: 4.1.12
 
 overrides:
-  minimatch: '>=10.2.1'
+  minimatch@<11: ^10.2.1
   picomatch: '>=4.0.4'
   esbuild: '>=0.28.1'
   form-data: '>=4.0.6'
@@ -117,7 +117,7 @@ overrides:
   axios: '>=1.18.0'
   smol-toml: '>=1.9.0'
   source-map-js: '>=1.2.2'
-  follow-redirects: '>=1.16.1'
+  follow-redirects: '>=1.16.2'
   zod: '>=4.6.6'
 
 importers:
@@ -287,7 +287,7 @@ importers:
         version: 0.5.2(eslint@9.39.4)
       glob:
         specifier: 'catalog:'
-        version: 13.0.6
+        version: 14.0.3
       globals:
         specifier: 'catalog:'
         version: 17.6.0
@@ -393,7 +393,7 @@ importers:
         version: 0.5.2(eslint@9.39.4)
       glob:
         specifier: 'catalog:'
-        version: 13.0.6
+        version: 14.0.3
       globals:
         specifier: 'catalog:'
         version: 17.6.0
@@ -520,13 +520,13 @@ importers:
         version: 0.5.2(eslint@9.39.4)
       glob:
         specifier: 'catalog:'
-        version: 13.0.6
+        version: 14.0.3
       globals:
         specifier: 'catalog:'
         version: 17.6.0
       happy-dom:
         specifier: 'catalog:'
-        version: 20.10.1
+        version: 21.0.4
       react:
         specifier: 'catalog:'
         version: 19.2.7
@@ -559,7 +559,7 @@ importers:
         version: 2.2.2(vite@7.3.7(@types/node@22.19.19)(sass-embedded@1.100.0)(sass@1.100.0)(yaml@2.9.0))
       vitest:
         specifier: 'catalog:'
-        version: 4.1.12(@types/node@22.19.19)(@vitest/coverage-v8@4.1.12)(happy-dom@20.10.1)(vite@7.3.7(@types/node@22.19.19)(sass-embedded@1.100.0)(sass@1.100.0)(yaml@2.9.0))
+        version: 4.1.12(@types/node@22.19.19)(@vitest/coverage-v8@4.1.12)(happy-dom@21.0.4)(vite@7.3.7(@types/node@22.19.19)(sass-embedded@1.100.0)(sass@1.100.0)(yaml@2.9.0))
 
   packages/frontend/api:
     dependencies:
@@ -599,7 +599,7 @@ importers:
         version: 0.5.2(eslint@9.39.4)
       glob:
         specifier: 'catalog:'
-        version: 13.0.6
+        version: 14.0.3
       globals:
         specifier: 'catalog:'
         version: 17.6.0
@@ -684,13 +684,13 @@ importers:
         version: 0.5.2(eslint@9.39.4)
       glob:
         specifier: 'catalog:'
-        version: 13.0.6
+        version: 14.0.3
       globals:
         specifier: 'catalog:'
         version: 17.6.0
       happy-dom:
         specifier: 'catalog:'
-        version: 20.10.1
+        version: 21.0.4
       react:
         specifier: 'catalog:'
         version: 19.2.7
@@ -726,7 +726,7 @@ importers:
         version: 3.4.0(vite@7.3.7(@types/node@22.19.19)(sass-embedded@1.100.0)(sass@1.100.0)(yaml@2.9.0))
       vitest:
         specifier: 'catalog:'
-        version: 4.1.12(@types/node@22.19.19)(@vitest/coverage-v8@4.1.12)(happy-dom@20.10.1)(vite@7.3.7(@types/node@22.19.19)(sass-embedded@1.100.0)(sass@1.100.0)(yaml@2.9.0))
+        version: 4.1.12(@types/node@22.19.19)(@vitest/coverage-v8@4.1.12)(happy-dom@21.0.4)(vite@7.3.7(@types/node@22.19.19)(sass-embedded@1.100.0)(sass@1.100.0)(yaml@2.9.0))
 
   packages/frontend/form:
     dependencies:
@@ -763,7 +763,7 @@ importers:
         version: 0.5.2(eslint@9.39.4)
       glob:
         specifier: 'catalog:'
-        version: 13.0.6
+        version: 14.0.3
       globals:
         specifier: 'catalog:'
         version: 17.6.0
@@ -824,7 +824,7 @@ importers:
         version: 0.5.2(eslint@9.39.4)
       glob:
         specifier: 'catalog:'
-        version: 13.0.6
+        version: 14.0.3
       globals:
         specifier: 'catalog:'
         version: 17.6.0
@@ -891,13 +891,13 @@ importers:
         version: 0.5.2(eslint@9.39.4)
       glob:
         specifier: 'catalog:'
-        version: 13.0.6
+        version: 14.0.3
       globals:
         specifier: 'catalog:'
         version: 17.6.0
       happy-dom:
         specifier: 'catalog:'
-        version: 20.10.1
+        version: 21.0.4
       react:
         specifier: 'catalog:'
         version: 19.2.7
@@ -927,7 +927,7 @@ importers:
         version: 2.2.2(vite@7.3.7(@types/node@22.19.19)(sass-embedded@1.100.0)(sass@1.100.0)(yaml@2.9.0))
       vitest:
         specifier: 'catalog:'
-        version: 4.1.12(@types/node@22.19.19)(@vitest/coverage-v8@4.1.12)(happy-dom@20.10.1)(vite@7.3.7(@types/node@22.19.19)(sass-embedded@1.100.0)(sass@1.100.0)(yaml@2.9.0))
+        version: 4.1.12(@types/node@22.19.19)(@vitest/coverage-v8@4.1.12)(happy-dom@21.0.4)(vite@7.3.7(@types/node@22.19.19)(sass-embedded@1.100.0)(sass@1.100.0)(yaml@2.9.0))
 
   packages/frontend/spreadsheet:
     dependencies:
@@ -946,7 +946,7 @@ importers:
         version: 9.39.4
       glob:
         specifier: 'catalog:'
-        version: 13.0.6
+        version: 14.0.3
       globals:
         specifier: 'catalog:'
         version: 17.6.0
@@ -967,7 +967,7 @@ importers:
         version: 0.10.0(vite@7.3.7(@types/node@22.19.19)(sass-embedded@1.100.0)(sass@1.100.0)(yaml@2.9.0))
       vitest:
         specifier: 'catalog:'
-        version: 4.1.12(@types/node@22.19.19)(@vitest/coverage-v8@4.1.12)(happy-dom@20.10.1)(vite@7.3.7(@types/node@22.19.19)(sass-embedded@1.100.0)(sass@1.100.0)(yaml@2.9.0))
+        version: 4.1.12(@types/node@22.19.19)(@vitest/coverage-v8@4.1.12)(happy-dom@21.0.4)(vite@7.3.7(@types/node@22.19.19)(sass-embedded@1.100.0)(sass@1.100.0)(yaml@2.9.0))
 
   packages/frontend/table:
     dependencies:
@@ -1022,7 +1022,7 @@ importers:
         version: 0.5.2(eslint@9.39.4)
       glob:
         specifier: 'catalog:'
-        version: 13.0.6
+        version: 14.0.3
       globals:
         specifier: 'catalog:'
         version: 17.6.0
@@ -1086,7 +1086,7 @@ importers:
         version: 8.60.1(eslint@9.39.4)(typescript@5.9.3)
       vitest:
         specifier: 'catalog:'
-        version: 4.1.12(@types/node@22.19.19)(@vitest/coverage-v8@4.1.12)(happy-dom@20.10.1)(vite@7.3.7(@types/node@22.19.19)(sass-embedded@1.100.0)(sass@1.100.0)(yaml@2.9.0))
+        version: 4.1.12(@types/node@22.19.19)(@vitest/coverage-v8@4.1.12)(happy-dom@21.0.4)(vite@7.3.7(@types/node@22.19.19)(sass-embedded@1.100.0)(sass@1.100.0)(yaml@2.9.0))
 
 packages:
 
@@ -1991,6 +1991,9 @@ packages:
   '@humanwhocodes/retry@0.4.3':
     resolution: {integrity: sha512-bV0Tgo9K4hfPCek+aMAn81RppFKv2ySDQeMoSZuvTASywNTnVJCArCZE2FWqpvIatKu7VMRLWlR1EazvVhDyhQ==}
     engines: {node: '>=18.18'}
+
+  '@isaacs/nonrecursive-glob-match@1.0.3':
+    resolution: {integrity: sha512-SI7kyKHq4XXDRozw+r9GlRZkia1ZkFrpLW98r2IC2Bpr8YkFGE3fvjzmxCG0x78A++69HmDNrDvSMYBZmHGpKA==}
 
   '@jest/diff-sequences@30.0.1':
     resolution: {integrity: sha512-n5H8QLDJ47QqbCNn5SuFjCRDrOLEZ0h8vAHCK5RL9Ls7Xa8AQLa/YxAc9UjFqoEDM48muwtBGjtMY5cr0PLDCw==}
@@ -3585,8 +3588,8 @@ packages:
   flatted@3.4.2:
     resolution: {integrity: sha512-PjDse7RzhcPkIJwy5t7KPWQSZ9cAbzQXcafsetQoD7sOJRQlGikNbx7yZp2OotDnJyrDcbyRq3Ttb18iYOqkxA==}
 
-  follow-redirects@1.16.1:
-    resolution: {integrity: sha512-FNvFGzoMLWmE6Yj9spb/zjd7yiNCHiAW9/Tg9CXrQ8wuu32HtlJOwWO11OJafl5FfY3DxTdQ0vj42zU1kvv5jg==}
+  follow-redirects@1.16.2:
+    resolution: {integrity: sha512-/kVP2U8z596Ia0gwFrwyIeo74ta5aVmSeU1FfAUMAmcEP5EP7zydmag3SLiN64NaRKef3lxsq7i/g7ltJQDGow==}
     engines: {node: '>=4.0'}
     peerDependencies:
       debug: '*'
@@ -3648,8 +3651,8 @@ packages:
     resolution: {integrity: sha512-XxwI8EOhVQgWp6iDL+3b0r86f4d6AX6zSU55HfB4ydCEuXLXc5FcYeOu+nnGftS4TEju/11rt4KJPTMgbfmv4A==}
     engines: {node: '>=10.13.0'}
 
-  glob@13.0.6:
-    resolution: {integrity: sha512-Wjlyrolmm8uDpm/ogGyXZXb1Z+Ca2B8NbJwqBVg0axK9GbBeoS7yGV6vjXnYdGm6X53iehEuxxbyiKp8QmN4Vw==}
+  glob@14.0.3:
+    resolution: {integrity: sha512-A1vjIwC3qpdCso45Iw127gnp7sPhqgY8lUQhDrArIs+GbmfaaVPFuoyy7WyLT9EPZCRZ7j7aLdwUhQmHWesEow==}
     engines: {node: 18 || 20 || >=22}
 
   globals@14.0.0:
@@ -3667,8 +3670,8 @@ packages:
   graceful-fs@4.2.11:
     resolution: {integrity: sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ==}
 
-  happy-dom@20.10.1:
-    resolution: {integrity: sha512-awPoqPjx8CgjapJllyDlgzgVHjBExcitKK5ZJkxwhQJyQpHFkyS2bEcqCm7IeW20cQvuCI0cz2Ifq79CJKqtiw==}
+  happy-dom@21.0.4:
+    resolution: {integrity: sha512-tFm+GaLBgo6o0awHnvHaNoraVo27qJ+2tZEtZ+cIa08hXbeitrxAJajLI05hsUy/2/YTKcUjQYzHe5mCcraLBw==}
     engines: {node: '>=20.0.0'}
 
   has-flag@4.0.0:
@@ -3981,9 +3984,13 @@ packages:
     resolution: {integrity: sha512-I9jwMn07Sy/IwOj3zVkVik2JTvgpaykDZEigL6Rx6N9LbMywwUSMtxET+7lVoDLLd3O3IXwJwvuuns8UB/HeAg==}
     engines: {node: '>=4'}
 
-  minimatch@10.2.5:
-    resolution: {integrity: sha512-MULkVLfKGYDFYejP07QOurDLLQpcjk7Fw+7jXS2R2czRQzR56yHRveU5NDJEOviH+hETZKSkIk5c+T23GjFUMg==}
+  minimatch@10.2.6:
+    resolution: {integrity: sha512-vpLQEs+VLCr1nU0BXS07maYoFwlDAH0gngQuuttxIwutDFEMHq2blX+8vpgxDdK3J1PwjCJiep77OitTZ4Ll1A==}
     engines: {node: 18 || 20 || >=22}
+
+  minimatch@11.0.4:
+    resolution: {integrity: sha512-/UJ1dEoVQTjPNDh6SGlUo+ueLMmoHTas4q+8yaAR/5t6nLAIiBDJtoYUh20IYleix7ehiQkgczb84PE3uzHkxg==}
+    engines: {node: 20 || >=22}
 
   minimist@1.2.8:
     resolution: {integrity: sha512-2yyAR8qBkN3YuheJanUpWC5U3bb5osDywNB8RzDVlDwDHbocAJveqqj1u8+SVD7jkWT4yvsHCpWqqWqAxb0zCA==}
@@ -4114,8 +4121,8 @@ packages:
   path-parse@1.0.7:
     resolution: {integrity: sha512-LDJzPVEEEPR+y48z93A0Ed0yXb8pAByGWo/k5YYdYgpY2/2EsOsksJrq7lOHxryrVOn1ejG6oAp8ahvOIQD8sw==}
 
-  path-scurry@2.0.2:
-    resolution: {integrity: sha512-3O/iVVsJAPsOnpwWIeD+d6z/7PmqApyQePUtCndjatj/9I5LylHvt5qluFaBT3I5h3r1ejfR056c+FCv+NnNXg==}
+  path-scurry@3.0.0:
+    resolution: {integrity: sha512-1pTbQqH1wIwMi/eleQ5leFTTCkzFsPcgXNjwOA8YGGW/W4/kHT3dssE7Z6NH+zuqNLOzOB0uaD61yl7cAcVhgg==}
     engines: {node: 18 || 20 || >=22}
 
   path-type@4.0.0:
@@ -5828,7 +5835,7 @@ snapshots:
     dependencies:
       '@eslint/object-schema': 2.1.7
       debug: 4.4.3(supports-color@7.2.0)
-      minimatch: 10.2.5
+      minimatch: 10.2.6
     transitivePeerDependencies:
       - supports-color
 
@@ -5849,7 +5856,7 @@ snapshots:
       ignore: 5.3.2
       import-fresh: 3.3.1
       js-yaml: 5.4.1
-      minimatch: 10.2.5
+      minimatch: 10.2.6
       strip-json-comments: 3.1.1
     transitivePeerDependencies:
       - supports-color
@@ -5904,6 +5911,8 @@ snapshots:
 
   '@humanwhocodes/retry@0.4.3': {}
 
+  '@isaacs/nonrecursive-glob-match@1.0.3': {}
+
   '@jest/diff-sequences@30.0.1': {}
 
   '@jridgewell/gen-mapping@0.3.13':
@@ -5943,7 +5952,7 @@ snapshots:
       '@rushstack/terminal': 0.24.0(@types/node@22.19.19)
       '@rushstack/ts-command-line': 5.3.9(@types/node@22.19.19)
       diff: 8.0.4
-      minimatch: 10.2.5
+      minimatch: 10.2.6
       resolve: 1.22.12
       semver: 7.7.4
       source-map: 0.6.1
@@ -5989,7 +5998,7 @@ snapshots:
       '@zkochan/js-yaml': 0.0.7
       ejs: 5.0.1
       enquirer: 2.3.6
-      minimatch: 10.2.5
+      minimatch: 10.2.6
       nx: 22.7.12(@swc-node/register@1.11.1(@swc/core@1.15.8(@swc/helpers@0.5.19))(@swc/types@0.1.26)(typescript@5.9.3))(@swc/core@1.15.8(@swc/helpers@0.5.19))
       semver: 7.8.1
       tslib: 2.8.1
@@ -6674,7 +6683,7 @@ snapshots:
       '@typescript-eslint/types': 8.60.1
       '@typescript-eslint/visitor-keys': 8.60.1
       debug: 4.4.3(supports-color@7.2.0)
-      minimatch: 10.2.5
+      minimatch: 10.2.6
       semver: 7.8.1
       tinyglobby: 0.2.17
       ts-api-utils: 2.5.0(typescript@5.9.3)
@@ -6803,7 +6812,7 @@ snapshots:
       obug: 2.1.2
       std-env: 4.1.0
       tinyrainbow: 3.1.0
-      vitest: 4.1.12(@types/node@22.19.19)(@vitest/coverage-v8@4.1.12)(happy-dom@20.10.1)(vite@7.3.7(@types/node@22.19.19)(sass-embedded@1.100.0)(sass@1.100.0)(yaml@2.9.0))
+      vitest: 4.1.12(@types/node@22.19.19)(@vitest/coverage-v8@4.1.12)(happy-dom@21.0.4)(vite@7.3.7(@types/node@22.19.19)(sass-embedded@1.100.0)(sass@1.100.0)(yaml@2.9.0))
 
   '@vitest/expect@4.1.12':
     dependencies:
@@ -6883,7 +6892,7 @@ snapshots:
       '@vue/compiler-vue2': 2.7.16
       '@vue/shared': 3.5.35
       alien-signals: 0.4.14
-      minimatch: 10.2.5
+      minimatch: 10.2.6
       muggle-string: 0.4.1
       path-browserify: 1.0.1
     optionalDependencies:
@@ -6985,7 +6994,7 @@ snapshots:
 
   axios@1.20.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0):
     dependencies:
-      follow-redirects: 1.16.1(debug@4.4.3(supports-color@7.2.0))
+      follow-redirects: 1.16.2(debug@4.4.3(supports-color@7.2.0))
       form-data: 4.0.6
       https-proxy-agent: 5.0.1(supports-color@7.2.0)
       proxy-from-env: 2.1.0
@@ -7352,7 +7361,7 @@ snapshots:
       eslint: 9.39.4
       eslint-import-context: 0.1.9(unrs-resolver@1.12.2)
       is-glob: 4.0.3
-      minimatch: 10.2.5
+      minimatch: 10.2.6
       semver: 7.8.1
       stable-hash-x: 0.2.0
       unrs-resolver: 1.12.2
@@ -7435,7 +7444,7 @@ snapshots:
       is-glob: 4.0.3
       json-stable-stringify-without-jsonify: 1.0.1
       lodash.merge: 4.6.2
-      minimatch: 10.2.5
+      minimatch: 10.2.6
       natural-compare: 1.4.0
       optionator: 0.9.4
     transitivePeerDependencies:
@@ -7474,7 +7483,7 @@ snapshots:
       is-glob: 4.0.3
       json-stable-stringify-without-jsonify: 1.0.1
       lodash.merge: 4.6.2
-      minimatch: 10.2.5
+      minimatch: 10.2.6
       natural-compare: 1.4.0
       optionator: 0.9.4
     transitivePeerDependencies:
@@ -7550,7 +7559,7 @@ snapshots:
 
   flatted@3.4.2: {}
 
-  follow-redirects@1.16.1(debug@4.4.3(supports-color@7.2.0)):
+  follow-redirects@1.16.2(debug@4.4.3(supports-color@7.2.0)):
     optionalDependencies:
       debug: 4.4.3(supports-color@7.2.0)
 
@@ -7614,11 +7623,11 @@ snapshots:
     dependencies:
       is-glob: 4.0.3
 
-  glob@13.0.6:
+  glob@14.0.3:
     dependencies:
-      minimatch: 10.2.5
+      minimatch: 11.0.4
       minipass: 7.1.3
-      path-scurry: 2.0.2
+      path-scurry: 3.0.0
 
   globals@14.0.0: {}
 
@@ -7628,7 +7637,7 @@ snapshots:
 
   graceful-fs@4.2.11: {}
 
-  happy-dom@20.10.1:
+  happy-dom@21.0.4:
     dependencies:
       '@types/node': 22.19.19
       '@types/whatwg-mimetype': 3.0.2
@@ -7889,8 +7898,13 @@ snapshots:
 
   min-indent@1.0.1: {}
 
-  minimatch@10.2.5:
+  minimatch@10.2.6:
     dependencies:
+      brace-expansion: 5.0.12
+
+  minimatch@11.0.4:
+    dependencies:
+      '@isaacs/nonrecursive-glob-match': 1.0.3
       brace-expansion: 5.0.12
 
   minimist@1.2.8: {}
@@ -7977,7 +7991,7 @@ snapshots:
       escape-string-regexp: 1.0.5
       figures: 3.2.0
       flat: 5.0.2
-      follow-redirects: 1.16.1(debug@4.4.3(supports-color@7.2.0))
+      follow-redirects: 1.16.2(debug@4.4.3(supports-color@7.2.0))
       form-data: 4.0.6
       fs-constants: 1.0.0
       function-bind: 1.1.2
@@ -8006,7 +8020,7 @@ snapshots:
       mime-db: 1.52.0
       mime-types: 2.1.35
       mimic-fn: 2.1.0
-      minimatch: 10.2.5
+      minimatch: 10.2.6
       minimist: 1.2.8
       ms: 2.1.3
       npm-run-path: 4.0.1
@@ -8150,7 +8164,7 @@ snapshots:
 
   path-parse@1.0.7: {}
 
-  path-scurry@2.0.2:
+  path-scurry@3.0.0:
     dependencies:
       lru-cache: 11.5.1
       minipass: 7.1.3
@@ -8744,7 +8758,7 @@ snapshots:
       sass-embedded: 1.100.0
       yaml: 2.9.0
 
-  vitest@4.1.12(@types/node@22.19.19)(@vitest/coverage-v8@4.1.12)(happy-dom@20.10.1)(vite@7.3.7(@types/node@22.19.19)(sass-embedded@1.100.0)(sass@1.100.0)(yaml@2.9.0)):
+  vitest@4.1.12(@types/node@22.19.19)(@vitest/coverage-v8@4.1.12)(happy-dom@21.0.4)(vite@7.3.7(@types/node@22.19.19)(sass-embedded@1.100.0)(sass@1.100.0)(yaml@2.9.0)):
     dependencies:
       '@vitest/expect': 4.1.12
       '@vitest/mocker': 4.1.12(vite@7.3.7(@types/node@22.19.19)(sass-embedded@1.100.0)(sass@1.100.0)(yaml@2.9.0))
@@ -8769,7 +8783,7 @@ snapshots:
     optionalDependencies:
       '@types/node': 22.19.19
       '@vitest/coverage-v8': 4.1.12(vitest@4.1.12)
-      happy-dom: 20.10.1
+      happy-dom: 21.0.4
     transitivePeerDependencies:
       - msw
 
