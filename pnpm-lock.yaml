@@ -732,6 +732,9 @@ importers:
       '@grit42/client-library':
         specifier: workspace:*
         version: link:../client-library
+      '@grit42/notifications':
+        specifier: workspace:*
+        version: link:../notifications
       '@tanstack/react-form':
         specifier: 'catalog:'
         version: 1.33.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
