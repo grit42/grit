@@ -37,10 +37,11 @@ ENV APP_WORKDIR=/workspace/${APP_DIR}
 
 WORKDIR /workspace
 
-RUN apt-get update && apt-get install -y curl ca-certificates \
-  && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
-  && apt-get install -y nodejs \
-  && rm -rf /var/lib/apt/lists/*
+# Node.js from the official image, pinned to a patch release (keep in sync with mise.toml)
+COPY --from=docker.io/library/node:22.23.4-slim /usr/local/bin/node /usr/local/bin/node
+COPY --from=docker.io/library/node:22.23.4-slim /usr/local/lib/node_modules /usr/local/lib/node_modules
+RUN ln -s ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
+  && ln -s ../lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx
 
 RUN gem update --system
 
@@ -64,7 +65,7 @@ WORKDIR ${APP_WORKDIR}
 RUN pnpm exec nx build @grit42/grit --verbose
 
 # Throw-away build stage to reduce size of final image
-FROM node:lts AS docs
+FROM docker.io/library/node:22.23.4-slim AS docs
 
 WORKDIR /docs
 
