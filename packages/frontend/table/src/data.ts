@@ -75,7 +75,8 @@ export const sampleDataProperties: GritColumnDef<SampleRow>[] = [
     header: "Conc. (µM)",
     type: "float",
     size: 110,
-    description: "Stock concentration in micromolar (nullable)",
+    editable: true,
+    description: "Stock concentration in micromolar (nullable) — editable",
   },
   {
     id: "molecular_weight",
@@ -99,7 +100,8 @@ export const sampleDataProperties: GritColumnDef<SampleRow>[] = [
     header: "Replicates",
     type: "integer",
     size: 100,
-    description: "Number of experimental replicates",
+    editable: true,
+    description: "Number of experimental replicates — editable",
   },
   {
     id: "is_active",
@@ -133,7 +135,8 @@ export const sampleDataProperties: GritColumnDef<SampleRow>[] = [
     header: "Registered",
     type: "date",
     size: 120,
-    description: "Date the compound was registered",
+    editable: true,
+    description: "Date the compound was registered — editable",
   },
   {
     id: "updated_at",
