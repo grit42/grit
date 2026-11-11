@@ -77,14 +77,14 @@ GRIT_SERVER_URL=https://grit.example.com
 
 ### Single Sign-On (SSO)
 
-grit supports enterprise Single Sign-On via **OpenID Connect (OIDC)**. When enabled, a "Sign in with SSO" button appears on the login page. Users who authenticate through the Identity Provider (IdP) are automatically created in grit on first login.
+grit supports enterprise Single Sign-On via **OpenID Connect (OIDC)** or **SAML 2.0**. When enabled, a "Sign in with SSO" button appears on the login page. With OIDC, users who authenticate through the Identity Provider (IdP) are automatically created in grit on first login; with SAML, see below.
 
 Local login (username/password) always remains available alongside SSO, ensuring admin access if the IdP is unavailable.
 
 SSO is configured through environment variables in the `.env` file. Set `SSO_PROVIDER` to enable it:
 
 ```sh
-# SSO provider: "none" (default), or "oidc"
+# SSO provider: "none" (default), "oidc" or "saml"
 SSO_PROVIDER=none
 ```
 
@@ -112,6 +112,45 @@ URL matches what is registered in your Identity Provider. The callback URL is:
 ```
 {GRIT_SERVER_URL}/api/grit/core/auth/oidc/callback
 ```
+
+#### SAML 2.0
+
+```sh
+SSO_PROVIDER=saml
+
+# The IdP's metadata URL (required). It's fetched on the first login and
+# cached for a day; a failed login fetches it again, so a certificate
+# rotation needs no restart, and grit starts while the IdP is down.
+SAML_IDP_METADATA_URL=https://idp.example.com/saml/metadata
+
+# The attribute carrying the user's e-mail (optional). Without it, or when a
+# response lacks it, the usual e-mail attributes and then an e-mail NameID
+# are used.
+SAML_EMAIL_ATTRIBUTE=http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress
+
+# What a login with an e-mail no grit user has does: "refuse" (default) or
+# "create" (a user without roles, who sees "not authorized" until an
+# administrator gives them roles).
+# SAML_UNKNOWN_USERS=refuse
+
+# Our entity id and callback (ACS) URL (optional: derived from
+# GRIT_SERVER_URL by default).
+# SAML_SP_ENTITY_ID=https://grit.example.com/api/grit/core/auth/saml/metadata
+# SAML_ACS_URL=https://grit.example.com/api/grit/core/auth/saml/callback
+```
+
+Register grit at the IdP with its metadata, served at `{GRIT_SERVER_URL}/api/grit/core/auth/saml/metadata` (entity id and callback URL as above, NameID format `emailAddress`, HTTP-POST binding for the response). The IdP must sign its responses.
+
+How SAML users are handled:
+
+- **Users are found by e-mail**, not by NameID (which may change at every login). Only users whose login method is *Single sign-on (SAML)* are found: a SAML login can't log in as a local (password) account with the same e-mail.
+- **New users** made in Administration → Users default to the SAML login method. They're active at once and get no activation e-mail. An administrator can still choose a local login, e.g. for a fallback account; `admin` always keeps its password.
+- **The login page** offers "Sign in with SSO" first; a link opens the username and password form (or open `/app/core/authenticate?local`).
+- **Logging out** ends the grit session only; there is no SAML single logout.
+
+**Moving from the old Animals app:** to keep the IdP's existing registration, set `SAML_SP_ENTITY_ID=https://{host}/saml/metadata` and `SAML_ACS_URL=https://{host}/saml/consume`. The old `/saml/consume`, `/saml/metadata` and `/saml/init` paths keep working.
+
+For a local IdP to try this with, see `db/keycloak/README.md`.
 
 ### Security configuration
 

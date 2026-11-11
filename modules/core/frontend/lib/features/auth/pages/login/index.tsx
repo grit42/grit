@@ -16,6 +16,7 @@
  * @grit42/core. If not, see <https://www.gnu.org/licenses/>.
  */
 
+import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { FormBanner, genericErrorHandler, useForm } from "@grit42/form";
 import { Button, Input } from "@grit42/client-library/components";
@@ -66,6 +67,16 @@ const LoginPage = () => {
 
   const ssoError = searchParams.get("sso_error");
 
+  // With SAML, signing in through the identity provider is the way in; the
+  // username and password form (for local accounts such as admin) is one
+  // click away, or open at once with ?local.
+  const ssoFirst =
+    serverSettings?.sso_provider === "saml" && !!serverSettings.sso_login_path;
+  const [showLocalLogin, setShowLocalLogin] = useState(
+    searchParams.has("local"),
+  );
+  const localLoginHidden = ssoFirst && !showLocalLogin;
+
   const form = useForm({
     defaultValues: {
       login: "",
@@ -108,95 +119,109 @@ const LoginPage = () => {
             }}
           >
             <SsoButton ssoLoginPath={serverSettings.sso_login_path} />
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                width: "100%",
-                opacity: 0.5,
-              }}
-            >
-              <hr
+            {localLoginHidden ? (
+              <Button
+                variant="transparent"
+                type="button"
+                onClick={() => setShowLocalLogin(true)}
+              >
+                Log in with username and password
+              </Button>
+            ) : (
+              <div
                 style={{
-                  flex: 1,
-                  border: "none",
-                  borderTop: "1px solid currentColor",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  width: "100%",
+                  opacity: 0.5,
                 }}
-              />
-              <span style={{ fontSize: "0.85em" }}>or</span>
-              <hr
-                style={{
-                  flex: 1,
-                  border: "none",
-                  borderTop: "1px solid currentColor",
-                }}
-              />
-            </div>
+              >
+                <hr
+                  style={{
+                    flex: 1,
+                    border: "none",
+                    borderTop: "1px solid currentColor",
+                  }}
+                />
+                <span style={{ fontSize: "0.85em" }}>or</span>
+                <hr
+                  style={{
+                    flex: 1,
+                    border: "none",
+                    borderTop: "1px solid currentColor",
+                  }}
+                />
+              </div>
+            )}
           </div>
         )}
 
-        <form.Field
-          name="login"
-          validators={{
-            onChange: ({ value }) =>
-              value.length === 0 ? "Required" : undefined,
-          }}
-          children={(field) => {
-            return (
-              <Input
-                required
-                name={field.name}
-                type="text"
-                label="Username or email"
-                placeholder="Username or email"
-                onChange={(e) => field.handleChange(e.target.value)}
-                onBlur={field.handleBlur}
-                value={field.state.value ?? ""}
-                error={field.state.meta.errors.join("\n")}
-                autoComplete="email"
-              />
-            );
-          }}
-        />
-        <form.Field
-          name={"password"}
-          validators={{
-            onChange: ({ value }) =>
-              value.length === 0 ? "Required" : undefined,
-          }}
-          children={(field) => {
-            return (
-              <Input
-                required
-                name={field.name}
-                label="Password"
-                placeholder="Password"
-                type="password"
-                onChange={(e) => field.handleChange(e.target.value)}
-                onBlur={field.handleBlur}
-                value={field.state.value ?? ""}
-                error={field.state.meta.errors.join("\n")}
-                autoComplete="current-password"
-              />
-            );
-          }}
-        />
+        {!localLoginHidden && (
+          <>
+            <form.Field
+              name="login"
+              validators={{
+                onChange: ({ value }) =>
+                  value.length === 0 ? "Required" : undefined,
+              }}
+              children={(field) => {
+                return (
+                  <Input
+                    required
+                    name={field.name}
+                    type="text"
+                    label="Username or email"
+                    placeholder="Username or email"
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    onBlur={field.handleBlur}
+                    value={field.state.value ?? ""}
+                    error={field.state.meta.errors.join("\n")}
+                    autoComplete="email"
+                  />
+                );
+              }}
+            />
+            <form.Field
+              name={"password"}
+              validators={{
+                onChange: ({ value }) =>
+                  value.length === 0 ? "Required" : undefined,
+              }}
+              children={(field) => {
+                return (
+                  <Input
+                    required
+                    name={field.name}
+                    label="Password"
+                    placeholder="Password"
+                    type="password"
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    onBlur={field.handleBlur}
+                    value={field.state.value ?? ""}
+                    error={field.state.meta.errors.join("\n")}
+                    autoComplete="current-password"
+                  />
+                );
+              }}
+            />
 
-        <form.Subscribe
-          selector={(state) => [state.canSubmit, state.isSubmitting]}
-          children={([canSubmit, isSubmitting]) => (
-            <Button
-              color="secondary"
-              disabled={!canSubmit}
-              loading={isSubmitting}
-              type="submit"
-            >
-              Please let me in
-            </Button>
-          )}
-        />
-        <Link to="/core/password_reset">Forgot password?</Link>
+            <form.Subscribe
+              selector={(state) => [state.canSubmit, state.isSubmitting]}
+              children={([canSubmit, isSubmitting]) => (
+                <Button
+                  color="secondary"
+                  disabled={!canSubmit}
+                  loading={isSubmitting}
+                  type="submit"
+                >
+                  Please let me in
+                </Button>
+              )}
+            />
+            <Link to="/core/password_reset">Forgot password?</Link>
+          </>
+        )}
       </form>
     </AuthenticationPage>
   );

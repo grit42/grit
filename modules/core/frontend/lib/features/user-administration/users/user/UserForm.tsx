@@ -28,6 +28,7 @@ import {
   FormFields,
   genericErrorHandler,
   FormBanner,
+  SelectFormFieldDef,
 } from "@grit42/form";
 import { useCreateUpdateUserMutation } from "../mutations";
 import { User } from "../types";
@@ -37,10 +38,39 @@ import { Session } from "../../../auth/types";
 import { EntityFormFieldDef } from "../../../entities/types";
 import { Button } from "@grit42/client-library/components";
 
+const AUTH_METHOD_LABELS: Record<string, string> = {
+  local: "Local (password)",
+  oidc: "Single sign-on (OpenID Connect)",
+  saml: "Single sign-on (SAML)",
+};
+
+// Local, the installation's SSO provider, and the user's own method (an SSO
+// method the installation no longer uses).
+const authMethodOptions = (
+  session: Session | null | undefined,
+  current: string | undefined,
+) =>
+  Array.from(
+    new Set(
+      ["local", session?.server_settings.sso_provider, current].filter(
+        (method): method is string => !!method,
+      ),
+    ),
+  ).map((method) => ({
+    label: AUTH_METHOD_LABELS[method] ?? method,
+    value: method,
+  }));
+
+// New users sign in through the IdP on a SAML installation.
+export const defaultAuthMethod = (session: Session | null | undefined) =>
+  session?.server_settings.sso_provider === "saml" ? "saml" : "local";
+
 function FIELDS(
   id: string,
   session: Session | null | undefined,
+  authMethod: string | undefined,
 ): FormFieldDef[] {
+  const authMethods = authMethodOptions(session, authMethod);
   const fields: FieldDef[] = [
     {
       name: "login",
@@ -89,10 +119,14 @@ function FIELDS(
     } as EntityFormFieldDef,
     {
       name: "auth_method",
-      display_name: "Auth method",
-      type: "string",
-      disabled: true,
-    },
+      display_name: "Login method",
+      type: "select",
+      required: true,
+      select: { options: authMethods },
+      disabled: authMethods.length < 2,
+      description:
+        "Single sign-on users log in through the identity provider: they are active at once and get no activation e-mail.",
+    } as SelectFormFieldDef<string>,
     {
       name: "sso_uid",
       display_name: "SSO UID",
@@ -137,11 +171,16 @@ function FIELDS(
 export function UserForm({ user, id }: { user: Partial<User>; id: string }) {
   const navigate = useNavigate();
   const { data: session } = useSession();
-  const [formData, setFormData] = useState<Partial<User>>(user);
+  const [formData, setFormData] = useState<Partial<User>>(() =>
+    id === "new" ? { auth_method: defaultAuthMethod(session), ...user } : user,
+  );
   const createUpdateUserMutation = useCreateUpdateUserMutation(id);
   const queryClient = useQueryClient();
 
-  const fields = useMemo(() => FIELDS(id, session), [id, session]);
+  const fields = useMemo(
+    () => FIELDS(id, session, formData.auth_method),
+    [id, session, formData.auth_method],
+  );
 
   const form = useForm({
     defaultValues: formData,

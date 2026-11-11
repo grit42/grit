@@ -22,6 +22,7 @@ require "grit/core/exporter"
 require "grit/core/filter_provider"
 require "grit/core/vocabulary_item_loader"
 require "grit/core/authentication_strategies"
+require "grit/core/saml"
 require "authlogic"
 
 module Grit

@@ -72,6 +72,9 @@ module Grit::Core
                 if: :will_save_change_to_login?
               }
 
+    AUTH_METHODS = %w[local oidc saml].freeze
+    validates :auth_method, inclusion: { in: AUTH_METHODS }
+
     validates :password,
               confirmation: { if: :require_password? },
               length: {
@@ -169,6 +172,13 @@ module Grit::Core
     end
 
     before_save :set_password_changed_at, if: :will_save_change_to_crypted_password?
+
+    # The login method of new users: SAML on a SAML installation (users there
+    # sign in through the IdP; an administrator can still choose local),
+    # else local.
+    def self.default_auth_method
+      Grit::Core::Saml.enabled? ? "saml" : "local"
+    end
 
     # SSO users don't have passwords — skip all password validations
     def require_password?
