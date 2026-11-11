@@ -1,0 +1,113 @@
+{
+  "realm": "grit",
+  "enabled": true,
+  "displayName": "grit test IdP",
+  "users": [
+    {
+      "username": "jane",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Jane",
+      "lastName": "Doe",
+      "email": "jane@example.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "jane",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "john",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "John",
+      "lastName": "Smith",
+      "email": "john@example.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "john",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "unknown",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Una",
+      "lastName": "Known",
+      "email": "unknown@example.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "unknown",
+          "temporary": false
+        }
+      ]
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "http://localhost:3001/api/grit/core/auth/saml/metadata",
+      "name": "grit (local dev)",
+      "protocol": "saml",
+      "enabled": true,
+      "frontchannelLogout": false,
+      "redirectUris": ["http://localhost:3001/*"],
+      "baseUrl": "http://localhost:3001/app",
+      "attributes": {
+        "saml_assertion_consumer_url_post": "http://localhost:3001/api/grit/core/auth/saml/callback",
+        "saml.client.signature": "false",
+        "saml.server.signature": "true",
+        "saml.assertion.signature": "false",
+        "saml.signature.algorithm": "RSA_SHA256",
+        "saml_name_id_format": "email",
+        "saml.force.name.id.format": "true",
+        "saml.authnstatement": "true",
+        "saml_idp_initiated_sso_url_name": "grit",
+        "saml.force.post.binding": "true"
+      },
+      "protocolMappers": [
+        {
+          "name": "email",
+          "protocol": "saml",
+          "protocolMapper": "saml-user-property-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "email",
+            "attribute.name": "email",
+            "friendly.name": "Email address",
+            "attribute.nameformat": "Basic"
+          }
+        },
+        {
+          "name": "first name",
+          "protocol": "saml",
+          "protocolMapper": "saml-user-property-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "firstName",
+            "attribute.name": "first_name",
+            "friendly.name": "Given name",
+            "attribute.nameformat": "Basic"
+          }
+        },
+        {
+          "name": "last name",
+          "protocol": "saml",
+          "protocolMapper": "saml-user-property-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "lastName",
+            "attribute.name": "last_name",
+            "friendly.name": "Family name",
+            "attribute.nameformat": "Basic"
+          }
+        }
+      ]
+    }
+  ]
+}

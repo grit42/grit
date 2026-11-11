@@ -29,9 +29,13 @@ Gem::Specification.new do |spec|
   # Authentication and session management
   spec.add_dependency "authlogic", '~> 6.6'
 
-  # SSO: OmniAuth + OpenID Connect strategies
+  # SSO: OmniAuth + OpenID Connect and SAML strategies
   spec.add_dependency "omniauth", '~> 2.1'
   spec.add_dependency "omniauth_openid_connect", '~> 0.8'
+  spec.add_dependency "omniauth-saml", '~> 2.2'
+  # ruby-saml had signature-bypass vulnerabilities up to 1.17 (CVE-2024-45409,
+  # CVE-2025-25291/25292); keep it at a patched release.
+  spec.add_dependency "ruby-saml", '>= 1.18.1', '< 2'
 
   # Testing
   spec.add_development_dependency "rspec-rails", "~> 8.0"

@@ -25,14 +25,20 @@ module Grit::Core
     before_action :require_user, only: %i[index show update_password generate_api_token]
 
     def create
-      user = params.require(:user).permit(:origin_id, :location_id, :login, :name, :active, :email, :two_factor)
+      user = params.require(:user).permit(:origin_id, :location_id, :login, :name, :active, :email, :two_factor, :auth_method)
       # Not in params[:user]: parameter wrapping only wraps the model's own
       # attributes, so role_ids arrives at the top level (as for update).
       role_ids = params.permit(role_ids: [])[:role_ids]
       record = Grit::Core::User.new(user)
-      record.activation_token = SecureRandom.urlsafe_base64(20)
+      record.auth_method = Grit::Core::User.default_auth_method if user[:auth_method].blank?
 
-      Grit::Core::Mailer.deliver_activation_instructions(record).deliver_now
+      if record.auth_method == "local"
+        record.activation_token = SecureRandom.urlsafe_base64(20)
+        Grit::Core::Mailer.deliver_activation_instructions(record).deliver_now
+      else
+        # SSO users have no password to set: active at once, no activation e-mail.
+        record.active = true
+      end
 
       saved = false
       Grit::Core::User.transaction do
@@ -54,7 +60,7 @@ module Grit::Core
     end
 
     def update
-      permitted_params = params.permit([ :name, :email, :origin_id, :location_id, :two_factor, :active, role_ids: [] ])
+      permitted_params = params.permit([ :name, :email, :origin_id, :location_id, :two_factor, :active, :auth_method, role_ids: [] ])
       user_params = permitted_params.except(:role_ids)
 
       @record = Grit::Core::User.find(params[:id])
