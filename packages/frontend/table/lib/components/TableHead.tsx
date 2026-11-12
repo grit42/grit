@@ -17,6 +17,7 @@
  */
 
 import { ColumnOrderState, Table } from "@tanstack/react-table";
+import { useMemo } from "react";
 
 import {
   horizontalListSortingStrategy,
@@ -32,13 +33,27 @@ interface Props<T> {
 }
 
 const TableHead = <T,>({ table, columnOrder, settings }: Props<T>) => {
+  // Pinned columns stay put: they are not among the columns to drag around.
+  const pinnedColumns = table.getState().columnPinning.left;
+  const sortableColumns = useMemo(
+    () =>
+      pinnedColumns?.length
+        ? columnOrder.filter((id) => !pinnedColumns.includes(id))
+        : columnOrder,
+    [columnOrder, pinnedColumns],
+  );
+  // See TableBody: pinned cells only stick within a row as wide as the table.
+  const rowStyle = table.getIsSomeColumnsPinned("left")
+    ? { minWidth: table.getTotalSize() }
+    : undefined;
+
   return (
     <thead>
       {table.getHeaderGroups().map((headerGroup, i, headerGroups) =>
         !settings?.disableColumnReorder && i === headerGroups.length - 1 ? (
-          <tr key={headerGroup.id}>
+          <tr key={headerGroup.id} style={rowStyle}>
             <SortableContext
-              items={columnOrder}
+              items={sortableColumns}
               strategy={horizontalListSortingStrategy}
             >
               {headerGroup.headers.map((header) => (
@@ -51,7 +66,7 @@ const TableHead = <T,>({ table, columnOrder, settings }: Props<T>) => {
             </SortableContext>
           </tr>
         ) : (
-          <tr key={headerGroup.id}>
+          <tr key={headerGroup.id} style={rowStyle}>
             {headerGroup.headers.map((header, _, headers) => (
               <DraggableTableHeaderColumn<T>
                 key={header.id}

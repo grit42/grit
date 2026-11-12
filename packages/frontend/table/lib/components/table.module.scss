@@ -121,6 +121,11 @@
         padding: theme.$spacing;
         border-inline-end: 1px solid theme.$palette-primary-dark;
 
+        // A pinned column's header covers the headers scrolling under it.
+        &.pinned {
+          background-color: theme.$palette-primary-main;
+        }
+
         .tableHeaderContainer {
           display: grid;
           grid-template-columns: 100%;
@@ -220,6 +225,18 @@
         &:has(.editableCell) {
           padding-block: 2px;
         }
+
+        // A pinned column's cells cover the cells scrolling under them.
+        &.pinned {
+          background-color: theme.$palette-background-surface;
+        }
+      }
+
+      &.emphasized td.pinned {
+        background-image: linear-gradient(
+          rgb(from theme.$palette-error-main r g b / 20%),
+          rgb(from theme.$palette-error-main r g b / 20%)
+        );
       }
     }
   }

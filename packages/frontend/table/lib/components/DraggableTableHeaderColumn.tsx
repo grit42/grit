@@ -29,6 +29,7 @@ import IconArrowDown from "@grit42/client-library/icons/IconArrowDown";
 import { GritColumnDef, TableStateSettings } from "../types";
 import useInternalTableState from "../features/table-state/useInternalTableState";
 import getCellSizeStyle from "./getCellSizeStyle";
+import getPinnedCellStyle from "./getPinnedCellStyle";
 
 const DraggableTableHeaderColumn = <T,>({
   header,
@@ -46,8 +47,9 @@ const DraggableTableHeaderColumn = <T,>({
     () =>
       !settings?.disableColumnReorder &&
       isLeafHeader &&
-      header.column.id !== "select-row",
-    [header.column.id, isLeafHeader, settings?.disableColumnReorder],
+      header.column.id !== "select-row" &&
+      !header.column.getIsPinned(),
+    [header.column, isLeafHeader, settings?.disableColumnReorder],
   );
   const { attributes, isDragging, listeners, setNodeRef, transform } =
     useSortable({
@@ -78,10 +80,19 @@ const DraggableTableHeaderColumn = <T,>({
     ),
     zIndex: isDragging ? 1 : 0,
     borderInlineEnd: nextToPlaceholder ? "none" : undefined,
+    ...getPinnedCellStyle(header.column),
   };
 
   return (
-    <th colSpan={header.colSpan} ref={setNodeRef} key={header.id} style={style}>
+    <th
+      colSpan={header.colSpan}
+      ref={setNodeRef}
+      key={header.id}
+      style={style}
+      className={classnames({
+        [styles.pinned]: header.column.getIsPinned() === "left",
+      })}
+    >
       <div className={styles.tableHeaderContainer}>
         <div
           className={styles.tableHeader}

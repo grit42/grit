@@ -253,6 +253,19 @@ export default function useTableCore<T>(
     settings?.enableSelection,
   ]);
 
+  // Columns with `pinned: true` stay on the left while scrolling sideways
+  // (TanStack column pinning; the cells stick via getPinnedCellStyle). The
+  // selection checkbox goes with them so it stays first.
+  const columnPinning = useMemo(() => {
+    const pinned = columns
+      .filter((column) => (column as GritColumnDef<T>).pinned)
+      .map((column) => column.id as string);
+    if (!pinned.length) return { left: [] };
+    return {
+      left: settings?.enableSelection ? ["select-row", ...pinned] : pinned,
+    };
+  }, [columns, settings?.enableSelection]);
+
   const displayData = useClientSideFilters(
     !!settings?.clientSideSortAndFilter,
     data ?? (FALLBACK_DATA as T[]),
@@ -324,6 +337,7 @@ export default function useTableCore<T>(
       columnVisibility,
       rowSelection,
       columnOrder: columnOrderWithActions,
+      columnPinning,
       ...(!settings?.disableColumnSorting ? { sorting } : {}),
       columnSizing: columnSizing,
       expanded: expandedRows,
