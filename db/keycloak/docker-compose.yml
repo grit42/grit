@@ -1,0 +1,12 @@
+# A local SAML identity provider for trying grit's single sign-on
+# (SSO_PROVIDER=saml). See README.md.
+services:
+  keycloak:
+    image: "quay.io/keycloak/keycloak:26.5.6"
+    command: ["start-dev", "--import-realm", "--http-port=8180"]
+    network_mode: "host"
+    environment:
+      - KC_BOOTSTRAP_ADMIN_USERNAME=admin
+      - KC_BOOTSTRAP_ADMIN_PASSWORD=admin
+    volumes:
+      - ./grit-realm.json:/opt/keycloak/data/import/grit-realm.json:ro

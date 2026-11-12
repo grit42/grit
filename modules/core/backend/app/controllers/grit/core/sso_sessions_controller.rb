@@ -30,21 +30,25 @@ module Grit::Core
       uid      = auth["uid"].to_s
       info     = auth["info"] || {}
 
-      email = info["email"].to_s.downcase.presence
+      email = provider == "saml" ? Grit::Core::Saml.email_from(auth) : info["email"].to_s.downcase.presence
       name  = info["name"].to_s.presence || [ info["first_name"], info["last_name"] ].compact.join(" ").presence
       # Try login from IdP attributes, fall back to email prefix, then uid
       login = (info["login"] || info["nickname"]).to_s.presence || email&.split("@")&.first || uid
 
       raise "SSO authentication did not return a usable identifier" if login.blank?
 
-      # Generate a placeholder email if the IdP didn't provide one.
-      # The user or an admin can update it later.
-      if email.blank?
-        email = "#{login}@sso.placeholder"
-        Rails.logger.warn "[SSO] IdP did not return an email for uid=#{uid}, using placeholder: #{email}"
-      end
+      user = if provider == "saml"
+        find_or_create_saml_user!(uid: uid, email: email, name: name, login: login)
+      else
+        # Generate a placeholder email if the IdP didn't provide one.
+        # The user or an admin can update it later.
+        if email.blank?
+          email = "#{login}@sso.placeholder"
+          Rails.logger.warn "[SSO] IdP did not return an email for uid=#{uid}, using placeholder: #{email}"
+        end
 
-      user = find_or_create_sso_user!(provider: provider, uid: uid, email: email, email_verified: info["email_verified"], name: name, login: login)
+        find_or_create_sso_user!(provider: provider, uid: uid, email: email, email_verified: info["email_verified"], name: name, login: login)
+      end
 
       raise "User #{user.login} is inactive" unless user.active?
 
@@ -85,7 +89,31 @@ module Grit::Core
           return user
         end
 
-        # JIT provision: create a new user
+        create_sso_user!(provider: provider, uid: uid, email: email, name: name, login: login)
+      end
+
+      # SAML users are found by e-mail, as in the old Animals app: the NameID
+      # may be transient (new each login), so it can't identify a returning
+      # user. Only accounts an administrator made SAML accounts are found, so
+      # the IdP can't log in as a local (password) account. A login with an
+      # unknown e-mail is refused, or creates a user when SAML_UNKNOWN_USERS
+      # is "create".
+      def find_or_create_saml_user!(uid:, email:, name:, login:)
+        raise "The identity provider did not send an e-mail address" if email.blank?
+
+        user = Grit::Core::User.where("LOWER(email) = ?", email).find_by(auth_method: "saml")
+        if user
+          user.update_columns(sso_uid: uid) if user.sso_uid != uid && !Grit::Core::User.exists?(auth_method: "saml", sso_uid: uid)
+          return user
+        end
+
+        raise "No grit account uses #{email} for single sign-on. Ask an administrator for access." unless Grit::Core::Saml.create_unknown_users?
+
+        create_sso_user!(provider: "saml", uid: uid, email: email, name: name, login: login)
+      end
+
+      # JIT provision: create a new user
+      def create_sso_user!(provider:, uid:, email:, name:, login:)
         # Ensure login uniqueness by appending a suffix if needed
         base_login = login
         counter = 0

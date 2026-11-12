@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# Configure OmniAuth SSO middleware when SSO_PROVIDER is set.
+# Configure OmniAuth SSO middleware when SSO_PROVIDER is set (oidc or saml).
 # Follows the same pattern as session_store.rb — the engine's initializer
 # directory is auto-loaded by the host Rails app.
 #
@@ -10,7 +10,7 @@
 Rails.application.configure do
   sso_provider = ENV.fetch("SSO_PROVIDER", "none").downcase
 
-  next unless %w[oidc].include?(sso_provider)
+  next unless %w[oidc saml].include?(sso_provider)
 
   require "omniauth"
 
@@ -22,6 +22,9 @@ Rails.application.configure do
     if env["omniauth.error"]
       Rails.logger.error "[SSO] OmniAuth error: #{env["omniauth.error"].class}: #{env["omniauth.error"].message}"
     end
+    # A failed SAML login refetches the IdP's metadata next time, in case its
+    # signing certificate was rotated.
+    Grit::Core::Saml.expire_idp_options! if env["omniauth.error.strategy"]&.name.to_s == "saml"
     OmniAuth::FailureEndpoint.new(env).redirect_to_failure
   end
 
@@ -75,6 +78,28 @@ Rails.application.configure do
           redirect_uri: oidc_redirect_uri
         },
         discovery: true
+    end
+  when "saml"
+    require "omniauth-saml"
+
+    # Settings: see Grit::Core::Saml. Our own are read now, so a missing
+    # GRIT_SERVER_URL fails at start; the IdP's metadata is fetched (and
+    # cached) on the first login, so the app starts while the IdP is down.
+    sp_options = Grit::Core::Saml.sp_options
+
+    # The old Animals app's /saml/... paths, before OmniAuth sees the request.
+    config.middleware.use Grit::Core::Saml::LegacyPaths
+
+    config.middleware.use OmniAuth::Builder do
+      provider :saml,
+        name: :saml,
+        **sp_options,
+        setup: lambda { |env|
+          # Our own metadata doesn't need the IdP's.
+          next if env["PATH_INFO"] == Grit::Core::Saml::METADATA_PATH
+
+          env["omniauth.strategy"].options.merge!(Grit::Core::Saml.idp_options)
+        }
     end
   end
 end
