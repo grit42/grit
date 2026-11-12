@@ -34,6 +34,7 @@ import { getIsFiltersActive } from "../features/filters";
 import useInternalTableState from "../features/table-state/useInternalTableState";
 import Marvin03Meh from "@grit42/client-library/icons/Marvin03Meh";
 import getCellSizeStyle from "./getCellSizeStyle";
+import getPinnedCellStyle from "./getPinnedCellStyle";
 import EditableCell from "./EditableCell";
 
 type Props<T> = Pick<
@@ -101,8 +102,12 @@ const TableCell = <T,>({
       }}
       className={classnames({
         [styles.clickable]: isColumnClickable,
+        [styles.pinned]: cell.column.getIsPinned() === "left",
       })}
-      style={getCellSizeStyle(`--col-${cell.column.id}-size`, flex)}
+      style={{
+        ...getCellSizeStyle(`--col-${cell.column.id}-size`, flex),
+        ...getPinnedCellStyle(cell.column),
+      }}
     >
       <div
         className={styles.cellContentContainer}
@@ -165,6 +170,12 @@ const TableBody = <T,>({
 
   const isRowClickable = !!onRowClick;
 
+  // A pinned cell only sticks within its row, so with pinned columns a row
+  // is as wide as all its columns, not just the visible part of the table.
+  const rowMinWidth = table.getIsSomeColumnsPinned("left")
+    ? table.getTotalSize()
+    : undefined;
+
   return (
     <tbody
       className={classnames({ [styles.emptyTable]: loading || !data.length })}
@@ -200,6 +211,7 @@ const TableBody = <T,>({
               key={row.id}
               style={{
                 transform: `translateY(${virtualRow.start}px)`,
+                minWidth: rowMinWidth,
               }}
             >
               {row.getVisibleCells().map((cell) => (

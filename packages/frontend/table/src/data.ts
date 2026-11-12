@@ -41,7 +41,9 @@ export const sampleDataProperties: GritColumnDef<SampleRow>[] = [
     header: "Compound",
     type: "string",
     size: 160,
-    description: "Human readable compound name",
+    pinned: true,
+    description:
+      "Human readable compound name — stays visible when scrolling sideways",
   },
   {
     id: "project",
@@ -67,7 +69,8 @@ export const sampleDataProperties: GritColumnDef<SampleRow>[] = [
     header: "Description",
     type: "text",
     flex: 1,
-    description: "Free text notes (nullable) — flex column, fills remaining width",
+    description:
+      "Free text notes (nullable) — flex column, fills remaining width",
   },
   {
     id: "concentration_um",

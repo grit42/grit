@@ -50,10 +50,7 @@ export interface EditedCell<T> {
  * "up"/"down" follow the table's current sort order, not row-array order.
  */
 export type CellValuePropagationDirection =
-  | "up"
-  | "down"
-  | "column"
-  | "selected";
+  "up" | "down" | "column" | "selected";
 
 declare module "@tanstack/react-table" {
   interface TableMeta<TData extends RowData> {
@@ -106,6 +103,14 @@ export type GritColumnDefBase<
    * editing a table that hasn't opted in.
    */
   editable?: boolean;
+
+  /**
+   * Keep this column on the left while the table scrolls sideways (frozen),
+   * e.g. a record's name in a wide table. Pinned columns come first, in
+   * their column order, after the row selection checkbox (pinned with them),
+   * and can't be dragged to another place. Use a fixed `size`, not `flex`.
+   */
+  pinned?: boolean;
 };
 
 export type GritDisplayColumnDef<
