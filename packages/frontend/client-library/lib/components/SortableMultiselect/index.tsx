@@ -40,6 +40,7 @@ import Button from "../Button";
 import ButtonGroup from "../ButtonGroup";
 import Checkbox from "../Checkbox";
 import Dialog from "../Dialog";
+import Input from "../Input";
 import InputError from "../InputError";
 import InputLabel from "../InputLabel";
 import Circle1Close from "../../icons/Circle1Close";
@@ -60,7 +61,10 @@ export interface SortableMultiselectProps<T> {
   onChange?: (value: T[], optionValue: Option<T>[]) => void;
   buttonLabel?: string;
   dialogTitle?: React.ReactNode;
+  searchable?: boolean;
 }
+
+export const SEARCH_FROM = 10;
 
 const getOptionId = <T,>(value: T): string => String(value);
 
@@ -137,6 +141,7 @@ const SortableMultiselect = <T,>({
   onChange,
   buttonLabel = "Add",
   dialogTitle,
+  searchable = options.length > SEARCH_FROM,
 }: SortableMultiselectProps<T>) => {
   const optionByValue = useMemo(() => {
     const map = new Map<T, Option<T>>();
@@ -158,6 +163,17 @@ const SortableMultiselect = <T,>({
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [pendingSelection, setPendingSelection] = useState<Set<T>>(new Set());
+  const [search, setSearch] = useState("");
+
+  const shown = useMemo(() => {
+    const words = search.trim().toLowerCase();
+    if (!words) return options;
+    return options.filter((option) =>
+      `${option.label} ${option.description ?? ""}`
+        .toLowerCase()
+        .includes(words),
+    );
+  }, [options, search]);
 
   const sensors = useSensors(
     useSensor(MouseSensor),
@@ -199,6 +215,7 @@ const SortableMultiselect = <T,>({
   const openDialog = () => {
     if (disabled) return;
     setPendingSelection(new Set(selected.map((o) => o.value)));
+    setSearch("");
     setDialogOpen(true);
   };
 
@@ -298,17 +315,27 @@ const SortableMultiselect = <T,>({
         onClose={closeDialog}
         title={dialogTitle ?? label ?? "Select items"}
       >
+        {searchable && (
+          <Input
+            type="search"
+            wrapperClassName={styles.search}
+            aria-label="Search the options"
+            placeholder="Search"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+          />
+        )}
         <div className={styles.dialogBody}>
           <table className={styles.optionsTable}>
             <tbody>
-              {options.length === 0 ? (
+              {shown.length === 0 ? (
                 <tr>
                   <td colSpan={2} className={styles.noOptions}>
-                    No options
+                    {options.length === 0 ? "No options" : "No match"}
                   </td>
                 </tr>
               ) : (
-                options.map((option) => {
+                shown.map((option) => {
                   const isChecked = pendingSelection.has(option.value);
                   return (
                     <tr
