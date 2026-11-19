@@ -16,7 +16,6 @@
  * @grit42/plots. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import type { ColorMap } from "./colors";
 const sum = (values: readonly number[]) =>
   values.reduce((total, value) => total + value, 0);
 
@@ -176,26 +175,16 @@ const zipSeries = ({
   xSeriesList,
   ySeriesList,
   labels,
-  colorMap,
 }: {
   xSeriesList: number[][];
   ySeriesList: number[][];
   labels: string[];
-  colorMap: ColorMap;
 }) => {
   const n = Math.min(xSeriesList.length, ySeriesList.length, labels.length);
-  const colorList = Array.from(
-    { length: n },
-    (_, i) =>
-      colorMap.universalColors[i % colorMap.universalColors.length] ??
-      colorMap.markerFill,
-  );
-
   return Array.from({ length: n }, (_, i) => ({
     x: xSeriesList[i] ?? [],
     y: ySeriesList[i] ?? [],
     label: labels[i] ?? `Series ${i + 1}`,
-    color: colorList[i] ?? "blue",
   }));
 };
 

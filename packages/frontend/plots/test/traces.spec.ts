@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { composite, readableOn, rgba, type ColorMap } from "../lib/colors";
+import { type ColorMap } from "../lib/colors";
 import { SYMBOLS } from "../lib/constants";
 import {
   boxStatsHoverTrace,
@@ -13,6 +13,8 @@ const colorMap = {
   markerFill: "#333",
   markerLine: "#000",
   universalColors: ["#4e79a7", "#f28e2b"],
+  manyColors: ["#m1", "#m2", "#m3", "#m4", "#m5", "#m6", "#m7", "#m8"],
+  fixedSeries: {},
 } as unknown as ColorMap;
 
 describe("scatterTrace", () => {
@@ -133,25 +135,20 @@ describe("outlierTrace", () => {
   // 100 is far past 1.5×IQR of 1..9, so it is the sole outlier.
   const values = [1, 2, 3, 4, 5, 6, 7, 8, 9, 100];
 
-  test("chooses a colour that reads on its group's fill as well as the page", () => {
-    const withPage = { ...colorMap, bgColor: "#ffffff" } as unknown as ColorMap;
-    // A light yellow reads poorly on white and worse on its own fill.
-    const colour = (
-      outlierTrace({
-        values,
-        label: "G",
-        xIndex: 1,
-        colorMap: withPage,
-        color: "#f5e050",
-      })!.marker as { color?: string }
-    ).color;
-    expect(colour).not.toBe("#f5e050");
-    expect(
-      readableOn(colour!, [
-        composite(rgba({ color: "#f5e050", alpha: 1 }), "#ffffff"),
-        "#ffffff",
-      ]),
-    ).toBe(colour);
+  test("rings its outliers in the violation colour, as the control chart does", () => {
+    const marker = outlierTrace({
+      values,
+      label: "G",
+      xIndex: 1,
+      colorMap: { ...colorMap, violationFill: "#7b3b34" } as ColorMap,
+    })!.marker as {
+      color?: string;
+      symbol?: string;
+      line?: { color?: string };
+    };
+    expect(marker.symbol).toBe("circle-open");
+    expect(marker.color).toBe("#7b3b34");
+    expect(marker.line?.color).toBe("#7b3b34");
   });
 
   test("plots only the points outside the whiskers", () => {

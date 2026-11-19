@@ -1,5 +1,11 @@
 import { Annotations, Data, LayoutAxis } from "plotly.js";
-import { ColorMap, composite, readableOn, rgba, seriesColor } from "../colors";
+import {
+  ColorMap,
+  composite,
+  readableOn,
+  rgba,
+  seriesPalette,
+} from "../colors";
 import { resolveDisplay } from "../displayMode";
 import { numberFormat, type NumberFormat } from "../format";
 import { pointHover, type PointHover } from "../hover";
@@ -60,8 +66,13 @@ const buildBoxTraces = (
   ];
   // A lone series is no grouping to tell apart, so its panels differ as ungrouped ones do.
   const byLabel = grouped && labels.length > 1;
+  const bySeries = seriesPalette(colorMap, labels);
+  const byPanel = seriesPalette(
+    colorMap,
+    facets.map((facet) => facet.key),
+  );
   const colorOf = (label: string, facetIndex: number) =>
-    seriesColor(colorMap, byLabel ? labels.indexOf(label) : facetIndex);
+    byLabel ? bySeries(label) : byPanel(facets[facetIndex]!.key);
   const named = new Set<string>();
   const jitter = randomJitter({ jitter: BOX_WIDTH * 0.4, seed: JITTER_SEED });
 

@@ -17,7 +17,13 @@
  */
 
 import { Annotations, Data, LayoutAxis } from "plotly.js";
-import { ColorMap, composite, readableOn, rgba, seriesColor } from "../colors";
+import {
+  ColorMap,
+  composite,
+  readableOn,
+  rgba,
+  seriesPalette,
+} from "../colors";
 import { resolveDisplay } from "../displayMode";
 import {
   buildHoverTemplate,
@@ -232,10 +238,11 @@ export const buildBar = (
   // A lone series is no grouping to tell apart, so its panels differ as ungrouped ones do.
   const colorBySeries =
     (def.groupBy ?? []).length > 0 && seriesNames.length > 1;
-  const colors = new Map(
-    seriesNames.map((series, index) => [series, seriesColor(colorMap, index)]),
+  const bySeries = seriesPalette(colorMap, seriesNames);
+  const byPanel = seriesPalette(
+    colorMap,
+    facets.map((facet) => facet.key),
   );
-  const facetColor = (index: number) => seriesColor(colorMap, index);
   // Stacked series share one slot, and Plotly piles them in trace order.
   const slotsFor = (category: string) =>
     categorySlots(
@@ -292,7 +299,7 @@ export const buildBar = (
     if (multiFacet) annotations.push(panelTitle(facet.label, axis));
 
     seriesNames.forEach((series, seriesIndex) => {
-      const color = colorBySeries ? colors.get(series)! : facetColor(index);
+      const color = colorBySeries ? bySeries(series) : byPanel(facet.key);
 
       const x: number[] = [];
       const y: number[] = [];

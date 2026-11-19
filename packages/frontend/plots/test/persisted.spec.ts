@@ -27,6 +27,8 @@ const colorMap = {
   markerFill: "#333",
   markerLine: "#000",
   universalColors: ["#4e79a7", "#f28e2b", "#e15759"],
+  manyColors: ["#m1", "#m2", "#m3", "#m4", "#m5", "#m6", "#m7", "#m8"],
+  fixedSeries: {},
 } as unknown as ColorMap;
 
 /** As stored: a box grouped by compound. */

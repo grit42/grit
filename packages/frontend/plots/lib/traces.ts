@@ -18,7 +18,7 @@
 
 // Generic traces only; licensed plot-type traces live in their own module.
 import type { Data, Datum, ScatterData } from "plotly.js";
-import { type ColorMap, composite, readableOn, rgba } from "./colors";
+import { type ColorMap, rgba } from "./colors";
 import { countText, numberFormat, type NumberFormat } from "./format";
 import {
   buildHoverTemplate,
@@ -259,8 +259,7 @@ export const boxStatsHoverTrace = ({
   });
 };
 
-const OUTLIER_FILL_ALPHA = 1;
-
+/** Ringed in the violation colour, as the control chart rings its outliers. */
 export const outlierTrace = ({
   format,
   values,
@@ -269,7 +268,6 @@ export const outlierTrace = ({
   label,
   xIndex,
   colorMap,
-  color,
   jitter = 0.2,
   stats: given,
 }: {
@@ -280,7 +278,6 @@ export const outlierTrace = ({
   label: string;
   xIndex: number;
   colorMap: ColorMap;
-  color?: string;
   jitter?: number;
   format?: NumberFormat;
   /** Where the whiskers follow another rule than 1.5 × IQR; past them is outlying. */
@@ -309,18 +306,13 @@ export const outlierTrace = ({
     x: outliers.map(() => xIndex + jitterValue()),
     y: outliers.map((one) => one.value),
     mode: "markers",
-    color: readableOn(color ?? colorMap.markerFill, [
-      composite(
-        rgba({
-          color: color ?? colorMap.markerFill,
-          alpha: OUTLIER_FILL_ALPHA,
-        }),
-        colorMap.bgColor,
-      ),
-      colorMap.bgColor,
-    ]),
+    color: colorMap.violationFill,
     colorMap,
-    marker: { symbol: "circle-open", size: 7, line: { width: 2 } },
+    marker: {
+      symbol: "circle-open",
+      size: 11,
+      line: { width: 2, color: colorMap.violationFill },
+    },
     legendgroup: label,
     showlegend: false,
     ...(hover ?? pointHover(undefined, undefined, fmt))(

@@ -17,7 +17,7 @@
  */
 
 import { Annotations, Data, LayoutAxis } from "plotly.js";
-import { ColorMap, seriesColor } from "../colors";
+import { ColorMap, seriesPalette } from "../colors";
 import { numberFormat, type NumberFormat } from "../format";
 import { summarise, toFiniteNumber } from "../math";
 import {
@@ -147,7 +147,7 @@ const buildErrorBar = ({
     name: `${groupLabel} ±${errorLabel}`,
     legendgroup,
     showlegend: false,
-    marker: { color, size: 1, opacity: 0, line: { color: "#fff", width: 1 } },
+    marker: { color, size: 1, opacity: 0 },
     error_y: { type: "data", array: errors, visible: true, color, width: 10 },
     customdata: customData,
     hovertemplate: buildHoverTemplate([
@@ -176,6 +176,7 @@ const buildTraces = (
     facets.flatMap((facet) => facet.groups.map((g) => g.label)),
     def.seriesOrder,
   );
+  const colorOf = seriesPalette(colorMap, seriesNames);
 
   const multiFacet = facets.length > 1;
   const rule = outlierRuleOf(def);
@@ -254,7 +255,7 @@ const buildTraces = (
       const group = groups[j]!;
       // Figure-wide, so a series looks the same in every panel.
       const seriesIndex = Math.max(seriesNames.indexOf(group.label), 0);
-      const color = seriesColor(colorMap, seriesIndex);
+      const color = colorOf(group.label);
       const xValues = Object.keys(group.data)
         .map(Number)
         .toSorted((a, b) => a - b);
@@ -457,7 +458,7 @@ const buildTraces = (
             color,
             size: 7,
             symbol: seriesSymbol(seriesIndex),
-            line: { color: "#fff", width: 1 },
+            line: { color: colorMap.markerLine, width: 1 },
           },
           customdata: statCustomdata,
           hovertemplate: buildHoverTemplate([

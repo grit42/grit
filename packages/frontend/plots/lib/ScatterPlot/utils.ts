@@ -1,5 +1,5 @@
 import { Annotations, Data, Datum, LayoutAxis } from "plotly.js";
-import { ColorMap, seriesColor } from "../colors";
+import { ColorMap, seriesPalette } from "../colors";
 import {
   ScatterPlotDefinition,
   SourceData,
@@ -54,6 +54,7 @@ const buildTraces = (
   const seriesNames = [
     ...new Set(facets.flatMap((facet) => facet.groups.map((g) => g.label))),
   ];
+  const colorOf = seriesPalette(colorMap, seriesNames);
   for (let i = 0; i < facets.length; i++) {
     const facet = facets[i];
     const { axis } = facet;
@@ -65,7 +66,7 @@ const buildTraces = (
     for (let j = 0; j < facet.groups.length; j++) {
       const group = facet.groups[j];
       const seriesIndex = Math.max(seriesNames.indexOf(group.label), 0);
-      const color = seriesColor(colorMap, seriesIndex);
+      const color = colorOf(group.label);
       traces.push({
         x: group.x,
         y: group.y,

@@ -16,10 +16,15 @@
  * @grit42/plots. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { useMemo } from "react";
+import { createContext, useContext, useMemo } from "react";
 import { useTheme } from "@grit42/client-library/hooks";
 import type { Palette, Theme } from "@grit42/client-library/theme";
 import type { NoticeLevel } from "./notices";
+import {
+  MANY_SERIES,
+  SEQUENTIAL_SCHEMES,
+  SIGMA_LINES,
+} from "./scientificColourMaps";
 
 export const hexToRgb = ({ color }: { color: string }) => {
   const raw = color.trim().replace(/^#/, "");
@@ -214,88 +219,35 @@ export const noticeColors = (palette: Palette): Record<NoticeLevel, string> => {
 };
 
 export type ColorPreset = "default" | "muted" | "bright";
+type Scheme = "light" | "dark";
+
+/** WCAG 1.4.11: a line, mark or series colour against its surface. */
+export const MIN_MARK_CONTRAST = 3;
+
+const hexes = (list: string): readonly string[] => list.split(" ");
 
 /**
- * Paul Tol's sequential schemes, light to dark: Iridescent, YlOrBr, Smooth
- * rainbow. https://sronpersonalpages.nl/~pault/#sec:sequential
+ * Paul Tol's qualitative schemes (https://sronpersonalpages.nl/~pault/):
+ * bright and light for default, muted, vibrant for bright. A colour below 3:1
+ * on its surface is moved in lightness.
  */
-export const SEQUENTIAL_SCHEMES: Record<ColorPreset, readonly string[]> = {
-  default: [
-    "#FEFBE9",
-    "#FCF7D5",
-    "#F5F3C1",
-    "#EAF0B5",
-    "#DDECBF",
-    "#D0E7CA",
-    "#C2E3D2",
-    "#B5DDD8",
-    "#A8D8DC",
-    "#9BD2E1",
-    "#8DCBE4",
-    "#81C4E7",
-    "#7BBCE7",
-    "#7EB2E4",
-    "#88A5DD",
-    "#9398D2",
-    "#9B8AC4",
-    "#9D7DB2",
-    "#9A709E",
-    "#906388",
-    "#805770",
-    "#684957",
-    "#46353A",
-  ],
-  muted: [
-    "#FFFFE5",
-    "#FFF7BC",
-    "#FEE391",
-    "#FEC44F",
-    "#FB9A29",
-    "#EC7014",
-    "#CC4C02",
-    "#993404",
-    "#662506",
-  ],
-  bright: [
-    "#E8ECFB",
-    "#DDD8EF",
-    "#D1C1E1",
-    "#C3A8D1",
-    "#B58FC2",
-    "#A778B4",
-    "#9B62A7",
-    "#8C4E99",
-    "#6F4C9B",
-    "#6059A9",
-    "#5568B8",
-    "#4E79C5",
-    "#4D8AC6",
-    "#4E96BC",
-    "#549EB3",
-    "#59A5A9",
-    "#60AB9E",
-    "#69B190",
-    "#77B77D",
-    "#8CBC68",
-    "#A6BE54",
-    "#BEBC48",
-    "#D1B541",
-    "#DDAA3C",
-    "#E49C39",
-    "#E78C35",
-    "#E67932",
-    "#E4632D",
-    "#DF4828",
-    "#DA2222",
-    "#B8221E",
-    "#95211B",
-    "#721E17",
-    "#521A13",
-  ],
+const SERIES: Record<ColorPreset, Record<Scheme, readonly string[]>> = {
+  default: {
+    light: hexes("#4477AA #EE6677 #228833 #A39321 #38A0BE #AA3377"),
+    dark: hexes("#85A8D2 #FFAABB #44BB99 #EEDD88 #99DDFF #EE8866"),
+  },
+  muted: {
+    light: hexes("#332288 #7699B1 #1CA38D #117733 #999933 #CC6677 #AA4499"),
+    dark: hexes("#AC79D5 #88CCEE #44AA99 #217F40 #DDCC77 #CC6677 #9E549B"),
+  },
+  bright: {
+    light: hexes("#0077BB #04597A #009988 #DD7A45 #CC3311 #EE3377"),
+    dark: hexes("#0077BB #33BBEE #009988 #EE7733 #CC3614 #EE3377"),
+  },
 };
 
-/** Minimum contrast of a scale's low end against its surface. */
-export const MIN_SCALE_CONTRAST = 1.2;
+/** A scale's low end against its surface, so an empty cell reads apart. */
+export const MIN_SCALE_CONTRAST = 1.5;
 
 /** Runs out from the surface, so high values stand out in either theme; stops too near the surface are dropped. */
 export const sequentialScale = (
@@ -314,219 +266,95 @@ export const sequentialScale = (
   ]);
 };
 
-const heatmapColors = (preset: ColorPreset, surface: string, dark: boolean) => {
-  const scale = sequentialScale(
-    SEQUENTIAL_SCHEMES[preset] ?? SEQUENTIAL_SCHEMES.default,
-    surface,
-    dark,
-  );
-  return {
-    heatmapScale: scale,
-    heatmaplow: rgba({ color: scale[0]![1], alpha: 1.0 }),
-    heatmaphigh: rgba({ color: scale[scale.length - 1]![1], alpha: 1.0 }),
-  };
-};
+/** Series keys that always draw one colour, such as a host's sex codes. */
+export type FixedSeries = Record<string, "male" | "female">;
 
-/** Annotation-strip colours, after Paul Tol's qualitative schemes */
-export const CATEGORICAL_COLORS = {
-  dark: [
-    "#77AADD",
-    "#FFAABB",
-    "#44BB99",
-    "#EEDD88",
-    "#99DDFF",
-    "#EE8866",
-    "#DDDDDD",
-  ],
-  light: [
-    "#4477AA",
-    "#EE6677",
-    "#228833",
-    "#CCBB44",
-    "#66CCEE",
-    "#AA3377",
-    "#BBBBBB",
-  ],
-} as const;
+const FixedSeriesContext = createContext<FixedSeries>({});
 
-export type ColorMap = ReturnType<typeof useColorMap>;
+export const FixedSeriesProvider = FixedSeriesContext.Provider;
 
-const structuralColors = (theme: Theme) => {
+const resolvePreset = (preset: string | undefined): ColorPreset =>
+  preset && preset in SERIES ? (preset as ColorPreset) : "default";
+
+/** The colours a figure draws with, for a theme and preset. */
+export const colorMapFor = (
+  theme: Theme,
+  preset: string | undefined,
+  fixed: FixedSeries = {},
+) => {
   const dark = theme.colorScheme === "dark";
+  const scheme: Scheme = dark ? "dark" : "light";
   const surface = theme.palette.background.surface;
   const text = theme.palette.background.contrastText;
+  const accent = theme.palette.secondary.main;
+  const resolved = resolvePreset(preset);
+  // The default series' blue and pink, in every preset.
+  const male = SERIES.default[scheme][0]!;
+  const female = SERIES.default[scheme][1]!;
+  const sigma = SIGMA_LINES[scheme];
 
   return {
     bgColor: surface,
     gridColor: rgba({ color: text, alpha: 0.2 }),
     textColor: text,
     bracketColor: text,
-    toggleButtonColor: dark ? "#F8EB5F" : "#171e2a",
+    toggleButtonColor: dark ? accent : text,
     hoverBackground: surface,
-    hoverBorder: dark
-      ? rgba({ color: "#F8EB5F", alpha: 1.0 })
-      : rgba({ color: "#009999", alpha: 1.0 }),
+    hoverBorder: accent,
     hoverFontColor: text,
     missingColor: surface,
-    categoricalColors: dark
-      ? [...CATEGORICAL_COLORS.dark]
-      : [...CATEGORICAL_COLORS.light],
+    boxLine: text,
+    markerFill: text,
+    markerLine: surface,
+    meanLine: text,
+    oLine: sigma[0],
+    wLine: sigma[1],
+    clLine: sigma[2],
+    // On dark every red sits near some series colour; text clears them all.
+    violationFill: dark ? text : sigma[2],
+    male,
+    female,
+    universalColors: [...SERIES[resolved][scheme]],
+    manyColors: MANY_SERIES.filter(
+      (color) => contrastRatio(color, surface) >= MIN_MARK_CONTRAST,
+    ),
+    fixedSeries: Object.fromEntries(
+      Object.entries(fixed).map(([key, role]) => [
+        key,
+        role === "male" ? male : female,
+      ]),
+    ) as Record<string, string>,
+    heatmapScale: sequentialScale(SEQUENTIAL_SCHEMES[resolved], surface, dark),
   };
 };
 
-const defaultPalette = (dark: boolean) => ({
-  maleFill: rgba({ color: "#E69F00", alpha: 0.42 }),
-  maleLine: rgba({ color: "#B87F00", alpha: 1.0 }),
-  femaleFill: rgba({ color: "#56B4E9", alpha: 0.42 }),
-  femaleLine: rgba({ color: "#3C7EA3", alpha: 1.0 }),
-  boxFill: rgba({ color: "#171e2a", alpha: 0.0 }),
-  boxLine: dark
-    ? rgba({ color: "#eeeeee", alpha: 1.0 })
-    : rgba({ color: "#333333", alpha: 1.0 }),
-  boxMean: dark
-    ? rgba({ color: "#eeeeee", alpha: 1.0 })
-    : rgba({ color: "#333333", alpha: 1.0 }),
-  markerFill: dark
-    ? rgba({ color: "#ffffff", alpha: 1.0 })
-    : rgba({ color: "#333333", alpha: 1.0 }),
-  markerLine: rgba({ color: "#000000", alpha: 1.0 }),
-  violationFill: rgba({ color: "#E60000", alpha: 1.0 }),
-  meanLine: rgba({ color: "#1A9A00", alpha: 1.0 }),
-  clLine: rgba({ color: "#E60000", alpha: 1.0 }),
-  wLine: dark
-    ? rgba({ color: "#E69F00", alpha: 0.8 })
-    : rgba({ color: "#8b5f00", alpha: 0.8 }),
-  oLine: dark
-    ? rgba({ color: "#F8EB5F", alpha: 0.8 })
-    : rgba({ color: "#9f9743", alpha: 0.8 }),
-  universalColors: [
-    "#4e79a7",
-    "#f28e2b",
-    "#e15759",
-    "#76b7b2",
-    "#59a14f",
-    "#edc948",
-    "#b07aa1",
-    "#ff9da7",
-    "#9c755f",
-    "#bab0ac",
-    "#86bcb6",
-    "#8cd17d",
-    "#b6992d",
-    "#499894",
-    "#d37295",
-    "#a0cbe8",
-    "#ffbe7d",
-    "#ff9d9a",
-  ],
-});
+export type ColorMap = ReturnType<typeof colorMapFor>;
 
-type PaletteColors = ReturnType<typeof defaultPalette>;
-
-/** Paul Tol "muted": https://sronpersonalpages.nl/~pault/ */
-const mutedPalette = (dark: boolean): PaletteColors => ({
-  maleFill: rgba({ color: "#CC8B3C", alpha: 0.4 }),
-  maleLine: rgba({ color: "#9C6A2E", alpha: 1.0 }),
-  femaleFill: rgba({ color: "#6699CC", alpha: 0.4 }),
-  femaleLine: rgba({ color: "#44688F", alpha: 1.0 }),
-  boxFill: rgba({ color: "#171e2a", alpha: 0.0 }),
-  boxLine: dark
-    ? rgba({ color: "#dddddd", alpha: 1.0 })
-    : rgba({ color: "#444444", alpha: 1.0 }),
-  boxMean: dark
-    ? rgba({ color: "#dddddd", alpha: 1.0 })
-    : rgba({ color: "#444444", alpha: 1.0 }),
-  markerFill: dark
-    ? rgba({ color: "#e8e8e8", alpha: 1.0 })
-    : rgba({ color: "#444444", alpha: 1.0 }),
-  markerLine: rgba({ color: "#222222", alpha: 1.0 }),
-  violationFill: rgba({ color: "#A50026", alpha: 1.0 }),
-  meanLine: rgba({ color: "#117733", alpha: 1.0 }),
-  clLine: rgba({ color: "#882255", alpha: 1.0 }),
-  wLine: dark
-    ? rgba({ color: "#DDCC77", alpha: 0.8 })
-    : rgba({ color: "#8A7B33", alpha: 0.8 }),
-  oLine: dark
-    ? rgba({ color: "#999933", alpha: 0.8 })
-    : rgba({ color: "#6E6E26", alpha: 0.8 }),
-  universalColors: [
-    "#332288",
-    "#88CCEE",
-    "#44AA99",
-    "#117733",
-    "#999933",
-    "#DDCC77",
-    "#CC6677",
-    "#882255",
-    "#AA4499",
-  ],
-});
-
-/** Paul Tol "bright": https://sronpersonalpages.nl/~pault/ */
-const brightPalette = (dark: boolean): PaletteColors => ({
-  maleFill: rgba({ color: "#FF9500", alpha: 0.45 }),
-  maleLine: rgba({ color: "#CC7700", alpha: 1.0 }),
-  femaleFill: rgba({ color: "#00A9E0", alpha: 0.45 }),
-  femaleLine: rgba({ color: "#0077A3", alpha: 1.0 }),
-  boxFill: rgba({ color: "#171e2a", alpha: 0.0 }),
-  boxLine: dark
-    ? rgba({ color: "#ffffff", alpha: 1.0 })
-    : rgba({ color: "#222222", alpha: 1.0 }),
-  boxMean: dark
-    ? rgba({ color: "#ffffff", alpha: 1.0 })
-    : rgba({ color: "#222222", alpha: 1.0 }),
-  markerFill: dark
-    ? rgba({ color: "#ffffff", alpha: 1.0 })
-    : rgba({ color: "#222222", alpha: 1.0 }),
-  markerLine: rgba({ color: "#000000", alpha: 1.0 }),
-  violationFill: rgba({ color: "#FF2C00", alpha: 1.0 }),
-  meanLine: rgba({ color: "#228833", alpha: 1.0 }),
-  clLine: rgba({ color: "#EE6677", alpha: 1.0 }),
-  wLine: dark
-    ? rgba({ color: "#CCBB44", alpha: 0.85 })
-    : rgba({ color: "#9A8A1F", alpha: 0.85 }),
-  oLine: dark
-    ? rgba({ color: "#66CCEE", alpha: 0.85 })
-    : rgba({ color: "#3388AA", alpha: 0.85 }),
-  universalColors: [
-    "#4477AA",
-    "#EE6677",
-    "#228833",
-    "#CCBB44",
-    "#66CCEE",
-    "#AA3377",
-    "#0C5DA5",
-    "#FF9500",
-    "#FF2C00",
-    "#845B97",
-    "#BBBBBB",
-  ],
-});
-
-const PRESETS: Record<ColorPreset, (dark: boolean) => PaletteColors> = {
-  default: defaultPalette,
-  muted: mutedPalette,
-  bright: brightPalette,
+/**
+ * A colour per series key, the same in every panel: a fixed colour where the
+ * host gives one, the preset's for the rest, batlowS where they outnumber it.
+ */
+export const seriesPalette = (
+  colorMap: ColorMap,
+  keys: readonly string[],
+): ((key: string) => string) => {
+  const free = [...new Set(keys)].filter(
+    (key) => !(key in colorMap.fixedSeries),
+  );
+  const colors =
+    free.length > colorMap.universalColors.length
+      ? colorMap.manyColors
+      : colorMap.universalColors;
+  return (key) =>
+    colorMap.fixedSeries[key] ??
+    colors[Math.max(free.indexOf(key), 0) % colors.length]!;
 };
-
-const resolvePreset = (preset: string | undefined): ColorPreset =>
-  preset && preset in PRESETS ? (preset as ColorPreset) : "default";
-
-/** The palette's colour for a series, cycling past its end. */
-export const seriesColor = (colorMap: ColorMap, index: number): string =>
-  colorMap.universalColors[index % colorMap.universalColors.length] ?? "#888";
 
 export const useColorMap = (preset: ColorPreset = "default") => {
   const theme = useTheme();
-  const darkTheme = theme.colorScheme === "dark";
-  const resolved = resolvePreset(preset);
-
+  const fixed = useContext(FixedSeriesContext);
   return useMemo(
-    () => ({
-      ...structuralColors(theme),
-      ...PRESETS[resolved](darkTheme),
-      ...heatmapColors(resolved, theme.palette.background.surface, darkTheme),
-    }),
-    [theme, darkTheme, resolved],
+    () => colorMapFor(theme, preset, fixed),
+    [theme, preset, fixed],
   );
 };

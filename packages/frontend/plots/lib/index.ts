@@ -82,3 +82,4 @@ export * from "./constants";
 export * from "./utils";
 export * from "./math";
 export * from "./colors";
+export * from "./colorVision";

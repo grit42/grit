@@ -28,6 +28,8 @@ const colorMap = {
   bgColor: "#fff",
   boxLine: "#333",
   universalColors: ["#c1", "#c2", "#c3", "#c4"],
+  manyColors: ["#m1", "#m2", "#m3", "#m4", "#m5", "#m6", "#m7", "#m8"],
+  fixedSeries: {},
 } as unknown as ColorMap;
 
 const timeSeries: TimeSeriesPlotDefinition = {
@@ -517,6 +519,20 @@ describe("buildBar", () => {
     expect(new Set(lines).size).toBe(bars.length);
   });
 
+  test("a panel whose key the host fixes draws that colour, as sexes do", () => {
+    const fixed = {
+      ...colorMap,
+      fixedSeries: { M: "#male", F: "#female" },
+    } as ColorMap;
+    const bars = buildBar(sendBodyWeights, { ...bar, facetBy: ["SEX"] }, fixed)
+      .traces.map(asTrace)
+      .filter((t) => t.type === "bar");
+    const lines = bars.map(
+      (b) => (b.marker as { line?: { color?: string } })?.line?.color,
+    );
+    expect(new Set(lines)).toEqual(new Set(["#male", "#female"]));
+  });
+
   test("the bar height is the group mean", () => {
     const first = buildBarWith()
       .traces.map(asTrace)
@@ -642,7 +658,7 @@ describe("buildBar", () => {
 
     const shared = buildBar(rows, counted, colorMap);
     expect(shared.axes.xaxis1.ticktext).toHaveLength(MAX_CATEGORIES);
-    expect(shared.axes.xaxis1.ticktext[0]).toBe("c10");
+    expect(shared.axes.xaxis1.ticktext![0]).toBe("c10");
     expect(shared.hiddenCategories).toBe(10);
 
     const own = buildBar(
@@ -734,17 +750,17 @@ describe("buildBar", () => {
       const rows = sendBodyWeights.filter((r) => r.ARM === "Treatment 1");
       const log = counted({ y: { ...bar.y, axisType: "log" } }).axes.yaxis1;
       expect(log.autorange).toBe(false);
-      expect(log.range[0]).toBeLessThan(0);
-      expect(10 ** log.range[1]).toBeGreaterThanOrEqual(rows.length);
+      expect(log.range![0]).toBeLessThan(0);
+      expect(10 ** log.range![1]).toBeGreaterThanOrEqual(rows.length);
       expect(log.ticktext).toEqual(
-        log.tickvals.map((value: number) => String(value)),
+        log.tickvals!.map((value: number) => String(value)),
       );
-      expect(log.tickvals.slice(0, 3)).toEqual([1, 2, 5]);
+      expect(log.tickvals!.slice(0, 3)).toEqual([1, 2, 5]);
 
       const fixed = counted({
         y: { ...bar.y, axisType: "log", ticks: { mode: "count", count: 4 } },
       }).axes.yaxis1;
-      expect(fixed.range[0]).toBeLessThan(0);
+      expect(fixed.range![0]).toBeLessThan(0);
       expect(fixed.tickvals).toBeUndefined();
     });
 

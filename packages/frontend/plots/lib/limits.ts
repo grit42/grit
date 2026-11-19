@@ -141,7 +141,7 @@ export const controlLineSpecs = (
     line: {
       color: colorMap.wLine as string,
       width: CONTROL_LINE_WIDTH,
-      dash: "dot",
+      dash: "dashdot",
     },
   },
   {
@@ -151,7 +151,7 @@ export const controlLineSpecs = (
     line: {
       color: colorMap.wLine as string,
       width: CONTROL_LINE_WIDTH,
-      dash: "dot",
+      dash: "dashdot",
     },
   },
   {

@@ -17,6 +17,8 @@ const colorMap = {
   gridColor: "#cccccc",
   bgColor: "#ffffff",
   universalColors: ["#c1"],
+  manyColors: ["#m1", "#m2", "#m3", "#m4", "#m5", "#m6", "#m7", "#m8"],
+  fixedSeries: {},
 } as unknown as ColorMap;
 
 const box: BoxPlotDefinition = {
