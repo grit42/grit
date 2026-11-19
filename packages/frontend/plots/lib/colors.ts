@@ -18,7 +18,8 @@
 
 import { useMemo } from "react";
 import { useTheme } from "@grit42/client-library/hooks";
-import type { Theme } from "@grit42/client-library/theme";
+import type { Palette, Theme } from "@grit42/client-library/theme";
+import type { NoticeLevel } from "./notices";
 
 export const hexToRgb = ({ color }: { color: string }) => {
   const raw = color.trim().replace(/^#/, "");
@@ -189,6 +190,27 @@ export const readableOn = (
   }
 
   return best;
+};
+
+/** WCAG AA for body text. */
+export const MIN_TEXT_CONTRAST = 4.5;
+
+/** A text colour per notice level, from the theme and readable on its surface and page. */
+export const noticeColors = (palette: Palette): Record<NoticeLevel, string> => {
+  const surface = palette.background.surface;
+  const text = (color: string) =>
+    readableOn(color, [surface, palette.background.default], MIN_TEXT_CONTRAST);
+  return {
+    cannot: text(palette.error.main),
+    check: text(palette.warning.main),
+    left: text(palette.info.main),
+    note: text(
+      composite(
+        rgba({ color: palette.background.contrastText, alpha: 0.72 }),
+        surface,
+      ),
+    ),
+  };
 };
 
 export type ColorPreset = "default" | "muted" | "bright";

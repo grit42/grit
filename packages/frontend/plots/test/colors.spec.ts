@@ -8,12 +8,15 @@ import {
   contrastRatio,
   contrastingText,
   hexToRgb,
+  MIN_TEXT_CONTRAST,
+  noticeColors,
   readableOn,
   interpolateScale,
   relativeLuminance,
   rgba,
   tint,
 } from "../lib/colors";
+import { darkPalette, lightPalette } from "@grit42/client-library/theme";
 
 describe("hexToRgb", () => {
   test("parses six-digit hex, with or without the hash", () => {
@@ -253,5 +256,27 @@ describe("readableOn", () => {
     expect(readableOn("#4e79a7", undefined as unknown as string)).toBe(
       "#4e79a7",
     );
+  });
+});
+
+describe("notice levels", () => {
+  test.each([
+    ["light", lightPalette],
+    ["dark", darkPalette],
+  ])("read on the %s theme's surface and page", (_, palette) => {
+    for (const color of Object.values(noticeColors(palette))) {
+      for (const surface of [
+        palette.background.surface,
+        palette.background.default,
+      ]) {
+        expect(contrastRatio(color, surface)).toBeGreaterThanOrEqual(
+          MIN_TEXT_CONTRAST,
+        );
+      }
+    }
+  });
+
+  test("come from the theme's own colours where they already read", () => {
+    expect(noticeColors(darkPalette).check).toBe(darkPalette.warning.main);
   });
 });

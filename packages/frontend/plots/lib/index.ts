@@ -63,6 +63,9 @@ export * from "./ranges";
 export * from "./format";
 export * from "./notices";
 export { default as PlotNotices } from "./PlotBase/PlotNotices";
+export * from "./PlotBase/PlotNotices";
+export { default as CannotDraw } from "./PlotBase/CannotDraw";
+export * from "./PlotBase/FigureSummary";
 export * from "./annotations";
 
 export type * from "./types";

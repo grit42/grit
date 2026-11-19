@@ -47,7 +47,7 @@ const PlotDataSummaryPanel = ({
     .join(", ");
 
   return (
-    <div style={{ fontSize: "0.85rem", marginTop: "0.5rem" }}>
+    <div style={{ fontSize: "0.85rem" }}>
       <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
         <span>
           <strong>{summary.included}</strong> of{" "}

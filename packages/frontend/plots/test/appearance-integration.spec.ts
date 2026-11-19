@@ -397,7 +397,7 @@ test("a box plot draws its boxes with no summary marker chosen", async () => {
     type: "box",
     display: { statMarkers: [] },
   } as PlotDefinition);
-  expect(host.textContent).not.toContain("Nothing to draw");
+  expect(host.textContent).not.toContain("Cannot draw");
 });
 
 test("a counted bar plot draws no ranges", async () => {

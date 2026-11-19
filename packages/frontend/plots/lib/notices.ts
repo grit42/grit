@@ -28,14 +28,64 @@ import {
   shownFacetLabels,
 } from "./utils";
 
+/** How serious a notice is, most serious first. */
+export const NOTICE_LEVELS = ["cannot", "check", "left", "note"] as const;
+export type NoticeLevel = (typeof NOTICE_LEVELS)[number];
+
+export const NOTICE_LEVEL_LABELS: Record<NoticeLevel, string> = {
+  cannot: "Cannot draw",
+  check: "Check",
+  left: "Left out",
+  note: "Note",
+};
+
 export interface PlotNotice {
-  /** `info` says what the figure did; it is not counted as omitted. */
+  /** Its level: `empty` cannot draw, `warning` check, `omitted` left out, `info` note. */
   kind: "omitted" | "empty" | "warning" | "info";
   reason: string;
   count?: number;
+  /** Named after the reason, four at most; the notices table names them all. */
+  items?: readonly string[];
 }
 
-const NAMED_OMISSIONS = 4;
+const LEVEL_OF_KIND: Record<PlotNotice["kind"], NoticeLevel> = {
+  empty: "cannot",
+  warning: "check",
+  omitted: "left",
+  info: "note",
+};
+
+export const noticeLevel = (notice: PlotNotice): NoticeLevel =>
+  LEVEL_OF_KIND[notice.kind];
+
+const rank = (notice: PlotNotice) => NOTICE_LEVELS.indexOf(noticeLevel(notice));
+
+/** Most serious first, otherwise in the order given. */
+export const sortedNotices = (notices: readonly PlotNotice[]): PlotNotice[] =>
+  [...notices].sort((a, b) => rank(a) - rank(b));
+
+/** What the figure leaves out, for the change since a moment ago. */
+export const leftOutCount = (notices: readonly PlotNotice[]): number =>
+  notices
+    .filter((notice) => noticeLevel(notice) === "left")
+    .reduce((sum, notice) => sum + (notice.count ?? 0), 0);
+
+export const NAMED_ITEMS = 4;
+
+/** The reason, then its items, `named` of them at most. */
+export const noticeText = (
+  notice: PlotNotice,
+  named: number = NAMED_ITEMS,
+): string =>
+  notice.items?.length
+    ? `${notice.reason}: ${namedList(notice.items, named)}`
+    : notice.reason;
+
+/** The text with its count in front, as a line of its own reads. */
+export const noticeLine = (notice: PlotNotice): string =>
+  notice.count === undefined
+    ? noticeText(notice)
+    : `${notice.count} ${noticeText(notice)}`;
 
 export const plotNotices = ({
   def,
@@ -64,7 +114,7 @@ export const plotNotices = ({
         notices.push({
           kind: "omitted",
           count: dropped,
-          reason: `not drawn: ${name} is on a logarithmic scale, which has no position for zero or negative values`,
+          reason: `values ≤ 0, not drawn on the log ${name} axis`,
         });
       }
     }
@@ -85,7 +135,7 @@ export const plotNotices = ({
         notices.push({
           kind: "omitted",
           count: clipped,
-          reason: `outside the fixed ${name} range of ${low} to ${high}`,
+          reason: `outside the fixed ${name} range ${low} to ${high}`,
         });
       }
     }
@@ -102,9 +152,7 @@ export const plotNotices = ({
   ) {
     notices.push({
       kind: "info",
-      reason:
-        "The dendrogram is drawn for a single panel only. " +
-        'Narrow "Facets shown" to one, or stop faceting, to see it.',
+      reason: "dendrogram drawn for one panel only",
     });
   }
 
@@ -113,7 +161,8 @@ export const plotNotices = ({
     notices.push({
       kind: "omitted",
       count: hidden.length,
-      reason: `facets hidden by "Facets shown": ${namedList(hidden, NAMED_OMISSIONS)}.`,
+      reason: `facets hidden by "Facets shown"`,
+      items: hidden,
     });
   }
 
@@ -123,7 +172,8 @@ export const plotNotices = ({
     notices.push({
       kind: "omitted",
       count: omitted.length,
-      reason: `panels not drawn, of ${wanted}: ${namedList(omitted, NAMED_OMISSIONS)}. Filter or group differently to reach them.`,
+      reason: `of ${wanted} panels not drawn`,
+      items: omitted,
     });
   }
 
@@ -133,7 +183,7 @@ export const plotNotices = ({
       notices.push({
         kind: "empty",
         reason:
-          "Nothing to draw: no summary is selected and the individual observations are hidden. Choose a summary, or show the observations.",
+          "No summary chosen and observations hidden. Choose one under Display.",
       });
     }
   }

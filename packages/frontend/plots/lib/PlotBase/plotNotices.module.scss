@@ -1,39 +1,249 @@
-.notices {
+@use "@grit42/client-library/theme.scss";
+
+$surface: theme.$palette-background-surface;
+$text: theme.$palette-background-contrast-text;
+$line: color-mix(in srgb, #{$text} 16%, #{$surface});
+
+.header {
   flex: 0 0 auto;
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-xs, 0.25rem);
-  padding: var(--spacing-sm, 0.5rem) var(--spacing-md, 0.75rem);
+  gap: 0.25rem;
+  padding: 0.375rem 0.625rem 0.25rem 0.75rem;
   font-size: 0.8125rem;
   line-height: 1.45;
+  color: $text;
+}
 
-  p {
-    display: flex;
-    gap: 0.4375rem;
-    margin: 0;
-    align-items: baseline;
+.row {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.25rem 0.75rem;
+}
+
+.summary {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.end {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+// A round `?` for the reading guide, quiet beside the chip.
+.help {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.375rem;
+  height: 1.375rem;
+  padding: 0;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--notice-note);
+  background: $surface;
+  border: 1px solid $line;
+  border-radius: 999px;
+  cursor: pointer;
+
+  &:hover,
+  &[aria-expanded="true"] {
+    color: $text;
+    border-color: color-mix(in srgb, #{$text} 40%, #{$surface});
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--notice-note);
+    outline-offset: 2px;
   }
 }
 
+.guide {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8rem;
+}
+
+@mixin levels {
+  @each $level in cannot, check, left, note {
+    &[data-level="#{$level}"] {
+      --level: var(--notice-#{$level});
+    }
+  }
+}
+
+.level {
+  @include levels;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--level);
+  font-weight: 700;
+  white-space: nowrap;
+
+  svg {
+    flex: none;
+  }
+}
+
+.chip {
+  @include levels;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--level);
+  background: color-mix(in srgb, var(--level) 11%, #{$surface});
+  border: 1px solid color-mix(in srgb, var(--level) 50%, #{$surface});
+  border-radius: 999px;
+  padding: 0.125rem 0.625rem 0.125rem 0.45rem;
+  cursor: pointer;
+  white-space: nowrap;
+
+  &:hover,
+  &[aria-expanded="true"] {
+    background: color-mix(in srgb, var(--level) 19%, #{$surface});
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--level);
+    outline-offset: 2px;
+  }
+}
+
+.caret {
+  width: 0.7rem;
+  height: 0.7rem;
+  transition: transform 0.15s;
+
+  [aria-expanded="true"] > & {
+    transform: rotate(180deg);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+.change {
+  font-weight: 400;
+  color: var(--notice-left);
+  padding-left: 0.4rem;
+  border-left: 1px solid color-mix(in srgb, var(--level) 40%, #{$surface});
+}
+
+.hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+// Over the figure, so the figure keeps its height.
+.table {
+  position: absolute;
+  top: calc(100% + 0.375rem);
+  left: -0.25rem;
+  right: 0;
+  z-index: 2;
+  max-height: min(18rem, 60vh);
+  overflow: auto;
+  background: $surface;
+  border: 1px solid $line;
+  border-radius: theme.$border-radius;
+  box-shadow: 0 0.6rem 1.75rem rgba(0, 0, 0, 0.28);
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+  }
+
+  th {
+    position: sticky;
+    top: 0;
+    text-align: left;
+    font-weight: 400;
+    font-size: 0.75rem;
+    color: var(--notice-note);
+    background: $surface;
+    padding: 0.4rem 0.6rem;
+    border-bottom: 1px solid $line;
+  }
+
+  td {
+    padding: 0.4rem 0.6rem;
+    vertical-align: top;
+    border-top: 1px solid $line;
+  }
+
+  tr:first-child td {
+    border-top: 0;
+  }
+
+  td:first-child {
+    width: 1%;
+  }
+}
+
+.table.guide {
+  max-height: min(32rem, 80vh);
+}
+
 .count {
+  text-align: right;
   font-variant-numeric: tabular-nums;
-  flex: none;
+  width: 4.5em;
 }
 
-.omitted {
-  color: var(--color-warning, #9a6100);
+.more {
+  font: inherit;
+  font-size: 0.75rem;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
 }
 
-.empty {
-  color: var(--color-error, #a32f2f);
-  font-weight: 500;
+.stack {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
 }
 
-.info {
-  color: var(--color-text-secondary, #767d8b);
-}
+// Where a figure cannot be drawn, its reason takes the figure's place.
+.cannot {
+  flex: 1 1 auto;
+  min-height: 8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  font-size: 0.875rem;
+  color: $text;
 
-.changed {
-  color: var(--color-text-secondary, #767d8b);
-  font-style: italic;
+  div {
+    max-width: 46ch;
+    display: grid;
+    gap: 0.375rem;
+  }
+
+  p {
+    margin: 0;
+  }
 }

@@ -16,14 +16,14 @@
  * @grit42/plots. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { useCallback, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Config, Layout, LayoutAxis, PlotMouseEvent } from "plotly.js";
 import type { PlotParams } from "./types";
 import PlotBase from ".";
 import { ColorMap, ColorPreset, useColorMap } from "../colors";
 import type { Annotations } from "plotly.js";
 import type { PlotAnnotation, PlotExportOptions } from "../types";
-import type { PlotNotice } from "../notices";
+import { noticeLevel, noticeLine, type PlotNotice } from "../notices";
 import {
   annotationShapes,
   axisLayout,
@@ -33,6 +33,7 @@ import {
   pointFromEvent,
 } from "../annotations";
 import AnnotationLayer, { type AnnotationPoint } from "./AnnotationLayer";
+import CannotDraw from "./CannotDraw";
 import DownloadDialog from "./DownloadDialog";
 import PlotNotices from "./PlotNotices";
 import { figureToolbarButtons } from "./toolbar";
@@ -198,8 +199,7 @@ const ThemedPlot = ({
           {
             kind: "info" as const,
             count: notes.elsewhere,
-            reason:
-              "notes hidden: placed with another panel layout, such as a different Facet by. Return to it to see them, or remove them under Notes.",
+            reason: "notes hidden: placed in another panel layout",
           },
         ]
       : []),
@@ -208,8 +208,7 @@ const ThemedPlot = ({
           {
             kind: "info" as const,
             count: notes.missing,
-            reason:
-              "notes hidden: what they point at is not in the figure, such as a removed study. Restore it to see them, or remove them under Notes.",
+            reason: "notes hidden: what they point at is not drawn",
           },
         ]
       : []),
@@ -218,12 +217,21 @@ const ThemedPlot = ({
           {
             kind: "info" as const,
             count: notes.unplaced,
-            reason:
-              "notes hidden: saved by an earlier version, they cannot be placed. Remove them under Notes.",
+            reason: "notes hidden: saved by an earlier version",
           },
         ]
       : []),
   ];
+  const refusals = shownNotices.filter((n) => noticeLevel(n) === "cannot");
+  if (refusals.length) {
+    return (
+      <CannotDraw
+        reason={refusals.map(noticeLine)}
+        notices={shownNotices.filter((n) => noticeLevel(n) !== "cannot")}
+      />
+    );
+  }
+
   const scales = {
     x: (themedAxes.xaxis as Partial<LayoutAxis> | undefined)?.type,
     y: (themedAxes.yaxis as Partial<LayoutAxis> | undefined)?.type,
@@ -315,51 +323,49 @@ const ThemedPlot = ({
     />
   );
 
-  const withNotices = (figure: ReactNode) => (
+  return (
     <div className={styles.stack}>
-      <div className={styles.figure}>{figure}</div>
-      {shownNotices.length ? <PlotNotices notices={shownNotices} /> : null}
-    </div>
-  );
-
-  return withNotices(
-    <div className={styles.container}>
-      {plot}
-      <div className={styles.overlay}>
-        {canAnnotate && (
-          <AnnotationLayer
-            annotating={annotating}
-            onAnnotatingChange={setAnnotating}
-            pending={pending}
-            onCancel={() => setPending(null)}
-            onCommit={(text) => {
-              if (!pending) return;
-              onAnnotationsChange?.([
-                ...(annotations ?? []),
-                {
-                  id: nextAnnotationId(annotations, text),
-                  text,
-                  x: pending.x,
-                  y: pending.y,
-                  axis: pending.axis,
-                  xaxis: pending.xaxis,
-                  layout: placedIn,
-                  author: annotationAuthor,
-                },
-              ]);
-              setPending(null);
-            }}
+      <PlotNotices notices={shownNotices} />
+      <div className={styles.figure}>
+        <div className={styles.container}>
+          {plot}
+          <div className={styles.overlay}>
+            {canAnnotate && (
+              <AnnotationLayer
+                annotating={annotating}
+                onAnnotatingChange={setAnnotating}
+                pending={pending}
+                onCancel={() => setPending(null)}
+                onCommit={(text) => {
+                  if (!pending) return;
+                  onAnnotationsChange?.([
+                    ...(annotations ?? []),
+                    {
+                      id: nextAnnotationId(annotations, text),
+                      text,
+                      x: pending.x,
+                      y: pending.y,
+                      axis: pending.axis,
+                      xaxis: pending.xaxis,
+                      layout: placedIn,
+                      author: annotationAuthor,
+                    },
+                  ]);
+                  setPending(null);
+                }}
+              />
+            )}
+          </div>
+          <DownloadDialog
+            isOpen={downloadOpen}
+            onClose={() => setDownloadOpen(false)}
+            graphDiv={graphDiv}
+            title={title}
+            options={exportOptions}
           />
-        )}
+        </div>
       </div>
-      <DownloadDialog
-        isOpen={downloadOpen}
-        onClose={() => setDownloadOpen(false)}
-        graphDiv={graphDiv}
-        title={title}
-        options={exportOptions}
-      />
-    </div>,
+    </div>
   );
 };
 

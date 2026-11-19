@@ -424,7 +424,7 @@ export const buildBar = (
           {
             kind: "omitted" as const,
             count: hiddenCategories.size,
-            reason: `${def.x.label ?? def.x.key} categories not drawn: past ${MAX_CATEGORIES}, a panel keeps its largest.`,
+            reason: `${def.x.label ?? def.x.key} categories not drawn: a panel keeps its ${MAX_CATEGORIES} largest`,
           },
         ]
       : [],
