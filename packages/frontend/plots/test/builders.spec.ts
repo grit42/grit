@@ -440,6 +440,19 @@ describe("buildBox", () => {
     expect(new Set(legend).size).toBe(legend.length);
   });
 
+  test("a lone group's panels take their own colours, as ungrouped ones do", () => {
+    const males = sendBodyWeights.filter((row) => row.SEX === "M");
+    const boxes = buildBox(
+      males,
+      { ...box, groupBy: ["SEX"], facetBy: ["ARMCD"] },
+      colorMap,
+    )
+      .traces.map(asTrace)
+      .filter((t) => t.type === "box");
+    const lines = boxes.map((b) => (b.line as { color?: string })?.color);
+    expect(new Set(lines).size).toBe(boxes.length);
+  });
+
   test("names the groups as ticks on a numeric axis", () => {
     const { axes } = buildBoxWith();
     expect(axes.xaxis1.tickvals).toEqual([0, 1, 2]);
@@ -511,6 +524,22 @@ describe("buildBar", () => {
 
     const legend = bars.filter((b) => b.showlegend).map((b) => b.name);
     expect(new Set(legend).size).toBe(legend.length);
+  });
+
+  test("a lone series' panels take their own colours, as ungrouped ones do", () => {
+    const males = sendBodyWeights.filter((row) => row.SEX === "M");
+    const bars = buildBar(
+      males,
+      { ...bar, groupBy: ["SEX"], facetBy: ["ARMCD"] },
+      colorMap,
+    )
+      .traces.map(asTrace)
+      .filter((t) => t.type === "bar");
+    expect(bars.length).toBeGreaterThan(1);
+    const lines = bars.map(
+      (b) => (b.marker as { line?: { color?: string } })?.line?.color,
+    );
+    expect(new Set(lines).size).toBe(bars.length);
   });
 
   test("the bar height is the group mean", () => {

@@ -58,9 +58,11 @@ const buildBoxTraces = (
   const labels = [
     ...new Set(facets.flatMap((f) => f.data.map((g) => g.label))),
   ];
+  // A lone series is no grouping to tell apart, so its panels differ as ungrouped ones do.
+  const byLabel = grouped && labels.length > 1;
   const colorOf = (label: string, facetIndex: number) =>
     colorMap.universalColors[
-      (grouped ? labels.indexOf(label) : facetIndex) %
+      (byLabel ? labels.indexOf(label) : facetIndex) %
         colorMap.universalColors.length
     ] ?? "#888";
   const named = new Set<string>();

@@ -237,7 +237,9 @@ export const buildBar = (
       ),
     ]),
   );
-  const colorBySeries = (def.groupBy ?? []).length > 0;
+  // A lone series is no grouping to tell apart, so its panels differ as ungrouped ones do.
+  const colorBySeries =
+    (def.groupBy ?? []).length > 0 && seriesNames.length > 1;
   const colors = new Map(
     seriesNames.map((series, index) => [
       series,
