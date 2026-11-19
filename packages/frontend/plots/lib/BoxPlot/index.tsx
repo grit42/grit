@@ -32,7 +32,10 @@ const BoxPlot = ({
     traces,
     axes,
     annotations: plotGroupAnnotations,
-  } = useMemo(() => buildBox(data, def, colorMap), [data, def, colorMap]);
+  } = useMemo(
+    () => buildBox(data, def, colorMap, dataProperties),
+    [data, def, colorMap, dataProperties],
+  );
 
   // x carries the grouping, which the builder places itself.
   const typedAxes = composeAxes({

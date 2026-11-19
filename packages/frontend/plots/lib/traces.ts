@@ -20,8 +20,14 @@
 import type { Data, Datum, ScatterData } from "plotly.js";
 import { type ColorMap, composite, readableOn, rgba } from "./colors";
 import { countText, numberFormat, type NumberFormat } from "./format";
-import { buildHoverTemplate, type HoverRow } from "./hover";
-import { type BoxStats, boxStats, randomJitter, toFiniteNumbers } from "./math";
+import {
+  buildHoverTemplate,
+  pointHover,
+  type HoverRow,
+  type PointHover,
+} from "./hover";
+import { type BoxStats, boxStats, randomJitter } from "./math";
+import type { SourceDatum } from "./types";
 
 export interface ScatterTraceOptions {
   x: ScatterData["x"];
@@ -255,6 +261,8 @@ const OUTLIER_FILL_ALPHA = 1;
 export const outlierTrace = ({
   format,
   values,
+  rows,
+  hover,
   label,
   xIndex,
   colorMap,
@@ -262,6 +270,9 @@ export const outlierTrace = ({
   jitter = 0.2,
 }: {
   values: number[];
+  /** Each value's row, for `hover`. */
+  rows?: readonly SourceDatum[];
+  hover?: PointHover;
   label: string;
   xIndex: number;
   colorMap: ColorMap;
@@ -276,13 +287,12 @@ export const outlierTrace = ({
   const meanText = fmt.text(stats.mean);
   const medianText = fmt.text(stats.median);
   const sdText = fmt.text(stats.std);
-  const varianceText = fmt.text(stats.variance);
 
-  const y = toFiniteNumbers(values);
-  if (!y.length) return null;
-
-  const outliers = y.filter(
-    (v) => v < stats.lowerWhisker || v > stats.upperWhisker,
+  const outliers = values.flatMap((value, i) =>
+    Number.isFinite(value) &&
+    (value < stats.lowerWhisker || value > stats.upperWhisker)
+      ? [{ value, row: rows?.[i] ?? {} }]
+      : [],
   );
   if (!outliers.length) return null;
 
@@ -291,7 +301,7 @@ export const outlierTrace = ({
   return scatterTrace({
     name: `${label} outliers`,
     x: outliers.map(() => xIndex + jitterValue()),
-    y: outliers,
+    y: outliers.map((one) => one.value),
     mode: "markers",
     color: readableOn(color ?? colorMap.markerFill, [
       composite(
@@ -307,14 +317,21 @@ export const outlierTrace = ({
     marker: { symbol: "circle-open", size: 7, line: { width: 2 } },
     legendgroup: label,
     showlegend: false,
-    hoverRows: [
-      { value: `${label} outlier` },
-      { key: "Value", value: "%{y}", format: fmt.spec },
-      { key: "Mean", value: meanText },
-      { key: "Median", value: medianText },
-      { key: "σ", value: sdText },
-      { key: "σ<sup>2</sup>", value: varianceText },
-    ],
+    ...(hover ?? pointHover(undefined, undefined, fmt))(
+      [
+        { value: `${label} outlier` },
+        { key: "Value", value: "%{y}", format: fmt.spec },
+      ],
+      outliers.map((one) => one.row),
+      {
+        after: [
+          { value: "Within group", section: true },
+          { key: "Mean", value: meanText, inline: true },
+          { key: "Median", value: medianText, inline: true },
+          { key: "σ", value: sdText, inline: true },
+        ],
+      },
+    ),
   });
 };
 

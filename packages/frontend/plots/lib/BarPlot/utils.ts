@@ -16,13 +16,12 @@
  * @grit42/plots. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Annotations, Data, Datum, LayoutAxis } from "plotly.js";
+import { Annotations, Data, LayoutAxis } from "plotly.js";
 import { ColorMap, composite, readableOn, rgba } from "../colors";
 import { resolveDisplay } from "../displayMode";
 import {
-  buildHoverCustomData,
   buildHoverTemplate,
-  resolveHoverSpec,
+  pointHover,
   summaryHoverRows,
   summaryHoverValues,
 } from "../hover";
@@ -257,9 +256,7 @@ export const buildBar = (
 
   const jitter = randomJitter({ jitter: 0.4, seed: JITTER_SEED });
 
-  const pointHoverSpec = def.hover?.length
-    ? resolveHoverSpec(def.hover, properties)
-    : null;
+  const hover = pointHover(def.hover, properties, fmt);
   const named = new Set<string>();
 
   const xLabel = def.x.label ?? def.x.key;
@@ -270,7 +267,6 @@ export const buildBar = (
 
   facets.forEach((facet, index) => {
     const axis = index + 1;
-    const facetSuffix = multiFacet ? `<br>${facet.label}` : "";
     const groups = facetGroups[index] ?? [];
     // Per panel where the panels hold different categories, as each tissue has its own findings.
     const own = def.x.categoriesPerPanel
@@ -403,9 +399,6 @@ export const buildBar = (
       }
 
       if (display.showIndividual && pointY.length > 0) {
-        const pointHover = pointHoverSpec
-          ? buildHoverCustomData(pointRows, pointHoverSpec.keys)
-          : pointRows.map((row) => [row[def.x.key] ?? null]);
         traces.push({
           ...scatterTrace({
             x: pointX,
@@ -423,11 +416,16 @@ export const buildBar = (
             ]),
             size: 5,
           },
-          customdata: pointHover as unknown as Datum[][],
-          hovertemplate: pointHoverSpec
-            ? buildHoverTemplate(pointHoverSpec.rows)
-            : `<b>${series}</b>${facetSuffix}<br>${xLabel}: %{customdata[0]}` +
-              `<br>${yLabel}: %{y:${fmt.spec}}<extra></extra>`,
+          ...hover(
+            [
+              { value: series },
+              ...(multiFacet ? [{ value: facet.label, bold: false }] : []),
+              { key: xLabel, value: "%{customdata[0]}" },
+              { key: yLabel, value: "%{y}", format: fmt.spec },
+            ],
+            pointRows,
+            { own: pointRows.map((row) => [row[def.x.key] ?? null]) },
+          ),
           xaxis: `x${axis}`,
           yaxis: `y${axis}`,
         } as Data);

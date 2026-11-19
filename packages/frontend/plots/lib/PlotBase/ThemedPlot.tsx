@@ -264,8 +264,9 @@ const ThemedPlot = ({
     hoverlabel: {
       bgcolor: colorMap.hoverBackground,
       bordercolor: colorMap.hoverBorder,
-      font: { color: colorMap.hoverFontColor },
       ...(hoverlabel ?? {}),
+      // A host's font size keeps the theme's colour.
+      font: { color: colorMap.hoverFontColor, ...(hoverlabel?.font ?? {}) },
     },
 
     annotations: [

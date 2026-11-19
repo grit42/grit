@@ -56,8 +56,8 @@ const TimeSeriesPlot = ({
     axes,
     annotations: plotGroupAnnotations,
   } = useMemo(
-    () => buildTimeSeries(data, def, colorMap),
-    [data, def, colorMap],
+    () => buildTimeSeries(data, def, colorMap, dataProperties),
+    [data, def, colorMap, dataProperties],
   );
 
   // Axis type is per-orientation; ThemedPlot supplies the colours.

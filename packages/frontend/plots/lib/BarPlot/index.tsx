@@ -36,7 +36,10 @@ const BarPlot = ({
     axes,
     annotations: plotGroupAnnotations,
     hiddenCategories,
-  } = useMemo(() => buildBar(data, def, colorMap), [data, def, colorMap]);
+  } = useMemo(
+    () => buildBar(data, def, colorMap, dataProperties),
+    [data, def, colorMap, dataProperties],
+  );
 
   const typedAxes = composeAxes({
     def,

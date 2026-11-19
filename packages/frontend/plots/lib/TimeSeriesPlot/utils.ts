@@ -22,11 +22,19 @@ import { numberFormat, type NumberFormat } from "../format";
 import { summarise } from "../math";
 import {
   buildHoverTemplate,
+  pointHover,
   summaryHoverRows,
   summaryHoverValues,
   type HoverRow,
+  type PointHover,
 } from "../hover";
-import { SourceData, StatMarker, TimeSeriesPlotDefinition } from "../types";
+import {
+  SourceData,
+  SourceDataProperties,
+  SourceDatum,
+  StatMarker,
+  TimeSeriesPlotDefinition,
+} from "../types";
 import {
   buildFacets,
   inDeclaredOrder,
@@ -44,7 +52,9 @@ interface TimeSeriesPlotGroup {
   key: string;
   label: string;
   data: Record<string, number[]>;
-  individuals: Record<string, [number, number][]>;
+  /** Each value's row, as `data` holds them. */
+  rows: Record<string, SourceDatum[]>;
+  individuals: Record<string, [number, number, SourceDatum][]>;
 }
 
 const buildTimeSeriesGroups = (
@@ -68,20 +78,24 @@ const buildTimeSeriesGroups = (
         key: key,
         label: key,
         data: {},
+        rows: {},
         individuals: {},
       };
     }
     const timeKey = Number(datum[def.x.key]).toString();
     if (nullish(groups[key].data[timeKey])) {
       groups[key].data[timeKey] = [];
+      groups[key].rows[timeKey] = [];
     }
     groups[key].data[timeKey].push(Number(datum[def.y.key]));
+    groups[key].rows[timeKey]!.push(datum);
 
     if (individualBy) {
       const individual = String(datum[individualBy]);
       (groups[key].individuals[individual] ??= []).push([
         Number(datum[def.x.key]),
         Number(datum[def.y.key]),
+        datum,
       ]);
     }
   }
@@ -140,6 +154,7 @@ const buildTraces = (
   facets: TimeSeriesPlotFacet[],
   def: TimeSeriesPlotDefinition,
   colorMap: ColorMap,
+  hover: PointHover,
 ) => {
   const traces: Data[] = [];
   const axes: Record<string, Partial<LayoutAxis>> = {};
@@ -228,17 +243,27 @@ const buildTraces = (
               legendgroup: seriesLabel,
               line: { color, width: 1, dash: seriesDash(seriesIndex) },
               opacity: 0.7,
-              hovertemplate: `<b>${individual}</b><br>${xLabel}: %{x}<br>${yLabel}: %{y:${fmt.spec}}<extra></extra>`,
+              ...hover(
+                [
+                  { value: individual },
+                  { key: xLabel, value: "%{x}" },
+                  { key: yLabel, value: "%{y}", format: fmt.spec },
+                ],
+                ordered.map(([, , row]) => row),
+              ),
             });
           }
         } else {
           const pointX: number[] = [];
           const pointY: number[] = [];
+          const pointRows: SourceDatum[] = [];
           for (const xValue of xValues) {
-            for (const value of group.data[xValue.toString()]) {
+            const at = xValue.toString();
+            group.data[at]!.forEach((value, k) => {
               pointX.push(xValue);
               pointY.push(value);
-            }
+              pointRows.push(group.rows[at]![k]!);
+            });
           }
 
           traces.push({
@@ -257,7 +282,14 @@ const buildTraces = (
               opacity: 0.7,
               symbol: seriesSymbol(seriesIndex),
             },
-            hovertemplate: `<b>${group.label}</b><br>${xLabel}: %{x}<br>${yLabel}: %{y:${fmt.spec}}<extra></extra>`,
+            ...hover(
+              [
+                { value: group.label },
+                { key: xLabel, value: "%{x}" },
+                { key: yLabel, value: "%{y}", format: fmt.spec },
+              ],
+              pointRows,
+            ),
           });
         }
       }
@@ -352,6 +384,7 @@ export const buildTimeSeries = (
   data: SourceData,
   def: TimeSeriesPlotDefinition,
   colorMap: ColorMap,
+  properties: SourceDataProperties = [],
 ) => {
   const rawFacets = buildFacets(data, def);
   const timeSeriesFacets = rawFacets.map(({ data, ...rest }) => ({
@@ -360,6 +393,11 @@ export const buildTimeSeries = (
   }));
   return {
     facets: rawFacets.length,
-    ...buildTraces(timeSeriesFacets, def, colorMap),
+    ...buildTraces(
+      timeSeriesFacets,
+      def,
+      colorMap,
+      pointHover(def.hover, properties, numberFormat(def.appearance)),
+    ),
   };
 };

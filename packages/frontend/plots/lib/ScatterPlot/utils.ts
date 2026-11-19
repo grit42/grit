@@ -1,7 +1,13 @@
 import { Annotations, Data, Datum, LayoutAxis } from "plotly.js";
 import { ColorMap } from "../colors";
-import { ScatterPlotDefinition, SourceData } from "../types";
-import { buildHoverTemplate } from "../hover";
+import {
+  ScatterPlotDefinition,
+  SourceData,
+  SourceDataProperties,
+  SourceDatum,
+} from "../types";
+import { numberFormat } from "../format";
+import { pointHover, type PointHover } from "../hover";
 import { seriesSymbol } from "../constants";
 import { buildFacets, nullish, ungroupedLabel } from "../utils";
 
@@ -9,6 +15,7 @@ interface ScatterPlotGroup {
   label: string;
   x: Datum[];
   y: Datum[];
+  rows: SourceDatum[];
 }
 
 const buildScatterGroups = (
@@ -26,10 +33,11 @@ const buildScatterGroups = (
         null,
       ) ?? ungroupedLabel(def);
     if (!groups[label]) {
-      groups[label] = { label, x: [], y: [] };
+      groups[label] = { label, x: [], y: [], rows: [] };
     }
     groups[label].x.push(datum[def.x.key]);
     groups[label].y.push(datum[def.y.key]);
+    groups[label].rows.push(datum);
   }
   return Object.values(groups);
 };
@@ -44,6 +52,7 @@ const buildTraces = (
   facets: ScatterPlotFacet[],
   colorMap: ColorMap,
   def: ScatterPlotDefinition,
+  hover: PointHover,
 ) => {
   const xLabel = def.x.label ?? def.x.key;
   const yLabel = def.y.label ?? def.y.key;
@@ -97,12 +106,15 @@ const buildTraces = (
             }
           : undefined,
         marker: { color, symbol: seriesSymbol(seriesIndex) },
-        hovertemplate: buildHoverTemplate([
-          { value: group.label },
-          ...(multiFacet ? [{ value: facet.label, bold: false }] : []),
-          { key: xLabel, value: "%{x}" },
-          { key: yLabel, value: "%{y}" },
-        ]),
+        ...hover(
+          [
+            { value: group.label },
+            ...(multiFacet ? [{ value: facet.label, bold: false }] : []),
+            { key: xLabel, value: "%{x}" },
+            { key: yLabel, value: "%{y}" },
+          ],
+          group.rows,
+        ),
       });
     }
   }
@@ -114,6 +126,7 @@ export const buildScatter = (
   data: SourceData,
   def: ScatterPlotDefinition,
   colorMap: ColorMap,
+  properties: SourceDataProperties = [],
 ) => {
   const rawFacets = buildFacets(data, def);
   const scatterFacets = rawFacets.map(({ data, ...rest }) => ({
@@ -122,6 +135,11 @@ export const buildScatter = (
   }));
   return {
     facets: rawFacets.length,
-    ...buildTraces(scatterFacets, colorMap, def),
+    ...buildTraces(
+      scatterFacets,
+      colorMap,
+      def,
+      pointHover(def.hover, properties, numberFormat(def.appearance)),
+    ),
   };
 };

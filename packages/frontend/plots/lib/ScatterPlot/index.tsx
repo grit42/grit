@@ -37,7 +37,10 @@ const ScatterPlot = ({
     traces,
     axes,
     annotations: plotGroupAnnotations,
-  } = useMemo(() => buildScatter(data, def, colorMap), [data, def, colorMap]);
+  } = useMemo(
+    () => buildScatter(data, def, colorMap, dataProperties),
+    [data, def, colorMap, dataProperties],
+  );
 
   // Axis type is per-orientation; ThemedPlot supplies the colours.
   const typedAxes = composeAxes({

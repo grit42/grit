@@ -142,6 +142,28 @@ describe("buildTimeSeries", () => {
   });
 });
 
+describe("buildTimeSeries point hover", () => {
+  test.each([
+    ["observations", { showIndividual: true }],
+    ["individual lines", { showIndividual: true, individualBy: "USUBJID" }],
+  ] as const)("%s name their row's hover columns", (_, display) => {
+    const traces = build({
+      display,
+      hover: [{ key: "USUBJID", label: "Subject" }],
+    }).traces.map(asTrace);
+    const points = traces.filter((t) => t.customdata && !t.showlegend);
+    const drawn = points.filter((t) =>
+      String(t.hovertemplate).includes("Subject"),
+    );
+    expect(drawn.length).toBeGreaterThan(0);
+    for (const trace of drawn) {
+      expect(
+        (trace.customdata as unknown[][]).map(([subject]) => subject),
+      ).toEqual(expect.arrayContaining([expect.stringContaining("ANIMAL")]));
+    }
+  });
+});
+
 describe("buildTimeSeries display options", () => {
   const names = (def: Partial<TimeSeriesPlotDefinition>) =>
     build(def).traces.map((t) => String(asTrace(t).name));
@@ -463,6 +485,21 @@ describe("buildBox", () => {
     const once = JSON.stringify(buildBox(sendBodyWeights, box, colorMap));
     expect(JSON.stringify(buildBox(sendBodyWeights, box, colorMap))).toBe(once);
   });
+
+  test("each observation and outlier names its row's hover columns", () => {
+    const traces = buildBoxWith({
+      display: { showIndividual: true },
+      hover: [{ key: "USUBJID", label: "Subject" }],
+    }).traces.map(asTrace);
+    const points = traces.filter((t) => t.mode === "markers" && t.customdata);
+    expect(points.length).toBeGreaterThan(0);
+    for (const trace of points) {
+      expect(trace.hovertemplate).toContain("Subject: %{customdata[0]}");
+      const customdata = trace.customdata as unknown[][];
+      expect(customdata).toHaveLength((trace.y as unknown[]).length);
+      expect(String(customdata[0]![0])).toContain("ANIMAL");
+    }
+  });
 });
 
 describe("buildBar", () => {
@@ -624,7 +661,7 @@ describe("buildBar", () => {
     ).toEqual([]);
   });
 
-  test("a hover spec names the columns each observation carries", () => {
+  test("a hover spec adds the columns each observation carries after its own lines", () => {
     const points = buildBarWith({
       display: { showIndividual: true },
       hover: [
@@ -635,11 +672,14 @@ describe("buildBar", () => {
       .traces.map(asTrace)
       .find((t) => t.mode === "markers")!;
 
-    expect(points.hovertemplate).toContain("Subject: %{customdata[0]}");
-    expect(points.hovertemplate).toContain("Weight: %{customdata[1]:.2f}");
+    expect(points.hovertemplate).toMatch(
+      /^<b>All<\/b><br>Arm: %\{customdata\[0\]\}/,
+    );
+    expect(points.hovertemplate).toContain("Subject: %{customdata[1]}");
+    expect(points.hovertemplate).toContain("Weight: %{customdata[2]:.2f}");
     const customdata = points.customdata as unknown[][];
-    expect(String(customdata[0]![0])).toContain("ANIMAL");
-    expect(Number(customdata[0]![1])).toBeGreaterThan(0);
+    expect(String(customdata[0]![1])).toContain("ANIMAL");
+    expect(Number(customdata[0]![2])).toBeGreaterThan(0);
   });
 
   test("faceting splits into separate axes", () => {

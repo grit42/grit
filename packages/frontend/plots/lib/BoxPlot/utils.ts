@@ -1,12 +1,18 @@
-import { Annotations, Data, Datum, LayoutAxis } from "plotly.js";
+import { Annotations, Data, LayoutAxis } from "plotly.js";
 import { ColorMap, composite, readableOn, rgba } from "../colors";
 import { resolveDisplay } from "../displayMode";
 import { numberFormat, type NumberFormat } from "../format";
-import { boxStats, randomJitter, toFiniteNumbers } from "../math";
+import { pointHover, type PointHover } from "../hover";
+import { boxStats, randomJitter, toFiniteNumber } from "../math";
 import { boxStatsHoverTrace, scatterTrace, statsBoxTrace } from "../traces";
 import { categoryRange } from "../axes";
-import { BoxPlotDefinition, SourceData } from "../types";
-import { buildFacets, nullish, ungroupedLabel } from "../utils";
+import {
+  BoxPlotDefinition,
+  SourceData,
+  SourceDataProperties,
+  SourceDatum,
+} from "../types";
+import { buildFacets, ungroupedLabel } from "../utils";
 
 const BOX_WIDTH = 0.5;
 const JITTER_SEED = 42;
@@ -14,7 +20,9 @@ const JITTER_SEED = 42;
 interface BoxGroup {
   key: string;
   label: string;
-  y: Datum[];
+  y: number[];
+  /** Each value's row. */
+  rows: SourceDatum[];
 }
 
 const buildBoxGroups = (
@@ -24,15 +32,17 @@ const buildBoxGroups = (
   const groupBy = def.groupBy ?? [];
   const groups: Record<string, BoxGroup> = {};
   for (const datum of data) {
-    if (nullish(datum[def.y.key])) continue;
+    const value = toFiniteNumber(datum[def.y.key]);
+    if (value === null) continue;
     const label =
       groupBy.reduce(
         (acc: string | null, property): string =>
           acc ? `${acc} ${datum[property]}` : `${datum[property]}`,
         null,
       ) ?? ungroupedLabel(def);
-    if (!groups[label]) groups[label] = { key: label, label, y: [] };
-    groups[label].y.push(datum[def.y.key]);
+    if (!groups[label]) groups[label] = { key: label, label, y: [], rows: [] };
+    groups[label].y.push(value);
+    groups[label].rows.push(datum);
   }
   return Object.values(groups);
 };
@@ -49,6 +59,7 @@ const buildBoxTraces = (
   showIndividual: boolean,
   grouped: boolean,
   fmt: NumberFormat,
+  describe: PointHover,
 ) => {
   const traces: Data[] = [];
   const axes: Record<string, Partial<LayoutAxis>> = {};
@@ -97,12 +108,12 @@ const buildBoxTraces = (
       });
     }
 
-    const facetSuffix = multiFacet ? `<br>${facet.label}` : "";
+    const facetLine = multiFacet ? [{ value: facet.label, bold: false }] : [];
 
     facet.data.forEach((group) => {
       const index = labels.indexOf(group.label);
       const color = colorOf(group.label, i);
-      const values = toFiniteNumbers(group.y);
+      const values = group.y;
       const stats = boxStats(values);
       if (!stats) return;
 
@@ -136,8 +147,9 @@ const buildBoxTraces = (
         } as Data);
       }
 
-      const placed = values.map((value) => ({
+      const placed = values.map((value, k) => ({
         value,
+        row: group.rows[k]!,
         x: index + jitter(),
         outlying: value < stats.lowerWhisker || value > stats.upperWhisker,
       }));
@@ -161,7 +173,14 @@ const buildBoxTraces = (
             legendgroup: group.label,
           }),
           marker: { color: pointColor, size: 5 },
-          hovertemplate: `<b>${group.label}</b>${facetSuffix}<br>%{y:${fmt.spec}}<extra></extra>`,
+          ...describe(
+            [
+              { value: group.label },
+              ...facetLine,
+              { key: "Value", value: "%{y}", format: fmt.spec },
+            ],
+            inliers.map((p) => p.row),
+          ),
           xaxis: `x${axis}`,
           yaxis: `y${axis}`,
         } as Data);
@@ -184,13 +203,22 @@ const buildBoxTraces = (
             size: 7,
             line: { width: 2 },
           },
-          hovertemplate:
-            `<b>${group.label} outlier</b>${facetSuffix}` +
-            `<br>Value: %{y:${fmt.spec}}` +
-            `<br>Mean: ${fmt.text(stats.mean)}` +
-            `<br>Median: ${fmt.text(stats.median)}` +
-            `<br>\u03c3: ${fmt.text(stats.std)}` +
-            `<br>\u03c3<sup>2</sup>: ${fmt.text(stats.variance)}<extra></extra>`,
+          ...describe(
+            [
+              { value: `${group.label} outlier` },
+              ...facetLine,
+              { key: "Value", value: "%{y}", format: fmt.spec },
+            ],
+            outliers.map((p) => p.row),
+            {
+              after: [
+                { value: "Within group", section: true },
+                { key: "Mean", value: fmt.text(stats.mean), inline: true },
+                { key: "Median", value: fmt.text(stats.median), inline: true },
+                { key: "\u03c3", value: fmt.text(stats.std), inline: true },
+              ],
+            },
+          ),
           xaxis: `x${axis}`,
           yaxis: `y${axis}`,
         } as Data);
@@ -205,6 +233,7 @@ export const buildBox = (
   data: SourceData,
   def: BoxPlotDefinition,
   colorMap: ColorMap,
+  properties: SourceDataProperties = [],
 ) => {
   const rawFacets = buildFacets(data, def);
   const boxFacets = rawFacets.map(({ data, ...rest }) => ({
@@ -212,6 +241,7 @@ export const buildBox = (
     data: buildBoxGroups(data, def),
   }));
   const { showIndividual } = resolveDisplay(def.display);
+  const fmt = numberFormat(def.appearance);
   return {
     facets: rawFacets.length,
     ...buildBoxTraces(
@@ -219,7 +249,8 @@ export const buildBox = (
       colorMap,
       showIndividual,
       (def.groupBy ?? []).length > 0,
-      numberFormat(def.appearance),
+      fmt,
+      pointHover(def.hover, properties, fmt),
     ),
   };
 };
