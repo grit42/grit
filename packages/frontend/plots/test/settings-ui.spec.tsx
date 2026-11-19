@@ -146,6 +146,47 @@ describe("the settings sections", () => {
     ).toContain("Band from the data");
   });
 
+  test("a time series sets its limits, band and outlier rule in one section", async () => {
+    let changed: PlotDefinition | undefined;
+    const host = await render(
+      { ...plot, type: "timeseries" } as PlotDefinition,
+      undefined,
+      {
+        onChange: (next: PlotDefinition) => {
+          changed = next;
+        },
+      },
+    );
+    const titles = sections(host).map((s) => s.title);
+    expect(titles.indexOf("Limits and outliers")).toBe(
+      titles.indexOf("Display") + 1,
+    );
+    const section = Array.from(host.querySelectorAll("details")).find(
+      (d) => d.querySelector("summary")?.textContent === "Limits and outliers",
+    )!;
+    const labels = Array.from(section.querySelectorAll("label")).map(
+      (l) => l.textContent,
+    );
+    expect(labels).toEqual(
+      expect.arrayContaining([
+        "Limits drawn",
+        "Band from the data",
+        "Outliers",
+        "Judged within",
+      ]),
+    );
+    // The band is set here, so Ranges no longer offers it.
+    const ranges = Array.from(host.querySelectorAll("details")).find(
+      (d) => d.querySelector("summary")?.textContent === "Ranges",
+    )!;
+    expect(ranges.textContent).not.toContain("Band from the data");
+    const all = Array.from(section.querySelectorAll("button")).find(
+      (b) => b.textContent === "All limits",
+    )!;
+    await act(async () => all.click());
+    expect(changed?.limits).toEqual(["mean", "median", "sd1", "sd2", "sd3"]);
+  });
+
   test("a bar plot with no numeric column only counts", async () => {
     const labels = (host: HTMLElement) =>
       Array.from(host.querySelectorAll("label")).map((l) => l.textContent);

@@ -1,6 +1,7 @@
 import { AxisType, Datum } from "plotly.js";
 import type { ColorMap, ColorPreset } from "./colors";
 import type { HoverSpec } from "./hover";
+import type { OutlierRule, OutlierScope } from "./outliers";
 
 export type SourceDatum = Record<string, Datum>;
 export type SourceData = SourceDatum[];
@@ -126,6 +127,12 @@ export interface PlotDefinitionBase {
   seriesLabel?: string;
   annotations?: PlotAnnotation[];
   ranges?: PlotRange[];
+  /** Lines from each panel's values; empty draws none. */
+  limits?: ControlLimit[];
+  /** Which values are ringed as outlying; unset is the default rule. */
+  outliers?: OutlierRule;
+  /** What a value is judged against: its panel (unset), or its group, as a box or error bar summarises it. */
+  outliersWithin?: OutlierScope;
   palette?: ColorPreset;
   appearance?: PlotAppearanceOptions;
   hover?: HoverSpec;
@@ -159,14 +166,9 @@ export interface ViolinPlotDefinition extends PlotDefinitionBase {
 
 export type ControlLimit = "mean" | "median" | "sd1" | "sd2" | "sd3";
 
-export type ControlOutlierRule = "none" | "sd1" | "sd2" | "sd3";
-
 /** Implemented in `modules/sdtm`. */
 export interface ControlChartPlotDefinition extends PlotDefinitionBase {
   type: "controlChart";
-  /** Empty draws none. */
-  limits?: ControlLimit[];
-  outliers?: ControlOutlierRule;
 }
 export interface PlotBracket {
   id: string;
@@ -223,7 +225,6 @@ export interface HeatmapPlotDefinition extends PlotDefinitionBase {
 export interface HistogramPlotDefinition extends PlotDefinitionBase {
   type: "histogram";
   bins?: number;
-  limits?: ControlLimit[];
   orientation?: "h" | "v";
   density?: boolean;
 }

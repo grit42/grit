@@ -24,8 +24,8 @@ import styles from "./annotationLayer.module.scss";
 
 const NO_DATA_RANGE = "none";
 
-/** The figure's ranges, each removable, and one from the data to add. */
-const RangeSettings = ({
+/** A band at each panel's mean ± k SD, kept among the figure's ranges. */
+export const DataBandField = ({
   plot,
   onChange,
 }: {
@@ -35,6 +35,43 @@ const RangeSettings = ({
   const ranges = plot.ranges ?? [];
   const others = ranges.filter((range) => range.id !== DATA_RANGE_ID);
   const fromData = ranges.find((range) => range.id === DATA_RANGE_ID)?.sd;
+  return (
+    <Select
+      label="Band from the data"
+      options={[
+        { label: "None", value: NO_DATA_RANGE },
+        ...DATA_RANGE_SDS.map((sd) => ({
+          label: `Mean ±${sd} SD`,
+          value: String(sd),
+        })),
+      ]}
+      value={fromData === undefined ? NO_DATA_RANGE : String(fromData)}
+      isClearable={false}
+      description="Each panel's own mean ± SD."
+      onChange={(value: string) =>
+        onChange({
+          ...plot,
+          ranges:
+            value === NO_DATA_RANGE
+              ? others
+              : [...others, dataRange(Number(value))],
+        })
+      }
+    />
+  );
+};
+
+/** The figure's ranges, each removable, and the band from the data unless set elsewhere. */
+const RangeSettings = ({
+  plot,
+  onChange,
+  band = true,
+}: {
+  plot: PlotDefinition;
+  onChange: (plot: PlotDefinition) => void;
+  band?: boolean;
+}) => {
+  const ranges = plot.ranges ?? [];
 
   return (
     <>
@@ -65,28 +102,7 @@ const RangeSettings = ({
       ) : (
         <span className={styles.none}>No ranges drawn.</span>
       )}
-      <Select
-        label="Band from the data"
-        options={[
-          { label: "None", value: NO_DATA_RANGE },
-          ...DATA_RANGE_SDS.map((sd) => ({
-            label: `Mean ±${sd} SD`,
-            value: String(sd),
-          })),
-        ]}
-        value={fromData === undefined ? NO_DATA_RANGE : String(fromData)}
-        isClearable={false}
-        description="Each panel's own mean, plus and minus this many standard deviations of its values."
-        onChange={(value: string) =>
-          onChange({
-            ...plot,
-            ranges:
-              value === NO_DATA_RANGE
-                ? others
-                : [...others, dataRange(Number(value))],
-          })
-        }
-      />
+      {band && <DataBandField plot={plot} onChange={onChange} />}
     </>
   );
 };

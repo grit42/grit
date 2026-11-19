@@ -45,8 +45,23 @@ import {
 } from "../utils";
 import { resolveDisplay } from "../displayMode";
 import { errorBand } from "../traces";
-import { wholeNumberTicks } from "../axes";
+import { paddedRange, wholeNumberTicks } from "../axes";
 import { seriesDash, seriesSymbol } from "../constants";
+import {
+  buildControlStats,
+  controlLineSpecs,
+  controlLineTraces,
+  limitKeysOf,
+  limitsOf,
+} from "../limits";
+import {
+  isOutlier,
+  outlierFences,
+  outlierNotice,
+  outlierRuleOf,
+  outlierScopeOf,
+  tooFewNotice,
+} from "../outliers";
 
 const SUMMARY_MARKERS: readonly StatMarker[] = ["mean", "median"];
 
@@ -163,6 +178,11 @@ const buildTraces = (
   );
 
   const multiFacet = facets.length > 1;
+  const rule = outlierRuleOf(def);
+  const byGroup = outlierScopeOf(def) === "group";
+  const wanted = limitKeysOf(limitsOf(def));
+  const judged: { label: string; n: number }[] = [];
+  let marked = 0;
 
   for (let i = 0; i < facets.length; i++) {
     const facet = facets[i];
@@ -182,6 +202,54 @@ const buildTraces = (
     const groups = [...facet.groups].sort(
       (a, b) => seriesNames.indexOf(a.label) - seriesNames.indexOf(b.label),
     );
+
+    // The panel's values: its limits and band come from them, and its outliers unless judged by group.
+    const panelValues = groups.flatMap((group) =>
+      Object.values(group.data).flat(),
+    );
+    const panelFences = byGroup ? null : outlierFences(panelValues, rule);
+    if (!byGroup) {
+      judged.push({
+        label: multiFacet ? facet.label : "all values",
+        n: panelValues.length,
+      });
+    }
+
+    // Limits across the panel's days.
+    if (wanted.size > 0) {
+      const xs: number[] = [];
+      const ys: number[] = [];
+      for (const group of groups) {
+        for (const [at, values] of Object.entries(group.data)) {
+          for (const value of values) {
+            xs.push(Number(at));
+            ys.push(value);
+          }
+        }
+      }
+      const stats = buildControlStats(xs, ys);
+      if (stats) {
+        traces.push(
+          ...(controlLineTraces({
+            specs: controlLineSpecs(stats, colorMap).filter((spec) =>
+              wanted.has(spec.key),
+            ),
+            orientation: "h",
+            // Padded, so a panel of one day still shows its lines.
+            range: paddedRange({ min: stats.xMin, max: stats.xMax }, 0.5, 1),
+            opts: {
+              showlegend: i === 0,
+              format: fmt.spec,
+              xaxis: `x${axis}`,
+              yaxis: `y${axis}`,
+            },
+          }) as Data[]),
+        );
+      }
+    }
+
+    // Drawn after every group's own traces, so a ring sits over its dot.
+    const ringTraces: Data[] = [];
     for (let j = 0; j < groups.length; j++) {
       const group = groups[j]!;
       // Figure-wide, so a series looks the same in every panel.
@@ -190,6 +258,54 @@ const buildTraces = (
       const xValues = Object.keys(group.data)
         .map(Number)
         .toSorted((a, b) => a - b);
+
+      const rings: { x: number; y: number; row: SourceDatum }[] = [];
+      for (const xValue of xValues) {
+        const at = xValue.toString();
+        const values = group.data[at]!;
+        // By group: each group's values on a day, as its error bar is drawn.
+        if (byGroup) {
+          judged.push({
+            label: `${multiFacet ? `${facet.label} ` : ""}${group.label}, ${xLabel} ${xValue}`,
+            n: values.length,
+          });
+        }
+        const fences = byGroup ? outlierFences(values, rule) : panelFences;
+        values.forEach((value, k) => {
+          if (isOutlier(value, fences)) {
+            rings.push({ x: xValue, y: value, row: group.rows[at]![k]! });
+          }
+        });
+      }
+      marked += rings.length;
+      if (rings.length) {
+        ringTraces.push({
+          x: rings.map((one) => one.x),
+          y: rings.map((one) => one.y),
+          xaxis: `x${axis}`,
+          yaxis: `y${axis}`,
+          type: "scatter",
+          mode: "markers",
+          name: `${group.label} outliers`,
+          showlegend: false,
+          legendgroup: group.label,
+          marker: {
+            symbol: "circle-open",
+            size: 12,
+            color: colorMap.violationFill,
+            line: { width: 2, color: colorMap.violationFill },
+          },
+          ...hover(
+            [
+              { value: "Outlier" },
+              { value: group.label, bold: false },
+              { key: xLabel, value: "%{x}" },
+              { key: yLabel, value: "%{y}", format: fmt.spec },
+            ],
+            rings.map((one) => one.row),
+          ),
+        } as Data);
+      }
       const summaries = xValues.map((xValue) =>
         summarise(group.data[xValue.toString()]),
       );
@@ -353,9 +469,15 @@ const buildTraces = (
         });
       }
     }
+    traces.push(...ringTraces);
   }
 
-  return { traces, axes, annotations };
+  return {
+    traces,
+    axes,
+    annotations,
+    notices: [...outlierNotice(marked, rule), ...tooFewNotice(judged, rule)],
+  };
 };
 
 export const buildTimeSeries = (

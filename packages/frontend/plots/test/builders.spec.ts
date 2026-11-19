@@ -1150,3 +1150,88 @@ describe("an empty cell is not a zero", () => {
     expect(line?.y).toEqual([4]);
   });
 });
+
+describe("buildTimeSeries limits and outliers", () => {
+  const day = (value: number, i: number) => ({
+    BWDY: 1,
+    BWSTRESN: value,
+    ARM: "Control",
+    USUBJID: `S${i}`,
+  });
+  // Eleven values, one far out: enough for ±3 SD to ring it.
+  const rows = [...Array(10).fill(100), 400].map(day);
+
+  test("rings the panel's values past the rule, and counts them", () => {
+    const built = buildTimeSeries(
+      rows,
+      { ...timeSeries, outliers: "sd2" },
+      colorMap,
+    );
+    const rings = built.traces.find((trace) =>
+      String((trace as { name?: string }).name).endsWith("outliers"),
+    ) as { y: number[] };
+    expect(rings.y).toEqual([400]);
+    expect(built.notices).toContainEqual({
+      kind: "info",
+      count: 1,
+      reason: "values beyond ±2 SD, ringed",
+    });
+  });
+
+  test("judges against the panel, as the limit lines are drawn", () => {
+    // Day 2 runs high: 12 is far from day 1's other values, yet inside the panel's ±1 SD.
+    const twoDays = [
+      ...[10, 10, 10, 10, 10, 12].map((value, i) => day(value, i)),
+      ...[20, 20, 20, 20, 20, 20].map((value, i) => ({
+        ...day(value, i + 6),
+        BWDY: 2,
+      })),
+    ];
+    const built = buildTimeSeries(
+      twoDays,
+      { ...timeSeries, outliers: "sd1" },
+      colorMap,
+    );
+    const rings = built.traces.find((trace) =>
+      String((trace as { name?: string }).name).endsWith("outliers"),
+    ) as { y: number[] } | undefined;
+    expect(rings?.y ?? []).not.toContain(12);
+
+    // Judged by group, each day's values stand alone, as its error bar does.
+    const byGroup = buildTimeSeries(
+      twoDays,
+      { ...timeSeries, outliers: "sd1", outliersWithin: "group" },
+      colorMap,
+    ).traces.find((trace) =>
+      String((trace as { name?: string }).name).endsWith("outliers"),
+    ) as { y: number[] };
+    expect(byGroup.y).toContain(12);
+  });
+
+  test("says where a panel holds too few values for the rule", () => {
+    const built = buildTimeSeries(rows.slice(0, 5), timeSeries, colorMap);
+    expect(built.notices.map((notice) => notice.reason)).toContain(
+      "groups too small for ±3 SD to mark a value",
+    );
+  });
+
+  test("draws no limits until chosen, then each chosen line", () => {
+    const names = (def: Partial<TimeSeriesPlotDefinition>) =>
+      buildTimeSeries(rows, { ...timeSeries, ...def }, colorMap).traces.map(
+        (trace) => (trace as { name?: string }).name,
+      );
+    expect(names({})).not.toContain("Mean");
+    expect(names({ limits: ["mean"] })).toContain("Mean");
+  });
+
+  test("draws a panel of one day's limits with some length", () => {
+    const mean = buildTimeSeries(
+      rows,
+      { ...timeSeries, limits: ["mean"] },
+      colorMap,
+    ).traces.find((trace) => (trace as { name?: string }).name === "Mean") as {
+      x: number[];
+    };
+    expect(mean.x[1]! - mean.x[0]!).toBeGreaterThan(0);
+  });
+});

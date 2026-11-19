@@ -1,6 +1,11 @@
 import { ComponentType, type ReactNode } from "react";
 import { Button, Select } from "@grit42/client-library/components";
-import { PaletteSwatches, PlotDefinition, PlotSettingsProps } from "./types";
+import {
+  ControlLimit,
+  PaletteSwatches,
+  PlotDefinition,
+  PlotSettingsProps,
+} from "./types";
 import styles from "./plotSettings.module.scss";
 import { useColorMap } from "./colors";
 import ScatterPlotSettings from "./ScatterPlot/ScatterPlotSettings";
@@ -15,6 +20,8 @@ import {
 import AxisTickSettings from "./PlotBase/AxisTickSettings";
 import { AnnotationList } from "./PlotBase/AnnotationLayer";
 import RangeSettings from "./PlotBase/RangeSettings";
+import LimitsSettings from "./PlotBase/LimitsSettings";
+import { DEFAULT_OUTLIER_RULE, outlierRuleOf } from "./outliers";
 import DisplaySettings from "./PlotBase/DisplaySettings";
 import LabelSettings from "./PlotBase/LabelSettings";
 import Section from "./PlotBase/Section";
@@ -34,6 +41,9 @@ const countSupport = axisSupport([], { scaleAxes: [] });
 export const PLOT_CAPABILITIES = [
   "annotations",
   "ranges",
+  "limits",
+  "outliers",
+  "outlierGroups",
   "tickAngle",
   "xLabels",
   "xTicks",
@@ -87,6 +97,8 @@ export interface PlotImplementation {
   unavailable?: (def: PlotDefinition) => readonly PlotCapability[];
   supports: (def: PlotDefinition, ctx: PlotSupportContext) => PlotSupport;
   sections?: readonly PlotSection[];
+  /** The limits drawn while the definition sets none, e.g. a control chart's. */
+  defaultLimits?: readonly ControlLimit[];
   resetDefaults?: (def: PlotDefinition) => PlotDefinition;
   /** The Style section's swatches, where the type draws other colours than the palette's series. */
   paletteSwatches?: PaletteSwatches;
@@ -155,7 +167,13 @@ export const PLOT_IMPLEMENTATIONS: PlotImplementations = {
     PlotSettings: TimeSeriesPlotSettings as ComponentType<PlotSettingsProps>,
     label: "Time series",
     value: "timeseries",
-    capabilities: [...XY_CAPABILITIES, ...DISPLAY_CAPABILITIES],
+    capabilities: [
+      ...XY_CAPABILITIES,
+      ...DISPLAY_CAPABILITIES,
+      "limits",
+      "outliers",
+      "outlierGroups",
+    ],
     // Time runs along x, so both axes have to be orderable numbers.
     supports: axisSupport(["x", "y"]),
   },
@@ -195,8 +213,14 @@ const PlotSettings = ({
     Object.keys(typeReset) as (keyof PlotDefinition)[]
   ).every((key) => typeReset[key] === plot[key]);
 
+  const limitsAreDefault =
+    (!can("limits") || plot.limits === undefined) &&
+    (!can("outliers") || outlierRuleOf(plot) === DEFAULT_OUTLIER_RULE) &&
+    plot.outliersWithin === undefined;
+
   const isDefault =
     typeIsDefault &&
+    limitsAreDefault &&
     plot.palette === undefined &&
     plot.appearance === undefined &&
     plot.display === undefined &&
@@ -258,6 +282,22 @@ const PlotSettings = ({
         </Section>
       )}
 
+      {(can("limits") || can("outliers")) && (
+        <Section title="Limits and outliers" collapsible={collapsible}>
+          <LimitsSettings
+            plot={plot}
+            onChange={props.onChange}
+            defaults={plotImplementation?.defaultLimits}
+            show={{
+              limits: can("limits"),
+              band: can("ranges"),
+              outliers: can("outliers"),
+              scope: can("outliers") && can("outlierGroups"),
+            }}
+          />
+        </Section>
+      )}
+
       {(plotImplementation?.sections ?? []).map(
         ({ title, Settings, defaultOpen }) => (
           <Section
@@ -298,7 +338,11 @@ const PlotSettings = ({
 
       {can("ranges") && (
         <Section title="Ranges" collapsible={collapsible}>
-          <RangeSettings plot={plot} onChange={props.onChange} />
+          <RangeSettings
+            plot={plot}
+            onChange={props.onChange}
+            band={!can("limits") && !can("outliers")}
+          />
         </Section>
       )}
 
@@ -342,7 +386,13 @@ const PlotSettings = ({
         variant="transparent"
         disabled={isDefault}
         onClick={() => {
-          const reset = withDefaultAppearance(plot, props.properties);
+          const reset = {
+            ...withDefaultAppearance(plot, props.properties),
+            ...(can("limits") ? { limits: undefined } : {}),
+            ...(can("outliers")
+              ? { outliers: undefined, outliersWithin: undefined }
+              : {}),
+          };
           props.onChange(plotImplementation?.resetDefaults?.(reset) ?? reset);
         }}
       >

@@ -221,13 +221,16 @@ export const boxStatsHoverTrace = ({
   values,
   label,
   xIndex,
+  stats,
 }: {
   values: number[];
   label: string;
   xIndex: number;
   format?: NumberFormat;
+  /** Where the whiskers follow another rule than 1.5 × IQR. */
+  stats?: BoxStats | null;
 }): Partial<ScatterData> | null => {
-  const s = boxStats(values);
+  const s = stats ?? boxStats(values);
   if (!s) return null;
   const fmt = format ?? numberFormat(undefined);
 
@@ -268,6 +271,7 @@ export const outlierTrace = ({
   colorMap,
   color,
   jitter = 0.2,
+  stats: given,
 }: {
   values: number[];
   /** Each value's row, for `hover`. */
@@ -279,8 +283,10 @@ export const outlierTrace = ({
   color?: string;
   jitter?: number;
   format?: NumberFormat;
+  /** Where the whiskers follow another rule than 1.5 × IQR; past them is outlying. */
+  stats?: BoxStats | null;
 }): Partial<ScatterData> | null => {
-  const stats = boxStats(values);
+  const stats = given ?? boxStats(values);
   if (!stats) return null;
   const fmt = format ?? numberFormat(undefined);
 
