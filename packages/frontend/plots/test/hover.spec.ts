@@ -163,6 +163,15 @@ describe("pointHover", () => {
     ]);
   });
 
+  test("prints an integer column whole", () => {
+    const { customdata } = pointHover(
+      spec,
+      [{ name: "mean", display_name: "Mean", type: "integer" }] as never,
+      fmt,
+    )(lines, [{ usubjid: "S1-01", mean: 12345 }]);
+    expect(customdata).toEqual([["S1-01", "12345"]]);
+  });
+
   test("starts the columns after the plot's own values", () => {
     const { customdata, hovertemplate } = pointHover(spec, [], fmt)(
       [{ key: "Arm", value: "%{customdata[0]}" }],

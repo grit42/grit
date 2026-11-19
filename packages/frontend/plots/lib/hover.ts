@@ -157,7 +157,7 @@ export const pointHover =
         ? {
             customdata: rows.map((row, i) => [
               ...(own?.[i] ?? []),
-              ...hoverValues(row, fields, fmt),
+              ...hoverValues(row, fields, fmt, properties),
             ]),
           }
         : {}),
