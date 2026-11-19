@@ -30,6 +30,18 @@ import { axisTitleFor, buildFacetGrid, withAxisTitles } from "./utils";
 
 export type ScaleAxis = "x" | "y";
 
+/** Margins for stacked plot rows; fixed, so a row's legend cannot widen its margin and misalign the x axes. */
+export const COMPACT_MARGIN = {
+  t: 48,
+  b: 56,
+  l: 80,
+  r: 200,
+  autoexpand: false,
+};
+
+/** Plotly drops a hover label taller than the figure, so a short row's hover is set smaller. */
+export const COMPACT_HOVER_LABEL = { font: { size: 11 } };
+
 /** A panel's title, above its plot area. */
 export const panelTitle = (
   label: string,

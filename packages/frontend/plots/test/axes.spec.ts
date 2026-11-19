@@ -10,6 +10,8 @@ import {
   niceRange,
   supportsTickRange,
   logTicks,
+  paddedRange,
+  withFixedRanges,
 } from "../lib/axes";
 
 describe("niceRange", () => {
@@ -335,5 +337,30 @@ describe("wholeNumberTicks", () => {
       wholeNumberTicks([1, 2], { mode: "count", count: 3 }),
     ).toBeUndefined();
     expect(wholeNumberTicks([1, 2], { mode: "auto" })?.dtick).toBe(1);
+  });
+});
+
+describe("fixed ranges", () => {
+  test("pad a shared range so no point sits on the edge", () => {
+    expect(paddedRange({ min: 2016, max: 2023 }, 0.5, 1)).toEqual([
+      2015.5, 2023.5,
+    ]);
+    // A single value gets a whole step either side, so its limits can be seen.
+    expect(paddedRange({ min: 2022, max: 2022 }, 0.5, 1)).toEqual([2021, 2023]);
+  });
+
+  test("fix the range and keep the builder's ticks", () => {
+    const axes = withFixedRanges(
+      { xaxis1: { dtick: 1, tickmode: "linear" }, yaxis1: {} },
+      { x: [2015.5, 2023.5] },
+    );
+    expect(axes.xaxis1).toEqual({
+      dtick: 1,
+      tickmode: "linear",
+      range: [2015.5, 2023.5],
+      autorange: false,
+    });
+    expect(axes.yaxis1).toEqual({});
+    expect(withFixedRanges(axes, undefined)).toBe(axes);
   });
 });

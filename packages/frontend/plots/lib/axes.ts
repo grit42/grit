@@ -400,3 +400,32 @@ export const buildAppearanceLayout = (
   appearance?.fontSize
     ? ({ font: { size: appearance.fontSize, color } } as Partial<Layout>)
     : {};
+
+export interface FixedRanges {
+  x?: [number, number];
+  y?: [number, number];
+}
+
+/** Shares a scale across separate figures; sets the range only, so the builder's ticks survive. */
+export const withFixedRanges = (
+  axes: Record<string, Partial<LayoutAxis>>,
+  ranges: FixedRanges | undefined,
+): Record<string, Partial<LayoutAxis>> => {
+  if (!ranges?.x && !ranges?.y) return axes;
+  return Object.fromEntries(
+    Object.entries(axes).map(([key, axis]) => {
+      const range = key.startsWith("x") ? ranges.x : ranges.y;
+      return [key, range ? { ...axis, range, autorange: false } : axis];
+    }),
+  );
+};
+
+/** Padded either side (`whole` for a single value), so edge points aren't half hidden. */
+export const paddedRange = (
+  span: { min: number; max: number },
+  pad: number,
+  whole = pad,
+): [number, number] =>
+  span.min === span.max
+    ? [span.min - whole, span.max + whole]
+    : [span.min - pad, span.max + pad];
