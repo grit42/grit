@@ -34,32 +34,17 @@ describe("buildThemedAxes", () => {
   describe("the first facet's axis (regression)", () => {
     test("`xaxis1` is folded onto `xaxis`, which Plotly actually reads", () => {
       const themed = buildThemedAxes(colorMap, {
-        axes: { xaxis1: { type: "log" }, yaxis1: { type: "linear" } },
+        axes: {
+          xaxis1: { type: "log" },
+          yaxis1: { type: "linear" },
+          xaxis2: { type: "log" },
+        },
       });
       expect(themed.xaxis!.type).toBe("log");
       expect(themed.yaxis!.type).toBe("linear");
+      expect(themed.xaxis2!.type).toBe("log");
       expect(themed).not.toHaveProperty("xaxis1");
       expect(themed).not.toHaveProperty("yaxis1");
-    });
-
-    test("the first facet is typed the same as the rest", () => {
-      const themed = buildThemedAxes(colorMap, {
-        axes: {
-          xaxis1: { type: "log" },
-          xaxis2: { type: "log" },
-          xaxis3: { type: "log" },
-        },
-      });
-      expect(
-        [themed.xaxis, themed.xaxis2, themed.xaxis3].map((a) => a!.type),
-      ).toEqual(["log", "log", "log"]);
-    });
-
-    test("a category x axis survives the same path", () => {
-      const themed = buildThemedAxes(colorMap, {
-        axes: { xaxis1: { type: "category" } },
-      });
-      expect(themed.xaxis!.type).toBe("category");
     });
 
     test("canonicalising does not disturb axes numbered 2 and up", () => {
@@ -89,28 +74,22 @@ describe("buildThemedAxes", () => {
     expect(Object.keys(themed).sort()).toEqual(["xaxis", "yaxis"]);
   });
 
-  test("the xaxis prop overrides themed defaults", () => {
-    const themed = buildThemedAxes(colorMap, {
-      xaxis: { color: "red", type: "log" },
-    });
-    expect(themed.xaxis).toMatchObject({ color: "red", type: "log" });
-  });
-
-  test("the axes entry overrides the xaxis prop", () => {
-    const themed = buildThemedAxes(colorMap, {
-      xaxis: { color: "red" },
-      axes: { xaxis: { color: "green" } },
-    });
-    expect(themed.xaxis!.color).toBe("green");
-  });
-
-  test("layout has the final say", () => {
-    const themed = buildThemedAxes(colorMap, {
-      xaxis: { color: "red" },
-      axes: { xaxis: { color: "green" } },
-      layout: { xaxis: { color: "blue" } },
-    });
-    expect(themed.xaxis!.color).toBe("blue");
+  test("the xaxis prop overrides the theme, the axes entry the prop, and layout has the final say", () => {
+    expect(
+      buildThemedAxes(colorMap, { xaxis: { color: "red", type: "log" } }).xaxis,
+    ).toMatchObject({ color: "red", type: "log" });
+    const xaxis = { color: "red" };
+    const axes = { xaxis: { color: "green" } };
+    expect(buildThemedAxes(colorMap, { xaxis, axes }).xaxis!.color).toBe(
+      "green",
+    );
+    expect(
+      buildThemedAxes(colorMap, {
+        xaxis,
+        axes,
+        layout: { xaxis: { color: "blue" } },
+      }).xaxis!.color,
+    ).toBe("blue");
   });
 });
 

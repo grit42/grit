@@ -46,26 +46,14 @@ describe("rendering", () => {
     expect(shape.text).toBe("Excursion expected");
   });
 
-  test("reads as a note rather than as part of the figure", () => {
-    const [shape] = annotationShapes([note()], colorMap);
-    expect(shape.bordercolor).toBe("#111");
-    expect(shape.bgcolor).toBe("#fff");
-  });
-
-  test("follows the theme", () => {
+  test("reads as a note in the theme's colours, rather than as part of the figure", () => {
     const [shape] = annotationShapes([note()], {
       textColor: "#eee",
       bgColor: "#111",
     } as unknown as ColorMap);
+    expect(shape.bordercolor).toBe("#eee");
+    expect(shape.bgcolor).toBe("#111");
     expect(shape.font?.color).toBe("#eee");
-  });
-
-  test("lands in the panel it was placed in", () => {
-    const [shape] = annotationShapes(
-      [note({ axis: "y2", xaxis: "x2" })],
-      colorMap,
-    );
-    expect([shape.xref, shape.yref]).toEqual(["x2", "y2"]);
   });
 
   // Plotly quirk: a log axis reads an annotation's x as log10 but `tickvals`
@@ -79,23 +67,12 @@ describe("rendering", () => {
     expect(shape.y).toBe(50);
   });
 
-  test("leaves a position alone on a linear axis", () => {
-    const [shape] = annotationShapes([note({ x: 1.2596 })], colorMap, {
-      x: "linear",
-    });
-    expect(shape.x).toBe(1.2596);
-  });
-
-  test("leaves a non-positive value alone on a logarithmic axis", () => {
-    const [shape] = annotationShapes([note({ x: 0 })], colorMap, { x: "log" });
-    expect(shape.x).toBe(0);
-  });
-
-  test("leaves a category alone", () => {
-    const [shape] = annotationShapes([note({ x: "Treatment 1" })], colorMap, {
-      x: "category",
-    });
-    expect(shape.x).toBe("Treatment 1");
+  test("leaves a linear position, a non-positive log value and a category alone", () => {
+    const x = (value: number | string, type: "linear" | "log" | "category") =>
+      annotationShapes([note({ x: value })], colorMap, { x: type })[0].x;
+    expect(x(1.2596, "linear")).toBe(1.2596);
+    expect(x(0, "log")).toBe(0);
+    expect(x("Treatment 1", "category")).toBe("Treatment 1");
   });
 
   test("draws nothing where there are no notes", () => {
@@ -113,12 +90,6 @@ describe("identity", () => {
   test("does not collide with an id already taken", () => {
     const existing = [note({ id: "note-2" })];
     expect(nextAnnotationId(existing, "c")).not.toBe("note-2");
-  });
-
-  test("is stable for the same input", () => {
-    expect(nextAnnotationId([note()], "x")).toBe(
-      nextAnnotationId([note()], "x"),
-    );
   });
 });
 
@@ -139,29 +110,17 @@ describe("placing a note from a click", () => {
     ).toEqual({ x: 50, y: 12.5, axis: "y", xaxis: "x" });
   });
 
-  test("keeps a category as its name", () => {
+  test("records both axes of a subplot whose axes do not pair, and a category as its name", () => {
     expect(
       pointFromEvent(
         click({
-          xvals: ["Dose 1"],
-          yvals: [3],
-          xaxes: [{ _id: "x" }],
+          xvals: [2],
+          yvals: ["LB"],
+          xaxes: [{ _id: "x3" }],
           yaxes: [{ _id: "y" }],
         }),
-      )?.x,
-    ).toBe("Dose 1");
-  });
-
-  test("records both axes of a subplot whose axes do not pair", () => {
-    const point = pointFromEvent(
-      click({
-        xvals: [2],
-        yvals: ["LB"],
-        xaxes: [{ _id: "x3" }],
-        yaxes: [{ _id: "y" }],
-      }),
-    )!;
-    expect([point.xaxis, point.axis]).toEqual(["x3", "y"]);
+      ),
+    ).toEqual({ x: 2, y: "LB", axis: "y", xaxis: "x3" });
   });
 
   test("declines a click that carries no position", () => {

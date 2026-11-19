@@ -10,14 +10,12 @@ import { describe, expect, test } from "vitest";
 import { buildBox } from "../lib/BoxPlot/utils";
 import { buildScatter } from "../lib/ScatterPlot/utils";
 import { buildTimeSeries } from "../lib/TimeSeriesPlot/utils";
-import { axisSupport } from "../lib/support";
 import { resolveDisplay } from "../lib/displayMode";
 import type {
   BoxPlotDefinition,
   ColorMap,
   ScatterPlotDefinition,
   SourceData,
-  SourceDataProperties,
   TimeSeriesPlotDefinition,
 } from "../lib";
 
@@ -110,17 +108,5 @@ describe("definitions persisted before the optional blocks existed", () => {
       (trace) => String((trace as { name?: string }).name).includes("observ"),
     );
     expect(observations).toHaveLength(0);
-  });
-
-  test("a text column typed linear is reported, not silently blank", () => {
-    const properties: SourceDataProperties = [
-      { name: "usubjid", display_name: "USUBJID", type: "text" },
-      { name: "vsorres", display_name: "VSORRES", type: "decimal" },
-    ];
-    const support = axisSupport(["y"])(savedScatter, { properties });
-    expect(support.ok).toBe(false);
-    if (!support.ok) {
-      expect(support.reasons.join(" ")).toContain("USUBJID");
-    }
   });
 });

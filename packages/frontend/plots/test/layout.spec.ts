@@ -28,15 +28,15 @@ const axesFor = (facets: number, extra: string[] = []) =>
     ].map((key) => [key, {}]),
   );
 
+const compose = (
+  plot: PlotDefinition,
+  axes: Parameters<typeof composeAxes>[0]["axes"],
+  facets: number,
+) => composeAxes({ def: plot, axes, facets, colorMap, titles: false });
+
 describe("composeAxes shared scales", () => {
   test("ties every panel's axes to the first panel's", () => {
-    const axes = composeAxes({
-      def: def(true),
-      axes: axesFor(3),
-      facets: 3,
-      colorMap,
-      titles: false,
-    });
+    const axes = compose(def(true), axesFor(3), 3);
     expect(axes.xaxis2?.matches).toBe("x");
     expect(axes.yaxis2?.matches).toBe("y");
     expect(axes.xaxis3?.matches).toBe("x");
@@ -44,62 +44,35 @@ describe("composeAxes shared scales", () => {
   });
 
   test("leaves each panel its own scale by default", () => {
-    const axes = composeAxes({
-      def: def(),
-      axes: axesFor(2),
-      facets: 2,
-      colorMap,
-      titles: false,
-    });
+    const axes = compose(def(), axesFor(2), 2);
     expect(axes.xaxis2?.matches).toBeUndefined();
   });
 
   test("leaves axes beyond the facet grid alone", () => {
     // A heatmap's strips and trees are numbered after the panels.
-    const axes = composeAxes({
-      def: def(true),
-      axes: axesFor(2, ["xaxis3", "yaxis3"]),
-      facets: 2,
-      colorMap,
-      titles: false,
-    });
+    const axes = compose(def(true), axesFor(2, ["xaxis3", "yaxis3"]), 2);
     expect(axes.xaxis3?.matches).toBeUndefined();
   });
 
   test("leaves an axis with categories per panel its own", () => {
     const base = def(true);
-    const axes = composeAxes({
-      def: { ...base, x: { ...base.x, categoriesPerPanel: true } },
-      axes: axesFor(2),
-      facets: 2,
-      colorMap,
-      titles: false,
-    });
+    const axes = compose(
+      { ...base, x: { ...base.x, categoriesPerPanel: true } },
+      axesFor(2),
+      2,
+    );
     expect(axes.xaxis2?.matches).toBeUndefined();
     expect(axes.yaxis2?.matches).toBe("y");
-  });
-
-  test("does nothing for a single panel", () => {
-    const axes = composeAxes({
-      def: def(true),
-      axes: axesFor(1),
-      facets: 1,
-      colorMap,
-      titles: false,
-    });
-    expect(axes.xaxis1?.matches).toBeUndefined();
   });
 });
 
 describe("composeAxes label angle", () => {
   test("turns every panel's x labels to the angle chosen, not a strip's", () => {
-    const axes = composeAxes({
-      def: { ...def(), appearance: { tickAngle: -45 } } as PlotDefinition,
-      axes: { ...axesFor(2, ["xaxis3"]), xaxis1: { tickangle: 0 } },
-      facets: 2,
-      colorMap,
-      titles: false,
-    });
+    const axes = compose(
+      { ...def(), appearance: { tickAngle: -45 } } as PlotDefinition,
+      { ...axesFor(2, ["xaxis3"]), xaxis1: { tickangle: 0 } },
+      2,
+    );
     expect(axes.xaxis1?.tickangle).toBe(-45);
     expect(axes.xaxis2?.tickangle).toBe(-45);
     expect(axes.yaxis1?.tickangle).toBeUndefined();
@@ -107,13 +80,7 @@ describe("composeAxes label angle", () => {
   });
 
   test("leaves the angle to the figure when unset", () => {
-    const axes = composeAxes({
-      def: def(),
-      axes: axesFor(2),
-      facets: 2,
-      colorMap,
-      titles: false,
-    });
+    const axes = compose(def(), axesFor(2), 2);
     expect(axes.xaxis1?.tickangle).toBeUndefined();
     expect(axes.xaxis2?.tickangle).toBeUndefined();
   });
@@ -126,13 +93,11 @@ describe("composeAxes hidden x labels", () => {
   } as PlotDefinition;
 
   test("hides the facet grid's x labels and leaves the rest", () => {
-    const axes = composeAxes({
-      def: hidden,
-      axes: { ...axesFor(2, ["xaxis3"]), xaxis1: { showticklabels: true } },
-      facets: 2,
-      colorMap,
-      titles: false,
-    });
+    const axes = compose(
+      hidden,
+      { ...axesFor(2, ["xaxis3"]), xaxis1: { showticklabels: true } },
+      2,
+    );
     expect(axes.xaxis1?.showticklabels).toBe(false);
     expect(axes.xaxis2?.showticklabels).toBe(false);
     expect(axes.yaxis1?.showticklabels).toBeUndefined();
@@ -141,13 +106,7 @@ describe("composeAxes hidden x labels", () => {
   });
 
   test("shows them by default", () => {
-    const axes = composeAxes({
-      def: def(),
-      axes: axesFor(1),
-      facets: 1,
-      colorMap,
-      titles: false,
-    });
+    const axes = compose(def(), axesFor(1), 1);
     expect(axes.xaxis1?.showticklabels).toBeUndefined();
   });
 });

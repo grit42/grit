@@ -106,15 +106,6 @@ const XY_CAPABILITIES = [
   ...STYLE_CAPABILITIES,
 ] as const;
 
-const SUMMARY_CAPABILITIES = [
-  "summary",
-  "multipleSummaries",
-  "errorBars",
-  "errorBand",
-  "individual",
-  "individualBy",
-] as const;
-
 export const PLOT_IMPLEMENTATIONS: PlotImplementations = {
   scatter: {
     PlotSettings: ScatterPlotSettings as ComponentType<PlotSettingsProps>,
@@ -135,7 +126,7 @@ export const PLOT_IMPLEMENTATIONS: PlotImplementations = {
       "tickAngle",
       ...STYLE_CAPABILITIES,
     ],
-    supports: axisSupport(["y"], { scaleAxes: ["y"] }),
+    supports: summarySupport,
   },
   bar: {
     PlotSettings: BarPlotSettings as ComponentType<PlotSettingsProps>,
@@ -164,7 +155,7 @@ export const PLOT_IMPLEMENTATIONS: PlotImplementations = {
     PlotSettings: TimeSeriesPlotSettings as ComponentType<PlotSettingsProps>,
     label: "Time series",
     value: "timeseries",
-    capabilities: [...XY_CAPABILITIES, ...SUMMARY_CAPABILITIES],
+    capabilities: [...XY_CAPABILITIES, ...DISPLAY_CAPABILITIES],
     // Time runs along x, so both axes have to be orderable numbers.
     supports: axisSupport(["x", "y"]),
   },
@@ -193,8 +184,7 @@ const PlotSettings = ({
     (plotImplementation?.capabilities.includes(capability) ?? false) &&
     !unavailable.includes(capability);
 
-  // Checked on every render, not only on a type change: a saved plot's data
-  // can change after it was configured. Non-blocking for the same reason.
+  // Checked every render, and non-blocking: a saved plot's data can change after it was set up.
   const support = plotImplementation?.supports(plot, {
     properties: props.properties,
     data: props.data,

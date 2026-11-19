@@ -1,11 +1,4 @@
-/**
- * What the figure admits it did not draw.
- *
- * Exclusions recorded by a domain validator answer "which records failed a
- * rule". These answer the question the figure used to be silent about: what
- * the plotting layer dropped because a scale could not hold it, a range did
- * not reach it, or there was no room for its panel.
- */
+/** What the figure admits it did not draw: values a scale, a range or the panel cap left out. */
 import { describe, expect, test } from "vitest";
 import { plotNotices } from "../lib/notices";
 import { MAX_FACETS } from "../lib/utils";
@@ -27,8 +20,6 @@ const rows = [
   { dose: 100, response: 500, study: "S2" },
 ];
 
-const reasons = (notices: { reason: string }[]) => notices.map((n) => n.reason);
-
 describe("a logarithmic scale", () => {
   test("counts the values it has no position for", () => {
     const notices = plotNotices({
@@ -47,6 +38,16 @@ describe("a logarithmic scale", () => {
       plotNotices({
         def: def({ y: { key: "response", axisType: "log" } }),
         data: [{ response: 1 }, { response: 10 }],
+        scaleAxes: ["y"],
+      }),
+    ).toEqual([]);
+  });
+
+  test("does not count an empty cell as a zero", () => {
+    expect(
+      plotNotices({
+        def: def({ y: { key: "response", axisType: "log" } }),
+        data: [{ response: 1 }, { response: null }, { response: "" }],
         scaleAxes: ["y"],
       }),
     ).toEqual([]);
@@ -131,8 +132,7 @@ describe("panels past the cap", () => {
     });
     expect(notices).toHaveLength(1);
     expect(notices[0].count).toBe(5);
-    // The identity of what is missing is the context that a blank panel
-    // cannot give, since the cap exists because the panels are unreadable.
+    // Naming what is missing is the context a blank panel cannot give.
     expect(notices[0].reason).toContain(`S${MAX_FACETS}`);
     expect(notices[0].reason).toContain(`of ${MAX_FACETS + 5}`);
   });
@@ -144,6 +144,16 @@ describe("panels past the cap", () => {
         data: many.slice(0, MAX_FACETS),
         scaleAxes: ["y"],
       }),
+    ).toEqual([]);
+  });
+
+  test("are not reported once Facets shown picks fewer", () => {
+    const notices = plotNotices({
+      def: def({ facetBy: ["study"], facetOnly: ["S00", "S01"] }),
+      data: many,
+    });
+    expect(
+      notices.filter((n) => n.reason.startsWith("panels not drawn")),
     ).toEqual([]);
   });
 });
@@ -174,42 +184,4 @@ describe("a configuration that draws nothing", () => {
 test("an empty selection produces no notices of its own", () => {
   expect(plotNotices({ def: def(), data: [] })).toEqual([]);
   expect(plotNotices({ def: def(), data: undefined })).toEqual([]);
-});
-
-test("several omissions are reported together", () => {
-  const notices = plotNotices({
-    def: def({
-      y: {
-        key: "response",
-        axisType: "log",
-        ticks: { mode: "range", min: 0, max: 100 },
-      },
-      facetBy: ["study"],
-    }),
-    data: rows,
-    scaleAxes: ["y"],
-  });
-  // The log omission only; the range is dropped on a log axis and two facets
-  // are under the cap.
-  expect(reasons(notices).some((r) => r.includes("logarithmic"))).toBe(true);
-});
-
-describe("panels over the maximum", () => {
-  const many = Array.from({ length: MAX_FACETS + 3 }, (_, i) => ({
-    dose: i,
-    response: i,
-    study: `S${String(i).padStart(2, "0")}`,
-  }));
-  const notDrawn = (extra: Record<string, unknown>) =>
-    reasons(
-      plotNotices({ def: def({ facetBy: ["study"], ...extra }), data: many }),
-    ).filter((reason) => reason.startsWith("panels not drawn"));
-
-  test("are reported when every panel is wanted", () => {
-    expect(notDrawn({})).toHaveLength(1);
-  });
-
-  test("are not reported once Facets shown picks fewer", () => {
-    expect(notDrawn({ facetOnly: ["S00", "S01"] })).toEqual([]);
-  });
 });

@@ -190,10 +190,7 @@ const MIN_LABELS_IN_VIEW = 3;
 const MAX_DECADES_WITH_MINORS = 10;
 const TARGET_DECADE_LABELS = 9;
 
-/**
- * For a log axis too narrow to hold two of 1…9 (e.g. 1.2…1.9); under a decade,
- * log and linear look the same.
- */
+/** For a log axis too narrow for two of 1…9 (e.g. 1.2…1.9), where log and linear look alike. */
 const roundValueTicks = (min: number, max: number, targetTicks: number) => {
   const step = niceStep((max - min) / Math.max(targetTicks, 2));
   const values: number[] = [];
@@ -217,10 +214,7 @@ export interface LogTicks {
   minorTickvals: number[];
 }
 
-/**
- * After matplotlib's `LogLocator`: decades labelled, then 2 and 5, then 1…9
- * while too sparse. `tickvals` are raw values; Plotly takes the log itself.
- */
+/** After matplotlib's `LogLocator`: decades, then 2 and 5, then 1…9 while sparse; `tickvals` are raw values. */
 export const logTicks = (
   values: number[],
   { maxTicks = TARGET_DECADE_LABELS }: { maxTicks?: number } = {},
@@ -235,7 +229,6 @@ export const logTicks = (
 
   const logMin = Math.log10(min);
   const logMax = Math.log10(max);
-  if (!Number.isFinite(logMin) || !Number.isFinite(logMax)) return none;
 
   // Span in view decides labelling; whole decades decide the stride.
   const inView = logMax - logMin;
@@ -309,8 +302,7 @@ export const buildAxisTicks = (
 ): Partial<LayoutAxis> => {
   const layout: Partial<LayoutAxis> = {};
 
-  // By axis type, so an unconfigured log axis gets ticks too. `count` aims for
-  // decade labels; Plotly already reads `spacing` as decades per tick.
+  // By axis type, so an unconfigured log axis gets ticks; Plotly reads `spacing` as decades already.
   const mode = ticks?.mode ?? "auto";
   let logMinorTickvals: number[] = [];
   if (axisType === "log" && values && (mode === "auto" || mode === "count")) {

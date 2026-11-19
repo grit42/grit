@@ -19,7 +19,7 @@
 /** Ranges marked across each panel: a dashed band for two bounds, a dashed line for one. */
 import type { Shape, ShapeLabel } from "plotly.js";
 import { rgba, type ColorMap } from "./colors";
-import { statistics } from "./math";
+import { columnNumbers, statistics } from "./math";
 import type { PlotRange, PlotDefinition, SourceData } from "./types";
 import { MAX_FACETS, buildFacets } from "./utils";
 
@@ -36,13 +36,6 @@ export const dataRange = (sd: number): PlotRange => ({
 
 const axisOf = (range: PlotRange) => range.axis ?? "y";
 
-const finite = (rows: SourceData, key: string) =>
-  rows
-    .map((row) => row[key])
-    .filter((value) => value !== null && value !== undefined && value !== "")
-    .map(Number)
-    .filter(Number.isFinite);
-
 /** Its bounds in a panel: as given, or from the panel's own values; null where it has none. */
 export const rangeBounds = (
   range: PlotRange,
@@ -56,7 +49,7 @@ export const rangeBounds = (
     }
   }
   if (range.sd !== undefined) {
-    const stats = statistics({ arr: finite(rows, key) });
+    const stats = statistics({ arr: columnNumbers(rows, key) });
     if (!stats || stats.nSamples < 2) return null;
     return {
       min: stats.meanValue - range.sd * stats.stdValue,
@@ -78,10 +71,7 @@ export const rangeText = (range: PlotRange): string => {
   return "no bounds";
 };
 
-/**
- * The ranges of `def`, behind the data in every panel they apply to. `transposed`
- * where the definition's y is drawn along x, as a vertical histogram's values are.
- */
+/** The ranges of `def`, behind the data in each panel; `transposed` where its y runs along x, as in an upright histogram. */
 export const rangeShapes = (
   def: PlotDefinition,
   data: SourceData,

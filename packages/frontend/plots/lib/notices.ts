@@ -18,6 +18,8 @@
 
 import { resolveDisplay } from "./displayMode";
 import { supportsTickRange } from "./axes";
+import { namedList } from "./format";
+import { columnNumbers } from "./math";
 import type { PlotDefinition, SourceData } from "./types";
 import {
   MAX_FACETS,
@@ -34,15 +36,6 @@ export interface PlotNotice {
 }
 
 const NAMED_OMISSIONS = 4;
-
-const finiteValues = (data: SourceData, key: string): number[] => {
-  const values: number[] = [];
-  for (const row of data) {
-    const value = Number(row[key]);
-    if (Number.isFinite(value)) values.push(value);
-  }
-  return values;
-};
 
 export const plotNotices = ({
   def,
@@ -62,7 +55,7 @@ export const plotNotices = ({
     const orientation = def[axis];
     const key = orientation?.key;
     if (!key) continue;
-    const values = finiteValues(data, key);
+    const values = columnNumbers(data, key);
     if (!values.length) continue;
     const name = orientation.label ?? key;
     if (orientation.axisType === "log") {
@@ -117,30 +110,20 @@ export const plotNotices = ({
 
   const hidden = hiddenFacetLabels(data, def);
   if (hidden.length > 0) {
-    const named = hidden.slice(0, NAMED_OMISSIONS).join(", ");
-    const rest =
-      hidden.length > NAMED_OMISSIONS
-        ? ` and ${hidden.length - NAMED_OMISSIONS} more`
-        : "";
     notices.push({
       kind: "omitted",
       count: hidden.length,
-      reason: `facets hidden by "Facets shown": ${named}${rest}.`,
+      reason: `facets hidden by "Facets shown": ${namedList(hidden, NAMED_OMISSIONS)}.`,
     });
   }
 
   const wanted = countFacets(data, def);
   if (wanted > MAX_FACETS) {
     const omitted = shownFacetLabels(data, def).slice(MAX_FACETS);
-    const named = omitted.slice(0, NAMED_OMISSIONS).join(", ");
-    const rest =
-      omitted.length > NAMED_OMISSIONS
-        ? ` and ${omitted.length - NAMED_OMISSIONS} more`
-        : "";
     notices.push({
       kind: "omitted",
       count: omitted.length,
-      reason: `panels not drawn, of ${wanted}: ${named}${rest}. Filter or group differently to reach them.`,
+      reason: `panels not drawn, of ${wanted}: ${namedList(omitted, NAMED_OMISSIONS)}. Filter or group differently to reach them.`,
     });
   }
 

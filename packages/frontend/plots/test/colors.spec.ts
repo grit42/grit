@@ -35,13 +35,10 @@ describe("hexToRgb", () => {
 });
 
 describe("rgba", () => {
-  test("applies alpha to hex input", () => {
+  test("applies alpha to hex input, shorthand too", () => {
     expect(rgba({ color: "#4e79a7", alpha: 0.5 })).toBe(
       "rgba(78, 121, 167, 0.5)",
     );
-  });
-
-  test("applies alpha to shorthand hex", () => {
     expect(rgba({ color: "#eee", alpha: 0.2 })).toBe(
       "rgba(238, 238, 238, 0.2)",
     );
@@ -61,16 +58,11 @@ describe("rgba", () => {
   });
 });
 
-describe("tint", () => {
-  test("mixes toward white by the given amount", () => {
-    expect(tint("#000000", 0)).toBe("rgb(0, 0, 0)");
-    expect(tint("#000000", 1)).toBe("rgb(255, 255, 255)");
-    expect(tint("#000000", 0.5)).toBe("rgb(128, 128, 128)");
-  });
-
-  test("accepts shorthand hex", () => {
-    expect(tint("#000", 0.5)).toBe("rgb(128, 128, 128)");
-  });
+test("tint mixes toward white by the given amount", () => {
+  expect(tint("#000000", 0)).toBe("rgb(0, 0, 0)");
+  expect(tint("#000000", 1)).toBe("rgb(255, 255, 255)");
+  expect(tint("#000000", 0.5)).toBe("rgb(128, 128, 128)");
+  expect(tint("#000", 0.5)).toBe("rgb(128, 128, 128)");
 });
 
 describe("contrast", () => {

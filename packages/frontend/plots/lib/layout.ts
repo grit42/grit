@@ -22,12 +22,29 @@ import {
   buildAppearanceLayout,
   buildAxisTicks,
 } from "./axes";
+import { columnNumbers } from "./math";
 import { rangeShapes } from "./ranges";
 import type { ColorMap } from "./colors";
 import type { PlotDefinition, SourceData } from "./types";
 import { axisTitleFor, buildFacetGrid, withAxisTitles } from "./utils";
 
 export type ScaleAxis = "x" | "y";
+
+/** A panel's title, above its plot area. */
+export const panelTitle = (
+  label: string,
+  axis: number,
+): Partial<Annotations> => ({
+  text: `<b>${label}</b>`,
+  xref: `x${axis} domain` as Annotations["xref"],
+  yref: `y${axis} domain` as Annotations["yref"],
+  x: 0.5,
+  y: 1.05,
+  xanchor: "center",
+  yanchor: "bottom",
+  showarrow: false,
+  font: { size: 13 },
+});
 
 export const composeAxes = ({
   def,
@@ -65,7 +82,7 @@ export const composeAxes = ({
                 def[orientation].axisType,
                 colorMap.textColor,
                 def[orientation].axisType === "log" && data
-                  ? data.map((row) => Number(row[def[orientation].key]))
+                  ? columnNumbers(data, def[orientation].key)
                   : undefined,
               ),
             }

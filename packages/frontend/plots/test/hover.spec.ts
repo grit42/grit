@@ -1,10 +1,6 @@
-/**
- * Hover templating. `buildHoverTemplate` moved here from SDTM unchanged, so
- * these also pin the output every SDTM plot's tooltip already depends on.
- */
+/** Hover templating; `buildHoverTemplate` came from SDTM unchanged, so these pin every SDTM tooltip. */
 import { describe, expect, test } from "vitest";
 import {
-  buildHoverCustomData,
   buildHoverTemplate,
   cellHover,
   pointHover,
@@ -12,7 +8,7 @@ import {
   type HoverSpec,
 } from "../lib/hover";
 import { numberFormat } from "../lib/format";
-import { sendLabs, sendLabsProperties } from "./fixtures/send";
+import { sendLabsProperties } from "./fixtures/send";
 
 describe("buildHoverTemplate", () => {
   test("labelled rows render as `key: value`, one per line", () => {
@@ -83,12 +79,13 @@ describe("resolveHoverSpec", () => {
     expect(rows.map((r) => r.key)).toEqual(["Subject", "Test", "Result"]);
   });
 
-  test("falls back to the raw key when the property is unknown", () => {
+  test("falls back to the raw key when the property is unknown or there are none", () => {
     const { rows } = resolveHoverSpec(
       [{ key: "NOT_A_COLUMN" }],
       sendLabsProperties,
     );
     expect(rows[0]!.key).toBe("NOT_A_COLUMN");
+    expect(resolveHoverSpec([{ key: "raw" }]).rows[0]!.key).toBe("raw");
   });
 
   test("rows address customdata positionally, matching the key order", () => {
@@ -101,47 +98,12 @@ describe("resolveHoverSpec", () => {
     ]);
   });
 
-  test("carries format and section through to the rows", () => {
-    const { rows } = resolveHoverSpec(spec, sendLabsProperties);
-    expect(rows[2]).toMatchObject({ format: ".2f", section: true });
-  });
-
-  test("works without properties, using keys as labels", () => {
-    const { rows } = resolveHoverSpec([{ key: "raw" }]);
-    expect(rows[0]!.key).toBe("raw");
-  });
-
+  // Format and section carry through.
   test("round-trips into a template", () => {
     const { rows } = resolveHoverSpec(spec, sendLabsProperties);
     expect(buildHoverTemplate(rows)).toMatchInlineSnapshot(
       `"Subject: %{customdata[0]}<br>Test: %{customdata[1]}<br><br>Result: %{customdata[2]:.2f}<extra></extra>"`,
     );
-  });
-});
-
-describe("buildHoverCustomData", () => {
-  const keys = ["USUBJID", "LBTESTCD", "LBSTRESN"];
-
-  test("extracts the named keys per datum, in order", () => {
-    const rows = buildHoverCustomData(sendLabs.slice(0, 2), keys);
-    expect(rows).toHaveLength(2);
-    expect(rows[0]).toHaveLength(3);
-    expect(rows[0]![1]).toBe(sendLabs[0]!.LBTESTCD);
-  });
-
-  /** Missing keys become null rather than undefined, which Plotly renders blank. */
-  test("absent keys become null", () => {
-    expect(buildHoverCustomData([{ a: 1 }], ["a", "missing"])).toEqual([
-      [1, null],
-    ]);
-  });
-
-  test("aligns with resolveHoverSpec's key order", () => {
-    const spec: HoverSpec = [{ key: "LBSTRESN" }, { key: "USUBJID" }];
-    const { keys } = resolveHoverSpec(spec, sendLabsProperties);
-    const [first] = buildHoverCustomData(sendLabs.slice(0, 1), keys);
-    // customdata[0] is the result, customdata[1] the subject — spec order wins.
-    expect(first).toEqual([sendLabs[0]!.LBSTRESN, sendLabs[0]!.USUBJID]);
   });
 });
 

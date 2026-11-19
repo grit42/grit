@@ -275,10 +275,7 @@ export const SEQUENTIAL_SCHEMES: Record<ColorPreset, readonly string[]> = {
 /** Minimum contrast of a scale's low end against its surface. */
 export const MIN_SCALE_CONTRAST = 1.2;
 
-/**
- * Runs out from the surface, so higher values stand out in either theme; low
- * stops too close to the surface are dropped.
- */
+/** Runs out from the surface, so high values stand out in either theme; stops too near the surface are dropped. */
 export const sequentialScale = (
   colors: readonly string[],
   surface: string,
@@ -492,6 +489,10 @@ const PRESETS: Record<ColorPreset, (dark: boolean) => PaletteColors> = {
 
 const resolvePreset = (preset: string | undefined): ColorPreset =>
   preset && preset in PRESETS ? (preset as ColorPreset) : "default";
+
+/** The palette's colour for a series, cycling past its end. */
+export const seriesColor = (colorMap: ColorMap, index: number): string =>
+  colorMap.universalColors[index % colorMap.universalColors.length] ?? "#888";
 
 export const useColorMap = (preset: ColorPreset = "default") => {
   const theme = useTheme();

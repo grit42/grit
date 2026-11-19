@@ -17,7 +17,7 @@
  */
 
 import { Annotations, Data, LayoutAxis } from "plotly.js";
-import { ColorMap, composite, readableOn, rgba } from "../colors";
+import { ColorMap, composite, readableOn, rgba, seriesColor } from "../colors";
 import { resolveDisplay } from "../displayMode";
 import {
   buildHoverTemplate,
@@ -25,7 +25,7 @@ import {
   summaryHoverRows,
   summaryHoverValues,
 } from "../hover";
-import { boxStats, randomJitter } from "../math";
+import { boxStats, randomJitter, toFiniteNumber } from "../math";
 import { barTrace, scatterTrace } from "../traces";
 import {
   BarPlotDefinition,
@@ -38,12 +38,13 @@ import {
 import { seriesPattern } from "../constants";
 import { categoryRange, countLogAxis, wholeNumberTicks } from "../axes";
 import { numberFormat } from "../format";
+import { panelTitle } from "../layout";
 import {
   COUNT_LABEL,
-  buildFacets,
+  buildPanels,
   countsRows,
   nullish,
-  ungroupedLabel,
+  seriesLabel,
 } from "../utils";
 
 const CATEGORY_FILL = 0.8;
@@ -80,10 +81,6 @@ interface BarGroup {
 const categoryOf = (datum: SourceDatum, def: BarPlotDefinition) =>
   String(datum[def.x.key]);
 
-const seriesOf = (datum: SourceDatum, def: BarPlotDefinition) =>
-  (def.groupBy ?? []).map((column) => String(datum[column])).join(" ") ||
-  ungroupedLabel(def);
-
 const buildBarGroups = (data: SourceData, def: BarPlotDefinition) => {
   const groups = new Map<string, BarGroup>();
   const counting = countsRows(def);
@@ -91,12 +88,11 @@ const buildBarGroups = (data: SourceData, def: BarPlotDefinition) => {
   for (const datum of data) {
     if (nullish(datum[def.x.key])) continue;
     // A counted row needs only its category.
-    if (!counting && nullish(datum[def.y.key])) continue;
-    const value = counting ? 1 : Number(datum[def.y.key]);
-    if (!Number.isFinite(value)) continue;
+    const value = counting ? 1 : toFiniteNumber(datum[def.y.key]);
+    if (value === null) continue;
 
     const category = categoryOf(datum, def);
-    const series = seriesOf(datum, def);
+    const series = seriesLabel(datum, def);
     const key = `${series} ${category}`;
 
     if (!groups.has(key))
@@ -119,10 +115,7 @@ const barHeight = (values: number[], statMarkers: StatMarker[]) => {
 export const stacksSeries = (def: BarPlotDefinition): boolean =>
   countsRows(def) && def.stacked === true;
 
-/**
- * Bars sit at numeric x with category names as ticks: Plotly's `barmode:
- * "group"` reserves a slot per trace, and observations need a bar to jitter on.
- */
+/** Bars at numeric x, names as ticks: Plotly's "group" mode reserves a slot per trace, and points jitter on a bar. */
 export const buildBar = (
   data: SourceData,
   def: BarPlotDefinition,
@@ -130,7 +123,7 @@ export const buildBar = (
   properties: SourceDataProperties = [],
   hooks: PlotHooks = {},
 ) => {
-  const facets = buildFacets(data, def);
+  const facets = buildPanels(data, def, (rows) => buildBarGroups(rows, def));
   const traces: Data[] = [];
   const axes: Record<string, Partial<LayoutAxis>> = {};
   const annotations: Partial<Annotations>[] = [];
@@ -144,7 +137,7 @@ export const buildBar = (
       : "mean";
   const multiFacet = facets.length > 1;
 
-  const facetGroups = facets.map((facet) => buildBarGroups(facet.data, def));
+  const facetGroups = facets.map((facet) => facet.groups);
   const stacking = stacksSeries(def);
   // A stack is as tall as its category's total, so its ticks follow the totals.
   const countsIn = (groups: BarGroup[]) => {
@@ -175,7 +168,7 @@ export const buildBar = (
   // The declared order first, so a stack can run from its base up.
   const sortedSeries = [
     ...new Set(facetGroups.flat().map((g) => g.series)),
-  ].sort(keyedOrder(hooks.getSeriesSortKey, (row) => seriesOf(row, def)));
+  ].sort(keyedOrder(hooks.getSeriesSortKey, (row) => seriesLabel(row, def)));
   const declaredSeries = (def.seriesOrder ?? []).filter((series) =>
     sortedSeries.includes(series),
   );
@@ -240,14 +233,9 @@ export const buildBar = (
   const colorBySeries =
     (def.groupBy ?? []).length > 0 && seriesNames.length > 1;
   const colors = new Map(
-    seriesNames.map((series, index) => [
-      series,
-      colorMap.universalColors[index % colorMap.universalColors.length] ??
-        "#888",
-    ]),
+    seriesNames.map((series, index) => [series, seriesColor(colorMap, index)]),
   );
-  const facetColor = (index: number) =>
-    colorMap.universalColors[index % colorMap.universalColors.length] ?? "#888";
+  const facetColor = (index: number) => seriesColor(colorMap, index);
   // Stacked series share one slot, and Plotly piles them in trace order.
   const slotsFor = (category: string) =>
     categorySlots(
@@ -266,7 +254,7 @@ export const buildBar = (
   const facetSeries: string[][] = [];
 
   facets.forEach((facet, index) => {
-    const axis = index + 1;
+    const { axis } = facet;
     const groups = facetGroups[index] ?? [];
     // Per panel where the panels hold different categories, as each tissue has its own findings.
     const own = def.x.categoriesPerPanel
@@ -301,19 +289,7 @@ export const buildBar = (
         : wholeNumberTicks([0, ...counts], def.y.ticks);
     axes[`yaxis${axis}`] = yTicks ?? {};
 
-    if (multiFacet) {
-      annotations.push({
-        text: `<b>${facet.label}</b>`,
-        xref: `x${axis} domain` as Annotations["xref"],
-        yref: `y${axis} domain` as Annotations["yref"],
-        x: 0.5,
-        y: 1.05,
-        xanchor: "center",
-        yanchor: "bottom",
-        showarrow: false,
-        font: { size: 13 },
-      });
-    }
+    if (multiFacet) annotations.push(panelTitle(facet.label, axis));
 
     seriesNames.forEach((series, seriesIndex) => {
       const color = colorBySeries ? colors.get(series)! : facetColor(index);
@@ -443,6 +419,19 @@ export const buildBar = (
     categories: facetCategories,
     /** Categories some panel left out, past {@link MAX_CATEGORIES}. */
     hiddenCategories: hiddenCategories.size,
+    notices: hiddenCategories.size
+      ? [
+          {
+            kind: "omitted" as const,
+            count: hiddenCategories.size,
+            reason: `${def.x.label ?? def.x.key} categories not drawn: past ${MAX_CATEGORIES}, a panel keeps its largest.`,
+          },
+        ]
+      : [],
+    // The builder places every bar itself; grouping would offset.
+    layout: {
+      barmode: stacksSeries(def) ? ("stack" as const) : ("overlay" as const),
+    },
     facetSeries,
     seriesByCategory,
   };

@@ -71,10 +71,7 @@ export interface HoverField {
 
 export type HoverSpec = HoverField[];
 
-/**
- * Plotly only reads values on the trace, so columns ride in `customdata`. Pass
- * the same `keys` to {@link buildHoverCustomData}.
- */
+/** Plotly reads only trace values, so columns ride in `customdata`, as {@link hoverValues} writes them. */
 export const resolveHoverSpec = (
   spec: HoverSpec,
   properties: SourceDataProperties = [],
@@ -97,12 +94,6 @@ export const resolveHoverSpec = (
 
   return { rows, keys };
 };
-
-/** Pass the `keys` from {@link resolveHoverSpec}, or the rows misalign. */
-export const buildHoverCustomData = (
-  data: SourceData,
-  keys: string[],
-): Datum[][] => data.map((datum) => keys.map((key) => datum[key] ?? null));
 
 const WHOLE: NumberFormat = { spec: "d", text: countText };
 
@@ -181,43 +172,6 @@ export const pointHover =
       ]),
     };
   };
-
-/** Heatmap `customdata`, shaped like `z`: Plotly indexes it `[row][column]`. */
-export const buildHoverMatrix = ({
-  data,
-  keys,
-  xKey,
-  yKey,
-  xCategories,
-  yCategories,
-}: {
-  data: SourceData;
-  keys: string[];
-  xKey: string;
-  yKey: string;
-  xCategories: string[];
-  yCategories: string[];
-}): (Datum[] | null)[][] => {
-  const byRow = new Map<string, Map<string, Datum[]>>();
-  for (const datum of data) {
-    const y = String(datum[yKey]);
-    const x = String(datum[xKey]);
-    const row = byRow.get(y) ?? new Map<string, Datum[]>();
-    if (!row.has(x))
-      row.set(
-        x,
-        keys.map((key) => datum[key] ?? null),
-      );
-    byRow.set(y, row);
-  }
-
-  // Not a bare null: Plotly would warn for every template key on hover.
-  const blank = keys.map(() => null);
-
-  return yCategories.map((y) =>
-    xCategories.map((x) => byRow.get(y)?.get(x) ?? blank),
-  );
-};
 
 /** A heatmap's hover from the definition's columns, read from each cell's first row. */
 export const cellHover =

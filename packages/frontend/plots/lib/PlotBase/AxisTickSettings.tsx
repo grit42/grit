@@ -19,6 +19,7 @@
 import { Select, ToggleSwitch } from "@grit42/client-library/components";
 import NumberField from "./NumberField";
 import { niceRange, supportsTickRange } from "../axes";
+import { columnNumbers } from "../math";
 import type {
   AxisTickOptions,
   PlotDefinition,
@@ -53,15 +54,11 @@ const AxisTickSettings = <TPlot extends PlotDefinition>({
   const span = (() => {
     const key = orientation?.key;
     if (!data?.length || !key) return undefined;
-    let min = Infinity;
-    let max = -Infinity;
-    for (const row of data) {
-      const value = Number(row[key]);
-      if (!Number.isFinite(value)) continue;
-      if (value < min) min = value;
-      if (value > max) max = value;
-    }
-    return Number.isFinite(min) && max > min ? max - min : undefined;
+    const values = columnNumbers(data, key);
+    if (!values.length) return undefined;
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    return max > min ? max - min : undefined;
   })();
 
   const minSpacing = span ? span / MAX_TICKS : undefined;

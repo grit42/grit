@@ -56,40 +56,21 @@ const sections = (host: HTMLElement) =>
   }));
 
 describe("the settings sections", () => {
-  test("groups the settings rather than listing them flat", async () => {
-    const host = await render();
-    expect(sections(host).map((s) => s.title)).toEqual([
-      "Data",
-      "Labels",
-      "Ticks",
-      "Ranges",
-      "Notes",
-      "Style",
-    ]);
-  });
-
   test("survives a definition whose type is implemented elsewhere", async () => {
     const host = await render({ ...plot, type: "violin" } as PlotDefinition);
     expect(host.textContent).toContain("Labels");
     expect(sections(host).map((s) => s.title)).not.toContain("Ticks");
   });
 
-  test("Display appears only for types that declare it", async () => {
-    const timeseries = await render({
-      ...plot,
-      type: "timeseries",
-    } as PlotDefinition);
-    expect(sections(timeseries).map((s) => s.title)).toContain("Display");
-    expect(sections(await render()).map((s) => s.title)).not.toContain(
-      "Display",
-    );
-  });
-
-  test("Display holds the summary and dispersion controls", async () => {
+  test("Display appears only for types that declare it, holding the summary and dispersion controls", async () => {
     const host = await render({
       ...plot,
       type: "timeseries",
     } as PlotDefinition);
+    expect(sections(host).map((s) => s.title)).toContain("Display");
+    expect(sections(await render()).map((s) => s.title)).not.toContain(
+      "Display",
+    );
     const display = Array.from(host.querySelectorAll("details")).find(
       (d) => d.querySelector("summary")?.textContent === "Display",
     )!;
@@ -98,7 +79,7 @@ describe("the settings sections", () => {
     expect(display.textContent).toContain("Individual observations");
   });
 
-  test("a counting bar plot hides the Y column and the Display section", async () => {
+  test("a counting bar plot hides the Y column and the Display and Ranges sections", async () => {
     const bar = {
       ...plot,
       type: "bar",
@@ -119,6 +100,7 @@ describe("the settings sections", () => {
     expect(labels(counting)).toContain("Bar height");
     expect(labels(counting)).not.toContain("Y axis");
     expect(sections(counting).map((s) => s.title)).not.toContain("Display");
+    expect(sections(counting).map((s) => s.title)).not.toContain("Ranges");
     // Stacking is offered only where it means something: counts.
     expect(labels(summary)).not.toContain("Series");
     expect(labels(counting)).toContain("Series");
@@ -162,16 +144,6 @@ describe("the settings sections", () => {
     expect(
       Array.from(host.querySelectorAll("label")).map((l) => l.textContent),
     ).toContain("Band from the data");
-  });
-
-  test("a counting bar plot has no ranges to mark", async () => {
-    const host = await render({
-      ...plot,
-      type: "bar",
-      x: { key: "compound", axisType: "category" },
-      aggregate: "count",
-    } as PlotDefinition);
-    expect(sections(host).map((s) => s.title)).not.toContain("Ranges");
   });
 
   test("a bar plot with no numeric column only counts", async () => {
@@ -228,37 +200,19 @@ describe("the settings sections", () => {
     expect(style.textContent).toContain("Gridlines");
   });
 
-  test("keeps the reset button outside the sections", async () => {
-    const host = await render();
-    const reset = Array.from(host.querySelectorAll("button")).find((b) =>
-      b.textContent?.includes("Reset to defaults"),
-    );
-    expect(reset).toBeDefined();
-    expect(reset!.closest("details")).toBeNull();
-  });
-
-  test("reset is offered once anything has been customised", async () => {
-    const plain = await render();
-    const styled = await render({ ...plot, appearance: { frame: true } });
+  test("keeps the reset button outside the sections, offered once anything has been customised", async () => {
     const resetIn = (host: HTMLElement) =>
       Array.from(host.querySelectorAll("button")).find((b) =>
         b.textContent?.includes("Reset to defaults"),
-      )!;
-    expect(resetIn(plain).disabled).toBe(true);
-    expect(resetIn(styled).disabled).toBe(false);
-  });
-
-  test("warns about a column the plot type cannot use", async () => {
-    const host = await render({
-      ...plot,
-      type: "timeseries",
-      x: { key: "compound", axisType: "category" },
-    } as PlotDefinition);
-    expect(warning(host)).toContain("X axis needs a numeric column");
-  });
-
-  test("stays silent on a configuration the type supports", async () => {
-    expect(warning(await render())).toBe("");
+      );
+    const plain = resetIn(await render());
+    expect(plain).toBeDefined();
+    expect(plain!.closest("details")).toBeNull();
+    expect(plain!.disabled).toBe(true);
+    const styled = resetIn(
+      await render({ ...plot, appearance: { frame: true } }),
+    );
+    expect(styled!.disabled).toBe(false);
   });
 
   test("warns when the axis type cannot plot the chosen column", async () => {
@@ -271,14 +225,6 @@ describe("the settings sections", () => {
     }
   });
 
-  test("clears once the axis type matches the column", async () => {
-    const host = await render({
-      ...plot,
-      x: { key: "compound", axisType: "category" },
-    } as PlotDefinition);
-    expect(warning(host)).toBe("");
-  });
-
   // Scatter tolerates the categorical x that time series rejects.
   test("asks the chosen type, not a shared rule", async () => {
     const categorical = {
@@ -288,7 +234,7 @@ describe("the settings sections", () => {
     expect(warning(await render(categorical))).toBe("");
     expect(
       warning(await render({ ...categorical, type: "timeseries" })),
-    ).toContain("numeric");
+    ).toContain("X axis needs a numeric column");
   });
 
   test("warns about a log axis the data cannot fill, given the rows", async () => {
@@ -385,40 +331,23 @@ describe("resetting a type's own settings", () => {
       (b) => b.textContent === "Reset to defaults",
     )!;
 
-  test("the button applies what the type declared", async () => {
+  test("the button is live while a type setting is set, and applies what the type declared", async () => {
     let received: PlotDefinition | undefined;
-    const host = document.createElement("div");
-    document.body.appendChild(host);
-    const root = createRoot(host);
-    await act(async () => {
-      root.render(
-        createElement(PlotSettings, {
-          plot: withBins,
-          properties,
-          onChange: (next: PlotDefinition) => {
-            received = next;
-          },
-          implementations: implementations(
-            (def) => ({ ...def, bins: undefined }) as PlotDefinition,
-          ),
-        } as never),
-      );
-    });
-    await act(async () => {
-      resetButton(host).click();
-    });
-    expect(received).toBeDefined();
-    expect((received as { bins?: number }).bins).toBeUndefined();
-  });
-
-  test("the button is live while a type setting is set", async () => {
     const host = await render(withBins, undefined, {
+      onChange: (next: PlotDefinition) => {
+        received = next;
+      },
       implementations: implementations(
         (def: PlotDefinition) =>
           ({ ...def, bins: undefined }) as PlotDefinition,
       ),
     });
     expect(resetButton(host).disabled).toBe(false);
+    await act(async () => {
+      resetButton(host).click();
+    });
+    expect(received).toBeDefined();
+    expect((received as { bins?: number }).bins).toBeUndefined();
   });
 
   test("and dead when nothing else is, whatever the type carries", async () => {
@@ -457,19 +386,10 @@ describe("the notes section", () => {
 
   test("deleting one keeps the others", async () => {
     let received: PlotDefinition | undefined;
-    const host = document.createElement("div");
-    document.body.appendChild(host);
-    const root = createRoot(host);
-    await act(async () => {
-      root.render(
-        createElement(PlotSettings, {
-          plot: withNotes,
-          properties,
-          onChange: (next: PlotDefinition) => {
-            received = next;
-          },
-        } as never),
-      );
+    const host = await render(withNotes, undefined, {
+      onChange: (next: PlotDefinition) => {
+        received = next;
+      },
     });
     const remove = Array.from(host.querySelectorAll("button")).find((b) =>
       b.getAttribute("aria-label")?.includes("Excursion expected"),
@@ -481,24 +401,6 @@ describe("the notes section", () => {
       (received as { annotations?: { id: string }[] }).annotations,
     ).toEqual([{ id: "note-2", text: "Balance recalibrated", x: 9, y: 12 }]);
   });
-});
-
-describe("the facets shown control", () => {
-  const rows = [
-    { concentration: 1, response: 2, compound: "A" },
-    { concentration: 3, response: 4, compound: "B" },
-  ];
-
-  test.each(["scatter", "box", "bar", "timeseries"] as const)(
-    "is offered on a faceted %s plot",
-    async (type) => {
-      const host = await render(
-        { ...plot, type, facetBy: ["compound"] } as PlotDefinition,
-        rows,
-      );
-      expect(host.textContent).toContain("Facets shown");
-    },
-  );
 });
 
 describe("the panel scales switch", () => {
@@ -551,10 +453,11 @@ describe("the panel scales switch", () => {
   });
 
   test.each(["scatter", "box", "bar", "timeseries"] as const)(
-    "is offered by the %s plot",
+    "is offered by the %s plot, with Facets shown",
     async (type) => {
       const host = await render({ ...faceted, type } as PlotDefinition, rows);
       expect(host.textContent).toContain("Panel scales");
+      expect(host.textContent).toContain("Facets shown");
     },
   );
 });

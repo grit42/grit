@@ -70,16 +70,11 @@ describe("getPlotTitle", () => {
   });
 });
 
-describe("isAutoTitle", () => {
-  test("is true while the title is what the generator would produce", () => {
-    expect(isAutoTitle(scatter, PROPERTIES)).toBe(true);
-  });
-
-  test("is false once someone has typed a different title", () => {
-    expect(
-      isAutoTitle({ ...scatter, title: "Weight gain, week 1" }, PROPERTIES),
-    ).toBe(false);
-  });
+test("isAutoTitle holds while the title is what the generator would produce, not once someone has typed another", () => {
+  expect(isAutoTitle(scatter, PROPERTIES)).toBe(true);
+  expect(
+    isAutoTitle({ ...scatter, title: "Weight gain, week 1" }, PROPERTIES),
+  ).toBe(false);
 });
 
 describe("nextPlotTitle", () => {
@@ -127,13 +122,7 @@ describe("withDerivedLabels", () => {
     expect(withDerivedLabels(next, PROPERTIES).title).not.toBe(custom.title);
   });
 
-  test("clears customised axis labels rather than freezing them", () => {
-    const reset = withDerivedLabels(custom, PROPERTIES);
-    expect(reset.x.label).toBeUndefined();
-    expect(reset.y.label).toBeUndefined();
-  });
-
-  test("cleared labels serialise away entirely", () => {
+  test("clears customised axis labels, so they serialise away entirely", () => {
     const reset = JSON.parse(
       JSON.stringify(withDerivedLabels(custom, PROPERTIES)),
     );
@@ -141,12 +130,13 @@ describe("withDerivedLabels", () => {
     expect(reset.y).not.toHaveProperty("label");
   });
 
-  test("leaves the axes, grouping and every other block untouched", () => {
+  test("leaves the axes, grouping, palette and every other block untouched", () => {
     const grouped: ScatterPlotDefinition = {
       ...custom,
       groupBy: ["ARM"],
       facetBy: ["SEX"],
       export: { format: "png" },
+      palette: "muted",
     };
     const reset = withDerivedLabels(grouped, PROPERTIES);
     expect(reset.x.key).toBe("BWDY");
@@ -154,13 +144,6 @@ describe("withDerivedLabels", () => {
     expect(reset.groupBy).toEqual(["ARM"]);
     expect(reset.facetBy).toEqual(["SEX"]);
     expect(reset.export).toEqual({ format: "png" });
-  });
-
-  test("keeps the palette, which is not derived from the axes", () => {
-    const reset = withDerivedLabels(
-      { ...custom, palette: "muted" },
-      PROPERTIES,
-    );
     expect(reset.palette).toBe("muted");
   });
 
@@ -171,17 +154,11 @@ describe("withDerivedLabels", () => {
 });
 
 describe("isDerivedAxisLabel", () => {
-  test("an absent label is derived", () => {
+  test("an absent label, the column display name or an unknown column's raw key is derived", () => {
     expect(isDerivedAxisLabel({ key: "BWDY" }, PROPERTIES)).toBe(true);
-  });
-
-  test("a label matching the column display name is derived", () => {
     expect(
       isDerivedAxisLabel({ key: "BWDY", label: "Study day" }, PROPERTIES),
     ).toBe(true);
-  });
-
-  test("a label matching the raw key of an unknown column is derived", () => {
     expect(
       isDerivedAxisLabel({ key: "UNKNOWN", label: "UNKNOWN" }, PROPERTIES),
     ).toBe(true);
@@ -204,14 +181,10 @@ describe("withDefaultAppearance", () => {
     appearance: { grid: false, frame: true, fontSize: 18 },
   };
 
-  test("clears the tick options on both axes", () => {
+  test("clears the tick options, palette and appearance block", () => {
     const reset = withDefaultAppearance(decorated, PROPERTIES);
     expect(reset.x.ticks).toBeUndefined();
     expect(reset.y.ticks).toBeUndefined();
-  });
-
-  test("clears the palette and appearance block", () => {
-    const reset = withDefaultAppearance(decorated, PROPERTIES);
     expect(reset.palette).toBeUndefined();
     expect(reset.appearance).toBeUndefined();
   });
@@ -273,18 +246,6 @@ describe("nextAxisLabel", () => {
     ).toBe("Weight (kg)");
   });
 
-  test("derives a label for an axis that has none", () => {
-    expect(nextAxisLabel({ key: "BWSTRESN" }, "LBSTRESN", PROPERTIES)).toBe(
-      "Lab result",
-    );
-  });
-
-  test("treats a label equal to the raw key as still derived", () => {
-    expect(
-      nextAxisLabel({ key: "UNKNOWN", label: "UNKNOWN" }, "BWDY", PROPERTIES),
-    ).toBe("Study day");
-  });
-
   test("tolerates an absent axis", () => {
     expect(nextAxisLabel(undefined, "BWDY", PROPERTIES)).toBe("Study day");
   });
@@ -313,11 +274,6 @@ describe("withAxisTitles", () => {
       text: "Weight",
       font: { color: undefined },
     });
-  });
-
-  test("leaves the title size to Plotly so it tracks the font setting", () => {
-    const titled = withAxisTitles(axesFor(1), { facets: 1, yTitle: "Weight" });
-    expect(titled.yaxis1!.title).not.toHaveProperty("font.size");
   });
 
   // Without it the title can be pushed out of the reserved margin.

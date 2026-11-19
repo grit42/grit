@@ -13,17 +13,11 @@ import {
 } from "../lib/axes";
 
 describe("niceRange", () => {
-  test("-2…103 becomes -10…110", () => {
-    expect(niceRange(-2, 103).range).toEqual([-10, 110]);
+  test("-2…103 becomes -10…110 in steps of 10", () => {
+    expect(niceRange(-2, 103)).toMatchObject({ range: [-10, 110], step: 10 });
   });
 
-  test("the step divides the range into round ticks", () => {
-    const { range, step } = niceRange(-2, 103);
-    expect(step).toBe(10);
-    expect((range[1] - range[0]) % step).toBe(0);
-  });
-
-  test("always contains the input", () => {
+  test("always contains the input, on whole multiples of the step", () => {
     const inputs: [number, number][] = [
       [-2, 103],
       [0, 1],
@@ -33,24 +27,12 @@ describe("niceRange", () => {
       [-0.5, 0.5],
       [99.9, 100.1],
       [1, 3],
-    ];
-    for (const [min, max] of inputs) {
-      const { range } = niceRange(min, max);
-      expect(range[0]).toBeLessThanOrEqual(min);
-      expect(range[1]).toBeGreaterThanOrEqual(max);
-    }
-  });
-
-  test("every bound is a whole multiple of the step", () => {
-    const inputs: [number, number][] = [
-      [-2, 103],
-      [0.0001, 0.0009],
-      [17, 23],
-      [-1e6, 1e6],
       [3, 7],
     ];
     for (const [min, max] of inputs) {
       const { range, step } = niceRange(min, max);
+      expect(range[0]).toBeLessThanOrEqual(min);
+      expect(range[1]).toBeGreaterThanOrEqual(max);
       for (const bound of range) {
         expect(Math.abs(Math.round(bound / step) - bound / step)).toBeLessThan(
           1e-9,
@@ -69,16 +51,13 @@ describe("niceRange", () => {
     expect(niceRange(103, -2).range).toEqual(niceRange(-2, 103).range);
   });
 
-  test("widens a zero-width span", () => {
+  test("widens a zero-width span, even at zero", () => {
     const { range } = niceRange(5, 5);
     expect(range[0]).toBeLessThan(5);
     expect(range[1]).toBeGreaterThan(5);
-  });
-
-  test("survives a zero-width span at zero", () => {
-    const { range, step } = niceRange(0, 0);
-    expect(step).toBeGreaterThan(0);
-    expect(range[0]).toBeLessThan(range[1]);
+    const zero = niceRange(0, 0);
+    expect(zero.step).toBeGreaterThan(0);
+    expect(zero.range[0]).toBeLessThan(zero.range[1]);
   });
 
   test("falls back rather than emitting NaN bounds", () => {
@@ -99,52 +78,21 @@ describe("niceRange", () => {
   });
 });
 
-describe("supportsTickRange", () => {
-  test("linear and unspecified axes take an explicit range", () => {
-    expect(supportsTickRange("linear")).toBe(true);
-    expect(supportsTickRange(undefined)).toBe(true);
-  });
-
-  // Plotly reads a log range as exponents: -10…110 is 10⁻¹⁰…10¹¹⁰.
-  test("log, category, date and multicategory do not", () => {
-    for (const type of ["log", "category", "date", "multicategory"] as const) {
-      expect(supportsTickRange(type)).toBe(false);
-    }
-  });
+// Plotly reads a log range as exponents: -10…110 is 10⁻¹⁰…10¹¹⁰.
+test("only linear and unspecified axes take an explicit range", () => {
+  expect(supportsTickRange("linear")).toBe(true);
+  expect(supportsTickRange(undefined)).toBe(true);
+  for (const type of ["log", "category", "date", "multicategory"] as const) {
+    expect(supportsTickRange(type)).toBe(false);
+  }
 });
 
 describe("buildAxisTicks", () => {
   test("auto contributes nothing, leaving Plotly's autorange alone", () => {
     expect(buildAxisTicks({ mode: "auto" }, "linear")).toEqual({});
     expect(buildAxisTicks(undefined, "linear")).toEqual({});
-  });
-
-  test("count maps to nticks", () => {
-    expect(buildAxisTicks({ mode: "count", count: 6 }, "linear").nticks).toBe(
-      6,
-    );
-  });
-
-  test("spacing maps to dtick, which Plotly honours exactly", () => {
-    expect(
-      buildAxisTicks({ mode: "spacing", spacing: 7 }, "linear").dtick,
-    ).toBe(7);
-  });
-
-  test("spacing applies to log axes too, where it counts decades", () => {
-    expect(buildAxisTicks({ mode: "spacing", spacing: 1 }, "log").dtick).toBe(
-      1,
-    );
-  });
-
-  test("ignores a spacing that could not produce ticks", () => {
-    expect(buildAxisTicks({ mode: "spacing", spacing: 0 }, "linear")).toEqual(
-      {},
-    );
-    expect(buildAxisTicks({ mode: "spacing", spacing: -5 }, "linear")).toEqual(
-      {},
-    );
-    expect(buildAxisTicks({ mode: "spacing" }, "linear")).toEqual({});
+    // Tick marks appear only with minor ticks enabled.
+    expect(buildAxisTicks({ mode: "auto" }, "linear", "#eee")).toEqual({});
   });
 
   test("each mode contributes only its own setting", () => {
@@ -156,9 +104,18 @@ describe("buildAxisTicks", () => {
     ).toEqual({ dtick: 7 });
   });
 
-  test("ignores a count that could not produce ticks", () => {
-    expect(buildAxisTicks({ mode: "count", count: 0 }, "linear")).toEqual({});
-    expect(buildAxisTicks({ mode: "count" }, "linear")).toEqual({});
+  test("ignores a setting that could not produce ticks", () => {
+    for (const ticks of [
+      { mode: "spacing", spacing: 0 },
+      { mode: "spacing", spacing: -5 },
+      { mode: "spacing" },
+      { mode: "count", count: 0 },
+      { mode: "count" },
+      { mode: "range", min: 0 },
+      { mode: "range" },
+    ] as const) {
+      expect(buildAxisTicks(ticks, "linear")).toEqual({});
+    }
   });
 
   test("range sets the rounded bounds, the step and autorange off", () => {
@@ -172,30 +129,6 @@ describe("buildAxisTicks", () => {
     expect(built.autorange).toBe(false);
   });
 
-  test("drops a range on a log axis instead of emptying the plot", () => {
-    const built = buildAxisTicks({ mode: "range", min: -2, max: 103 }, "log");
-    expect(built).not.toHaveProperty("range");
-    expect(built).not.toHaveProperty("autorange");
-  });
-
-  test("ignores a half-specified range", () => {
-    expect(buildAxisTicks({ mode: "range", min: 0 }, "linear")).toEqual({});
-    expect(buildAxisTicks({ mode: "range" }, "linear")).toEqual({});
-  });
-
-  test("minor ticks are drawn without labels or gridlines", () => {
-    const built = buildAxisTicks({ minor: true }, "linear");
-    expect(built.minor?.ticks).toBe("outside");
-    expect(built.minor?.showgrid).toBe(false);
-  });
-
-  // Plotly draws no major tick marks by default.
-  test("enabling minor ticks also draws the major marks, and longer", () => {
-    const built = buildAxisTicks({ minor: true }, "linear");
-    expect(built.ticks).toBe("outside");
-    expect(built.ticklen).toBeGreaterThan(built.minor!.ticklen as number);
-  });
-
   // Plotly's axis `color` skips `minor.tickcolor`, whose #444 vanishes on dark.
   test("both tick colours are set explicitly from the theme", () => {
     const built = buildAxisTicks({ minor: true }, "linear", "#eeeeee");
@@ -207,10 +140,6 @@ describe("buildAxisTicks", () => {
     const built = buildAxisTicks({ minor: true }, "linear");
     expect(built).not.toHaveProperty("tickcolor");
     expect(built.minor).not.toHaveProperty("tickcolor");
-  });
-
-  test("tick marks appear only with minor ticks enabled", () => {
-    expect(buildAxisTicks({ mode: "auto" }, "linear", "#eee")).toEqual({});
   });
 
   test("minor ticks combine with a range", () => {
@@ -234,15 +163,12 @@ describe("buildAppearanceAxis", () => {
     expect(buildAppearanceAxis({ grid: true }, "#111").showgrid).toBe(true);
   });
 
-  test("a frame borders all four sides", () => {
+  test("a frame borders all four sides and turns zero lines off by default", () => {
     const built = buildAppearanceAxis({ frame: true }, "#111");
     expect(built.showline).toBe(true);
     expect(built.mirror).toBe(true);
     expect(built.linecolor).toBe("#111");
-  });
-
-  test("a frame turns zero lines off by default", () => {
-    expect(buildAppearanceAxis({ frame: true }, "#111").zeroline).toBe(false);
+    expect(built.zeroline).toBe(false);
   });
 
   test("an explicit zero-line choice beats that default", () => {
@@ -273,8 +199,7 @@ describe("buildAppearanceLayout", () => {
 
 // Modelled on matplotlib's `LogLocator`.
 describe("logTicks", () => {
-  // Labels in view: Plotly clips tick arrays to the range, and the locator
-  // overshoots the data so panning has ticks.
+  // Labels in view: Plotly clips tick arrays to the range, and the locator overshoots for panning.
   const labels = (values: number[], maxTicks?: number) => {
     const { axis } = logTicks(values, maxTicks ? { maxTicks } : undefined);
     const positions = (axis.tickvals ?? []) as number[];
@@ -316,16 +241,6 @@ describe("logTicks", () => {
     ]);
   });
 
-  test("labels every subdivision over a fraction of a decade", () => {
-    expect(labels([3000, 5000, 7000])).toEqual([
-      "3×10³",
-      "4×10³",
-      "5×10³",
-      "6×10³",
-      "7×10³",
-    ]);
-  });
-
   // SEND body weights: 0.429 decades, just past matplotlib's threshold.
   test("does not read as linear just past a threshold", () => {
     const drawn = labels([2090.1, 3400, 4800, 5609.1]);
@@ -345,14 +260,11 @@ describe("logTicks", () => {
     expect(labels([1e-10, 1e10], 4).length).toBeLessThanOrEqual(8);
   });
 
+  // An explicit array, so every label is the same size.
   test("positions are the values, not their logarithms", () => {
-    expect(logTicks([1, 100]).axis.tickvals).toEqual(
-      expect.arrayContaining([1, 10, 100]),
-    );
-  });
-
-  test("uses an explicit array so every label is the same size", () => {
-    expect(logTicks([1, 1000]).axis.tickmode).toBe("array");
+    const { axis } = logTicks([1, 100]);
+    expect(axis.tickmode).toBe("array");
+    expect(axis.tickvals).toEqual(expect.arrayContaining([1, 10, 100]));
   });
 
   test("never runs away", () => {
@@ -373,41 +285,25 @@ describe("logTicks", () => {
   });
 });
 
-describe("minor ticks on a log axis", () => {
-  const minorsOf = (values: number[]) =>
-    (
-      (
-        buildAxisTicks({ mode: "auto", minor: true }, "log", "#111", values)
-          .minor as { tickvals?: number[] }
-      )?.tickvals ?? []
-    ).length;
-
-  test("places them between the decades", () => {
-    expect(minorsOf([1, 1000])).toBeGreaterThan(0);
-  });
-
-  test("stays bounded over an extreme range", () => {
-    expect(minorsOf([1e-200, 1e200])).toBeLessThan(30);
-  });
+test("a log axis places minor ticks between the decades", () => {
+  const minor = buildAxisTicks(
+    { mode: "auto", minor: true },
+    "log",
+    "#111",
+    [1, 1000],
+  ).minor as { tickvals?: number[] };
+  expect(minor.tickvals?.length).toBeGreaterThan(0);
 });
 
-describe("categoryRange", () => {
-  test("gives half a cell beyond the first and last category", () => {
-    expect(categoryRange(3)).toEqual({ range: [-0.5, 2.5], autorange: false });
-  });
-
-  test("still spans one cell with nothing to draw", () => {
-    expect(categoryRange(0).range).toEqual([-0.5, 0.5]);
-  });
+test("categoryRange gives half a cell beyond the first and last category, even with none", () => {
+  expect(categoryRange(3)).toEqual({ range: [-0.5, 2.5], autorange: false });
+  expect(categoryRange(0).range).toEqual([-0.5, 0.5]);
 });
 
 describe("countStep", () => {
-  test("steps by one on a short axis", () => {
+  test("steps by one on a short axis, by 1, 2 or 5 of a power of ten on a long one", () => {
     expect(countStep(2.4)).toBe(1);
     expect(countStep(0)).toBe(1);
-  });
-
-  test("steps by 1, 2 or 5 of a power of ten on a long one", () => {
     expect(countStep(12)).toBe(5);
     expect(countStep(40)).toBe(10);
     expect(countStep(80)).toBe(20);

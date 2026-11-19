@@ -21,6 +21,8 @@ export type * from "plotly.js";
 export { default as PlotBase } from "./PlotBase";
 export { default as ThemedPlot } from "./PlotBase/ThemedPlot";
 export * from "./PlotBase/ThemedPlot";
+export { default as PlotFigure } from "./PlotBase/PlotFigure";
+export * from "./PlotBase/PlotFigure";
 
 export { default as ScatterPlot } from "./ScatterPlot";
 export { default as ScatterPlotSettings } from "./ScatterPlot/ScatterPlotSettings";
@@ -69,7 +71,6 @@ export * from "./exclusions";
 export { default as PlotDataSummaryPanel } from "./PlotDataSummaryPanel";
 export * from "./PlotDataSummaryPanel";
 export * from "./traces";
-export * from "./displayMode";
 export * from "./constants";
 export * from "./utils";
 export * from "./math";

@@ -38,30 +38,19 @@ describe("scatterTrace", () => {
     expect(JSON.stringify(withMap)).not.toContain("#abcdef");
   });
 
-  test("hoverRows become a hovertemplate", () => {
-    const t = scatterTrace({
-      x: [1],
-      y: [2],
-      name: "n",
-      colorMap,
-      hoverRows: [{ key: "Value", value: "%{y}" }],
-    });
-    expect(t.hovertemplate).toBe("Value: %{y}<extra></extra>");
+  test("hoverRows become a hovertemplate, unless one is given", () => {
+    const hoverRows = [{ key: "Value", value: "%{y}" }];
+    const trace = { x: [1], y: [2], name: "n", colorMap, hoverRows };
+    expect(scatterTrace(trace).hovertemplate).toBe(
+      "Value: %{y}<extra></extra>",
+    );
+    expect(
+      scatterTrace({ ...trace, hovertemplate: "custom<extra></extra>" })
+        .hovertemplate,
+    ).toBe("custom<extra></extra>");
   });
 
-  test("an explicit hovertemplate takes precedence over hoverRows", () => {
-    const t = scatterTrace({
-      x: [1],
-      y: [2],
-      name: "n",
-      colorMap,
-      hovertemplate: "custom<extra></extra>",
-      hoverRows: [{ key: "Value", value: "%{y}" }],
-    });
-    expect(t.hovertemplate).toBe("custom<extra></extra>");
-  });
-
-  test("legend grouping and visibility pass through", () => {
+  test("legend grouping, visibility and secondary axes pass through", () => {
     const t = scatterTrace({
       x: [],
       y: [],
@@ -69,20 +58,11 @@ describe("scatterTrace", () => {
       colorMap,
       legendgroup: "g",
       showlegend: false,
-    });
-    expect(t.legendgroup).toBe("g");
-    expect(t.showlegend).toBe(false);
-  });
-
-  test("secondary axes can be targeted", () => {
-    const t = scatterTrace({
-      x: [],
-      y: [],
-      name: "n",
-      colorMap,
       xaxis: "x2",
       yaxis: "y2",
     });
+    expect(t.legendgroup).toBe("g");
+    expect(t.showlegend).toBe(false);
     expect(t.xaxis).toBe("x2");
     expect(t.yaxis).toBe("y2");
   });
@@ -189,21 +169,12 @@ describe("outlierTrace", () => {
     expect(Math.abs((a.x as number[])[0]! - 1)).toBeLessThanOrEqual(0.2);
   });
 
-  test("returns null when no point lies outside the whiskers", () => {
-    expect(
-      outlierTrace({
-        values: [1, 2, 3, 4, 5],
-        label: "G",
-        xIndex: 0,
-        colorMap,
-      }),
-    ).toBeNull();
-  });
-
-  test("returns null for an empty series", () => {
-    expect(
-      outlierTrace({ values: [], label: "G", xIndex: 0, colorMap }),
-    ).toBeNull();
+  test("returns null when no point lies outside the whiskers, or there are none", () => {
+    for (const values of [[1, 2, 3, 4, 5], []]) {
+      expect(
+        outlierTrace({ values, label: "G", xIndex: 0, colorMap }),
+      ).toBeNull();
+    }
   });
 });
 
