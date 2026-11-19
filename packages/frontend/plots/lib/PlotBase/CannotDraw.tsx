@@ -22,7 +22,7 @@ import { useNoticeStyle } from "./noticeStyle";
 import PlotNotices, { NoticeLevelLabel } from "./PlotNotices";
 import styles from "./plotNotices.module.scss";
 
-/** A figure that cannot be drawn: the reason in its place, never behind the chip. */
+/** The reason a figure cannot be drawn, in its place, never behind the chip. */
 const CannotDraw = ({
   reason,
   notices = [],

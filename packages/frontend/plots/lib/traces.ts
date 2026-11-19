@@ -280,7 +280,7 @@ export const outlierTrace = ({
   colorMap: ColorMap;
   jitter?: number;
   format?: NumberFormat;
-  /** Where the whiskers follow another rule than 1.5 × IQR; past them is outlying. */
+  /** Where the whiskers follow another rule than 1.5 × IQR. */
   stats?: BoxStats | null;
 }): Partial<ScatterData> | null => {
   const stats = given ?? boxStats(values);

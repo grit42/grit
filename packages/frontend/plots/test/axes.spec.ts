@@ -201,7 +201,7 @@ describe("buildAppearanceLayout", () => {
 
 // Modelled on matplotlib's `LogLocator`.
 describe("logTicks", () => {
-  // Labels in view: Plotly clips tick arrays to the range, and the locator overshoots for panning.
+  // Only labels in view count: Plotly clips the locator's overshoot.
   const labels = (values: number[], maxTicks?: number) => {
     const { axis } = logTicks(values, maxTicks ? { maxTicks } : undefined);
     const positions = (axis.tickvals ?? []) as number[];

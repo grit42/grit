@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-/** The figure's header row: one chip for every notice, the first to check, and the table. */
+/** The figure's header row: the notices chip, its table and the guide. */
 import { afterEach, describe, expect, test } from "vitest";
 import { createRoot, type Root } from "react-dom/client";
 import { act, type ReactNode } from "react";

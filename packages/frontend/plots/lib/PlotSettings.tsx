@@ -93,14 +93,14 @@ export interface PlotImplementation {
   label: string;
   value: PlotDefinition["type"];
   capabilities: readonly PlotCapability[];
-  /** Capabilities this definition cannot use, e.g. a bar plot's summary while it counts. */
+  /** Capabilities this definition cannot use, as a counting bar's summary. */
   unavailable?: (def: PlotDefinition) => readonly PlotCapability[];
   supports: (def: PlotDefinition, ctx: PlotSupportContext) => PlotSupport;
   sections?: readonly PlotSection[];
-  /** The limits drawn while the definition sets none, e.g. a control chart's. */
+  /** The limits drawn while the definition sets none. */
   defaultLimits?: readonly ControlLimit[];
   resetDefaults?: (def: PlotDefinition) => PlotDefinition;
-  /** The Style section's swatches, where the type draws other colours than the palette's series. */
+  /** Style swatches, where the type does not draw the palette's series. */
   paletteSwatches?: PaletteSwatches;
 }
 
@@ -202,7 +202,7 @@ const PlotSettings = ({
     (plotImplementation?.capabilities.includes(capability) ?? false) &&
     !unavailable.includes(capability);
 
-  // Checked every render, and non-blocking: a saved plot's data can change after it was set up.
+  // Checked every render, non-blocking: a saved plot's data can change.
   const support = plotImplementation?.supports(plot, {
     properties: props.properties,
     data: props.data,

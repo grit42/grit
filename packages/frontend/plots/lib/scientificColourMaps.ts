@@ -68,10 +68,7 @@ export const MANY_SERIES = hexes(`
   #F49F72 #868330 #B58E30 #577647
 `);
 
-/**
- * Yellow, orange and red for ±1, 2 and 3σ, 3σ standing out most: roma and
- * vik on light, batlow and lipari on dark.
- */
+/** ±1, 2, 3σ lines from roma and vik on light, batlow and lipari on dark. */
 export const SIGMA_LINES = {
   light: ["#B68C32", "#9B5517", "#6F1107"],
   dark: ["#8E852E", "#EA8D6B", "#FDB4B6"],

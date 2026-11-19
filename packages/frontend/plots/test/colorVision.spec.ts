@@ -1,6 +1,4 @@
-// colorVision.json comes from reference/colorVision.R: farver for CIELAB and
-// CIEDE2000, colorspace for colour-vision deficiency. Change a colour there
-// and rerun it, never edit the JSON by hand.
+// colorVision.json is written by reference/colorVision.R; never hand-edit.
 import { describe, expect, test } from "vitest";
 import {
   deltaE2000,
@@ -28,8 +26,7 @@ const DEFICIENCIES: Deficiency[] = ["deuteranopia", "protanopia", "tritanopia"];
 describe.each(reference.colours.map((c) => [c.hex, c] as const))(
   "%s",
   (hex, expected) => {
-    // farver's white point sits 0.01 off the sRGB matrix's; a just-noticeable
-    // step is about 1.
+    // farver's white point is 0.01 off; a just-noticeable step is about 1.
     test("CIELAB as farver", () => {
       toLab(hex).forEach((value, i) =>
         expect(value).toBeCloseTo(expected.lab[i]!, 1),

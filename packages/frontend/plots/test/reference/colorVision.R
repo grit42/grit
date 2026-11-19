@@ -2,10 +2,7 @@
 # Reference values for colorVision.ts: CIELAB and CIEDE2000 from farver,
 # colour-vision deficiency from colorspace (Machado, Oliveira & Fernandes 2009,
 # severity 1, in linear RGB).
-# Run from the repo root:
-#   Rscript grit/packages/frontend/plots/test/reference/colorVision.R
-# Writes colorVision.json beside this script; colorVision.spec.ts reads it.
-# Then format the JSON with prettier from the repo root (never pnpm in grit/).
+# Writes colorVision.json beside this script; format it with prettier.
 
 suppressMessages({
   library(colorspace)
@@ -49,8 +46,7 @@ pairs <- lapply(PAIRS, function(p) list(
   )[1, 1]
 ))
 
-# Sharma, Wu & Dalal (2005), table 1: pairs that exercise the hue wrap and the
-# rotation term.
+# Sharma, Wu & Dalal (2005), table 1: the hue wrap and rotation term.
 SHARMA <- list(
   list(c(50, 2.6772, -79.7751), c(50, 0, -82.7485)),
   list(c(50, -1.3802, -84.2814), c(50, 0, -82.7485)),

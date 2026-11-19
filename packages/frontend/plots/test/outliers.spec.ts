@@ -1,4 +1,4 @@
-/** Which values a figure rings, and where too few values leave a rule nothing to ring. */
+/** Which values a figure rings, and when a set is too small to ring any. */
 import { describe, expect, test } from "vitest";
 import {
   fewestMarkable,

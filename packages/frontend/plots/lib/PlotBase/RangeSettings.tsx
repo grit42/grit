@@ -61,7 +61,7 @@ export const DataBandField = ({
   );
 };
 
-/** The figure's ranges, each removable, and the band from the data unless set elsewhere. */
+/** The figure's ranges, each removable, and the data band where `band`. */
 const RangeSettings = ({
   plot,
   onChange,

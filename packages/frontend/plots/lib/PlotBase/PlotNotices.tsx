@@ -89,11 +89,7 @@ const NoticeRow = ({ notice }: { notice: PlotNotice }) => {
 
 const plural = (count: number) => `${count} notice${count === 1 ? "" : "s"}`;
 
-/**
- * The figure's header row: the host's data summary, one chip for every
- * notice and a `?` for its reading guide. Each opens over the figure, so the
- * figure keeps its height; one at a time.
- */
+/** The figure's header row: summary, notices chip and reading guide. */
 const PlotNotices = ({
   notices,
   summary: own,

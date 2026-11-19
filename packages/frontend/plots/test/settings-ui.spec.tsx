@@ -101,7 +101,7 @@ describe("the settings sections", () => {
     expect(labels(counting)).not.toContain("Y axis");
     expect(sections(counting).map((s) => s.title)).not.toContain("Display");
     expect(sections(counting).map((s) => s.title)).not.toContain("Ranges");
-    // Stacking is offered only where it means something: counts.
+    // Stacking is offered only for counts.
     expect(labels(summary)).not.toContain("Series");
     expect(labels(counting)).toContain("Series");
   });

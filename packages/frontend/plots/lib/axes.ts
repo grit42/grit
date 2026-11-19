@@ -120,7 +120,7 @@ export const wholeNumberTicks = (
 const COUNT_LOG_FLOOR = 0.5;
 const COUNT_LOG_HEADROOM = 0.05;
 
-/** Counts on a log axis: from below one, ticked 1, 2, 5, 10, … in plain numbers. */
+/** Counts on a log axis, ticked 1, 2, 5, 10, … in plain numbers. */
 export const countLogAxis = (
   counts: readonly number[],
   userTicks?: AxisTickOptions,
@@ -130,7 +130,7 @@ export const countLogAxis = (
     Math.log10(COUNT_LOG_FLOOR),
     Math.log10(top) + COUNT_LOG_HEADROOM,
   ];
-  // Plotly fits a log axis to the shortest bar's top, cutting off every bar below it.
+  // Plotly's log autorange starts at the shortest bar's top, hiding it.
   const axis = { range, autorange: false as const };
   if (userTicks?.mode && userTicks.mode !== "auto") return axis;
 
@@ -190,7 +190,7 @@ const MIN_LABELS_IN_VIEW = 3;
 const MAX_DECADES_WITH_MINORS = 10;
 const TARGET_DECADE_LABELS = 9;
 
-/** For a log axis too narrow for two of 1…9 (e.g. 1.2…1.9), where log and linear look alike. */
+/** For a log axis too narrow for two of 1…9, where log looks linear. */
 const roundValueTicks = (min: number, max: number, targetTicks: number) => {
   const step = niceStep((max - min) / Math.max(targetTicks, 2));
   const values: number[] = [];
@@ -214,7 +214,7 @@ export interface LogTicks {
   minorTickvals: number[];
 }
 
-/** After matplotlib's `LogLocator`: decades, then 2 and 5, then 1…9 while sparse; `tickvals` are raw values. */
+/** After matplotlib's `LogLocator`; `tickvals` are values, not logs. */
 export const logTicks = (
   values: number[],
   { maxTicks = TARGET_DECADE_LABELS }: { maxTicks?: number } = {},
@@ -302,7 +302,7 @@ export const buildAxisTicks = (
 ): Partial<LayoutAxis> => {
   const layout: Partial<LayoutAxis> = {};
 
-  // By axis type, so an unconfigured log axis gets ticks; Plotly reads `spacing` as decades already.
+  // By type, so a bare log axis gets ticks; on log, `spacing` is decades.
   const mode = ticks?.mode ?? "auto";
   let logMinorTickvals: number[] = [];
   if (axisType === "log" && values && (mode === "auto" || mode === "count")) {
@@ -406,7 +406,7 @@ export interface FixedRanges {
   y?: [number, number];
 }
 
-/** Shares a scale across separate figures; sets the range only, so the builder's ticks survive. */
+/** One scale across figures: the range only, so the builder's ticks stay. */
 export const withFixedRanges = (
   axes: Record<string, Partial<LayoutAxis>>,
   ranges: FixedRanges | undefined,
@@ -420,7 +420,7 @@ export const withFixedRanges = (
   );
 };
 
-/** Padded either side (`whole` for a single value), so edge points aren't half hidden. */
+/** Padded so edge points aren't half hidden; `whole` for a single value. */
 export const paddedRange = (
   span: { min: number; max: number },
   pad: number,

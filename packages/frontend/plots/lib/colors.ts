@@ -200,7 +200,7 @@ export const readableOn = (
 /** WCAG AA for body text. */
 export const MIN_TEXT_CONTRAST = 4.5;
 
-/** A text colour per notice level, from the theme and readable on its surface and page. */
+/** A text colour per notice level, readable on its surface and page. */
 export const noticeColors = (palette: Palette): Record<NoticeLevel, string> => {
   const surface = palette.background.surface;
   const text = (color: string) =>
@@ -226,11 +226,7 @@ export const MIN_MARK_CONTRAST = 3;
 
 const hexes = (list: string): readonly string[] => list.split(" ");
 
-/**
- * Paul Tol's qualitative schemes (https://sronpersonalpages.nl/~pault/):
- * bright and light for default, muted, vibrant for bright. A colour below 3:1
- * on its surface is moved in lightness.
- */
+/** Paul Tol's schemes (https://sronpersonalpages.nl/~pault/), lifted to 3:1. */
 const SERIES: Record<ColorPreset, Record<Scheme, readonly string[]>> = {
   default: {
     light: hexes("#4477AA #EE6677 #228833 #A39321 #38A0BE #AA3377"),
@@ -249,7 +245,7 @@ const SERIES: Record<ColorPreset, Record<Scheme, readonly string[]>> = {
 /** A scale's low end against its surface, so an empty cell reads apart. */
 export const MIN_SCALE_CONTRAST = 1.5;
 
-/** Runs out from the surface, so high values stand out in either theme; stops too near the surface are dropped. */
+/** From the surface outward; stops too close to the surface are dropped. */
 export const sequentialScale = (
   colors: readonly string[],
   surface: string,
@@ -330,10 +326,7 @@ export const colorMapFor = (
 
 export type ColorMap = ReturnType<typeof colorMapFor>;
 
-/**
- * A colour per series key, the same in every panel: a fixed colour where the
- * host gives one, the preset's for the rest, batlowS where they outnumber it.
- */
+/** A colour per series key, the same in every panel. */
 export const seriesPalette = (
   colorMap: ColorMap,
   keys: readonly string[],

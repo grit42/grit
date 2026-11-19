@@ -64,7 +64,7 @@ const buildBoxTraces = (
   const labels = [
     ...new Set(facets.flatMap((f) => f.groups.map((g) => g.label))),
   ];
-  // A lone series is no grouping to tell apart, so its panels differ as ungrouped ones do.
+  // A lone series colours its panels apart, as an ungrouped plot does.
   const byLabel = grouped && labels.length > 1;
   const bySeries = seriesPalette(colorMap, labels);
   const byPanel = seriesPalette(

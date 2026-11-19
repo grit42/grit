@@ -627,7 +627,7 @@ describe("buildBar", () => {
   });
 
   test("a panel can keep only its own categories", () => {
-    // Each arm is its own panel, so a shared axis would show two empty arms in each.
+    // Faceted by arm, a shared axis shows every arm in each panel.
     const shared = buildBarWith({ facetBy: ["ARMCD"] });
     const own = buildBarWith({
       facetBy: ["ARMCD"],
@@ -1195,7 +1195,7 @@ describe("buildTimeSeries limits and outliers", () => {
   });
 
   test("judges against the panel, as the limit lines are drawn", () => {
-    // Day 2 runs high: 12 is far from day 1's other values, yet inside the panel's ±1 SD.
+    // Day 2 runs high, so day 1's 12 lies within the panel's ±1 SD.
     const twoDays = [
       ...[10, 10, 10, 10, 10, 12].map((value, i) => day(value, i)),
       ...[20, 20, 20, 20, 20, 20].map((value, i) => ({

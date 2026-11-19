@@ -1,4 +1,4 @@
-/** Appearance settings, checked on Plotly's resolved `_fullLayout`: a key Plotly ignores (the `xaxis1` bug) passes unit tests. */
+/** Checked on Plotly's `_fullLayout`: a key it ignores passes unit tests. */
 // @vitest-environment happy-dom
 import { describe, expect, test } from "vitest";
 import { createRoot } from "react-dom/client";
@@ -99,7 +99,7 @@ describe("tick configuration", () => {
     expect(layout.xaxis.minor.showgrid).toBe(false);
   });
 
-  /** Plotly draws unset minor ticks in a fixed `#444`, invisible on a dark theme. */
+  /** Plotly's unset minor ticks are a fixed `#444`, unseen on a dark theme. */
   test("minor ticks take the theme colour rather than Plotly's dark default", async () => {
     const layout = await fullLayout(
       withDef({ x: { ...BASE.x, ticks: { minor: true } } }),
@@ -178,7 +178,7 @@ describe("plot appearance", () => {
   });
 });
 
-/** The log axis as Plotly resolves it: only a render shows the transform reaches a box plot's quartiles. */
+/** Only a render shows the log transform reaches a box plot's quartiles. */
 describe("log axes", () => {
   test("a box plot's y axis actually goes logarithmic", async () => {
     const layout = await fullLayout(
@@ -191,7 +191,7 @@ describe("log axes", () => {
     expect(layout.yaxis.type).toBe("log");
   });
 
-  /** Left to Plotly, a wide log axis repeats 1, 2 and 5 in each decade without saying which. */
+  /** Plotly alone repeats 1, 2 and 5 in each decade without saying which. */
   test("labels the decades across a wide range", async () => {
     const layout = await fullLayout(
       withDef({ x: { key: "concentration", axisType: "log" } }),
@@ -208,7 +208,7 @@ describe("log axes", () => {
     );
   });
 
-  /** Within one decade Plotly labels like a linear axis; `_vals` also shows it clips the locator's extra decade. */
+  /** Within one decade Plotly labels a log axis like a linear one. */
   test("a narrow range no longer reads like a linear one", async () => {
     const layout = await fullLayout(
       withDef({ x: { key: "concentration", axisType: "log" } }),
@@ -229,7 +229,7 @@ describe("log axes", () => {
     expect(drawn).not.toContain("10⁴");
   });
 
-  /** Minor ticks on by default, unlike linear: they show the compressed scale between sparse labels. */
+  /** On by default, unlike linear: they show the compressed scale. */
   test("draws the ticks between the labels without being asked", async () => {
     const layout = await fullLayout(
       withDef({ x: { key: "concentration", axisType: "log" } }),
@@ -281,7 +281,6 @@ describe("log axes", () => {
   });
 });
 
-/** The exported image is the figure. */
 describe("export fidelity", () => {
   const exported = async (def: PlotDefinition, rows: unknown[] = data) => {
     const graphDiv = await renderedPlot(def, rows);
@@ -319,7 +318,7 @@ describe("export fidelity", () => {
     expect(svg).toContain("Compound A");
   });
 
-  /** A note on a log axis sits at its data point's pixel, not at ten to the power of itself. */
+  /** Plotly reads a note's x on a log axis as an exponent. */
   test("a note lands on the point it names, on a log axis", async () => {
     const logX = { x: { key: "concentration", axisType: "log" } };
     const rows = [

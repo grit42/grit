@@ -32,7 +32,7 @@ export interface HoverRow {
   section?: boolean;
   /** Defaults to true for unlabelled rows, which act as headings. */
   bold?: boolean;
-  /** On the line before, after a dot: Plotly drops a label taller than the figure. */
+  /** Joins the line before, after a dot: Plotly drops too tall a label. */
   inline?: boolean;
 }
 
@@ -71,7 +71,7 @@ export interface HoverField {
 
 export type HoverSpec = HoverField[];
 
-/** Plotly reads only trace values, so columns ride in `customdata`, as {@link hoverValues} writes them. */
+/** Columns ride in `customdata`: Plotly reads only trace values. */
 export const resolveHoverSpec = (
   spec: HoverSpec,
   properties: SourceDataProperties = [],
@@ -97,7 +97,7 @@ export const resolveHoverSpec = (
 
 const WHOLE: NumberFormat = { spec: "d", text: countText };
 
-/** Plotly prints a null as 0 under a number format, so a point's values go in as text. */
+/** As text: Plotly prints a null as 0 under a number format. */
 const hoverText = (
   value: Datum | undefined,
   fmt: NumberFormat,
@@ -110,7 +110,7 @@ const hoverText = (
   return value;
 };
 
-/** A row's values for the fields, as hover text; "–" where it has none. Integer properties print whole. */
+/** A row's values as hover text: "–" where empty, integers whole. */
 export const hoverValues = (
   row: SourceDatum | undefined,
   fields: HoverSpec,
@@ -129,7 +129,6 @@ export const hoverValues = (
   );
 };
 
-/** Writes one kind of point's hover from the plot's own lines and the points' rows. */
 export type PointHover = (
   lines: HoverRow[],
   rows: readonly SourceDatum[],
@@ -141,7 +140,7 @@ export type PointHover = (
   },
 ) => { customdata?: Datum[][]; hovertemplate: string };
 
-/** The definition's `hover` columns after the plot's own lines, read from each point's row. */
+/** The plot's own lines, then the definition's `hover` columns per row. */
 export const pointHover =
   (
     spec: HoverSpec | undefined,
@@ -173,7 +172,7 @@ export const pointHover =
     };
   };
 
-/** A heatmap's hover from the definition's columns, read from each cell's first row. */
+/** A heatmap's hover: the definition's columns from each cell's first row. */
 export const cellHover =
   (
     spec: HoverSpec,

@@ -16,12 +16,7 @@
  * @grit42/plots. If not, see <https://www.gnu.org/licenses/>.
  */
 
-/**
- * A facet grid's tick labels, after Plotly has drawn them: one angle for every
- * panel, and room between the panels for the labels. Plotly turns each axis's
- * labels on its own and spaces the grid by fractions, so long labels run into
- * the next panel.
- */
+// Plotly angles each panel's labels alone, so they run into the next one.
 export interface Box {
   left: number;
   right: number;
@@ -60,12 +55,7 @@ const steepest = (angles: number[]) =>
     0,
   );
 
-/**
- * One angle per orientation for every panel: the steepest any panel took, and
- * turned at least as Plotly would where a label is wider than its slot, which
- * Plotly misses when a panel has a single label. An angle the figure set, as
- * the Label angle setting does, is never turned for being too wide.
- */
+/** One angle for all panels: the steepest, turned where a label overflows. */
 export const sharedTickAngles = (
   panels: readonly Panel[],
 ): { x?: number; y?: number } => {
@@ -97,7 +87,7 @@ export const sharedTickAngles = (
   };
 };
 
-/** From a px gap to Plotly's share of a cell and its gap, keeping the grid's span. */
+/** A px gap as Plotly's grid fraction, keeping the grid's span. */
 const gapFraction = ({
   cells,
   cell,
@@ -132,11 +122,7 @@ const extremes = (boxes: Box[]) =>
     },
   );
 
-/**
- * Plotly's `grid.ygap` and `grid.xgap` that clear each row's x labels of the
- * row below, its panel titles included, and each column's y labels of the
- * column to its left. Only ever wider than drawn.
- */
+/** Grid gaps widened so tick labels clear the neighbouring panels. */
 export const tickLabelGaps = (
   panels: readonly Panel[],
   /** Drawn above panels, as facet titles are. */

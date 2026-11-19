@@ -16,7 +16,7 @@
  * @grit42/plots. If not, see <https://www.gnu.org/licenses/>.
  */
 
-/** Which values a figure marks as outlying, by how far they lie from the values judged with them. */
+/** Which values a figure marks as outlying. */
 import { boxStats, statistics, type BoxStats } from "./math";
 import type { PlotNotice } from "./notices";
 
@@ -42,12 +42,10 @@ export const OUTLIER_SCOPE_LABELS: Record<OutlierScope, string> = {
   group: "Each group",
 };
 
-/** Judged against the panel unless the definition says each group. */
 export const outlierScopeOf = (def: {
   outliersWithin?: OutlierScope;
 }): OutlierScope => def.outliersWithin ?? "panel";
 
-/** The rule a definition marks by; unset is the default. */
 export const outlierRuleOf = (def: { outliers?: OutlierRule }): OutlierRule =>
   def.outliers ?? DEFAULT_OUTLIER_RULE;
 
@@ -88,7 +86,7 @@ export const outlierFences = (
 export const isOutlier = (value: number, fences: Fences | null): boolean =>
   fences !== null && (value < fences.low || value > fences.high);
 
-/** A box's stats with its whiskers at the furthest values the rule does not mark. */
+/** Box stats with whiskers at the furthest values the rule does not mark. */
 export const ruleBoxStats = (
   values: readonly number[],
   rule: OutlierRule,
@@ -109,10 +107,7 @@ export const ruleBoxStats = (
     : stats;
 };
 
-/**
- * The fewest values at which the rule can mark one. No value lies more than
- * (n − 1) / √n sample SDs from its set's mean, so ±3 SD needs 11.
- */
+/** Fewest values the rule can mark one of; none lies past (n − 1) / √n SD. */
 export const fewestMarkable = (rule: OutlierRule): number | undefined => {
   const sds = SDS[rule];
   if (sds === undefined) return undefined;
@@ -121,7 +116,6 @@ export const fewestMarkable = (rule: OutlierRule): number | undefined => {
   return n;
 };
 
-/** Every marked value, counted. */
 export const outlierNotice = (
   count: number,
   rule: OutlierRule,

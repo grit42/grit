@@ -266,7 +266,7 @@ const LIMIT_KEYS: Record<ControlLimit, readonly string[]> = {
   sd3: ["lcl", "ucl"],
 };
 
-/** The limits a definition draws: its own, else its type's default (none for most). */
+/** The limits a definition draws: its own, else its type's default. */
 export const limitsOf = (
   def: { limits?: ControlLimit[] },
   fallback: readonly ControlLimit[] = [],

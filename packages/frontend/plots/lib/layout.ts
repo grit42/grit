@@ -30,7 +30,7 @@ import { axisTitleFor, buildFacetGrid, withAxisTitles } from "./utils";
 
 export type ScaleAxis = "x" | "y";
 
-/** Margins for stacked plot rows; fixed, so a row's legend cannot widen its margin and misalign the x axes. */
+/** Fixed margins, so stacked rows' x axes align whatever their legends. */
 export const COMPACT_MARGIN = {
   t: 48,
   b: 56,
@@ -39,10 +39,9 @@ export const COMPACT_MARGIN = {
   autoexpand: false,
 };
 
-/** Plotly drops a hover label taller than the figure, so a short row's hover is set smaller. */
+/** Smaller hover text: Plotly drops a label taller than a short row. */
 export const COMPACT_HOVER_LABEL = { font: { size: 11 } };
 
-/** A panel's title, above its plot area. */
 export const panelTitle = (
   label: string,
   axis: number,
@@ -167,7 +166,7 @@ export const composeLayout = ({
   facets: number;
   colorMap: ColorMap;
   annotations?: Partial<Annotations>[];
-  /** The rows drawn, for the definition's ranges; without them none are drawn. */
+  /** The rows drawn, for the definition's ranges; none without them. */
   data?: SourceData;
   /** The definition's y runs along x, as a vertical histogram's values do. */
   transposed?: boolean;

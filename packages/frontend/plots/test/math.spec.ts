@@ -141,7 +141,7 @@ describe("toFiniteNumbers", () => {
     ).toEqual([1, 2, 3.5]);
   });
 
-  /** Regression: `Number(null)` and `Number("")` are 0, so an absent value once dragged the statistics down. */
+  /** `Number(null)` and `Number("")` are both 0. */
   test("excludes absent measurements rather than coercing them to 0", () => {
     expect(toFiniteNumbers([1, null, "", "   ", undefined, 2])).toEqual([1, 2]);
     // A zero that really is a measurement still counts.

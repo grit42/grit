@@ -204,7 +204,7 @@ const buildTraces = (
       (a, b) => seriesNames.indexOf(a.label) - seriesNames.indexOf(b.label),
     );
 
-    // The panel's values: its limits and band come from them, and its outliers unless judged by group.
+    // Limits and, unless judged by group, outliers come from these.
     const panelValues = groups.flatMap((group) =>
       Object.values(group.data).flat(),
     );
@@ -216,7 +216,6 @@ const buildTraces = (
       });
     }
 
-    // Limits across the panel's days.
     if (wanted.size > 0) {
       const xs: number[] = [];
       const ys: number[] = [];

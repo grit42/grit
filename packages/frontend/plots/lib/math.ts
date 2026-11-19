@@ -101,7 +101,7 @@ const randomSeed = (seed: number): (() => number) => {
   };
 };
 
-/** One value as a finite number, or `null` where there is none; {@link toFiniteNumbers} drops it instead. */
+/** One value as a finite number, or `null` where there is none. */
 const toFiniteNumber = (value: unknown): number | null => {
   if (typeof value === "number") return Number.isFinite(value) ? value : null;
   if (typeof value === "bigint") {
@@ -117,7 +117,7 @@ const toFiniteNumber = (value: unknown): number | null => {
   return Number.isFinite(n) ? n : null;
 };
 
-/** Two series filtered together, keeping only the pairs where both are numbers, so x and y stay paired. */
+/** Two series filtered together, so x and y stay paired. */
 const zipFinite = (
   xs: unknown[],
   ys: unknown[],

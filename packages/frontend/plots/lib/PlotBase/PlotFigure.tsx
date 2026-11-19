@@ -41,7 +41,7 @@ export interface PlotBuild {
     Parameters<typeof composeLayout>[0],
     "def" | "facets" | "colorMap" | "annotations" | "data"
   >;
-  /** Where the axes are not the definition's own, as an upright histogram's swap. */
+  /** Axes not the definition's own, as an upright histogram's swap. */
   axesOn?: Pick<
     Parameters<typeof composeAxes>[0],
     "def" | "scaleAxes" | "titles"

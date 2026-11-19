@@ -55,7 +55,7 @@ import {
 
 const CATEGORY_FILL = 0.8;
 
-/** Past this, bars are too narrow to read and slow to draw: a panel keeps its largest. */
+/** Past this, bars grow too narrow: a panel keeps its largest. */
 export const MAX_CATEGORIES = 30;
 const JITTER_SEED = 42;
 
@@ -121,7 +121,7 @@ const barHeight = (values: number[], statMarkers: StatMarker[]) => {
 export const stacksSeries = (def: BarPlotDefinition): boolean =>
   countsRows(def) && def.stacked === true;
 
-/** Bars at numeric x, names as ticks: Plotly's "group" mode reserves a slot per trace, and points jitter on a bar. */
+/** Bars sit at numeric x: Plotly's "group" mode reserves a slot per trace. */
 export const buildBar = (
   data: SourceData,
   def: BarPlotDefinition,
@@ -185,7 +185,6 @@ export const buildBar = (
   const sortedCategories = [
     ...new Set(facetGroups.flat().map((g) => g.category)),
   ].sort(keyedOrder(hooks.getCategorySortKey, (row) => categoryOf(row, def)));
-  // The axis's declared categories first, as the heatmaps read them.
   const declaredCategories = (def.x.categories ?? []).filter((category) =>
     sortedCategories.includes(category),
   );
@@ -196,7 +195,6 @@ export const buildBar = (
     ),
   ];
 
-  // A count's stack total, or a summary's tallest series.
   const largest = (categories: string[], groups: BarGroup[]) => {
     if (categories.length <= MAX_CATEGORIES) return categories;
     const sizes = new Map<string, number>();
@@ -235,7 +233,7 @@ export const buildBar = (
       ),
     ]),
   );
-  // A lone series is no grouping to tell apart, so its panels differ as ungrouped ones do.
+  // A lone series colours its panels apart, as an ungrouped plot does.
   const colorBySeries =
     (def.groupBy ?? []).length > 0 && seriesNames.length > 1;
   const bySeries = seriesPalette(colorMap, seriesNames);
@@ -263,7 +261,6 @@ export const buildBar = (
   facets.forEach((facet, index) => {
     const { axis } = facet;
     const groups = facetGroups[index] ?? [];
-    // Per panel where the panels hold different categories, as each tissue has its own findings.
     const own = def.x.categoriesPerPanel
       ? allCategories.filter((category) =>
           groups.some((g) => g.category === category),

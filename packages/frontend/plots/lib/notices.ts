@@ -40,11 +40,10 @@ export const NOTICE_LEVEL_LABELS: Record<NoticeLevel, string> = {
 };
 
 export interface PlotNotice {
-  /** Its level: `empty` cannot draw, `warning` check, `omitted` left out, `info` note. */
   kind: "omitted" | "empty" | "warning" | "info";
   reason: string;
   count?: number;
-  /** Named after the reason, four at most; the notices table names them all. */
+  /** Named after the reason; the notices table names them all. */
   items?: readonly string[];
 }
 
@@ -81,7 +80,6 @@ export const noticeText = (
     ? `${notice.reason}: ${namedList(notice.items, named)}`
     : notice.reason;
 
-/** The text with its count in front, as a line of its own reads. */
 export const noticeLine = (notice: PlotNotice): string =>
   notice.count === undefined
     ? noticeText(notice)

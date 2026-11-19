@@ -1,4 +1,4 @@
-/** Hover templating; `buildHoverTemplate` came from SDTM unchanged, so these pin every SDTM tooltip. */
+/** Hover templating. */
 import { describe, expect, test } from "vitest";
 import {
   buildHoverTemplate,

@@ -61,7 +61,7 @@ const PlotlyChart = ({
         graphDiv.on("plotly_click", (event) =>
           handlers.current.onClick?.(event),
         );
-        // A resize keeps the angles and the fractions, so labels can collide again.
+        // A resize can make the labels collide again.
         graphDiv.on("plotly_relayout", (event) => {
           if (!("autosize" in event)) return;
           queue.current = queue.current

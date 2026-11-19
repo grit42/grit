@@ -34,7 +34,7 @@ import {
 import type { ControlLimit, PlotDefinition } from "../types";
 import { DataBandField } from "./RangeSettings";
 
-/** Lines and a band from each panel's values, and the rule its outliers are ringed by. */
+/** Limit lines, a band from the data, and the outlier rule. */
 const LimitsSettings = ({
   plot,
   onChange,

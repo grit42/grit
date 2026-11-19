@@ -1,4 +1,4 @@
-/** What the figure admits it did not draw: values a scale, a range or the panel cap left out. */
+/** Values a scale, a range or the panel cap left out of the figure. */
 import { describe, expect, test } from "vitest";
 import {
   leftOutCount,

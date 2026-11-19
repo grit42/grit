@@ -131,7 +131,7 @@ export interface PlotDefinitionBase {
   limits?: ControlLimit[];
   /** Which values are ringed as outlying; unset is the default rule. */
   outliers?: OutlierRule;
-  /** What a value is judged against: its panel (unset), or its group, as a box or error bar summarises it. */
+  /** What a value is judged against: its panel (unset) or its group. */
   outliersWithin?: OutlierScope;
   palette?: ColorPreset;
   appearance?: PlotAppearanceOptions;
@@ -149,9 +149,9 @@ export interface ScatterPlotDefinition extends PlotDefinitionBase {
 }
 export interface BarPlotDefinition extends PlotDefinitionBase {
   type: "bar";
-  /** `count`: a bar is as tall as its rows, and Y is not read. Unset: the summary of Y. */
+  /** `count`: a bar is as tall as its rows; unset: the summary of Y. */
   aggregate?: "count";
-  /** While counting: one bar per category, its series piled in `seriesOrder` from the base up. */
+  /** While counting: series piled in `seriesOrder` from the base up. */
   stacked?: boolean;
 }
 

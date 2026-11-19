@@ -103,13 +103,13 @@ describe("sharedTickAngles", () => {
 
 describe("tickLabelGaps", () => {
   test("widens the rows' gap so a row's x labels clear the titles below", () => {
-    // Row one ends at 250; its labels reach 300; the next row's title starts at 275.
+    // Row one ends at 250, its labels at 300; the title below starts at 275.
     const gaps = tickLabelGaps(
       [panel(0, 0, { x: { labels: [box(60, 255, 120, 45)] } }), panel(1, 0)],
       [box(100, 275, 60, 14)],
     );
     expect(gaps.xgap).toBeUndefined();
-    // 40 px became 40 + 300 + 6 - 275 = 71 px, Plotly's share of a cell and its gap.
+    // The gap grows from 40 to 40 + 300 + 6 - 275 = 71 px.
     const cell = (2 * 200 + 40 - 71) / 2;
     expect(gaps.ygap).toBeCloseTo(71 / (cell + 71), 5);
   });

@@ -28,7 +28,7 @@ const FigureSummaryContext = createContext<Framed>({
   guide: null,
 });
 
-/** A host's data summary and reading guide, drawn in the header row of the figure below it. */
+/** A host's summary and reading guide, for the header of figures inside. */
 export const FigureSummary = ({
   summary,
   guide = null,

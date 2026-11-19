@@ -16,7 +16,7 @@
  * @grit42/plots. If not, see <https://www.gnu.org/licenses/>.
  */
 
-/** Ranges marked across each panel: a dashed band for two bounds, a dashed line for one. */
+/** Ranges across each panel: a band for two bounds, a line for one. */
 import type { Shape, ShapeLabel } from "plotly.js";
 import { rgba, type ColorMap } from "./colors";
 import { columnNumbers, statistics } from "./math";
@@ -36,7 +36,7 @@ export const dataRange = (sd: number): PlotRange => ({
 
 const axisOf = (range: PlotRange) => range.axis ?? "y";
 
-/** Its bounds in a panel: as given, or from the panel's own values; null where it has none. */
+/** A range's bounds in a panel; null where it has none there. */
 export const rangeBounds = (
   range: PlotRange,
   rows: SourceData,
@@ -60,7 +60,6 @@ export const rangeBounds = (
   return { min: range.min, max: range.max };
 };
 
-/** How a band reads in a list: `200 to 300`, `200 or more`, or what it is drawn from. */
 export const rangeText = (range: PlotRange): string => {
   if (range.sd !== undefined) return `mean ±${range.sd} SD of each panel`;
   if (range.min !== undefined && range.max !== undefined) {
@@ -71,7 +70,7 @@ export const rangeText = (range: PlotRange): string => {
   return "no bounds";
 };
 
-/** The ranges of `def`, behind the data in each panel; `transposed` where its y runs along x, as in an upright histogram. */
+/** `transposed` where y runs along x, as in an upright histogram. */
 export const rangeShapes = (
   def: PlotDefinition,
   data: SourceData,
