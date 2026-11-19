@@ -272,7 +272,6 @@ export const outlierTrace = ({
   stats: given,
 }: {
   values: number[];
-  /** Each value's row, for `hover`. */
   rows?: readonly SourceDatum[];
   hover?: PointHover;
   label: string;

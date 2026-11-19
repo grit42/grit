@@ -29,13 +29,11 @@ import type {
 } from "../types";
 import { useResolvedAxisLabels } from "../utils";
 
-/** What a plot type's builder returns for the figure. */
 export interface PlotBuild {
   facets: number;
   traces: Data[];
   axes: Record<string, Partial<LayoutAxis>>;
   annotations: Partial<Annotations>[];
-  /** What the type itself left out. */
   notices?: PlotNotice[];
   layout?: Omit<
     Parameters<typeof composeLayout>[0],
@@ -58,7 +56,6 @@ export interface PlotFigureProps<T extends PlotDefinition> {
   annotationAuthor?: string;
 }
 
-/** A plot type drawn from its builder: the shape every type shares. */
 const PlotFigure = <T extends PlotDefinition>({
   def: rawDef,
   data,

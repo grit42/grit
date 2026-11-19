@@ -98,7 +98,6 @@ describe("resolveHoverSpec", () => {
     ]);
   });
 
-  // Format and section carry through.
   test("round-trips into a template", () => {
     const { rows } = resolveHoverSpec(spec, sendLabsProperties);
     expect(buildHoverTemplate(rows)).toMatchInlineSnapshot(

@@ -9,7 +9,6 @@ const BarPlot = (props: PlotFigureProps<BarPlotDefinition>) => (
     build={buildBar}
     scaleAxes={["y"]}
     readsDisplay
-    // A count reads no Y column, so nothing about one is noticed.
     readsValues={(def) => !countsRows(def)}
   />
 );

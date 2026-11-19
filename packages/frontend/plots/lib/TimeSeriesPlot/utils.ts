@@ -204,7 +204,6 @@ const buildTraces = (
       (a, b) => seriesNames.indexOf(a.label) - seriesNames.indexOf(b.label),
     );
 
-    // Limits and, unless judged by group, outliers come from these.
     const panelValues = groups.flatMap((group) =>
       Object.values(group.data).flat(),
     );
@@ -258,7 +257,6 @@ const buildTraces = (
       for (const xValue of xValues) {
         const at = xValue.toString();
         const values = group.data[at]!;
-        // By group: each group's values on a day, as its error bar is drawn.
         if (byGroup) {
           judged.push({
             label:

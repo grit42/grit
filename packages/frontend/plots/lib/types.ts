@@ -129,7 +129,6 @@ export interface PlotDefinitionBase {
   ranges?: PlotRange[];
   /** Lines from each panel's values; empty draws none. */
   limits?: ControlLimit[];
-  /** Which values are ringed as outlying; unset is the default rule. */
   outliers?: OutlierRule;
   /** What a value is judged against: its panel (unset) or its group. */
   outliersWithin?: OutlierScope;

@@ -181,7 +181,6 @@ describe.each(PRESETS)("the %s preset", (preset) => {
       expect(seen(map.wLine)).toBeLessThan(seen(map.clLine));
     });
 
-    // The control chart's convention: yellow, orange, red.
     test("the σ lines run yellow, orange, red", () => {
       const hue = (color: string) => {
         const [, a, b] = toLab(color);

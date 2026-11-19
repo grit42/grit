@@ -28,7 +28,6 @@ interface BoxGroup {
   key: string;
   label: string;
   y: number[];
-  /** Each value's row. */
   rows: SourceDatum[];
 }
 

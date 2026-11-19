@@ -36,7 +36,6 @@ $line: color-mix(in srgb, #{$text} 16%, #{$surface});
   gap: 0.375rem;
 }
 
-// A round `?` for the reading guide, quiet beside the chip.
 .help {
   display: inline-flex;
   align-items: center;
@@ -223,7 +222,6 @@ $line: color-mix(in srgb, #{$text} 16%, #{$surface});
   min-height: 0;
 }
 
-// Where a figure cannot be drawn, its reason takes the figure's place.
 .cannot {
   flex: 1 1 auto;
   min-height: 8rem;

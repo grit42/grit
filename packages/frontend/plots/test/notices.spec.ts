@@ -140,7 +140,6 @@ describe("panels past the cap", () => {
     });
     expect(notices).toHaveLength(1);
     expect(notices[0].count).toBe(5);
-    // Naming what is missing is the context a blank panel cannot give.
     expect(notices[0].items).toContain(`S${MAX_FACETS}`);
     expect(notices[0].reason).toContain(`of ${MAX_FACETS + 5}`);
   });

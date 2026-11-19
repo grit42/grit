@@ -97,7 +97,6 @@ export interface PlotImplementation {
   unavailable?: (def: PlotDefinition) => readonly PlotCapability[];
   supports: (def: PlotDefinition, ctx: PlotSupportContext) => PlotSupport;
   sections?: readonly PlotSection[];
-  /** The limits drawn while the definition sets none. */
   defaultLimits?: readonly ControlLimit[];
   resetDefaults?: (def: PlotDefinition) => PlotDefinition;
   /** Style swatches, where the type does not draw the palette's series. */
@@ -156,10 +155,8 @@ export const PLOT_IMPLEMENTATIONS: PlotImplementations = {
       "tickAngle",
       ...STYLE_CAPABILITIES,
     ],
-    // A count has no values for a range to mark.
     unavailable: (def) =>
       countsRows(def) ? ["summary", "errorBars", "individual", "ranges"] : [],
-    // A count reads no Y column, so only X and the grouping are checked.
     supports: (def, ctx) =>
       countsRows(def) ? countSupport(def, ctx) : summarySupport(def, ctx),
   },

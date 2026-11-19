@@ -31,7 +31,6 @@ export const nullish = (v: any) => v === null || v === undefined;
 
 export const COUNT_LABEL = "Count";
 
-/** A bar plot counting its rows reads no Y column. */
 export const countsRows = (plot: PlotDefinition): boolean =>
   plot.type === "bar" && plot.aggregate === "count";
 
@@ -262,7 +261,6 @@ export const buildFacets = (
   return [...facets.values()].slice(0, MAX_FACETS);
 };
 
-/** A shown panel: its rows, its groups and the axes it draws on. */
 export interface Panel<G> extends RawPlotFacet {
   axis: number;
   groups: G[];

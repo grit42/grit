@@ -92,7 +92,6 @@ describe("collectValid", () => {
   test("without accessors, falls back to the array index, with no group or category breakdown", () => {
     const { excluded, summary } = collectValid(rows, [hasValue]);
     expect(excluded.map((e) => e.id)).toEqual(["1", "3"]);
-    // No group key at all, rather than a bogus one.
     expect(excluded[0]).not.toHaveProperty("group");
     expect(summary.includedByCategory).toEqual({});
   });

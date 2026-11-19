@@ -200,7 +200,6 @@ export const readableOn = (
 /** WCAG AA for body text. */
 export const MIN_TEXT_CONTRAST = 4.5;
 
-/** A text colour per notice level, readable on its surface and page. */
 export const noticeColors = (palette: Palette): Record<NoticeLevel, string> => {
   const surface = palette.background.surface;
   const text = (color: string) =>
@@ -272,7 +271,6 @@ export const FixedSeriesProvider = FixedSeriesContext.Provider;
 const resolvePreset = (preset: string | undefined): ColorPreset =>
   preset && preset in SERIES ? (preset as ColorPreset) : "default";
 
-/** The colours a figure draws with, for a theme and preset. */
 export const colorMapFor = (
   theme: Theme,
   preset: string | undefined,

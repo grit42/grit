@@ -122,10 +122,8 @@ const extremes = (boxes: Box[]) =>
     },
   );
 
-/** Grid gaps widened so tick labels clear the neighbouring panels. */
 export const tickLabelGaps = (
   panels: readonly Panel[],
-  /** Drawn above panels, as facet titles are. */
   titles: readonly Box[] = [],
 ): { xgap?: number; ygap?: number } => {
   const rows = Math.max(...panels.map((panel) => panel.row)) + 1;

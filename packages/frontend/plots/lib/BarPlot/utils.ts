@@ -93,7 +93,6 @@ const buildBarGroups = (data: SourceData, def: BarPlotDefinition) => {
 
   for (const datum of data) {
     if (nullish(datum[def.x.key])) continue;
-    // A counted row needs only its category.
     const value = counting ? 1 : toFiniteNumber(datum[def.y.key]);
     if (value === null) continue;
 
@@ -145,7 +144,6 @@ export const buildBar = (
 
   const facetGroups = facets.map((facet) => facet.groups);
   const stacking = stacksSeries(def);
-  // A stack is as tall as its category's total, so its ticks follow the totals.
   const countsIn = (groups: BarGroup[]) => {
     if (!stacking) return groups.map((g) => g.rows.length);
     const totals = new Map<string, number>();
@@ -217,7 +215,6 @@ export const buildBar = (
     );
     return categories.filter((category) => kept.has(category));
   };
-  // Shared panels keep one set, so a category sits at the same place in each.
   const sharedCategories = def.x.categoriesPerPanel
     ? allCategories
     : largest(allCategories, facetGroups.flat());
@@ -337,7 +334,6 @@ export const buildBar = (
           );
         }
 
-        // A count has no observations to scatter.
         if (counting) return;
         group.values.forEach((value, i) => {
           pointX.push(position + jitter() * slots.width);

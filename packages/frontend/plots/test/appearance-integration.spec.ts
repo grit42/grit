@@ -44,7 +44,6 @@ const render = async (def: PlotDefinition, rows: unknown[] = data) => {
   return host;
 };
 
-/** Renders a definition and returns Plotly's resolved layout. */
 const renderedPlot = async (def: PlotDefinition, rows: unknown[] = data) => {
   const host = await render(def, rows);
   const graphDiv = host.querySelector(".js-plotly-plot") as

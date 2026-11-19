@@ -22,14 +22,12 @@ import { useNoticeStyle } from "./noticeStyle";
 import PlotNotices, { NoticeLevelLabel } from "./PlotNotices";
 import styles from "./plotNotices.module.scss";
 
-/** The reason a figure cannot be drawn, in its place, never behind the chip. */
 const CannotDraw = ({
   reason,
   notices = [],
   summary,
 }: {
   reason: string | readonly string[];
-  /** The figure's other notices. */
   notices?: readonly PlotNotice[];
   /** Else the frame's, as the figure's own would be. */
   summary?: ReactNode;

@@ -345,7 +345,6 @@ describe("fixed ranges", () => {
     expect(paddedRange({ min: 2016, max: 2023 }, 0.5, 1)).toEqual([
       2015.5, 2023.5,
     ]);
-    // A single value gets a whole step either side, so its limits can be seen.
     expect(paddedRange({ min: 2022, max: 2022 }, 0.5, 1)).toEqual([2021, 2023]);
   });
 

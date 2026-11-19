@@ -34,7 +34,6 @@ import {
 import type { ControlLimit, PlotDefinition } from "../types";
 import { DataBandField } from "./RangeSettings";
 
-/** Limit lines, a band from the data, and the outlier rule. */
 const LimitsSettings = ({
   plot,
   onChange,
@@ -44,7 +43,6 @@ const LimitsSettings = ({
   plot: PlotDefinition;
   onChange: (plot: PlotDefinition) => void;
   show: { limits: boolean; band: boolean; outliers: boolean; scope: boolean };
-  /** The type's own, where it draws some until told otherwise. */
   defaults?: readonly ControlLimit[];
 }) => (
   <>

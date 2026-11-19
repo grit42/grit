@@ -71,7 +71,6 @@ const toHex = (channels: number[]) =>
     .join("")
     .toUpperCase()}`;
 
-/** `color` as a reader with the deficiency sees it. */
 export const simulateDeficiency = (
   color: string,
   deficiency: Deficiency,

@@ -130,7 +130,6 @@ export const outlierNotice = (
       ]
     : [];
 
-/** The sets judged that are too small for the rule to mark any value. */
 export const tooFewNotice = (
   sets: readonly { label: string; n: number }[],
   rule: OutlierRule,

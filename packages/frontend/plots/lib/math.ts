@@ -101,7 +101,6 @@ const randomSeed = (seed: number): (() => number) => {
   };
 };
 
-/** One value as a finite number, or `null` where there is none. */
 const toFiniteNumber = (value: unknown): number | null => {
   if (typeof value === "number") return Number.isFinite(value) ? value : null;
   if (typeof value === "bigint") {
@@ -140,7 +139,6 @@ const zipFinite = (
 const toFiniteNumbers = (arr: unknown[]): number[] =>
   arr.map(toFiniteNumber).filter((v): v is number => typeof v === "number");
 
-/** A column's numbers across the rows, without the cells that hold none. */
 const columnNumbers = (
   rows: readonly Record<string, unknown>[],
   key: string,

@@ -34,7 +34,6 @@ export const dataRange = (sd: number): PlotRange => ({
   sd,
 });
 
-/** A range's bounds in a panel; null where it has none there. */
 export const rangeBounds = (
   range: PlotRange,
   rows: SourceData,

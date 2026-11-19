@@ -202,7 +202,6 @@ describe("a figure that cannot be drawn", () => {
     );
     expect(host.textContent).toContain("52 animals");
     expect(host.textContent).toContain("Cannot drawLB carries no study day.");
-    // The reason is never behind the chip.
     expect(chip(host)?.textContent).toContain("1 notice");
   });
 });
