@@ -20,7 +20,7 @@ jobs:
 
       - uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1
         with:
-          ruby-version: 3.4.9
+          ruby-version: 3.4.13
           bundler-cache: true
           working-directory: apps/grit/server
           bundler-opts: --with local
@@ -48,7 +48,7 @@ jobs:
 
       - uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1
         with:
-          ruby-version: 3.4.9
+          ruby-version: 3.4.13
 
       - name: Install bundler-audit
         run: gem install bundler-audit
