@@ -217,17 +217,12 @@ const buildTraces = (
     }
 
     if (wanted.size > 0) {
-      const xs: number[] = [];
-      const ys: number[] = [];
-      for (const group of groups) {
-        for (const [at, values] of Object.entries(group.data)) {
-          for (const value of values) {
-            xs.push(Number(at));
-            ys.push(value);
-          }
-        }
-      }
-      const stats = buildControlStats(xs, ys);
+      const xs = groups.flatMap((group) =>
+        Object.entries(group.data).flatMap(([at, values]) =>
+          values.map(() => Number(at)),
+        ),
+      );
+      const stats = buildControlStats(xs, panelValues);
       if (stats) {
         traces.push(
           ...(controlLineTraces({
@@ -266,7 +261,9 @@ const buildTraces = (
         // By group: each group's values on a day, as its error bar is drawn.
         if (byGroup) {
           judged.push({
-            label: `${multiFacet ? `${facet.label} ` : ""}${group.label}, ${xLabel} ${xValue}`,
+            label:
+              (multiFacet ? `${facet.label} ` : "") +
+              `${group.label}, ${xLabel} ${xValue}`,
             n: values.length,
           });
         }

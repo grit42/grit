@@ -75,7 +75,10 @@ const BarPlotSettings = ({
           options={HEIGHT_OPTIONS}
           value={counting ? "count" : "summary"}
           isClearable={false}
-          description="The summary is chosen under Display. Counting reads no Y column, so it has no error bars or observations."
+          description={
+            "The summary is chosen under Display. Counting reads no Y " +
+            "column, so it has no error bars or observations."
+          }
           onChange={onHeightChange}
         />
       )}
@@ -93,7 +96,10 @@ const BarPlotSettings = ({
           options={SERIES_OPTIONS}
           value={plot.stacked ? "stacked" : "apart"}
           isClearable={false}
-          description="Stacked piles each category's series into one bar, as tall as their total."
+          description={
+            "Stacked piles each category's series into one bar, " +
+            "as tall as their total."
+          }
           onChange={(value: "apart" | "stacked") =>
             onChange({ ...plot, stacked: value === "stacked" || undefined })
           }

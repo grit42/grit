@@ -108,7 +108,6 @@ const PlotNotices = ({
   const root = useRef<HTMLDivElement>(null);
   const chip = useRef<HTMLButtonElement>(null);
   const help = useRef<HTMLButtonElement>(null);
-  const setOpen = (next: boolean) => setShown(next ? "notices" : null);
   const style = useNoticeStyle();
   const leftOut = leftOutCount(notices);
   const previous = useRecentChange(leftOut);
@@ -152,7 +151,7 @@ const PlotNotices = ({
                   data-level={top}
                   aria-expanded={open}
                   aria-controls={id}
-                  onClick={() => setOpen(!open)}
+                  onClick={() => setShown(open ? null : "notices")}
                 >
                   <NoticeIcon level={top} />
                   {plural(notices.length)}

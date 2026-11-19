@@ -71,8 +71,6 @@ const buildBoxTraces = (
     colorMap,
     facets.map((facet) => facet.key),
   );
-  const colorOf = (label: string, facetIndex: number) =>
-    byLabel ? bySeries(label) : byPanel(facets[facetIndex]!.key);
   const named = new Set<string>();
   const jitter = randomJitter({ jitter: BOX_WIDTH * 0.4, seed: JITTER_SEED });
 
@@ -97,7 +95,7 @@ const buildBoxTraces = (
 
     facet.groups.forEach((group) => {
       const index = labels.indexOf(group.label);
-      const color = colorOf(group.label, i);
+      const color = byLabel ? bySeries(group.label) : byPanel(facet.key);
       const values = group.y;
       const stats = boxStats(values);
       if (!stats) return;

@@ -63,8 +63,6 @@ export const buildControlStats = (
   ySeries: number[],
 ): ControlStats | null => {
   const { x, y } = zipFinite(xSeries, ySeries);
-  if (!x.length) return null;
-
   const xStats = statistics({ arr: x });
   const yStats = statistics({ arr: y });
   if (!xStats || !yStats) return null;
@@ -90,91 +88,29 @@ export const buildControlStats = (
 
 const CONTROL_LINE_WIDTH = 2.5;
 
+type LineColor = "meanLine" | "oLine" | "wLine" | "clLine";
+
+const CONTROL_LINES: [ControlLineSpec["key"], string, LineColor, Dash][] = [
+  ["mean", "Mean", "meanLine", "solid"],
+  ["median", "Median", "meanLine", "dot"],
+  ["lol", "LoL -1σ", "oLine", "dot"],
+  ["uol", "UoL +1σ", "oLine", "dot"],
+  ["lwl", "LWL -2σ", "wLine", "dashdot"],
+  ["uwl", "UWL +2σ", "wLine", "dashdot"],
+  ["lcl", "LCL -3σ", "clLine", "dash"],
+  ["ucl", "UCL +3σ", "clLine", "dash"],
+];
+
 export const controlLineSpecs = (
   stats: ControlStats,
   colorMap: ColorMap,
-): ControlLineSpec[] => [
-  {
-    key: "mean",
-    name: "Mean",
-    y: stats.mean,
-    line: {
-      color: colorMap.meanLine as string,
-      width: CONTROL_LINE_WIDTH,
-      dash: "solid",
-    },
-  },
-  {
-    key: "median",
-    name: "Median",
-    y: stats.median,
-    line: {
-      color: colorMap.meanLine as string,
-      width: CONTROL_LINE_WIDTH,
-      dash: "dot",
-    },
-  },
-  {
-    key: "lol",
-    name: "LoL -1σ",
-    y: stats.lol,
-    line: {
-      color: colorMap.oLine as string,
-      width: CONTROL_LINE_WIDTH,
-      dash: "dot",
-    },
-  },
-  {
-    key: "uol",
-    name: "UoL +1σ",
-    y: stats.uol,
-    line: {
-      color: colorMap.oLine as string,
-      width: CONTROL_LINE_WIDTH,
-      dash: "dot",
-    },
-  },
-  {
-    key: "lwl",
-    name: "LWL -2σ",
-    y: stats.lwl,
-    line: {
-      color: colorMap.wLine as string,
-      width: CONTROL_LINE_WIDTH,
-      dash: "dashdot",
-    },
-  },
-  {
-    key: "uwl",
-    name: "UWL +2σ",
-    y: stats.uwl,
-    line: {
-      color: colorMap.wLine as string,
-      width: CONTROL_LINE_WIDTH,
-      dash: "dashdot",
-    },
-  },
-  {
-    key: "lcl",
-    name: "LCL -3σ",
-    y: stats.lcl,
-    line: {
-      color: colorMap.clLine as string,
-      width: CONTROL_LINE_WIDTH,
-      dash: "dash",
-    },
-  },
-  {
-    key: "ucl",
-    name: "UCL +3σ",
-    y: stats.ucl,
-    line: {
-      color: colorMap.clLine as string,
-      width: CONTROL_LINE_WIDTH,
-      dash: "dash",
-    },
-  },
-];
+): ControlLineSpec[] =>
+  CONTROL_LINES.map(([key, name, color, dash]) => ({
+    key,
+    name,
+    y: stats[key],
+    line: { color: colorMap[color], width: CONTROL_LINE_WIDTH, dash },
+  }));
 
 export const controlLineTraces = ({
   specs,

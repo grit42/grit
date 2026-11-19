@@ -181,7 +181,8 @@ export const plotNotices = ({
       notices.push({
         kind: "empty",
         reason:
-          "No summary chosen and observations hidden. Choose one under Display.",
+          "No summary chosen and observations hidden. " +
+          "Choose one under Display.",
       });
     }
   }

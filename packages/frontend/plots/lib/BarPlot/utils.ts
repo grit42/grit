@@ -261,13 +261,13 @@ export const buildBar = (
   facets.forEach((facet, index) => {
     const { axis } = facet;
     const groups = facetGroups[index] ?? [];
-    const own = def.x.categoriesPerPanel
-      ? allCategories.filter((category) =>
-          groups.some((g) => g.category === category),
-        )
-      : allCategories;
     const categories = def.x.categoriesPerPanel
-      ? largest(own, groups)
+      ? largest(
+          allCategories.filter((category) =>
+            groups.some((g) => g.category === category),
+          ),
+          groups,
+        )
       : sharedCategories;
     for (const g of groups) {
       if (!categories.includes(g.category)) hiddenCategories.add(g.category);
@@ -428,13 +428,15 @@ export const buildBar = (
           {
             kind: "omitted" as const,
             count: hiddenCategories.size,
-            reason: `${def.x.label ?? def.x.key} categories not drawn: a panel keeps its ${MAX_CATEGORIES} largest`,
+            reason:
+              `${xLabel} categories not drawn: ` +
+              `a panel keeps its ${MAX_CATEGORIES} largest`,
           },
         ]
       : [],
     // The builder places every bar itself; grouping would offset.
     layout: {
-      barmode: stacksSeries(def) ? ("stack" as const) : ("overlay" as const),
+      barmode: stacking ? ("stack" as const) : ("overlay" as const),
     },
     facetSeries,
     seriesByCategory,

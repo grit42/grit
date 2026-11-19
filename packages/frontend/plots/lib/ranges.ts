@@ -21,7 +21,7 @@ import type { Shape, ShapeLabel } from "plotly.js";
 import { rgba, type ColorMap } from "./colors";
 import { columnNumbers, statistics } from "./math";
 import type { PlotRange, PlotDefinition, SourceData } from "./types";
-import { MAX_FACETS, buildFacets } from "./utils";
+import { buildFacets } from "./utils";
 
 /** The id of the range "Band from the data" adds. */
 export const DATA_RANGE_ID = "data-sd";
@@ -33,8 +33,6 @@ export const dataRange = (sd: number): PlotRange => ({
   label: `±${sd} SD`,
   sd,
 });
-
-const axisOf = (range: PlotRange) => range.axis ?? "y";
 
 /** A range's bounds in a panel; null where it has none there. */
 export const rangeBounds = (
@@ -79,13 +77,13 @@ export const rangeShapes = (
 ): Partial<Shape>[] => {
   const ranges = def.ranges ?? [];
   if (ranges.length === 0) return [];
-  const panels = buildFacets(data, def).slice(0, MAX_FACETS);
+  const panels = buildFacets(data, def);
   const line = rgba({ color: colorMap.textColor, alpha: 0.7 });
 
   return panels.flatMap((panel, index) => {
     const suffix = index === 0 ? "" : String(index + 1);
     return ranges.flatMap((range): Partial<Shape>[] => {
-      const along = axisOf(range);
+      const along = range.axis ?? "y";
       const scale = def[along];
       const bounds = rangeBounds(range, panel.data, scale.key);
       if (!bounds) return [];

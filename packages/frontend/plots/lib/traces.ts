@@ -307,7 +307,6 @@ export const outlierTrace = ({
     y: outliers.map((one) => one.value),
     mode: "markers",
     color: colorMap.violationFill,
-    colorMap,
     marker: {
       symbol: "circle-open",
       size: 11,

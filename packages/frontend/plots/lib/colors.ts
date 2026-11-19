@@ -279,7 +279,7 @@ export const colorMapFor = (
   fixed: FixedSeries = {},
 ) => {
   const dark = theme.colorScheme === "dark";
-  const scheme: Scheme = dark ? "dark" : "light";
+  const scheme: Scheme = theme.colorScheme;
   const surface = theme.palette.background.surface;
   const text = theme.palette.background.contrastText;
   const accent = theme.palette.secondary.main;

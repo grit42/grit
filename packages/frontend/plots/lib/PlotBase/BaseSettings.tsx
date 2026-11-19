@@ -90,7 +90,10 @@ const BaseSettings = <TPlot extends PlotDefinition>({
           ]}
           value={plot.sharedScales ? "shared" : "own"}
           isClearable={false}
-          description="The same scales in every panel, so they can be compared by eye."
+          description={
+            "The same scales in every panel, " +
+            "so they can be compared by eye."
+          }
           onChange={(value: string) =>
             onChange({ ...plot, sharedScales: value === "shared" })
           }

@@ -59,9 +59,7 @@ const LimitsSettings = ({
           value={limitsOf(plot, defaults)}
           placeholder="None"
           description="Lines from each panel's values."
-          onChange={(limits: ControlLimit[]) =>
-            onChange({ ...plot, limits: limits ?? [] })
-          }
+          onChange={(limits: ControlLimit[]) => onChange({ ...plot, limits })}
         />
         <Button
           size="tiny"
@@ -95,7 +93,10 @@ const LimitsSettings = ({
         }))}
         value={outlierScopeOf(plot)}
         isClearable={false}
-        description="A panel, as its limits and band; a group, as its box or error bars."
+        description={
+          "A panel, as its limits and band; " +
+          "a group, as its box or error bars."
+        }
         onChange={(scope: OutlierScope) =>
           onChange({
             ...plot,

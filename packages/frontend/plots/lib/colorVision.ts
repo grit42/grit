@@ -19,10 +19,10 @@
 import { hexToRgb } from "./colors";
 
 export type Deficiency = "deuteranopia" | "protanopia" | "tritanopia";
-export type Vision = "normal" | Deficiency;
+type Vision = "normal" | Deficiency;
 export type Lab = readonly [number, number, number];
 
-export const VISIONS: readonly Vision[] = [
+const VISIONS: readonly Vision[] = [
   "normal",
   "deuteranopia",
   "protanopia",

@@ -66,11 +66,6 @@ $line: color-mix(in srgb, #{$text} 16%, #{$surface});
   }
 }
 
-.guide {
-  padding: 0.5rem 0.75rem;
-  font-size: 0.8rem;
-}
-
 @mixin levels {
   @each $level in cannot, check, left, note {
     &[data-level="#{$level}"] {
@@ -199,6 +194,8 @@ $line: color-mix(in srgb, #{$text} 16%, #{$surface});
 
 .table.guide {
   max-height: min(32rem, 80vh);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8rem;
 }
 
 .count {
