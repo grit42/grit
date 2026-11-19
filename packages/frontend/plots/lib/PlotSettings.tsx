@@ -1,6 +1,6 @@
 import { ComponentType, type ReactNode } from "react";
 import { Button, Select } from "@grit42/client-library/components";
-import { PlotDefinition, PlotSettingsProps } from "./types";
+import { PaletteSwatches, PlotDefinition, PlotSettingsProps } from "./types";
 import styles from "./plotSettings.module.scss";
 import { useColorMap } from "./colors";
 import ScatterPlotSettings from "./ScatterPlot/ScatterPlotSettings";
@@ -86,6 +86,8 @@ export interface PlotImplementation {
   supports: (def: PlotDefinition, ctx: PlotSupportContext) => PlotSupport;
   sections?: readonly PlotSection[];
   resetDefaults?: (def: PlotDefinition) => PlotDefinition;
+  /** The Style section's swatches, where the type draws other colours than the palette's series. */
+  paletteSwatches?: PaletteSwatches;
 }
 
 export type PlotImplementations = Partial<
@@ -327,6 +329,7 @@ const PlotSettings = ({
               tickAngle: can("tickAngle"),
               xLabels: can("xLabels"),
             }}
+            paletteSwatches={plotImplementation?.paletteSwatches}
           />
         </Section>
       )}

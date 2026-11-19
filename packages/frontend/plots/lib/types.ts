@@ -1,5 +1,5 @@
 import { AxisType, Datum } from "plotly.js";
-import type { ColorPreset } from "./colors";
+import type { ColorMap, ColorPreset } from "./colors";
 import type { HoverSpec } from "./hover";
 
 export type SourceDatum = Record<string, Datum>;
@@ -254,6 +254,11 @@ export interface PlotSettingsProps<T extends PlotDefinition = PlotDefinition> {
   onChange: (plot: T) => void;
   data?: SourceData;
 }
+
+export type PaletteSwatches = (
+  plot: PlotDefinition,
+  colors: { colorMap: ColorMap; dark: boolean },
+) => readonly string[];
 
 export interface RawPlotFacet {
   label: string;

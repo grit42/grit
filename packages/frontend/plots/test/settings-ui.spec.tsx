@@ -265,6 +265,44 @@ describe("the settings sections", () => {
     expect(bright).not.toEqual(defaultPalette);
   });
 
+  test("previews a type's own colours where it gives them", async () => {
+    const swatches = (host: HTMLElement) =>
+      Array.from(host.querySelectorAll('[aria-hidden="true"] > span')).map(
+        (s) => (s as HTMLElement).style.background,
+      );
+    const asked: unknown[] = [];
+    const implementations = {
+      scatter: {
+        ...PLOT_IMPLEMENTATIONS.scatter!,
+        paletteSwatches: (
+          def: PlotDefinition,
+          colors: { colorMap: unknown; dark: boolean },
+        ) => {
+          asked.push(colors.dark);
+          return def.palette === "bright"
+            ? ["rgb(1, 2, 3)", "rgb(1, 2, 3)"]
+            : ["rgb(4, 5, 6)"];
+        },
+      },
+    };
+
+    const own = swatches(await render(plot, undefined, { implementations }));
+    const bright = swatches(
+      await render(
+        { ...plot, palette: "bright" } as PlotDefinition,
+        undefined,
+        {
+          implementations,
+        },
+      ),
+    );
+
+    expect(own).toEqual(["rgb(4, 5, 6)"]);
+    // Repeated colours are each drawn.
+    expect(bright).toEqual(["rgb(1, 2, 3)", "rgb(1, 2, 3)"]);
+    expect(asked.every((dark) => typeof dark === "boolean")).toBe(true);
+  });
+
   test("offers x ticks only where x is a measurement axis", async () => {
     const scatter = await render();
     const box = await render({ ...plot, type: "box" });

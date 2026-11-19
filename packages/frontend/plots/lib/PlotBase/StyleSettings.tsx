@@ -17,11 +17,16 @@
  */
 
 import { Select, ToggleSwitch } from "@grit42/client-library/components";
+import { useTheme } from "@grit42/client-library/hooks";
 import NumberField from "./NumberField";
 import styles from "./styleSettings.module.scss";
 import { useColorMap, type ColorPreset } from "../colors";
 import { AUTOMATIC_SIGNIFICANT_FIGURES } from "../format";
-import type { PlotAppearanceOptions, PlotDefinition } from "../types";
+import type {
+  PaletteSwatches,
+  PlotAppearanceOptions,
+  PlotDefinition,
+} from "../types";
 
 const PALETTE_OPTIONS: { label: string; value: ColorPreset }[] = [
   { label: "Default", value: "default" },
@@ -57,9 +62,12 @@ const StyleSettings = <TPlot extends PlotDefinition>({
   plot,
   onChange,
   show = {},
+  paletteSwatches,
 }: {
   plot: TPlot;
   onChange: (plot: TPlot) => void;
+  /** Unset: the palette's series colours. */
+  paletteSwatches?: PaletteSwatches;
   show?: {
     palette?: boolean;
     /** Preview the heatmap scale rather than the series colours. */
@@ -83,6 +91,9 @@ const StyleSettings = <TPlot extends PlotDefinition>({
     xLabels: showXLabels = false,
   } = show;
   const colorMap = useColorMap(plot.palette);
+  const dark = useTheme().colorScheme === "dark";
+  const swatches =
+    paletteSwatches?.(plot, { colorMap, dark }) ?? colorMap.universalColors;
   const appearance = plot.appearance ?? {};
   const setAppearance = (next: PlotAppearanceOptions) =>
     onChange({ ...plot, appearance: next });
@@ -106,9 +117,9 @@ const StyleSettings = <TPlot extends PlotDefinition>({
             />
           ) : (
             <div className={styles.swatches} aria-hidden="true">
-              {colorMap.universalColors.map((color) => (
+              {swatches.map((color, index) => (
                 <span
-                  key={color}
+                  key={`${index}-${color}`}
                   className={styles.swatch}
                   style={{ background: color }}
                 />
