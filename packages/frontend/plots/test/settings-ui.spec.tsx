@@ -123,6 +123,20 @@ describe("the settings sections", () => {
     expect(labels(counting)).toContain("Series");
   });
 
+  test("bar and box plots offer the label angle; a scatter does not", async () => {
+    const labels = (host: HTMLElement) =>
+      Array.from(host.querySelectorAll("label")).map((l) => l.textContent);
+    for (const type of ["bar", "box"]) {
+      const host = await render({
+        ...plot,
+        type,
+        x: { key: "compound", axisType: "category" },
+      } as PlotDefinition);
+      expect(labels(host)).toContain("Label angle");
+    }
+    expect(labels(await render())).not.toContain("Label angle");
+  });
+
   test("a bar plot with no numeric column only counts", async () => {
     const labels = (host: HTMLElement) =>
       Array.from(host.querySelectorAll("label")).map((l) => l.textContent);

@@ -21,6 +21,7 @@ import { useEffect, useLayoutEffect, useRef } from "react";
 import Plotly from "plotly.js-cartesian-dist-min";
 import type { PlotlyHTMLElement } from "plotly.js";
 import type { Figure, PlotParams } from "./types";
+import { fitTickLabels } from "./fitTickLabels";
 
 const figureOf = (graphDiv: HTMLElement): Figure => {
   const div = graphDiv as PlotlyHTMLElement & Partial<Figure>;
@@ -54,11 +55,23 @@ const PlotlyChart = ({
       .then(async () => {
         if (!mounted.current) return;
         const graphDiv = await Plotly.react(div, data, layout, config);
+        await fitTickLabels(graphDiv, Plotly.relayout);
         if (initialised.current || !mounted.current) return;
         initialised.current = true;
         graphDiv.on("plotly_click", (event) =>
           handlers.current.onClick?.(event),
         );
+        // A resize keeps the angles and the fractions, so labels can collide again.
+        graphDiv.on("plotly_relayout", (event) => {
+          if (!("autosize" in event)) return;
+          queue.current = queue.current
+            .then(() =>
+              mounted.current
+                ? fitTickLabels(graphDiv, Plotly.relayout)
+                : undefined,
+            )
+            .catch((error: unknown) => console.error(error));
+        });
         handlers.current.onInitialized?.(figureOf(graphDiv), graphDiv);
       })
       .catch((error: unknown) => console.error(error));

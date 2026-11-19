@@ -76,12 +76,19 @@ export const composeAxes = ({
   }, {});
 
   // The facet grid's own x axes only, so strips keep their labels.
-  if (def.appearance?.xTickLabels === false) {
+  const tickAngle = def.appearance?.tickAngle;
+  if (def.appearance?.xTickLabels === false || tickAngle !== undefined) {
     for (let panel = 1; panel <= Math.max(facets, 1); panel += 1) {
       for (const key of panel === 1 ? ["xaxis", "xaxis1"] : [`xaxis${panel}`]) {
-        if (composed[key]) {
-          composed[key] = { ...composed[key], showticklabels: false };
-        }
+        if (!composed[key]) continue;
+        composed[key] = {
+          ...composed[key],
+          ...(def.appearance?.xTickLabels === false
+            ? { showticklabels: false }
+            : {}),
+          // Chosen, so every panel keeps it; unset, the tick fit decides.
+          ...(tickAngle !== undefined ? { tickangle: tickAngle } : {}),
+        };
       }
     }
   }

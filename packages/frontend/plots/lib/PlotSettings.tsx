@@ -128,6 +128,7 @@ export const PLOT_IMPLEMENTATIONS: PlotImplementations = {
       "yTicks",
       "individual",
       "annotations",
+      "tickAngle",
       ...STYLE_CAPABILITIES,
     ],
     supports: axisSupport(["y"], { scaleAxes: ["y"] }),
@@ -144,6 +145,7 @@ export const PLOT_IMPLEMENTATIONS: PlotImplementations = {
       "errorBars",
       "individual",
       "annotations",
+      "tickAngle",
       ...STYLE_CAPABILITIES,
     ],
     unavailable: (def) =>

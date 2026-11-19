@@ -78,6 +78,34 @@ describe("composeAxes shared scales", () => {
   });
 });
 
+describe("composeAxes label angle", () => {
+  test("turns every panel's x labels to the angle chosen, not a strip's", () => {
+    const axes = composeAxes({
+      def: { ...def(), appearance: { tickAngle: -45 } } as PlotDefinition,
+      axes: { ...axesFor(2, ["xaxis3"]), xaxis1: { tickangle: 0 } },
+      facets: 2,
+      colorMap,
+      titles: false,
+    });
+    expect(axes.xaxis1?.tickangle).toBe(-45);
+    expect(axes.xaxis2?.tickangle).toBe(-45);
+    expect(axes.yaxis1?.tickangle).toBeUndefined();
+    expect(axes.xaxis3?.tickangle).toBeUndefined();
+  });
+
+  test("leaves the angle to the figure when unset", () => {
+    const axes = composeAxes({
+      def: def(),
+      axes: axesFor(2),
+      facets: 2,
+      colorMap,
+      titles: false,
+    });
+    expect(axes.xaxis1?.tickangle).toBeUndefined();
+    expect(axes.xaxis2?.tickangle).toBeUndefined();
+  });
+});
+
 describe("composeAxes hidden x labels", () => {
   const hidden = {
     ...def(),
