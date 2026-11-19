@@ -97,6 +97,8 @@ export const composeAxes = ({
   if (def.sharedScales && facets > 1) {
     for (let panel = 2; panel <= facets; panel += 1) {
       for (const orientation of ["x", "y"] as const) {
+        // Panels with their own categories would be cut to the first one's.
+        if (def[orientation].categoriesPerPanel) continue;
         const key = `${orientation}axis${panel}`;
         if (composed[key]) {
           composed[key] = { ...composed[key], matches: orientation };

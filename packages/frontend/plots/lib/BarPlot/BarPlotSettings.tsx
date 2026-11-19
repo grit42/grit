@@ -105,6 +105,7 @@ const BarPlotSettings = ({
         properties={properties}
         onChange={onChange}
         data={data}
+        show={{ sharedScales: true }}
       />
     </>
   );

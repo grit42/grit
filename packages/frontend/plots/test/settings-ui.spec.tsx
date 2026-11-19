@@ -543,6 +543,20 @@ describe("the panel scales switch", () => {
       "Panel scales",
     );
   });
+
+  test("is offered where the host sets Facet by, with Facets shown", async () => {
+    const text = await mount(faceted, { facetBy: false, sharedScales: true });
+    expect(text).toContain("Panel scales");
+    expect(text).toContain("Facets shown");
+  });
+
+  test.each(["scatter", "box", "bar", "timeseries"] as const)(
+    "is offered by the %s plot",
+    async (type) => {
+      const host = await render({ ...faceted, type } as PlotDefinition, rows);
+      expect(host.textContent).toContain("Panel scales");
+    },
+  );
 });
 
 describe("the palette preview", () => {

@@ -60,6 +60,7 @@ const ScatterPlotSettings = ({
         properties={properties}
         onChange={onChange}
         data={data}
+        show={{ sharedScales: true }}
       />
     </>
   );

@@ -66,6 +66,19 @@ describe("composeAxes shared scales", () => {
     expect(axes.xaxis3?.matches).toBeUndefined();
   });
 
+  test("leaves an axis with categories per panel its own", () => {
+    const base = def(true);
+    const axes = composeAxes({
+      def: { ...base, x: { ...base.x, categoriesPerPanel: true } },
+      axes: axesFor(2),
+      facets: 2,
+      colorMap,
+      titles: false,
+    });
+    expect(axes.xaxis2?.matches).toBeUndefined();
+    expect(axes.yaxis2?.matches).toBe("y");
+  });
+
   test("does nothing for a single panel", () => {
     const axes = composeAxes({
       def: def(true),
