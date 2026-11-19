@@ -54,10 +54,13 @@ const AxisTickSettings = <TPlot extends PlotDefinition>({
   const span = (() => {
     const key = orientation?.key;
     if (!data?.length || !key) return undefined;
-    const values = columnNumbers(data, key);
-    if (!values.length) return undefined;
-    const min = Math.min(...values);
-    const max = Math.max(...values);
+    // A loop: spreading a long column into Math.min overflows the stack.
+    let min = Infinity;
+    let max = -Infinity;
+    for (const value of columnNumbers(data, key)) {
+      if (value < min) min = value;
+      if (value > max) max = value;
+    }
     return max > min ? max - min : undefined;
   })();
 

@@ -289,6 +289,20 @@ describe("the settings sections", () => {
     ).toContain("logarithmic");
   });
 
+  test("raises a tick spacing too fine for a long column", async () => {
+    const data = Array.from({ length: 300_000 }, (_, i) => ({
+      concentration: i,
+      response: 1,
+    }));
+    const spaced = {
+      ...plot,
+      x: { ...plot.x, ticks: { mode: "spacing", spacing: 1 } },
+    } as PlotDefinition;
+    expect(warning(await render(spaced, data))).toContain(
+      "Raised to about 3000",
+    );
+  });
+
   test("previews the colours of the selected palette", async () => {
     const swatches = (host: HTMLElement) =>
       Array.from(host.querySelectorAll('[aria-hidden="true"] > span')).map(
