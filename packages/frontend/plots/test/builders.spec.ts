@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import { buildTimeSeries } from "../lib/TimeSeriesPlot/utils";
 import { buildScatter } from "../lib/ScatterPlot/utils";
 import { buildBox } from "../lib/BoxPlot/utils";
-import { buildBar } from "../lib/BarPlot/utils";
+import { MAX_CATEGORIES, buildBar, stacksSeries } from "../lib/BarPlot/utils";
 import {
   buildFacets,
   facetLabels,
@@ -619,9 +619,187 @@ describe("buildBar", () => {
     expect(Object.keys(faceted.axes).length).toBeGreaterThan(2);
   });
 
+  test("a panel can keep only its own categories", () => {
+    // Each arm is its own panel, so a shared axis would show two empty arms in each.
+    const shared = buildBarWith({ facetBy: ["ARMCD"] });
+    const own = buildBarWith({
+      facetBy: ["ARMCD"],
+      x: { ...bar.x, categoriesPerPanel: true },
+    });
+    expect(shared.axes.xaxis1.ticktext).toHaveLength(3);
+    expect(own.axes.xaxis1.ticktext).toEqual(["Treatment 1"]);
+    expect(own.axes.xaxis2.ticktext).toEqual(["Treatment 2"]);
+    const [first] = own.traces
+      .map(asTrace)
+      .filter((t) => t.type === "bar" && t.xaxis === "x1");
+    expect(first!.x).toEqual([0]);
+  });
+
+  test("past 30 categories, a panel keeps its largest, in their order", () => {
+    // Category i has i + 1 rows, so the largest are the last 30.
+    const rows = Array.from({ length: 40 }, (_, i) =>
+      Array.from({ length: i + 1 }, () => ({
+        name: `c${String(i).padStart(2, "0")}`,
+        side: i % 2 ? "odd" : "even",
+      })),
+    ).flat();
+    const counted: BarPlotDefinition = {
+      ...bar,
+      x: { key: "name", axisType: "category" },
+      aggregate: "count",
+    };
+
+    const shared = buildBar(rows, counted, colorMap);
+    expect(shared.axes.xaxis1.ticktext).toHaveLength(MAX_CATEGORIES);
+    expect(shared.axes.xaxis1.ticktext[0]).toBe("c10");
+    expect(shared.hiddenCategories).toBe(10);
+
+    const own = buildBar(
+      rows,
+      {
+        ...counted,
+        x: { ...counted.x, categoriesPerPanel: true },
+        facetBy: ["side"],
+      },
+      colorMap,
+    );
+    expect(own.axes.xaxis1.ticktext).toHaveLength(20);
+    expect(own.hiddenCategories).toBe(0);
+    expect(buildBarWith().hiddenCategories).toBe(0);
+  });
+
+  test("categories follow the axis's declared order, the rest after", () => {
+    const { axes } = buildBarWith({
+      x: { ...bar.x, categories: ["Treatment 2", "Absent"] },
+    });
+    expect(axes.xaxis1.ticktext).toEqual([
+      "Treatment 2",
+      "Treatment 1",
+      "Treatment 3",
+    ]);
+  });
+
   test("is deterministic, and copes with no rows", () => {
     expect(JSON.stringify(buildBarWith())).toBe(JSON.stringify(buildBarWith()));
     expect(() => buildBar([], bar, colorMap)).not.toThrow();
+  });
+
+  describe("counting rows", () => {
+    const barsOf = (built: ReturnType<typeof buildBar>) =>
+      built.traces.map(asTrace).filter((t) => t.type === "bar");
+    const counted = (def: Partial<BarPlotDefinition> = {}) =>
+      buildBarWith({ aggregate: "count", ...def });
+
+    test("a bar is as tall as its rows", () => {
+      const [first] = barsOf(counted());
+      const rows = sendBodyWeights.filter((r) => r.ARM === "Treatment 1");
+      expect((first!.y as number[])[0]).toBe(rows.length);
+    });
+
+    test("counts a row whatever its Y holds, but not one without a category", () => {
+      const data = [
+        { ARM: "A", BWSTRESN: null },
+        { ARM: "A", BWSTRESN: "not a number" },
+        { ARM: "B", BWSTRESN: 3 },
+        { ARM: null, BWSTRESN: 1 },
+      ];
+      const [only] = barsOf(
+        buildBar(data, { ...bar, aggregate: "count" }, colorMap),
+      );
+      expect(only!.y).toEqual([2, 1]);
+    });
+
+    test("splits each category's count between its series", () => {
+      const bars = barsOf(counted({ groupBy: ["SEX"] }));
+      expect(bars.length).toBeGreaterThan(1);
+      const total = bars.reduce((sum, b) => sum + (b.y as number[])[0]!, 0);
+      const rows = sendBodyWeights.filter((r) => r.ARM === "Treatment 1");
+      expect(total).toBe(rows.length);
+    });
+
+    test("draws bars with no summary chosen, and no error bars or observations", () => {
+      const built = counted({
+        display: { statMarkers: [], errorBars: "sem", showIndividual: true },
+      });
+      const traces = built.traces.map(asTrace);
+      expect(traces.length).toBeGreaterThan(0);
+      expect(traces.every((t) => t.type === "bar")).toBe(true);
+      expect(traces.every((t) => t.error_y === undefined)).toBe(true);
+    });
+
+    test("ticks the count in whole numbers unless the ticks are set", () => {
+      expect(counted().axes.yaxis1).toMatchObject({
+        tickmode: "linear",
+        tick0: 0,
+      });
+      const fixed = counted({
+        y: { ...bar.y, ticks: { mode: "range", min: 0, max: 10 } },
+      });
+      expect(fixed.axes.yaxis1).toEqual({});
+      expect(buildBarWith().axes.yaxis1).toEqual({});
+    });
+
+    test("a log axis starts below one, so the shortest bar still stands", () => {
+      const rows = sendBodyWeights.filter((r) => r.ARM === "Treatment 1");
+      const log = counted({ y: { ...bar.y, axisType: "log" } }).axes.yaxis1;
+      expect(log.autorange).toBe(false);
+      expect(log.range[0]).toBeLessThan(0);
+      expect(10 ** log.range[1]).toBeGreaterThanOrEqual(rows.length);
+      expect(log.ticktext).toEqual(
+        log.tickvals.map((value: number) => String(value)),
+      );
+      expect(log.tickvals.slice(0, 3)).toEqual([1, 2, 5]);
+
+      const fixed = counted({
+        y: { ...bar.y, axisType: "log", ticks: { mode: "count", count: 4 } },
+      }).axes.yaxis1;
+      expect(fixed.range[0]).toBeLessThan(0);
+      expect(fixed.tickvals).toBeUndefined();
+    });
+
+    test("the hover gives the count, not a summary of Y", () => {
+      const [first] = barsOf(counted({ y: { ...bar.y, label: undefined } }));
+      expect(first!.hovertemplate).toContain("- count");
+      expect(first!.hovertemplate).toContain("Count: %{y}");
+      expect(first!.hovertemplate).not.toContain("%{customdata[1]}");
+    });
+
+    test("stacks the series in one full-width slot per category", () => {
+      const bars = barsOf(counted({ groupBy: ["SEX"], stacked: true }));
+      expect(bars.length).toBeGreaterThan(1);
+      for (const b of bars) expect(b.x).toEqual(bars[0]!.x);
+      const apart = barsOf(counted({ groupBy: ["SEX"] }));
+      expect((bars[0]!.width as number[])[0]).toBeGreaterThan(
+        (apart[0]!.width as number[])[0]!,
+      );
+    });
+
+    test("stacks only counts: a mean stays side by side", () => {
+      const bars = barsOf(buildBarWith({ groupBy: ["SEX"], stacked: true }));
+      expect(bars[0]!.x).not.toEqual(bars[1]!.x);
+      expect(stacksSeries({ ...bar, stacked: true })).toBe(false);
+      expect(stacksSeries({ ...bar, aggregate: "count", stacked: true })).toBe(
+        true,
+      );
+    });
+
+    test("ticks a stack by its category's total", () => {
+      const apart = counted({ groupBy: ["SEX"] }).axes.yaxis1 as {
+        dtick: number;
+      };
+      const stacked = counted({ groupBy: ["SEX"], stacked: true }).axes
+        .yaxis1 as { dtick: number };
+      expect(stacked.dtick).toBeGreaterThanOrEqual(apart.dtick);
+    });
+
+    test("orders the series as declared, base first", () => {
+      const names = (order?: string[]) =>
+        barsOf(counted({ groupBy: ["SEX"], seriesOrder: order })).map(
+          (b) => b.name,
+        );
+      expect(names()).toEqual(["F", "M"]);
+      expect(names(["M"])).toEqual(["M", "F"]);
+    });
   });
 });
 

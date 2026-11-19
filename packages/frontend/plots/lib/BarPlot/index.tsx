@@ -5,8 +5,8 @@ import ThemedPlot from "../PlotBase/ThemedPlot";
 import { plotNotices, type PlotNotice } from "../notices";
 import { useColorMap } from "../colors";
 import { composeAxes, composeLayout } from "../layout";
-import { useResolvedAxisLabels } from "../utils";
-import { buildBar } from "./utils";
+import { countsRows, useResolvedAxisLabels } from "../utils";
+import { MAX_CATEGORIES, buildBar, stacksSeries } from "./utils";
 
 interface BarPlotProps {
   def: BarPlotDefinition;
@@ -27,12 +27,15 @@ const BarPlot = ({
 }: BarPlotProps) => {
   const def = useResolvedAxisLabels(rawDef, dataProperties);
   const colorMap = useColorMap(def.palette);
+  // A count reads no Y column, so nothing about one is noticed.
+  const counting = countsRows(def);
 
   const {
     facets,
     traces,
     axes,
     annotations: plotGroupAnnotations,
+    hiddenCategories,
   } = useMemo(() => buildBar(data, def, colorMap), [data, def, colorMap]);
 
   const typedAxes = composeAxes({
@@ -40,7 +43,7 @@ const BarPlot = ({
     axes,
     facets,
     colorMap,
-    data,
+    data: counting ? undefined : data,
     scaleAxes: ["y"],
   });
 
@@ -54,9 +57,18 @@ const BarPlot = ({
     ...plotNotices({
       def,
       data,
-      scaleAxes: ["y"],
-      readsDisplay: true,
+      scaleAxes: counting ? [] : ["y"],
+      readsDisplay: !counting,
     }),
+    ...(hiddenCategories
+      ? [
+          {
+            kind: "omitted" as const,
+            count: hiddenCategories,
+            reason: `${def.x.label ?? def.x.key} categories not drawn: past ${MAX_CATEGORIES}, a panel keeps its largest.`,
+          },
+        ]
+      : []),
   ];
 
   return (
@@ -80,7 +92,7 @@ const BarPlot = ({
         colorMap,
         annotations,
         // The builder places every bar itself; grouping would offset.
-        barmode: "overlay",
+        barmode: stacksSeries(def) ? "stack" : "overlay",
       })}
     />
   );

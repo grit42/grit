@@ -97,6 +97,49 @@ describe("the settings sections", () => {
     expect(display.textContent).toContain("Individual observations");
   });
 
+  test("a counting bar plot hides the Y column and the Display section", async () => {
+    const bar = {
+      ...plot,
+      type: "bar",
+      x: { key: "compound", axisType: "category" },
+    } as PlotDefinition;
+    const labels = (host: HTMLElement) =>
+      Array.from(host.querySelectorAll("label")).map((l) => l.textContent);
+
+    const summary = await render(bar);
+    expect(labels(summary)).toContain("Bar height");
+    expect(labels(summary)).toContain("Y axis");
+    expect(sections(summary).map((s) => s.title)).toContain("Display");
+
+    const counting = await render({
+      ...bar,
+      aggregate: "count",
+    } as PlotDefinition);
+    expect(labels(counting)).toContain("Bar height");
+    expect(labels(counting)).not.toContain("Y axis");
+    expect(sections(counting).map((s) => s.title)).not.toContain("Display");
+    // Stacking is offered only where it means something: counts.
+    expect(labels(summary)).not.toContain("Series");
+    expect(labels(counting)).toContain("Series");
+  });
+
+  test("a bar plot with no numeric column only counts", async () => {
+    const labels = (host: HTMLElement) =>
+      Array.from(host.querySelectorAll("label")).map((l) => l.textContent);
+    const counting = await render(
+      {
+        ...plot,
+        type: "bar",
+        x: { key: "compound", axisType: "category" },
+        aggregate: "count",
+      } as PlotDefinition,
+      undefined,
+      { properties: properties.filter((p) => p.type === "text") },
+    );
+    expect(labels(counting)).not.toContain("Bar height");
+    expect(labels(counting)).toContain("Series");
+  });
+
   test("the identity column appears only with individual observations on", async () => {
     const off = await render({
       ...plot,

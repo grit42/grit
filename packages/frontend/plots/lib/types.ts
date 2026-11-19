@@ -125,6 +125,10 @@ export interface ScatterPlotDefinition extends PlotDefinitionBase {
 }
 export interface BarPlotDefinition extends PlotDefinitionBase {
   type: "bar";
+  /** `count`: a bar is as tall as its rows, and Y is not read. Unset: the summary of Y. */
+  aggregate?: "count";
+  /** While counting: one bar per category, its series piled in `seriesOrder` from the base up. */
+  stacked?: boolean;
 }
 
 export interface TimeSeriesPlotDefinition extends PlotDefinitionBase {

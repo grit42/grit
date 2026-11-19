@@ -37,11 +37,20 @@ import {
   StatMarker,
 } from "../types";
 import { seriesPattern } from "../constants";
-import { categoryRange } from "../axes";
+import { categoryRange, countLogAxis, wholeNumberTicks } from "../axes";
 import { numberFormat } from "../format";
-import { buildFacets, nullish, ungroupedLabel } from "../utils";
+import {
+  COUNT_LABEL,
+  buildFacets,
+  countsRows,
+  nullish,
+  ungroupedLabel,
+} from "../utils";
 
 const CATEGORY_FILL = 0.8;
+
+/** Past this, bars are too narrow to read and slow to draw: a panel keeps its largest. */
+export const MAX_CATEGORIES = 30;
 const JITTER_SEED = 42;
 
 /** Where each bar sits when several series share a category. */
@@ -78,10 +87,13 @@ const seriesOf = (datum: SourceDatum, def: BarPlotDefinition) =>
 
 const buildBarGroups = (data: SourceData, def: BarPlotDefinition) => {
   const groups = new Map<string, BarGroup>();
+  const counting = countsRows(def);
 
   for (const datum of data) {
-    if (nullish(datum[def.x.key]) || nullish(datum[def.y.key])) continue;
-    const value = Number(datum[def.y.key]);
+    if (nullish(datum[def.x.key])) continue;
+    // A counted row needs only its category.
+    if (!counting && nullish(datum[def.y.key])) continue;
+    const value = counting ? 1 : Number(datum[def.y.key]);
     if (!Number.isFinite(value)) continue;
 
     const category = categoryOf(datum, def);
@@ -104,6 +116,10 @@ const barHeight = (values: number[], statMarkers: StatMarker[]) => {
   return statMarkers.includes("mean") ? stats.mean : stats.median;
 };
 
+/** Counts can be piled into one bar per category; means and medians cannot. */
+export const stacksSeries = (def: BarPlotDefinition): boolean =>
+  countsRows(def) && def.stacked === true;
+
 /**
  * Bars sit at numeric x with category names as ticks: Plotly's `barmode:
  * "group"` reserves a slot per trace, and observations need a bar to jitter on.
@@ -121,12 +137,24 @@ export const buildBar = (
   const annotations: Partial<Annotations>[] = [];
   const display = resolveDisplay(def.display);
   const fmt = numberFormat(def.appearance);
-  const summaryLabel = display.statMarkers.includes("median")
-    ? "median"
-    : "mean";
+  const counting = countsRows(def);
+  const summaryLabel = counting
+    ? "count"
+    : display.statMarkers.includes("median")
+      ? "median"
+      : "mean";
   const multiFacet = facets.length > 1;
 
   const facetGroups = facets.map((facet) => buildBarGroups(facet.data, def));
+  const stacking = stacksSeries(def);
+  // A stack is as tall as its category's total, so its ticks follow the totals.
+  const countsIn = (groups: BarGroup[]) => {
+    if (!stacking) return groups.map((g) => g.rows.length);
+    const totals = new Map<string, number>();
+    for (const g of groups)
+      totals.set(g.category, (totals.get(g.category) ?? 0) + g.rows.length);
+    return [...totals.values()];
+  };
 
   const compare = (a: string, b: string) =>
     a.localeCompare(b, undefined, { numeric: true });
@@ -145,12 +173,59 @@ export const buildBar = (
       compare(String(keys.get(a) ?? a), String(keys.get(b) ?? b));
   };
 
-  const seriesNames = [
+  // The declared order first, so a stack can run from its base up.
+  const sortedSeries = [
     ...new Set(facetGroups.flat().map((g) => g.series)),
   ].sort(keyedOrder(hooks.getSeriesSortKey, (row) => seriesOf(row, def)));
-  const allCategories = [
+  const declaredSeries = (def.seriesOrder ?? []).filter((series) =>
+    sortedSeries.includes(series),
+  );
+  const seriesNames = [
+    ...declaredSeries,
+    ...sortedSeries.filter((series) => !declaredSeries.includes(series)),
+  ];
+  const sortedCategories = [
     ...new Set(facetGroups.flat().map((g) => g.category)),
   ].sort(keyedOrder(hooks.getCategorySortKey, (row) => categoryOf(row, def)));
+  // The axis's declared categories first, as the heatmaps read them.
+  const declaredCategories = (def.x.categories ?? []).filter((category) =>
+    sortedCategories.includes(category),
+  );
+  const allCategories = [
+    ...declaredCategories,
+    ...sortedCategories.filter(
+      (category) => !declaredCategories.includes(category),
+    ),
+  ];
+
+  // A count's stack total, or a summary's tallest series.
+  const largest = (categories: string[], groups: BarGroup[]) => {
+    if (categories.length <= MAX_CATEGORIES) return categories;
+    const sizes = new Map<string, number>();
+    for (const g of groups) {
+      const was = sizes.get(g.category) ?? 0;
+      sizes.set(
+        g.category,
+        counting
+          ? was + g.rows.length
+          : Math.max(
+              was,
+              Math.abs(barHeight(g.values, display.statMarkers) ?? 0),
+            ),
+      );
+    }
+    const kept = new Set(
+      [...categories]
+        .sort((a, b) => (sizes.get(b) ?? 0) - (sizes.get(a) ?? 0))
+        .slice(0, MAX_CATEGORIES),
+    );
+    return categories.filter((category) => kept.has(category));
+  };
+  // Shared panels keep one set, so a category sits at the same place in each.
+  const sharedCategories = def.x.categoriesPerPanel
+    ? allCategories
+    : largest(allCategories, facetGroups.flat());
+  const hiddenCategories = new Set<string>();
 
   const seriesByCategory: Record<string, string[]> = Object.fromEntries(
     allCategories.map((category) => [
@@ -172,8 +247,11 @@ export const buildBar = (
   );
   const facetColor = (index: number) =>
     colorMap.universalColors[index % colorMap.universalColors.length] ?? "#888";
+  // Stacked series share one slot, and Plotly piles them in trace order.
   const slotsFor = (category: string) =>
-    categorySlots((seriesByCategory[category] ?? seriesNames).length);
+    categorySlots(
+      stacking ? 1 : (seriesByCategory[category] ?? seriesNames).length,
+    );
 
   const jitter = randomJitter({ jitter: 0.4, seed: JITTER_SEED });
 
@@ -183,7 +261,7 @@ export const buildBar = (
   const named = new Set<string>();
 
   const xLabel = def.x.label ?? def.x.key;
-  const yLabel = def.y.label ?? def.y.key;
+  const yLabel = def.y.label ?? (counting ? COUNT_LABEL : def.y.key);
 
   const facetCategories: string[][] = [];
   const facetSeries: string[][] = [];
@@ -192,7 +270,18 @@ export const buildBar = (
     const axis = index + 1;
     const facetSuffix = multiFacet ? `<br>${facet.label}` : "";
     const groups = facetGroups[index] ?? [];
-    const categories = allCategories;
+    // Per panel where the panels hold different categories, as each tissue has its own findings.
+    const own = def.x.categoriesPerPanel
+      ? allCategories.filter((category) =>
+          groups.some((g) => g.category === category),
+        )
+      : allCategories;
+    const categories = def.x.categoriesPerPanel
+      ? largest(own, groups)
+      : sharedCategories;
+    for (const g of groups) {
+      if (!categories.includes(g.category)) hiddenCategories.add(g.category);
+    }
     facetCategories.push(categories);
     facetSeries.push([...new Set(groups.map((g) => g.series))]);
 
@@ -204,7 +293,15 @@ export const buildBar = (
       ...categoryRange(categories.length),
       zeroline: false,
     };
-    axes[`yaxis${axis}`] = {};
+    const counts = counting
+      ? countsIn(def.sharedScales ? facetGroups.flat() : groups)
+      : [];
+    const yTicks = !counting
+      ? undefined
+      : def.y.axisType === "log"
+        ? countLogAxis(counts, def.y.ticks)
+        : wholeNumberTicks([0, ...counts], def.y.ticks);
+    axes[`yaxis${axis}`] = yTicks ?? {};
 
     if (multiFacet) {
       annotations.push({
@@ -245,17 +342,25 @@ export const buildBar = (
         const slots = slotsFor(category);
         const position = slots.position(
           categoryIndex,
-          Math.max(present.indexOf(series), 0),
+          stacking ? 0 : Math.max(present.indexOf(series), 0),
         );
-        const height = barHeight(group.values, display.statMarkers);
+        const height = counting
+          ? group.rows.length
+          : barHeight(group.values, display.statMarkers);
         if (height !== undefined) {
           x.push(position);
           y.push(height);
           widths.push(slots.width * 0.9);
           errors.push(display.errorBars === "sem" ? stats.sem : stats.std);
-          hovered.push([category, ...summaryHoverValues(stats, fmt)]);
+          hovered.push(
+            counting
+              ? [category]
+              : [category, ...summaryHoverValues(stats, fmt)],
+          );
         }
 
+        // A count has no observations to scatter.
+        if (counting) return;
         group.values.forEach((value, i) => {
           pointX.push(position + jitter() * slots.width);
           pointY.push(value);
@@ -273,15 +378,20 @@ export const buildBar = (
             width: widths,
             pattern:
               seriesNames.length > 1 ? seriesPattern(seriesIndex) : undefined,
-            error: display.errorBars === "none" ? undefined : errors,
+            error:
+              counting || display.errorBars === "none" ? undefined : errors,
             showlegend: !named.has(series),
             customData: hovered,
             // Same shape as the time-series hover.
             hoverTemplate: buildHoverTemplate([
               { value: `${series} - ${summaryLabel}` },
               { key: xLabel, value: "%{customdata[0]}" },
-              { key: yLabel, value: "%{y}", format: fmt.spec },
-              ...summaryHoverRows(1),
+              ...(counting
+                ? [{ key: yLabel, value: "%{y}" }]
+                : [
+                    { key: yLabel, value: "%{y}", format: fmt.spec },
+                    ...summaryHoverRows(1),
+                  ]),
             ]),
           }),
           xaxis: `x${axis}`,
@@ -331,6 +441,8 @@ export const buildBar = (
     // Bar geometry, for overlays.
     series: seriesNames,
     categories: facetCategories,
+    /** Categories some panel left out, past {@link MAX_CATEGORIES}. */
+    hiddenCategories: hiddenCategories.size,
     facetSeries,
     seriesByCategory,
   };

@@ -28,11 +28,23 @@ import {
 
 export const nullish = (v: any) => v === null || v === undefined;
 
+export const COUNT_LABEL = "Count";
+
+/** A bar plot counting its rows reads no Y column. */
+export const countsRows = (plot: PlotDefinition): boolean =>
+  plot.type === "bar" && plot.aggregate === "count";
+
+export const yAxisLabel = (
+  plot: PlotDefinition,
+  properties: SourceDataProperties,
+): string =>
+  countsRows(plot) ? COUNT_LABEL : propertyLabel(plot.y?.key, properties);
+
 export const getPlotTitle = (
   plot: PlotDefinition,
   properties: SourceDataProperties,
 ): string => {
-  const y = propertyLabel(plot.y?.key, properties);
+  const y = yAxisLabel(plot, properties);
   const x = propertyLabel(plot.x?.key, properties);
 
   switch (plot.type) {
@@ -147,7 +159,7 @@ export const useResolvedAxisLabels = <T extends PlotDefinition>(
       },
       y: {
         ...def.y,
-        label: def.y?.label ?? propertyLabel(def.y?.key, properties),
+        label: def.y?.label ?? yAxisLabel(def, properties),
       },
     }),
     [def, properties],

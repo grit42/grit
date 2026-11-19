@@ -116,6 +116,39 @@ export const wholeNumberTicks = (
   };
 };
 
+/** A count of one sits at 0 on a log axis, so the axis starts below it. */
+const COUNT_LOG_FLOOR = 0.5;
+const COUNT_LOG_HEADROOM = 0.05;
+
+/** Counts on a log axis: from below one, ticked 1, 2, 5, 10, … in plain numbers. */
+export const countLogAxis = (
+  counts: readonly number[],
+  userTicks?: AxisTickOptions,
+): Partial<LayoutAxis> => {
+  const top = Math.max(1, ...counts.filter(Number.isFinite));
+  const range: [number, number] = [
+    Math.log10(COUNT_LOG_FLOOR),
+    Math.log10(top) + COUNT_LOG_HEADROOM,
+  ];
+  // Plotly fits a log axis to the shortest bar's top, cutting off every bar below it.
+  const axis = { range, autorange: false as const };
+  if (userTicks?.mode && userTicks.mode !== "auto") return axis;
+
+  const mantissas = top > 1000 ? [1] : [1, 2, 5];
+  const tickvals: number[] = [];
+  for (let decade = 1; decade <= top; decade *= 10) {
+    for (const mantissa of mantissas) {
+      if (mantissa * decade <= top) tickvals.push(mantissa * decade);
+    }
+  }
+  return {
+    ...axis,
+    tickmode: "array",
+    tickvals,
+    ticktext: tickvals.map(String),
+  };
+};
+
 export const countTicks = (
   top: number,
 ): { tickmode: "linear"; tick0: 0; dtick: number } => ({

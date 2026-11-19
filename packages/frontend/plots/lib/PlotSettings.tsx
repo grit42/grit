@@ -19,12 +19,16 @@ import LabelSettings from "./PlotBase/LabelSettings";
 import Section from "./PlotBase/Section";
 import StyleSettings from "./PlotBase/StyleSettings";
 import {
+  countsRows,
   hasTickOptions,
   isAutoTitle,
   isDerivedAxisLabel,
   withDefaultAppearance,
   withDerivedLabels,
 } from "./utils";
+
+const summarySupport = axisSupport(["y"], { scaleAxes: ["y"] });
+const countSupport = axisSupport([], { scaleAxes: [] });
 
 export const PLOT_CAPABILITIES = [
   "annotations",
@@ -77,6 +81,8 @@ export interface PlotImplementation {
   label: string;
   value: PlotDefinition["type"];
   capabilities: readonly PlotCapability[];
+  /** Capabilities this definition cannot use, e.g. a bar plot's summary while it counts. */
+  unavailable?: (def: PlotDefinition) => readonly PlotCapability[];
   supports: (def: PlotDefinition, ctx: PlotSupportContext) => PlotSupport;
   sections?: readonly PlotSection[];
   resetDefaults?: (def: PlotDefinition) => PlotDefinition;
@@ -138,7 +144,11 @@ export const PLOT_IMPLEMENTATIONS: PlotImplementations = {
       "annotations",
       ...STYLE_CAPABILITIES,
     ],
-    supports: axisSupport(["y"], { scaleAxes: ["y"] }),
+    unavailable: (def) =>
+      countsRows(def) ? ["summary", "errorBars", "individual"] : [],
+    // A count reads no Y column, so only X and the grouping are checked.
+    supports: (def, ctx) =>
+      countsRows(def) ? countSupport(def, ctx) : summarySupport(def, ctx),
   },
   timeseries: {
     PlotSettings: TimeSeriesPlotSettings as ComponentType<PlotSettingsProps>,
@@ -168,8 +178,10 @@ const PlotSettings = ({
   const plotOptions = Object.values(implementations)
     .map(({ label, value }) => ({ label, value }))
     .sort((a, b) => a.label.localeCompare(b.label));
+  const unavailable = plotImplementation?.unavailable?.(plot) ?? [];
   const can = (capability: PlotCapability) =>
-    plotImplementation?.capabilities.includes(capability) ?? false;
+    (plotImplementation?.capabilities.includes(capability) ?? false) &&
+    !unavailable.includes(capability);
 
   // Checked on every render, not only on a type change: a saved plot's data
   // can change after it was configured. Non-blocking for the same reason.

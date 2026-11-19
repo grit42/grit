@@ -53,6 +53,21 @@ describe("getPlotTitle", () => {
       "Body weight over Study day",
     );
   });
+
+  test("names a counting bar plot after the count, not its unread Y", () => {
+    const bar = {
+      ...scatter,
+      type: "bar",
+      x: { key: "ARM" },
+    } as PlotDefinition;
+    expect(getPlotTitle(bar, PROPERTIES)).toBe("Body weight by Arm");
+    expect(
+      getPlotTitle(
+        { ...bar, aggregate: "count" } as PlotDefinition,
+        PROPERTIES,
+      ),
+    ).toBe("Count by Arm");
+  });
 });
 
 describe("isAutoTitle", () => {

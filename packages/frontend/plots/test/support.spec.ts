@@ -3,6 +3,7 @@
  */
 import { describe, expect, test } from "vitest";
 import { axisSupport } from "../lib/support";
+import { PLOT_IMPLEMENTATIONS } from "../lib/PlotSettings";
 import type {
   PlotDefinition,
   SourceData,
@@ -305,5 +306,30 @@ describe("more facets than can be drawn", () => {
         data: many.slice(0, 5),
       }).ok,
     ).toBe(true);
+  });
+});
+
+describe("a bar plot that counts its rows", () => {
+  const bar = (extra: Record<string, unknown> = {}) =>
+    def({
+      type: "bar",
+      x: { key: "arm", axisType: "category" },
+      y: { key: "arm", axisType: "linear" },
+      ...extra,
+    });
+  const supports = PLOT_IMPLEMENTATIONS.bar!.supports;
+
+  test("needs no numeric Y column, since it reads none", () => {
+    expect(supports(bar(), { properties }).ok).toBe(false);
+    expect(supports(bar({ aggregate: "count" }), { properties }).ok).toBe(true);
+  });
+
+  test("still refuses a column used as both a group and a facet", () => {
+    const both = bar({
+      aggregate: "count",
+      groupBy: ["day"],
+      facetBy: ["day"],
+    });
+    expect(supports(both, { properties }).ok).toBe(false);
   });
 });
