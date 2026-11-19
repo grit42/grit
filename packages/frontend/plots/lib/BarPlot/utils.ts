@@ -417,8 +417,6 @@ export const buildBar = (
     // Bar geometry, for overlays.
     series: seriesNames,
     categories: facetCategories,
-    /** Categories some panel left out, past {@link MAX_CATEGORIES}. */
-    hiddenCategories: hiddenCategories.size,
     notices: hiddenCategories.size
       ? [
           {

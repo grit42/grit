@@ -49,9 +49,7 @@ export interface ControlLineSpec {
 }
 
 export interface ControlLineTraceOptions {
-  legendgroup?: string;
   showlegend?: boolean;
-  hovertemplate?: (name: string, orientation: "h" | "v") => string;
   /** The line's value, as the figure writes numbers. */
   format?: string;
   xaxis?: string;
@@ -123,23 +121,14 @@ export const controlLineTraces = ({
   range: [number, number];
   opts?: ControlLineTraceOptions;
 }): Partial<ScatterData>[] => {
-  const {
-    legendgroup,
-    showlegend = false,
-    hovertemplate,
-    format = ".2f",
-    xaxis = "x",
-    yaxis = "y",
-  } = opts;
+  const { showlegend = false, format = ".2f", xaxis = "x", yaxis = "y" } = opts;
   const isV = orientation === "v";
 
   const hover = (name: string) =>
-    hovertemplate
-      ? hovertemplate(name, orientation)
-      : buildHoverTemplate([
-          { value: name },
-          { key: "Value", value: isV ? "%{x}" : "%{y}", format },
-        ]);
+    buildHoverTemplate([
+      { value: name },
+      { key: "Value", value: isV ? "%{x}" : "%{y}", format },
+    ]);
 
   const CONTROL_LINE_HOVER_POINTS = 10;
   const [start, end] = range;
@@ -157,7 +146,6 @@ export const controlLineTraces = ({
       xaxis,
       yaxis,
       name: s.name,
-      legendgroup,
       showlegend,
       line: s.line,
       hoverinfo: "skip",
@@ -169,7 +157,6 @@ export const controlLineTraces = ({
       y: isV ? along : along.map(() => s.y),
       xaxis,
       yaxis,
-      legendgroup,
       showlegend: false,
       marker: { size: 5, opacity: 0 },
       hovertemplate: hover(s.name),

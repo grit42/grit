@@ -659,7 +659,7 @@ describe("buildBar", () => {
     const shared = buildBar(rows, counted, colorMap);
     expect(shared.axes.xaxis1.ticktext).toHaveLength(MAX_CATEGORIES);
     expect(shared.axes.xaxis1.ticktext![0]).toBe("c10");
-    expect(shared.hiddenCategories).toBe(10);
+    expect(shared.notices[0]?.count).toBe(10);
 
     const own = buildBar(
       rows,
@@ -671,8 +671,8 @@ describe("buildBar", () => {
       colorMap,
     );
     expect(own.axes.xaxis1.ticktext).toHaveLength(20);
-    expect(own.hiddenCategories).toBe(0);
-    expect(buildBarWith().hiddenCategories).toBe(0);
+    expect(own.notices).toEqual([]);
+    expect(buildBarWith().notices).toEqual([]);
   });
 
   test("categories follow the axis's declared order, the rest after", () => {

@@ -64,8 +64,6 @@ export * from "./format";
 export * from "./notices";
 export * from "./limits";
 export * from "./outliers";
-export { default as LimitsSettings } from "./PlotBase/LimitsSettings";
-export { DataBandField } from "./PlotBase/RangeSettings";
 export { default as PlotNotices } from "./PlotBase/PlotNotices";
 export { default as CannotDraw } from "./PlotBase/CannotDraw";
 export * from "./PlotBase/FigureSummary";
