@@ -2,6 +2,11 @@
 # Reference values for colorVision.ts: CIELAB and CIEDE2000 from farver,
 # colour-vision deficiency from colorspace (Machado, Oliveira & Fernandes 2009,
 # severity 1, in linear RGB).
+# R, as no JS library simulates all three deficiencies as colorspace does.
+# Latest releases on 2026-11-19 match farver's CIELAB and CIEDE2000, but:
+# - culori 4.0.2 applies Machado to gamma sRGB, not linear: up to 73 steps off;
+# - color-space 3.6.0 takes Brettel, Viénot & Mollon 1997 for tritanopia;
+# - colorjs.io 0.7.1 simulates no deficiency.
 # Writes colorVision.json beside this script; format it with prettier.
 
 suppressMessages({
