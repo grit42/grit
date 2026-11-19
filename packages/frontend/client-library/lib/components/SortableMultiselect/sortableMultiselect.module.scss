@@ -123,6 +123,10 @@
   align-self: stretch;
 }
 
+.search {
+  margin-bottom: theme.$spacing;
+}
+
 .dialogBody {
   flex: 1;
   overflow-y: auto;
