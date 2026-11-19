@@ -84,6 +84,7 @@ const ScatterPlot = ({
         facets,
         colorMap,
         annotations,
+        data,
       })}
     />
   );

@@ -62,6 +62,7 @@ describe("the settings sections", () => {
       "Data",
       "Labels",
       "Ticks",
+      "Ranges",
       "Notes",
       "Style",
     ]);
@@ -137,6 +138,42 @@ describe("the settings sections", () => {
     expect(labels(await render())).not.toContain("Label angle");
   });
 
+  test("Ranges lists each band to remove, and adds one from the data", async () => {
+    let changed: PlotDefinition | undefined;
+    const box = {
+      ...plot,
+      type: "box",
+      x: { key: "compound", axisType: "category" },
+      ranges: [{ id: "pre", label: "Pre-test filter", min: 1, max: 2 }],
+    } as PlotDefinition;
+    const host = await render(box, undefined, {
+      onChange: (next: PlotDefinition) => {
+        changed = next;
+      },
+    });
+    expect(sections(host).map((s) => s.title)).toContain("Ranges");
+    expect(host.textContent).toContain("Pre-test filter");
+    expect(host.textContent).toContain("1 to 2");
+    const remove = host.querySelector(
+      '[aria-label="Remove range: Pre-test filter"]',
+    ) as HTMLElement;
+    await act(async () => remove.click());
+    expect(changed?.ranges).toEqual([]);
+    expect(
+      Array.from(host.querySelectorAll("label")).map((l) => l.textContent),
+    ).toContain("Band from the data");
+  });
+
+  test("a counting bar plot has no ranges to mark", async () => {
+    const host = await render({
+      ...plot,
+      type: "bar",
+      x: { key: "compound", axisType: "category" },
+      aggregate: "count",
+    } as PlotDefinition);
+    expect(sections(host).map((s) => s.title)).not.toContain("Ranges");
+  });
+
   test("a bar plot with no numeric column only counts", async () => {
     const labels = (host: HTMLElement) =>
       Array.from(host.querySelectorAll("label")).map((l) => l.textContent);
@@ -174,6 +211,7 @@ describe("the settings sections", () => {
       { title: "Data", open: true },
       { title: "Labels", open: false },
       { title: "Ticks", open: false },
+      { title: "Ranges", open: false },
       { title: "Notes", open: false },
       { title: "Style", open: false },
     ]);

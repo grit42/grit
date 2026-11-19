@@ -57,6 +57,7 @@ export * from "./displayMode";
 export * from "./support";
 export * from "./axes";
 export * from "./layout";
+export * from "./ranges";
 export * from "./format";
 export * from "./notices";
 export { default as PlotNotices } from "./PlotBase/PlotNotices";

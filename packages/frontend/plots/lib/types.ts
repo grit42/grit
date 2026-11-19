@@ -96,6 +96,22 @@ export interface PlotAxis {
   labelKey?: string;
 }
 
+/** A range marked across the panels, behind the data. */
+export interface PlotRange {
+  id: string;
+  /** Drawn on the band and listed under Ranges. */
+  label: string;
+  /** The definition's axis it ranges: its key's values; `y` unless set. */
+  axis?: "x" | "y";
+  /** An open end is drawn as a single line. */
+  min?: number;
+  max?: number;
+  /** Instead of bounds: each panel's own mean, plus and minus this many SDs. */
+  sd?: number;
+  /** Only in panels whose rows all hold this value, e.g. one sex's range. */
+  where?: { key: string; value: string };
+}
+
 export interface PlotDefinitionBase {
   title: string;
   type: PlotDefinitionType;
@@ -109,6 +125,7 @@ export interface PlotDefinitionBase {
   seriesOrder?: string[];
   seriesLabel?: string;
   annotations?: PlotAnnotation[];
+  ranges?: PlotRange[];
   palette?: ColorPreset;
   appearance?: PlotAppearanceOptions;
   hover?: HoverSpec;

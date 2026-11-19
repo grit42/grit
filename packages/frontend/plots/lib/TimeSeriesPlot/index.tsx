@@ -105,6 +105,7 @@ const TimeSeriesPlot = ({
         facets,
         colorMap,
         annotations,
+        data,
       })}
     />
   );

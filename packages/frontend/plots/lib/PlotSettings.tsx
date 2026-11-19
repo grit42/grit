@@ -14,6 +14,7 @@ import {
 } from "./support";
 import AxisTickSettings from "./PlotBase/AxisTickSettings";
 import { AnnotationList } from "./PlotBase/AnnotationLayer";
+import RangeSettings from "./PlotBase/RangeSettings";
 import DisplaySettings from "./PlotBase/DisplaySettings";
 import LabelSettings from "./PlotBase/LabelSettings";
 import Section from "./PlotBase/Section";
@@ -32,6 +33,7 @@ const countSupport = axisSupport([], { scaleAxes: [] });
 
 export const PLOT_CAPABILITIES = [
   "annotations",
+  "ranges",
   "tickAngle",
   "xLabels",
   "xTicks",
@@ -100,6 +102,7 @@ const XY_CAPABILITIES = [
   "yTicks",
   "axisLabels",
   "annotations",
+  "ranges",
   ...STYLE_CAPABILITIES,
 ] as const;
 
@@ -128,6 +131,7 @@ export const PLOT_IMPLEMENTATIONS: PlotImplementations = {
       "yTicks",
       "individual",
       "annotations",
+      "ranges",
       "tickAngle",
       ...STYLE_CAPABILITIES,
     ],
@@ -145,11 +149,13 @@ export const PLOT_IMPLEMENTATIONS: PlotImplementations = {
       "errorBars",
       "individual",
       "annotations",
+      "ranges",
       "tickAngle",
       ...STYLE_CAPABILITIES,
     ],
+    // A count has no values for a range to mark.
     unavailable: (def) =>
-      countsRows(def) ? ["summary", "errorBars", "individual"] : [],
+      countsRows(def) ? ["summary", "errorBars", "individual", "ranges"] : [],
     // A count reads no Y column, so only X and the grouping are checked.
     supports: (def, ctx) =>
       countsRows(def) ? countSupport(def, ctx) : summarySupport(def, ctx),
@@ -297,6 +303,12 @@ const PlotSettings = ({
               data={props.data}
             />
           )}
+        </Section>
+      )}
+
+      {can("ranges") && (
+        <Section title="Ranges" collapsible={collapsible}>
+          <RangeSettings plot={plot} onChange={props.onChange} />
         </Section>
       )}
 

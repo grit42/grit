@@ -91,6 +91,7 @@ const BarPlot = ({
         facets,
         colorMap,
         annotations,
+        data,
         // The builder places every bar itself; grouping would offset.
         barmode: stacksSeries(def) ? "stack" : "overlay",
       })}

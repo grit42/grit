@@ -22,6 +22,7 @@ import {
   buildAppearanceLayout,
   buildAxisTicks,
 } from "./axes";
+import { rangeShapes } from "./ranges";
 import type { ColorMap } from "./colors";
 import type { PlotDefinition, SourceData } from "./types";
 import { axisTitleFor, buildFacetGrid, withAxisTitles } from "./utils";
@@ -126,14 +127,31 @@ export const composeLayout = ({
   facets,
   colorMap,
   annotations = [],
+  data,
+  transposed,
+  shapes = [],
   ...extra
 }: {
   def: PlotDefinition;
   facets: number;
   colorMap: ColorMap;
   annotations?: Partial<Annotations>[];
+  /** The rows drawn, for the definition's ranges; without them none are drawn. */
+  data?: SourceData;
+  /** The definition's y runs along x, as a vertical histogram's values do. */
+  transposed?: boolean;
 } & Partial<Layout>): Partial<Layout> => ({
   grid: buildFacetGrid(facets),
+  ...(data && def.ranges?.length
+    ? {
+        shapes: [
+          ...rangeShapes(def, data, colorMap, { transposed }),
+          ...shapes,
+        ],
+      }
+    : shapes.length
+      ? { shapes }
+      : {}),
   annotations: annotations.map((annotation) => ({
     ...annotation,
     font: {

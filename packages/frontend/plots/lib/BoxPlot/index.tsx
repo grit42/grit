@@ -74,6 +74,7 @@ const BoxPlot = ({
         facets,
         colorMap,
         annotations: plotGroupAnnotations,
+        data,
       })}
     />
   );
