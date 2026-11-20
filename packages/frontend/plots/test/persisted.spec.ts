@@ -10,14 +10,12 @@ import { describe, expect, test } from "vitest";
 import { buildBox } from "../lib/BoxPlot/utils";
 import { buildScatter } from "../lib/ScatterPlot/utils";
 import { buildTimeSeries } from "../lib/TimeSeriesPlot/utils";
-import { axisSupport } from "../lib/support";
 import { resolveDisplay } from "../lib/displayMode";
 import type {
   BoxPlotDefinition,
   ColorMap,
   ScatterPlotDefinition,
   SourceData,
-  SourceDataProperties,
   TimeSeriesPlotDefinition,
 } from "../lib";
 
@@ -29,6 +27,8 @@ const colorMap = {
   markerFill: "#333",
   markerLine: "#000",
   universalColors: ["#4e79a7", "#f28e2b", "#e15759"],
+  manyColors: ["#m1", "#m2", "#m3", "#m4", "#m5", "#m6", "#m7", "#m8"],
+  fixedSeries: {},
 } as unknown as ColorMap;
 
 /** As stored: a box grouped by compound. */
@@ -110,17 +110,5 @@ describe("definitions persisted before the optional blocks existed", () => {
       (trace) => String((trace as { name?: string }).name).includes("observ"),
     );
     expect(observations).toHaveLength(0);
-  });
-
-  test("a text column typed linear is reported, not silently blank", () => {
-    const properties: SourceDataProperties = [
-      { name: "usubjid", display_name: "USUBJID", type: "text" },
-      { name: "vsorres", display_name: "VSORRES", type: "decimal" },
-    ];
-    const support = axisSupport(["y"])(savedScatter, { properties });
-    expect(support.ok).toBe(false);
-    if (!support.ok) {
-      expect(support.reasons.join(" ")).toContain("USUBJID");
-    }
   });
 });

@@ -74,4 +74,6 @@
   position: relative;
   min-width: 0;
   overflow: hidden;
+  // Keeps Plotly's own stacking under the notices table.
+  isolation: isolate;
 }

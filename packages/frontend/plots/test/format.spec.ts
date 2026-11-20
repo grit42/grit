@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { countText, numberFormat } from "../lib/format";
+import { countText, namedList, numberFormat } from "../lib/format";
 
 describe("automatic precision", () => {
   const fmt = numberFormat(undefined);
@@ -44,4 +44,9 @@ describe("a chosen number of decimals", () => {
 test("a count is written as a count", () => {
   expect(countText(30)).toBe("30");
   expect(countText(30.4)).toBe("30");
+});
+
+test("a list names its first few, then counts the rest", () => {
+  expect(namedList(["a", "b"], 2)).toBe("a, b");
+  expect(namedList(["a", "b", "c", "d"], 2)).toBe("a, b and 2 more");
 });

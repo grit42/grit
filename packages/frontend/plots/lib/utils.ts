@@ -24,15 +24,27 @@ import {
   SourceData,
   SourceDataProperties,
   SourceDataProperty,
+  SourceDatum,
 } from "./types";
 
 export const nullish = (v: any) => v === null || v === undefined;
+
+export const COUNT_LABEL = "Count";
+
+export const countsRows = (plot: PlotDefinition): boolean =>
+  plot.type === "bar" && plot.aggregate === "count";
+
+export const yAxisLabel = (
+  plot: PlotDefinition,
+  properties: SourceDataProperties,
+): string =>
+  countsRows(plot) ? COUNT_LABEL : propertyLabel(plot.y?.key, properties);
 
 export const getPlotTitle = (
   plot: PlotDefinition,
   properties: SourceDataProperties,
 ): string => {
-  const y = propertyLabel(plot.y?.key, properties);
+  const y = yAxisLabel(plot, properties);
   const x = propertyLabel(plot.x?.key, properties);
 
   switch (plot.type) {
@@ -147,7 +159,7 @@ export const useResolvedAxisLabels = <T extends PlotDefinition>(
       },
       y: {
         ...def.y,
-        label: def.y?.label ?? propertyLabel(def.y?.key, properties),
+        label: def.y?.label ?? yAxisLabel(def, properties),
       },
     }),
     [def, properties],
@@ -212,6 +224,12 @@ export const MAX_FACETS = 12;
 
 export const ungroupedLabel = (def: PlotDefinition) => def.seriesLabel ?? "All";
 
+/** A row's series: its `groupBy` values, or the ungrouped label. */
+export const seriesLabel = (datum: SourceDatum, def: PlotDefinition): string =>
+  def.groupBy?.length
+    ? def.groupBy.map((column) => String(datum[column])).join(" ")
+    : ungroupedLabel(def);
+
 const chosenFacets = (
   labels: readonly string[],
   def: PlotDefinition,
@@ -242,6 +260,22 @@ export const buildFacets = (
 
   return [...facets.values()].slice(0, MAX_FACETS);
 };
+
+export interface Panel<G> extends RawPlotFacet {
+  axis: number;
+  groups: G[];
+}
+
+export const buildPanels = <G>(
+  data: SourceData,
+  def: PlotDefinition,
+  groupsOf: (rows: SourceData) => G[],
+): Panel<G>[] =>
+  buildFacets(data, def).map((facet, index) => ({
+    ...facet,
+    axis: index + 1,
+    groups: groupsOf(facet.data),
+  }));
 
 export const facetLabels = (
   data: SourceData,

@@ -16,7 +16,6 @@
  * @grit42/plots. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import type { ColorMap } from "./colors";
 const sum = (values: readonly number[]) =>
   values.reduce((total, value) => total + value, 0);
 
@@ -102,13 +101,6 @@ const randomSeed = (seed: number): (() => number) => {
   };
 };
 
-/**
- * One value as a finite number, or `null` where there is no measurement.
-
- * Kept separate from {@link toFiniteNumbers} because that one *drops* what it
- * cannot read, which is right for a series and wrong wherever a value has a
- * slot to keep — a cell in a matrix, a column on a row.
- */
 const toFiniteNumber = (value: unknown): number | null => {
   if (typeof value === "number") return Number.isFinite(value) ? value : null;
   if (typeof value === "bigint") {
@@ -124,14 +116,7 @@ const toFiniteNumber = (value: unknown): number | null => {
   return Number.isFinite(n) ? n : null;
 };
 
-/**
- * Two series filtered *together*, keeping only the pairs where both are
- * numbers.
- *
- * Filtering each with {@link toFiniteNumbers} independently can be a trap:
- * arrays come back different lengths and every index after the first gap pairs
- * an x with someone else's y.
- */
+/** Two series filtered together, so x and y stay paired. */
 const zipFinite = (
   xs: unknown[],
   ys: unknown[],
@@ -153,6 +138,11 @@ const zipFinite = (
 
 const toFiniteNumbers = (arr: unknown[]): number[] =>
   arr.map(toFiniteNumber).filter((v): v is number => typeof v === "number");
+
+const columnNumbers = (
+  rows: readonly Record<string, unknown>[],
+  key: string,
+): number[] => toFiniteNumbers(rows.map((row) => row[key]));
 
 const arange = (start: number, end: number, step: number): number[] => {
   const result = [];
@@ -183,26 +173,16 @@ const zipSeries = ({
   xSeriesList,
   ySeriesList,
   labels,
-  colorMap,
 }: {
   xSeriesList: number[][];
   ySeriesList: number[][];
   labels: string[];
-  colorMap: ColorMap;
 }) => {
   const n = Math.min(xSeriesList.length, ySeriesList.length, labels.length);
-  const colorList = Array.from(
-    { length: n },
-    (_, i) =>
-      colorMap.universalColors[i % colorMap.universalColors.length] ??
-      colorMap.markerFill,
-  );
-
   return Array.from({ length: n }, (_, i) => ({
     x: xSeriesList[i] ?? [],
     y: ySeriesList[i] ?? [],
     label: labels[i] ?? `Series ${i + 1}`,
-    color: colorList[i] ?? "blue",
   }));
 };
 
@@ -333,6 +313,7 @@ export {
   summarise,
   toFiniteNumber,
   toFiniteNumbers,
+  columnNumbers,
   zipFinite,
   arange,
   statistics,

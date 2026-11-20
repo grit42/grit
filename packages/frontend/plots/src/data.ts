@@ -55,3 +55,42 @@ const generateSampleData = (): SourceData => {
 };
 
 export const sampleData = generateSampleData();
+
+export const awkwardDataProperties: SourceDataProperties = [
+  { name: "site", display_name: "Site", type: "text" },
+  { name: "plate", display_name: "Plate", type: "text" },
+  { name: "value", display_name: "Value (AU)", type: "decimal" },
+];
+
+const SITES = Array.from(
+  { length: 40 },
+  (_, i) => `Site ${String(i + 1).padStart(2, "0")}`,
+);
+
+const awkwardValue = (i: number): number | string | null => {
+  if (i % 19 === 3) return null;
+  if (i % 23 === 5) return "";
+  if (i % 13 === 0) return 0;
+  if (i % 17 === 2) return -5;
+  return Math.round((20 + (i % 9) * 3 + noise(i) * 4) * 10) / 10;
+};
+
+const generateAwkwardData = (): SourceData => {
+  const data: SourceData = [];
+  let i = 0;
+  SITES.forEach((site, s) => {
+    for (const plate of ["A", "B"]) {
+      for (let rep = 0; rep <= s % 4; rep++) {
+        data.push({
+          site: i % 31 === 7 ? null : site,
+          plate,
+          value: awkwardValue(i),
+        });
+        i++;
+      }
+    }
+  });
+  return data;
+};
+
+export const awkwardData = generateAwkwardData();

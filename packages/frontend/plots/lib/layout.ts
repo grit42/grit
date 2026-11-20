@@ -22,11 +22,40 @@ import {
   buildAppearanceLayout,
   buildAxisTicks,
 } from "./axes";
+import { columnNumbers } from "./math";
+import { rangeShapes } from "./ranges";
 import type { ColorMap } from "./colors";
 import type { PlotDefinition, SourceData } from "./types";
 import { axisTitleFor, buildFacetGrid, withAxisTitles } from "./utils";
 
 export type ScaleAxis = "x" | "y";
+
+/** Fixed margins, so stacked rows' x axes align whatever their legends. */
+export const COMPACT_MARGIN = {
+  t: 48,
+  b: 56,
+  l: 80,
+  r: 200,
+  autoexpand: false,
+};
+
+/** Smaller hover text: Plotly drops a label taller than a short row. */
+export const COMPACT_HOVER_LABEL = { font: { size: 11 } };
+
+export const panelTitle = (
+  label: string,
+  axis: number,
+): Partial<Annotations> => ({
+  text: `<b>${label}</b>`,
+  xref: `x${axis} domain` as Annotations["xref"],
+  yref: `y${axis} domain` as Annotations["yref"],
+  x: 0.5,
+  y: 1.05,
+  xanchor: "center",
+  yanchor: "bottom",
+  showarrow: false,
+  font: { size: 13 },
+});
 
 export const composeAxes = ({
   def,
@@ -64,7 +93,7 @@ export const composeAxes = ({
                 def[orientation].axisType,
                 colorMap.textColor,
                 def[orientation].axisType === "log" && data
-                  ? data.map((row) => Number(row[def[orientation].key]))
+                  ? columnNumbers(data, def[orientation].key)
                   : undefined,
               ),
             }
@@ -76,12 +105,19 @@ export const composeAxes = ({
   }, {});
 
   // The facet grid's own x axes only, so strips keep their labels.
-  if (def.appearance?.xTickLabels === false) {
+  const tickAngle = def.appearance?.tickAngle;
+  if (def.appearance?.xTickLabels === false || tickAngle !== undefined) {
     for (let panel = 1; panel <= Math.max(facets, 1); panel += 1) {
       for (const key of panel === 1 ? ["xaxis", "xaxis1"] : [`xaxis${panel}`]) {
-        if (composed[key]) {
-          composed[key] = { ...composed[key], showticklabels: false };
-        }
+        if (!composed[key]) continue;
+        composed[key] = {
+          ...composed[key],
+          ...(def.appearance?.xTickLabels === false
+            ? { showticklabels: false }
+            : {}),
+          // Chosen, so every panel keeps it; unset, the tick fit decides.
+          ...(tickAngle !== undefined ? { tickangle: tickAngle } : {}),
+        };
       }
     }
   }
@@ -89,6 +125,8 @@ export const composeAxes = ({
   if (def.sharedScales && facets > 1) {
     for (let panel = 2; panel <= facets; panel += 1) {
       for (const orientation of ["x", "y"] as const) {
+        // Panels with their own categories would be cut to the first one's.
+        if (def[orientation].categoriesPerPanel) continue;
         const key = `${orientation}axis${panel}`;
         if (composed[key]) {
           composed[key] = { ...composed[key], matches: orientation };
@@ -119,14 +157,31 @@ export const composeLayout = ({
   facets,
   colorMap,
   annotations = [],
+  data,
+  transposed,
+  shapes = [],
   ...extra
 }: {
   def: PlotDefinition;
   facets: number;
   colorMap: ColorMap;
   annotations?: Partial<Annotations>[];
+  /** The rows drawn, for the definition's ranges; none without them. */
+  data?: SourceData;
+  /** The definition's y runs along x, as a vertical histogram's values do. */
+  transposed?: boolean;
 } & Partial<Layout>): Partial<Layout> => ({
   grid: buildFacetGrid(facets),
+  ...(data && def.ranges?.length
+    ? {
+        shapes: [
+          ...rangeShapes(def, data, colorMap, { transposed }),
+          ...shapes,
+        ],
+      }
+    : shapes.length
+      ? { shapes }
+      : {}),
   annotations: annotations.map((annotation) => ({
     ...annotation,
     font: {

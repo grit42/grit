@@ -1,6 +1,7 @@
 import { AxisType, Datum } from "plotly.js";
-import type { ColorPreset } from "./colors";
+import type { ColorMap, ColorPreset } from "./colors";
 import type { HoverSpec } from "./hover";
+import type { OutlierRule, OutlierScope } from "./outliers";
 
 export type SourceDatum = Record<string, Datum>;
 export type SourceData = SourceDatum[];
@@ -96,6 +97,22 @@ export interface PlotAxis {
   labelKey?: string;
 }
 
+/** A range marked across the panels, behind the data. */
+export interface PlotRange {
+  id: string;
+  /** Drawn on the band and listed under Ranges. */
+  label: string;
+  /** The definition's axis it ranges: its key's values; `y` unless set. */
+  axis?: "x" | "y";
+  /** An open end is drawn as a single line. */
+  min?: number;
+  max?: number;
+  /** Instead of bounds: each panel's own mean, plus and minus this many SDs. */
+  sd?: number;
+  /** Only in panels whose rows all hold this value, e.g. one sex's range. */
+  where?: { key: string; value: string };
+}
+
 export interface PlotDefinitionBase {
   title: string;
   type: PlotDefinitionType;
@@ -109,6 +126,12 @@ export interface PlotDefinitionBase {
   seriesOrder?: string[];
   seriesLabel?: string;
   annotations?: PlotAnnotation[];
+  ranges?: PlotRange[];
+  /** Lines from each panel's values; empty draws none. */
+  limits?: ControlLimit[];
+  outliers?: OutlierRule;
+  /** What a value is judged against: its panel (unset) or its group. */
+  outliersWithin?: OutlierScope;
   palette?: ColorPreset;
   appearance?: PlotAppearanceOptions;
   hover?: HoverSpec;
@@ -125,6 +148,10 @@ export interface ScatterPlotDefinition extends PlotDefinitionBase {
 }
 export interface BarPlotDefinition extends PlotDefinitionBase {
   type: "bar";
+  /** `count`: a bar is as tall as its rows; unset: the summary of Y. */
+  aggregate?: "count";
+  /** While counting: series piled in `seriesOrder` from the base up. */
+  stacked?: boolean;
 }
 
 export interface TimeSeriesPlotDefinition extends PlotDefinitionBase {
@@ -138,14 +165,9 @@ export interface ViolinPlotDefinition extends PlotDefinitionBase {
 
 export type ControlLimit = "mean" | "median" | "sd1" | "sd2" | "sd3";
 
-export type ControlOutlierRule = "none" | "sd1" | "sd2" | "sd3";
-
 /** Implemented in `modules/sdtm`. */
 export interface ControlChartPlotDefinition extends PlotDefinitionBase {
   type: "controlChart";
-  /** Empty draws none. */
-  limits?: ControlLimit[];
-  outliers?: ControlOutlierRule;
 }
 export interface PlotBracket {
   id: string;
@@ -202,7 +224,6 @@ export interface HeatmapPlotDefinition extends PlotDefinitionBase {
 export interface HistogramPlotDefinition extends PlotDefinitionBase {
   type: "histogram";
   bins?: number;
-  limits?: ControlLimit[];
   orientation?: "h" | "v";
   density?: boolean;
 }
@@ -250,6 +271,11 @@ export interface PlotSettingsProps<T extends PlotDefinition = PlotDefinition> {
   onChange: (plot: T) => void;
   data?: SourceData;
 }
+
+export type PaletteSwatches = (
+  plot: PlotDefinition,
+  colors: { colorMap: ColorMap; dark: boolean },
+) => readonly string[];
 
 export interface RawPlotFacet {
   label: string;

@@ -3,7 +3,12 @@ import type {
   SourceData,
   SourceDataProperties,
 } from "@grit42/plots";
-import { sampleData, sampleDataProperties } from "./data";
+import {
+  awkwardData,
+  awkwardDataProperties,
+  sampleData,
+  sampleDataProperties,
+} from "./data";
 import {
   sendBodyWeights,
   sendBodyWeightsProperties,
@@ -15,6 +20,12 @@ import {
   sendSubjectsProperties,
 } from "../test/fixtures/send";
 
+export interface DatasetGuide {
+  what: string;
+  markLabel: string;
+  mark: string;
+}
+
 export interface Dataset {
   id: string;
   label: string;
@@ -22,6 +33,9 @@ export interface Dataset {
   data: SourceData;
   properties: SourceDataProperties;
   plot: PlotDefinition;
+  /** What the data summary counts. */
+  recordLabel: string;
+  guide: DatasetGuide;
 }
 
 export const DATASETS: Dataset[] = [
@@ -38,6 +52,12 @@ export const DATASETS: Dataset[] = [
       y: { key: "response", axisType: "linear" },
       groupBy: ["compound"],
     },
+    recordLabel: "wells",
+    guide: {
+      what: "Each compound's response across its concentrations.",
+      markLabel: "A point",
+      mark: "One well: its response at one concentration.",
+    },
   },
   {
     id: "send-bw",
@@ -51,6 +71,12 @@ export const DATASETS: Dataset[] = [
       x: { key: "BWDY", axisType: "linear" },
       y: { key: "BWSTRESN", axisType: "linear" },
       groupBy: ["ARM"],
+    },
+    recordLabel: "weighings",
+    guide: {
+      what: "Body weight over the study, per dose group.",
+      markLabel: "A point",
+      mark: "One animal weighed on one study day.",
     },
   },
   {
@@ -68,6 +94,12 @@ export const DATASETS: Dataset[] = [
       facetBy: ["SEX"],
       facetOrder: ["M", "F"],
     },
+    recordLabel: "weighings",
+    guide: {
+      what: "Body weight over the study, per dose group and sex.",
+      markLabel: "A point",
+      mark: "One animal weighed on one study day.",
+    },
   },
   {
     id: "send-bw-bar",
@@ -81,6 +113,12 @@ export const DATASETS: Dataset[] = [
       title: "Body weight by dose group",
       x: { key: "ARM", axisType: "category" },
       y: { key: "BWSTRESN", axisType: "linear" },
+    },
+    recordLabel: "weighings",
+    guide: {
+      what: "Body weight per dose group.",
+      markLabel: "A bar",
+      mark: "The group's mean, with the error bars set in Display.",
     },
   },
   {
@@ -96,6 +134,12 @@ export const DATASETS: Dataset[] = [
       y: { key: "LBSTRESN", axisType: "linear" },
       groupBy: ["LBTEST"],
     },
+    recordLabel: "results",
+    guide: {
+      what: "Each lab test's results across the animals.",
+      markLabel: "A box",
+      mark: "The test's median and quartiles.",
+    },
   },
   {
     id: "send-cl",
@@ -110,6 +154,12 @@ export const DATASETS: Dataset[] = [
       y: { key: "CLDY", axisType: "linear" },
       groupBy: ["CLSEV"],
     },
+    recordLabel: "observations",
+    guide: {
+      what: "When findings of each severity were seen.",
+      markLabel: "A box",
+      mark: "The study days of one severity's findings.",
+    },
   },
   {
     id: "send-dm",
@@ -123,6 +173,33 @@ export const DATASETS: Dataset[] = [
       x: { key: "ARM", axisType: "category" },
       y: { key: "AGE", axisType: "linear" },
       groupBy: ["ARM"],
+    },
+    recordLabel: "animals",
+    guide: {
+      what: "Age per arm.",
+      markLabel: "A box",
+      mark: "The arm's median and quartiles.",
+    },
+  },
+  {
+    id: "awkward",
+    label: "Awkward values (synthetic)",
+    description:
+      "40 sites on two plates, with missing, empty and non-positive values.",
+    data: awkwardData,
+    properties: awkwardDataProperties,
+    plot: {
+      type: "bar",
+      title: "Value by site",
+      x: { key: "site", axisType: "category" },
+      y: { key: "value", axisType: "log" },
+      groupBy: ["plate"],
+    },
+    recordLabel: "rows",
+    guide: {
+      what: "Mean value per site and plate.",
+      markLabel: "A bar",
+      mark: "One site's mean on one plate.",
     },
   },
 ];

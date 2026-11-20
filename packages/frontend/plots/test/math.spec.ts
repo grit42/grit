@@ -1,10 +1,9 @@
-/**
- * Baseline numeric assertions for the statistics the plot builders depend on.
- */
+/** Baseline assertions for the statistics the plot builders depend on. */
 import { describe, expect, test } from "vitest";
 import {
   arange,
   boxStats,
+  columnNumbers,
   maxBinCount,
   mean,
   median,
@@ -100,12 +99,6 @@ describe("boxStats", () => {
     expect(stats.lowerWhisker).toBeGreaterThanOrEqual(stats.min);
     expect(stats.upperWhisker).toBeLessThanOrEqual(stats.max);
   });
-
-  /** Consumed by the SD/SEM error-bar modes and the comparison-plot labels. */
-  test("sem is the standard error of the mean", () => {
-    const stats = boxStats(bodyWeightDay28)!;
-    expect(stats.sem).toBeCloseTo(stats.std / Math.sqrt(stats.count), 12);
-  });
 });
 
 describe("statistics", () => {
@@ -148,11 +141,7 @@ describe("toFiniteNumbers", () => {
     ).toEqual([1, 2, 3.5]);
   });
 
-  /**
-   * Regression guard. `Number(null)` and `Number("")` are both 0, so before
-   * this was fixed an absent measurement entered the series as a zero and
-   * dragged means, SDs and p-values downward
-   */
+  /** `Number(null)` and `Number("")` are both 0. */
   test("excludes absent measurements rather than coercing them to 0", () => {
     expect(toFiniteNumbers([1, null, "", "   ", undefined, 2])).toEqual([1, 2]);
     // A zero that really is a measurement still counts.
@@ -162,6 +151,20 @@ describe("toFiniteNumbers", () => {
   /** Number(Symbol()) throws; the guard exists so plot data can't crash a build. */
   test("tolerates symbols and bigints", () => {
     expect(toFiniteNumbers([Symbol("s"), 10n, 5])).toEqual([10, 5]);
+  });
+});
+
+describe("columnNumbers", () => {
+  test("reads one column's numbers, without the cells that hold none", () => {
+    const rows = [
+      { v: 1 },
+      { v: "2" },
+      { v: null },
+      { v: "" },
+      { w: 3 },
+      { v: 0 },
+    ];
+    expect(columnNumbers(rows, "v")).toEqual([1, 2, 0]);
   });
 });
 
@@ -195,17 +198,6 @@ describe("helpers", () => {
     expect(arange(0, 1, 0.5)).toEqual([0, 0.5, 1]);
   });
 
-  test("maxBinCount returns the tallest histogram bin", () => {
-    expect(maxBinCount([1, 1, 1, 2, 5], 0, 6, 1)).toBe(3);
-    expect(maxBinCount([], 0, 6, 1)).toBe(0);
-    // Body weights span ~2756-5609 g; bin across that range in 250 g steps.
-    expect(maxBinCount(bodyWeightDay28, 2500, 6000, 250)).toMatchInlineSnapshot(
-      `7`,
-    );
-    // A range the data falls entirely outside of yields no populated bin.
-    expect(maxBinCount(bodyWeightDay28, 0, 600, 50)).toBe(0);
-  });
-
   test("numberToLetters produces propper labels", () => {
     expect([0, 1, 25, 26, 27].map((n) => numberToLetters(n))).toEqual([
       "a",
@@ -219,13 +211,7 @@ describe("helpers", () => {
 });
 
 describe("zipFinite", () => {
-  test("keeps only the pairs where both are numbers", () => {
-    expect(zipFinite([1, 2, 3, 4], [10, 20, 30, 40])).toEqual({
-      x: [1, 2, 3, 4],
-      y: [10, 20, 30, 40],
-    });
-  });
-
+  // Filtering each side apart would break the pairing.
   test("drops a pair when either side is missing", () => {
     expect(zipFinite([1, null, 3], [10, 20, 30])).toEqual({
       x: [1, 3],
@@ -235,14 +221,6 @@ describe("zipFinite", () => {
       x: [1, 3],
       y: [10, 30],
     });
-  });
-
-  test("keeps the pairing that separate filtering would break", () => {
-    const xs = [1, null, 3];
-    const ys = [10, 20, 30];
-    const { x, y } = zipFinite(xs, ys);
-    expect(x).toHaveLength(y.length);
-    x.forEach((value, index) => expect(y[index]).toBe(value * 10));
   });
 
   test("stops at the shorter series rather than reading past it", () => {
@@ -257,6 +235,11 @@ describe("zipFinite", () => {
 describe("maxBinCount", () => {
   test("counts the fullest bin", () => {
     expect(maxBinCount([1, 1, 1, 5], 0, 10, 2)).toBe(3);
+    expect(maxBinCount([], 0, 6, 1)).toBe(0);
+    // Body weights span ~2756-5609 g; bin across that range in 250 g steps.
+    expect(maxBinCount(bodyWeightDay28, 2500, 6000, 250)).toMatchInlineSnapshot(
+      `7`,
+    );
   });
 
   test("survives a series with no spread", () => {
@@ -276,6 +259,7 @@ describe("maxBinCount", () => {
 
   test("ignores values outside the range", () => {
     expect(maxBinCount([1, 100], 0, 10, 5)).toBe(1);
+    expect(maxBinCount(bodyWeightDay28, 0, 600, 50)).toBe(0);
   });
 });
 

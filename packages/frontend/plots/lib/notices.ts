@@ -18,6 +18,8 @@
 
 import { resolveDisplay } from "./displayMode";
 import { supportsTickRange } from "./axes";
+import { namedList } from "./format";
+import { columnNumbers } from "./math";
 import type { PlotDefinition, SourceData } from "./types";
 import {
   MAX_FACETS,
@@ -26,23 +28,62 @@ import {
   shownFacetLabels,
 } from "./utils";
 
+/** How serious a notice is, most serious first. */
+export const NOTICE_LEVELS = ["cannot", "check", "left", "note"] as const;
+export type NoticeLevel = (typeof NOTICE_LEVELS)[number];
+
+export const NOTICE_LEVEL_LABELS: Record<NoticeLevel, string> = {
+  cannot: "Cannot draw",
+  check: "Check",
+  left: "Left out",
+  note: "Note",
+};
+
 export interface PlotNotice {
-  /** `info` says what the figure did; it is not counted as omitted. */
   kind: "omitted" | "empty" | "warning" | "info";
   reason: string;
   count?: number;
+  /** Named after the reason; the notices table names them all. */
+  items?: readonly string[];
 }
 
-const NAMED_OMISSIONS = 4;
-
-const finiteValues = (data: SourceData, key: string): number[] => {
-  const values: number[] = [];
-  for (const row of data) {
-    const value = Number(row[key]);
-    if (Number.isFinite(value)) values.push(value);
-  }
-  return values;
+const LEVEL_OF_KIND: Record<PlotNotice["kind"], NoticeLevel> = {
+  empty: "cannot",
+  warning: "check",
+  omitted: "left",
+  info: "note",
 };
+
+export const noticeLevel = (notice: PlotNotice): NoticeLevel =>
+  LEVEL_OF_KIND[notice.kind];
+
+const rank = (notice: PlotNotice) => NOTICE_LEVELS.indexOf(noticeLevel(notice));
+
+/** Most serious first, otherwise in the order given. */
+export const sortedNotices = (notices: readonly PlotNotice[]): PlotNotice[] =>
+  [...notices].sort((a, b) => rank(a) - rank(b));
+
+/** What the figure leaves out, for the change since a moment ago. */
+export const leftOutCount = (notices: readonly PlotNotice[]): number =>
+  notices
+    .filter((notice) => noticeLevel(notice) === "left")
+    .reduce((sum, notice) => sum + (notice.count ?? 0), 0);
+
+export const NAMED_ITEMS = 4;
+
+/** The reason, then its items, `named` of them at most. */
+export const noticeText = (
+  notice: PlotNotice,
+  named: number = NAMED_ITEMS,
+): string =>
+  notice.items?.length
+    ? `${notice.reason}: ${namedList(notice.items, named)}`
+    : notice.reason;
+
+export const noticeLine = (notice: PlotNotice): string =>
+  notice.count === undefined
+    ? noticeText(notice)
+    : `${notice.count} ${noticeText(notice)}`;
 
 export const plotNotices = ({
   def,
@@ -62,7 +103,7 @@ export const plotNotices = ({
     const orientation = def[axis];
     const key = orientation?.key;
     if (!key) continue;
-    const values = finiteValues(data, key);
+    const values = columnNumbers(data, key);
     if (!values.length) continue;
     const name = orientation.label ?? key;
     if (orientation.axisType === "log") {
@@ -71,7 +112,7 @@ export const plotNotices = ({
         notices.push({
           kind: "omitted",
           count: dropped,
-          reason: `not drawn: ${name} is on a logarithmic scale, which has no position for zero or negative values`,
+          reason: `values ≤ 0, not drawn on the log ${name} axis`,
         });
       }
     }
@@ -92,7 +133,7 @@ export const plotNotices = ({
         notices.push({
           kind: "omitted",
           count: clipped,
-          reason: `outside the fixed ${name} range of ${low} to ${high}`,
+          reason: `outside the fixed ${name} range ${low} to ${high}`,
         });
       }
     }
@@ -109,38 +150,28 @@ export const plotNotices = ({
   ) {
     notices.push({
       kind: "info",
-      reason:
-        "The dendrogram is drawn for a single panel only. " +
-        'Narrow "Facets shown" to one, or stop faceting, to see it.',
+      reason: "dendrogram drawn for one panel only",
     });
   }
 
   const hidden = hiddenFacetLabels(data, def);
   if (hidden.length > 0) {
-    const named = hidden.slice(0, NAMED_OMISSIONS).join(", ");
-    const rest =
-      hidden.length > NAMED_OMISSIONS
-        ? ` and ${hidden.length - NAMED_OMISSIONS} more`
-        : "";
     notices.push({
       kind: "omitted",
       count: hidden.length,
-      reason: `facets hidden by "Facets shown": ${named}${rest}.`,
+      reason: `facets hidden by "Facets shown"`,
+      items: hidden,
     });
   }
 
   const wanted = countFacets(data, def);
   if (wanted > MAX_FACETS) {
     const omitted = shownFacetLabels(data, def).slice(MAX_FACETS);
-    const named = omitted.slice(0, NAMED_OMISSIONS).join(", ");
-    const rest =
-      omitted.length > NAMED_OMISSIONS
-        ? ` and ${omitted.length - NAMED_OMISSIONS} more`
-        : "";
     notices.push({
       kind: "omitted",
       count: omitted.length,
-      reason: `panels not drawn, of ${wanted}: ${named}${rest}. Filter or group differently to reach them.`,
+      reason: `of ${wanted} panels not drawn`,
+      items: omitted,
     });
   }
 
@@ -150,7 +181,8 @@ export const plotNotices = ({
       notices.push({
         kind: "empty",
         reason:
-          "Nothing to draw: no summary is selected and the individual observations are hidden. Choose a summary, or show the observations.",
+          "No summary chosen and observations hidden. " +
+          "Choose one under Display.",
       });
     }
   }

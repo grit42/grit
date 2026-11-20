@@ -89,17 +89,11 @@ describe("collectValid", () => {
     ]);
   });
 
-  test("falls back to the array index when no id accessor is given", () => {
-    const { excluded } = collectValid(rows, [hasValue]);
+  test("without accessors, falls back to the array index, with no group or category breakdown", () => {
+    const { excluded, summary } = collectValid(rows, [hasValue]);
     expect(excluded.map((e) => e.id)).toEqual(["1", "3"]);
-    // No group accessor means no group key at all, rather than a bogus one.
     expect(excluded[0]).not.toHaveProperty("group");
-  });
-
-  test("omits the category breakdown when no category accessor is given", () => {
-    expect(collectValid(rows, [hasValue]).summary.includedByCategory).toEqual(
-      {},
-    );
+    expect(summary.includedByCategory).toEqual({});
   });
 
   test("everything valid yields no exclusions", () => {

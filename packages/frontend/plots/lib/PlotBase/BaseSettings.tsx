@@ -73,7 +73,7 @@ const BaseSettings = <TPlot extends PlotDefinition>({
           }
         />
       )}
-      {facetBy && panelOptions.length > 1 && (
+      {panelOptions.length > 1 && (
         <SortableMultiselect
           label="Facets shown"
           options={panelOptions}
@@ -81,7 +81,7 @@ const BaseSettings = <TPlot extends PlotDefinition>({
           onChange={onPropChange("facetOnly")}
         />
       )}
-      {facetBy && sharedScales && panelOptions.length > 1 && (
+      {sharedScales && panelOptions.length > 1 && (
         <Select
           label="Panel scales"
           options={[
@@ -90,7 +90,10 @@ const BaseSettings = <TPlot extends PlotDefinition>({
           ]}
           value={plot.sharedScales ? "shared" : "own"}
           isClearable={false}
-          description="The same x and y scale in every panel, so they can be compared by eye."
+          description={
+            "The same scales in every panel, " +
+            "so they can be compared by eye."
+          }
           onChange={(value: string) =>
             onChange({ ...plot, sharedScales: value === "shared" })
           }

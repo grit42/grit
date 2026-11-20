@@ -1,6 +1,11 @@
 import { ComponentType, type ReactNode } from "react";
 import { Button, Select } from "@grit42/client-library/components";
-import { PlotDefinition, PlotSettingsProps } from "./types";
+import {
+  ControlLimit,
+  PaletteSwatches,
+  PlotDefinition,
+  PlotSettingsProps,
+} from "./types";
 import styles from "./plotSettings.module.scss";
 import { useColorMap } from "./colors";
 import ScatterPlotSettings from "./ScatterPlot/ScatterPlotSettings";
@@ -14,11 +19,15 @@ import {
 } from "./support";
 import AxisTickSettings from "./PlotBase/AxisTickSettings";
 import { AnnotationList } from "./PlotBase/AnnotationLayer";
+import RangeSettings from "./PlotBase/RangeSettings";
+import LimitsSettings from "./PlotBase/LimitsSettings";
+import { DEFAULT_OUTLIER_RULE, outlierRuleOf } from "./outliers";
 import DisplaySettings from "./PlotBase/DisplaySettings";
 import LabelSettings from "./PlotBase/LabelSettings";
 import Section from "./PlotBase/Section";
 import StyleSettings from "./PlotBase/StyleSettings";
 import {
+  countsRows,
   hasTickOptions,
   isAutoTitle,
   isDerivedAxisLabel,
@@ -26,8 +35,15 @@ import {
   withDerivedLabels,
 } from "./utils";
 
+const summarySupport = axisSupport(["y"], { scaleAxes: ["y"] });
+const countSupport = axisSupport([], { scaleAxes: [] });
+
 export const PLOT_CAPABILITIES = [
   "annotations",
+  "ranges",
+  "limits",
+  "outliers",
+  "outlierGroups",
   "tickAngle",
   "xLabels",
   "xTicks",
@@ -77,9 +93,14 @@ export interface PlotImplementation {
   label: string;
   value: PlotDefinition["type"];
   capabilities: readonly PlotCapability[];
+  /** Capabilities this definition cannot use, as a counting bar's summary. */
+  unavailable?: (def: PlotDefinition) => readonly PlotCapability[];
   supports: (def: PlotDefinition, ctx: PlotSupportContext) => PlotSupport;
   sections?: readonly PlotSection[];
+  defaultLimits?: readonly ControlLimit[];
   resetDefaults?: (def: PlotDefinition) => PlotDefinition;
+  /** Style swatches, where the type does not draw the palette's series. */
+  paletteSwatches?: PaletteSwatches;
 }
 
 export type PlotImplementations = Partial<
@@ -92,16 +113,8 @@ const XY_CAPABILITIES = [
   "yTicks",
   "axisLabels",
   "annotations",
+  "ranges",
   ...STYLE_CAPABILITIES,
-] as const;
-
-const SUMMARY_CAPABILITIES = [
-  "summary",
-  "multipleSummaries",
-  "errorBars",
-  "errorBand",
-  "individual",
-  "individualBy",
 ] as const;
 
 export const PLOT_IMPLEMENTATIONS: PlotImplementations = {
@@ -120,9 +133,11 @@ export const PLOT_IMPLEMENTATIONS: PlotImplementations = {
       "yTicks",
       "individual",
       "annotations",
+      "ranges",
+      "tickAngle",
       ...STYLE_CAPABILITIES,
     ],
-    supports: axisSupport(["y"], { scaleAxes: ["y"] }),
+    supports: summarySupport,
   },
   bar: {
     PlotSettings: BarPlotSettings as ComponentType<PlotSettingsProps>,
@@ -136,15 +151,26 @@ export const PLOT_IMPLEMENTATIONS: PlotImplementations = {
       "errorBars",
       "individual",
       "annotations",
+      "ranges",
+      "tickAngle",
       ...STYLE_CAPABILITIES,
     ],
-    supports: axisSupport(["y"], { scaleAxes: ["y"] }),
+    unavailable: (def) =>
+      countsRows(def) ? ["summary", "errorBars", "individual", "ranges"] : [],
+    supports: (def, ctx) =>
+      countsRows(def) ? countSupport(def, ctx) : summarySupport(def, ctx),
   },
   timeseries: {
     PlotSettings: TimeSeriesPlotSettings as ComponentType<PlotSettingsProps>,
     label: "Time series",
     value: "timeseries",
-    capabilities: [...XY_CAPABILITIES, ...SUMMARY_CAPABILITIES],
+    capabilities: [
+      ...XY_CAPABILITIES,
+      ...DISPLAY_CAPABILITIES,
+      "limits",
+      "outliers",
+      "outlierGroups",
+    ],
     // Time runs along x, so both axes have to be orderable numbers.
     supports: axisSupport(["x", "y"]),
   },
@@ -168,11 +194,12 @@ const PlotSettings = ({
   const plotOptions = Object.values(implementations)
     .map(({ label, value }) => ({ label, value }))
     .sort((a, b) => a.label.localeCompare(b.label));
+  const unavailable = plotImplementation?.unavailable?.(plot) ?? [];
   const can = (capability: PlotCapability) =>
-    plotImplementation?.capabilities.includes(capability) ?? false;
+    (plotImplementation?.capabilities.includes(capability) ?? false) &&
+    !unavailable.includes(capability);
 
-  // Checked on every render, not only on a type change: a saved plot's data
-  // can change after it was configured. Non-blocking for the same reason.
+  // Checked every render, non-blocking: a saved plot's data can change.
   const support = plotImplementation?.supports(plot, {
     properties: props.properties,
     data: props.data,
@@ -183,8 +210,14 @@ const PlotSettings = ({
     Object.keys(typeReset) as (keyof PlotDefinition)[]
   ).every((key) => typeReset[key] === plot[key]);
 
+  const limitsAreDefault =
+    (!can("limits") || plot.limits === undefined) &&
+    (!can("outliers") || outlierRuleOf(plot) === DEFAULT_OUTLIER_RULE) &&
+    plot.outliersWithin === undefined;
+
   const isDefault =
     typeIsDefault &&
+    limitsAreDefault &&
     plot.palette === undefined &&
     plot.appearance === undefined &&
     plot.display === undefined &&
@@ -246,6 +279,22 @@ const PlotSettings = ({
         </Section>
       )}
 
+      {(can("limits") || can("outliers")) && (
+        <Section title="Limits and outliers" collapsible={collapsible}>
+          <LimitsSettings
+            plot={plot}
+            onChange={props.onChange}
+            defaults={plotImplementation?.defaultLimits}
+            show={{
+              limits: can("limits"),
+              band: can("ranges"),
+              outliers: can("outliers"),
+              scope: can("outliers") && can("outlierGroups"),
+            }}
+          />
+        </Section>
+      )}
+
       {(plotImplementation?.sections ?? []).map(
         ({ title, Settings, defaultOpen }) => (
           <Section
@@ -284,6 +333,16 @@ const PlotSettings = ({
         </Section>
       )}
 
+      {can("ranges") && (
+        <Section title="Ranges" collapsible={collapsible}>
+          <RangeSettings
+            plot={plot}
+            onChange={props.onChange}
+            band={!can("limits") && !can("outliers")}
+          />
+        </Section>
+      )}
+
       {can("annotations") && (
         <Section title="Notes" collapsible={collapsible}>
           <AnnotationList
@@ -315,6 +374,7 @@ const PlotSettings = ({
               tickAngle: can("tickAngle"),
               xLabels: can("xLabels"),
             }}
+            paletteSwatches={plotImplementation?.paletteSwatches}
           />
         </Section>
       )}
@@ -323,7 +383,13 @@ const PlotSettings = ({
         variant="transparent"
         disabled={isDefault}
         onClick={() => {
-          const reset = withDefaultAppearance(plot, props.properties);
+          const reset = {
+            ...withDefaultAppearance(plot, props.properties),
+            ...(can("limits") ? { limits: undefined } : {}),
+            ...(can("outliers")
+              ? { outliers: undefined, outliersWithin: undefined }
+              : {}),
+          };
           props.onChange(plotImplementation?.resetDefaults?.(reset) ?? reset);
         }}
       >
