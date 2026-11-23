@@ -1,4 +1,4 @@
-FROM node:lts
+FROM docker.io/library/node:22.23.4-slim
 
 WORKDIR /app
 
