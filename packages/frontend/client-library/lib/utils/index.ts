@@ -18,3 +18,4 @@
 
 export { default as classnames } from "./classnames";
 export * from "./tools";
+export * from "./text";
