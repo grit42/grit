@@ -75,6 +75,7 @@ const TimeSeriesPlotSettings = ({
         plot={plot}
         properties={properties}
         data={data}
+        show={{ sharedScales: true }}
       />
     </>
   );

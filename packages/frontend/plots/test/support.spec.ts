@@ -3,6 +3,7 @@
  */
 import { describe, expect, test } from "vitest";
 import { axisSupport } from "../lib/support";
+import { PLOT_IMPLEMENTATIONS } from "../lib/PlotSettings";
 import type {
   PlotDefinition,
   SourceData,
@@ -81,8 +82,12 @@ describe("numeric axis requirements", () => {
 
 describe("axis type against column type", () => {
   const scatterSupport = axisSupport(["y"]);
+  const withDate: SourceDataProperties = [
+    ...properties,
+    { name: "when", display_name: "Measured at", type: "datetime" },
+  ];
 
-  test("warns when a linear axis is given a text column", () => {
+  test("warns when a linear or log axis is given a text column", () => {
     const support = scatterSupport(
       def({ x: { key: "arm", axisType: "linear" } }),
       { properties },
@@ -90,16 +95,10 @@ describe("axis type against column type", () => {
     expect(support.ok).toBe(false);
     expect(reasons(support)[0]).toContain("X axis is set to Linear");
     expect(reasons(support)[0]).toContain("Arm");
-  });
-
-  test("warns for a log axis over the same column", () => {
-    const support = scatterSupport(
-      def({ x: { key: "arm", axisType: "log" } }),
-      {
-        properties,
-      },
-    );
-    expect(reasons(support)[0]).toContain("X axis is set to Log");
+    const log = scatterSupport(def({ x: { key: "arm", axisType: "log" } }), {
+      properties,
+    });
+    expect(reasons(log)[0]).toContain("X axis is set to Log");
   });
 
   test("accepts a text column on a category axis", () => {
@@ -111,10 +110,6 @@ describe("axis type against column type", () => {
   });
 
   test("warns when a date column is placed on a linear axis", () => {
-    const withDate: SourceDataProperties = [
-      ...properties,
-      { name: "when", display_name: "Measured at", type: "datetime" },
-    ];
     const support = scatterSupport(
       def({ x: { key: "when", axisType: "linear" } }),
       { properties: withDate },
@@ -124,10 +119,6 @@ describe("axis type against column type", () => {
   });
 
   test("accepts a date column on a date axis", () => {
-    const withDate: SourceDataProperties = [
-      ...properties,
-      { name: "when", display_name: "Measured at", type: "datetime" },
-    ];
     expect(
       scatterSupport(def({ x: { key: "when", axisType: "date" } }), {
         properties: withDate,
@@ -305,5 +296,30 @@ describe("more facets than can be drawn", () => {
         data: many.slice(0, 5),
       }).ok,
     ).toBe(true);
+  });
+});
+
+describe("a bar plot that counts its rows", () => {
+  const bar = (extra: Record<string, unknown> = {}) =>
+    def({
+      type: "bar",
+      x: { key: "arm", axisType: "category" },
+      y: { key: "arm", axisType: "linear" },
+      ...extra,
+    });
+  const supports = PLOT_IMPLEMENTATIONS.bar!.supports;
+
+  test("needs no numeric Y column, since it reads none", () => {
+    expect(supports(bar(), { properties }).ok).toBe(false);
+    expect(supports(bar({ aggregate: "count" }), { properties }).ok).toBe(true);
+  });
+
+  test("still refuses a column used as both a group and a facet", () => {
+    const both = bar({
+      aggregate: "count",
+      groupBy: ["day"],
+      facetBy: ["day"],
+    });
+    expect(supports(both, { properties }).ok).toBe(false);
   });
 });

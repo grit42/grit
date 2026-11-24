@@ -31,6 +31,12 @@ export interface NumberFormat {
 
 export const countText = (value: number): string => String(Math.round(value));
 
+/** The first `max` names, then how many more: "a, b and 3 more". */
+export const namedList = (names: readonly string[], max: number): string =>
+  names.length <= max
+    ? names.join(", ")
+    : `${names.slice(0, max).join(", ")} and ${names.length - max} more`;
+
 export const numberFormat = (
   appearance: PlotAppearanceOptions | undefined,
 ): NumberFormat => {

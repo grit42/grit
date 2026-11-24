@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { composite, readableOn, rgba, type ColorMap } from "../lib/colors";
+import { type ColorMap } from "../lib/colors";
 import { SYMBOLS } from "../lib/constants";
 import {
   boxStatsHoverTrace,
@@ -13,6 +13,8 @@ const colorMap = {
   markerFill: "#333",
   markerLine: "#000",
   universalColors: ["#4e79a7", "#f28e2b"],
+  manyColors: ["#m1", "#m2", "#m3", "#m4", "#m5", "#m6", "#m7", "#m8"],
+  fixedSeries: {},
 } as unknown as ColorMap;
 
 describe("scatterTrace", () => {
@@ -38,30 +40,19 @@ describe("scatterTrace", () => {
     expect(JSON.stringify(withMap)).not.toContain("#abcdef");
   });
 
-  test("hoverRows become a hovertemplate", () => {
-    const t = scatterTrace({
-      x: [1],
-      y: [2],
-      name: "n",
-      colorMap,
-      hoverRows: [{ key: "Value", value: "%{y}" }],
-    });
-    expect(t.hovertemplate).toBe("Value: %{y}<extra></extra>");
+  test("hoverRows become a hovertemplate, unless one is given", () => {
+    const hoverRows = [{ key: "Value", value: "%{y}" }];
+    const trace = { x: [1], y: [2], name: "n", colorMap, hoverRows };
+    expect(scatterTrace(trace).hovertemplate).toBe(
+      "Value: %{y}<extra></extra>",
+    );
+    expect(
+      scatterTrace({ ...trace, hovertemplate: "custom<extra></extra>" })
+        .hovertemplate,
+    ).toBe("custom<extra></extra>");
   });
 
-  test("an explicit hovertemplate takes precedence over hoverRows", () => {
-    const t = scatterTrace({
-      x: [1],
-      y: [2],
-      name: "n",
-      colorMap,
-      hovertemplate: "custom<extra></extra>",
-      hoverRows: [{ key: "Value", value: "%{y}" }],
-    });
-    expect(t.hovertemplate).toBe("custom<extra></extra>");
-  });
-
-  test("legend grouping and visibility pass through", () => {
+  test("legend grouping, visibility and secondary axes pass through", () => {
     const t = scatterTrace({
       x: [],
       y: [],
@@ -69,20 +60,11 @@ describe("scatterTrace", () => {
       colorMap,
       legendgroup: "g",
       showlegend: false,
-    });
-    expect(t.legendgroup).toBe("g");
-    expect(t.showlegend).toBe(false);
-  });
-
-  test("secondary axes can be targeted", () => {
-    const t = scatterTrace({
-      x: [],
-      y: [],
-      name: "n",
-      colorMap,
       xaxis: "x2",
       yaxis: "y2",
     });
+    expect(t.legendgroup).toBe("g");
+    expect(t.showlegend).toBe(false);
     expect(t.xaxis).toBe("x2");
     expect(t.yaxis).toBe("y2");
   });
@@ -153,25 +135,20 @@ describe("outlierTrace", () => {
   // 100 is far past 1.5×IQR of 1..9, so it is the sole outlier.
   const values = [1, 2, 3, 4, 5, 6, 7, 8, 9, 100];
 
-  test("chooses a colour that reads on its group's fill as well as the page", () => {
-    const withPage = { ...colorMap, bgColor: "#ffffff" } as unknown as ColorMap;
-    // A light yellow reads poorly on white and worse on its own fill.
-    const colour = (
-      outlierTrace({
-        values,
-        label: "G",
-        xIndex: 1,
-        colorMap: withPage,
-        color: "#f5e050",
-      })!.marker as { color?: string }
-    ).color;
-    expect(colour).not.toBe("#f5e050");
-    expect(
-      readableOn(colour!, [
-        composite(rgba({ color: "#f5e050", alpha: 1 }), "#ffffff"),
-        "#ffffff",
-      ]),
-    ).toBe(colour);
+  test("rings its outliers in the violation colour, as the control chart does", () => {
+    const marker = outlierTrace({
+      values,
+      label: "G",
+      xIndex: 1,
+      colorMap: { ...colorMap, violationFill: "#7b3b34" } as ColorMap,
+    })!.marker as {
+      color?: string;
+      symbol?: string;
+      line?: { color?: string };
+    };
+    expect(marker.symbol).toBe("circle-open");
+    expect(marker.color).toBe("#7b3b34");
+    expect(marker.line?.color).toBe("#7b3b34");
   });
 
   test("plots only the points outside the whiskers", () => {
@@ -189,21 +166,12 @@ describe("outlierTrace", () => {
     expect(Math.abs((a.x as number[])[0]! - 1)).toBeLessThanOrEqual(0.2);
   });
 
-  test("returns null when no point lies outside the whiskers", () => {
-    expect(
-      outlierTrace({
-        values: [1, 2, 3, 4, 5],
-        label: "G",
-        xIndex: 0,
-        colorMap,
-      }),
-    ).toBeNull();
-  });
-
-  test("returns null for an empty series", () => {
-    expect(
-      outlierTrace({ values: [], label: "G", xIndex: 0, colorMap }),
-    ).toBeNull();
+  test("returns null when no point lies outside the whiskers, or there are none", () => {
+    for (const values of [[1, 2, 3, 4, 5], []]) {
+      expect(
+        outlierTrace({ values, label: "G", xIndex: 0, colorMap }),
+      ).toBeNull();
+    }
   });
 });
 

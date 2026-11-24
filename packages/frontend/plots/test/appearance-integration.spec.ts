@@ -1,12 +1,4 @@
-/**
- * Appearance configuration, verified against real Plotly.
- *
- * The unit tests in `axes.spec.ts` prove the layout objects are built
- * correctly; they cannot prove those objects are ever *read*. That gap is not
- * hypothetical — settings landing on a key Plotly ignores is exactly the
- * `xaxis1` bug — so these render an actual plot and assert on `_fullLayout`,
- * which is Plotly's own resolved view of the layout.
- */
+/** Checked on Plotly's `_fullLayout`: a key it ignores passes unit tests. */
 // @vitest-environment happy-dom
 import { describe, expect, test } from "vitest";
 import { createRoot } from "react-dom/client";
@@ -33,8 +25,7 @@ const BASE = {
   y: { key: "response", axisType: "linear" },
 } as const;
 
-/** Renders a definition and returns Plotly's resolved layout. */
-const renderedPlot = async (def: PlotDefinition, rows: unknown[] = data) => {
+const render = async (def: PlotDefinition, rows: unknown[] = data) => {
   const host = document.createElement("div");
   document.body.appendChild(host);
   const root = createRoot(host);
@@ -50,6 +41,11 @@ const renderedPlot = async (def: PlotDefinition, rows: unknown[] = data) => {
   await act(async () => {
     await new Promise((resolve) => setTimeout(resolve, 300));
   });
+  return host;
+};
+
+const renderedPlot = async (def: PlotDefinition, rows: unknown[] = data) => {
+  const host = await render(def, rows);
   const graphDiv = host.querySelector(".js-plotly-plot") as
     | (HTMLElement & {
         layout: Record<string, any>;
@@ -102,11 +98,7 @@ describe("tick configuration", () => {
     expect(layout.xaxis.minor.showgrid).toBe(false);
   });
 
-  /**
-   * Plotly resolves `minor.tickcolor` to a hard-coded `#444` regardless of the
-   * axis `color`, so on a dark theme unset minor ticks are drawn but invisible
-   * — present in the layout, absent on screen.
-   */
+  /** Plotly's unset minor ticks are a fixed `#444`, unseen on a dark theme. */
   test("minor ticks take the theme colour rather than Plotly's dark default", async () => {
     const layout = await fullLayout(
       withDef({ x: { ...BASE.x, ticks: { minor: true } } }),
@@ -123,11 +115,7 @@ describe("tick configuration", () => {
     expect(layout.xaxis.ticklen).toBeGreaterThan(layout.xaxis.minor.ticklen);
   });
 
-  /**
-   * The failure this guards against is severe and silent: Plotly reads a log
-   * axis range as exponents, so -10…110 would mean 10⁻¹⁰…10¹¹⁰ and the plot
-   * would come out blank.
-   */
+  /** Plotly reads a log range as exponents, so -10…110 would blank the plot. */
   test("a fixed range is ignored on a log axis rather than emptying the plot", async () => {
     const layout = await fullLayout(
       withDef({
@@ -189,13 +177,7 @@ describe("plot appearance", () => {
   });
 });
 
-/**
- * The log axis, as Plotly resolves it.
- *
- * A box plot hands Plotly precomputed quartiles rather than a sample, so
- * whether the axis transform reaches them is not something the builder tests
- * can answer — only a real render can.
- */
+/** Only a render shows the log transform reaches a box plot's quartiles. */
 describe("log axes", () => {
   test("a box plot's y axis actually goes logarithmic", async () => {
     const layout = await fullLayout(
@@ -208,11 +190,7 @@ describe("log axes", () => {
     expect(layout.yaxis.type).toBe("log");
   });
 
-  /**
-   * Left to Plotly, a wide log axis repeats 1, 2 and 5 in every decade — in
-   * smaller type — so the same numbers run down the axis with nothing saying
-   * which decade each is in.
-   */
+  /** Plotly alone repeats 1, 2 and 5 in each decade without saying which. */
   test("labels the decades across a wide range", async () => {
     const layout = await fullLayout(
       withDef({ x: { key: "concentration", axisType: "log" } }),
@@ -229,16 +207,7 @@ describe("log axes", () => {
     );
   });
 
-  /**
-   * And within a single decade Plotly falls back to ordinary values —
-   * `2000, 2500, 3000` — which are the labels a *linear* axis would show, so
-   * a reader cannot tell the scale changed.
-   *
-   * `_vals` rather than `tickvals`: the latter is what we handed over, the
-   * former is what Plotly resolved to draw. The locator deliberately generates
-   * a decade past the data so panning has somewhere to go, and this is the
-   * assertion that Plotly clips it back rather than labelling empty space.
-   */
+  /** Within one decade Plotly labels a log axis like a linear one. */
   test("a narrow range no longer reads like a linear one", async () => {
     const layout = await fullLayout(
       withDef({ x: { key: "concentration", axisType: "log" } }),
@@ -259,11 +228,7 @@ describe("log axes", () => {
     expect(drawn).not.toContain("10⁴");
   });
 
-  /**
-   * Unlike a linear axis, where minor ticks are opt-in. The positions between
-   * the decades are what shows the scale is compressed, and where only 2 and 5
-   * are labelled they carry most of the reading.
-   */
+  /** On by default, unlike linear: they show the compressed scale. */
   test("draws the ticks between the labels without being asked", async () => {
     const layout = await fullLayout(
       withDef({ x: { key: "concentration", axisType: "log" } }),
@@ -315,27 +280,9 @@ describe("log axes", () => {
   });
 });
 
-/**
- * The exported image is the figure.
- */
 describe("export fidelity", () => {
   const exported = async (def: PlotDefinition, rows: unknown[] = data) => {
-    const host = document.createElement("div");
-    document.body.appendChild(host);
-    const root = createRoot(host);
-    await act(async () => {
-      root.render(
-        createElement(Plot, {
-          def,
-          data: rows,
-          dataProperties: properties,
-        } as never),
-      );
-    });
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 300));
-    });
-    const graphDiv = host.querySelector(".js-plotly-plot") as HTMLElement;
+    const graphDiv = await renderedPlot(def, rows);
     const { default: Plotly } = await import("plotly.js-cartesian-dist-min");
     return (await Plotly.toImage(graphDiv, {
       format: "svg",
@@ -370,12 +317,7 @@ describe("export fidelity", () => {
     expect(svg).toContain("Compound A");
   });
 
-  /**
-   * The one assertion that catches a coordinate-space mistake: it compares the
-   * pixel the annotation is drawn at against the pixel the data point of the
-   * same value sits at. A note stored in data space on a log axis was drawn at
-   * ten to the power of itself, and only Plotly can say so.
-   */
+  /** Plotly reads a note's x on a log axis as an exponent. */
   test("a note lands on the point it names, on a log axis", async () => {
     const logX = { x: { key: "concentration", axisType: "log" } };
     const rows = [
@@ -383,41 +325,23 @@ describe("export fidelity", () => {
       { concentration: 10, response: 100 },
     ];
     const layout = await noteLayout(withDef(logX), rows);
-    const host = document.createElement("div");
-    document.body.appendChild(host);
-    const root = createRoot(host);
-    await act(async () => {
-      root.render(
-        createElement(Plot, {
-          def: withDef({
-            ...logX,
-            annotations: [
-              {
-                id: "note-1",
-                text: "Excursion",
-                x: 1.2596,
-                y: 50,
-                axis: "y",
-                xaxis: "x",
-                layout,
-              },
-            ],
-          }),
-          data: rows,
-          dataProperties: properties,
-        } as never),
-      );
-    });
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 300));
-    });
-    const graphDiv = host.querySelector(".js-plotly-plot") as unknown as {
-      _fullLayout: {
-        xaxis: { r2p: (v: number) => number; d2p: (v: number) => number };
-        annotations: { x: number }[];
-      };
-    };
-    const { xaxis, annotations } = graphDiv._fullLayout;
+    const { xaxis, annotations } = await fullLayout(
+      withDef({
+        ...logX,
+        annotations: [
+          {
+            id: "note-1",
+            text: "Excursion",
+            x: 1.2596,
+            y: 50,
+            axis: "y",
+            xaxis: "x",
+            layout,
+          },
+        ],
+      }),
+      rows,
+    );
     expect(xaxis.r2p(annotations[0].x)).toBeCloseTo(xaxis.d2p(1.2596), 6);
   });
 
@@ -451,20 +375,7 @@ describe("re-rendering", () => {
 
   // A full redraw (newPlot) rebuilds the svg and loses the reader's zoom.
   test("updates the figure in place, e.g. when Download opens", async () => {
-    const host = document.createElement("div");
-    document.body.appendChild(host);
-    await act(async () => {
-      createRoot(host).render(
-        createElement(Plot, {
-          def: withDef({}),
-          data,
-          dataProperties: properties,
-        } as never),
-      );
-    });
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 300));
-    });
+    const host = await render(withDef({}));
     const graphDiv = host.querySelector(".js-plotly-plot") as GraphDiv;
     const before = graphDiv.querySelector(".main-svg");
     await act(async () => {
@@ -476,4 +387,26 @@ describe("re-rendering", () => {
     expect(before).not.toBeNull();
     expect(graphDiv.querySelector(".main-svg")).toBe(before);
   });
+});
+
+test("a box plot draws its boxes with no summary marker chosen", async () => {
+  const host = await render({
+    ...BASE,
+    type: "box",
+    display: { statMarkers: [] },
+  } as PlotDefinition);
+  expect(host.textContent).not.toContain("Cannot draw");
+});
+
+test("a counted bar plot draws no ranges", async () => {
+  const bar = {
+    ...BASE,
+    type: "bar",
+    x: { key: "concentration", axisType: "category" },
+    ranges: [{ id: "r", label: "Range", min: 0, max: 60 }],
+  } as PlotDefinition;
+  expect((await fullLayout(bar)).shapes).toHaveLength(1);
+  expect(
+    (await fullLayout({ ...bar, aggregate: "count" } as PlotDefinition)).shapes,
+  ).toHaveLength(0);
 });

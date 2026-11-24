@@ -18,7 +18,7 @@
 
 import { Input } from "@grit42/client-library/components";
 import type { PlotDefinition, SourceDataProperties } from "../types";
-import { propertyLabel } from "../utils";
+import { propertyLabel, yAxisLabel } from "../utils";
 
 const LabelSettings = <TPlot extends PlotDefinition>({
   plot,
@@ -59,7 +59,7 @@ const LabelSettings = <TPlot extends PlotDefinition>({
             type="string"
             label="Y axis label"
             value={plot.y?.label ?? ""}
-            placeholder={propertyLabel(plot.y?.key, properties)}
+            placeholder={yAxisLabel(plot, properties)}
             onChange={(e) => setAxisLabel("y")(e.target.value)}
           />
         </>

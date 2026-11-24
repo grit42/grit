@@ -1,19 +1,35 @@
 import { describe, expect, test } from "vitest";
 import {
-  CATEGORICAL_COLORS,
+  colorMapFor,
+  MIN_MARK_CONTRAST,
   MIN_SCALE_CONTRAST,
-  SEQUENTIAL_SCHEMES,
+  seriesPalette,
   sequentialScale,
   composite,
   contrastRatio,
   contrastingText,
   hexToRgb,
+  MIN_TEXT_CONTRAST,
+  noticeColors,
   readableOn,
   interpolateScale,
   relativeLuminance,
   rgba,
   tint,
 } from "../lib/colors";
+import {
+  darkPalette,
+  lightPalette,
+  type Theme,
+} from "@grit42/client-library/theme";
+import {
+  type Deficiency,
+  leastDifference,
+  lightness,
+  simulateDeficiency,
+  toLab,
+} from "../lib/colorVision";
+import { SEQUENTIAL_SCHEMES } from "../lib/scientificColourMaps";
 
 describe("hexToRgb", () => {
   test("parses six-digit hex, with or without the hash", () => {
@@ -35,13 +51,10 @@ describe("hexToRgb", () => {
 });
 
 describe("rgba", () => {
-  test("applies alpha to hex input", () => {
+  test("applies alpha to hex input, shorthand too", () => {
     expect(rgba({ color: "#4e79a7", alpha: 0.5 })).toBe(
       "rgba(78, 121, 167, 0.5)",
     );
-  });
-
-  test("applies alpha to shorthand hex", () => {
     expect(rgba({ color: "#eee", alpha: 0.2 })).toBe(
       "rgba(238, 238, 238, 0.2)",
     );
@@ -61,16 +74,11 @@ describe("rgba", () => {
   });
 });
 
-describe("tint", () => {
-  test("mixes toward white by the given amount", () => {
-    expect(tint("#000000", 0)).toBe("rgb(0, 0, 0)");
-    expect(tint("#000000", 1)).toBe("rgb(255, 255, 255)");
-    expect(tint("#000000", 0.5)).toBe("rgb(128, 128, 128)");
-  });
-
-  test("accepts shorthand hex", () => {
-    expect(tint("#000", 0.5)).toBe("rgb(128, 128, 128)");
-  });
+test("tint mixes toward white by the given amount", () => {
+  expect(tint("#000000", 0)).toBe("rgb(0, 0, 0)");
+  expect(tint("#000000", 1)).toBe("rgb(255, 255, 255)");
+  expect(tint("#000000", 0.5)).toBe("rgb(128, 128, 128)");
+  expect(tint("#000", 0.5)).toBe("rgb(128, 128, 128)");
 });
 
 describe("contrast", () => {
@@ -102,56 +110,167 @@ describe("contrast", () => {
   });
 });
 
-describe("heatmap scales", () => {
-  const surfaces = { light: "#ffffff", dark: "#1d2532" } as const;
+const THEMES = {
+  light: { colorScheme: "light", palette: lightPalette } as Theme,
+  dark: { colorScheme: "dark", palette: darkPalette } as Theme,
+};
+const PRESETS = ["default", "muted", "bright"] as const;
+const SCHEMES = ["light", "dark"] as const;
+const DEFICIENCIES: Deficiency[] = ["deuteranopia", "protanopia", "tritanopia"];
 
-  test.each(["default", "muted", "bright"] as const)(
-    "%s starts clear of the surface and stands out more as it rises",
-    (preset) => {
-      for (const scheme of ["light", "dark"] as const) {
-        const scale = sequentialScale(
-          SEQUENTIAL_SCHEMES[preset],
-          surfaces[scheme],
-          scheme === "dark",
-        );
-        const low = scale[0]![1];
-        const high = scale[scale.length - 1]![1];
-        expect(contrastRatio(low, surfaces[scheme])).toBeGreaterThanOrEqual(
-          MIN_SCALE_CONTRAST,
-        );
-        expect(contrastRatio(high, surfaces[scheme])).toBeGreaterThan(
-          contrastRatio(low, surfaces[scheme]),
-        );
-        expect(scale[0]![0]).toBe(0);
-        expect(scale[scale.length - 1]![0]).toBe(1);
+/** Series apart under every vision; semantic sets further apart. */
+const SERIES_APART = 8;
+const SEMANTIC_APART = 11;
+
+describe.each(PRESETS)("the %s preset", (preset) => {
+  describe.each(SCHEMES)("on the %s theme", (scheme) => {
+    const theme = THEMES[scheme];
+    const surface = theme.palette.background.surface;
+    const map = colorMapFor(theme, preset);
+    const seen = (color: string) => contrastRatio(color, surface);
+
+    test("every line, mark and series colour stands 3:1 off the surface", () => {
+      for (const color of [
+        ...map.universalColors,
+        ...map.manyColors,
+        map.male,
+        map.female,
+        map.meanLine,
+        map.oLine,
+        map.wLine,
+        map.clLine,
+        map.violationFill,
+        map.boxLine,
+        map.markerFill,
+      ]) {
+        expect(seen(color), color).toBeGreaterThanOrEqual(MIN_MARK_CONTRAST);
       }
-    },
-  );
+    });
 
-  test("runs light to dark on a light surface and reversed on a dark one", () => {
-    const iridescent = SEQUENTIAL_SCHEMES.default;
-    const light = sequentialScale(iridescent, surfaces.light, false);
-    const dark = sequentialScale(iridescent, surfaces.dark, true);
-    expect(light[light.length - 1]![1]).toBe(iridescent[iridescent.length - 1]);
-    expect(dark[dark.length - 1]![1]).toBe(iridescent[0]);
+    test("series stay apart under every colour-vision deficiency", () => {
+      expect(leastDifference(map.universalColors)).toBeGreaterThanOrEqual(
+        SERIES_APART,
+      );
+    });
+
+    test("many series repeat no colour", () => {
+      expect(new Set(map.manyColors).size).toBe(map.manyColors.length);
+      expect(map.manyColors.length).toBeGreaterThanOrEqual(50);
+    });
+
+    test("the sexes, and the mean and its σ lines, stay further apart", () => {
+      expect(leastDifference([map.male, map.female])).toBeGreaterThanOrEqual(
+        SEMANTIC_APART,
+      );
+      expect(
+        leastDifference([map.meanLine, map.oLine, map.wLine, map.clLine]),
+      ).toBeGreaterThanOrEqual(SEMANTIC_APART);
+    });
+
+    test("outlier rings stand apart from every series colour", () => {
+      for (const color of map.universalColors) {
+        expect(
+          leastDifference([map.violationFill, color]),
+          color,
+        ).toBeGreaterThanOrEqual(SERIES_APART);
+      }
+    });
+
+    test("the σ lines stand out more as they widen", () => {
+      expect(seen(map.oLine)).toBeLessThan(seen(map.wLine));
+      expect(seen(map.wLine)).toBeLessThan(seen(map.clLine));
+    });
+
+    test("the σ lines run yellow, orange, red", () => {
+      const hue = (color: string) => {
+        const [, a, b] = toLab(color);
+        return (Math.atan2(b, a) * 180) / Math.PI;
+      };
+      expect(hue(map.oLine)).toBeGreaterThan(hue(map.wLine));
+      expect(hue(map.wLine)).toBeGreaterThan(hue(map.clLine));
+      expect(hue(map.oLine)).toBeGreaterThan(70);
+      expect(hue(map.clLine)).toBeLessThan(45);
+    });
+
+    test("male draws the default series' blue, female its pink", () => {
+      const series = colorMapFor(theme, "default").universalColors;
+      expect([map.male, map.female]).toEqual(series.slice(0, 2));
+    });
+
+    test("the heatmap starts clear of the surface and darkens or lightens steadily", () => {
+      const colors = map.heatmapScale.map(([, color]) => color);
+      expect(seen(colors[0]!)).toBeGreaterThanOrEqual(MIN_SCALE_CONTRAST);
+      for (const vision of [undefined, ...DEFICIENCIES]) {
+        const steps = colors.map((color) =>
+          lightness(vision ? simulateDeficiency(color, vision) : color),
+        );
+        for (let i = 1; i < steps.length; i++) {
+          if (scheme === "light") expect(steps[i]).toBeLessThan(steps[i - 1]!);
+          else expect(steps[i]).toBeGreaterThan(steps[i - 1]!);
+        }
+      }
+    });
   });
 });
 
-describe("categorical colours", () => {
-  test("has a distinct set per scheme, same length", () => {
-    expect(CATEGORICAL_COLORS.dark).toHaveLength(
-      CATEGORICAL_COLORS.light.length,
-    );
-    expect(CATEGORICAL_COLORS.dark).not.toEqual(CATEGORICAL_COLORS.light);
+test("the heatmap scales are Scientific colour maps' 25-colour palettes, light to dark", () => {
+  const ends = (preset: (typeof PRESETS)[number]) => {
+    const colors = SEQUENTIAL_SCHEMES[preset];
+    return [colors[0], colors[12], colors[24], colors.length];
+  };
+  expect(ends("default")).toEqual(["#FACCFA", "#828231", "#011959", 25]);
+  expect(ends("muted")).toEqual(["#FEFEFE", "#6C8E93", "#00054A", 25]);
+  expect(ends("bright")).toEqual(["#B3F2FD", "#9C961C", "#8C0273", 25]);
+});
+
+test("a scale runs light to dark on a light surface and reversed on a dark one", () => {
+  const batlow = SEQUENTIAL_SCHEMES.default;
+  const light = sequentialScale(batlow, "#ffffff", false);
+  const dark = sequentialScale(batlow, "#1d2532", true);
+  expect(light[light.length - 1]![1]).toBe(batlow[batlow.length - 1]);
+  expect(dark[dark.length - 1]![1]).toBe(batlow[0]);
+  expect(light[0]![0]).toBe(0);
+  expect(dark[dark.length - 1]![0]).toBe(1);
+});
+
+test("an unknown preset draws as the default", () => {
+  expect(colorMapFor(THEMES.light, "rainbow").universalColors).toEqual(
+    colorMapFor(THEMES.light, "default").universalColors,
+  );
+});
+
+test("hover border and toggle follow the theme's accent", () => {
+  expect(colorMapFor(THEMES.dark, "default").hoverBorder).toBe(
+    darkPalette.secondary.main,
+  );
+  expect(colorMapFor(THEMES.light, "muted").hoverBorder).toBe(
+    lightPalette.secondary.main,
+  );
+});
+
+describe("seriesPalette", () => {
+  const map = colorMapFor(THEMES.light, "default", { M: "male", F: "female" });
+
+  test("gives a fixed key its colour, and the rest the preset's from the start", () => {
+    const colorOf = seriesPalette(map, ["M", "F", "U"]);
+    expect(colorOf("M")).toBe(map.male);
+    expect(colorOf("F")).toBe(map.female);
+    expect(colorOf("U")).toBe(map.universalColors[0]);
   });
 
-  test("each strip colour stands clear of its own surface", () => {
-    for (const color of CATEGORICAL_COLORS.light) {
-      expect(contrastRatio(color, "#ffffff")).toBeGreaterThanOrEqual(1.8);
-    }
-    for (const color of CATEGORICAL_COLORS.dark) {
-      expect(contrastRatio(color, "#1d2532")).toBeGreaterThanOrEqual(3);
-    }
+  test("colours a key by its place in the figure's list", () => {
+    const colorOf = seriesPalette(map, ["a", "b", "c"]);
+    expect(colorOf("b")).toBe(map.universalColors[1]);
+    expect(colorOf("c")).toBe(map.universalColors[2]);
+  });
+
+  test("switches the whole figure to batlowS when the series outnumber the preset", () => {
+    const keys = Array.from(
+      { length: map.universalColors.length + 1 },
+      (_, i) => `s${i}`,
+    );
+    const colorOf = seriesPalette(map, keys);
+    expect(keys.map(colorOf)).toEqual(map.manyColors.slice(0, keys.length));
   });
 });
 
@@ -261,5 +380,27 @@ describe("readableOn", () => {
     expect(readableOn("#4e79a7", undefined as unknown as string)).toBe(
       "#4e79a7",
     );
+  });
+});
+
+describe("notice levels", () => {
+  test.each([
+    ["light", lightPalette],
+    ["dark", darkPalette],
+  ])("read on the %s theme's surface and page", (_, palette) => {
+    for (const color of Object.values(noticeColors(palette))) {
+      for (const surface of [
+        palette.background.surface,
+        palette.background.default,
+      ]) {
+        expect(contrastRatio(color, surface)).toBeGreaterThanOrEqual(
+          MIN_TEXT_CONTRAST,
+        );
+      }
+    }
+  });
+
+  test("come from the theme's own colours where they already read", () => {
+    expect(noticeColors(darkPalette).check).toBe(darkPalette.warning.main);
   });
 });

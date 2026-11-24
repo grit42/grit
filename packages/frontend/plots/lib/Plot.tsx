@@ -3,12 +3,15 @@ import BoxPlot from "./BoxPlot";
 import BarPlot from "./BarPlot";
 import ScatterPlot from "./ScatterPlot";
 import TimeSeriesPlot from "./TimeSeriesPlot";
+import type { PlotNotice } from "./notices";
 import { PlotDefinition, SourceData, SourceDataProperties } from "./types";
 
 interface PlotProps {
   def: PlotDefinition;
   data: SourceData;
   dataProperties: SourceDataProperties;
+  /** Host notices, ahead of the plot's own. */
+  notices?: PlotNotice[];
   onChange?: (def: PlotDefinition) => void;
   annotationAuthor?: string;
 }

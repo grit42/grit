@@ -1,13 +1,14 @@
-/**
- * What the figure admits it did not draw.
- *
- * Exclusions recorded by a domain validator answer "which records failed a
- * rule". These answer the question the figure used to be silent about: what
- * the plotting layer dropped because a scale could not hold it, a range did
- * not reach it, or there was no room for its panel.
- */
+/** Values a scale, a range or the panel cap left out of the figure. */
 import { describe, expect, test } from "vitest";
-import { plotNotices } from "../lib/notices";
+import {
+  leftOutCount,
+  noticeLevel,
+  noticeLine,
+  noticeText,
+  plotNotices,
+  sortedNotices,
+  type PlotNotice,
+} from "../lib/notices";
 import { MAX_FACETS } from "../lib/utils";
 import type { PlotDefinition } from "../lib/types";
 
@@ -27,8 +28,6 @@ const rows = [
   { dose: 100, response: 500, study: "S2" },
 ];
 
-const reasons = (notices: { reason: string }[]) => notices.map((n) => n.reason);
-
 describe("a logarithmic scale", () => {
   test("counts the values it has no position for", () => {
     const notices = plotNotices({
@@ -39,7 +38,7 @@ describe("a logarithmic scale", () => {
     // response holds one negative value; dose holds a zero but x is not scaled.
     expect(notices).toHaveLength(1);
     expect(notices[0].count).toBe(1);
-    expect(notices[0].reason).toContain("logarithmic");
+    expect(notices[0].reason).toContain("log");
   });
 
   test("says nothing where every value can be drawn", () => {
@@ -47,6 +46,16 @@ describe("a logarithmic scale", () => {
       plotNotices({
         def: def({ y: { key: "response", axisType: "log" } }),
         data: [{ response: 1 }, { response: 10 }],
+        scaleAxes: ["y"],
+      }),
+    ).toEqual([]);
+  });
+
+  test("does not count an empty cell as a zero", () => {
+    expect(
+      plotNotices({
+        def: def({ y: { key: "response", axisType: "log" } }),
+        data: [{ response: 1 }, { response: null }, { response: "" }],
         scaleAxes: ["y"],
       }),
     ).toEqual([]);
@@ -131,9 +140,7 @@ describe("panels past the cap", () => {
     });
     expect(notices).toHaveLength(1);
     expect(notices[0].count).toBe(5);
-    // The identity of what is missing is the context that a blank panel
-    // cannot give, since the cap exists because the panels are unreadable.
-    expect(notices[0].reason).toContain(`S${MAX_FACETS}`);
+    expect(notices[0].items).toContain(`S${MAX_FACETS}`);
     expect(notices[0].reason).toContain(`of ${MAX_FACETS + 5}`);
   });
 
@@ -144,6 +151,16 @@ describe("panels past the cap", () => {
         data: many.slice(0, MAX_FACETS),
         scaleAxes: ["y"],
       }),
+    ).toEqual([]);
+  });
+
+  test("are not reported once Facets shown picks fewer", () => {
+    const notices = plotNotices({
+      def: def({ facetBy: ["study"], facetOnly: ["S00", "S01"] }),
+      data: many,
+    });
+    expect(
+      notices.filter((n) => n.reason.startsWith("panels not drawn")),
     ).toEqual([]);
   });
 });
@@ -157,7 +174,7 @@ describe("a configuration that draws nothing", () => {
     });
     expect(notices).toHaveLength(1);
     expect(notices[0].kind).toBe("empty");
-    expect(notices[0].reason).toContain("no summary");
+    expect(notices[0].reason).toContain("No summary chosen");
   });
 
   test("is silent for a type that does not read the display block", () => {
@@ -176,40 +193,72 @@ test("an empty selection produces no notices of its own", () => {
   expect(plotNotices({ def: def(), data: undefined })).toEqual([]);
 });
 
-test("several omissions are reported together", () => {
-  const notices = plotNotices({
-    def: def({
-      y: {
-        key: "response",
-        axisType: "log",
-        ticks: { mode: "range", min: 0, max: 100 },
-      },
-      facetBy: ["study"],
-    }),
-    data: rows,
-    scaleAxes: ["y"],
+describe("levels", () => {
+  const notice = (
+    kind: PlotNotice["kind"],
+    extra: Partial<PlotNotice> = {},
+  ): PlotNotice => ({ kind, reason: kind, ...extra });
+
+  test("each kind has its level", () => {
+    expect(noticeLevel(notice("empty"))).toBe("cannot");
+    expect(noticeLevel(notice("warning"))).toBe("check");
+    expect(noticeLevel(notice("omitted"))).toBe("left");
+    expect(noticeLevel(notice("info"))).toBe("note");
   });
-  // The log omission only; the range is dropped on a log axis and two facets
-  // are under the cap.
-  expect(reasons(notices).some((r) => r.includes("logarithmic"))).toBe(true);
+
+  test("sort most serious first, otherwise in the order given", () => {
+    const given = [
+      notice("info", { reason: "a" }),
+      notice("omitted", { reason: "b" }),
+      notice("warning", { reason: "c" }),
+      notice("warning", { reason: "d" }),
+      notice("empty", { reason: "e" }),
+    ];
+    expect(sortedNotices(given).map((n) => n.reason)).toEqual([
+      "e",
+      "c",
+      "d",
+      "b",
+      "a",
+    ]);
+  });
+
+  test("left out sums what is left out, and nothing else", () => {
+    expect(
+      leftOutCount([
+        notice("omitted", { count: 3 }),
+        notice("omitted", { count: 2 }),
+        notice("warning", { count: 5 }),
+        notice("info", { count: 7 }),
+      ]),
+    ).toBe(5);
+  });
 });
 
-describe("panels over the maximum", () => {
-  const many = Array.from({ length: MAX_FACETS + 3 }, (_, i) => ({
-    dose: i,
-    response: i,
-    study: `S${String(i).padStart(2, "0")}`,
-  }));
-  const notDrawn = (extra: Record<string, unknown>) =>
-    reasons(
-      plotNotices({ def: def({ facetBy: ["study"], ...extra }), data: many }),
-    ).filter((reason) => reason.startsWith("panels not drawn"));
+describe("a notice's text", () => {
+  const items = ["A", "B", "C", "D", "E", "F"];
 
-  test("are reported when every panel is wanted", () => {
-    expect(notDrawn({})).toHaveLength(1);
+  test("names four items and counts the rest", () => {
+    expect(noticeText({ kind: "omitted", reason: "hidden", items })).toBe(
+      "hidden: A, B, C, D and 2 more",
+    );
   });
 
-  test("are not reported once Facets shown picks fewer", () => {
-    expect(notDrawn({ facetOnly: ["S00", "S01"] })).toEqual([]);
+  test("names every item when asked", () => {
+    expect(noticeText({ kind: "omitted", reason: "hidden", items }, 6)).toBe(
+      "hidden: A, B, C, D, E, F",
+    );
+  });
+
+  test("is the reason alone without items", () => {
+    expect(noticeText({ kind: "info", reason: "log scale", items: [] })).toBe(
+      "log scale",
+    );
+  });
+
+  test("a line of its own leads with the count", () => {
+    expect(noticeLine({ kind: "omitted", reason: "hidden", count: 2 })).toBe(
+      "2 hidden",
+    );
   });
 });

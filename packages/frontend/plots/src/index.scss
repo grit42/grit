@@ -106,3 +106,17 @@ a {
 a {
   text-decoration: none;
 }
+
+.guide {
+  font-size: 0.8rem;
+  line-height: 1.4;
+
+  dt {
+    font-weight: 600;
+    opacity: 0.8;
+  }
+
+  dd {
+    margin-bottom: var(--spacing-sm);
+  }
+}

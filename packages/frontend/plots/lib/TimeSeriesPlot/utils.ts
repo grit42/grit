@@ -17,26 +17,51 @@
  */
 
 import { Annotations, Data, LayoutAxis } from "plotly.js";
-import { ColorMap } from "../colors";
+import { ColorMap, seriesPalette } from "../colors";
 import { numberFormat, type NumberFormat } from "../format";
-import { summarise } from "../math";
+import { summarise, toFiniteNumber } from "../math";
 import {
   buildHoverTemplate,
+  pointHover,
   summaryHoverRows,
   summaryHoverValues,
   type HoverRow,
+  type PointHover,
 } from "../hover";
-import { SourceData, StatMarker, TimeSeriesPlotDefinition } from "../types";
 import {
-  buildFacets,
+  SourceData,
+  SourceDataProperties,
+  SourceDatum,
+  StatMarker,
+  TimeSeriesPlotDefinition,
+} from "../types";
+import { panelTitle } from "../layout";
+import {
+  buildPanels,
   inDeclaredOrder,
   nullish,
-  ungroupedLabel,
+  seriesLabel,
+  type Panel,
 } from "../utils";
 import { resolveDisplay } from "../displayMode";
 import { errorBand } from "../traces";
-import { wholeNumberTicks } from "../axes";
+import { paddedRange, wholeNumberTicks } from "../axes";
 import { seriesDash, seriesSymbol } from "../constants";
+import {
+  buildControlStats,
+  controlLineSpecs,
+  controlLineTraces,
+  limitKeysOf,
+  limitsOf,
+} from "../limits";
+import {
+  isOutlier,
+  outlierFences,
+  outlierNotice,
+  outlierRuleOf,
+  outlierScopeOf,
+  tooFewNotice,
+} from "../outliers";
 
 const SUMMARY_MARKERS: readonly StatMarker[] = ["mean", "median"];
 
@@ -44,45 +69,43 @@ interface TimeSeriesPlotGroup {
   key: string;
   label: string;
   data: Record<string, number[]>;
-  individuals: Record<string, [number, number][]>;
+  /** Each value's row, as `data` holds them. */
+  rows: Record<string, SourceDatum[]>;
+  individuals: Record<string, [number, number, SourceDatum][]>;
 }
 
 const buildTimeSeriesGroups = (
   data: SourceData,
   def: TimeSeriesPlotDefinition,
 ) => {
-  const groupBy = def.groupBy ?? [];
   const { individualBy } = resolveDisplay(def.display);
   const groups: Record<string, TimeSeriesPlotGroup> = {};
   for (const datum of data) {
-    if (nullish(datum[def.x.key]) || nullish(datum[def.y.key])) continue;
-    const key =
-      groupBy.reduce(
-        (acc: string | null, property): string =>
-          acc ? `${acc} ${datum[property]}` : `${datum[property]}`,
-        null,
-      ) ?? ungroupedLabel(def);
+    const x = toFiniteNumber(datum[def.x.key]);
+    const y = toFiniteNumber(datum[def.y.key]);
+    if (x === null || y === null) continue;
+    const key = seriesLabel(datum, def);
 
     if (!groups[key]) {
       groups[key] = {
         key: key,
         label: key,
         data: {},
+        rows: {},
         individuals: {},
       };
     }
-    const timeKey = Number(datum[def.x.key]).toString();
+    const timeKey = x.toString();
     if (nullish(groups[key].data[timeKey])) {
       groups[key].data[timeKey] = [];
+      groups[key].rows[timeKey] = [];
     }
-    groups[key].data[timeKey].push(Number(datum[def.y.key]));
+    groups[key].data[timeKey].push(y);
+    groups[key].rows[timeKey]!.push(datum);
 
     if (individualBy) {
       const individual = String(datum[individualBy]);
-      (groups[key].individuals[individual] ??= []).push([
-        Number(datum[def.x.key]),
-        Number(datum[def.y.key]),
-      ]);
+      (groups[key].individuals[individual] ??= []).push([x, y, datum]);
     }
   }
   return Object.values(groups);
@@ -124,7 +147,7 @@ const buildErrorBar = ({
     name: `${groupLabel} ±${errorLabel}`,
     legendgroup,
     showlegend: false,
-    marker: { color, size: 1, opacity: 0, line: { color: "#fff", width: 1 } },
+    marker: { color, size: 1, opacity: 0 },
     error_y: { type: "data", array: errors, visible: true, color, width: 10 },
     customdata: customData,
     hovertemplate: buildHoverTemplate([
@@ -137,9 +160,10 @@ const buildErrorBar = ({
 };
 
 const buildTraces = (
-  facets: TimeSeriesPlotFacet[],
+  facets: Panel<TimeSeriesPlotGroup>[],
   def: TimeSeriesPlotDefinition,
   colorMap: ColorMap,
+  hover: PointHover,
 ) => {
   const traces: Data[] = [];
   const axes: Record<string, Partial<LayoutAxis>> = {};
@@ -149,50 +173,134 @@ const buildTraces = (
   const display = resolveDisplay(def.display);
   const fmt = numberFormat(def.appearance);
   const seriesNames = inDeclaredOrder(
-    facets.flatMap((facet) => facet.data.map((g) => g.label)),
+    facets.flatMap((facet) => facet.groups.map((g) => g.label)),
     def.seriesOrder,
   );
+  const colorOf = seriesPalette(colorMap, seriesNames);
 
   const multiFacet = facets.length > 1;
+  const rule = outlierRuleOf(def);
+  const byGroup = outlierScopeOf(def) === "group";
+  const wanted = limitKeysOf(limitsOf(def));
+  const judged: { label: string; n: number }[] = [];
+  let marked = 0;
 
   for (let i = 0; i < facets.length; i++) {
     const facet = facets[i];
-    const axis = i + 1;
+    const { axis } = facet;
     axes[`xaxis${axis}`] =
       wholeNumberTicks(
         (def.sharedScales ? facets : [facet]).flatMap((one) =>
-          one.data.flatMap((group) => Object.keys(group.data).map(Number)),
+          one.groups.flatMap((group) => Object.keys(group.data).map(Number)),
         ),
         def.x.ticks,
       ) ?? {};
     axes[`yaxis${axis}`] = {};
 
-    if (multiFacet) {
-      annotations.push({
-        text: `<b>${facet.label}</b>`,
-        xref: `x${axis} domain` as Annotations["xref"],
-        yref: `y${axis} domain` as Annotations["yref"],
-        x: 0.5,
-        y: 1.05,
-        xanchor: "center",
-        yanchor: "bottom",
-        showarrow: false,
-        font: { size: 13 },
+    if (multiFacet) annotations.push(panelTitle(facet.label, axis));
+    const facetLine = multiFacet ? [{ value: facet.label, bold: false }] : [];
+
+    const groups = [...facet.groups].sort(
+      (a, b) => seriesNames.indexOf(a.label) - seriesNames.indexOf(b.label),
+    );
+
+    const panelValues = groups.flatMap((group) =>
+      Object.values(group.data).flat(),
+    );
+    const panelFences = byGroup ? null : outlierFences(panelValues, rule);
+    if (!byGroup) {
+      judged.push({
+        label: multiFacet ? facet.label : "all values",
+        n: panelValues.length,
       });
     }
 
-    const groups = [...facet.data].sort(
-      (a, b) => seriesNames.indexOf(a.label) - seriesNames.indexOf(b.label),
-    );
+    if (wanted.size > 0) {
+      const xs = groups.flatMap((group) =>
+        Object.entries(group.data).flatMap(([at, values]) =>
+          values.map(() => Number(at)),
+        ),
+      );
+      const stats = buildControlStats(xs, panelValues);
+      if (stats) {
+        traces.push(
+          ...(controlLineTraces({
+            specs: controlLineSpecs(stats, colorMap).filter((spec) =>
+              wanted.has(spec.key),
+            ),
+            orientation: "h",
+            // Padded, so a panel of one day still shows its lines.
+            range: paddedRange({ min: stats.xMin, max: stats.xMax }, 0.5, 1),
+            opts: {
+              showlegend: i === 0,
+              format: fmt.spec,
+              xaxis: `x${axis}`,
+              yaxis: `y${axis}`,
+            },
+          }) as Data[]),
+        );
+      }
+    }
+
+    // Drawn after every group's own traces, so a ring sits over its dot.
+    const ringTraces: Data[] = [];
     for (let j = 0; j < groups.length; j++) {
       const group = groups[j]!;
       // Figure-wide, so a series looks the same in every panel.
       const seriesIndex = Math.max(seriesNames.indexOf(group.label), 0);
-      const color =
-        colorMap.universalColors[seriesIndex % colorMap.universalColors.length];
+      const color = colorOf(group.label);
       const xValues = Object.keys(group.data)
         .map(Number)
         .toSorted((a, b) => a - b);
+
+      const rings: { x: number; y: number; row: SourceDatum }[] = [];
+      for (const xValue of xValues) {
+        const at = xValue.toString();
+        const values = group.data[at]!;
+        if (byGroup) {
+          judged.push({
+            label:
+              (multiFacet ? `${facet.label} ` : "") +
+              `${group.label}, ${xLabel} ${xValue}`,
+            n: values.length,
+          });
+        }
+        const fences = byGroup ? outlierFences(values, rule) : panelFences;
+        values.forEach((value, k) => {
+          if (isOutlier(value, fences)) {
+            rings.push({ x: xValue, y: value, row: group.rows[at]![k]! });
+          }
+        });
+      }
+      marked += rings.length;
+      if (rings.length) {
+        ringTraces.push({
+          x: rings.map((one) => one.x),
+          y: rings.map((one) => one.y),
+          xaxis: `x${axis}`,
+          yaxis: `y${axis}`,
+          type: "scatter",
+          mode: "markers",
+          name: `${group.label} outliers`,
+          showlegend: false,
+          legendgroup: group.label,
+          marker: {
+            symbol: "circle-open",
+            size: 12,
+            color: colorMap.violationFill,
+            line: { width: 2, color: colorMap.violationFill },
+          },
+          ...hover(
+            [
+              { value: "Outlier" },
+              { value: group.label, bold: false },
+              { key: xLabel, value: "%{x}" },
+              { key: yLabel, value: "%{y}", format: fmt.spec },
+            ],
+            rings.map((one) => one.row),
+          ),
+        } as Data);
+      }
       const summaries = xValues.map((xValue) =>
         summarise(group.data[xValue.toString()]),
       );
@@ -228,17 +336,28 @@ const buildTraces = (
               legendgroup: seriesLabel,
               line: { color, width: 1, dash: seriesDash(seriesIndex) },
               opacity: 0.7,
-              hovertemplate: `<b>${individual}</b><br>${xLabel}: %{x}<br>${yLabel}: %{y:${fmt.spec}}<extra></extra>`,
+              ...hover(
+                [
+                  { value: individual },
+                  ...facetLine,
+                  { key: xLabel, value: "%{x}" },
+                  { key: yLabel, value: "%{y}", format: fmt.spec },
+                ],
+                ordered.map(([, , row]) => row),
+              ),
             });
           }
         } else {
           const pointX: number[] = [];
           const pointY: number[] = [];
+          const pointRows: SourceDatum[] = [];
           for (const xValue of xValues) {
-            for (const value of group.data[xValue.toString()]) {
+            const at = xValue.toString();
+            group.data[at]!.forEach((value, k) => {
               pointX.push(xValue);
               pointY.push(value);
-            }
+              pointRows.push(group.rows[at]![k]!);
+            });
           }
 
           traces.push({
@@ -257,7 +376,15 @@ const buildTraces = (
               opacity: 0.7,
               symbol: seriesSymbol(seriesIndex),
             },
-            hovertemplate: `<b>${group.label}</b><br>${xLabel}: %{x}<br>${yLabel}: %{y:${fmt.spec}}<extra></extra>`,
+            ...hover(
+              [
+                { value: group.label },
+                ...facetLine,
+                { key: xLabel, value: "%{x}" },
+                { key: yLabel, value: "%{y}", format: fmt.spec },
+              ],
+              pointRows,
+            ),
           });
         }
       }
@@ -325,7 +452,7 @@ const buildTraces = (
             color,
             size: 7,
             symbol: seriesSymbol(seriesIndex),
-            line: { color: "#fff", width: 1 },
+            line: { color: colorMap.markerLine, width: 1 },
           },
           customdata: statCustomdata,
           hovertemplate: buildHoverTemplate([
@@ -337,29 +464,33 @@ const buildTraces = (
         });
       }
     }
+    traces.push(...ringTraces);
   }
 
-  return { traces, axes, annotations };
+  return {
+    traces,
+    axes,
+    annotations,
+    notices: [...outlierNotice(marked, rule), ...tooFewNotice(judged, rule)],
+  };
 };
-
-interface TimeSeriesPlotFacet {
-  label: string;
-  key: string;
-  data: TimeSeriesPlotGroup[];
-}
 
 export const buildTimeSeries = (
   data: SourceData,
   def: TimeSeriesPlotDefinition,
   colorMap: ColorMap,
+  properties: SourceDataProperties = [],
 ) => {
-  const rawFacets = buildFacets(data, def);
-  const timeSeriesFacets = rawFacets.map(({ data, ...rest }) => ({
-    ...rest,
-    data: buildTimeSeriesGroups(data, def),
-  }));
+  const panels = buildPanels(data, def, (rows) =>
+    buildTimeSeriesGroups(rows, def),
+  );
   return {
-    facets: rawFacets.length,
-    ...buildTraces(timeSeriesFacets, def, colorMap),
+    facets: panels.length,
+    ...buildTraces(
+      panels,
+      def,
+      colorMap,
+      pointHover(def.hover, properties, numberFormat(def.appearance)),
+    ),
   };
 };

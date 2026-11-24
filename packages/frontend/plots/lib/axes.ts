@@ -116,6 +116,39 @@ export const wholeNumberTicks = (
   };
 };
 
+/** A count of one sits at 0 on a log axis, so the axis starts below it. */
+const COUNT_LOG_FLOOR = 0.5;
+const COUNT_LOG_HEADROOM = 0.05;
+
+/** Counts on a log axis, ticked 1, 2, 5, 10, … in plain numbers. */
+export const countLogAxis = (
+  counts: readonly number[],
+  userTicks?: AxisTickOptions,
+): Partial<LayoutAxis> => {
+  const top = Math.max(1, ...counts.filter(Number.isFinite));
+  const range: [number, number] = [
+    Math.log10(COUNT_LOG_FLOOR),
+    Math.log10(top) + COUNT_LOG_HEADROOM,
+  ];
+  // Plotly's log autorange starts at the shortest bar's top, hiding it.
+  const axis = { range, autorange: false as const };
+  if (userTicks?.mode && userTicks.mode !== "auto") return axis;
+
+  const mantissas = top > 1000 ? [1] : [1, 2, 5];
+  const tickvals: number[] = [];
+  for (let decade = 1; decade <= top; decade *= 10) {
+    for (const mantissa of mantissas) {
+      if (mantissa * decade <= top) tickvals.push(mantissa * decade);
+    }
+  }
+  return {
+    ...axis,
+    tickmode: "array",
+    tickvals,
+    ticktext: tickvals.map(String),
+  };
+};
+
 export const countTicks = (
   top: number,
 ): { tickmode: "linear"; tick0: 0; dtick: number } => ({
@@ -157,10 +190,7 @@ const MIN_LABELS_IN_VIEW = 3;
 const MAX_DECADES_WITH_MINORS = 10;
 const TARGET_DECADE_LABELS = 9;
 
-/**
- * For a log axis too narrow to hold two of 1…9 (e.g. 1.2…1.9); under a decade,
- * log and linear look the same.
- */
+/** For a log axis too narrow for two of 1…9, where log looks linear. */
 const roundValueTicks = (min: number, max: number, targetTicks: number) => {
   const step = niceStep((max - min) / Math.max(targetTicks, 2));
   const values: number[] = [];
@@ -184,10 +214,7 @@ export interface LogTicks {
   minorTickvals: number[];
 }
 
-/**
- * After matplotlib's `LogLocator`: decades labelled, then 2 and 5, then 1…9
- * while too sparse. `tickvals` are raw values; Plotly takes the log itself.
- */
+/** After matplotlib's `LogLocator`; `tickvals` are values, not logs. */
 export const logTicks = (
   values: number[],
   { maxTicks = TARGET_DECADE_LABELS }: { maxTicks?: number } = {},
@@ -202,7 +229,6 @@ export const logTicks = (
 
   const logMin = Math.log10(min);
   const logMax = Math.log10(max);
-  if (!Number.isFinite(logMin) || !Number.isFinite(logMax)) return none;
 
   // Span in view decides labelling; whole decades decide the stride.
   const inView = logMax - logMin;
@@ -276,8 +302,7 @@ export const buildAxisTicks = (
 ): Partial<LayoutAxis> => {
   const layout: Partial<LayoutAxis> = {};
 
-  // By axis type, so an unconfigured log axis gets ticks too. `count` aims for
-  // decade labels; Plotly already reads `spacing` as decades per tick.
+  // By type, so a bare log axis gets ticks; on log, `spacing` is decades.
   const mode = ticks?.mode ?? "auto";
   let logMinorTickvals: number[] = [];
   if (axisType === "log" && values && (mode === "auto" || mode === "count")) {
@@ -375,3 +400,32 @@ export const buildAppearanceLayout = (
   appearance?.fontSize
     ? ({ font: { size: appearance.fontSize, color } } as Partial<Layout>)
     : {};
+
+export interface FixedRanges {
+  x?: [number, number];
+  y?: [number, number];
+}
+
+/** One scale across figures: the range only, so the builder's ticks stay. */
+export const withFixedRanges = (
+  axes: Record<string, Partial<LayoutAxis>>,
+  ranges: FixedRanges | undefined,
+): Record<string, Partial<LayoutAxis>> => {
+  if (!ranges?.x && !ranges?.y) return axes;
+  return Object.fromEntries(
+    Object.entries(axes).map(([key, axis]) => {
+      const range = key.startsWith("x") ? ranges.x : ranges.y;
+      return [key, range ? { ...axis, range, autorange: false } : axis];
+    }),
+  );
+};
+
+/** Padded so edge points aren't half hidden; `whole` for a single value. */
+export const paddedRange = (
+  span: { min: number; max: number },
+  pad: number,
+  whole = pad,
+): [number, number] =>
+  span.min === span.max
+    ? [span.min - whole, span.max + whole]
+    : [span.min - pad, span.max + pad];

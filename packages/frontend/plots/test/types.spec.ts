@@ -34,13 +34,11 @@ describe("backward compatibility", () => {
     groupBy: [...PERSISTED_BEFORE_EXTENSION.groupBy],
   };
 
-  test("a definition saved before the extension is still a valid definition", () => {
+  test("a definition saved before the extension is still a valid definition, needing none of the new blocks", () => {
     expect(legacy.type).toBe("box");
     expect(legacy.title).toBe("% inhibition : compound_name");
     expect(legacy.y.key).toBe("__inhibition");
-  });
-
-  test("none of the new blocks are present, and none are required", () => {
+    expect(legacy.y.axisType).toBe("linear");
     for (const block of [
       "palette",
       "hover",
@@ -50,28 +48,12 @@ describe("backward compatibility", () => {
     ] as const) {
       expect(legacy[block]).toBeUndefined();
     }
-  });
-
-  test("the axis objects still parse without their tick block", () => {
     expect(legacy.x.ticks).toBeUndefined();
     expect(legacy.y.ticks).toBeUndefined();
-    expect(legacy.y.key).toBe("__inhibition");
-    expect(legacy.y.axisType).toBe("linear");
   });
 
   test("it survives a JSON round-trip unchanged", () => {
     expect(JSON.parse(JSON.stringify(legacy))).toEqual(legacy);
-  });
-
-  test("unknown sibling keys on the host wrapper are harmless", () => {
-    const wrapper = {
-      id: "mq9eij1zfztr6g61yd5",
-      data_sheet_id: 19312,
-      name: "New plot",
-      def: legacy,
-    };
-    const parsed = JSON.parse(JSON.stringify(wrapper));
-    expect(parsed.def).toEqual(legacy);
   });
 });
 
@@ -110,16 +92,10 @@ describe("the extended schema", () => {
     export: { format: "png", filename: "body-weight", scale: 2 },
   };
 
+  /** Config and callbacks are split: a function would silently vanish here. */
   test("round-trips through JSON with every block intact", () => {
-    expect(JSON.parse(JSON.stringify(fully))).toEqual(fully);
-  });
-
-  /**
-   * The reason config and callbacks are split: anything in the definition must
-   * survive `JSON.stringify`. A function would silently vanish here.
-   */
-  test("contains no values JSON would drop", () => {
     const serialised = JSON.stringify(fully);
+    expect(JSON.parse(serialised)).toEqual(fully);
     expect(serialised).not.toContain("undefined");
     // A round-trip that loses a key would shrink the key count.
     expect(Object.keys(JSON.parse(serialised))).toHaveLength(

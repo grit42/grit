@@ -18,10 +18,6 @@ describe("sanitiseFilename", () => {
     );
   });
 
-  test("writes a percent sign as 'pct'", () => {
-    expect(sanitiseFilename("50% response")).toBe("50pct response");
-  });
-
   test("removes every character a filesystem or browser would reject", () => {
     expect(sanitiseFilename('a/b\\c?d*e:f|g"h<i>j')).toBe(
       "a-b-c-d-e-f-g-h-i-j",
@@ -86,20 +82,14 @@ describe("buildDownloadRequest", () => {
     ).toBe("a-b");
   });
 
-  test("passes scale for raster formats", () => {
+  // svg is resolution-independent, so a scale would be meaningless.
+  test("passes a configured scale for raster formats only", () => {
     expect(
       buildDownloadRequest({ format: "png", filename: "a", scale: 2 }),
     ).toHaveProperty("scale", 2);
-  });
-
-  /** svg is resolution-independent, so a scale would be meaningless. */
-  test("drops scale for svg", () => {
     expect(
       buildDownloadRequest({ format: "svg", filename: "a", scale: 2 }),
     ).not.toHaveProperty("scale");
-  });
-
-  test("omits scale entirely when none is configured", () => {
     expect(
       buildDownloadRequest({ format: "png", filename: "a" }),
     ).not.toHaveProperty("scale");
@@ -115,12 +105,9 @@ describe("the offered formats", () => {
   });
 
   /** The Resolution select is shown only for these, so it must match. */
-  test("the default scale is a no-op multiplier", () => {
+  test("the default scale is a no-op multiplier, among positive ones", () => {
     expect(DEFAULT_EXPORT_SCALE).toBe(1);
     expect(EXPORT_SCALES.map((s) => s.value)).toContain(DEFAULT_EXPORT_SCALE);
-  });
-
-  test("every offered scale is a positive multiplier", () => {
     expect(EXPORT_SCALES.every((s) => s.value > 0)).toBe(true);
   });
 

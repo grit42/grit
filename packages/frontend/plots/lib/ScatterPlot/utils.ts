@@ -1,49 +1,48 @@
 import { Annotations, Data, Datum, LayoutAxis } from "plotly.js";
-import { ColorMap } from "../colors";
-import { ScatterPlotDefinition, SourceData } from "../types";
-import { buildHoverTemplate } from "../hover";
+import { ColorMap, seriesPalette } from "../colors";
+import {
+  ScatterPlotDefinition,
+  SourceData,
+  SourceDataProperties,
+  SourceDatum,
+} from "../types";
+import { numberFormat, type NumberFormat } from "../format";
+import { pointHover, type PointHover } from "../hover";
 import { seriesSymbol } from "../constants";
-import { buildFacets, nullish, ungroupedLabel } from "../utils";
+import { panelTitle } from "../layout";
+import { buildPanels, nullish, seriesLabel, type Panel } from "../utils";
 
 interface ScatterPlotGroup {
   label: string;
   x: Datum[];
   y: Datum[];
+  rows: SourceDatum[];
 }
 
 const buildScatterGroups = (
   data: SourceData,
   def: ScatterPlotDefinition,
 ): ScatterPlotGroup[] => {
-  const groupBy = def.groupBy ?? [];
   const groups: Record<string, ScatterPlotGroup> = {};
   for (const datum of data) {
     if (nullish(datum[def.x.key]) || nullish(datum[def.y.key])) continue;
-    const label =
-      groupBy.reduce(
-        (acc: string | null, property): string =>
-          acc ? `${acc} ${datum[property]}` : `${datum[property]}`,
-        null,
-      ) ?? ungroupedLabel(def);
+    const label = seriesLabel(datum, def);
     if (!groups[label]) {
-      groups[label] = { label, x: [], y: [] };
+      groups[label] = { label, x: [], y: [], rows: [] };
     }
     groups[label].x.push(datum[def.x.key]);
     groups[label].y.push(datum[def.y.key]);
+    groups[label].rows.push(datum);
   }
   return Object.values(groups);
 };
 
-interface ScatterPlotFacet {
-  label: string;
-  key: string;
-  data: ScatterPlotGroup[];
-}
-
 const buildTraces = (
-  facets: ScatterPlotFacet[],
+  facets: Panel<ScatterPlotGroup>[],
   colorMap: ColorMap,
   def: ScatterPlotDefinition,
+  fmt: NumberFormat,
+  hover: PointHover,
 ) => {
   const xLabel = def.x.label ?? def.x.key;
   const yLabel = def.y.label ?? def.y.key;
@@ -53,33 +52,21 @@ const buildTraces = (
 
   const multiFacet = facets.length > 1;
   const seriesNames = [
-    ...new Set(facets.flatMap((facet) => facet.data.map((g) => g.label))),
+    ...new Set(facets.flatMap((facet) => facet.groups.map((g) => g.label))),
   ];
+  const colorOf = seriesPalette(colorMap, seriesNames);
   for (let i = 0; i < facets.length; i++) {
     const facet = facets[i];
-    const axis = i + 1;
+    const { axis } = facet;
     axes[`xaxis${axis}`] = {};
     axes[`yaxis${axis}`] = {};
 
-    if (multiFacet) {
-      annotations.push({
-        text: `<b>${facet.label}</b>`,
-        xref: `x${axis} domain` as Annotations["xref"],
-        yref: `y${axis} domain` as Annotations["yref"],
-        x: 0.5,
-        y: 1.05,
-        xanchor: "center",
-        yanchor: "bottom",
-        showarrow: false,
-        font: { size: 13 },
-      });
-    }
+    if (multiFacet) annotations.push(panelTitle(facet.label, axis));
 
-    for (let j = 0; j < facet.data.length; j++) {
-      const group = facet.data[j];
+    for (let j = 0; j < facet.groups.length; j++) {
+      const group = facet.groups[j];
       const seriesIndex = Math.max(seriesNames.indexOf(group.label), 0);
-      const color =
-        colorMap.universalColors[seriesIndex % colorMap.universalColors.length];
+      const color = colorOf(group.label);
       traces.push({
         x: group.x,
         y: group.y,
@@ -97,12 +84,15 @@ const buildTraces = (
             }
           : undefined,
         marker: { color, symbol: seriesSymbol(seriesIndex) },
-        hovertemplate: buildHoverTemplate([
-          { value: group.label },
-          ...(multiFacet ? [{ value: facet.label, bold: false }] : []),
-          { key: xLabel, value: "%{x}" },
-          { key: yLabel, value: "%{y}" },
-        ]),
+        ...hover(
+          [
+            { value: group.label },
+            ...(multiFacet ? [{ value: facet.label, bold: false }] : []),
+            { key: xLabel, value: "%{x}", format: fmt.spec },
+            { key: yLabel, value: "%{y}", format: fmt.spec },
+          ],
+          group.rows,
+        ),
       });
     }
   }
@@ -114,14 +104,20 @@ export const buildScatter = (
   data: SourceData,
   def: ScatterPlotDefinition,
   colorMap: ColorMap,
+  properties: SourceDataProperties = [],
 ) => {
-  const rawFacets = buildFacets(data, def);
-  const scatterFacets = rawFacets.map(({ data, ...rest }) => ({
-    ...rest,
-    data: buildScatterGroups(data, def),
-  }));
+  const panels = buildPanels(data, def, (rows) =>
+    buildScatterGroups(rows, def),
+  );
+  const fmt = numberFormat(def.appearance);
   return {
-    facets: rawFacets.length,
-    ...buildTraces(scatterFacets, colorMap, def),
+    facets: panels.length,
+    ...buildTraces(
+      panels,
+      colorMap,
+      def,
+      fmt,
+      pointHover(def.hover, properties, fmt),
+    ),
   };
 };
