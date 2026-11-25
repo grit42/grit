@@ -101,14 +101,7 @@ RSpec.describe "Users API", type: :request do
   end
 
   describe "user creation when the activation email cannot be sent" do
-    before do
-      smtp_error = Net::SMTPAuthenticationError.new(
-        Net::SMTP::Response.parse("535 5.7.8 Username and Password not accepted")
-      )
-      message = instance_double(ActionMailer::MessageDelivery)
-      allow(message).to receive(:deliver_now).and_raise(smtp_error)
-      allow(Grit::Core::Mailer).to receive(:deliver_activation_instructions).and_return(message)
-    end
+    before { stub_smtp_authentication_failure(:deliver_activation_instructions) }
 
     it "creates the user and returns the mail error as a warning" do
       expect {
@@ -124,7 +117,7 @@ RSpec.describe "Users API", type: :request do
       expect(response).to have_http_status(:created)
       res = JSON.parse(response.body)
       expect(res["success"]).to be(true)
-      expect(res["warning"]).to include("Net::SMTPAuthenticationError", "535 5.7.8")
+      expect(res["warning"]).to include("Net::SMTPAuthenticationError", MailHelpers::SMTP_AUTH_REPLY)
       expect(Grit::Core::User.find(res["data"]["id"]).activation_token).to be_present
     end
   end
@@ -372,6 +365,22 @@ RSpec.describe "Users API", type: :request do
       expect(response).to have_http_status(:success)
     end
 
+    context "when the email cannot be sent" do
+      before { stub_smtp_authentication_failure(:deliver_password_reset) }
+
+      it "reports a generic error and revokes the unsent token so the user can retry" do
+        post "/api/grit/core/user/request_password_reset", params: { user: admin.email }, as: :json
+
+        expect(response).to have_http_status(:service_unavailable)
+        res = JSON.parse(response.body)
+        expect(res["success"]).to be(false)
+        expect(res["errors"]).to eq("The password reset email could not be sent. Please contact an administrator.")
+        admin.reload
+        expect(admin.forgot_token).to be_nil
+        expect(admin.valid_forgot_token?).to be(false)
+      end
+    end
+
     it "should not reset password with expired token" do
       post "/api/grit/core/user/request_password_reset", params: { user: admin.email }, as: :json
       expect(response).to have_http_status(:success)
@@ -461,6 +470,17 @@ RSpec.describe "Users API", type: :request do
       login_as(admin)
       post "/api/grit/core/user/request_password_reset_for_user", params: { user: notadmin.email }, as: :json
       expect(response).to have_http_status(:success)
+    end
+
+    it "admin gets the token and a warning when the email cannot be sent" do
+      stub_smtp_authentication_failure(:deliver_password_reset)
+      login_as(admin)
+      post "/api/grit/core/user/request_password_reset_for_user", params: { user: notadmin.email }, as: :json
+
+      expect(response).to have_http_status(:success)
+      res = JSON.parse(response.body)
+      expect(res["token"]).to eq(notadmin.reload.forgot_token)
+      expect(res["warning"]).to include("Net::SMTPAuthenticationError", MailHelpers::SMTP_AUTH_REPLY)
     end
 
     it "admin should revoke a reset password token" do

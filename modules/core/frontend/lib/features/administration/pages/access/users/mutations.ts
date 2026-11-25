@@ -105,6 +105,11 @@ export const useGeneratePasswordResetTokenMutation = (email: string) => {
       if (!response.success) {
         throw response.errors;
       }
+
+      if (response.warning) {
+        toast.warning(response.warning, { autoClose: false });
+      }
+
       return response;
     },
     onError: notifyOnError,
