@@ -483,6 +483,19 @@ RSpec.describe "Users API", type: :request do
       expect(res["warning"]).to include("Net::SMTPAuthenticationError", MailHelpers::SMTP_AUTH_REPLY)
     end
 
+    it "lets the user request a new reset after an admin revoked the token" do
+      login_as(admin)
+      post "/api/grit/core/user/request_password_reset_for_user", params: { user: notadmin.email }, as: :json
+      revoked_token = notadmin.reload.forgot_token
+      post "/api/grit/core/user/revoke_forgot_token_for_user", params: { user: notadmin.email }, as: :json
+      expect(notadmin.reload.valid_forgot_token?).to be(false)
+
+      post "/api/grit/core/user/request_password_reset", params: { user: notadmin.email }, as: :json
+      expect(response).to have_http_status(:success)
+      expect(notadmin.reload.forgot_token).to be_present
+      expect(notadmin.forgot_token).not_to eq(revoked_token)
+    end
+
     it "admin should revoke a reset password token" do
       login_as(admin)
       post "/api/grit/core/user/revoke_forgot_token_for_user", params: { user: notadmin.email }, as: :json

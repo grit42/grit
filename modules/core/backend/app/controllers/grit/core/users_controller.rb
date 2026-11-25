@@ -328,7 +328,10 @@ module Grit::Core
       @user = Grit::Core::User.find_by(login: params[:user]&.downcase)
       @user = Grit::Core::User.find_by(email: params[:user]&.downcase) if @user.nil?
 
+      # Clear the expiry too: while it lies in the future, valid_forgot_token? stays true and
+      # self-service reset requests answer success without issuing a new token or email.
       @user.forgot_token = nil
+      @user.forgot_token_expires_at = nil
       @user.save_without_session_maintenance
 
       render json: { success: true }
