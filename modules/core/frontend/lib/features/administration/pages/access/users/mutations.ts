@@ -24,6 +24,7 @@ import {
   EndpointErrorErrors,
   notifyOnError,
 } from "@grit42/api";
+import { toast } from "@grit42/notifications";
 import { User } from "../types";
 import type { AuthToken, ForgotToken, UserSettings } from "../../../../auth";
 
@@ -38,7 +39,7 @@ export const useCreateUpdateUserMutation = (id: string | number) => {
     mutationKey: [`updateUser`, id],
     mutationFn: async (data: Partial<User>) => {
       const response = await request<
-        EndpointSuccess<User>,
+        EndpointSuccess<User> & { warning?: string },
         EndpointError<EndpointErrorErrors<User>>
       >(`${url}?scope=user_administration`, {
         method,
@@ -47,6 +48,10 @@ export const useCreateUpdateUserMutation = (id: string | number) => {
 
       if (!response.success) {
         throw response.errors;
+      }
+
+      if (response.warning) {
+        toast.warning(response.warning, { autoClose: false });
       }
 
       return response.data;

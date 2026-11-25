@@ -32,8 +32,6 @@ module Grit::Core
       record = Grit::Core::User.new(user)
       record.activation_token = SecureRandom.urlsafe_base64(20)
 
-      Grit::Core::Mailer.deliver_activation_instructions(record).deliver_now
-
       saved = false
       Grit::Core::User.transaction do
         saved = record.save
@@ -41,9 +39,10 @@ module Grit::Core
       end
 
       if saved
+        warning = deliver_activation_instructions(record)
         scope = get_scope(params[:scope] || "detailed", params)
         record = scope.find(record.id)
-        render json: { success: true, data: record }, status: :created, location: record
+        render json: { success: true, data: record, warning: warning }.compact, status: :created, location: record
       else
         render json: { success: false, errors: record.errors }, status: :unprocessable_entity
       end
@@ -334,6 +333,18 @@ module Grit::Core
         raise "Invalid or expired link" unless token.is_a?(String) && token.present?
 
         Grit::Core::User.find_by(column => token)
+      end
+
+      # Sends the activation email for a newly created user. A mail failure (e.g. bad SMTP
+      # credentials) must not prevent the user from being created, so it is logged and
+      # returned as a warning message instead of raised. Returns nil on success.
+      def deliver_activation_instructions(user)
+        Grit::Core::Mailer.deliver_activation_instructions(user).deliver_now
+        nil
+      rescue StandardError => e
+        logger.error "Activation email for user #{user.id} could not be sent: #{e.class}: #{e.message}"
+        "User created, but the activation email could not be sent (#{e.class}: #{e.message.strip}). " \
+          "Share the activation link from the user page instead, and check the SMTP configuration."
       end
 
       def sync_user_roles(record, role_ids)

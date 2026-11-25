@@ -100,6 +100,35 @@ RSpec.describe "Users API", type: :request do
     end
   end
 
+  describe "user creation when the activation email cannot be sent" do
+    before do
+      smtp_error = Net::SMTPAuthenticationError.new(
+        Net::SMTP::Response.parse("535 5.7.8 Username and Password not accepted")
+      )
+      message = instance_double(ActionMailer::MessageDelivery)
+      allow(message).to receive(:deliver_now).and_raise(smtp_error)
+      allow(Grit::Core::Mailer).to receive(:deliver_activation_instructions).and_return(message)
+    end
+
+    it "creates the user and returns the mail error as a warning" do
+      expect {
+        post "/api/grit/core/users", params: {
+          login: "test",
+          name: "Test",
+          email: "test@example.com",
+          origin_id: origin.id,
+          role_ids: []
+        }, as: :json
+      }.to change(Grit::Core::User, :count).by(1)
+
+      expect(response).to have_http_status(:created)
+      res = JSON.parse(response.body)
+      expect(res["success"]).to be(true)
+      expect(res["warning"]).to include("Net::SMTPAuthenticationError", "535 5.7.8")
+      expect(Grit::Core::User.find(res["data"]["id"]).activation_token).to be_present
+    end
+  end
+
   describe "user creation and activation" do
     it "should create and activate user" do
       expect {
