@@ -22,6 +22,7 @@ module Grit::Core
   class UserSessionsController < ApplicationController
     include Grit::Core::Controller::Unforgeable
     include Grit::Core::Controller::Authenticated
+    include Grit::Core::Controller::MailDelivery
     before_action :require_no_user, only: %i[create two_factor]
     before_action :require_user, only: %i[show destroy]
 
@@ -89,7 +90,8 @@ module Grit::Core
         if new_count >= lockout_limit && @user.login != "admin"
           token = SecureRandom.urlsafe_base64(20)
           @user.update_columns(active: false, failed_login_count: 0, activation_token: token)
-          Grit::Core::Mailer.deliver_reactivation_instructions(@user).deliver_now
+          # The account is locked either way; a mail failure is only logged.
+          deliver_mail(Grit::Core::Mailer.deliver_reactivation_instructions(@user), "Reactivation email for user #{@user.id}")
           raise "Invalid login or password. Account has been locked."
         else
           @user.update_columns(failed_login_count: new_count)
@@ -106,7 +108,10 @@ module Grit::Core
         @user.two_factor_attempts = 0
         @user.save!
         two_factor = true
-        Grit::Core::Mailer.deliver_two_factor_instructions(@user).deliver_now
+        # Anonymous request: report a generic message, the SMTP details are only logged.
+        if deliver_mail(Grit::Core::Mailer.deliver_two_factor_instructions(@user), "Two factor email for user #{@user.id}")
+          raise "The two factor code could not be sent by email. Please contact an administrator."
+        end
       else
         Grit::Core::UserSession.create!(@user)
         @user.update(

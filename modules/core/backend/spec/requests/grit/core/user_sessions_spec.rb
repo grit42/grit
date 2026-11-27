@@ -35,6 +35,34 @@ RSpec.describe "User Sessions API", type: :request do
     end
   end
 
+  describe "when an email cannot be sent" do
+    let(:user) { create(:grit_core_user, :with_read_role) }
+
+    it "refuses a two factor login with a generic message" do
+      user.update!(two_factor: true)
+      stub_smtp_authentication_failure(:deliver_two_factor_instructions)
+
+      post "/api/grit/core/user_session", params: { user_session: { login: user.login, password: "password" } }
+
+      expect(response).to have_http_status(:unauthorized)
+      res = JSON.parse(response.body)
+      expect(res["errors"]).to eq("The two factor code could not be sent by email. Please contact an administrator.")
+      expect(response.body).not_to include("535")
+    end
+
+    it "still locks the account with the lockout message" do
+      stub_smtp_authentication_failure(:deliver_reactivation_instructions)
+      allow(Grit::Core::UserSession).to receive(:consecutive_failed_logins_limit).and_return(3)
+
+      3.times do
+        post "/api/grit/core/user_session", params: { user_session: { login: user.login, password: "wrong" } }
+      end
+
+      expect(JSON.parse(response.body)["errors"]).to eq("Invalid login or password. Account has been locked.")
+      expect(user.reload.active).to be(false)
+    end
+  end
+
   describe "rate limiting" do
     # The test environment uses a null cache store, which never counts.
     let(:counter_store) { ActiveSupport::Cache::MemoryStore.new }

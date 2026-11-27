@@ -37,6 +37,7 @@ export interface AuthToken {
 export interface ForgotToken {
   success: true;
   token: string;
+  warning?: string;
 }
 
 export interface Session {

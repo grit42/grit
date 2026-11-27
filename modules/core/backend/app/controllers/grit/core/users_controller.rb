@@ -19,6 +19,7 @@
 module Grit::Core
   class UsersController < ApplicationController
     include Grit::Core::GritEntityController
+    include Grit::Core::Controller::MailDelivery
 
     before_action :require_administrator, only: %i[create update destroy]
     before_action :require_no_user, only: %i[activate request_password_reset password_reset]
@@ -32,8 +33,6 @@ module Grit::Core
       record = Grit::Core::User.new(user)
       record.activation_token = SecureRandom.urlsafe_base64(20)
 
-      Grit::Core::Mailer.deliver_activation_instructions(record).deliver_now
-
       saved = false
       Grit::Core::User.transaction do
         saved = record.save
@@ -41,9 +40,12 @@ module Grit::Core
       end
 
       if saved
+        mail_error = deliver_mail(Grit::Core::Mailer.deliver_activation_instructions(record), "Activation email for user #{record.id}")
+        warning = mail_failure_warning(mail_error, "User created, but the activation email",
+          "Share the activation link from the user page instead, and check the SMTP configuration.")
         scope = get_scope(params[:scope] || "detailed", params)
         record = scope.find(record.id)
-        render json: { success: true, data: record }, status: :created, location: record
+        render json: { success: true, data: record, warning: warning }.compact, status: :created, location: record
       else
         render json: { success: false, errors: record.errors }, status: :unprocessable_entity
       end
@@ -127,7 +129,15 @@ module Grit::Core
       @user.forgot_token_expires_at = Grit::Core::User::FORGOT_TOKEN_EXPIRY_HOURS.hours.from_now
       @user.save_without_session_maintenance
 
-      Grit::Core::Mailer.deliver_password_reset(@user).deliver_now
+      if deliver_mail(Grit::Core::Mailer.deliver_password_reset(@user), "Password reset email for user #{@user.id}")
+        # Revoke the unsent token: while it is valid, new requests are answered without
+        # sending anything, so the user could never get the email once SMTP is fixed.
+        @user.update_columns(forgot_token: nil, forgot_token_expires_at: nil)
+        render json: { success: false, errors: "The password reset email could not be sent. Please contact an administrator." },
+               status: :service_unavailable
+        return
+      end
+
       render json: { success: true }
     rescue StandardError => e
       logger.warn e.to_s
@@ -192,8 +202,10 @@ module Grit::Core
       @user.forgot_token_expires_at = Grit::Core::User::FORGOT_TOKEN_EXPIRY_HOURS.hours.from_now
       @user.save_without_session_maintenance
 
-      Grit::Core::Mailer.deliver_password_reset(@user).deliver_now
-      render json: { success: true, token: @user.forgot_token }
+      mail_error = deliver_mail(Grit::Core::Mailer.deliver_password_reset(@user), "Password reset email for user #{@user.id}")
+      warning = mail_failure_warning(mail_error, "Password reset link generated, but the email",
+        "Share the password reset link with the user instead, and check the SMTP configuration.")
+      render json: { success: true, token: @user.forgot_token, warning: warning }.compact
     rescue StandardError => e
       logger.warn e.to_s
       logger.warn e.backtrace.join("\n")
@@ -316,7 +328,10 @@ module Grit::Core
       @user = Grit::Core::User.find_by(login: params[:user]&.downcase)
       @user = Grit::Core::User.find_by(email: params[:user]&.downcase) if @user.nil?
 
+      # Clear the expiry too: while it lies in the future, valid_forgot_token? stays true and
+      # self-service reset requests answer success without issuing a new token or email.
       @user.forgot_token = nil
+      @user.forgot_token_expires_at = nil
       @user.save_without_session_maintenance
 
       render json: { success: true }
