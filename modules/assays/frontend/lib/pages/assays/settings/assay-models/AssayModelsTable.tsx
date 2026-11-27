@@ -107,7 +107,7 @@ const AssayModelsTable = () => {
                 },
               ]}
             >
-              <Button variant="transparent">Import / Export</Button>
+              <Button>Import / Export</Button>
             </Dropdown>
             <Button color="secondary" onClick={navigateToNew}>
               New
